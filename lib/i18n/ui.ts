@@ -927,6 +927,12 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "extform.issued"
+  | "extform.expires"
+  | "extform.optional"
+  | "extform.changeLanguage"
+  | "extform.customLabelPh"
+  | "extform.postalCodeShort"
   | "ema.display_name"
   | "ema.display_name_ph"
   | "ema.smtp_config"
@@ -17600,6 +17606,18 @@ const en: Dict = {
 
 
 
+
+  "extform.issued": "Issued",
+
+  "extform.expires": "Expires",
+
+  "extform.optional": "Optional",
+
+  "extform.changeLanguage": "Change Language",
+
+  "extform.customLabelPh": "Enter Custom Label (e.g. Office Assistant / Warehouse)",
+
+  "extform.postalCodeShort": "Postal Code",
   "ema.display_name": "Display Name",
 
   "ema.display_name_ph": "e.g. Company / Department name",
@@ -30751,6 +30769,18 @@ const ur: Dict = {
 
 
 
+
+  "extform.issued": "جاری",
+
+  "extform.expires": "میعاد ختم",
+
+  "extform.optional": "اختیاری",
+
+  "extform.changeLanguage": "زبان تبدیل کریں",
+
+  "extform.customLabelPh": "حسب ضرورت لیبل درج کریں (مثلاً آفس اسسٹنٹ / گودام)",
+
+  "extform.postalCodeShort": "پوسٹل کوڈ",
   "ema.display_name": "ظاہر ہونے والا نام",
 
   "ema.display_name_ph": "مثلاً کمپنی / شعبہ کا نام",
@@ -43904,6 +43934,18 @@ const ar: Dict = {
 
 
 
+
+  "extform.issued": "تاريخ الإصدار",
+
+  "extform.expires": "تاريخ الانتهاء",
+
+  "extform.optional": "اختياري",
+
+  "extform.changeLanguage": "تغيير اللغة",
+
+  "extform.customLabelPh": "أدخل تسمية مخصصة (مثل مساعد مكتب / مستودع)",
+
+  "extform.postalCodeShort": "الرمز البريدي",
   "ema.display_name": "الاسم المعروض",
 
   "ema.display_name_ph": "مثال: اسم الشركة / القسم",
@@ -57056,6 +57098,18 @@ const fa: Dict = {
 
 
 
+
+  "extform.issued": "صادر شده",
+
+  "extform.expires": "انقضا",
+
+  "extform.optional": "اختیاری",
+
+  "extform.changeLanguage": "تغییر زبان",
+
+  "extform.customLabelPh": "برچسب سفارشی وارد کنید (مثلاً دستیار دفتر / انبار)",
+
+  "extform.postalCodeShort": "کد پستی",
   "ema.display_name": "نام نمایشی",
 
   "ema.display_name_ph": "مثلاً نام شرکت / بخش",
@@ -70214,6 +70268,18 @@ const ps: Dict = {
 
 
 
+
+  "extform.issued": "صادر شوی",
+
+  "extform.expires": "پای ته رسیږي",
+
+  "extform.optional": "اختیاري",
+
+  "extform.changeLanguage": "ژبه بدله کړئ",
+
+  "extform.customLabelPh": "دودیز لیبل ولیکئ (لکه د دفتر مرستیال / ګدام)",
+
+  "extform.postalCodeShort": "پوستي کوډ",
   "ema.display_name": "ښکاره نوم",
 
   "ema.display_name_ph": "لکه د شرکت / څانګې نوم",

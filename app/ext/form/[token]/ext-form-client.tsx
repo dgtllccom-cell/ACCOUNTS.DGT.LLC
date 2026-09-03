@@ -161,6 +161,12 @@ const dictEn: Record<string, string> = {
   "appSlipHeading": "Official Registration & Verification Sheet",
   "appSlipSub": "Please review and download your complete verification application before final submission.",
   "declarationText": "I hereby confirm that the personal details, contact information, address, and uploaded documents provided in this application are accurate, true, and complete.",
+  "issued": "Issued",
+  "expires": "Expires",
+  "optional": "Optional",
+  "changeLanguage": "Change Language",
+  "customLabelPh": "Enter Custom Label (e.g. Office Assistant / Warehouse)",
+  "postalCodeShort": "Postal Code",
 };
 
 function t(key: string, lang: string): string {
@@ -1173,7 +1179,7 @@ export function ExtFormClient({ token }: { token: string }) {
             type="button"
             onClick={() => setLangModalOpen(true)}
             className="h-9 w-9 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs cursor-pointer"
-            title="Change Language"
+            title={t("changeLanguage", lang)}
           >
             <Globe className="h-4 w-4" />
           </button>
@@ -1454,7 +1460,7 @@ export function ExtFormClient({ token }: { token: string }) {
                                 type="text"
                                 value={contact.customLabel || ""}
                                 onChange={(e) => handleContactCustomLabelChange(contact.id, e.target.value)}
-                                placeholder="Enter Custom Label (e.g. Office Assistant / Warehouse)"
+                                placeholder={t("customLabelPh", lang)}
                                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700"
                               />
                             )}
@@ -1708,7 +1714,7 @@ export function ExtFormClient({ token }: { token: string }) {
                               </span>
                             ) : (
                               <span className="text-[10px] font-medium text-slate-400">
-                                Optional
+                                {t("optional", lang)}
                               </span>
                             )}
                           </div>
@@ -1895,8 +1901,8 @@ export function ExtFormClient({ token }: { token: string }) {
                             {(doc.dob || doc.issueDate || doc.expiryDate) && (
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-600 font-mono bg-white/70 p-1.5 rounded-lg border border-slate-100">
                                 {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
-                                {doc.issueDate && <span>Issued: <b>{doc.issueDate}</b></span>}
-                                {doc.expiryDate && <span>Expires: <b>{doc.expiryDate}</b></span>}
+                                {doc.issueDate && <span>{t("issued", lang)}: <b>{doc.issueDate}</b></span>}
+                                {doc.expiryDate && <span>{t("expires", lang)}: <b>{doc.expiryDate}</b></span>}
                               </div>
                             )}
 
@@ -2100,7 +2106,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           type="text"
                           value={postalCode}
                           onChange={(e) => setPostalCode(e.target.value)}
-                          placeholder="Postal Code"
+                          placeholder={t("postalCodeShort", lang)}
                           className="w-full bg-slate-100/70 border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-bold text-slate-800 font-mono"
                         />
                       </div>
@@ -2389,8 +2395,8 @@ export function ExtFormClient({ token }: { token: string }) {
                             {(docDob || docIssueDate || docExpiryDate) && (
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
                                 {docDob && <span>DOB: <b>{docDob}</b></span>}
-                                {docIssueDate && <span>Issued: <b>{docIssueDate}</b></span>}
-                                {docExpiryDate && <span>Expires: <b>{docExpiryDate}</b></span>}
+                                {docIssueDate && <span>{t("issued", lang)}: <b>{docIssueDate}</b></span>}
+                                {docExpiryDate && <span>{t("expires", lang)}: <b>{docExpiryDate}</b></span>}
                               </div>
                             )}
                             {/* Dual Side-by-Side Photo Previews */}
@@ -2437,8 +2443,8 @@ export function ExtFormClient({ token }: { token: string }) {
                             {(doc.dob || docIssueDate || docExpiryDate) && (
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
                                 {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
-                                {docIssueDate && <span>Issued: <b>{docIssueDate}</b></span>}
-                                {docExpiryDate && <span>Expires: <b>{docExpiryDate}</b></span>}
+                                {docIssueDate && <span>{t("issued", lang)}: <b>{docIssueDate}</b></span>}
+                                {docExpiryDate && <span>{t("expires", lang)}: <b>{docExpiryDate}</b></span>}
                               </div>
                             )}
                             {(doc.frontImage || doc.backImage) && (
@@ -2570,8 +2576,8 @@ export function ExtFormClient({ token }: { token: string }) {
                             {(docDob || docIssueDate || docExpiryDate) && (
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
                                 {docDob && <span>DOB: <b>{docDob}</b></span>}
-                                {docIssueDate && <span>Issued: <b>{docIssueDate}</b></span>}
-                                {docExpiryDate && <span>Expires: <b>{docExpiryDate}</b></span>}
+                                {docIssueDate && <span>{t("issued", lang)}: <b>{docIssueDate}</b></span>}
+                                {docExpiryDate && <span>{t("expires", lang)}: <b>{docExpiryDate}</b></span>}
                               </div>
                             )}
                             {/* Dual Side-by-Side Photo Previews */}
@@ -2616,8 +2622,8 @@ export function ExtFormClient({ token }: { token: string }) {
                             {(doc.dob || docIssueDate || docExpiryDate) && (
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
                                 {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
-                                {doc.issueDate && <span>Issued: <b>{doc.issueDate}</b></span>}
-                                {doc.expiryDate && <span>Expires: <b>{doc.expiryDate}</b></span>}
+                                {doc.issueDate && <span>{t("issued", lang)}: <b>{doc.issueDate}</b></span>}
+                                {doc.expiryDate && <span>{t("expires", lang)}: <b>{doc.expiryDate}</b></span>}
                               </div>
                             )}
                             {(doc.frontImage || doc.backImage) && (
@@ -2864,9 +2870,9 @@ export function ExtFormClient({ token }: { token: string }) {
                         )}
                         {(d.dob || d.issueDate || d.expiryDate) && (
                           <div className="text-[9px] text-slate-400 font-mono">
-                            {d.dob && <div>DOB: {d.dob}</div>}
-                            {d.issueDate && <div>Issued: {d.issueDate}</div>}
-                            {d.expiryDate && <div>Exp: {d.expiryDate}</div>}
+                            {d.dob && <div>{t("dob", lang)}: {d.dob}</div>}
+                            {d.issueDate && <div>{t("issued", lang)}: {d.issueDate}</div>}
+                            {d.expiryDate && <div>{t("expires", lang)}: {d.expiryDate}</div>}
                           </div>
                         )}
                         {(d.frontImage || d.backImage) && (
