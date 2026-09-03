@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "setmenu.sync_system"
+  | "setmenu.new_parameter"
+  | "setmenu.enterprise_core"
+  | "setmenu.config_center"
+  | "setmenu.config_center_desc"
+  | "setmenu.backup_db"
+  | "setmenu.create_master"
   | "common.email"
   | "common.whatsapp"
   | "acct.apv_rpt_certificate"
@@ -17633,6 +17640,20 @@ const en: Dict = {
 
 
 
+
+  "setmenu.sync_system": "Sync System",
+
+  "setmenu.new_parameter": "New Parameter",
+
+  "setmenu.enterprise_core": "Digital Dock Enterprise Core",
+
+  "setmenu.config_center": "ERP Configuration Center",
+
+  "setmenu.config_center_desc": "Manage core parameters, branch network topologies, company incorporations, bank masters, and official email settings.",
+
+  "setmenu.backup_db": "Backup DB",
+
+  "setmenu.create_master": "Create Master",
   "common.email": "Email",
 
   "common.whatsapp": "WhatsApp",
@@ -30842,6 +30863,20 @@ const ur: Dict = {
 
 
 
+
+  "setmenu.sync_system": "سسٹم ہم آہنگ کریں",
+
+  "setmenu.new_parameter": "نیا پیرامیٹر",
+
+  "setmenu.enterprise_core": "ڈیجیٹل ڈاک انٹرپرائز کور",
+
+  "setmenu.config_center": "ERP کنفیگریشن سینٹر",
+
+  "setmenu.config_center_desc": "بنیادی پیرامیٹرز، برانچ نیٹ ورک ٹوپولوجیز، کمپنی رجسٹریشنز، بینک ماسٹرز اور آفیشل ای میل ترتیبات کا نظم کریں۔",
+
+  "setmenu.backup_db": "ڈیٹابیس بیک اپ",
+
+  "setmenu.create_master": "ماسٹر بنائیں",
   "common.email": "ای میل",
 
   "common.whatsapp": "واٹس ایپ",
@@ -44053,6 +44088,20 @@ const ar: Dict = {
 
 
 
+
+  "setmenu.sync_system": "مزامنة النظام",
+
+  "setmenu.new_parameter": "معلمة جديدة",
+
+  "setmenu.enterprise_core": "نواة مؤسسة Digital Dock",
+
+  "setmenu.config_center": "مركز إعداد ERP",
+
+  "setmenu.config_center_desc": "إدارة المعلمات الأساسية وطبولوجيا شبكة الفروع وتأسيس الشركات وبيانات البنوك وإعدادات البريد الرسمي.",
+
+  "setmenu.backup_db": "نسخ احتياطي لقاعدة البيانات",
+
+  "setmenu.create_master": "إنشاء سجل رئيسي",
   "common.email": "بريد إلكتروني",
 
   "common.whatsapp": "واتساب",
@@ -57263,6 +57312,20 @@ const fa: Dict = {
 
 
 
+
+  "setmenu.sync_system": "همگام‌سازی سیستم",
+
+  "setmenu.new_parameter": "پارامتر جدید",
+
+  "setmenu.enterprise_core": "هسته سازمانی Digital Dock",
+
+  "setmenu.config_center": "مرکز پیکربندی ERP",
+
+  "setmenu.config_center_desc": "مدیریت پارامترهای اصلی، توپولوژی شبکه شعب، ثبت شرکت‌ها، اطلاعات بانکی و تنظیمات ایمیل رسمی.",
+
+  "setmenu.backup_db": "پشتیبان‌گیری پایگاه داده",
+
+  "setmenu.create_master": "ایجاد اصلی",
   "common.email": "ایمیل",
 
   "common.whatsapp": "واتساپ",
@@ -70479,6 +70542,20 @@ const ps: Dict = {
 
 
 
+
+  "setmenu.sync_system": "سیسټم همغږی کړئ",
+
+  "setmenu.new_parameter": "نوی پیرامیټر",
+
+  "setmenu.enterprise_core": "د ډیجیټل ډاک تصدۍ اصلي برخه",
+
+  "setmenu.config_center": "د ERP د تنظیم مرکز",
+
+  "setmenu.config_center_desc": "د اصلي پیرامیټرونو، د څانګې د شبکې جوړښتونه، د شرکت ثبت، د بانک ماسټرونه او رسمي بریښنالیک تنظیمات اداره کړئ.",
+
+  "setmenu.backup_db": "د ډیټابیس بیک اپ",
+
+  "setmenu.create_master": "ماسټر جوړ کړئ",
   "common.email": "بریښنالیک",
 
   "common.whatsapp": "واټساپ",

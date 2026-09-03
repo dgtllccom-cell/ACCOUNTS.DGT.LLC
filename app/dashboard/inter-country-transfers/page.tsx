@@ -559,7 +559,7 @@ export default function InterCountryTransfersPage() {
                 <div className="space-y-2 md:col-span-2">
                   <Label>{t("DESCRIPTION / PARTICULARS")}</Label>
                   <Input
-                    placeholder="Transfer memo, reference details, purpose..."
+                    placeholder={t("TRANSFER MEMO, REFERENCE DETAILS, PURPOSE...")}
                     value={narration}
                     onChange={(e) => setNarration(e.target.value)}
                   />
@@ -696,10 +696,10 @@ export default function InterCountryTransfersPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-background rounded-lg p-6 max-w-md w-full border border-border shadow-xl space-y-4">
             <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-600">
-              <CheckCircle2 className="h-5 w-5" /> Accept Transfer {selectedTransfer.transfer_no}
+              <CheckCircle2 className="h-5 w-5" /> {t("ACCEPT TRANSFER")} {selectedTransfer.transfer_no}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Select destination receiving ledgers to post into local accounts.
+              {t("SELECT DESTINATION RECEIVING LEDGERS TO POST INTO LOCAL ACCOUNTS.")}
             </p>
 
             <div className="space-y-3">
@@ -760,9 +760,9 @@ export default function InterCountryTransfersPage() {
             </p>
 
             <div className="space-y-2">
-              <Label>Rejection Reason *</Label>
+              <Label>{t("REJECTION REASON")} *</Label>
               <Input
-                placeholder="Incorrect amount, wrong party, not authorized..."
+                placeholder={t("INCORRECT AMOUNT, WRONG PARTY, NOT AUTHORIZED...")}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 required
@@ -794,13 +794,13 @@ export default function InterCountryTransfersPage() {
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label>Destination Bank/Cash Ledger</Label>
+                <Label>{t("DESTINATION BANK/CASH LEDGER")}</Label>
                 <select
                   value={editBankLedgerId}
                   onChange={(e) => setEditBankLedgerId(e.target.value)}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="">-- Select Bank/Cash Ledger --</option>
+                  <option value="">{t("-- SELECT BANK/CASH LEDGER --")}</option>
                   {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name} ({l.currency})
@@ -810,7 +810,7 @@ export default function InterCountryTransfersPage() {
               </div>
 
               <div className="space-y-1">
-                <Label>Destination Party Ledger</Label>
+                <Label>{t("DESTINATION PARTY LEDGER")}</Label>
                 <select
                   value={editPartyLedgerId}
                   onChange={(e) => setEditPartyLedgerId(e.target.value)}

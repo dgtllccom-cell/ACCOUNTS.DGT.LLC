@@ -149,11 +149,11 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" className="border-slate-700 bg-slate-800/80 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:text-white">
                 <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
-                Sync System
+                {t(lang, "setmenu.sync_system", "Sync System")}
               </Button>
               <Button size="sm" className="bg-blue-600 text-xs font-semibold text-white shadow-md hover:bg-blue-500">
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                New Parameter
+                {t(lang, "setmenu.new_parameter", "New Parameter")}
               </Button>
             </div>
           </div>
@@ -241,24 +241,24 @@ export default function SettingsPage() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold text-blue-300 backdrop-blur">
                   <Activity className="h-3 w-3 text-blue-400" />
-                  Digital Dock Enterprise Core
+                  {t(lang, "setmenu.enterprise_core", "Digital Dock Enterprise Core")}
                 </div>
                 <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white">
-                  ERP Configuration Center
+                  {t(lang, "setmenu.config_center", "ERP Configuration Center")}
                 </h1>
                 <p className="mt-1 max-w-xl text-xs text-blue-200/80 leading-relaxed">
-                  Manage core parameters, branch network topologies, company incorporations, bank masters, and official Titan email settings.
+                  {t(lang, "setmenu.config_center_desc", "Manage core parameters, branch network topologies, company incorporations, bank masters, and official email settings.")}
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button size="sm" className="bg-white/10 text-xs font-semibold text-white border border-white/20 hover:bg-white/20">
                   <Database className="mr-1.5 h-3.5 w-3.5" />
-                  Backup DB
+                  {t(lang, "setmenu.backup_db", "Backup DB")}
                 </Button>
                 <Button size="sm" className="bg-blue-500 text-xs font-semibold text-white shadow-lg hover:bg-blue-400">
                   <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Create Master
+                  {t(lang, "setmenu.create_master", "Create Master")}
                 </Button>
               </div>
             </div>
