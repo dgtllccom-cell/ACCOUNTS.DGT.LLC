@@ -927,6 +927,22 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "wa.err_connect"
+  | "wa.connect_title"
+  | "wa.connect_hint"
+  | "wa.account_scope"
+  | "wa.scope_global"
+  | "wa.f_display_name"
+  | "wa.f_display_name_ph"
+  | "wa.f_phone"
+  | "wa.f_phone_id"
+  | "wa.f_waba_id"
+  | "wa.f_token"
+  | "wa.access_denied"
+  | "wa.return_inbox"
+  | "wa.back_inbox"
+  | "wa.setup_title"
+  | "wa.setup_desc"
   | "email_mgmt.tpl_quotation"
   | "email_mgmt.tpl_invoice"
   | "email_mgmt.tpl_purchase_order"
@@ -17678,6 +17694,54 @@ const en: Dict = {
 
 
 
+
+
+  "wa.err_connect": "Failed to connect account",
+
+
+  "wa.connect_title": "Connect WhatsApp Business Account",
+
+
+  "wa.connect_hint": "You'll need your Meta WhatsApp Cloud API credentials",
+
+
+  "wa.account_scope": "Account Scope",
+
+
+  "wa.scope_global": "Global (Super Admin)",
+
+
+  "wa.f_display_name": "Display Name",
+
+
+  "wa.f_display_name_ph": "e.g. Branch WhatsApp",
+
+
+  "wa.f_phone": "Phone Number (E.164)",
+
+
+  "wa.f_phone_id": "Phone Number ID (from Meta)",
+
+
+  "wa.f_waba_id": "WhatsApp Business Account ID",
+
+
+  "wa.f_token": "Permanent System User Access Token",
+
+
+  "wa.access_denied": "Access Denied — WhatsApp Business Account Configuration is strictly restricted to Super Admin.",
+
+
+  "wa.return_inbox": "Return to Inbox",
+
+
+  "wa.back_inbox": "Back to Inbox",
+
+
+  "wa.setup_title": "WhatsApp Account Setup",
+
+
+  "wa.setup_desc": "Connect and manage WhatsApp Business numbers for each country and branch. Uses the official Meta WhatsApp Cloud API — numbers are safe from being blocked.",
   "email_mgmt.tpl_quotation": "Quotation Request",
 
   "email_mgmt.tpl_invoice": "Sales Invoice",
@@ -30967,6 +31031,54 @@ const ur: Dict = {
 
 
 
+
+
+  "wa.err_connect": "اکاؤنٹ منسلک کرنے میں ناکام",
+
+
+  "wa.connect_title": "واٹس ایپ بزنس اکاؤنٹ منسلک کریں",
+
+
+  "wa.connect_hint": "آپ کو اپنی Meta WhatsApp Cloud API اسناد درکار ہوں گی",
+
+
+  "wa.account_scope": "اکاؤنٹ کا دائرہ",
+
+
+  "wa.scope_global": "گلوبل (سپر ایڈمن)",
+
+
+  "wa.f_display_name": "ظاہر ہونے والا نام",
+
+
+  "wa.f_display_name_ph": "مثلاً برانچ واٹس ایپ",
+
+
+  "wa.f_phone": "فون نمبر (E.164)",
+
+
+  "wa.f_phone_id": "فون نمبر ID (Meta سے)",
+
+
+  "wa.f_waba_id": "واٹس ایپ بزنس اکاؤنٹ ID",
+
+
+  "wa.f_token": "مستقل سسٹم یوزر ایکسیس ٹوکن",
+
+
+  "wa.access_denied": "رسائی مسترد — واٹس ایپ بزنس اکاؤنٹ کنفیگریشن سختی سے صرف سپر ایڈمن تک محدود ہے۔",
+
+
+  "wa.return_inbox": "اِن باکس پر واپس جائیں",
+
+
+  "wa.back_inbox": "اِن باکس پر واپس",
+
+
+  "wa.setup_title": "واٹس ایپ اکاؤنٹ سیٹ اپ",
+
+
+  "wa.setup_desc": "ہر ملک اور برانچ کے لیے واٹس ایپ بزنس نمبرز منسلک اور منظم کریں۔ آفیشل Meta WhatsApp Cloud API استعمال کرتا ہے — نمبرز بلاک ہونے سے محفوظ ہیں۔",
   "email_mgmt.tpl_quotation": "کوٹیشن کی درخواست",
 
   "email_mgmt.tpl_invoice": "سیلز انوائس",
@@ -44258,6 +44370,54 @@ const ar: Dict = {
 
 
 
+
+
+  "wa.err_connect": "فشل ربط الحساب",
+
+
+  "wa.connect_title": "ربط حساب واتساب للأعمال",
+
+
+  "wa.connect_hint": "ستحتاج إلى بيانات اعتماد Meta WhatsApp Cloud API",
+
+
+  "wa.account_scope": "نطاق الحساب",
+
+
+  "wa.scope_global": "عالمي (المشرف العام)",
+
+
+  "wa.f_display_name": "الاسم المعروض",
+
+
+  "wa.f_display_name_ph": "مثال: واتساب الفرع",
+
+
+  "wa.f_phone": "رقم الهاتف (E.164)",
+
+
+  "wa.f_phone_id": "معرّف رقم الهاتف (من Meta)",
+
+
+  "wa.f_waba_id": "معرّف حساب واتساب للأعمال",
+
+
+  "wa.f_token": "رمز وصول مستخدم النظام الدائم",
+
+
+  "wa.access_denied": "تم رفض الوصول — إعداد حساب واتساب للأعمال مقيّد بشدة على المشرف العام فقط.",
+
+
+  "wa.return_inbox": "العودة إلى صندوق الوارد",
+
+
+  "wa.back_inbox": "رجوع إلى صندوق الوارد",
+
+
+  "wa.setup_title": "إعداد حساب واتساب",
+
+
+  "wa.setup_desc": "قم بربط وإدارة أرقام واتساب للأعمال لكل دولة وفرع. يستخدم واجهة Meta WhatsApp Cloud API الرسمية — الأرقام آمنة من الحظر.",
   "email_mgmt.tpl_quotation": "طلب عرض سعر",
 
   "email_mgmt.tpl_invoice": "فاتورة مبيعات",
@@ -57548,6 +57708,54 @@ const fa: Dict = {
 
 
 
+
+
+  "wa.err_connect": "اتصال حساب ناموفق بود",
+
+
+  "wa.connect_title": "اتصال حساب تجاری واتساپ",
+
+
+  "wa.connect_hint": "به اطلاعات Meta WhatsApp Cloud API خود نیاز دارید",
+
+
+  "wa.account_scope": "محدوده حساب",
+
+
+  "wa.scope_global": "جهانی (سوپر ادمین)",
+
+
+  "wa.f_display_name": "نام نمایشی",
+
+
+  "wa.f_display_name_ph": "مثلاً واتساپ شعبه",
+
+
+  "wa.f_phone": "شماره تلفن (E.164)",
+
+
+  "wa.f_phone_id": "شناسه شماره تلفن (از Meta)",
+
+
+  "wa.f_waba_id": "شناسه حساب تجاری واتساپ",
+
+
+  "wa.f_token": "توکن دسترسی دائمی کاربر سیستم",
+
+
+  "wa.access_denied": "دسترسی رد شد — پیکربندی حساب تجاری واتساپ به‌شدت فقط به سوپر ادمین محدود است.",
+
+
+  "wa.return_inbox": "بازگشت به صندوق ورودی",
+
+
+  "wa.back_inbox": "بازگشت به صندوق ورودی",
+
+
+  "wa.setup_title": "راه‌اندازی حساب واتساپ",
+
+
+  "wa.setup_desc": "شماره‌های تجاری واتساپ را برای هر کشور و شعبه متصل و مدیریت کنید. از Meta WhatsApp Cloud API رسمی استفاده می‌کند — شماره‌ها از مسدود شدن ایمن هستند.",
   "email_mgmt.tpl_quotation": "درخواست پیش‌فاکتور",
 
   "email_mgmt.tpl_invoice": "فاکتور فروش",
@@ -70844,6 +71052,54 @@ const ps: Dict = {
 
 
 
+
+
+  "wa.err_connect": "د حساب نښلول ناکام شول",
+
+
+  "wa.connect_title": "د واټساپ بزنس حساب ونښلوئ",
+
+
+  "wa.connect_hint": "تاسو به د خپل Meta WhatsApp Cloud API اسنادو ته اړتیا ولرئ",
+
+
+  "wa.account_scope": "د حساب ساحه",
+
+
+  "wa.scope_global": "نړیوال (سوپر اډمین)",
+
+
+  "wa.f_display_name": "ښکاره نوم",
+
+
+  "wa.f_display_name_ph": "لکه د څانګې واټساپ",
+
+
+  "wa.f_phone": "د تلیفون شمېره (E.164)",
+
+
+  "wa.f_phone_id": "د تلیفون شمېرې ID (له Meta څخه)",
+
+
+  "wa.f_waba_id": "د واټساپ بزنس حساب ID",
+
+
+  "wa.f_token": "د سیسټم کاروونکي دایمي لاسرسي ټوکن",
+
+
+  "wa.access_denied": "لاسرسی رد شو — د واټساپ بزنس حساب تنظیم په کلکه یوازې سوپر اډمین ته محدود دی.",
+
+
+  "wa.return_inbox": "بیرته صندوق ته",
+
+
+  "wa.back_inbox": "بیرته صندوق ته",
+
+
+  "wa.setup_title": "د واټساپ حساب تنظیم",
+
+
+  "wa.setup_desc": "د هر هېواد او څانګې لپاره د واټساپ بزنس شمېرې ونښلوئ او اداره کړئ. رسمي Meta WhatsApp Cloud API کاروي — شمېرې د بلاک کیدو څخه خوندي دي.",
   "email_mgmt.tpl_quotation": "د نرخ غوښتنه",
 
   "email_mgmt.tpl_invoice": "د پلور بیله",
