@@ -1082,14 +1082,14 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
             </Card>
 
             <Card className="border-slate-200/80 shadow-sm">
-              <CardContent className="space-y-4 p-4">
+              <CardContent className="space-y-4 p-4 sm:p-5">
                 {selected ? (
                   <>
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h2 className="truncate text-lg font-semibold text-foreground">{selected.subject}</h2>
-                          {selected.isUnread ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{tt("email_mgmt.unread", "Unread")}</span> : null}
+                          <h2 className="min-w-0 truncate text-lg font-semibold text-foreground">{selected.subject}</h2>
+                          {selected.isUnread ? <span className="shrink-0 whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{tt("email_mgmt.unread", "Unread")}</span> : null}
                         </div>
                         <p className="text-sm text-muted-foreground">{selected.senderName} - {selected.companyName} - {selected.branchName}</p>
                       </div>

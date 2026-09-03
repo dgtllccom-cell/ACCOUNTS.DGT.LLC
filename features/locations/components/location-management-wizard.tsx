@@ -1302,7 +1302,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       </div>
 
       {/* Tabs navigation & Controls */}
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3">
         <div className="flex border-b overflow-x-auto">
           <button
             onClick={() => {
@@ -1360,7 +1360,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
         {/* Filter scopes card */}
         <Card className="shadow-sm">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3">
                 {activeTab !== "country" && (
@@ -1531,17 +1531,17 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                               {c.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-2.5">
                               <Button
                                 variant="default"
                                 size="sm"
                                 onClick={() => handleDrillToState(c)}
-                                className="bg-sky-600 hover:bg-sky-700 text-white h-8 text-xs font-medium gap-1"
+                                className="bg-sky-600 hover:bg-sky-700 text-white h-8 whitespace-nowrap text-xs font-medium gap-1"
                               >
                                 <Eye className="h-3.5 w-3.5" /> {tt("loc.view_hierarchy", "View Details / Hierarchy")}
                               </Button>
-                              <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(c, "country")} className="h-8">
+                              <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(c, "country")} className="h-8 w-8 p-0">
                                 <Edit3 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
