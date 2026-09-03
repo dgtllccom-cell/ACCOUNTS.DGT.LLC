@@ -169,14 +169,14 @@ const DEFAULT_FORM = {
   currencyType: "USD",
   purchaseCurrency: "USD",
   exchangeRate: 1,
-  branchName: "Kabul Main Branch",
-  branchCode: "BR-KBL-001",
-  branchCity: "Kabul",
-  branchCountry: "Afghanistan",
-  userName: "ADMIN",
-  userId: "USR-1001",
-  paymentType: "Advance Payment",
-  shipmentType: "By Ship",
+  branchName: "",
+  branchCode: "",
+  branchCity: "",
+  branchCountry: "",
+  userName: "",
+  userId: "",
+  paymentType: "",
+  shipmentType: "",
   shippingMode: "By Sea",
   supplierId: "",
   supplierName: "",
@@ -1525,11 +1525,11 @@ export function PurchaseOrderWizard({ session }) {
       });
     } else {
       setForm(prev => {
-        if (!prev.branchCode || prev.branchCode === "BR-KBL-001") {
+        if (!prev.branchCode) {
           return {
             ...prev,
-            branchName: "Branch Not Selected",
-            branchCode: "BR-XXXX-000",
+            branchName: "",
+            branchCode: "",
             branchCity: "",
             branchCountry: ""
           };
@@ -2575,8 +2575,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       currency: form.currencyType,
       status: isTransferred ? "Posted" : "Pending",
       paymentStatus: isTransferred ? "partial" : "pending",
-      branchName: form.branchName || "Main Branch",
-      countryName: form.branchCountry || "Country",
+      branchName: form.branchName || "",
+      countryName: form.branchCountry || "",
       createdAt: new Date().toISOString(),
       totalGrossWeight: reportTotals.totalGross,
       totalNetWeight: reportTotals.totalNet,
@@ -2584,9 +2584,9 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       finalAmount: reportTotals.grandFinal,
       form_data: { form, goodsEntries },
       audit: {
-        userName: form.userName || "Admin User",
-        userId: form.userId || "USR-1001",
-        branchCode: form.branchCode || "BR-KBL-001"
+        userName: form.userName || "",
+        userId: form.userId || "",
+        branchCode: form.branchCode || ""
       }
     };
 
@@ -4723,10 +4723,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               <div>
                                 <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
                                 <select
-                                  value={form.paymentType || "Advance Payment"}
+                                  value={form.paymentType || ""}
                                   onChange={(e) => setValue("paymentType", e.target.value)}
                                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
                                 >
+                                  <option value="">{t(lang, "common.select", "Select…")}</option>
                                   {PAYMENT_TYPES.map((type) => (
                                     <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
                                   ))}
@@ -5620,10 +5621,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 <div>
                                   <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                                   <select
-                                    value={form.paymentType || "Advance Payment"}
+                                    value={form.paymentType || ""}
                                     onChange={(e) => setValue("paymentType", e.target.value)}
                                     className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
                                   >
+                                    <option value="">{t(lang, "common.select", "Select…")}</option>
                                     {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{translateOptionLabel(lang, p)}</option>)}
                                   </select>
                                 </div>

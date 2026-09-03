@@ -162,17 +162,15 @@ const DEFAULT_FORM = {
   currencyType: "USD",
   salesCurrency: "USD",
   exchangeRate: 1,
-  branchName: "Kabul Main Branch",
-  branchCode: "BR-KBL-001",
-  branchCity: "Kabul",
-  branchCountry: "Afghanistan",
-  userName: "ADMIN",
-  userId: "USR-1001",
-  paymentType: "Advance Payment",
-  shipmentType: "By Ship",
-  shippingMode: "By Sea",
-  customerId: "",
-  customerName: "",
+  branchName: "",
+  branchCode: "",
+  branchCity: "",
+  branchCountry: "",
+  userName: "",
+  userId: "",
+  paymentType: "",
+  shipmentType: "",
+  shippingMode: "",
   customerId: "",
   customerName: "",
   salesStatus: "Draft",
@@ -1019,8 +1017,8 @@ export function SalesOrderWizard({ session }) {
 
           setForm((prev) => ({
             ...prev,
-            userName: sessionRes.user?.fullName || sessionRes.fullName || prev.userName,
-            userId: sessionRes.user?.id || sessionRes.userId || prev.userId,
+            userName: sessionRes.user?.fullName || sessionRes.fullName || sessionRes.user?.email || prev.userName || "",
+            userId: sessionRes.user?.id || sessionRes.userId || prev.userId || "",
             countryId: userCountryId || prev.countryId,
             countryBranchId: userCountryBranchId || prev.countryBranchId,
             cityBranchId: userCityBranchId || prev.cityBranchId
@@ -3217,11 +3215,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div>
                           <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                           <select
-                            value={form.paymentType || "Advance Payment"}
+                            value={form.paymentType || ""}
                             onChange={(e) => setValue("paymentType", e.target.value)}
                             className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
                           >
-                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
+                            <option value="">{t(lang, "common.select", "Select…")}</option>
+                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{translateOptionLabel(lang, p)}</option>)}
                           </select>
                         </div>
                         <div>
@@ -3784,12 +3783,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <div>
                         <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
                         <select
-                          value={form.paymentType}
+                          value={form.paymentType || ""}
                           onChange={(e) => setValue("paymentType", e.target.value)}
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
                         >
+                          <option value="">{t(lang, "common.select", "Select…")}</option>
                           {PAYMENT_TYPES.map((type) => (
-                            <option key={type} value={type}>{type}</option>
+                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
                           ))}
                         </select>
                       </div>
