@@ -58,8 +58,7 @@ interface JournalBillRecord {
   currentStatus: string;
   nextStep: string;
   nextStepColor: "green" | "orange" | "red" | "blue" | "gray";
-  // Optional: MOCK_JOURNAL_BILLS omit it and it is assigned later in processedMockBills;
-  // db/local records set it directly from row.created_by.
+  // Set directly from row.created_by on real purchase_orders / local_purchases rows.
   salesmanId?: string | null;
   journey: JourneyStep[];
   goods: BillGoodsItem[];
