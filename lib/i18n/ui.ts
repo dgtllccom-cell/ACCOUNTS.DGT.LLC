@@ -894,6 +894,39 @@ export type UiKey =
   | "setmenu.badge_superadmin"
   | "setmenu.badge_kyc"
   | "setmenu.badge_5lang"
+  | "mgmt.eyebrow"
+  | "mgmt.title"
+  | "mgmt.subtitle"
+  | "mgmt.refresh"
+  | "mgmt.location_topology"
+  | "mgmt.tab_countries"
+  | "mgmt.tab_company_reg"
+  | "mgmt.tab_contracts"
+  | "mgmt.tab_documents"
+  | "mgmt.add_country_node"
+  | "mgmt.add_country_desc"
+  | "mgmt.country_name"
+  | "mgmt.iso_code"
+  | "mgmt.currency_code"
+  | "mgmt.official_email"
+  | "mgmt.admin_email"
+  | "mgmt.adding_country"
+  | "mgmt.add_country_btn"
+  | "mgmt.countries_master"
+  | "mgmt.countries_master_desc"
+  | "mgmt.search_country_ph"
+  | "mgmt.col_country"
+  | "mgmt.col_iso"
+  | "mgmt.col_currency"
+  | "mgmt.col_status"
+  | "mgmt.loading_countries"
+  | "mgmt.no_country_match"
+  | "mgmt.active_node"
+  | "mgmt.managed_elsewhere_desc"
+  | "mgmt.open_module"
+  | "mgmt.err_create_country"
+  | "mgmt.err_add_country"
+  | "mgmt.country_added"
   | "nav.super_admin_roznamcha"
   | "nav.country_roznamcha"
   | "nav.branch_roznamcha"
@@ -16878,6 +16911,72 @@ const en: Dict = {
   "setmenu.badge_superadmin": "Super Admin",
   "setmenu.badge_kyc": "KYC Audit",
   "setmenu.badge_5lang": "5 Languages",
+
+  "mgmt.eyebrow": "Settings & Master Data Management",
+
+  "mgmt.title": "Management Parameters & Live Data Hub",
+
+  "mgmt.subtitle": "Live database registry for nations and cities. Registration, contract and document types are managed in their own dedicated modules.",
+
+  "mgmt.refresh": "Refresh Data",
+
+  "mgmt.location_topology": "Location Topology",
+
+  "mgmt.tab_countries": "Live Countries",
+
+  "mgmt.tab_company_reg": "Company Registration",
+
+  "mgmt.tab_contracts": "Contract Types",
+
+  "mgmt.tab_documents": "Document Parameters",
+
+  "mgmt.add_country_node": "Add New Country Node",
+
+  "mgmt.add_country_desc": "Register a country in the live database for accounts and branches.",
+
+  "mgmt.country_name": "Country Name",
+
+  "mgmt.iso_code": "ISO Code (2-letter)",
+
+  "mgmt.currency_code": "Currency Code",
+
+  "mgmt.official_email": "Official Email",
+
+  "mgmt.admin_email": "Admin Email",
+
+  "mgmt.adding_country": "Adding Country...",
+
+  "mgmt.add_country_btn": "Add Country to Master Data",
+
+  "mgmt.countries_master": "Active Countries Master Database",
+
+  "mgmt.countries_master_desc": "All registered nation nodes connected with branch networks and ledgers.",
+
+  "mgmt.search_country_ph": "Search country or currency...",
+
+  "mgmt.col_country": "Country Name",
+
+  "mgmt.col_iso": "ISO",
+
+  "mgmt.col_currency": "Currency",
+
+  "mgmt.col_status": "Status",
+
+  "mgmt.loading_countries": "Loading live countries from database...",
+
+  "mgmt.no_country_match": "No country records match your search.",
+
+  "mgmt.active_node": "Active Node",
+
+  "mgmt.managed_elsewhere_desc": "This parameter set has its own dedicated module with full create, edit and delete support. Open it to manage these records.",
+
+  "mgmt.open_module": "Open Module",
+
+  "mgmt.err_create_country": "Failed to create country",
+
+  "mgmt.err_add_country": "Failed to add country",
+
+  "mgmt.country_added": "Country added to master data.",
 };
 
 const ur: Dict = {
@@ -28767,6 +28866,72 @@ const ur: Dict = {
   "setmenu.badge_superadmin": "سپر ایڈمن",
   "setmenu.badge_kyc": "KYC آڈٹ",
   "setmenu.badge_5lang": "5 زبانیں",
+
+  "mgmt.eyebrow": "سیٹنگز و ماسٹر ڈیٹا مینیجمنٹ",
+
+  "mgmt.title": "مینیجمنٹ پیرامیٹرز و لائیو ڈیٹا ہب",
+
+  "mgmt.subtitle": "ممالک اور شہروں کے لیے لائیو ڈیٹابیس رجسٹری۔ رجسٹریشن، کنٹریکٹ اور دستاویز کی اقسام اپنے مخصوص ماڈیولز میں سنبھالی جاتی ہیں۔",
+
+  "mgmt.refresh": "ڈیٹا ریفریش کریں",
+
+  "mgmt.location_topology": "مقام ٹوپولوجی",
+
+  "mgmt.tab_countries": "لائیو ممالک",
+
+  "mgmt.tab_company_reg": "کمپنی رجسٹریشن",
+
+  "mgmt.tab_contracts": "کنٹریکٹ کی اقسام",
+
+  "mgmt.tab_documents": "دستاویز پیرامیٹرز",
+
+  "mgmt.add_country_node": "نیا ملک نوڈ شامل کریں",
+
+  "mgmt.add_country_desc": "اکاؤنٹس اور برانچز کے لیے لائیو ڈیٹابیس میں ملک رجسٹر کریں۔",
+
+  "mgmt.country_name": "ملک کا نام",
+
+  "mgmt.iso_code": "ISO کوڈ (2 حروف)",
+
+  "mgmt.currency_code": "کرنسی کوڈ",
+
+  "mgmt.official_email": "سرکاری ای میل",
+
+  "mgmt.admin_email": "ایڈمن ای میل",
+
+  "mgmt.adding_country": "ملک شامل کیا جا رہا ہے...",
+
+  "mgmt.add_country_btn": "ماسٹر ڈیٹا میں ملک شامل کریں",
+
+  "mgmt.countries_master": "فعال ممالک ماسٹر ڈیٹابیس",
+
+  "mgmt.countries_master_desc": "برانچ نیٹ ورکس اور لیجرز سے منسلک تمام رجسٹرڈ ملک نوڈز۔",
+
+  "mgmt.search_country_ph": "ملک یا کرنسی تلاش کریں...",
+
+  "mgmt.col_country": "ملک کا نام",
+
+  "mgmt.col_iso": "ISO",
+
+  "mgmt.col_currency": "کرنسی",
+
+  "mgmt.col_status": "حیثیت",
+
+  "mgmt.loading_countries": "ڈیٹابیس سے لائیو ممالک لوڈ ہو رہے ہیں...",
+
+  "mgmt.no_country_match": "کوئی ملک ریکارڈ آپ کی تلاش سے میل نہیں کھاتا۔",
+
+  "mgmt.active_node": "فعال نوڈ",
+
+  "mgmt.managed_elsewhere_desc": "اس پیرامیٹر سیٹ کا اپنا مخصوص ماڈیول ہے جس میں مکمل بنانے، ترمیم اور حذف کی سہولت ہے۔ ان ریکارڈز کو سنبھالنے کے لیے اسے کھولیں۔",
+
+  "mgmt.open_module": "ماڈیول کھولیں",
+
+  "mgmt.err_create_country": "ملک بنانے میں ناکامی",
+
+  "mgmt.err_add_country": "ملک شامل کرنے میں ناکامی",
+
+  "mgmt.country_added": "ملک ماسٹر ڈیٹا میں شامل ہو گیا۔",
 };
 
 const ar: Dict = {
@@ -40658,6 +40823,72 @@ const ar: Dict = {
   "setmenu.badge_superadmin": "المشرف الأعلى",
   "setmenu.badge_kyc": "تدقيق KYC",
   "setmenu.badge_5lang": "5 لغات",
+
+  "mgmt.eyebrow": "إعدادات وإدارة البيانات الرئيسية",
+
+  "mgmt.title": "معلمات الإدارة ومركز البيانات الحية",
+
+  "mgmt.subtitle": "سجل قاعدة بيانات حية للدول والمدن. تُدار أنواع التسجيل والعقود والمستندات في وحداتها المخصصة.",
+
+  "mgmt.refresh": "تحديث البيانات",
+
+  "mgmt.location_topology": "طوبولوجيا الموقع",
+
+  "mgmt.tab_countries": "الدول الحية",
+
+  "mgmt.tab_company_reg": "تسجيل الشركات",
+
+  "mgmt.tab_contracts": "أنواع العقود",
+
+  "mgmt.tab_documents": "معلمات المستندات",
+
+  "mgmt.add_country_node": "إضافة عقدة دولة جديدة",
+
+  "mgmt.add_country_desc": "سجّل دولة في قاعدة البيانات الحية للحسابات والفروع.",
+
+  "mgmt.country_name": "اسم الدولة",
+
+  "mgmt.iso_code": "رمز ISO (حرفان)",
+
+  "mgmt.currency_code": "رمز العملة",
+
+  "mgmt.official_email": "البريد الرسمي",
+
+  "mgmt.admin_email": "بريد المسؤول",
+
+  "mgmt.adding_country": "جارٍ إضافة الدولة...",
+
+  "mgmt.add_country_btn": "إضافة الدولة إلى البيانات الرئيسية",
+
+  "mgmt.countries_master": "قاعدة بيانات الدول النشطة الرئيسية",
+
+  "mgmt.countries_master_desc": "جميع عقد الدول المسجّلة المرتبطة بشبكات الفروع ودفاتر الأستاذ.",
+
+  "mgmt.search_country_ph": "ابحث عن دولة أو عملة...",
+
+  "mgmt.col_country": "اسم الدولة",
+
+  "mgmt.col_iso": "ISO",
+
+  "mgmt.col_currency": "العملة",
+
+  "mgmt.col_status": "الحالة",
+
+  "mgmt.loading_countries": "جارٍ تحميل الدول الحية من قاعدة البيانات...",
+
+  "mgmt.no_country_match": "لا توجد سجلات دول تطابق بحثك.",
+
+  "mgmt.active_node": "عقدة نشطة",
+
+  "mgmt.managed_elsewhere_desc": "لهذه المجموعة من المعلمات وحدة مخصصة بها دعم كامل للإنشاء والتعديل والحذف. افتحها لإدارة هذه السجلات.",
+
+  "mgmt.open_module": "فتح الوحدة",
+
+  "mgmt.err_create_country": "فشل إنشاء الدولة",
+
+  "mgmt.err_add_country": "فشل إضافة الدولة",
+
+  "mgmt.country_added": "تمت إضافة الدولة إلى البيانات الرئيسية.",
 };
 
 const fa: Dict = {
@@ -52548,6 +52779,72 @@ const fa: Dict = {
   "setmenu.badge_superadmin": "مدیر ارشد",
   "setmenu.badge_kyc": "حسابرسی KYC",
   "setmenu.badge_5lang": "۵ زبان",
+
+  "mgmt.eyebrow": "تنظیمات و مدیریت داده‌های اصلی",
+
+  "mgmt.title": "پارامترهای مدیریت و مرکز داده‌های زنده",
+
+  "mgmt.subtitle": "ثبت پایگاه دادهٔ زنده برای کشورها و شهرها. انواع ثبت‌نام، قرارداد و سند در ماژول‌های اختصاصی خود مدیریت می‌شوند.",
+
+  "mgmt.refresh": "به‌روزرسانی داده‌ها",
+
+  "mgmt.location_topology": "توپولوژی مکان",
+
+  "mgmt.tab_countries": "کشورهای زنده",
+
+  "mgmt.tab_company_reg": "ثبت شرکت",
+
+  "mgmt.tab_contracts": "انواع قرارداد",
+
+  "mgmt.tab_documents": "پارامترهای سند",
+
+  "mgmt.add_country_node": "افزودن گرهٔ کشور جدید",
+
+  "mgmt.add_country_desc": "یک کشور را در پایگاه دادهٔ زنده برای حساب‌ها و شعب ثبت کنید.",
+
+  "mgmt.country_name": "نام کشور",
+
+  "mgmt.iso_code": "کد ISO (۲ حرفی)",
+
+  "mgmt.currency_code": "کد ارز",
+
+  "mgmt.official_email": "ایمیل رسمی",
+
+  "mgmt.admin_email": "ایمیل مدیر",
+
+  "mgmt.adding_country": "در حال افزودن کشور...",
+
+  "mgmt.add_country_btn": "افزودن کشور به داده‌های اصلی",
+
+  "mgmt.countries_master": "پایگاه دادهٔ اصلی کشورهای فعال",
+
+  "mgmt.countries_master_desc": "همهٔ گره‌های کشورهای ثبت‌شده متصل با شبکه‌های شعب و دفاتر کل.",
+
+  "mgmt.search_country_ph": "جستجوی کشور یا ارز...",
+
+  "mgmt.col_country": "نام کشور",
+
+  "mgmt.col_iso": "ISO",
+
+  "mgmt.col_currency": "ارز",
+
+  "mgmt.col_status": "وضعیت",
+
+  "mgmt.loading_countries": "در حال بارگذاری کشورهای زنده از پایگاه داده...",
+
+  "mgmt.no_country_match": "هیچ رکورد کشوری با جستجوی شما مطابقت ندارد.",
+
+  "mgmt.active_node": "گرهٔ فعال",
+
+  "mgmt.managed_elsewhere_desc": "این مجموعه پارامتر ماژول اختصاصی خود را با پشتیبانی کامل ایجاد، ویرایش و حذف دارد. برای مدیریت این رکوردها آن را باز کنید.",
+
+  "mgmt.open_module": "باز کردن ماژول",
+
+  "mgmt.err_create_country": "ایجاد کشور ناموفق بود",
+
+  "mgmt.err_add_country": "افزودن کشور ناموفق بود",
+
+  "mgmt.country_added": "کشور به داده‌های اصلی افزوده شد.",
 };
 
 const ps: Dict = {
@@ -64444,6 +64741,72 @@ const ps: Dict = {
   "setmenu.badge_superadmin": "سوپر ایډمین",
   "setmenu.badge_kyc": "د KYC پلټنه",
   "setmenu.badge_5lang": "5 ژبې",
+
+  "mgmt.eyebrow": "تنظیمات او د اصلي معلوماتو مدیریت",
+
+  "mgmt.title": "د مدیریت پیرامیټرونه او د ژوندي معلوماتو مرکز",
+
+  "mgmt.subtitle": "د هېوادونو او ښارونو لپاره د ژوندي ډیټابیس راجستر. د راجستر، تړون او سند ډولونه په خپلو ځانګړو ماډیولونو کې اداره کیږي.",
+
+  "mgmt.refresh": "معلومات تازه کړئ",
+
+  "mgmt.location_topology": "د موقعیت ټوپولوژي",
+
+  "mgmt.tab_countries": "ژوندي هېوادونه",
+
+  "mgmt.tab_company_reg": "د شرکت راجستر",
+
+  "mgmt.tab_contracts": "د تړون ډولونه",
+
+  "mgmt.tab_documents": "د سند پیرامیټرونه",
+
+  "mgmt.add_country_node": "د نوي هېواد نوډ اضافه کړئ",
+
+  "mgmt.add_country_desc": "د حسابونو او څانګو لپاره په ژوندي ډیټابیس کې یو هېواد راجستر کړئ.",
+
+  "mgmt.country_name": "د هېواد نوم",
+
+  "mgmt.iso_code": "ISO کوډ (2-توری)",
+
+  "mgmt.currency_code": "د اسعارو کوډ",
+
+  "mgmt.official_email": "رسمي بریښنالیک",
+
+  "mgmt.admin_email": "د مدیر بریښنالیک",
+
+  "mgmt.adding_country": "هېواد اضافه کیږي...",
+
+  "mgmt.add_country_btn": "هېواد اصلي معلوماتو ته اضافه کړئ",
+
+  "mgmt.countries_master": "د فعالو هېوادونو اصلي ډیټابیس",
+
+  "mgmt.countries_master_desc": "ټول راجستر شوي هېواد نوډونه چې له څانګو شبکو او لیجرونو سره تړلي دي.",
+
+  "mgmt.search_country_ph": "هېواد یا اسعارو لټون...",
+
+  "mgmt.col_country": "د هېواد نوم",
+
+  "mgmt.col_iso": "ISO",
+
+  "mgmt.col_currency": "اسعار",
+
+  "mgmt.col_status": "حالت",
+
+  "mgmt.loading_countries": "د ډیټابیس څخه ژوندي هېوادونه پورته کیږي...",
+
+  "mgmt.no_country_match": "هیڅ د هېواد ریکارډ ستاسو له لټون سره سمون نه لري.",
+
+  "mgmt.active_node": "فعال نوډ",
+
+  "mgmt.managed_elsewhere_desc": "دې پیرامیټر سیټ خپل ځانګړی ماډیول لري چې د جوړولو، سمولو او حذف بشپړ ملاتړ لري. د دې ریکارډونو د اداره کولو لپاره یې پرانیزئ.",
+
+  "mgmt.open_module": "ماډیول پرانیزئ",
+
+  "mgmt.err_create_country": "د هېواد جوړول ناکام شو",
+
+  "mgmt.err_add_country": "د هېواد اضافه کول ناکام شو",
+
+  "mgmt.country_added": "هېواد اصلي معلوماتو ته اضافه شو.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
