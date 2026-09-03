@@ -3766,6 +3766,9 @@ export type UiKey =
   | "eaud.no_edits_country" | "eaud.no_edits_month" | "eaud.edit_count" | "eaud.edits_deletes"
   | "eaud.deletion_reason" | "eaud.deleted_at" | "eaud.deleted_by" | "eaud.last_edited"
   | "eaud.entity_type" | "eaud.deleted_label"
+  | "eaud.center_title" | "eaud.center_subtitle" | "eaud.immutable_badge" | "eaud.print_report"
+  | "eaud.entries_edited_traced" | "eaud.soft_deleted_archived" | "eaud.active_branches_monitored"
+  | "eaud.unique_records" | "eaud.restored_suffix" | "eaud.col_user" | "eaud.col_role" | "eaud.col_country_branch"
   | "slstage.title" | "slstage.bl_number" | "slstage.bl_full" | "slstage.available_registry"
   | "slstage.arrived" | "slstage.delivered" | "slstage.in_transit" | "slstage.container_no"
   | "slstage.container_number" | "slstage.discharge_port" | "slstage.loading_port"
@@ -16748,6 +16751,18 @@ const en: Dict = {
   "email_acct.total_accounts": "Total Accounts",
   "email_acct.connected": "Connected",
   "email_acct.failed_incomplete": "Failed / Incomplete",
+  "eaud.center_title": "Enterprise Audit, Monitoring & Accountability Center",
+  "eaud.center_subtitle": "Multi-country audit trails, immutable version timelines, soft-delete archive, and daily branch accountability.",
+  "eaud.immutable_badge": "Immutable Audit Trail Active",
+  "eaud.print_report": "Print Report",
+  "eaud.entries_edited_traced": "Entries Edited & Traced",
+  "eaud.soft_deleted_archived": "Soft Deleted (Archived)",
+  "eaud.active_branches_monitored": "Active Branches Monitored",
+  "eaud.unique_records": "unique records",
+  "eaud.restored_suffix": "restored",
+  "eaud.col_user": "User",
+  "eaud.col_role": "Role",
+  "eaud.col_country_branch": "Country / Branch",
 };
 
 const ur: Dict = {
@@ -28554,6 +28569,18 @@ const ur: Dict = {
   "email_acct.total_accounts": "کل اکاؤنٹس",
   "email_acct.connected": "منسلک",
   "email_acct.failed_incomplete": "ناکام / نامکمل",
+  "eaud.center_title": "انٹرپرائز آڈٹ، نگرانی و جوابدہی مرکز",
+  "eaud.center_subtitle": "کثیر ملکی آڈٹ ٹریلز، ناقابلِ تبدیل ورژن ٹائم لائنز، soft-delete آرکائیو، اور روزانہ برانچ جوابدہی۔",
+  "eaud.immutable_badge": "ناقابلِ تبدیل آڈٹ ٹریل فعال",
+  "eaud.print_report": "رپورٹ پرنٹ کریں",
+  "eaud.entries_edited_traced": "ترمیم شدہ و ٹریس شدہ اندراجات",
+  "eaud.soft_deleted_archived": "نرم-حذف شدہ (آرکائیو)",
+  "eaud.active_branches_monitored": "زیرِ نگرانی فعال برانچیں",
+  "eaud.unique_records": "منفرد ریکارڈز",
+  "eaud.restored_suffix": "بحال شدہ",
+  "eaud.col_user": "صارف",
+  "eaud.col_role": "کردار",
+  "eaud.col_country_branch": "ملک / برانچ",
 };
 
 const ar: Dict = {
@@ -40362,6 +40389,18 @@ const ar: Dict = {
   "email_acct.total_accounts": "إجمالي الحسابات",
   "email_acct.connected": "متصل",
   "email_acct.failed_incomplete": "فشل / غير مكتمل",
+  "eaud.center_title": "مركز التدقيق والمراقبة والمساءلة للمؤسسة",
+  "eaud.center_subtitle": "مسارات تدقيق متعددة البلدان، وجداول زمنية غير قابلة للتغيير، وأرشيف الحذف المؤقت، والمساءلة اليومية للفروع.",
+  "eaud.immutable_badge": "سجل تدقيق غير قابل للتغيير نشط",
+  "eaud.print_report": "طباعة التقرير",
+  "eaud.entries_edited_traced": "الإدخالات المحررة والمتتبعة",
+  "eaud.soft_deleted_archived": "محذوف مؤقتًا (مؤرشف)",
+  "eaud.active_branches_monitored": "الفروع النشطة الخاضعة للمراقبة",
+  "eaud.unique_records": "سجلات فريدة",
+  "eaud.restored_suffix": "مستعاد",
+  "eaud.col_user": "المستخدم",
+  "eaud.col_role": "الدور",
+  "eaud.col_country_branch": "البلد / الفرع",
 };
 
 const fa: Dict = {
@@ -52169,6 +52208,18 @@ const fa: Dict = {
   "email_acct.total_accounts": "مجموع حساب‌ها",
   "email_acct.connected": "متصل",
   "email_acct.failed_incomplete": "ناموفق / ناقص",
+  "eaud.center_title": "مرکز حسابرسی، نظارت و پاسخگویی سازمانی",
+  "eaud.center_subtitle": "مسیرهای حسابرسی چندکشوری، جدول‌های زمانی نسخهٔ تغییرناپذیر، بایگانی حذف نرم، و پاسخگویی روزانهٔ شعب.",
+  "eaud.immutable_badge": "مسیر حسابرسی تغییرناپذیر فعال",
+  "eaud.print_report": "چاپ گزارش",
+  "eaud.entries_edited_traced": "ورودی‌های ویرایش و ردیابی‌شده",
+  "eaud.soft_deleted_archived": "حذف نرم (بایگانی‌شده)",
+  "eaud.active_branches_monitored": "شعب فعال تحت نظارت",
+  "eaud.unique_records": "رکوردهای یکتا",
+  "eaud.restored_suffix": "بازیابی‌شده",
+  "eaud.col_user": "کاربر",
+  "eaud.col_role": "نقش",
+  "eaud.col_country_branch": "کشور / شعبه",
 };
 
 const ps: Dict = {
@@ -63982,6 +64033,18 @@ const ps: Dict = {
   "email_acct.total_accounts": "ټول حسابونه",
   "email_acct.connected": "نښلول شوی",
   "email_acct.failed_incomplete": "ناکام / نیمګړی",
+  "eaud.center_title": "د تصدۍ پلټنه، څارنه او د حساب ورکونې مرکز",
+  "eaud.center_subtitle": "ډیر هېوادنۍ پلټنې، د نه بدلېدونکو نسخو مهالوېشونه، د نرم-حذف آرشیف، او د څانګو ورځنۍ حساب ورکونه.",
+  "eaud.immutable_badge": "د نه بدلېدونکې پلټنې تسلسل فعال",
+  "eaud.print_report": "راپور چاپ کړئ",
+  "eaud.entries_edited_traced": "سمون شوي او تعقیب شوي ننوتنې",
+  "eaud.soft_deleted_archived": "نرم-حذف شوي (آرشیف)",
+  "eaud.active_branches_monitored": "د څارنې لاندې فعالې څانګې",
+  "eaud.unique_records": "بېلابېل ریکارډونه",
+  "eaud.restored_suffix": "بیا رغول شوي",
+  "eaud.col_user": "کاروونکی",
+  "eaud.col_role": "رول",
+  "eaud.col_country_branch": "هېواد / څانګه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

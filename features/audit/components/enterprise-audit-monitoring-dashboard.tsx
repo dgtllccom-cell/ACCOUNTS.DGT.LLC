@@ -249,19 +249,19 @@ export function EnterpriseAuditMonitoringDashboard() {
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Layers className="h-6 w-6 text-sky-600" />
-            Enterprise Audit, Monitoring & Accountability Center
+            {tt("eaud.center_title", "Enterprise Audit, Monitoring & Accountability Center")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Multi-country audit trails, immutable version timelines, soft-delete archive, and daily branch accountability.
+            {tt("eaud.center_subtitle", "Multi-country audit trails, immutable version timelines, soft-delete archive, and daily branch accountability.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300 dark:bg-sky-950/40">
-            Immutable Audit Trail Active
+            {tt("eaud.immutable_badge", "Immutable Audit Trail Active")}
           </Badge>
           <Button variant="outline" size="sm" onClick={handlePrintReport} className="gap-1">
             <Printer className="h-4 w-4" />
-            Print Report
+            {tt("eaud.print_report", "Print Report")}
           </Button>
         </div>
       </div>
@@ -290,36 +290,36 @@ export function EnterpriseAuditMonitoringDashboard() {
         <Card className="border-blue-200 dark:border-blue-900 bg-blue-50/40 dark:bg-blue-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase text-blue-800 dark:text-blue-300">
-              Entries Edited & Traced
+              {tt("eaud.entries_edited_traced", "Entries Edited & Traced")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{monthlyEdits ? (monthlyEdits.stats?.total_edits ?? 0) : "—"}</div>
-            <p className="text-xs text-muted-foreground">{monthlyEdits?.stats?.unique_entities_edited || 0} unique records</p>
+            <p className="text-xs text-muted-foreground">{monthlyEdits?.stats?.unique_entities_edited || 0} {tt("eaud.unique_records", "unique records")}</p>
           </CardContent>
         </Card>
 
         <Card className="border-rose-200 dark:border-rose-900 bg-rose-50/40 dark:bg-rose-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase text-rose-800 dark:text-rose-300">
-              Soft Deleted (Archived)
+              {tt("eaud.soft_deleted_archived", "Soft Deleted (Archived)")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-rose-600">{monthlyEdits ? (monthlyEdits.stats?.total_deleted ?? 0) : "—"}</div>
-            <p className="text-xs text-muted-foreground">{monthlyEdits?.stats?.total_restored || 0} restored</p>
+            <p className="text-xs text-muted-foreground">{monthlyEdits?.stats?.total_restored || 0} {tt("eaud.restored_suffix", "restored")}</p>
           </CardContent>
         </Card>
 
         <Card className="border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase text-emerald-800 dark:text-emerald-300">
-              Active Branches Monitored
+              {tt("eaud.active_branches_monitored", "Active Branches Monitored")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-700">{dailyBranchData ? (dailyBranchData.totals?.totalBranches ?? 0) : "—"}</div>
-            <p className="text-xs text-muted-foreground">Live Global Feed</p>
+            <p className="text-xs text-muted-foreground">{tt("eaud.live_tab", "Live Global Feed")}</p>
           </CardContent>
         </Card>
       </div>
@@ -709,13 +709,13 @@ export function EnterpriseAuditMonitoringDashboard() {
                   <table className="w-full text-xs text-left border-collapse">
                     <thead className="bg-muted text-muted-foreground font-semibold">
                       <tr>
-                        <th className="p-2.5 border-b">User</th>
-                        <th className="p-2.5 border-b">Role</th>
-                        <th className="p-2.5 border-b">Country / Branch</th>
-                        <th className="p-2.5 border-b text-center">Entries Created</th>
-                        <th className="p-2.5 border-b text-center">Entries Edited</th>
-                        <th className="p-2.5 border-b text-center">Entries Deleted</th>
-                        <th className="p-2.5 border-b text-right">Status</th>
+                        <th className="p-2.5 border-b">{tt("eaud.col_user", "User")}</th>
+                        <th className="p-2.5 border-b">{tt("eaud.col_role", "Role")}</th>
+                        <th className="p-2.5 border-b">{tt("eaud.col_country_branch", "Country / Branch")}</th>
+                        <th className="p-2.5 border-b text-center">{tt("eaud.entries_created", "Entries Created")}</th>
+                        <th className="p-2.5 border-b text-center">{tt("eaud.entries_edited", "Entries Edited")}</th>
+                        <th className="p-2.5 border-b text-center">{tt("eaud.entries_deleted", "Entries Deleted")}</th>
+                        <th className="p-2.5 border-b text-right">{tt("common.status", "Status")}</th>
                       </tr>
                     </thead>
                     <tbody>

@@ -442,19 +442,19 @@ export default function HandoverReportPage() {
 
           {/* Access Table */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="max-h-[68vh] overflow-auto print:max-h-none print:overflow-visible">
               <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold text-[11px]">
+                <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold text-[11px] shadow-sm">
                   <tr>
-                    <th className="p-3">Country</th>
-                    <th className="p-3">Main Branch</th>
-                    <th className="p-3">City Branch</th>
-                    <th className="p-3">User / Person</th>
-                    <th className="p-3">Role</th>
-                    <th className="p-3">Username / Login ID</th>
-                    <th className="p-3">Assigned Permissions</th>
-                    <th className="p-3">Vault Ref ID</th>
-                    <th className="p-3">Status</th>
+                    <th className="whitespace-nowrap p-3">Country</th>
+                    <th className="whitespace-nowrap p-3">Main Branch</th>
+                    <th className="whitespace-nowrap p-3">City Branch</th>
+                    <th className="whitespace-nowrap p-3">User / Person</th>
+                    <th className="whitespace-nowrap p-3">Role</th>
+                    <th className="whitespace-nowrap p-3">Username / Login ID</th>
+                    <th className="whitespace-nowrap p-3">Assigned Permissions</th>
+                    <th className="whitespace-nowrap p-3">Vault Ref ID</th>
+                    <th className="whitespace-nowrap p-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -483,9 +483,26 @@ export default function HandoverReportPage() {
                             {entry.role}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-[11px] text-blue-700 dark:text-blue-300 font-semibold align-middle break-all">{entry.username}</td>
-                        <td className="p-3 text-slate-600 dark:text-slate-400 text-[11px] max-w-xs align-middle leading-relaxed break-words">{entry.assignedPermissions}</td>
-                        <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/60 rounded px-2 py-1 align-middle">
+                        <td className="max-w-[160px] truncate p-3 font-mono text-[11px] text-blue-700 dark:text-blue-300 font-semibold align-middle" title={entry.username}>{entry.username}</td>
+                        <td className="p-3 align-top text-[11px] text-slate-600 dark:text-slate-400" title={entry.assignedPermissions}>
+                          {(() => {
+                            const list = String(entry.assignedPermissions || "").split(/[,\n]/).map((s) => s.trim()).filter(Boolean);
+                            if (list.length === 0) return <span className="text-slate-400">—</span>;
+                            return (
+                              <details className="print:open">
+                                <summary className="cursor-pointer list-none font-semibold text-slate-700 dark:text-slate-300 marker:content-none">
+                                  {list.length} permission{list.length === 1 ? "" : "s"} assigned
+                                </summary>
+                                <div className="mt-1 flex max-w-[260px] flex-wrap gap-1">
+                                  {list.map((p, i) => (
+                                    <span key={i} className="rounded bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-400">{p}</span>
+                                  ))}
+                                </div>
+                              </details>
+                            );
+                          })()}
+                        </td>
+                        <td className="max-w-[150px] truncate p-3 font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/60 rounded px-2 py-1 align-middle" title={entry.passwordVaultRef}>
                           {entry.passwordVaultRef}
                         </td>
                         <td className="p-3 align-middle">
