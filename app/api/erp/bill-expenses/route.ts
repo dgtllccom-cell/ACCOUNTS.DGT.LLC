@@ -35,6 +35,11 @@ export async function GET(request: NextRequest) {
     );
 
     const moduleFilter = MODULES.includes((sp.get("module") ?? "") as any) ? sp.get("module") : null;
+    // `modules=a,b,c` — restrict to a set (used by the top-menu Purchase/Sales sections)
+    const modulesSet = (sp.get("modules") || "")
+      .split(",")
+      .map((m) => m.trim())
+      .filter((m): m is (typeof MODULES)[number] => MODULES.includes(m as any));
     const statusFilter = sp.get("status") && sp.get("status") !== "all" ? sp.get("status") : null;
     const eligibility = sp.get("eligibility") || "active";
     const q = (sp.get("q") || "").trim();
@@ -59,6 +64,7 @@ export async function GET(request: NextRequest) {
         where be.deleted_at is null
           ${eligibility === "all" ? sql`` : sql`and be.eligibility = ${eligibility}`}
           ${moduleFilter ? sql`and be.source_module = ${moduleFilter}` : sql``}
+          ${modulesSet.length ? sql`and be.source_module = any(${modulesSet})` : sql``}
           ${statusFilter ? sql`and be.status = ${statusFilter}` : sql``}
           ${effectiveCountryId ? sql`and be.country_id = ${effectiveCountryId}` : sql``}
           ${effectiveBranchId ? sql`and be.city_branch_id = ${effectiveBranchId}` : sql``}

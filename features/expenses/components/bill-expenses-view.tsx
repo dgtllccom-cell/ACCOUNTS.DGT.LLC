@@ -65,10 +65,21 @@ function escapeHtml(v: unknown) {
   return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-export function BillExpensesView({ lang: langProp }: { lang?: string }) {
+type BcpSection = "all" | "purchase" | "sales" | "expenses";
+
+/** Which source modules each top-menu section shows. */
+const SECTION_MODULES: Record<BcpSection, SourceModule[] | null> = {
+  all: null,
+  purchase: ["purchase_booking", "local_purchase", "shipping_bl", "clearing_bill"],
+  sales: ["sales_booking", "local_sales"],
+  expenses: null // consolidated: bill_expenses register + Daily-Payment expenses_bills
+};
+
+export function BillExpensesView({ lang: langProp, section = "all" }: { lang?: string; section?: BcpSection }) {
   const s = useErpScreen("bexp", langProp);
   const lang = s.lang;
   const scope = useErpScope();
+  const sectionModules = SECTION_MODULES[section];
 
   const [rows, setRows] = useState<BillRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,11 +96,14 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
     setPortalNode(document.getElementById("erp-page-actions-slot"));
   }, []);
 
+  const [expensesBills, setExpensesBills] = useState<any[]>([]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const qs = new URLSearchParams();
       if (moduleTab !== "all") qs.set("module", moduleTab);
+      else if (sectionModules) qs.set("modules", sectionModules.join(","));
       if (statusFilter !== "all") qs.set("status", statusFilter);
       if (search.trim()) qs.set("q", search.trim());
       const res = await fetch(`/api/erp/bill-expenses?${qs.toString()}`);
@@ -98,16 +112,23 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
         setRows(j.data.rows || []);
         setSummary(j.data.summary || null);
       }
+      // Consolidated "Expenses" section — also pull the Daily-Payment expenses_bills (read-only)
+      if (section === "expenses") {
+        const eb = await fetch(`/api/erp/bill-expenses/expenses-bills${search.trim() ? `?q=${encodeURIComponent(search.trim())}` : ""}`)
+          .then((r) => r.json())
+          .catch(() => null);
+        setExpensesBills(eb?.ok ? (eb.data.rows || []) : []);
+      }
     } catch {
       /* keep last */
     } finally {
       setLoading(false);
     }
-  }, [moduleTab, statusFilter, search]);
+  }, [moduleTab, statusFilter, search, section, sectionModules]);
 
   useEffect(() => {
     load();
-  }, [moduleTab, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [moduleTab, statusFilter, section]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const moduleLabel = useCallback(
     (m: SourceModule) =>
@@ -245,7 +266,7 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
         <Card className="shadow-sm">
           <CardContent className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-1.5">
-              {(["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill"] as const).map((m) => (
+              {(["all", ...(sectionModules ?? ["purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill"])] as Array<"all" | SourceModule>).map((m) => (
                 <button
                   key={m}
                   onClick={() => setModuleTab(m)}
@@ -360,6 +381,60 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
             </table>
           </div>
         </Card>
+
+        {/* Consolidated view — Daily-Payment Expenses Bills (read-only, no re-posting here) */}
+        {section === "expenses" && (
+          <Card className="mt-4 overflow-hidden shadow-sm">
+            <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+              <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
+                <Receipt className="h-3.5 w-3.5" /> {s.t("daily_expenses_bills", "Daily Payment — Expenses Bills")}
+                <span className="ml-1 rounded bg-slate-200 px-1.5 text-[10px] text-slate-500 dark:bg-slate-700">{expensesBills.length}</span>
+              </CardTitle>
+            </CardHeader>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-900/40">
+                  <tr>
+                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</th>
+                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</th>
+                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</th>
+                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
+                    <th className="px-3 py-2 text-right font-semibold">{s.t("f_grand_amount", "Grand Amount")}</th>
+                    <th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</th>
+                    <th className="px-3 py-2 text-center font-semibold w-8" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {expensesBills.length === 0 ? (
+                    <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-400">{s.t("no_daily_expenses", "No Daily-Payment expense bills in your scope.")}</td></tr>
+                  ) : (
+                    expensesBills.map((b: any) => (
+                      <tr key={b.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                        <td className="px-3 py-2 font-mono font-semibold">{b.billSerial || "—"}</td>
+                        <td className="px-3 py-2 text-slate-500">{b.billTitle || "—"}</td>
+                        <td className="px-3 py-2">{b.billDate ? new Date(b.billDate).toLocaleDateString("en-GB") : "—"}</td>
+                        <td className="px-3 py-2">{b.branchLabel || "—"}</td>
+                        <td className="px-3 py-2 text-right font-mono font-bold">{b.currency || ""} {money(b.grandTotal)}</td>
+                        <td className="px-3 py-2 text-center">
+                          {b.transferredToRoznamcha ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                              <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 dark:bg-slate-800">{s.t("posting_unposted", "Not posted")}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <a href="/dashboard/roznamcha/expenses-bill" className="text-[10px] text-blue-600 hover:underline dark:text-blue-400">{s.t("open", "Open")}</a>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
       </div>
 
       {openId && (

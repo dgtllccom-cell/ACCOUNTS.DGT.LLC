@@ -521,6 +521,40 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "bill-cost-profit",
+    labelKey: "nav.bill_cost_profit",
+    iconKey: "calculator",
+    href: "/dashboard/bill-cost-profit" as Route,
+    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+    permission: { resource: "reports", action: "read" },
+    children: [
+      {
+        key: "bcp-all",
+        labelKey: "nav.bcp_overview",
+        iconKey: "bar-chart-3",
+        href: "/dashboard/bill-cost-profit" as Route
+      },
+      {
+        key: "bcp-purchase",
+        labelKey: "nav.bcp_purchase",
+        iconKey: "shopping-bag",
+        href: "/dashboard/bill-cost-profit/purchase" as Route
+      },
+      {
+        key: "bcp-sales",
+        labelKey: "nav.bcp_sales",
+        iconKey: "gantt",
+        href: "/dashboard/bill-cost-profit/sales" as Route
+      },
+      {
+        key: "bcp-expenses",
+        labelKey: "nav.bcp_expenses",
+        iconKey: "coins",
+        href: "/dashboard/bill-cost-profit/expenses" as Route
+      }
+    ]
+  },
+  {
     key: "journal-stock",
     labelKey: "nav.journal_stock",
     iconKey: "clipboard-list",
@@ -1534,6 +1568,7 @@ function impliedPermission(node: SidebarNode): PermissionRequirement | null {
   if (href.includes("/roznamcha/")) return { resource: "roznamcha", action: "read" };
 
   if (href.includes("/expenses/bill-expenses")) return { resource: "reports", action: "read" };
+  if (href.includes("/bill-cost-profit")) return { resource: "reports", action: "read" };
   if (href.includes("/user-tasks")) return { resource: "reports", action: "read" };
   if (href.includes("/purchase/")) return { resource: "purchases", action: key.includes("report") ? "read" : "read" };
   if (href.includes("/sales/")) return { resource: "sales", action: "read" };

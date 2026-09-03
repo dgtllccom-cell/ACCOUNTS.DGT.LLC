@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "nav.bill_cost_profit"
+  | "nav.bcp_overview"
+  | "nav.bcp_purchase"
+  | "nav.bcp_sales"
+  | "nav.bcp_expenses"
+  | "bexp.daily_expenses_bills"
+  | "bexp.no_daily_expenses"
+  | "bexp.posting_unposted"
+  | "bexp.open"
   | "bexp.f_posting"
   | "bexp.posting_posted"
   | "bexp.posting_view_journal"
@@ -17893,6 +17902,33 @@ const en: Dict = {
 
 
 
+
+
+  "nav.bill_cost_profit": "Bill Cost, Expenses & Profit",
+
+
+  "nav.bcp_overview": "Overview — All Bills",
+
+
+  "nav.bcp_purchase": "Purchase Bills",
+
+
+  "nav.bcp_sales": "Sales Bills",
+
+
+  "nav.bcp_expenses": "Expenses",
+
+
+  "bexp.daily_expenses_bills": "Daily Payment — Expenses Bills",
+
+
+  "bexp.no_daily_expenses": "No Daily-Payment expense bills in your scope.",
+
+
+  "bexp.posting_unposted": "Not posted",
+
+
+  "bexp.open": "Open",
   "bexp.f_posting": "Accounting",
 
 
@@ -31731,6 +31767,33 @@ const ur: Dict = {
 
 
 
+
+
+  "nav.bill_cost_profit": "بل لاگت، اخراجات اور منافع",
+
+
+  "nav.bcp_overview": "جائزہ — تمام بل",
+
+
+  "nav.bcp_purchase": "پرچیز بل",
+
+
+  "nav.bcp_sales": "سیلز بل",
+
+
+  "nav.bcp_expenses": "اخراجات",
+
+
+  "bexp.daily_expenses_bills": "ڈیلی پیمنٹ — اخراجات بل",
+
+
+  "bexp.no_daily_expenses": "آپ کے دائرہ کار میں کوئی ڈیلی پیمنٹ اخراجات بل نہیں۔",
+
+
+  "bexp.posting_unposted": "پوسٹ نہیں ہوا",
+
+
+  "bexp.open": "کھولیں",
   "bexp.f_posting": "اکاؤنٹنگ",
 
 
@@ -45571,6 +45634,33 @@ const ar: Dict = {
 
 
 
+
+
+  "nav.bill_cost_profit": "تكلفة الفاتورة والمصروفات والربح",
+
+
+  "nav.bcp_overview": "نظرة عامة — كل الفواتير",
+
+
+  "nav.bcp_purchase": "فواتير الشراء",
+
+
+  "nav.bcp_sales": "فواتير المبيعات",
+
+
+  "nav.bcp_expenses": "المصروفات",
+
+
+  "bexp.daily_expenses_bills": "الدفع اليومي — فواتير المصروفات",
+
+
+  "bexp.no_daily_expenses": "لا توجد فواتير مصروفات دفع يومي في نطاقك.",
+
+
+  "bexp.posting_unposted": "غير مُرحّل",
+
+
+  "bexp.open": "فتح",
   "bexp.f_posting": "المحاسبة",
 
 
@@ -59410,6 +59500,33 @@ const fa: Dict = {
 
 
 
+
+
+  "nav.bill_cost_profit": "هزینه فاکتور، مخارج و سود",
+
+
+  "nav.bcp_overview": "نمای کلی — همه فاکتورها",
+
+
+  "nav.bcp_purchase": "فاکتورهای خرید",
+
+
+  "nav.bcp_sales": "فاکتورهای فروش",
+
+
+  "nav.bcp_expenses": "مخارج",
+
+
+  "bexp.daily_expenses_bills": "پرداخت روزانه — فاکتورهای مخارج",
+
+
+  "bexp.no_daily_expenses": "هیچ فاکتور مخارج پرداخت روزانه‌ای در محدوده شما نیست.",
+
+
+  "bexp.posting_unposted": "ثبت نشده",
+
+
+  "bexp.open": "باز کردن",
   "bexp.f_posting": "حسابداری",
 
 
@@ -73255,6 +73372,33 @@ const ps: Dict = {
 
 
 
+
+
+  "nav.bill_cost_profit": "د بل لګښت، لګښتونه او ګټه",
+
+
+  "nav.bcp_overview": "کتنه — ټول بلونه",
+
+
+  "nav.bcp_purchase": "د پیرود بلونه",
+
+
+  "nav.bcp_sales": "د پلور بلونه",
+
+
+  "nav.bcp_expenses": "لګښتونه",
+
+
+  "bexp.daily_expenses_bills": "ورځنۍ تادیه — د لګښتونو بلونه",
+
+
+  "bexp.no_daily_expenses": "ستاسو په ساحه کې د ورځنۍ تادیې د لګښتونو بل نشته.",
+
+
+  "bexp.posting_unposted": "نه دی پوسټ شوی",
+
+
+  "bexp.open": "پرانیزئ",
   "bexp.f_posting": "حساب داري",
 
 
