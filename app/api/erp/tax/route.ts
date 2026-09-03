@@ -18,16 +18,6 @@ const taxSchema = z.object({
   isActive: z.boolean().default(true)
 });
 
-// Default initial tax presets for major ERP countries (fallback if DB table not populated)
-const DEFAULT_TAX_PRESETS: Record<string, any[]> = {
-  // Common fallback presets if no database tax settings exist yet
-  default: [
-    { id: "tax-preset-vat5", taxName: "Value Added Tax (VAT)", taxCode: "VAT5", taxRate: 5.0, appliesTo: "both", isDefault: true, isActive: true },
-    { id: "tax-preset-gst18", taxName: "General Sales Tax (GST)", taxCode: "GST18", taxRate: 18.0, appliesTo: "both", isDefault: false, isActive: true },
-    { id: "tax-preset-zero", taxName: "Zero Rated Tax", taxCode: "ZERO", taxRate: 0.0, appliesTo: "both", isDefault: false, isActive: true }
-  ]
-};
-
 /**
  * GET /api/erp/tax?countryId=<uuid>
  *
@@ -50,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Query country_tax_settings table
     let query = admin
       .from("country_tax_settings")
-      .select("id, country_id, tax_name, tax_code, tax_rate, trn_number, applies_to, is_default, is_active, created_at, updated_at, countries(id, name, code, currency_code)")
+      .select("id, country_id, tax_name, tax_code, tax_rate, trn_number, applies_to, is_default, is_active, created_at, updated_at, countries(id, name, iso2, currency_code)")
       .order("created_at", { ascending: false });
 
     if (effectiveCountryId) {
@@ -60,7 +50,10 @@ export async function GET(request: NextRequest) {
     const { data: taxRows, error } = await query;
 
     if (error) {
-      console.warn("[api/erp/tax] DB error or table missing, returning structured fallbacks:", error.message);
+      // country_tax_settings is created by migration 20261029. A hard error here
+      // means the schema is out of date on this environment — surface it, do not
+      // silently serve preset data as if it were real configuration.
+      throw new Error(`Tax settings unavailable: ${error.message}`);
     }
 
     let taxes = (taxRows ?? []).map((t: any) => ({
@@ -76,14 +69,6 @@ export async function GET(request: NextRequest) {
       isActive: Boolean(t.is_active),
       createdAt: t.created_at
     }));
-
-    // If no custom tax records found for requested country, return default presets with countryId populated
-    if (taxes.length === 0 && effectiveCountryId) {
-      taxes = DEFAULT_TAX_PRESETS.default.map((preset) => ({
-        ...preset,
-        countryId: effectiveCountryId
-      }));
-    }
 
     return apiOk({
       scope: {
@@ -112,8 +97,9 @@ export async function POST(request: NextRequest) {
 
     const scope = resolveReportScope(session);
 
-    // Super admin can edit any country; country admin locked to theirs
-    if (scope.level !== "global" && scope.countryId && parsed.countryId !== scope.countryId) {
+    // Super admin can edit any country; a scoped admin may only touch their own
+    // country — and a scoped session with no country resolved cannot write at all.
+    if (scope.level !== "global" && (!scope.countryId || parsed.countryId !== scope.countryId)) {
       return handleApiError(new Error("You do not have permission to manage tax settings for this country."));
     }
 
@@ -154,24 +140,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.warn("[api/erp/tax] DB upsert warning:", error.message);
-      // Fallback return if table not migrated yet
-      return apiOk({
-        saved: true,
-        tax: {
-          id: parsed.id || `tax-${Date.now()}`,
-          countryId: parsed.countryId,
-          taxName: parsed.taxName,
-          taxCode: parsed.taxCode,
-          taxRate: parsed.taxRate,
-          trnNumber: parsed.trnNumber,
-          appliesTo: parsed.appliesTo,
-          isDefault: parsed.isDefault,
-          isActive: parsed.isActive,
-          translations: nameTranslations
-        },
-        note: "Tax setting saved in session state (table migration pending)"
-      });
+      // Do not pretend the save succeeded — the caller must know it failed.
+      throw new Error(`Could not save tax setting: ${error.message}`);
     }
 
     return apiCreated({
@@ -208,10 +178,28 @@ export async function DELETE(request: NextRequest) {
     }
 
     const admin = createSupabaseAdminClient() as any;
+    const scope = resolveReportScope(session);
+
+    // A scoped admin may only delete a row that belongs to their own country —
+    // never one addressed only by id.
+    if (scope.level !== "global") {
+      if (!scope.countryId) {
+        return handleApiError(new Error("You do not have permission to delete tax settings."));
+      }
+      const { data: row } = await admin
+        .from("country_tax_settings")
+        .select("country_id")
+        .eq("id", taxId)
+        .maybeSingle();
+      if (row && row.country_id !== scope.countryId) {
+        return handleApiError(new Error("You do not have permission to delete this tax setting."));
+      }
+    }
+
     const { error } = await admin.from("country_tax_settings").delete().eq("id", taxId);
 
     if (error) {
-      console.warn("[api/erp/tax] Delete warning:", error.message);
+      throw new Error(`Could not delete tax setting: ${error.message}`);
     }
 
     return apiOk({ deleted: true, id: taxId });
