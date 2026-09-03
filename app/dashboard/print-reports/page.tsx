@@ -186,7 +186,7 @@ export default function PrintReportsHubPage() {
       const data: ActivityData = (json && typeof json === "object" && "data" in json) ? json.data : json;
       setActivityData(data);
     } catch (e: any) {
-      setActivityError(e.message || "Failed to load activity summary");
+      setActivityError(e.message || tp("prep.err_activity", "Failed to load activity summary"));
     } finally {
       setActivityLoading(false);
     }
@@ -1084,15 +1084,15 @@ export default function PrintReportsHubPage() {
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
             <Button type="button" variant={viewMode === "table" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("table")} className={`h-8 text-xs font-bold gap-1.5 px-3 rounded-lg ${viewMode === "table" ? "bg-blue-600 text-white shadow-xs" : "text-slate-600 dark:text-slate-300"}`}>
-              <TableIcon className="h-3.5 w-3.5" /> Table View
+              <TableIcon className="h-3.5 w-3.5" /> {tp("prep.table_view", "Table View")}
             </Button>
             <Button type="button" variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")} className={`h-8 text-xs font-bold gap-1.5 px-3 rounded-lg ${viewMode === "grid" ? "bg-blue-600 text-white shadow-xs" : "text-slate-600 dark:text-slate-300"}`}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Grid Cards
+              <LayoutGrid className="h-3.5 w-3.5" /> {tp("prep.grid_cards", "Grid Cards")}
             </Button>
           </div>
 
           <Button type="button" variant="outline" size="sm" onClick={() => { void fetchActivitySummary(); void fetchLiveData(); }} className="h-9 text-xs font-semibold">
-            <RefreshCcw className={`mr-1.5 h-3.5 w-3.5 text-slate-600 ${loading || activityLoading ? "animate-spin" : ""}`} /> Refresh All
+            <RefreshCcw className={`mr-1.5 h-3.5 w-3.5 text-slate-600 ${loading || activityLoading ? "animate-spin" : ""}`} /> {tp("prep.refresh_all", "Refresh All")}
           </Button>
         </div>
       </div>
@@ -1136,22 +1136,22 @@ export default function PrintReportsHubPage() {
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           <div className="relative min-w-[240px] flex-1 max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search report name, category, or description..." className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs font-medium text-slate-900 outline-none focus:border-blue-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-white transition" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={tp("prep.search_ph", "Search report name, category, or description...")} className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs font-medium text-slate-900 outline-none focus:border-blue-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-white transition" />
           </div>
 
           <select value={selectedCountry} onChange={(e) => { setSelectedCountry(e.target.value); setSelectedBranch("All Branches"); }} className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
-            {countries.map(c => <option key={c} value={c}>{c}</option>)}
+            {countries.map(c => <option key={c} value={c}>{c === "All Countries" ? tp("prep.all_countries", "All Countries") : c}</option>)}
           </select>
 
           <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
-            {branchNames.map(b => <option key={b} value={b}>{b}</option>)}
+            {branchNames.map(b => <option key={b} value={b}>{b === "All Branches" ? tp("prep.all_branches", "All Branches") : b}</option>)}
           </select>
         </div>
 
         <div className="text-[11px] font-bold text-slate-500">
-          Showing <span className="text-slate-900 dark:text-white font-extrabold">{filteredCards.length}</span> of {reportCards.length} Reports
+          {tp("prep.showing", "Showing")} <span className="text-slate-900 dark:text-white font-extrabold">{filteredCards.length}</span> {tp("prep.of_word", "of")} {reportCards.length} {tp("prep.reports_word", "Reports")}
           <span className="mx-2 text-slate-300">|</span>
-          <span className="text-emerald-600 font-extrabold">{orders.length + salesOrders.length + roznamchaEntries.length}</span> live records loaded
+          <span className="text-emerald-600 font-extrabold">{orders.length + salesOrders.length + roznamchaEntries.length}</span> {tp("prep.live_records_loaded", "live records loaded")}
         </div>
       </div>
 
@@ -1166,9 +1166,9 @@ export default function PrintReportsHubPage() {
                   <Th className="px-4 py-3 min-w-[200px]">Report / Form Name</Th>
                   <Th className="px-3 py-3">Assigned Country</Th>
                   <Th className="px-3 py-3 min-w-[140px]">Branch Name & Code</Th>
-                  <Th className="px-3 py-3 min-w-[140px]">Records in Scope</Th>
+                  <Th className="px-3 py-3 min-w-[140px]">{tp("prep.records_in_scope", "Records in Scope")}</Th>
                   <Th className="px-3 py-3 min-w-[130px]">Last Active Time</Th>
-                  <Th className="px-3 py-3 text-center">Active Users</Th>
+                  <Th className="px-3 py-3 text-center">{tp("prep.active_users", "Active Users")}</Th>
                   <Th className="px-3 py-3 text-center w-12">Actions (•••)</Th>
                 </tr>
               </thead>
@@ -1193,7 +1193,7 @@ export default function PrintReportsHubPage() {
                                 ? "bg-rose-500 text-white hover:bg-rose-600"
                                 : "bg-blue-600 text-white hover:bg-blue-700"
                             )}
-                            title={isExpanded ? "Collapse Country Branch Table" : "Expand Country Branch Table"}
+                            title={isExpanded ? tp("prep.collapse_branch_table", "Collapse Country Branch Table") : tp("prep.expand_branch_table", "Expand Country Branch Table")}
                           >
                             {isExpanded ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                           </button>
@@ -1228,7 +1228,7 @@ export default function PrintReportsHubPage() {
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                             <Clock className="h-3 w-3 text-slate-400 shrink-0" />
-                            <span>{card.dataCount > 0 ? `${card.dataCount} record${card.dataCount === 1 ? "" : "s"}` : "No data"}</span>
+                            <span>{card.dataCount > 0 ? `${card.dataCount} ${tp("prep.records_word", "records")}` : tp("prep.no_data", "No data")}</span>
                           </div>
                         </td>
 
@@ -1240,7 +1240,7 @@ export default function PrintReportsHubPage() {
                         {/* Active Users Count */}
                         <td className="px-3 py-3 text-center">
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-200 dark:border-emerald-800">
-                            <UserCheck className="h-3 w-3" /> {card.activeUsersCount} Active
+                            <UserCheck className="h-3 w-3" /> {card.activeUsersCount} {tp("common.active", "Active")}
                           </span>
                         </td>
 
@@ -1263,28 +1263,28 @@ export default function PrintReportsHubPage() {
                                 onClick={() => { card.onPrint(); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-600 transition-colors"
                               >
-                                <Printer className="h-3.5 w-3.5 text-blue-600" /> Open & Print A4 (PDF)
+                                <Printer className="h-3.5 w-3.5 text-blue-600" /> {tp("prep.open_print_a4", "Open & Print A4 (PDF)")}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => { card.onPrint(); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950 hover:text-emerald-600 transition-colors"
                               >
-                                <Download className="h-3.5 w-3.5 text-emerald-600" /> Save PDF Document
+                                <Download className="h-3.5 w-3.5 text-emerald-600" /> {tp("prep.save_pdf_doc", "Save PDF Document")}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => { card.onPrint(); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-950 hover:text-teal-600 transition-colors"
                               >
-                                <FileSpreadsheet className="h-3.5 w-3.5 text-teal-600" /> Export to Excel
+                                <FileSpreadsheet className="h-3.5 w-3.5 text-teal-600" /> {tp("prep.export_excel", "Export to Excel")}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => { card.onPrint(); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1 pt-1.5"
                               >
-                                <Eye className="h-3.5 w-3.5 text-indigo-600" /> View Table Details
+                                <Eye className="h-3.5 w-3.5 text-indigo-600" /> {tp("prep.view_table_details", "View Table Details")}
                               </button>
                             </div>
                           )}
@@ -1302,10 +1302,10 @@ export default function PrintReportsHubPage() {
                                 <div className="p-1.5 rounded-lg bg-blue-600 text-white"><Timer className="h-4 w-4" /></div>
                                 <div>
                                   <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                                    {card.dataCount > 0 ? `${card.dataCount} live record${card.dataCount === 1 ? "" : "s"} ready for this report` : "Waiting for data — this report will populate once records exist in scope"}
+                                    {card.dataCount > 0 ? `${card.dataCount} ${tp("prep.live_records_ready", "live records ready for this report")}` : tp("prep.waiting_for_data", "Waiting for data — this report will populate once records exist in scope")}
                                   </span>
                                   <span className="text-[10px] text-slate-500 font-semibold">
-                                    Last activity: {card.lastActiveTime}
+                                    {tp("prep.last_activity", "Last activity:")} {card.lastActiveTime}
                                   </span>
                                 </div>
                               </div>
@@ -1409,7 +1409,7 @@ export default function PrintReportsHubPage() {
                 </div>
                 <div className="p-4 pt-0 gap-2 flex flex-col border-t border-slate-100 dark:border-slate-800/60 mt-2">
                   <Button type="button" onClick={card.onPrint} className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2">
-                    <Printer className="h-4 w-4" /> Open Preview & Print Report
+                    <Printer className="h-4 w-4" /> {tp("prep.open_preview_print", "Open Preview & Print Report")}
                   </Button>
                 </div>
               </Card>
@@ -1423,9 +1423,9 @@ export default function PrintReportsHubPage() {
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 font-bold">💡</div>
           <div>
-            <h4 className="font-bold text-slate-900 dark:text-white">How Print & PDF Downloads Work:</h4>
+            <h4 className="font-bold text-slate-900 dark:text-white">{tp("prep.how_it_works_title", "How Print & PDF Downloads Work:")}</h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Clicking the <strong>&quot;+&quot;</strong> icon expands the Country & Branch structure and live processing timer. Clicking <strong>&quot;Open Preview & Print Report&quot;</strong> or <strong>&quot;Save PDF&quot;</strong> inside the <strong>••• (More Actions)</strong> menu opens an A4 formatted window complete with your official company letterhead and signature strips.
+              {tp("prep.how_it_works_body", "Clicking the \"+\" icon expands the Country & Branch structure and live processing timer. Clicking \"Open Preview & Print Report\" or \"Save PDF\" inside the ••• (More Actions) menu opens an A4 formatted window complete with your official company letterhead and signature strips.")}
             </p>
           </div>
         </div>

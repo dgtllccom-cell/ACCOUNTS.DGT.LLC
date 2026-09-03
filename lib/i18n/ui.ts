@@ -927,6 +927,48 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "iab.title"
+  | "iab.auto_dl_ready"
+  | "iab.subtitle"
+  | "iab.download_now"
+  | "iab.ios_title"
+  | "iab.ios_intro"
+  | "iab.ios_s1"
+  | "iab.ios_s1b"
+  | "iab.ios_s2"
+  | "iab.ios_s2b"
+  | "iab.got_it"
+  | "iab.dl_done_title"
+  | "iab.dl_completed"
+  | "iab.dl_body"
+  | "iab.setup_title"
+  | "iab.setup_1"
+  | "iab.setup_2"
+  | "iab.setup_3"
+  | "iab.redownload_bat"
+  | "iab.download_url"
+  | "iab.download_cmd"
+  | "iab.done"
+  | "prep.active_users"
+  | "prep.all_branches"
+  | "prep.all_countries"
+  | "prep.collapse_branch_table"
+  | "prep.expand_branch_table"
+  | "prep.err_activity"
+  | "prep.grid_cards"
+  | "prep.last_activity"
+  | "prep.live_records_loaded"
+  | "prep.live_records_ready"
+  | "prep.no_data"
+  | "prep.of_word"
+  | "prep.records_in_scope"
+  | "prep.records_word"
+  | "prep.refresh_all"
+  | "prep.reports_word"
+  | "prep.search_ph"
+  | "prep.showing"
+  | "prep.table_view"
+  | "prep.waiting_for_data"
   | "extform.ct_mobile"
   | "extform.ct_whatsapp"
   | "extform.ct_phone"
@@ -17503,6 +17545,90 @@ const en: Dict = {
 
 
 
+
+
+  "iab.title": "Install Digital Dock ERP Mobile & Desktop App",
+
+  "iab.auto_dl_ready": "Automatic Download Ready",
+
+  "iab.subtitle": "Click below to automatically download the app installer directly into your computer for 1-click desktop access.",
+
+  "iab.download_now": "DOWNLOAD & INSTALL APP NOW",
+
+  "iab.ios_title": "Install on iPhone / iPad",
+
+  "iab.ios_intro": "Follow these 2 simple steps to add the Digital Dock ERP App icon to your iPhone Home Screen:",
+
+  "iab.ios_s1": "Tap the Share Button",
+
+  "iab.ios_s1b": "Tap the share icon at the bottom of Safari.",
+
+  "iab.ios_s2": "Tap Add to Home Screen",
+
+  "iab.ios_s2b": "Scroll down and tap the Add to Home Screen option.",
+
+  "iab.got_it": "GOT IT",
+
+  "iab.dl_done_title": "App Installer Downloaded Automatically",
+
+  "iab.dl_completed": "Automatic Download Completed!",
+
+  "iab.dl_body": "The 1-click desktop app installer (Install-Digital-Dock-ERP.bat) has been downloaded into your computer Downloads folder.",
+
+  "iab.setup_title": "How to complete setup on your PC:",
+
+  "iab.setup_1": "Go to your Downloads folder on your computer.",
+
+  "iab.setup_2": "Double-click Install-Digital-Dock-ERP.bat.",
+
+  "iab.setup_3": "It will automatically place a 1-click icon on your Desktop & Start Menu!",
+
+  "iab.redownload_bat": "RE-DOWNLOAD 1-CLICK INSTALLER (.BAT)",
+
+  "iab.download_url": "DOWNLOAD .URL DESKTOP ICON",
+
+  "iab.download_cmd": "DOWNLOAD STANDALONE WINDOW (.CMD)",
+
+  "iab.done": "DONE",
+  "prep.active_users": "Active Users",
+
+  "prep.all_branches": "All Branches",
+
+  "prep.all_countries": "All Countries",
+
+  "prep.collapse_branch_table": "Collapse Country Branch Table",
+
+  "prep.expand_branch_table": "Expand Country Branch Table",
+
+  "prep.err_activity": "Failed to load activity summary",
+
+  "prep.grid_cards": "Grid Cards",
+
+  "prep.last_activity": "Last activity:",
+
+  "prep.live_records_loaded": "live records loaded",
+
+  "prep.live_records_ready": "live records ready for this report",
+
+  "prep.no_data": "No data",
+
+  "prep.of_word": "of",
+
+  "prep.records_in_scope": "Records in Scope",
+
+  "prep.records_word": "records",
+
+  "prep.refresh_all": "Refresh All",
+
+  "prep.reports_word": "Reports",
+
+  "prep.search_ph": "Search report name, category, or description...",
+
+  "prep.showing": "Showing",
+
+  "prep.table_view": "Table View",
+
+  "prep.waiting_for_data": "Waiting for data — this report will populate once records exist in scope",
   "extform.ct_mobile": "Mobile Phone",
 
   "extform.ct_whatsapp": "WhatsApp Number",
@@ -30476,6 +30602,90 @@ const ur: Dict = {
 
 
 
+
+
+  "iab.title": "ڈیجیٹل ڈاک ERP موبائل اور ڈیسک ٹاپ ایپ انسٹال کریں",
+
+  "iab.auto_dl_ready": "خودکار ڈاؤن لوڈ تیار",
+
+  "iab.subtitle": "1-کلک ڈیسک ٹاپ رسائی کے لیے ایپ انسٹالر براہ راست اپنے کمپیوٹر میں خودکار طور پر ڈاؤن لوڈ کرنے کے لیے نیچے کلک کریں۔",
+
+  "iab.download_now": "ابھی ایپ ڈاؤن لوڈ اور انسٹال کریں",
+
+  "iab.ios_title": "آئی فون / آئی پیڈ پر انسٹال کریں",
+
+  "iab.ios_intro": "اپنی آئی فون ہوم اسکرین پر ڈیجیٹل ڈاک ERP ایپ آئیکن شامل کرنے کے لیے یہ 2 آسان مراحل اپنائیں:",
+
+  "iab.ios_s1": "شیئر بٹن پر ٹیپ کریں",
+
+  "iab.ios_s1b": "سفاری کے نیچے شیئر آئیکن پر ٹیپ کریں۔",
+
+  "iab.ios_s2": "ہوم اسکرین میں شامل کریں پر ٹیپ کریں",
+
+  "iab.ios_s2b": "نیچے اسکرول کریں اور ہوم اسکرین میں شامل کریں کے آپشن پر ٹیپ کریں۔",
+
+  "iab.got_it": "سمجھ گیا",
+
+  "iab.dl_done_title": "ایپ انسٹالر خودکار طور پر ڈاؤن لوڈ ہو گیا",
+
+  "iab.dl_completed": "خودکار ڈاؤن لوڈ مکمل!",
+
+  "iab.dl_body": "1-کلک ڈیسک ٹاپ ایپ انسٹالر (Install-Digital-Dock-ERP.bat) آپ کے کمپیوٹر کے Downloads فولڈر میں ڈاؤن لوڈ ہو گیا ہے۔",
+
+  "iab.setup_title": "اپنے PC پر سیٹ اپ کیسے مکمل کریں:",
+
+  "iab.setup_1": "اپنے کمپیوٹر پر اپنے Downloads فولڈر میں جائیں۔",
+
+  "iab.setup_2": "Install-Digital-Dock-ERP.bat پر ڈبل کلک کریں۔",
+
+  "iab.setup_3": "یہ خودکار طور پر آپ کے ڈیسک ٹاپ اور اسٹارٹ مینو پر 1-کلک آئیکن رکھ دے گا!",
+
+  "iab.redownload_bat": "1-کلک انسٹالر دوبارہ ڈاؤن لوڈ کریں (.BAT)",
+
+  "iab.download_url": ".URL ڈیسک ٹاپ آئیکن ڈاؤن لوڈ کریں",
+
+  "iab.download_cmd": "اسٹینڈ الون ونڈو ڈاؤن لوڈ کریں (.CMD)",
+
+  "iab.done": "مکمل",
+  "prep.active_users": "فعال یوزرز",
+
+  "prep.all_branches": "تمام برانچز",
+
+  "prep.all_countries": "تمام ممالک",
+
+  "prep.collapse_branch_table": "کنٹری برانچ ٹیبل سمیٹیں",
+
+  "prep.expand_branch_table": "کنٹری برانچ ٹیبل کھولیں",
+
+  "prep.err_activity": "سرگرمی خلاصہ لوڈ کرنے میں ناکامی",
+
+  "prep.grid_cards": "گرڈ کارڈز",
+
+  "prep.last_activity": "آخری سرگرمی:",
+
+  "prep.live_records_loaded": "لائیو ریکارڈز لوڈ ہوئے",
+
+  "prep.live_records_ready": "اس رپورٹ کے لیے لائیو ریکارڈز تیار",
+
+  "prep.no_data": "کوئی ڈیٹا نہیں",
+
+  "prep.of_word": "میں سے",
+
+  "prep.records_in_scope": "دائرے میں ریکارڈز",
+
+  "prep.records_word": "ریکارڈز",
+
+  "prep.refresh_all": "سب تازہ کریں",
+
+  "prep.reports_word": "رپورٹس",
+
+  "prep.search_ph": "رپورٹ کا نام، زمرہ یا تفصیل تلاش کریں...",
+
+  "prep.showing": "دکھایا جا رہا ہے",
+
+  "prep.table_view": "ٹیبل ویو",
+
+  "prep.waiting_for_data": "ڈیٹا کا انتظار — دائرے میں ریکارڈ موجود ہونے پر یہ رپورٹ بھر جائے گی",
   "extform.ct_mobile": "موبائل فون",
 
   "extform.ct_whatsapp": "واٹس ایپ نمبر",
@@ -43451,6 +43661,90 @@ const ar: Dict = {
 
 
 
+
+
+  "iab.title": "ثبّت تطبيق ديجيتال دوك ERP للجوال وسطح المكتب",
+
+  "iab.auto_dl_ready": "التنزيل التلقائي جاهز",
+
+  "iab.subtitle": "انقر أدناه لتنزيل مثبّت التطبيق تلقائيًا مباشرةً إلى حاسوبك للوصول بنقرة واحدة من سطح المكتب.",
+
+  "iab.download_now": "نزّل وثبّت التطبيق الآن",
+
+  "iab.ios_title": "التثبيت على آيفون / آيباد",
+
+  "iab.ios_intro": "اتبع هاتين الخطوتين البسيطتين لإضافة أيقونة تطبيق ديجيتال دوك ERP إلى شاشة آيفون الرئيسية:",
+
+  "iab.ios_s1": "اضغط زر المشاركة",
+
+  "iab.ios_s1b": "اضغط أيقونة المشاركة أسفل سفاري.",
+
+  "iab.ios_s2": "اضغط إضافة إلى الشاشة الرئيسية",
+
+  "iab.ios_s2b": "مرّر لأسفل واضغط خيار إضافة إلى الشاشة الرئيسية.",
+
+  "iab.got_it": "فهمت",
+
+  "iab.dl_done_title": "تم تنزيل مثبّت التطبيق تلقائيًا",
+
+  "iab.dl_completed": "اكتمل التنزيل التلقائي!",
+
+  "iab.dl_body": "تم تنزيل مثبّت تطبيق سطح المكتب بنقرة واحدة (Install-Digital-Dock-ERP.bat) إلى مجلد التنزيلات في حاسوبك.",
+
+  "iab.setup_title": "كيفية إكمال الإعداد على حاسوبك:",
+
+  "iab.setup_1": "انتقل إلى مجلد التنزيلات في حاسوبك.",
+
+  "iab.setup_2": "انقر نقرًا مزدوجًا على Install-Digital-Dock-ERP.bat.",
+
+  "iab.setup_3": "سيضع تلقائيًا أيقونة بنقرة واحدة على سطح المكتب وقائمة ابدأ لديك!",
+
+  "iab.redownload_bat": "أعد تنزيل المثبّت بنقرة واحدة (.BAT)",
+
+  "iab.download_url": "نزّل أيقونة سطح المكتب .URL",
+
+  "iab.download_cmd": "نزّل النافذة المستقلة (.CMD)",
+
+  "iab.done": "تم",
+  "prep.active_users": "المستخدمون النشطون",
+
+  "prep.all_branches": "جميع الفروع",
+
+  "prep.all_countries": "جميع الدول",
+
+  "prep.collapse_branch_table": "طي جدول فروع الدولة",
+
+  "prep.expand_branch_table": "توسيع جدول فروع الدولة",
+
+  "prep.err_activity": "فشل تحميل ملخص النشاط",
+
+  "prep.grid_cards": "بطاقات شبكية",
+
+  "prep.last_activity": "آخر نشاط:",
+
+  "prep.live_records_loaded": "سجلات مباشرة محمّلة",
+
+  "prep.live_records_ready": "سجلات مباشرة جاهزة لهذا التقرير",
+
+  "prep.no_data": "لا توجد بيانات",
+
+  "prep.of_word": "من",
+
+  "prep.records_in_scope": "السجلات ضمن النطاق",
+
+  "prep.records_word": "سجلات",
+
+  "prep.refresh_all": "تحديث الكل",
+
+  "prep.reports_word": "التقارير",
+
+  "prep.search_ph": "ابحث باسم التقرير أو الفئة أو الوصف...",
+
+  "prep.showing": "عرض",
+
+  "prep.table_view": "عرض الجدول",
+
+  "prep.waiting_for_data": "بانتظار البيانات — سيمتلئ هذا التقرير عند وجود سجلات ضمن النطاق",
   "extform.ct_mobile": "هاتف جوال",
 
   "extform.ct_whatsapp": "رقم الواتساب",
@@ -56425,6 +56719,90 @@ const fa: Dict = {
 
 
 
+
+
+  "iab.title": "برنامه موبایل و دسکتاپ دیجیتال داک ERP را نصب کنید",
+
+  "iab.auto_dl_ready": "دانلود خودکار آماده",
+
+  "iab.subtitle": "برای دانلود خودکار نصب‌کننده برنامه مستقیماً در رایانه خود جهت دسترسی یک‌کلیکی از دسکتاپ، پایین را کلیک کنید.",
+
+  "iab.download_now": "اکنون برنامه را دانلود و نصب کنید",
+
+  "iab.ios_title": "نصب روی آیفون / آیپد",
+
+  "iab.ios_intro": "این ۲ گام ساده را دنبال کنید تا نماد برنامه دیجیتال داک ERP به صفحه اصلی آیفون شما افزوده شود:",
+
+  "iab.ios_s1": "دکمه اشتراک‌گذاری را بزنید",
+
+  "iab.ios_s1b": "نماد اشتراک‌گذاری را در پایین سافاری بزنید.",
+
+  "iab.ios_s2": "افزودن به صفحه اصلی را بزنید",
+
+  "iab.ios_s2b": "به پایین بروید و گزینه افزودن به صفحه اصلی را بزنید.",
+
+  "iab.got_it": "متوجه شدم",
+
+  "iab.dl_done_title": "نصب‌کننده برنامه به‌طور خودکار دانلود شد",
+
+  "iab.dl_completed": "دانلود خودکار کامل شد!",
+
+  "iab.dl_body": "نصب‌کننده برنامه دسکتاپ یک‌کلیکی (Install-Digital-Dock-ERP.bat) در پوشه Downloads رایانه شما دانلود شد.",
+
+  "iab.setup_title": "نحوه تکمیل نصب روی رایانه شما:",
+
+  "iab.setup_1": "به پوشه Downloads رایانه خود بروید.",
+
+  "iab.setup_2": "روی Install-Digital-Dock-ERP.bat دوبار کلیک کنید.",
+
+  "iab.setup_3": "به‌طور خودکار یک نماد یک‌کلیکی روی دسکتاپ و منوی Start شما قرار می‌دهد!",
+
+  "iab.redownload_bat": "دانلود مجدد نصب‌کننده یک‌کلیکی (.BAT)",
+
+  "iab.download_url": "دانلود نماد دسکتاپ .URL",
+
+  "iab.download_cmd": "دانلود پنجره مستقل (.CMD)",
+
+  "iab.done": "انجام شد",
+  "prep.active_users": "کاربران فعال",
+
+  "prep.all_branches": "همه شعب",
+
+  "prep.all_countries": "همه کشورها",
+
+  "prep.collapse_branch_table": "جمع کردن جدول شعب کشور",
+
+  "prep.expand_branch_table": "باز کردن جدول شعب کشور",
+
+  "prep.err_activity": "بارگذاری خلاصه فعالیت ناموفق بود",
+
+  "prep.grid_cards": "کارت‌های شبکه‌ای",
+
+  "prep.last_activity": "آخرین فعالیت:",
+
+  "prep.live_records_loaded": "سوابق زنده بارگذاری‌شده",
+
+  "prep.live_records_ready": "سوابق زنده آماده برای این گزارش",
+
+  "prep.no_data": "بدون داده",
+
+  "prep.of_word": "از",
+
+  "prep.records_in_scope": "سوابق در محدوده",
+
+  "prep.records_word": "سوابق",
+
+  "prep.refresh_all": "تازه‌سازی همه",
+
+  "prep.reports_word": "گزارش‌ها",
+
+  "prep.search_ph": "جستجوی نام گزارش، دسته یا توضیحات...",
+
+  "prep.showing": "نمایش",
+
+  "prep.table_view": "نمای جدول",
+
+  "prep.waiting_for_data": "در انتظار داده — این گزارش پس از وجود سوابق در محدوده پر می‌شود",
   "extform.ct_mobile": "تلفن همراه",
 
   "extform.ct_whatsapp": "شماره واتس‌اپ",
@@ -69405,6 +69783,90 @@ const ps: Dict = {
 
 
 
+
+
+  "iab.title": "د ډیجیټل ډاک ERP موبایل او ډیسک ټاپ اپلیکیشن نصب کړئ",
+
+  "iab.auto_dl_ready": "اتومات ډاونلوډ چمتو",
+
+  "iab.subtitle": "د 1-کلیک ډیسک ټاپ لاسرسي لپاره د اپ انسټالر مستقیم ستاسو کمپیوټر ته د اتومات ډاونلوډ لپاره لاندې کلیک وکړئ.",
+
+  "iab.download_now": "اوس اپ ډاونلوډ او نصب کړئ",
+
+  "iab.ios_title": "په آی فون / آی پیډ نصب کړئ",
+
+  "iab.ios_intro": "دا ۲ ساده ګامونه تعقیب کړئ ترڅو د ډیجیټل ډاک ERP اپ آیکون ستاسو د آی فون کور سکرین ته اضافه شي:",
+
+  "iab.ios_s1": "د شریکولو تڼۍ ووهئ",
+
+  "iab.ios_s1b": "د سفاري په پایین کې د شریکولو آیکون ووهئ.",
+
+  "iab.ios_s2": "کور سکرین ته اضافه کول ووهئ",
+
+  "iab.ios_s2b": "لاندې سکرول کړئ او د کور سکرین ته اضافه کولو اختیار ووهئ.",
+
+  "iab.got_it": "پوه شوم",
+
+  "iab.dl_done_title": "د اپ انسټالر په اتومات ډول ډاونلوډ شو",
+
+  "iab.dl_completed": "اتومات ډاونلوډ بشپړ شو!",
+
+  "iab.dl_body": "د 1-کلیک ډیسک ټاپ اپ انسټالر (Install-Digital-Dock-ERP.bat) ستاسو د کمپیوټر Downloads فولډر ته ډاونلوډ شو.",
+
+  "iab.setup_title": "په خپل PC کې د تنظیم بشپړولو څرنګوالی:",
+
+  "iab.setup_1": "په خپل کمپیوټر کې خپل Downloads فولډر ته لاړ شئ.",
+
+  "iab.setup_2": "پر Install-Digital-Dock-ERP.bat دوه ځله کلیک وکړئ.",
+
+  "iab.setup_3": "دا به په اتومات ډول ستاسو په ډیسک ټاپ او Start مینو کې د 1-کلیک آیکون کیږدي!",
+
+  "iab.redownload_bat": "1-کلیک انسټالر بیا ډاونلوډ کړئ (.BAT)",
+
+  "iab.download_url": ".URL ډیسک ټاپ آیکون ډاونلوډ کړئ",
+
+  "iab.download_cmd": "خپلواکه کړکۍ ډاونلوډ کړئ (.CMD)",
+
+  "iab.done": "بشپړ شو",
+  "prep.active_users": "فعال کاروونکي",
+
+  "prep.all_branches": "ټولې څانګې",
+
+  "prep.all_countries": "ټول هېوادونه",
+
+  "prep.collapse_branch_table": "د هېواد د څانګو جدول راټول کړئ",
+
+  "prep.expand_branch_table": "د هېواد د څانګو جدول پراخ کړئ",
+
+  "prep.err_activity": "د فعالیت لنډیز پورته کول ناکام شو",
+
+  "prep.grid_cards": "ګرډ کارتونه",
+
+  "prep.last_activity": "وروستی فعالیت:",
+
+  "prep.live_records_loaded": "ژوندي ریکارډونه پورته شول",
+
+  "prep.live_records_ready": "د دې راپور لپاره ژوندي ریکارډونه چمتو",
+
+  "prep.no_data": "هیڅ معلومات نشته",
+
+  "prep.of_word": "له",
+
+  "prep.records_in_scope": "په ساحه کې ریکارډونه",
+
+  "prep.records_word": "ریکارډونه",
+
+  "prep.refresh_all": "ټول تازه کړئ",
+
+  "prep.reports_word": "راپورونه",
+
+  "prep.search_ph": "د راپور نوم، کټګوري یا تشریح ولټوئ...",
+
+  "prep.showing": "ښودل کیږي",
+
+  "prep.table_view": "د جدول لید",
+
+  "prep.waiting_for_data": "د معلوماتو په تمه — دا راپور به ډک شي کله چې په ساحه کې ریکارډونه شتون ولري",
   "extform.ct_mobile": "ګرځنده تیلیفون",
 
   "extform.ct_whatsapp": "د واټس‌اپ شمېره",
