@@ -102,11 +102,11 @@ export function VersionComparisonModal({
                   <span>{t(lang, "audit.compare_versions", "Compare Versions")}</span>
                   <span className="text-slate-400">—</span>
                   <span className="font-mono text-blue-600">
-                    {currentVer?.reference_no || currentVer?.entity_id || "PO-2826-6874"}
+                    {currentVer?.reference_no || currentVer?.entity_id || "—"}
                   </span>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500">
-                  Detailed Before & After field level comparison with immutable Super Admin audit evidence.
+                  {t(lang, "audit.vcm_desc", "Detailed Before & After field level comparison with immutable Super Admin audit evidence.")}
                 </DialogDescription>
               </div>
             </div>
@@ -192,7 +192,7 @@ export function VersionComparisonModal({
                     </span>
                     {diff.isHighRisk && (
                       <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[9.5px] font-black uppercase">
-                        High-Risk Financial Field
+                        {t(lang, "audit.vcm_high_risk", "High-Risk Financial Field")}
                       </span>
                     )}
                   </div>
@@ -231,7 +231,7 @@ export function VersionComparisonModal({
           </div>
           <div className="font-medium text-emerald-600 flex items-center gap-1">
             <ShieldCheck className="h-4 w-4" />
-            <span>Immutable Audit Log Authenticated</span>
+            <span>{t(lang, "audit.vcm_immutable", "Immutable Audit Log Authenticated")}</span>
           </div>
         </div>
 

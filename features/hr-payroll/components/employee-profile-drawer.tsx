@@ -290,7 +290,7 @@ export function EmployeeProfileDrawer({
             <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
               <MapPin className="h-4 w-4 text-emerald-600" />
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Location & Reporting Structure
+                {th("Location & Reporting Structure")}
               </span>
             </div>
 
@@ -333,7 +333,7 @@ export function EmployeeProfileDrawer({
             <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
               <Phone className="h-4 w-4 text-blue-600" />
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Contact & Identity Verification
+                {th("Contact & Identity Verification")}
               </span>
             </div>
 
@@ -403,7 +403,7 @@ export function EmployeeProfileDrawer({
             <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
               <DollarSign className="h-4 w-4 text-emerald-600" />
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Payroll, Salary & Deductions
+                {th("Payroll, Salary & Deductions")}
               </span>
             </div>
 

@@ -2122,6 +2122,9 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "APPLY RANGE": { ur: "رینج لاگو کریں", ar: "تطبيق النطاق", fa: "اعمال بازه", ps: "حد پلي کړئ" },
   "GRID VIEW": { ur: "گرڈ منظر", ar: "عرض شبكي", fa: "نمای شبکه‌ای", ps: "د جدول لید" },
   "TABLE VIEW": { ur: "ٹیبل منظر", ar: "عرض جدول", fa: "نمای جدول", ps: "د جدول لید" },
+  "LOCATION & REPORTING STRUCTURE": { ur: "مقام اور رپورٹنگ ڈھانچہ", ar: "الموقع وهيكل التقارير", fa: "موقعیت و ساختار گزارش‌دهی", ps: "موقعیت او د راپور ورکولو جوړښت" },
+  "CONTACT & IDENTITY VERIFICATION": { ur: "رابطہ اور شناخت کی تصدیق", ar: "التواصل والتحقق من الهوية", fa: "تماس و تأیید هویت", ps: "اړیکه او د هویت تصدیق" },
+  "PAYROLL, SALARY & DEDUCTIONS": { ur: "پے رول، تنخواہ اور کٹوتیاں", ar: "كشوف الرواتب والراتب والخصومات", fa: "حقوق و دستمزد، حقوق و کسورات", ps: "معاش لیست، معاش او کسرونه" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

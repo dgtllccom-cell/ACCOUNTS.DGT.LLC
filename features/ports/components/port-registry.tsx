@@ -255,7 +255,7 @@ export function PortRegistry() {
                 label=""
                 value={formData.countryId}
                 options={countries.map(c => ({ value: c.id, label: c.name }))}
-                placeholder="Select Country..."
+                placeholder={tt("common.select_country", "Select Country...")}
                 onValueChange={(val) => setFormData({ ...formData, countryId: val })}
               />
             </div>
@@ -287,19 +287,19 @@ export function PortRegistry() {
     <UniversalReportModal
       isOpen={showReport}
       onClose={() => setShowReport(false)}
-      title="Ports & Boundaries Register"
-      subtitle="Official Ports, Border Crossings & Entry/Exit Points Registry"
+      title={tt("port.register_title", "Ports & Boundaries Register")}
+      subtitle={tt("port.register_subtitle", "Official Ports, Border Crossings & Entry/Exit Points Registry")}
       exportFileName="port_boundary_report"
       filters={[
-        { label: "Search", value: searchQuery || "All" },
-        { label: "Status", value: statusFilter === "all" ? "All" : statusFilter }
+        { label: tt("common.search", "Search"), value: searchQuery || "All" },
+        { label: tt("common.status", "Status"), value: statusFilter === "all" ? "All" : statusFilter }
       ]}
       columns={[
-        { key: "code", label: "Port Code" },
-        { key: "name", label: "Port / Boundary Name" },
-        { key: "border_type", label: "Border Type" },
-        { key: "country", label: "Country" },
-        { key: "status", label: "Status", align: "center" }
+        { key: "code", label: tt("port.col_code", "Port Code") },
+        { key: "name", label: tt("port.col_name", "Port / Boundary Name") },
+        { key: "border_type", label: tt("port.col_border_type", "Border Type") },
+        { key: "country", label: tt("common.country", "Country") },
+        { key: "status", label: tt("common.status", "Status"), align: "center" }
       ]}
       data={filtered.map(p => ({
         code: p.code || "-",

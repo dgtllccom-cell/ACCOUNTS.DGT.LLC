@@ -927,6 +927,17 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "common.select_country"
+  | "wai.new_chat"
+  | "wai.manage_accounts"
+  | "port.register_title"
+  | "port.register_subtitle"
+  | "port.col_code"
+  | "port.col_name"
+  | "port.col_border_type"
+  | "audit.vcm_desc"
+  | "audit.vcm_high_risk"
+  | "audit.vcm_immutable"
   | "hr.cat_accountant"
   | "hr.cat_branch_admin"
   | "hr.cat_cashier"
@@ -17568,6 +17579,28 @@ const en: Dict = {
 
 
 
+
+  "common.select_country": "Select Country...",
+
+  "wai.new_chat": "New Chat",
+
+  "wai.manage_accounts": "Manage WhatsApp Accounts",
+
+  "port.register_title": "Ports & Boundaries Register",
+
+  "port.register_subtitle": "Official Ports, Border Crossings & Entry/Exit Points Registry",
+
+  "port.col_code": "Port Code",
+
+  "port.col_name": "Port / Boundary Name",
+
+  "port.col_border_type": "Border Type",
+
+  "audit.vcm_desc": "Detailed Before & After field level comparison with immutable Super Admin audit evidence.",
+
+  "audit.vcm_high_risk": "High-Risk Financial Field",
+
+  "audit.vcm_immutable": "Immutable Audit Log Authenticated",
   "hr.cat_accountant": "Accountant",
 
   "hr.cat_branch_admin": "Branch Administrator",
@@ -30661,6 +30694,28 @@ const ur: Dict = {
 
 
 
+
+  "common.select_country": "ملک منتخب کریں...",
+
+  "wai.new_chat": "نئی چیٹ",
+
+  "wai.manage_accounts": "واٹس ایپ اکاؤنٹس کا نظم کریں",
+
+  "port.register_title": "بندرگاہیں اور سرحدیں رجسٹر",
+
+  "port.register_subtitle": "سرکاری بندرگاہیں، سرحدی گزرگاہیں اور داخلے/اخراج کے مقامات کی رجسٹری",
+
+  "port.col_code": "بندرگاہ کوڈ",
+
+  "port.col_name": "بندرگاہ / سرحد کا نام",
+
+  "port.col_border_type": "سرحد کی قسم",
+
+  "audit.vcm_desc": "غیر قابل تبدیل سپر ایڈمن آڈٹ ثبوت کے ساتھ تفصیلی پہلے اور بعد فیلڈ سطح کا موازنہ۔",
+
+  "audit.vcm_high_risk": "زیادہ خطرے والا مالیاتی فیلڈ",
+
+  "audit.vcm_immutable": "غیر قابل تبدیل آڈٹ لاگ تصدیق شدہ",
   "hr.cat_accountant": "اکاؤنٹنٹ",
 
   "hr.cat_branch_admin": "برانچ ایڈمنسٹریٹر",
@@ -43756,6 +43811,28 @@ const ar: Dict = {
 
 
 
+
+  "common.select_country": "اختر الدولة...",
+
+  "wai.new_chat": "محادثة جديدة",
+
+  "wai.manage_accounts": "إدارة حسابات واتساب",
+
+  "port.register_title": "سجل الموانئ والحدود",
+
+  "port.register_subtitle": "سجل الموانئ الرسمية والمعابر الحدودية ونقاط الدخول/الخروج",
+
+  "port.col_code": "رمز الميناء",
+
+  "port.col_name": "اسم الميناء / الحدود",
+
+  "port.col_border_type": "نوع الحدود",
+
+  "audit.vcm_desc": "مقارنة تفصيلية على مستوى الحقول قبل وبعد مع أدلة تدقيق غير قابلة للتغيير للمشرف العام.",
+
+  "audit.vcm_high_risk": "حقل مالي عالي الخطورة",
+
+  "audit.vcm_immutable": "سجل تدقيق غير قابل للتغيير موثّق",
   "hr.cat_accountant": "محاسب",
 
   "hr.cat_branch_admin": "مدير الفرع",
@@ -56850,6 +56927,28 @@ const fa: Dict = {
 
 
 
+
+  "common.select_country": "انتخاب کشور...",
+
+  "wai.new_chat": "گفتگوی جدید",
+
+  "wai.manage_accounts": "مدیریت حساب‌های واتساپ",
+
+  "port.register_title": "ثبت بنادر و مرزها",
+
+  "port.register_subtitle": "ثبت بنادر رسمی، گذرگاه‌های مرزی و نقاط ورود/خروج",
+
+  "port.col_code": "کد بندر",
+
+  "port.col_name": "نام بندر / مرز",
+
+  "port.col_border_type": "نوع مرز",
+
+  "audit.vcm_desc": "مقایسه تفصیلی سطح فیلد قبل و بعد با شواهد حسابرسی تغییرناپذیر سوپر ادمین.",
+
+  "audit.vcm_high_risk": "فیلد مالی پرخطر",
+
+  "audit.vcm_immutable": "گزارش حسابرسی تغییرناپذیر احراز هویت شد",
   "hr.cat_accountant": "حسابدار",
 
   "hr.cat_branch_admin": "مدیر شعبه",
@@ -69950,6 +70049,28 @@ const ps: Dict = {
 
 
 
+
+  "common.select_country": "هېواد وټاکئ...",
+
+  "wai.new_chat": "نوې خبرې اترې",
+
+  "wai.manage_accounts": "د واټساپ حسابونه اداره کړئ",
+
+  "port.register_title": "د بندرونو او پولو راجستر",
+
+  "port.register_subtitle": "د رسمي بندرونو، سرحدي معبرونو او د ننوتلو/وتلو نقطو راجستر",
+
+  "port.col_code": "د بندر کوډ",
+
+  "port.col_name": "د بندر / پولې نوم",
+
+  "port.col_border_type": "د پولې ډول",
+
+  "audit.vcm_desc": "د سوپر اډمین د نه بدلېدونکي پلټنې شواهدو سره د ساحې په کچه مفصله د مخکې او وروسته پرتله.",
+
+  "audit.vcm_high_risk": "د لوړ خطر مالي ساحه",
+
+  "audit.vcm_immutable": "د نه بدلېدونکي پلټنې ثبت تصدیق شو",
   "hr.cat_accountant": "محاسب",
 
   "hr.cat_branch_admin": "د څانګې مدیر",

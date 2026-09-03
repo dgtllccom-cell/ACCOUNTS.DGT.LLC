@@ -113,21 +113,21 @@ export function WhatsAppInbox({ session }: Props) {
           <div className="flex items-center gap-1">
             <button
               onClick={handleNewChat}
-              title="New Chat"
+              title={tt("wai.new_chat", "New Chat")}
               className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => refreshConversations()}
-              title="Refresh"
+              title={tt("common.refresh", "Refresh")}
               className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${convLoading ? "animate-spin" : ""}`} />
             </button>
             <Link
               href="/dashboard/messages/whatsapp/setup"
-              title="Manage WhatsApp Accounts"
+              title={tt("wai.manage_accounts", "Manage WhatsApp Accounts")}
               className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             >
               <Settings className="h-3.5 w-3.5" />
