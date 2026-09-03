@@ -87,7 +87,8 @@ const reportI18n = {
     empSign: "Employee Acknowledgment",
     managerSign: "Branch Manager Approval",
     adminSign: "System Admin Authorization",
-    vaultNotice: "SECURITY POLICY: Passwords are protected in the Enterprise Credential Vault. Plaintext passwords are not exported."
+    vaultNotice: "SECURITY POLICY: Passwords are protected in the Enterprise Credential Vault. Plaintext passwords are not exported.",
+    notProvided: "Not Provided"
   },
   ur: {
     orgTitle: "اکاؤنٹس ڈی جی ٹی ایل ایل سی انٹرپرائز ریسورس پلاننگ",
@@ -103,7 +104,8 @@ const reportI18n = {
     empSign: "ملازم کی تصدیق و دستخط",
     managerSign: "برانچ مینیجر کی منظوری",
     adminSign: "سسٹم ایڈمنسٹریٹر کی اجازت",
-    vaultNotice: "سیکیورٹی پالیسی: پاس ورڈز کو والٹ میں محفوظ رکھا جاتا ہے۔ سیکیورٹی وجوہات پر پاس ورڈ ظاہر نہیں کیا جاتا۔"
+    vaultNotice: "سیکیورٹی پالیسی: پاس ورڈز کو والٹ میں محفوظ رکھا جاتا ہے۔ سیکیورٹی وجوہات پر پاس ورڈ ظاہر نہیں کیا جاتا۔",
+    notProvided: "فراہم نہیں کیا گیا"
   },
   ar: {
     orgTitle: "تخطيط موارد المؤسسات - ACCOUNTS.DGT.LLC",
@@ -119,7 +121,8 @@ const reportI18n = {
     empSign: "إقرار وتوقيع الموظف",
     managerSign: "موافقة مدير الفرع",
     adminSign: "اعتماد مسؤول النظام",
-    vaultNotice: "سياسة الأمان: كلمات المرور محمية في خزينة بيانات الاعتماد ولا يتم تصديرها كنص صريح."
+    vaultNotice: "سياسة الأمان: كلمات المرور محمية في خزينة بيانات الاعتماد ولا يتم تصديرها كنص صريح.",
+    notProvided: "غير مُقدَّم"
   },
   fa: {
     orgTitle: "سیستم جامع مدیریت سازمانی - ACCOUNTS.DGT.LLC",
@@ -135,7 +138,8 @@ const reportI18n = {
     empSign: "امضا و تایید پرسنل",
     managerSign: "تایید مدیر شعبه",
     adminSign: "تایید مدیر ارشد سیستم",
-    vaultNotice: "خط‌مشی امنیتی: گذرواژه‌ها در مخزن امن محافظت می‌شوند و متن آشکار ذخیره نمی‌شود."
+    vaultNotice: "خط‌مشی امنیتی: گذرواژه‌ها در مخزن امن محافظت می‌شوند و متن آشکار ذخیره نمی‌شود.",
+    notProvided: "ارائه نشده"
   },
   ps: {
     orgTitle: "د تشبث د سرچینو پلان جوړونه - ACCOUNTS.DGT.LLC",
@@ -151,7 +155,8 @@ const reportI18n = {
     empSign: "د کارمند تایید او لاسلیک",
     managerSign: "د څانګې د مدیر تایید",
     adminSign: "د سیسټم د اداري مدیر تایید",
-    vaultNotice: "امنیتي پالیسي: پټنوم په خوندي والټ کې ساتل کیږي او په فایل کې ښکاره نه راځي."
+    vaultNotice: "امنیتي پالیسي: پټنوم په خوندي والټ کې ساتل کیږي او په فایل کې ښکاره نه راځي.",
+    notProvided: "نه دی وړاندې شوی"
   }
 };
 
@@ -295,7 +300,8 @@ export function openUserA4ReportWindow(input: {
 
     .info-row {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: 8px;
       padding: 2px 0;
       font-size: 7.5pt;
       border-bottom: 1px dashed #f1f5f9;
@@ -304,11 +310,16 @@ export function openUserA4ReportWindow(input: {
     .info-label {
       color: #64748b;
       font-weight: 500;
+      flex: 0 0 42%;
+      max-width: 42%;
     }
 
     .info-val {
       color: #0f172a;
       font-weight: 700;
+      flex: 1 1 auto;
+      text-align: left;
+      word-break: break-word;
     }
 
     table {
@@ -443,8 +454,8 @@ export function openUserA4ReportWindow(input: {
         <div class="info-row"><span class="info-label">Full Name:</span><span class="info-val">${escapeHtml(u.fullName)}</span></div>
         <div class="info-row"><span class="info-label">Designation:</span><span class="info-val">${escapeHtml(u.designation || u.branchType || "Staff")}</span></div>
         <div class="info-row"><span class="info-label">Department:</span><span class="info-val">${escapeHtml(u.department || "General Office")}</span></div>
-        <div class="info-row"><span class="info-label">Phone / WhatsApp:</span><span class="info-val">${escapeHtml(u.phone || "-")}</span></div>
-        <div class="info-row"><span class="info-label">Personal Email:</span><span class="info-val">${escapeHtml(u.email || "-")}</span></div>
+        <div class="info-row"><span class="info-label">Phone / WhatsApp:</span><span class="info-val">${escapeHtml(u.phone || loc.notProvided)}</span></div>
+        <div class="info-row"><span class="info-label">Personal Email:</span><span class="info-val">${escapeHtml(u.email || loc.notProvided)}</span></div>
       </div>
     </div>
 
@@ -520,7 +531,9 @@ export function openUserA4ReportWindow(input: {
     <div class="info-card" style="background: #fef2f2; border-color: #fecaca;">
       <div style="font-weight: 700; color: #991b1b; margin-bottom: 3px; font-size: 7pt;">✕ ${loc.restrMod}</div>
       <div style="font-size: 6.8pt; color: #7f1d1d;">
-        ${rbac.restrictedModules.length > 0 ? rbac.restrictedModules.map(rm => `<span class="tag tag-restricted" style="margin-right: 3px;">${escapeHtml(rm)}</span>`).join('') : "None (Full Enterprise Root Scope)"}
+        ${rbac.restrictedModules.length > 0
+          ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;">${rbac.restrictedModules.map(rm => `<span style="display:block;padding:1px 0;break-inside:avoid;">• ${escapeHtml(rm)}</span>`).join('')}</div>`
+          : "None (Full Enterprise Root Scope)"}
       </div>
     </div>
   </div>
