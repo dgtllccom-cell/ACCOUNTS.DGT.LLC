@@ -927,6 +927,12 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "wai.toggle_contact_panel"
+  | "wai.send_enter"
+  | "spin.target_record"
+  | "spin.enter_pin"
+  | "crm.loading_action_tasks"
+  | "crm.no_active_items_tab"
   | "kyc.kycManagement"
   | "kyc.applyRange"
   | "bankroz.update_status_clear"
@@ -17854,6 +17860,24 @@ const en: Dict = {
 
 
 
+
+
+  "wai.toggle_contact_panel": "Toggle contact panel",
+
+
+  "wai.send_enter": "Send (Enter)",
+
+
+  "spin.target_record": "Target Record:",
+
+
+  "spin.enter_pin": "Enter Security Authorization PIN Code:",
+
+
+  "crm.loading_action_tasks": "Loading action tasks...",
+
+
+  "crm.no_active_items_tab": "No active items found for this tab.",
   "kyc.kycManagement": "KYC Management",
 
 
@@ -31599,6 +31623,24 @@ const ur: Dict = {
 
 
 
+
+
+  "wai.toggle_contact_panel": "رابطہ پینل ٹوگل کریں",
+
+
+  "wai.send_enter": "بھیجیں (Enter)",
+
+
+  "spin.target_record": "ہدف ریکارڈ:",
+
+
+  "spin.enter_pin": "سیکیورٹی اجازت PIN کوڈ درج کریں:",
+
+
+  "crm.loading_action_tasks": "ایکشن ٹاسکس لوڈ ہو رہے ہیں...",
+
+
+  "crm.no_active_items_tab": "اس ٹیب کے لیے کوئی فعال آئٹم نہیں ملا۔",
   "kyc.kycManagement": "KYC انتظام",
 
 
@@ -45346,6 +45388,24 @@ const ar: Dict = {
 
 
 
+
+
+  "wai.toggle_contact_panel": "تبديل لوحة جهة الاتصال",
+
+
+  "wai.send_enter": "إرسال (Enter)",
+
+
+  "spin.target_record": "السجل المستهدف:",
+
+
+  "spin.enter_pin": "أدخل رمز PIN لتفويض الأمان:",
+
+
+  "crm.loading_action_tasks": "جارٍ تحميل مهام الإجراءات...",
+
+
+  "crm.no_active_items_tab": "لم يتم العثور على عناصر نشطة لهذه التبويب.",
   "kyc.kycManagement": "إدارة اعرف عميلك",
 
 
@@ -59092,6 +59152,24 @@ const fa: Dict = {
 
 
 
+
+
+  "wai.toggle_contact_panel": "تغییر وضعیت پنل مخاطب",
+
+
+  "wai.send_enter": "ارسال (Enter)",
+
+
+  "spin.target_record": "رکورد هدف:",
+
+
+  "spin.enter_pin": "کد PIN مجوز امنیتی را وارد کنید:",
+
+
+  "crm.loading_action_tasks": "در حال بارگذاری وظایف اقدام...",
+
+
+  "crm.no_active_items_tab": "هیچ موردی فعالی برای این زبانه یافت نشد.",
   "kyc.kycManagement": "مدیریت احراز هویت مشتری",
 
 
@@ -72844,6 +72922,24 @@ const ps: Dict = {
 
 
 
+
+
+  "wai.toggle_contact_panel": "د اړیکې پینل بدل کړئ",
+
+
+  "wai.send_enter": "واستوئ (Enter)",
+
+
+  "spin.target_record": "هدف ریکارډ:",
+
+
+  "spin.enter_pin": "د امنیت د واک PIN کوډ ولیکئ:",
+
+
+  "crm.loading_action_tasks": "د کړنو دندې بارېږي...",
+
+
+  "crm.no_active_items_tab": "د دې ټب لپاره هیڅ فعال توکي ونه موندل شول.",
   "kyc.kycManagement": "د KYC مدیریت",
 
 

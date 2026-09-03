@@ -2174,6 +2174,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "CONVERSION FACTOR": { ur: "تبادلہ عنصر", ar: "عامل التحويل", fa: "ضریب تبدیل", ps: "د بدلون فکتور" },
   "CATEGORY CODE": { ur: "کیٹگری کوڈ", ar: "رمز الفئة", fa: "کد دسته", ps: "د کټګورۍ کوډ" },
   "CATEGORY NAME": { ur: "کیٹگری کا نام", ar: "اسم الفئة", fa: "نام دسته", ps: "د کټګورۍ نوم" },
+  "FAVOURITES": { ur: "پسندیدہ", ar: "المفضلة", fa: "موارد دلخواه", ps: "خوښې" },
+  "RECENT": { ur: "حالیہ", ar: "الأخيرة", fa: "اخیر", ps: "وروستي" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

@@ -134,7 +134,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
                 : "bg-[#25D366] text-white shadow-sm hover:bg-[#20ba59]"
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
-          title="Send (Enter)"
+          title={tt("wai.send_enter","Send (Enter)")}
         >
           {isSending ? (
             <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />

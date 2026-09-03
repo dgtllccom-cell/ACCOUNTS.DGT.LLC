@@ -856,13 +856,13 @@ export function SmartCrmControlCenter() {
                     <tr>
                       <td colSpan={12} className="py-8 text-center text-slate-400">
                         <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-1 text-blue-600" />
-                        Loading action tasks...
+                        {t(lang, "crm.loading_action_tasks", "Loading action tasks...")}
                       </td>
                     </tr>
                   ) : actionItems.length === 0 ? (
                     <tr>
                       <td colSpan={12} className="py-8 text-center text-slate-400 font-medium">
-                        No active items found for this tab.
+                        {t(lang, "crm.no_active_items_tab", "No active items found for this tab.")}
                       </td>
                     </tr>
                   ) : (

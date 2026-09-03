@@ -486,8 +486,8 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
       <nav className="flex-1 overflow-y-auto px-2.5 py-4 [scrollbar-width:thin]">
         {!query && (
           <>
-            <QuickList title="Favourites" icon={Star} items={QUICK_FAVOURITES} />
-            <QuickList title="Recent" icon={Clock} items={QUICK_RECENT} />
+            <QuickList title={tr("Favourites")} icon={Star} items={QUICK_FAVOURITES} />
+            <QuickList title={tr("Recent")} icon={Clock} items={QUICK_RECENT} />
           </>
         )}
         {SIDEBAR_GROUPS.map((group) => (

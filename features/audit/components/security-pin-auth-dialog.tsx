@@ -93,7 +93,7 @@ export function SecurityPinAuthDialog({
 
         <div className="space-y-3 py-2 text-xs">
           <div className="p-2.5 bg-muted/50 rounded-lg border flex items-center justify-between font-mono">
-            <span>Target Record:</span>
+            <span>{tt("spin.target_record","Target Record:")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">
               {entityType} #{referenceNo || entityId}
             </span>
@@ -101,7 +101,7 @@ export function SecurityPinAuthDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-              <span>Enter Security Authorization PIN Code:</span>
+              <span>{tt("spin.enter_pin","Enter Security Authorization PIN Code:")}</span>
               <Badge variant="outline" className={isDelete ? "text-rose-600 border-rose-300" : "text-emerald-600 border-emerald-300"}>
                 {isDelete ? "Required: 3636" : "Required: 9999 or 3636"}
               </Badge>

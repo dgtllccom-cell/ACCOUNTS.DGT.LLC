@@ -111,7 +111,7 @@ export function ChatPanel({
             className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
               showContact ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
-            title="Toggle contact panel"
+            title={tt("wai.toggle_contact_panel","Toggle contact panel")}
           >
             <Info className="h-3.5 w-3.5" />
           </button>
