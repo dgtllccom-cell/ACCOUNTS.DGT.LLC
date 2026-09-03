@@ -14,123 +14,53 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const settingsItems = [
-  {
-    title: "Company Setup",
-    description: "Company incorporation, owner identification, contacts, and registrations.",
-    href: "/dashboard/settings/company-setup" as Route,
-    icon: Building2,
-    category: "Core Setup",
-    badge: "Essential"
-  },
-  {
-    title: "Location Management",
-    description: "Configure the global 4-level location hierarchy: Country, State, City, and Tehsil.",
-    href: "/dashboard/settings/location" as Route,
-    icon: MapPin,
-    category: "Core Setup",
-    badge: "Hierarchy"
-  },
-  {
-    title: "Bank Master Form",
-    description: "Create banks once and use them everywhere — accounts, payments, receipts, ledger, purchases, and reports.",
-    href: "/dashboard/settings/bank" as Route,
-    icon: Landmark,
-    category: "Master Data",
-    badge: "Financial"
-  },
-  {
-    title: "Customer Management",
-    description: "Manage customer / owner master records used across sales, receipts, accounts, and reports.",
-    href: "/dashboard/settings/customers" as Route,
-    icon: Users,
-    category: "Master Data",
-    badge: "CRM"
-  },
-  {
-    title: "Employee Management",
-    description: "Manage employee master records used by HR, payroll, branch assignments, and permissions.",
-    href: "/dashboard/settings/employees" as Route,
-    icon: Users,
-    category: "Master Data",
-    badge: "HR"
-  },
-  {
-    title: "Warehouse Master Form",
-    description: "Register warehouses or storage facilities connected with the company.",
-    href: "/dashboard/settings/warehouse" as Route,
-    icon: Warehouse,
-    category: "Master Data",
-    badge: "Logistics"
-  },
-  {
-    title: "Port / Boundary Master",
-    description: "Manage departure and arrival ports, border checkpoints, and airports for shipments.",
-    href: "/dashboard/settings/ports" as Route,
-    icon: Anchor,
-    category: "Master Data",
-    badge: "Trade"
-  },
-  {
-    title: "Management Parameters",
-    description: "Draft parameter area for registration, contract, country, customer, and document types.",
-    href: "/dashboard/settings/management" as Route,
-    icon: SlidersHorizontal,
-    category: "Core Setup",
-    badge: "Parameters"
-  },
-  {
-    title: "Nations & Branch Networks",
-    description: "Country -> Main Branch -> City Branch topology overview and master configurations.",
-    href: "/dashboard/settings/branch-network" as Route,
-    icon: Globe,
-    category: "Core Setup",
-    badge: "Topology"
-  },
-  {
-    title: "Official Email Accounts (Titan SMTP)",
-    description: "Manage official branch email accounts, Hostinger Titan SMTP settings, passwords, and status.",
-    href: "/dashboard/settings/email-accounts" as Route,
-    icon: Mail,
-    category: "Communications",
-    badge: "Hostinger Titan"
-  },
-  {
-    title: "Dashboard System & Module Manager",
-    description: "Super Admin dashboard allotment, screen visibility toggles, and form alert controls per role.",
-    href: "/dashboard/settings/dashboard-settings" as Route,
-    icon: LayoutDashboard,
-    category: "System & Security",
-    badge: "Super Admin"
-  },
-  {
-    title: "KYC Verification & Compliance Reports",
-    description: "Track 15-day grace period countdowns, missing documents, and compliance status for country branches, city branches, and accounts.",
-    href: "/dashboard/kyc-reports" as Route,
-    icon: ShieldCheck,
-    category: "System & Security",
-    badge: "KYC Audit"
-  },
-  {
-    title: "Local Translation Management",
-    description: "Super Admin offline 5-language dictionary manager (English, Urdu, Pashto, Farsi, Arabic).",
-    href: "/dashboard/translations" as Route,
-    icon: Globe2,
-    category: "System & Security",
-    badge: "5 Languages"
-  }
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t, type UiKey } from "@/lib/i18n/ui";
+
+type SettingsItem = {
+  title: string; description: string; href: Route; icon: typeof Building2;
+  category: string; badge: string;
+  tKey: UiKey; dKey: UiKey; catKey: UiKey; bKey: UiKey;
+};
+
+const settingsItems: SettingsItem[] = [
+  { title: "Company Setup", description: "Company incorporation, owner identification, contacts, and registrations.", href: "/dashboard/settings/company-setup" as Route, icon: Building2, category: "Core Setup", badge: "Essential", tKey: "setmenu.t_company", dKey: "setmenu.d_company", catKey: "setmenu.cat_core", bKey: "setmenu.badge_essential" },
+  { title: "Location Management", description: "Configure the global 4-level location hierarchy: Country, State, City, and Tehsil.", href: "/dashboard/settings/location" as Route, icon: MapPin, category: "Core Setup", badge: "Hierarchy", tKey: "setmenu.t_location", dKey: "setmenu.d_location", catKey: "setmenu.cat_core", bKey: "setmenu.badge_hierarchy" },
+  { title: "Bank Master Form", description: "Create banks once and use them everywhere across accounts, payments, receipts, ledger, purchases, and reports.", href: "/dashboard/settings/bank" as Route, icon: Landmark, category: "Master Data", badge: "Financial", tKey: "setmenu.t_bank", dKey: "setmenu.d_bank", catKey: "setmenu.cat_master", bKey: "setmenu.badge_financial" },
+  { title: "Customer Management", description: "Manage customer / owner master records used across sales, receipts, accounts, and reports.", href: "/dashboard/settings/customers" as Route, icon: Users, category: "Master Data", badge: "CRM", tKey: "setmenu.t_customer", dKey: "setmenu.d_customer", catKey: "setmenu.cat_master", bKey: "setmenu.badge_crm" },
+  { title: "Employee Management", description: "Manage employee master records used by HR, payroll, branch assignments, and permissions.", href: "/dashboard/settings/employees" as Route, icon: Users, category: "Master Data", badge: "HR", tKey: "setmenu.t_employee", dKey: "setmenu.d_employee", catKey: "setmenu.cat_master", bKey: "setmenu.badge_hr" },
+  { title: "Warehouse Master Form", description: "Register warehouses or storage facilities connected with the company.", href: "/dashboard/settings/warehouse" as Route, icon: Warehouse, category: "Master Data", badge: "Logistics", tKey: "setmenu.t_warehouse", dKey: "setmenu.d_warehouse", catKey: "setmenu.cat_master", bKey: "setmenu.badge_logistics" },
+  { title: "Port / Boundary Master", description: "Manage departure and arrival ports, border checkpoints, and airports for shipments.", href: "/dashboard/settings/ports" as Route, icon: Anchor, category: "Master Data", badge: "Trade", tKey: "setmenu.t_port", dKey: "setmenu.d_port", catKey: "setmenu.cat_master", bKey: "setmenu.badge_trade" },
+  { title: "Management Parameters", description: "Draft parameter area for registration, contract, country, customer, and document types.", href: "/dashboard/settings/management" as Route, icon: SlidersHorizontal, category: "Core Setup", badge: "Parameters", tKey: "setmenu.t_params", dKey: "setmenu.d_params", catKey: "setmenu.cat_core", bKey: "setmenu.badge_params" },
+  { title: "Nations & Branch Networks", description: "Country to Main Branch to City Branch topology overview and master configurations.", href: "/dashboard/settings/branch-network" as Route, icon: Globe, category: "Core Setup", badge: "Topology", tKey: "setmenu.t_topology", dKey: "setmenu.d_topology", catKey: "setmenu.cat_core", bKey: "setmenu.badge_topology" },
+  { title: "Official Email Accounts (Titan SMTP)", description: "Manage official branch email accounts, Hostinger Titan SMTP settings, passwords, and status.", href: "/dashboard/settings/email-accounts" as Route, icon: Mail, category: "Communications", badge: "Hostinger Titan", tKey: "setmenu.t_email", dKey: "setmenu.d_email", catKey: "setmenu.cat_comm", bKey: "setmenu.badge_titan" },
+  { title: "Dashboard System & Module Manager", description: "Super Admin dashboard allotment, screen visibility toggles, and per-role form alert controls.", href: "/dashboard/settings/dashboard-settings" as Route, icon: LayoutDashboard, category: "System & Security", badge: "Super Admin", tKey: "setmenu.t_dashmgr", dKey: "setmenu.d_dashmgr", catKey: "setmenu.cat_sys", bKey: "setmenu.badge_superadmin" },
+  { title: "KYC Verification & Compliance Reports", description: "Track 15-day grace period countdowns, missing documents, and compliance status for country branches, city branches, and accounts.", href: "/dashboard/kyc-reports" as Route, icon: ShieldCheck, category: "System & Security", badge: "KYC Audit", tKey: "setmenu.t_kyc", dKey: "setmenu.d_kyc", catKey: "setmenu.cat_sys", bKey: "setmenu.badge_kyc" },
+  { title: "Local Translation Management", description: "Super Admin offline 5-language dictionary manager (English, Urdu, Pashto, Farsi, Arabic).", href: "/dashboard/translations" as Route, icon: Globe2, category: "System & Security", badge: "5 Languages", tKey: "setmenu.t_translation", dKey: "setmenu.d_translation", catKey: "setmenu.cat_sys", bKey: "setmenu.badge_5lang" }
 ];
 
 export default function SettingsPage() {
+  const lang = useActiveLanguage();
   const [selectedLayoutOption, setSelectedLayoutOption] = useState<"option1" | "option2" | "option3">("option1");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
   const categories = ["All", "Core Setup", "Master Data", "Communications", "System & Security"];
+  const CAT_KEY: Record<string, UiKey> = {
+    "All": "common.all",
+    "Core Setup": "setmenu.cat_core",
+    "Master Data": "setmenu.cat_master",
+    "Communications": "setmenu.cat_comm",
+    "System & Security": "setmenu.cat_sys"
+  };
+  const catLabel = (cat: string) => t(lang, CAT_KEY[cat] ?? "common.all", cat);
 
   const filteredItems = settingsItems.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = item.title.toLowerCase().includes(q) ||
+                          item.description.toLowerCase().includes(q) ||
+                          t(lang, item.tKey, item.title).toLowerCase().includes(q) ||
+                          t(lang, item.dKey, item.description).toLowerCase().includes(q);
     const matchesCategory = activeCategory === "All" || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
@@ -253,7 +183,7 @@ export default function SettingsPage() {
                       : "bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-slate-100"
                   )}
                 >
-                  {cat}
+                  {catLabel(cat)}
                 </button>
               ))}
             </div>
@@ -361,7 +291,7 @@ export default function SettingsPage() {
                         : "bg-white/10 text-blue-200 hover:bg-white/20"
                     )}
                   >
-                    {cat}
+                    {catLabel(cat)}
                   </button>
                 ))}
               </div>
@@ -419,7 +349,7 @@ export default function SettingsPage() {
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  {cat}
+                  {catLabel(cat)}
                 </button>
               ))}
             </div>
@@ -448,14 +378,14 @@ export default function SettingsPage() {
 
               <div className="flex items-center gap-1.5">
                 <Badge variant="secondary" className="text-[10px] font-semibold">
-                  {item.badge}
+                  {t(lang, item.bKey, item.badge)}
                 </Badge>
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
               </div>
             </div>
 
-            <h2 className="mt-4 font-bold text-card-foreground group-hover:text-primary">{item.title}</h2>
-            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{item.description}</p>
+            <h2 className="mt-4 font-bold text-card-foreground group-hover:text-primary">{t(lang, item.tKey, item.title)}</h2>
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{t(lang, item.dKey, item.description)}</p>
           </Link>
         ))}
       </div>

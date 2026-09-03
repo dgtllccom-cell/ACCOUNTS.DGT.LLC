@@ -851,6 +851,49 @@ export type UiKey =
   | "nav.all_roznamcha"
   | "nav.roznamcha_all_report" | "roz.mgmt_title"
   | "prof.readonly_notice" | "prof.info_title" | "prof.info_desc" | "prof.f_full_name" | "prof.f_user_role" | "prof.f_branch_code" | "prof.f_state" | "prof.f_department" | "prof.f_designation" | "prof.f_login_email" | "prof.f_account_status" | "prof.f_last_login" | "prof.v_erp_ops" | "prof.v_current_session" | "prof.v_all_states" | "prof.v_all_countries" | "prof.v_all_main_branches" | "prof.v_all_city_branches" | "prof.creds_title" | "prof.creds_desc" | "prof.edit_login" | "prof.pwd_title" | "prof.pwd_desc" | "prof.pwd_link_note" | "prof.your_login_email" | "prof.reset_password" | "prof.erp_user"
+  | "setmenu.cat_core"
+  | "setmenu.cat_master"
+  | "setmenu.cat_comm"
+  | "setmenu.cat_sys"
+  | "setmenu.t_company"
+  | "setmenu.d_company"
+  | "setmenu.t_location"
+  | "setmenu.d_location"
+  | "setmenu.t_bank"
+  | "setmenu.d_bank"
+  | "setmenu.t_customer"
+  | "setmenu.d_customer"
+  | "setmenu.t_employee"
+  | "setmenu.d_employee"
+  | "setmenu.t_warehouse"
+  | "setmenu.d_warehouse"
+  | "setmenu.t_port"
+  | "setmenu.d_port"
+  | "setmenu.t_params"
+  | "setmenu.d_params"
+  | "setmenu.t_topology"
+  | "setmenu.d_topology"
+  | "setmenu.t_email"
+  | "setmenu.d_email"
+  | "setmenu.t_dashmgr"
+  | "setmenu.d_dashmgr"
+  | "setmenu.t_kyc"
+  | "setmenu.d_kyc"
+  | "setmenu.t_translation"
+  | "setmenu.d_translation"
+  | "setmenu.badge_essential"
+  | "setmenu.badge_hierarchy"
+  | "setmenu.badge_financial"
+  | "setmenu.badge_crm"
+  | "setmenu.badge_hr"
+  | "setmenu.badge_logistics"
+  | "setmenu.badge_trade"
+  | "setmenu.badge_params"
+  | "setmenu.badge_topology"
+  | "setmenu.badge_titan"
+  | "setmenu.badge_superadmin"
+  | "setmenu.badge_kyc"
+  | "setmenu.badge_5lang"
   | "nav.super_admin_roznamcha"
   | "nav.country_roznamcha"
   | "nav.branch_roznamcha"
@@ -16792,6 +16835,49 @@ const en: Dict = {
   "prof.your_login_email": "your login email",
   "prof.reset_password": "Reset Password",
   "prof.erp_user": "ERP User",
+  "setmenu.cat_core": "Core Setup",
+  "setmenu.cat_master": "Master Data",
+  "setmenu.cat_comm": "Communications",
+  "setmenu.cat_sys": "System & Security",
+  "setmenu.t_company": "Company Setup",
+  "setmenu.d_company": "Company incorporation, owner identification, contacts, and registrations.",
+  "setmenu.t_location": "Location Management",
+  "setmenu.d_location": "Configure the global 4-level location hierarchy: Country, State, City, and Tehsil.",
+  "setmenu.t_bank": "Bank Master Form",
+  "setmenu.d_bank": "Create banks once and use them everywhere across accounts, payments, receipts, ledger, purchases, and reports.",
+  "setmenu.t_customer": "Customer Management",
+  "setmenu.d_customer": "Manage customer / owner master records used across sales, receipts, accounts, and reports.",
+  "setmenu.t_employee": "Employee Management",
+  "setmenu.d_employee": "Manage employee master records used by HR, payroll, branch assignments, and permissions.",
+  "setmenu.t_warehouse": "Warehouse Master Form",
+  "setmenu.d_warehouse": "Register warehouses or storage facilities connected with the company.",
+  "setmenu.t_port": "Port / Boundary Master",
+  "setmenu.d_port": "Manage departure and arrival ports, border checkpoints, and airports for shipments.",
+  "setmenu.t_params": "Management Parameters",
+  "setmenu.d_params": "Draft parameter area for registration, contract, country, customer, and document types.",
+  "setmenu.t_topology": "Nations & Branch Networks",
+  "setmenu.d_topology": "Country to Main Branch to City Branch topology overview and master configurations.",
+  "setmenu.t_email": "Official Email Accounts (Titan SMTP)",
+  "setmenu.d_email": "Manage official branch email accounts, Hostinger Titan SMTP settings, passwords, and status.",
+  "setmenu.t_dashmgr": "Dashboard System & Module Manager",
+  "setmenu.d_dashmgr": "Super Admin dashboard allotment, screen visibility toggles, and per-role form alert controls.",
+  "setmenu.t_kyc": "KYC Verification & Compliance Reports",
+  "setmenu.d_kyc": "Track 15-day grace period countdowns, missing documents, and compliance status for country branches, city branches, and accounts.",
+  "setmenu.t_translation": "Local Translation Management",
+  "setmenu.d_translation": "Super Admin offline 5-language dictionary manager (English, Urdu, Pashto, Farsi, Arabic).",
+  "setmenu.badge_essential": "Essential",
+  "setmenu.badge_hierarchy": "Hierarchy",
+  "setmenu.badge_financial": "Financial",
+  "setmenu.badge_crm": "CRM",
+  "setmenu.badge_hr": "HR",
+  "setmenu.badge_logistics": "Logistics",
+  "setmenu.badge_trade": "Trade",
+  "setmenu.badge_params": "Parameters",
+  "setmenu.badge_topology": "Topology",
+  "setmenu.badge_titan": "Hostinger Titan",
+  "setmenu.badge_superadmin": "Super Admin",
+  "setmenu.badge_kyc": "KYC Audit",
+  "setmenu.badge_5lang": "5 Languages",
 };
 
 const ur: Dict = {
@@ -28638,6 +28724,49 @@ const ur: Dict = {
   "prof.your_login_email": "آپ کے لاگ اِن ای میل",
   "prof.reset_password": "پاس ورڈ دوبارہ ترتیب دیں",
   "prof.erp_user": "ERP صارف",
+  "setmenu.cat_core": "بنیادی سیٹ اپ",
+  "setmenu.cat_master": "ماسٹر ڈیٹا",
+  "setmenu.cat_comm": "مواصلات",
+  "setmenu.cat_sys": "سسٹم و سیکیورٹی",
+  "setmenu.t_company": "کمپنی سیٹ اپ",
+  "setmenu.d_company": "کمپنی کا اندراج، مالک کی شناخت، رابطے اور رجسٹریشنز۔",
+  "setmenu.t_location": "مقام مینیجمنٹ",
+  "setmenu.d_location": "عالمی 4 سطحی مقام درجہ بندی ترتیب دیں: ملک، ریاست، شہر اور تحصیل۔",
+  "setmenu.t_bank": "بینک ماسٹر فارم",
+  "setmenu.d_bank": "بینک ایک بار بنائیں اور اکاؤنٹس، ادائیگیوں، رسیدوں، لیجر، خریداری اور رپورٹس میں ہر جگہ استعمال کریں۔",
+  "setmenu.t_customer": "کسٹمر مینیجمنٹ",
+  "setmenu.d_customer": "فروخت، رسیدوں، اکاؤنٹس اور رپورٹس میں استعمال ہونے والے کسٹمر / مالک ماسٹر ریکارڈ سنبھالیں۔",
+  "setmenu.t_employee": "ملازم مینیجمنٹ",
+  "setmenu.d_employee": "HR، پے رول، برانچ تفویض اور اجازتوں میں استعمال ہونے والے ملازم ماسٹر ریکارڈ سنبھالیں۔",
+  "setmenu.t_warehouse": "گودام ماسٹر فارم",
+  "setmenu.d_warehouse": "کمپنی سے منسلک گودام یا اسٹوریج سہولیات رجسٹر کریں۔",
+  "setmenu.t_port": "بندرگاہ / سرحد ماسٹر",
+  "setmenu.d_port": "شپمنٹس کے لیے روانگی اور آمد کی بندرگاہیں، سرحدی چوکیاں اور ہوائی اڈے سنبھالیں۔",
+  "setmenu.t_params": "مینیجمنٹ پیرامیٹرز",
+  "setmenu.d_params": "رجسٹریشن، کنٹریکٹ، ملک، کسٹمر اور دستاویز کی اقسام کے لیے ڈرافٹ پیرامیٹر ایریا۔",
+  "setmenu.t_topology": "ممالک و برانچ نیٹ ورکس",
+  "setmenu.d_topology": "ملک سے مین برانچ سے سٹی برانچ ٹوپولوجی کا جائزہ اور ماسٹر کنفیگریشنز۔",
+  "setmenu.t_email": "سرکاری ای میل اکاؤنٹس (Titan SMTP)",
+  "setmenu.d_email": "سرکاری برانچ ای میل اکاؤنٹس، Hostinger Titan SMTP سیٹنگز، پاس ورڈز اور اسٹیٹس سنبھالیں۔",
+  "setmenu.t_dashmgr": "ڈیش بورڈ سسٹم و ماڈیول منیجر",
+  "setmenu.d_dashmgr": "سپر ایڈمن ڈیش بورڈ الاٹمنٹ، اسکرین visibility ٹوگلز اور فی کردار فارم الرٹ کنٹرولز۔",
+  "setmenu.t_kyc": "KYC تصدیق و تعمیل رپورٹس",
+  "setmenu.d_kyc": "ملک برانچز، سٹی برانچز اور اکاؤنٹس کے لیے 15 روزہ مہلت کاؤنٹ ڈاؤن، غائب دستاویزات اور تعمیل کی حیثیت ٹریک کریں۔",
+  "setmenu.t_translation": "مقامی ترجمہ مینیجمنٹ",
+  "setmenu.d_translation": "سپر ایڈمن آف لائن 5 زبان لغت منیجر (انگریزی، اردو، پشتو، فارسی، عربی)۔",
+  "setmenu.badge_essential": "ضروری",
+  "setmenu.badge_hierarchy": "درجہ بندی",
+  "setmenu.badge_financial": "مالی",
+  "setmenu.badge_crm": "CRM",
+  "setmenu.badge_hr": "ایچ آر",
+  "setmenu.badge_logistics": "لاجسٹکس",
+  "setmenu.badge_trade": "تجارت",
+  "setmenu.badge_params": "پیرامیٹرز",
+  "setmenu.badge_topology": "ٹوپولوجی",
+  "setmenu.badge_titan": "هوسٹنگر ٹائٹن",
+  "setmenu.badge_superadmin": "سپر ایڈمن",
+  "setmenu.badge_kyc": "KYC آڈٹ",
+  "setmenu.badge_5lang": "5 زبانیں",
 };
 
 const ar: Dict = {
@@ -40486,6 +40615,49 @@ const ar: Dict = {
   "prof.your_login_email": "بريد تسجيل الدخول الخاص بك",
   "prof.reset_password": "إعادة تعيين كلمة المرور",
   "prof.erp_user": "مستخدم ERP",
+  "setmenu.cat_core": "الإعداد الأساسي",
+  "setmenu.cat_master": "البيانات الرئيسية",
+  "setmenu.cat_comm": "الاتصالات",
+  "setmenu.cat_sys": "النظام والأمان",
+  "setmenu.t_company": "إعداد الشركة",
+  "setmenu.d_company": "تأسيس الشركة وتحديد المالك وجهات الاتصال والتسجيلات.",
+  "setmenu.t_location": "إدارة المواقع",
+  "setmenu.d_location": "تكوين التسلسل الهرمي العالمي للمواقع من 4 مستويات: الدولة والولاية والمدينة والتحصيل.",
+  "setmenu.t_bank": "نموذج البنك الرئيسي",
+  "setmenu.d_bank": "أنشئ البنوك مرة واحدة واستخدمها في كل مكان عبر الحسابات والمدفوعات والإيصالات ودفتر الأستاذ والمشتريات والتقارير.",
+  "setmenu.t_customer": "إدارة العملاء",
+  "setmenu.d_customer": "إدارة سجلات العملاء / المالكين الرئيسية المستخدمة في المبيعات والإيصالات والحسابات والتقارير.",
+  "setmenu.t_employee": "إدارة الموظفين",
+  "setmenu.d_employee": "إدارة سجلات الموظفين الرئيسية المستخدمة من قبل الموارد البشرية والرواتب وتعيينات الفروع والأذونات.",
+  "setmenu.t_warehouse": "نموذج المستودع الرئيسي",
+  "setmenu.d_warehouse": "تسجيل المستودعات أو مرافق التخزين المرتبطة بالشركة.",
+  "setmenu.t_port": "ميناء / حدود رئيسي",
+  "setmenu.d_port": "إدارة موانئ المغادرة والوصول ونقاط التفتيش الحدودية والمطارات للشحنات.",
+  "setmenu.t_params": "معلمات الإدارة",
+  "setmenu.d_params": "منطقة معلمات مسودة لأنواع التسجيل والعقد والدولة والعميل والمستندات.",
+  "setmenu.t_topology": "الدول وشبكات الفروع",
+  "setmenu.d_topology": "نظرة عامة على طوبولوجيا الدولة إلى الفرع الرئيسي إلى فرع المدينة والتكوينات الرئيسية.",
+  "setmenu.t_email": "حسابات البريد الإلكتروني الرسمية (Titan SMTP)",
+  "setmenu.d_email": "إدارة حسابات البريد الإلكتروني الرسمية للفروع وإعدادات Hostinger Titan SMTP وكلمات المرور والحالة.",
+  "setmenu.t_dashmgr": "مدير النظام والوحدات للوحة التحكم",
+  "setmenu.d_dashmgr": "تخصيص لوحة تحكم المشرف الأعلى ومفاتيح رؤية الشاشة وعناصر تحكم تنبيه النموذج لكل دور.",
+  "setmenu.t_kyc": "تقارير التحقق من KYC والامتثال",
+  "setmenu.d_kyc": "تتبع العد التنازلي لفترة السماح البالغة 15 يومًا والمستندات المفقودة وحالة الامتثال لفروع الدول وفروع المدن والحسابات.",
+  "setmenu.t_translation": "إدارة الترجمة المحلية",
+  "setmenu.d_translation": "مدير قاموس المشرف الأعلى بدون اتصال بـ 5 لغات (الإنجليزية والأردية والباشتو والفارسية والعربية).",
+  "setmenu.badge_essential": "أساسي",
+  "setmenu.badge_hierarchy": "التسلسل الهرمي",
+  "setmenu.badge_financial": "مالي",
+  "setmenu.badge_crm": "CRM",
+  "setmenu.badge_hr": "الموارد البشرية",
+  "setmenu.badge_logistics": "الخدمات اللوجستية",
+  "setmenu.badge_trade": "التجارة",
+  "setmenu.badge_params": "المعلمات",
+  "setmenu.badge_topology": "الطوبولوجيا",
+  "setmenu.badge_titan": "هوستنجر تايتن",
+  "setmenu.badge_superadmin": "المشرف الأعلى",
+  "setmenu.badge_kyc": "تدقيق KYC",
+  "setmenu.badge_5lang": "5 لغات",
 };
 
 const fa: Dict = {
@@ -52333,6 +52505,49 @@ const fa: Dict = {
   "prof.your_login_email": "ایمیل ورود شما",
   "prof.reset_password": "بازنشانی رمز عبور",
   "prof.erp_user": "کاربر ERP",
+  "setmenu.cat_core": "راه‌اندازی اصلی",
+  "setmenu.cat_master": "داده‌های اصلی",
+  "setmenu.cat_comm": "ارتباطات",
+  "setmenu.cat_sys": "سیستم و امنیت",
+  "setmenu.t_company": "راه‌اندازی شرکت",
+  "setmenu.d_company": "ثبت شرکت، شناسایی مالک، مخاطبین و ثبت‌نام‌ها.",
+  "setmenu.t_location": "مدیریت مکان‌ها",
+  "setmenu.d_location": "پیکربندی سلسله‌مراتب ۴ سطحی جهانی مکان: کشور، استان، شهر و بخش.",
+  "setmenu.t_bank": "فرم اصلی بانک",
+  "setmenu.d_bank": "بانک‌ها را یک بار ایجاد کنید و در حساب‌ها، پرداخت‌ها، رسیدها، دفتر کل، خریدها و گزارش‌ها همه‌جا استفاده کنید.",
+  "setmenu.t_customer": "مدیریت مشتریان",
+  "setmenu.d_customer": "مدیریت رکوردهای اصلی مشتری / مالک که در فروش، رسیدها، حساب‌ها و گزارش‌ها استفاده می‌شود.",
+  "setmenu.t_employee": "مدیریت کارمندان",
+  "setmenu.d_employee": "مدیریت رکوردهای اصلی کارمند که توسط منابع انسانی، حقوق و دستمزد، تخصیص شعبه و مجوزها استفاده می‌شود.",
+  "setmenu.t_warehouse": "فرم اصلی انبار",
+  "setmenu.d_warehouse": "ثبت انبارها یا امکانات ذخیره‌سازی مرتبط با شرکت.",
+  "setmenu.t_port": "بندر / مرز اصلی",
+  "setmenu.d_port": "مدیریت بنادر خروج و ورود، ایست‌های بازرسی مرزی و فرودگاه‌ها برای محموله‌ها.",
+  "setmenu.t_params": "پارامترهای مدیریت",
+  "setmenu.d_params": "ناحیهٔ پارامتر پیش‌نویس برای انواع ثبت‌نام، قرارداد، کشور، مشتری و سند.",
+  "setmenu.t_topology": "کشورها و شبکه‌های شعب",
+  "setmenu.d_topology": "نمای کلی توپولوژی کشور به شعبه اصلی به شعبه شهری و پیکربندی‌های اصلی.",
+  "setmenu.t_email": "حساب‌های ایمیل رسمی (Titan SMTP)",
+  "setmenu.d_email": "مدیریت حساب‌های ایمیل رسمی شعبه، تنظیمات Hostinger Titan SMTP، رمزها و وضعیت.",
+  "setmenu.t_dashmgr": "مدیر سیستم و ماژول داشبورد",
+  "setmenu.d_dashmgr": "تخصیص داشبورد مدیر ارشد، کلیدهای نمایش صفحه و کنترل‌های هشدار فرم به ازای هر نقش.",
+  "setmenu.t_kyc": "گزارش‌های تأیید KYC و انطباق",
+  "setmenu.d_kyc": "پیگیری شمارش معکوس دورهٔ مهلت ۱۵ روزه، اسناد گمشده و وضعیت انطباق برای شعب کشوری، شعب شهری و حساب‌ها.",
+  "setmenu.t_translation": "مدیریت ترجمهٔ محلی",
+  "setmenu.d_translation": "مدیر واژه‌نامهٔ آفلاین ۵ زبانهٔ مدیر ارشد (انگلیسی، اردو، پشتو، فارسی، عربی).",
+  "setmenu.badge_essential": "ضروری",
+  "setmenu.badge_hierarchy": "سلسله‌مراتب",
+  "setmenu.badge_financial": "مالی",
+  "setmenu.badge_crm": "CRM",
+  "setmenu.badge_hr": "منابع انسانی",
+  "setmenu.badge_logistics": "لجستیک",
+  "setmenu.badge_trade": "تجارت",
+  "setmenu.badge_params": "پارامترها",
+  "setmenu.badge_topology": "توپولوژی",
+  "setmenu.badge_titan": "هاستینگر تایتن",
+  "setmenu.badge_superadmin": "مدیر ارشد",
+  "setmenu.badge_kyc": "حسابرسی KYC",
+  "setmenu.badge_5lang": "۵ زبان",
 };
 
 const ps: Dict = {
@@ -64186,6 +64401,49 @@ const ps: Dict = {
   "prof.your_login_email": "ستاسو د ننوتلو ایمیل",
   "prof.reset_password": "پاسورډ بیا تنظیم کړئ",
   "prof.erp_user": "د ERP کاروونکی",
+  "setmenu.cat_core": "بنسټیز تنظیم",
+  "setmenu.cat_master": "اصلي معلومات",
+  "setmenu.cat_comm": "اړیکې",
+  "setmenu.cat_sys": "سیسټم او امنیت",
+  "setmenu.t_company": "د شرکت تنظیم",
+  "setmenu.d_company": "د شرکت راجستر، د مالک پېژندنه، اړیکې او راجسترونه.",
+  "setmenu.t_location": "د موقعیت مدیریت",
+  "setmenu.d_location": "د موقعیت نړیوال 4-کچیز درجه بندي تنظیم کړئ: هېواد، ایالت، ښار او تحصیل.",
+  "setmenu.t_bank": "د بانک اصلي فورمه",
+  "setmenu.d_bank": "بانکونه یو ځل جوړ کړئ او په حسابونو، تادیاتو، رسیدونو، لیجر، پیرودنو او راپورونو کې یې هر ځای وکاروئ.",
+  "setmenu.t_customer": "د پیرودونکو مدیریت",
+  "setmenu.d_customer": "د پیرودونکي / مالک اصلي ریکارډونه اداره کړئ چې په پلور، رسیدونو، حسابونو او راپورونو کې کارول کیږي.",
+  "setmenu.t_employee": "د کارمندانو مدیریت",
+  "setmenu.d_employee": "د کارمند اصلي ریکارډونه اداره کړئ چې د HR، معاش، د څانګې ټاکنو او اجازو لخوا کارول کیږي.",
+  "setmenu.t_warehouse": "د ګودام اصلي فورمه",
+  "setmenu.d_warehouse": "له شرکت سره تړلي ګودامونه یا د ذخیرې تاسیسات راجستر کړئ.",
+  "setmenu.t_port": "بندر / پوله اصلي",
+  "setmenu.d_port": "د بارونو لپاره د تګ او راتګ بندرونه، پوله پوستې او هوایي ډګرونه اداره کړئ.",
+  "setmenu.t_params": "د مدیریت پیرامیټرونه",
+  "setmenu.d_params": "د راجستر، تړون، هېواد، پیرودونکي او سند ډولونو لپاره د مسودې پیرامیټر ساحه.",
+  "setmenu.t_topology": "هېوادونه او د څانګو شبکې",
+  "setmenu.d_topology": "د هېواد څخه اصلي څانګې څخه ښاري څانګې ټوپولوژي کتنه او اصلي تنظیمات.",
+  "setmenu.t_email": "رسمي بریښنالیک حسابونه (Titan SMTP)",
+  "setmenu.d_email": "د رسمي څانګې بریښنالیک حسابونه، د Hostinger Titan SMTP تنظیمات، پاسورډونه او حالت اداره کړئ.",
+  "setmenu.t_dashmgr": "د ډشبورډ سیسټم او ماډیول مدیر",
+  "setmenu.d_dashmgr": "د سوپر ایډمین ډشبورډ تخصیص، د سکرین لیدو ټاګلونه او د هر رول لپاره د فورمې خبرتیا کنټرولونه.",
+  "setmenu.t_kyc": "د KYC تصدیق او د مطابقت راپورونه",
+  "setmenu.d_kyc": "د هېواد څانګو، ښاري څانګو او حسابونو لپاره د 15-ورځني مهلت شمېرنه، ورک شوي سندونه او د مطابقت حالت تعقیب کړئ.",
+  "setmenu.t_translation": "د محلي ژباړې مدیریت",
+  "setmenu.d_translation": "د سوپر ایډمین آف‌لاین د 5 ژبو قاموس مدیر (انګلیسي، اردو، پښتو، فارسي، عربي).",
+  "setmenu.badge_essential": "اړین",
+  "setmenu.badge_hierarchy": "درجه بندي",
+  "setmenu.badge_financial": "مالي",
+  "setmenu.badge_crm": "CRM",
+  "setmenu.badge_hr": "بشري سرچینې",
+  "setmenu.badge_logistics": "لوژستیک",
+  "setmenu.badge_trade": "سوداګري",
+  "setmenu.badge_params": "پیرامیټرونه",
+  "setmenu.badge_topology": "ټوپولوژي",
+  "setmenu.badge_titan": "هوسټینګر ټایټن",
+  "setmenu.badge_superadmin": "سوپر ایډمین",
+  "setmenu.badge_kyc": "د KYC پلټنه",
+  "setmenu.badge_5lang": "5 ژبې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
