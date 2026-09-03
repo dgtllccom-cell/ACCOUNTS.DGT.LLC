@@ -1327,7 +1327,7 @@ export function SmartCrmControlCenter() {
                     className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-black rounded-lg shadow-xs flex items-center justify-center gap-1"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>{t(lang, "crm.btn_add_followup", "+ Add Follow-Up")}</span>
+                    <span>{t(lang, "crm.btn_add_followup", "Add Follow-Up")}</span>
                   </Button>
 
                   <Button

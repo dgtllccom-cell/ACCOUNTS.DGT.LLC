@@ -106,7 +106,11 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Report pages, documents manager, KYC reports, and specialized studio pages render their own dedicated toolbar directly
+  // Report pages, documents manager, KYC reports, and specialized studio pages render their own dedicated toolbar directly.
+  // NOTE: this is computed but the early return MUST come after every hook below — a conditional
+  // return before a hook changes the hook count between route renders and triggers React error #310
+  // (Rules of Hooks). ErpPageActions renders on every dashboard route, so that crash hit ~every
+  // navigation between a report and a non-report page.
   const isReportPage =
     pathname?.startsWith("/dashboard/reports") ||
     pathname?.startsWith("/dashboard/roznamcha/reports") ||
@@ -115,7 +119,6 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     pathname?.startsWith("/dashboard/documents/") ||
     pathname === "/dashboard/kyc-reports" ||
     pathname?.startsWith("/dashboard/kyc-reports/");
-  if (isReportPage) return null;
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
   const subtitle = subtitleOverride || t(lang, "pa.subtitle", "Standard ERP navigation and page actions");
@@ -203,6 +206,9 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
       summary: subtitle,
     });
   }
+
+  // Early return is safe here — every hook above has already run unconditionally.
+  if (isReportPage) return null;
 
   return (
     <section data-erp-page-actions className="no-print mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3.5 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90 sm:px-4">
