@@ -38,6 +38,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 
 interface UserDirectoryItem {
@@ -110,6 +112,7 @@ const ALL_SYSTEM_FORMS = [
 export default function SuperAdminAllUsersDirectoryPage() {
   const lang = useActiveLanguage();
   const isRTL = getLanguageDirection(lang) === "rtl";
+  const th = (s: string) => translateHeader(lang, s);
   const [users, setUsers] = useState<UserDirectoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +137,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
   // Live time for header
   const [currentTime, setCurrentTime] = useState<string>("");
+
+  // Real signed-in session context for the "Branch & User Details" block
+  const [sess, setSess] = useState<any>(null);
+  useEffect(() => {
+    fetch("/api/erp/auth/session")
+      .then((r) => r.json())
+      .then((j) => setSess(j?.data || j))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -261,17 +273,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
           return {
             userId: u.userId || u.id || `u-${idx}`,
             userCode,
-            fullName: u.fullName || u.name || "System User",
+            fullName: u.fullName || u.name || u.email || "—",
             email,
             phone: u.phone || "—",
             countryId: u.countryId || null,
-            countryName: u.countryName || "Global / All",
+            countryName: u.countryName || "—",
             branchId: u.branchId || null,
-            branchName: u.branchName || "Main Headquarters",
+            branchName: u.branchName || "—",
             role: u.role || "staff_user",
-            roleLabel: u.roleLabel || u.role || "Staff User",
+            roleLabel: u.roleLabel || u.role || "—",
             isActive: u.isActive ?? true,
-            permissionsCount: u.permissionsCount || 12,
+            permissionsCount: Number(u.permissionsCount) || 0,
             passwordVaultRef: u.passwordVaultRef || `VAULT-DGT-${userCode}`,
             passwordKey,
             loginUrl,
@@ -555,32 +567,32 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
               <span className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] font-black text-white">1</span>
-                BRANCH & USER DETAILS
+                {th("BRANCH & USER DETAILS")}
               </span>
               <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-mono">
-                ACTIVE
+                {th("ACTIVE")}
               </span>
             </div>
             <div className="space-y-1 text-[11px]">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">COUNTRY:</span>
-                <span className="font-bold text-foreground">Pakistan / Afghanistan</span>
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0 text-muted-foreground font-medium">{th("COUNTRY")}:</span>
+                <span className="min-w-0 truncate text-right font-bold text-foreground">{sess?.isSuperAdmin || sess?.scopes?.isSuperAdmin ? th("All Countries") : ((sess?.scopes?.countryNames || sess?.countryNames || []).join(", ") || "—")}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">BRANCH NAME:</span>
-                <span className="font-bold text-foreground truncate max-w-[140px]" title="UNITED ARAB EMIRATES MAIN BRANCH">MAIN HEADQUARTERS</span>
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0 text-muted-foreground font-medium">{th("BRANCH NAME")}:</span>
+                <span className="min-w-0 truncate text-right font-bold text-foreground">{sess?.isSuperAdmin || sess?.scopes?.isSuperAdmin ? th("All Branches") : ((sess?.scopes?.branchNames || sess?.branchNames || []).join(", ") || "—")}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">USER NAME:</span>
-                <span className="font-bold text-foreground">SUPER ADMIN (Asmat Abdullah)</span>
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0 text-muted-foreground font-medium">{th("USER NAME")}:</span>
+                <span className="min-w-0 truncate text-right font-bold text-foreground">{sess?.user?.fullName || sess?.fullName || sess?.user?.email || "—"}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">ROLE:</span>
-                <span className="font-black text-indigo-600 dark:text-indigo-400">GLOBAL SUPER ADMIN</span>
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0 text-muted-foreground font-medium">{th("ROLE")}:</span>
+                <span className="min-w-0 truncate text-right font-black text-indigo-600 dark:text-indigo-400">{(sess?.roles?.[0] || "—").toString().replace(/_/g, " ")}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">DATE & TIME:</span>
-                <span className="font-mono text-muted-foreground text-[10px]">{currentTime || "17 Aug 2026, 02:15 PM"}</span>
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0 text-muted-foreground font-medium">{th("DATE & TIME")}:</span>
+                <span className="font-mono text-muted-foreground text-[10px]">{currentTime || "—"}</span>
               </div>
             </div>
           </div>
@@ -590,30 +602,30 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
               <span className="text-[11px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-black text-white">2</span>
-                GLOBAL USER SUMMARY
+                {th("GLOBAL USER SUMMARY")}
               </span>
               <span className="text-[9px] font-mono text-muted-foreground">TOTAL: {stats.total}</span>
             </div>
             <div className="space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">TOTAL USERS:</span>
+                <span className="text-muted-foreground font-medium">{th("TOTAL USERS")}:</span>
                 <span className="font-mono font-black text-foreground text-xs">{stats.total}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">ACTIVE LOGINS:</span>
+                <span className="text-muted-foreground font-medium">{th("ACTIVE LOGINS")}:</span>
                 <span className="font-mono font-bold text-emerald-600">{stats.active}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">ADMIN & MANAGERS:</span>
+                <span className="text-muted-foreground font-medium">{th("ADMIN & MANAGERS")}:</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{stats.admins}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">STAFF & CASHIERS:</span>
+                <span className="text-muted-foreground font-medium">{th("STAFF & CASHIERS")}:</span>
                 <span className="font-mono font-bold text-amber-600">{stats.total - stats.admins}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">SYSTEM VAULT:</span>
-                <span className="font-bold text-emerald-600">ENCRYPTED & SYNCED</span>
+                <span className="text-muted-foreground font-medium">{th("PASSWORD VAULT")}:</span>
+                <span className="font-bold text-emerald-600">{th("Active")}</span>
               </div>
             </div>
           </div>
@@ -623,30 +635,30 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
               <span className="text-[11px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[9px] font-black text-white">3</span>
-                ACCESS COVERAGE
+                {th("ACCESS COVERAGE")}
               </span>
               <span className="text-[9px] font-mono text-muted-foreground">{stats.branches} BRANCHES</span>
             </div>
             <div className="space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">COVERED BRANCHES:</span>
+                <span className="text-muted-foreground font-medium">{th("COVERED BRANCHES")}:</span>
                 <span className="font-mono font-black text-purple-600 dark:text-purple-400">{stats.branches}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">ACTIVE COUNTRIES:</span>
-                <span className="font-mono font-bold text-foreground">{countriesList.length || 3}</span>
+                <span className="text-muted-foreground font-medium">{th("ACTIVE COUNTRIES")}:</span>
+                <span className="font-mono font-bold text-foreground">{countriesList.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">SYSTEM FORMS:</span>
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{ALL_SYSTEM_FORMS.length} Active Forms</span>
+                <span className="text-muted-foreground font-medium">{th("SYSTEM FORMS")}:</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{ALL_SYSTEM_FORMS.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">ROLE TIERS:</span>
-                <span className="font-bold text-foreground">6 Hierarchy Levels</span>
+                <span className="text-muted-foreground font-medium">{th("ROLE TIERS")}:</span>
+                <span className="font-bold text-foreground">{new Set(users.map((u) => u.role)).size || "—"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground font-medium">SECURITY CHECK:</span>
-                <span className="font-bold text-emerald-600">PASSED 100%</span>
+                <span className="text-muted-foreground font-medium">{th("VAULT REFERENCES")}:</span>
+                <span className="font-bold text-emerald-600">{users.filter((u) => u.passwordVaultRef).length}</span>
               </div>
             </div>
           </div>
@@ -657,9 +669,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
               <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
                 <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white">4</span>
-                  QUICK HANDOVER TOOLS
+                  {th("QUICK HANDOVER TOOLS")}
                 </span>
-                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 font-mono">ONLINE</span>
+                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 font-mono">{th("Online")}</span>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
                 Click any user row to open their <strong>Form Permissions Matrix</strong> or generate their official A4 Onboarding Handover Form.
@@ -827,7 +839,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
           <Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search User, Code, Email, Branch, Vault ID..."
+            placeholder={th("Search User, Code, Email, Branch, Vault ID") + "..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full ps-9 pe-3 py-2 text-xs bg-muted/40 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-foreground placeholder:text-muted-foreground font-medium"
@@ -840,7 +852,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             onChange={(e) => setCountryFilter(e.target.value)}
             className="px-3 py-1.5 text-xs bg-background border border-border rounded-xl focus:outline-none text-foreground font-semibold"
           >
-            <option value="all">All Countries</option>
+            <option value="all">{th("All Countries")}</option>
             {countriesList.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -851,7 +863,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             onChange={(e) => setRoleFilter(e.target.value)}
             className="px-3 py-1.5 text-xs bg-background border border-border rounded-xl focus:outline-none text-foreground font-semibold"
           >
-            <option value="all">All Roles</option>
+            <option value="all">{th("All Roles")}</option>
             {rolesList.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
@@ -862,9 +874,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-1.5 text-xs bg-background border border-border rounded-xl focus:outline-none text-foreground font-semibold"
           >
-            <option value="all">All Statuses</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
+            <option value="all">{th("All Statuses")}</option>
+            <option value="active">{th("Active Only")}</option>
+            <option value="inactive">{th("Inactive Only")}</option>
           </select>
 
           {(searchQuery || countryFilter !== "all" || roleFilter !== "all" || statusFilter !== "all") && (
@@ -916,15 +928,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
           <table className="w-full text-xs text-left border-collapse">
             <thead className="bg-muted/60 border-b border-border text-muted-foreground uppercase font-black text-[10px] tracking-wider print:bg-slate-100 print:text-slate-900">
               <tr>
-                <th className="p-3.5 text-center w-12">Sr #</th>
-                <th className="p-3.5">User & Code</th>
-                <th className="p-3.5">Role & Level</th>
-                <th className="p-3.5">Country & Branch</th>
-                <th className="p-3.5">Login Portal URL</th>
-                <th className="p-3.5">Username / Email</th>
-                <th className="p-3.5">Password Key / Vault</th>
-                <th className="p-3.5 text-center">Status</th>
-                <th className="p-3.5 text-center print:hidden">Actions</th>
+                <th className="p-3.5 text-center w-12">{th("Sr #")}</th>
+                <th className="p-3.5">{th("User & Code")}</th>
+                <th className="p-3.5">{th("Role & Level")}</th>
+                <th className="p-3.5">{th("Country & Branch")}</th>
+                <th className="p-3.5">{th("Login Portal URL")}</th>
+                <th className="p-3.5">{th("Username / Email")}</th>
+                <th className="p-3.5">{th("Password Key / Vault")}</th>
+                <th className="p-3.5 text-center">{th("Status")}</th>
+                <th className="p-3.5 text-center print:hidden">{th("Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border print:divide-slate-300">
