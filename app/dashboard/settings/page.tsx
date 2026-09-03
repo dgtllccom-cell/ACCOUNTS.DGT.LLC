@@ -126,11 +126,11 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
+                <Link href="/dashboard" className="hover:text-white">{t(lang, "nav.dashboard", "Dashboard")}</Link>
                 <ChevronRight className="h-3 w-3" />
-                <span className="text-slate-300">Workspace</span>
+                <span className="text-slate-300">{t(lang, "setmenu.workspace", "Workspace")}</span>
                 <ChevronRight className="h-3 w-3" />
-                <span className="font-semibold text-blue-400">Settings & Controls</span>
+                <span className="font-semibold text-blue-400">{t(lang, "setmenu.settings_controls", "Settings & Controls")}</span>
               </div>
 
               <div className="mt-2 flex items-center gap-3">
@@ -138,7 +138,7 @@ export default function SettingsPage() {
                   <Settings className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-white">System Settings & Controls</h1>
+                  <h1 className="text-2xl font-bold tracking-tight text-white">{t(lang, "setmenu.system_settings_controls", "System Settings & Controls")}</h1>
                   <p className="text-xs text-slate-400">
                     {t(lang, "setmenu.hub_desc", "Enterprise configuration hub for branch, company, account, and permission workflows.")}
                   </p>
@@ -197,8 +197,8 @@ export default function SettingsPage() {
                 <Layers className="h-4 w-4 text-blue-400" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
-                <span className="text-xl font-bold text-white">9 Active</span>
-                <span className="text-[10px] text-emerald-400 font-medium">+100% operational</span>
+                <span className="text-xl font-bold text-white">9 {t(lang, "common.active", "Active")}</span>
+                <span className="text-[10px] text-emerald-400 font-medium">+100% {t(lang, "setmenu.operational", "operational")}</span>
               </div>
             </div>
 
@@ -219,8 +219,8 @@ export default function SettingsPage() {
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
-                <span className="text-xl font-bold text-emerald-400">Protected</span>
-                <span className="text-[10px] text-slate-400 font-medium">Multi-tenant Scoped</span>
+                <span className="text-xl font-bold text-emerald-400">{t(lang, "setmenu.protected", "Protected")}</span>
+                <span className="text-[10px] text-slate-400 font-medium">{t(lang, "setmenu.multi_tenant_scoped", "Multi-tenant Scoped")}</span>
               </div>
             </div>
           </div>

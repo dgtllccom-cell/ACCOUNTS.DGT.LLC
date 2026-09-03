@@ -77,8 +77,8 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} tickFormatter={compact} />
                   <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`]} contentStyle={tooltipStyle} />
                   <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 10, paddingTop: 10 }} />
-                  <Bar dataKey="Sales" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Purchase" fill="#0f62fe" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Sales" name={t(lang, "cdash.col_sales", "Sales")} fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Purchase" name={t(lang, "cdash.col_purchase", "Purchase")} fill="#0f62fe" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               )}
@@ -99,7 +99,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   <XAxis dataKey="name" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
                   <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} tickFormatter={compact} />
                   <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`]} contentStyle={tooltipStyle} />
-                  <Line type="monotone" dataKey="Profit" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: "#8b5cf6", r: 4 }} />
+                  <Line type="monotone" dataKey="Profit" name={t(lang, "dash.profit", "Profit")} stroke="#8b5cf6" strokeWidth={3} dot={{ fill: "#8b5cf6", r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
               )}

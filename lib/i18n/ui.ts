@@ -927,6 +927,14 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cdash.col_purchase"
+  | "dash.profit"
+  | "setmenu.workspace"
+  | "setmenu.settings_controls"
+  | "setmenu.system_settings_controls"
+  | "setmenu.operational"
+  | "setmenu.protected"
+  | "setmenu.multi_tenant_scoped"
   | "setmenu.sync_system"
   | "setmenu.new_parameter"
   | "setmenu.enterprise_core"
@@ -17641,6 +17649,22 @@ const en: Dict = {
 
 
 
+
+
+  "cdash.col_purchase": "Purchase",
+
+  "dash.profit": "Profit",
+  "setmenu.workspace": "Workspace",
+
+  "setmenu.settings_controls": "Settings & Controls",
+
+  "setmenu.system_settings_controls": "System Settings & Controls",
+
+  "setmenu.operational": "operational",
+
+  "setmenu.protected": "Protected",
+
+  "setmenu.multi_tenant_scoped": "Multi-tenant Scoped",
   "setmenu.sync_system": "Sync System",
 
   "setmenu.new_parameter": "New Parameter",
@@ -30864,6 +30888,22 @@ const ur: Dict = {
 
 
 
+
+
+  "cdash.col_purchase": "خریداری",
+
+  "dash.profit": "منافع",
+  "setmenu.workspace": "ورک اسپیس",
+
+  "setmenu.settings_controls": "ترتیبات اور کنٹرولز",
+
+  "setmenu.system_settings_controls": "سسٹم ترتیبات اور کنٹرولز",
+
+  "setmenu.operational": "فعال",
+
+  "setmenu.protected": "محفوظ",
+
+  "setmenu.multi_tenant_scoped": "ملٹی ٹیننٹ اسکوپڈ",
   "setmenu.sync_system": "سسٹم ہم آہنگ کریں",
 
   "setmenu.new_parameter": "نیا پیرامیٹر",
@@ -44089,6 +44129,22 @@ const ar: Dict = {
 
 
 
+
+
+  "cdash.col_purchase": "المشتريات",
+
+  "dash.profit": "الربح",
+  "setmenu.workspace": "مساحة العمل",
+
+  "setmenu.settings_controls": "الإعدادات والتحكم",
+
+  "setmenu.system_settings_controls": "إعدادات النظام والتحكم",
+
+  "setmenu.operational": "تشغيلي",
+
+  "setmenu.protected": "محمي",
+
+  "setmenu.multi_tenant_scoped": "نطاق متعدد المستأجرين",
   "setmenu.sync_system": "مزامنة النظام",
 
   "setmenu.new_parameter": "معلمة جديدة",
@@ -57313,6 +57369,22 @@ const fa: Dict = {
 
 
 
+
+
+  "cdash.col_purchase": "خرید",
+
+  "dash.profit": "سود",
+  "setmenu.workspace": "فضای کاری",
+
+  "setmenu.settings_controls": "تنظیمات و کنترل‌ها",
+
+  "setmenu.system_settings_controls": "تنظیمات و کنترل‌های سیستم",
+
+  "setmenu.operational": "عملیاتی",
+
+  "setmenu.protected": "محافظت‌شده",
+
+  "setmenu.multi_tenant_scoped": "محدوده چند-مستاجری",
   "setmenu.sync_system": "همگام‌سازی سیستم",
 
   "setmenu.new_parameter": "پارامتر جدید",
@@ -70543,6 +70615,22 @@ const ps: Dict = {
 
 
 
+
+
+  "cdash.col_purchase": "پیرود",
+
+  "dash.profit": "ګټه",
+  "setmenu.workspace": "کاري چاپېریال",
+
+  "setmenu.settings_controls": "تنظیمات او کنټرولونه",
+
+  "setmenu.system_settings_controls": "د سیسټم تنظیمات او کنټرولونه",
+
+  "setmenu.operational": "عملیاتي",
+
+  "setmenu.protected": "خوندي",
+
+  "setmenu.multi_tenant_scoped": "څو-کرایه نشین ساحه",
   "setmenu.sync_system": "سیسټم همغږی کړئ",
 
   "setmenu.new_parameter": "نوی پیرامیټر",
