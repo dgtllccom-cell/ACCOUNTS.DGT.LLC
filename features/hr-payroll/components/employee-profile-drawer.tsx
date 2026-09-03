@@ -28,6 +28,7 @@ import { printEmployeeCertificate } from "@/components/ui/employee-certificate-p
 import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 interface EmployeeProfileDrawerProps {
@@ -48,6 +49,7 @@ export function EmployeeProfileDrawer({
   onOpenLoan
 }: EmployeeProfileDrawerProps) {
   const lang = useActiveLanguage();
+  const th = (s: string) => translateHeader(lang, s);
   const [emp, setEmp] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -139,16 +141,16 @@ export function EmployeeProfileDrawer({
     <DetailDrawer
       isOpen={isOpen}
       onClose={onClose}
-      title={emp ? `${emp.person?.customer_name || emp.name || "Employee"} — Dossier` : "Employee Profile Details"}
-      subtitle="Enterprise Employee Registry, Identity, Branch Assignment & Payroll Verification"
+      title={emp ? `${emp.person?.customer_name || emp.name || th("Employee")} — ${th("Dossier")}` : th("Employee Profile Details")}
+      subtitle={th("Enterprise Employee Registry, Identity, Branch Assignment & Payroll Verification")}
     >
       {loading ? (
         <div className="p-12 text-center text-slate-500 font-medium animate-pulse">
-          Loading employee dossier and verified records...
+          {th("Loading employee dossier and verified records")}...
         </div>
       ) : !emp ? (
         <div className="p-8 text-center text-slate-500">
-          Employee profile could not be loaded.
+          {th("Employee profile could not be loaded.")}
         </div>
       ) : (
         <div className="space-y-5 p-2 font-sans text-xs">
@@ -162,7 +164,7 @@ export function EmployeeProfileDrawer({
                 className="h-8 text-xs font-bold gap-1.5 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 shadow-xs hover:bg-slate-100"
               >
                 <Printer className="h-3.5 w-3.5 text-blue-600" />
-                <span>Print Certificate</span>
+                <span>{th("Print Certificate")}</span>
               </Button>
               {onEdit && (
                 <Button
@@ -175,7 +177,7 @@ export function EmployeeProfileDrawer({
                   className="h-8 text-xs font-bold gap-1.5 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 shadow-xs hover:bg-slate-100"
                 >
                   <Edit3 className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Edit Profile</span>
+                  <span>{th("Edit Profile")}</span>
                 </Button>
               )}
             </div>
@@ -189,7 +191,7 @@ export function EmployeeProfileDrawer({
                   className="h-8 text-xs font-bold gap-1.5 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 shadow-xs hover:bg-slate-100"
                 >
                   <CreditCard className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Loan / Adv</span>
+                  <span>{th("Loan / Adv")}</span>
                 </Button>
               )}
               {onOpen360 && person.id && (
@@ -200,7 +202,7 @@ export function EmployeeProfileDrawer({
                   className="h-8 text-xs font-bold gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 shadow-xs"
                 >
                   <Layers className="h-3.5 w-3.5 text-purple-600" />
-                  <span>360° Links</span>
+                  <span>{th("360 Links")}</span>
                 </Button>
               )}
             </div>
@@ -294,33 +296,33 @@ export function EmployeeProfileDrawer({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Country</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Country")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{country.name || "N/A"}</span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Main Branch</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Main Branch")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">
                   {mainBranch.name || "N/A"} {mainBranch.code ? `(${mainBranch.code})` : ""}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">City Branch</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("City Branch")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">
                   {cityBranch.name || "N/A"} {cityBranch.code ? `(${cityBranch.code})` : ""}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Reporting Manager</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Reporting Manager")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">
                   {emp.reporting_manager_name || emp.reporting_manager?.customer_name || "Self / Branch Head"}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Designation</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Designation")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{emp.designation || "N/A"}</span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Department</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Department")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{emp.department || "Executive Management"}</span>
               </div>
             </div>
@@ -337,7 +339,7 @@ export function EmployeeProfileDrawer({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Mobile Number</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Mobile Number")}</span>
                 {person.mobile ? (
                   <a
                     href={`tel:${person.mobile}`}
@@ -351,7 +353,7 @@ export function EmployeeProfileDrawer({
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">WhatsApp</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("WhatsApp")}</span>
                 {person.whatsapp || person.mobile ? (
                   <a
                     href={`https://wa.me/${(person.whatsapp || person.mobile).replace(/[^0-9]/g, "")}`}
@@ -367,7 +369,7 @@ export function EmployeeProfileDrawer({
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Email Address</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Email Address")}</span>
                 {person.email ? (
                   <a
                     href={`mailto:${person.email}`}
@@ -381,14 +383,14 @@ export function EmployeeProfileDrawer({
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">National ID / Passport</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("National ID / Passport")}</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                   {person.cnic || person.passport || emp.cnic_passport || "—"}
                 </span>
               </div>
 
               <div className="sm:col-span-2">
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">Address</span>
+                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Address")}</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">
                   {person.address || emp.address || "—"}
                 </span>
@@ -407,28 +409,28 @@ export function EmployeeProfileDrawer({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
               <div className="p-2.5 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/80 dark:border-emerald-800">
-                <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Net Salary</div>
+                <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">{th("Net Salary")}</div>
                 <div className="font-mono font-black text-emerald-800 dark:text-emerald-300 text-sm mt-0.5">
                   {Number(emp.net_salary || emp.salary || 0).toLocaleString()} {emp.salary_currency || "USD"}
                 </div>
               </div>
 
               <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">Basic Salary</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase">{th("Basic Salary")}</div>
                 <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">
                   {Number(emp.basic_salary || emp.salary || 0).toLocaleString()} {emp.salary_currency || "USD"}
                 </div>
               </div>
 
               <div className="p-2.5 bg-red-50/60 dark:bg-red-950/30 rounded-xl border border-red-200/80 dark:border-red-800">
-                <div className="text-[9px] font-bold text-red-700 dark:text-red-400 uppercase">Adv / Loan Deduction</div>
+                <div className="text-[9px] font-bold text-red-700 dark:text-red-400 uppercase">{th("Adv / Loan Deduction")}</div>
                 <div className="font-mono font-bold text-red-700 dark:text-red-300 text-sm mt-0.5">
                   -{Number((emp.advance_deduction || 0) + (emp.loan_deduction || 0)).toLocaleString()}
                 </div>
               </div>
 
               <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">Joining Date</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase">{th("Joining Date")}</div>
                 <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">
                   {emp.joining_date || "—"}
                 </div>
