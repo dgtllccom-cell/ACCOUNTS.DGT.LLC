@@ -8,11 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiGet, apiPut } from "@/lib/api/client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export default function EditLocationPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const lang = useActiveLanguage();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +44,7 @@ export default function EditLocationPage() {
           isActive: loc.is_active ?? true,
         });
       } catch (err) {
-        alert("Failed to load location");
+        alert(t(lang, "locedit.err_load", "Failed to load location"));
         router.push("/dashboard/settings/location");
       } finally {
         setLoading(false);
@@ -63,10 +66,10 @@ export default function EditLocationPage() {
         isActive: formData.isActive,
       });
 
-      alert("Location updated successfully!");
+      alert(t(lang, "locedit.updated_ok", "Location updated successfully!"));
       router.push("/dashboard/settings/location");
     } catch (err: any) {
-      alert(`Failed to update location: ${err.message}`);
+      alert(`${t(lang, "locedit.err_update", "Failed to update location")}: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -90,18 +93,18 @@ export default function EditLocationPage() {
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h1 className="text-2xl font-bold">Edit Location</h1>
+        <h1 className="text-2xl font-bold">{t(lang, "locedit.title", "Edit Location")}</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Location Details</CardTitle>
+          <CardTitle>{t(lang, "locedit.details", "Location Details")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name" className="font-semibold">
-                Location Name
+                {t(lang, "locedit.name", "Location Name")}
               </Label>
               <Input
                 id="name"
@@ -112,7 +115,7 @@ export default function EditLocationPage() {
 
             <div>
               <Label htmlFor="code" className="font-semibold">
-                Location Code
+                {t(lang, "locedit.code", "Location Code")}
               </Label>
               <Input
                 id="code"
@@ -123,14 +126,14 @@ export default function EditLocationPage() {
 
             <div>
               <Label htmlFor="countryId" className="font-semibold">
-                Country ID
+                {t(lang, "locedit.country_id", "Country ID")}
               </Label>
               <Input id="countryId" value={formData.countryId} disabled className="bg-slate-100" />
             </div>
 
             <div>
               <Label htmlFor="stateId" className="font-semibold">
-                State/Province ID
+                {t(lang, "locedit.state_id", "State/Province ID")}
               </Label>
               <Input
                 id="stateId"
@@ -141,7 +144,7 @@ export default function EditLocationPage() {
 
             <div>
               <Label htmlFor="districtId" className="font-semibold">
-                District ID
+                {t(lang, "locedit.district_id", "District ID")}
               </Label>
               <Input
                 id="districtId"
@@ -152,7 +155,7 @@ export default function EditLocationPage() {
 
             <div>
               <Label htmlFor="postalCode" className="font-semibold">
-                Postal Code
+                {t(lang, "locedit.postal_code", "Postal Code")}
               </Label>
               <Input
                 id="postalCode"
@@ -170,7 +173,7 @@ export default function EditLocationPage() {
                 className="w-4 h-4 rounded border-slate-300"
               />
               <Label htmlFor="isActive" className="font-semibold">
-                Active
+                {t(lang, "common.active", "Active")}
               </Label>
             </div>
 
@@ -179,10 +182,10 @@ export default function EditLocationPage() {
                 {saving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    {t(lang, "common.saving", "Saving...")}
                   </>
                 ) : (
-                  "Save Changes"
+                  t(lang, "locedit.save_changes", "Save Changes")
                 )}
               </Button>
               <Button
@@ -191,7 +194,7 @@ export default function EditLocationPage() {
                 onClick={() => router.push("/dashboard/settings/location")}
                 disabled={saving}
               >
-                Cancel
+                {t(lang, "common.cancel", "Cancel")}
               </Button>
             </div>
           </form>

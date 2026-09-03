@@ -927,6 +927,94 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "locsetup.eg_country"
+  | "locsetup.eg_state"
+  | "locsetup.eg_city"
+  | "locsetup.eg_area"
+  | "locsetup.country_saved"
+  | "locsetup.state_saved"
+  | "locsetup.city_saved"
+  | "locsetup.area_saved"
+  | "cl.subtitle"
+  | "cl.search_ph"
+  | "cl.filter_by_status"
+  | "cl.all_status"
+  | "cl.status_new"
+  | "cl.status_contacted"
+  | "cl.status_qualified"
+  | "cl.status_proposal"
+  | "cl.status_negotiation"
+  | "cl.status_closed"
+  | "cl.status_lost"
+  | "cl.filters"
+  | "cl.add_lead"
+  | "cl.reset_all_filters"
+  | "cl.print_master_report"
+  | "cl.send_form_link"
+  | "cl.loading_records"
+  | "cl.edit_customer"
+  | "cl.view_profile"
+  | "cl.print_dossier"
+  | "cl.no_matching_leads"
+  | "cl.tab_all"
+  | "cl.tab_new"
+  | "cl.tab_contacted"
+  | "cl.tab_qualified"
+  | "cl.tab_proposal"
+  | "cl.tab_negotiation"
+  | "cl.tab_closed"
+  | "cl.tab_lost"
+  | "cl.src_website"
+  | "cl.src_facebook"
+  | "cl.src_whatsapp"
+  | "cl.src_instagram"
+  | "cl.src_referral"
+  | "cl.src_other"
+  | "sae.shipping_line_module"
+  | "sae.lang_sync"
+  | "sae.ph_agent_code"
+  | "sae.ph_remarks"
+  | "sae.ph_search"
+  | "ace.customs_module"
+  | "ace.lang_sync"
+  | "ace.ph_entry_no"
+  | "ace.ph_remarks"
+  | "ace.ph_search"
+  | "ace.custom_declaration"
+  | "ace.updated"
+  | "ace.created"
+  | "ace.successfully"
+  | "locedit.title"
+  | "locedit.details"
+  | "locedit.name"
+  | "locedit.code"
+  | "locedit.country_id"
+  | "locedit.state_id"
+  | "locedit.district_id"
+  | "locedit.postal_code"
+  | "locedit.save_changes"
+  | "locedit.err_load"
+  | "locedit.err_update"
+  | "locedit.updated_ok"
+  | "audit.all_offices_branches"
+  | "audit.all_operating_countries"
+  | "audit.approval_status"
+  | "audit.bill_ref_no"
+  | "audit.date_range"
+  | "audit.deleted_control_title"
+  | "audit.last_edited_at"
+  | "audit.loading_deleted_records"
+  | "audit.loading_edit_history"
+  | "audit.no_deleted_records"
+  | "audit.no_versioned_records"
+  | "audit.original_date"
+  | "audit.party"
+  | "audit.reason"
+  | "audit.record_party"
+  | "audit.review_status"
+  | "audit.risk_level"
+  | "audit.total_edits"
+  | "audit.window_closed"
   | "lptp.sync_pending"
   | "lptp.pending_gl_transfers"
   | "lptp.accepted_bills_awaiting"
@@ -17122,6 +17210,182 @@ const en: Dict = {
 
 
 
+
+
+
+
+  "locsetup.eg_country": "e.g. Pakistan",
+
+  "locsetup.eg_state": "e.g. Balochistan",
+
+  "locsetup.eg_city": "e.g. Chaman",
+
+  "locsetup.eg_area": "e.g. Main Bazaar",
+
+  "locsetup.country_saved": "Country saved.",
+
+  "locsetup.state_saved": "State saved.",
+
+  "locsetup.city_saved": "City saved.",
+
+  "locsetup.area_saved": "Area saved.",
+  "cl.subtitle": "Manage and track your leads, from inquiry to close.",
+
+  "cl.search_ph": "Search leads, contacts, companies...",
+
+  "cl.filter_by_status": "Filter by status",
+
+  "cl.all_status": "All Status",
+
+  "cl.status_new": "New",
+
+  "cl.status_contacted": "Contacted",
+
+  "cl.status_qualified": "Qualified",
+
+  "cl.status_proposal": "Proposal",
+
+  "cl.status_negotiation": "Negotiation",
+
+  "cl.status_closed": "Closed",
+
+  "cl.status_lost": "Lost",
+
+  "cl.filters": "Filters",
+
+  "cl.add_lead": "+ Add Lead",
+
+  "cl.reset_all_filters": "Reset all filters",
+
+  "cl.print_master_report": "Print Master Report",
+
+  "cl.send_form_link": "Send Form Link",
+
+  "cl.loading_records": "Loading customer records...",
+
+  "cl.edit_customer": "Edit Customer",
+
+  "cl.view_profile": "View Profile",
+
+  "cl.print_dossier": "Print Dossier",
+
+  "cl.no_matching_leads": "No matching customer leads found.",
+
+  "cl.tab_all": "All Leads",
+
+  "cl.tab_new": "New",
+
+  "cl.tab_contacted": "Contacted",
+
+  "cl.tab_qualified": "Qualified",
+
+  "cl.tab_proposal": "Proposal",
+
+  "cl.tab_negotiation": "Negotiation",
+
+  "cl.tab_closed": "Closed",
+
+  "cl.tab_lost": "Lost",
+
+  "cl.src_website": "Website",
+
+  "cl.src_facebook": "Facebook",
+
+  "cl.src_whatsapp": "WhatsApp",
+
+  "cl.src_instagram": "Instagram",
+
+  "cl.src_referral": "Referral",
+
+  "cl.src_other": "Other",
+
+  "sae.shipping_line_module": "Shipping Line Module",
+
+  "sae.lang_sync": "5-Language Translation Sync",
+
+  "sae.ph_agent_code": "Auto-generated (e.g. SHIP-AGT-001)",
+
+  "sae.ph_remarks": "Additional contact details, agency terms...",
+
+  "sae.ph_search": "Search agent code, name, city...",
+
+  "ace.customs_module": "Customs & Border Station Module",
+
+  "ace.lang_sync": "5-Language Translation Sync",
+
+  "ace.ph_entry_no": "Auto-generated (or custom)",
+
+  "ace.ph_remarks": "Detailed description of cargo items, tariff notes...",
+
+  "ace.ph_search": "Search GD no, entry, agent...",
+
+  "ace.custom_declaration": "Custom Declaration",
+
+  "ace.updated": "updated",
+
+  "ace.created": "created",
+
+  "ace.successfully": "successfully!",
+  "locedit.title": "Edit Location",
+
+  "locedit.details": "Location Details",
+
+  "locedit.name": "Location Name",
+
+  "locedit.code": "Location Code",
+
+  "locedit.country_id": "Country ID",
+
+  "locedit.state_id": "State/Province ID",
+
+  "locedit.district_id": "District ID",
+
+  "locedit.postal_code": "Postal Code",
+
+  "locedit.save_changes": "Save Changes",
+
+  "locedit.err_load": "Failed to load location",
+
+  "locedit.err_update": "Failed to update location",
+
+  "locedit.updated_ok": "Location updated successfully!",
+  "audit.all_offices_branches": "All offices / branches",
+
+  "audit.all_operating_countries": "All operating countries",
+
+  "audit.approval_status": "Approval Status",
+
+  "audit.bill_ref_no": "Bill / Ref No",
+
+  "audit.date_range": "Date Range",
+
+  "audit.deleted_control_title": "Deleted Records Control — All Countries & Branches",
+
+  "audit.last_edited_at": "Last Edited At",
+
+  "audit.loading_deleted_records": "Loading enterprise deleted records...",
+
+  "audit.loading_edit_history": "Loading enterprise edit & version history...",
+
+  "audit.no_deleted_records": "No deleted records found matching current criteria.",
+
+  "audit.no_versioned_records": "No versioned records found matching current criteria.",
+
+  "audit.original_date": "Original Date",
+
+  "audit.party": "Party",
+
+  "audit.reason": "Reason",
+
+  "audit.record_party": "Record / Party",
+
+  "audit.review_status": "Review Status",
+
+  "audit.risk_level": "Risk Level",
+
+  "audit.total_edits": "Total Edits",
+
+  "audit.window_closed": "Window closed",
   "lptp.sync_pending": "Sync Pending",
 
   "lptp.pending_gl_transfers": "Pending GL Transfers",
@@ -29355,6 +29619,182 @@ const ur: Dict = {
 
 
 
+
+
+
+
+  "locsetup.eg_country": "مثلاً پاکستان",
+
+  "locsetup.eg_state": "مثلاً بلوچستان",
+
+  "locsetup.eg_city": "مثلاً چمن",
+
+  "locsetup.eg_area": "مثلاً مین بازار",
+
+  "locsetup.country_saved": "ملک محفوظ ہو گیا۔",
+
+  "locsetup.state_saved": "ریاست محفوظ ہو گئی۔",
+
+  "locsetup.city_saved": "شہر محفوظ ہو گیا۔",
+
+  "locsetup.area_saved": "علاقہ محفوظ ہو گیا۔",
+  "cl.subtitle": "اپنے لیڈز کا انتظام اور ٹریکنگ کریں، انکوائری سے کلوز تک۔",
+
+  "cl.search_ph": "لیڈز، رابطے، کمپنیاں تلاش کریں...",
+
+  "cl.filter_by_status": "حیثیت کے لحاظ سے فلٹر کریں",
+
+  "cl.all_status": "تمام حیثیتیں",
+
+  "cl.status_new": "نیا",
+
+  "cl.status_contacted": "رابطہ کیا گیا",
+
+  "cl.status_qualified": "اہل",
+
+  "cl.status_proposal": "تجویز",
+
+  "cl.status_negotiation": "مذاکرات",
+
+  "cl.status_closed": "بند",
+
+  "cl.status_lost": "کھو گیا",
+
+  "cl.filters": "فلٹرز",
+
+  "cl.add_lead": "+ لیڈ شامل کریں",
+
+  "cl.reset_all_filters": "تمام فلٹرز ری سیٹ کریں",
+
+  "cl.print_master_report": "ماسٹر رپورٹ پرنٹ کریں",
+
+  "cl.send_form_link": "فارم لنک بھیجیں",
+
+  "cl.loading_records": "کسٹمر ریکارڈز لوڈ ہو رہے ہیں...",
+
+  "cl.edit_customer": "کسٹمر میں ترمیم کریں",
+
+  "cl.view_profile": "پروفائل دیکھیں",
+
+  "cl.print_dossier": "ڈوزیئر پرنٹ کریں",
+
+  "cl.no_matching_leads": "کوئی مماثل کسٹمر لیڈ نہیں ملا۔",
+
+  "cl.tab_all": "تمام لیڈز",
+
+  "cl.tab_new": "نیا",
+
+  "cl.tab_contacted": "رابطہ کیا گیا",
+
+  "cl.tab_qualified": "اہل",
+
+  "cl.tab_proposal": "تجویز",
+
+  "cl.tab_negotiation": "مذاکرات",
+
+  "cl.tab_closed": "بند",
+
+  "cl.tab_lost": "کھو گیا",
+
+  "cl.src_website": "ویب سائٹ",
+
+  "cl.src_facebook": "فیس بک",
+
+  "cl.src_whatsapp": "واٹس ایپ",
+
+  "cl.src_instagram": "انسٹاگرام",
+
+  "cl.src_referral": "حوالہ",
+
+  "cl.src_other": "دیگر",
+
+  "sae.shipping_line_module": "شپنگ لائن ماڈیول",
+
+  "sae.lang_sync": "5 زبانوں کا ترجمہ سنک",
+
+  "sae.ph_agent_code": "خودکار تیار شدہ (مثلاً SHIP-AGT-001)",
+
+  "sae.ph_remarks": "اضافی رابطہ تفصیلات، ایجنسی شرائط...",
+
+  "sae.ph_search": "ایجنٹ کوڈ، نام، شہر تلاش کریں...",
+
+  "ace.customs_module": "کسٹمز اور بارڈر اسٹیشن ماڈیول",
+
+  "ace.lang_sync": "5 زبانوں کا ترجمہ سنک",
+
+  "ace.ph_entry_no": "خودکار تیار شدہ (یا حسبِ ضرورت)",
+
+  "ace.ph_remarks": "کارگو آئٹمز کی تفصیلی وضاحت، ٹیرف نوٹس...",
+
+  "ace.ph_search": "جی ڈی نمبر، اندراج، ایجنٹ تلاش کریں...",
+
+  "ace.custom_declaration": "کسٹم ڈیکلریشن",
+
+  "ace.updated": "اپ ڈیٹ ہو گیا",
+
+  "ace.created": "بنایا گیا",
+
+  "ace.successfully": "کامیابی سے!",
+  "locedit.title": "مقام میں ترمیم کریں",
+
+  "locedit.details": "مقام کی تفصیلات",
+
+  "locedit.name": "مقام کا نام",
+
+  "locedit.code": "مقام کوڈ",
+
+  "locedit.country_id": "ملک آئی ڈی",
+
+  "locedit.state_id": "ریاست/صوبہ آئی ڈی",
+
+  "locedit.district_id": "ضلع آئی ڈی",
+
+  "locedit.postal_code": "پوسٹل کوڈ",
+
+  "locedit.save_changes": "تبدیلیاں محفوظ کریں",
+
+  "locedit.err_load": "مقام لوڈ کرنے میں ناکامی",
+
+  "locedit.err_update": "مقام اپ ڈیٹ کرنے میں ناکامی",
+
+  "locedit.updated_ok": "مقام کامیابی سے اپ ڈیٹ ہو گیا!",
+  "audit.all_offices_branches": "تمام دفاتر / برانچز",
+
+  "audit.all_operating_countries": "تمام فعال ممالک",
+
+  "audit.approval_status": "منظوری کی حیثیت",
+
+  "audit.bill_ref_no": "بل / حوالہ نمبر",
+
+  "audit.date_range": "تاریخ کی حد",
+
+  "audit.deleted_control_title": "حذف شدہ ریکارڈز کنٹرول — تمام ممالک اور برانچز",
+
+  "audit.last_edited_at": "آخری ترمیم کی تاریخ",
+
+  "audit.loading_deleted_records": "انٹرپرائز حذف شدہ ریکارڈز لوڈ ہو رہے ہیں...",
+
+  "audit.loading_edit_history": "انٹرپرائز ترمیم اور ورژن ہسٹری لوڈ ہو رہی ہے...",
+
+  "audit.no_deleted_records": "موجودہ معیار سے مماثل کوئی حذف شدہ ریکارڈ نہیں ملا۔",
+
+  "audit.no_versioned_records": "موجودہ معیار سے مماثل کوئی ورژن شدہ ریکارڈ نہیں ملا۔",
+
+  "audit.original_date": "اصل تاریخ",
+
+  "audit.party": "پارٹی",
+
+  "audit.reason": "وجہ",
+
+  "audit.record_party": "ریکارڈ / پارٹی",
+
+  "audit.review_status": "جائزہ کی حیثیت",
+
+  "audit.risk_level": "خطرے کی سطح",
+
+  "audit.total_edits": "کل ترامیم",
+
+  "audit.window_closed": "ونڈو بند ہو گئی",
   "lptp.sync_pending": "زیر التوا سنک کریں",
 
   "lptp.pending_gl_transfers": "زیر التوا جی ایل ٹرانسفرز",
@@ -41590,6 +42030,182 @@ const ar: Dict = {
 
 
 
+
+
+
+
+  "locsetup.eg_country": "مثال: باكستان",
+
+  "locsetup.eg_state": "مثال: بلوشستان",
+
+  "locsetup.eg_city": "مثال: تشامان",
+
+  "locsetup.eg_area": "مثال: السوق الرئيسي",
+
+  "locsetup.country_saved": "تم حفظ الدولة.",
+
+  "locsetup.state_saved": "تم حفظ الولاية.",
+
+  "locsetup.city_saved": "تم حفظ المدينة.",
+
+  "locsetup.area_saved": "تم حفظ المنطقة.",
+  "cl.subtitle": "أدر وتتبّع عملاءك المحتملين، من الاستفسار حتى الإغلاق.",
+
+  "cl.search_ph": "ابحث عن العملاء المحتملين وجهات الاتصال والشركات...",
+
+  "cl.filter_by_status": "التصفية حسب الحالة",
+
+  "cl.all_status": "كل الحالات",
+
+  "cl.status_new": "جديد",
+
+  "cl.status_contacted": "تم التواصل",
+
+  "cl.status_qualified": "مؤهَّل",
+
+  "cl.status_proposal": "عرض",
+
+  "cl.status_negotiation": "تفاوض",
+
+  "cl.status_closed": "مغلق",
+
+  "cl.status_lost": "مفقود",
+
+  "cl.filters": "عوامل التصفية",
+
+  "cl.add_lead": "+ إضافة عميل محتمل",
+
+  "cl.reset_all_filters": "إعادة تعيين كل عوامل التصفية",
+
+  "cl.print_master_report": "طباعة التقرير الرئيسي",
+
+  "cl.send_form_link": "إرسال رابط النموذج",
+
+  "cl.loading_records": "جارٍ تحميل سجلات العملاء...",
+
+  "cl.edit_customer": "تعديل العميل",
+
+  "cl.view_profile": "عرض الملف",
+
+  "cl.print_dossier": "طباعة الملف",
+
+  "cl.no_matching_leads": "لم يتم العثور على عملاء محتملين مطابقين.",
+
+  "cl.tab_all": "كل العملاء المحتملين",
+
+  "cl.tab_new": "جديد",
+
+  "cl.tab_contacted": "تم التواصل",
+
+  "cl.tab_qualified": "مؤهَّل",
+
+  "cl.tab_proposal": "عرض",
+
+  "cl.tab_negotiation": "تفاوض",
+
+  "cl.tab_closed": "مغلق",
+
+  "cl.tab_lost": "مفقود",
+
+  "cl.src_website": "الموقع الإلكتروني",
+
+  "cl.src_facebook": "فيسبوك",
+
+  "cl.src_whatsapp": "واتساب",
+
+  "cl.src_instagram": "إنستغرام",
+
+  "cl.src_referral": "إحالة",
+
+  "cl.src_other": "أخرى",
+
+  "sae.shipping_line_module": "وحدة خط الشحن",
+
+  "sae.lang_sync": "مزامنة الترجمة بـ 5 لغات",
+
+  "sae.ph_agent_code": "مُنشأ تلقائيًا (مثال: SHIP-AGT-001)",
+
+  "sae.ph_remarks": "تفاصيل اتصال إضافية، شروط الوكالة...",
+
+  "sae.ph_search": "ابحث عن رمز الوكيل والاسم والمدينة...",
+
+  "ace.customs_module": "وحدة الجمارك ومحطة الحدود",
+
+  "ace.lang_sync": "مزامنة الترجمة بـ 5 لغات",
+
+  "ace.ph_entry_no": "مُنشأ تلقائيًا (أو مخصص)",
+
+  "ace.ph_remarks": "وصف تفصيلي لأصناف الشحن وملاحظات التعرفة...",
+
+  "ace.ph_search": "ابحث عن رقم البيان الجمركي والقيد والوكيل...",
+
+  "ace.custom_declaration": "الإقرار الجمركي",
+
+  "ace.updated": "تم التحديث",
+
+  "ace.created": "تم الإنشاء",
+
+  "ace.successfully": "بنجاح!",
+  "locedit.title": "تعديل الموقع",
+
+  "locedit.details": "تفاصيل الموقع",
+
+  "locedit.name": "اسم الموقع",
+
+  "locedit.code": "رمز الموقع",
+
+  "locedit.country_id": "معرّف الدولة",
+
+  "locedit.state_id": "معرّف الولاية/المقاطعة",
+
+  "locedit.district_id": "معرّف المنطقة",
+
+  "locedit.postal_code": "الرمز البريدي",
+
+  "locedit.save_changes": "حفظ التغييرات",
+
+  "locedit.err_load": "فشل تحميل الموقع",
+
+  "locedit.err_update": "فشل تحديث الموقع",
+
+  "locedit.updated_ok": "تم تحديث الموقع بنجاح!",
+  "audit.all_offices_branches": "جميع المكاتب / الفروع",
+
+  "audit.all_operating_countries": "جميع الدول التشغيلية",
+
+  "audit.approval_status": "حالة الموافقة",
+
+  "audit.bill_ref_no": "الفاتورة / رقم المرجع",
+
+  "audit.date_range": "النطاق الزمني",
+
+  "audit.deleted_control_title": "التحكم في السجلات المحذوفة — جميع الدول والفروع",
+
+  "audit.last_edited_at": "آخر تعديل في",
+
+  "audit.loading_deleted_records": "جارٍ تحميل السجلات المحذوفة للمؤسسة...",
+
+  "audit.loading_edit_history": "جارٍ تحميل سجل التعديلات والإصدارات للمؤسسة...",
+
+  "audit.no_deleted_records": "لم يتم العثور على سجلات محذوفة مطابقة للمعايير الحالية.",
+
+  "audit.no_versioned_records": "لم يتم العثور على سجلات ذات إصدارات مطابقة للمعايير الحالية.",
+
+  "audit.original_date": "التاريخ الأصلي",
+
+  "audit.party": "الطرف",
+
+  "audit.reason": "السبب",
+
+  "audit.record_party": "السجل / الطرف",
+
+  "audit.review_status": "حالة المراجعة",
+
+  "audit.risk_level": "مستوى المخاطر",
+
+  "audit.total_edits": "إجمالي التعديلات",
+
+  "audit.window_closed": "النافذة مغلقة",
   "lptp.sync_pending": "مزامنة المعلّقة",
 
   "lptp.pending_gl_transfers": "تحويلات دفتر الأستاذ المعلّقة",
@@ -53824,6 +54440,182 @@ const fa: Dict = {
 
 
 
+
+
+
+
+  "locsetup.eg_country": "مثال: پاکستان",
+
+  "locsetup.eg_state": "مثال: بلوچستان",
+
+  "locsetup.eg_city": "مثال: چمن",
+
+  "locsetup.eg_area": "مثال: بازار اصلی",
+
+  "locsetup.country_saved": "کشور ذخیره شد.",
+
+  "locsetup.state_saved": "ایالت ذخیره شد.",
+
+  "locsetup.city_saved": "شهر ذخیره شد.",
+
+  "locsetup.area_saved": "منطقه ذخیره شد.",
+  "cl.subtitle": "سرنخ‌های خود را از استعلام تا بستن مدیریت و پیگیری کنید.",
+
+  "cl.search_ph": "جستجوی سرنخ‌ها، مخاطبین، شرکت‌ها...",
+
+  "cl.filter_by_status": "فیلتر بر اساس وضعیت",
+
+  "cl.all_status": "همه وضعیت‌ها",
+
+  "cl.status_new": "جدید",
+
+  "cl.status_contacted": "تماس گرفته‌شده",
+
+  "cl.status_qualified": "واجد شرایط",
+
+  "cl.status_proposal": "پیشنهاد",
+
+  "cl.status_negotiation": "مذاکره",
+
+  "cl.status_closed": "بسته",
+
+  "cl.status_lost": "از دست رفته",
+
+  "cl.filters": "فیلترها",
+
+  "cl.add_lead": "+ افزودن سرنخ",
+
+  "cl.reset_all_filters": "بازنشانی همه فیلترها",
+
+  "cl.print_master_report": "چاپ گزارش اصلی",
+
+  "cl.send_form_link": "ارسال لینک فرم",
+
+  "cl.loading_records": "در حال بارگذاری سوابق مشتری...",
+
+  "cl.edit_customer": "ویرایش مشتری",
+
+  "cl.view_profile": "مشاهده نمایه",
+
+  "cl.print_dossier": "چاپ پرونده",
+
+  "cl.no_matching_leads": "هیچ سرنخ مشتری منطبقی یافت نشد.",
+
+  "cl.tab_all": "همه سرنخ‌ها",
+
+  "cl.tab_new": "جدید",
+
+  "cl.tab_contacted": "تماس گرفته‌شده",
+
+  "cl.tab_qualified": "واجد شرایط",
+
+  "cl.tab_proposal": "پیشنهاد",
+
+  "cl.tab_negotiation": "مذاکره",
+
+  "cl.tab_closed": "بسته",
+
+  "cl.tab_lost": "از دست رفته",
+
+  "cl.src_website": "وب‌سایت",
+
+  "cl.src_facebook": "فیسبوک",
+
+  "cl.src_whatsapp": "واتساپ",
+
+  "cl.src_instagram": "اینستاگرام",
+
+  "cl.src_referral": "معرفی",
+
+  "cl.src_other": "دیگر",
+
+  "sae.shipping_line_module": "ماژول خط کشتیرانی",
+
+  "sae.lang_sync": "همگام‌سازی ترجمه ۵ زبانه",
+
+  "sae.ph_agent_code": "تولید خودکار (مثال: SHIP-AGT-001)",
+
+  "sae.ph_remarks": "جزئیات تماس اضافی، شرایط نمایندگی...",
+
+  "sae.ph_search": "جستجوی کد نماینده، نام، شهر...",
+
+  "ace.customs_module": "ماژول گمرک و ایستگاه مرزی",
+
+  "ace.lang_sync": "همگام‌سازی ترجمه ۵ زبانه",
+
+  "ace.ph_entry_no": "تولید خودکار (یا سفارشی)",
+
+  "ace.ph_remarks": "توضیح مفصل اقلام محموله، یادداشت‌های تعرفه...",
+
+  "ace.ph_search": "جستجوی شماره اظهارنامه، ثبت، نماینده...",
+
+  "ace.custom_declaration": "اظهارنامه گمرکی",
+
+  "ace.updated": "به‌روزرسانی شد",
+
+  "ace.created": "ایجاد شد",
+
+  "ace.successfully": "با موفقیت!",
+  "locedit.title": "ویرایش مکان",
+
+  "locedit.details": "جزئیات مکان",
+
+  "locedit.name": "نام مکان",
+
+  "locedit.code": "کد مکان",
+
+  "locedit.country_id": "شناسه کشور",
+
+  "locedit.state_id": "شناسه ایالت/استان",
+
+  "locedit.district_id": "شناسه ناحیه",
+
+  "locedit.postal_code": "کد پستی",
+
+  "locedit.save_changes": "ذخیره تغییرات",
+
+  "locedit.err_load": "بارگذاری مکان ناموفق بود",
+
+  "locedit.err_update": "به‌روزرسانی مکان ناموفق بود",
+
+  "locedit.updated_ok": "مکان با موفقیت به‌روزرسانی شد!",
+  "audit.all_offices_branches": "همه دفاتر / شعب",
+
+  "audit.all_operating_countries": "همه کشورهای فعال",
+
+  "audit.approval_status": "وضعیت تأیید",
+
+  "audit.bill_ref_no": "صورت‌حساب / شماره مرجع",
+
+  "audit.date_range": "بازه تاریخ",
+
+  "audit.deleted_control_title": "کنترل سوابق حذف‌شده — همه کشورها و شعب",
+
+  "audit.last_edited_at": "آخرین ویرایش در",
+
+  "audit.loading_deleted_records": "در حال بارگذاری سوابق حذف‌شده سازمانی...",
+
+  "audit.loading_edit_history": "در حال بارگذاری تاریخچه ویرایش و نسخه سازمانی...",
+
+  "audit.no_deleted_records": "هیچ سابقه حذف‌شده‌ای منطبق با معیارهای فعلی یافت نشد.",
+
+  "audit.no_versioned_records": "هیچ سابقه نسخه‌داری منطبق با معیارهای فعلی یافت نشد.",
+
+  "audit.original_date": "تاریخ اصلی",
+
+  "audit.party": "طرف",
+
+  "audit.reason": "دلیل",
+
+  "audit.record_party": "سابقه / طرف",
+
+  "audit.review_status": "وضعیت بررسی",
+
+  "audit.risk_level": "سطح ریسک",
+
+  "audit.total_edits": "مجموع ویرایش‌ها",
+
+  "audit.window_closed": "پنجره بسته شد",
   "lptp.sync_pending": "همگام‌سازی در انتظار",
 
   "lptp.pending_gl_transfers": "انتقالات دفتر کل در انتظار",
@@ -66064,6 +66856,182 @@ const ps: Dict = {
 
 
 
+
+
+
+
+  "locsetup.eg_country": "لکه پاکستان",
+
+  "locsetup.eg_state": "لکه بلوچستان",
+
+  "locsetup.eg_city": "لکه چمن",
+
+  "locsetup.eg_area": "لکه اصلي بازار",
+
+  "locsetup.country_saved": "هېواد خوندي شو.",
+
+  "locsetup.state_saved": "ایالت خوندي شو.",
+
+  "locsetup.city_saved": "ښار خوندي شو.",
+
+  "locsetup.area_saved": "سیمه خوندي شوه.",
+  "cl.subtitle": "خپل لیدونه له پوښتنې څخه تر تړلو پورې اداره او تعقیب کړئ.",
+
+  "cl.search_ph": "لیدونه، اړیکې، شرکتونه ولټوئ...",
+
+  "cl.filter_by_status": "د حالت له مخې فلټر کړئ",
+
+  "cl.all_status": "ټول حالتونه",
+
+  "cl.status_new": "نوی",
+
+  "cl.status_contacted": "اړیکه ونیول شوه",
+
+  "cl.status_qualified": "وړ",
+
+  "cl.status_proposal": "وړاندیز",
+
+  "cl.status_negotiation": "خبرې اترې",
+
+  "cl.status_closed": "تړل شوی",
+
+  "cl.status_lost": "له لاسه ووت",
+
+  "cl.filters": "فلټرونه",
+
+  "cl.add_lead": "+ لید اضافه کړئ",
+
+  "cl.reset_all_filters": "ټول فلټرونه بیا تنظیم کړئ",
+
+  "cl.print_master_report": "ماسټر راپور چاپ کړئ",
+
+  "cl.send_form_link": "د فورمې لینک واستوئ",
+
+  "cl.loading_records": "د پیرودونکو ریکارډونه پورته کیږي...",
+
+  "cl.edit_customer": "پیرودونکی سمول",
+
+  "cl.view_profile": "پېژنیال وګورئ",
+
+  "cl.print_dossier": "ډوسیه چاپ کړئ",
+
+  "cl.no_matching_leads": "هیڅ ورته د پیرودونکي لید ونه موندل شو.",
+
+  "cl.tab_all": "ټول لیدونه",
+
+  "cl.tab_new": "نوی",
+
+  "cl.tab_contacted": "اړیکه ونیول شوه",
+
+  "cl.tab_qualified": "وړ",
+
+  "cl.tab_proposal": "وړاندیز",
+
+  "cl.tab_negotiation": "خبرې اترې",
+
+  "cl.tab_closed": "تړل شوی",
+
+  "cl.tab_lost": "له لاسه ووت",
+
+  "cl.src_website": "ویب پاڼه",
+
+  "cl.src_facebook": "فیسبوک",
+
+  "cl.src_whatsapp": "واټساپ",
+
+  "cl.src_instagram": "انسټاګرام",
+
+  "cl.src_referral": "راجع کول",
+
+  "cl.src_other": "نور",
+
+  "sae.shipping_line_module": "د بار کرښې ماډیول",
+
+  "sae.lang_sync": "د ۵ ژبو د ژباړې همغږي",
+
+  "sae.ph_agent_code": "اتومات جوړ شوی (لکه SHIP-AGT-001)",
+
+  "sae.ph_remarks": "اضافي د اړیکو جزئیات، د استازیتوب شرطونه...",
+
+  "sae.ph_search": "د استازي کوډ، نوم، ښار ولټوئ...",
+
+  "ace.customs_module": "د ګمرک او سرحدي سټیشن ماډیول",
+
+  "ace.lang_sync": "د ۵ ژبو د ژباړې همغږي",
+
+  "ace.ph_entry_no": "اتومات جوړ شوی (یا دودیز)",
+
+  "ace.ph_remarks": "د بار د توکو تفصیلي تشریح، د محصول یادښتونه...",
+
+  "ace.ph_search": "د GD شمېره، ننوتنه، استازی ولټوئ...",
+
+  "ace.custom_declaration": "ګمرکي اعلامیه",
+
+  "ace.updated": "تازه شو",
+
+  "ace.created": "جوړ شو",
+
+  "ace.successfully": "په بریالیتوب سره!",
+  "locedit.title": "ځای سمول",
+
+  "locedit.details": "د ځای جزئیات",
+
+  "locedit.name": "د ځای نوم",
+
+  "locedit.code": "د ځای کوډ",
+
+  "locedit.country_id": "د هېواد پېژندپاڼه",
+
+  "locedit.state_id": "د ایالت/ولایت پېژندپاڼه",
+
+  "locedit.district_id": "د ولسوالۍ پېژندپاڼه",
+
+  "locedit.postal_code": "پوستي کوډ",
+
+  "locedit.save_changes": "بدلونونه خوندي کړئ",
+
+  "locedit.err_load": "د ځای پورته کول ناکام شو",
+
+  "locedit.err_update": "د ځای تازه کول ناکام شو",
+
+  "locedit.updated_ok": "ځای په بریالیتوب سره تازه شو!",
+  "audit.all_offices_branches": "ټول دفترونه / څانګې",
+
+  "audit.all_operating_countries": "ټول فعال هېوادونه",
+
+  "audit.approval_status": "د تصویب حالت",
+
+  "audit.bill_ref_no": "بیل / د حوالې شمېره",
+
+  "audit.date_range": "د نیټې حد",
+
+  "audit.deleted_control_title": "د حذف شویو ریکارډونو کنټرول — ټول هېوادونه او څانګې",
+
+  "audit.last_edited_at": "وروستی سمون په",
+
+  "audit.loading_deleted_records": "د تصدۍ حذف شوي ریکارډونه پورته کیږي...",
+
+  "audit.loading_edit_history": "د تصدۍ د سمون او نسخې تاریخ پورته کیږي...",
+
+  "audit.no_deleted_records": "د اوسنیو معیارونو سره سمون لرونکی هیڅ حذف شوی ریکارډ ونه موندل شو.",
+
+  "audit.no_versioned_records": "د اوسنیو معیارونو سره سمون لرونکی هیڅ نسخه لرونکی ریکارډ ونه موندل شو.",
+
+  "audit.original_date": "اصلي نیټه",
+
+  "audit.party": "پارټي",
+
+  "audit.reason": "دلیل",
+
+  "audit.record_party": "ریکارډ / پارټي",
+
+  "audit.review_status": "د بیاکتنې حالت",
+
+  "audit.risk_level": "د خطر کچه",
+
+  "audit.total_edits": "ټول سمونونه",
+
+  "audit.window_closed": "کړکۍ بنده شوه",
   "lptp.sync_pending": "پاتې سینک کړئ",
 
   "lptp.pending_gl_transfers": "پاتې د GL لیږدونه",

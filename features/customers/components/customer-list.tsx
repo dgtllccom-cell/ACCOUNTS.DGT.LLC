@@ -120,14 +120,6 @@ function getAvatarColor(str: string): string {
   return AVATAR_COLORS[index];
 }
 
-// Pre-assigned sales officers for mock/fallback presentation
-const STAFF_LIST = [
-  { name: "Umer Farooq", avatar: "UF" },
-  { name: "Ayesha Khan", avatar: "AK" },
-  { name: "Bilal Ahmed", avatar: "BA" },
-  { name: "Zainab Malik", avatar: "ZM" }
-];
-
 // Sources list with badge colors
 const SOURCE_MAP: Record<string, { label: string; bg: string }> = {
   Website: { label: "Website", bg: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800" },
@@ -174,7 +166,6 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedStatusTab, setSelectedStatusTab] = useState("all");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("all");
 
@@ -220,10 +211,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
   // Parse custom metadata for each customer
   const parsedCustomers = useMemo(() => {
-    const sources = ["Website", "Facebook", "WhatsApp", "Instagram", "Referral", "Other"];
-    const statuses = ["New", "Contacted", "Qualified", "Proposal", "Negotiation", "Closed", "Lost"];
-
-    return customers.map((c, idx) => {
+    return customers.map((c) => {
       let meta: any = {};
       if (c.notes) {
         try {
@@ -232,15 +220,15 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         } catch {}
       }
 
-      // Assign deterministic mock properties if not saved in meta
-      const source = meta.source || sources[idx % sources.length];
-      const leadStatus = meta.leadStatus || meta.status || statuses[idx % statuses.length];
-      const assignedStaff = meta.assignedTo || STAFF_LIST[idx % STAFF_LIST.length].name;
+      // Only real, saved values — no synthetic/mock assignment.
+      const source = meta.source || "";
+      const leadStatus = meta.leadStatus || meta.status || "";
+      const assignedStaff = meta.assignedTo || "";
       const phone = c.mobile || c.whatsapp || meta.phone || "—";
 
-      const countryName = c.country_name || meta.country || "UAE";
-      const stateName = c.state_province_name || meta.stateProvince || (countryName.toLowerCase().includes("pakistan") ? "Sindh" : "Dubai");
-      const cityName = c.city_name || meta.city || (countryName.toLowerCase().includes("pakistan") ? "Karachi" : "Dubai");
+      const countryName = c.country_name || meta.country || "";
+      const stateName = c.state_province_name || meta.stateProvince || "";
+      const cityName = c.city_name || meta.city || "";
 
       return {
         ...c,
@@ -404,7 +392,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               {getLabel("customersTitle", lang) || "Leads"}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-              Manage and track your leads, from inquiry to close.
+              {t(lang, "cl.subtitle", "Manage and track your leads, from inquiry to close.")}
             </p>
           </div>
 
@@ -420,7 +408,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search leads, contacts, companies..."
+                placeholder={t(lang, "cl.search_ph", "Search leads, contacts, companies...")}
                 className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 font-medium"
               />
               {searchQuery && (
@@ -434,22 +422,6 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               )}
             </div>
 
-            {/* Branch Filter Dropdown */}
-            <div className="relative">
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                aria-label="Filter by branch"
-                className="h-9 px-3 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-8 shadow-2xs"
-              >
-                <option value="all">All Branches</option>
-                <option value="dubai">Dubai Main</option>
-                <option value="karachi">Karachi City</option>
-                <option value="sharjah">Sharjah Branch</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-            </div>
-
             {/* Status Dropdown */}
             <div className="relative">
               <select
@@ -458,17 +430,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   setSelectedStatusTab(e.target.value);
                   setCurrentPage(1);
                 }}
-                aria-label="Filter by status"
+                aria-label={t(lang, "cl.filter_by_status", "Filter by status")}
                 className="h-9 px-3 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-8 shadow-2xs"
               >
-                <option value="all">All Status</option>
-                <option value="New">New</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Qualified">Qualified</option>
-                <option value="Proposal">Proposal</option>
-                <option value="Negotiation">Negotiation</option>
-                <option value="Closed">Closed</option>
-                <option value="Lost">Lost</option>
+                <option value="all">{t(lang, "cl.all_status", "All Status")}</option>
+                <option value="New">{t(lang, "cl.status_new", "New")}</option>
+                <option value="Contacted">{t(lang, "cl.status_contacted", "Contacted")}</option>
+                <option value="Qualified">{t(lang, "cl.status_qualified", "Qualified")}</option>
+                <option value="Proposal">{t(lang, "cl.status_proposal", "Proposal")}</option>
+                <option value="Negotiation">{t(lang, "cl.status_negotiation", "Negotiation")}</option>
+                <option value="Closed">{t(lang, "cl.status_closed", "Closed")}</option>
+                <option value="Lost">{t(lang, "cl.status_lost", "Lost")}</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
             </div>
@@ -481,14 +453,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               onClick={() => {
                 setSearchQuery("");
                 setSelectedStatusTab("all");
-                setSelectedBranch("all");
                 setSelectedCountryFilter("all");
               }}
-              title="Reset all filters"
+              title={t(lang, "cl.reset_all_filters", "Reset all filters")}
               className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
             >
               <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
-              <span>Filters</span>
+              <span>{t(lang, "cl.filters", "Filters")}</span>
             </Button>
 
             {/* Export Button */}
@@ -500,7 +471,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
             >
               <Download className="h-3.5 w-3.5 text-slate-500" />
-              <span>Export</span>
+              <span>{t(lang, "common.export", "Export")}</span>
             </Button>
 
             {/* Primary "+ Add Lead" / "+ Add Customer" Button */}
@@ -510,7 +481,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-9 px-4 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>+ Add Lead</span>
+              <span>{t(lang, "cl.add_lead", "+ Add Lead")}</span>
             </Button>
 
             {/* More Menu Dropdown */}
@@ -553,7 +524,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
                   >
                     <Printer className="h-3.5 w-3.5 text-cyan-600" />
-                    <span>Print Master Report</span>
+                    <span>{t(lang, "cl.print_master_report", "Print Master Report")}</span>
                   </button>
                   <button
                     type="button"
@@ -564,7 +535,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
                   >
                     <Send className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Send Form Link</span>
+                    <span>{t(lang, "cl.send_form_link", "Send Form Link")}</span>
                   </button>
                 </div>
               )}
@@ -592,7 +563,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60"
                 )}
               >
-                <span>{tab.label}</span>
+                <span>{t(lang, `cl.tab_${tab.id.toLowerCase()}`, tab.label)}</span>
                 <span
                   className={cn(
                     "text-[10px] font-black px-1.5 py-0.2 rounded-md",
@@ -652,7 +623,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               {loading ? (
                 <tr>
                   <td colSpan={13} className="px-6 py-12 text-center text-slate-400 font-medium italic">
-                    Loading customer records...
+                    {t(lang, "cl.loading_records", "Loading customer records...")}
                   </td>
                 </tr>
               ) : paginatedCustomers.length > 0 ? (
@@ -662,10 +633,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   const countryInfo = getCountryFlagAndName(c.meta.countryName);
                   const initials = getInitials(c.customer_name);
                   const avatarColor = getAvatarColor(c.customer_name);
-                  const source = c.meta.source || "Website";
-                  const sourceBadge = SOURCE_MAP[source] || SOURCE_MAP.Other;
-                  const leadStatus = c.meta.leadStatus || "New";
-                  const statusBadgeClass = STATUS_STYLES[leadStatus] || STATUS_STYLES.New;
+                  const source = c.meta.source || "";
+                  const sourceBadge = source ? (SOURCE_MAP[source] || SOURCE_MAP.Other) : null;
+                  const leadStatus = c.meta.leadStatus || "";
+                  const statusBadgeClass = leadStatus ? (STATUS_STYLES[leadStatus] || STATUS_STYLES.New) : "";
                   const cleanPhone = (c.meta.phone || "").replace(/[^0-9+]/g, "");
 
                   return (
@@ -712,31 +683,37 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* Company */}
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs font-semibold truncate max-w-[150px]">
-                        {c.company_name || c.meta.companyName || "Skyline Properties"}
+                        {c.company_name || c.meta.companyName || "—"}
                       </td>
 
                       {/* Source Pill */}
                       <td className="px-4 py-3">
-                        <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold", sourceBadge.bg)}>
-                          {source}
-                        </span>
+                        {sourceBadge ? (
+                          <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold", sourceBadge.bg)}>
+                            {t(lang, `cl.src_${source.toLowerCase()}`, source)}
+                          </span>
+                        ) : <span className="text-slate-300">—</span>}
                       </td>
 
                       {/* Status Pill */}
                       <td className="px-4 py-3">
-                        <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border", statusBadgeClass)}>
-                          {leadStatus}
-                        </span>
+                        {leadStatus ? (
+                          <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border", statusBadgeClass)}>
+                            {t(lang, `cl.status_${leadStatus.toLowerCase()}`, leadStatus)}
+                          </span>
+                        ) : <span className="text-slate-300">—</span>}
                       </td>
 
                       {/* Assigned To */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold">
-                          <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-black text-slate-700 dark:text-slate-200">
-                            {getInitials(c.meta.assignedStaff)}
-                          </span>
-                          <span className="truncate max-w-[110px]">{c.meta.assignedStaff}</span>
-                        </div>
+                        {c.meta.assignedStaff ? (
+                          <div className="flex items-center gap-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold">
+                            <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-black text-slate-700 dark:text-slate-200">
+                              {getInitials(c.meta.assignedStaff)}
+                            </span>
+                            <span className="truncate max-w-[110px]">{c.meta.assignedStaff}</span>
+                          </div>
+                        ) : <span className="text-slate-300 text-xs">—</span>}
                       </td>
 
                       {/* Country with flag */}
@@ -749,12 +726,12 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* State / Province */}
                       <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                        {c.meta.stateName || "Dubai"}
+                        {c.meta.stateName || "—"}
                       </td>
 
                       {/* City */}
                       <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                        {c.meta.cityName || "Dubai"}
+                        {c.meta.cityName || "—"}
                       </td>
 
                       {/* Phone */}
@@ -807,7 +784,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                           <button
                             type="button"
                             onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${c.id}` as Route)}
-                            title="Edit Customer"
+                            title={t(lang, "cl.edit_customer", "Edit Customer")}
                             className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
                             <PencilLine className="h-3.5 w-3.5" />
@@ -840,7 +817,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                                   className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
                                 >
                                   <Eye className="h-3.5 w-3.5 text-teal-600" />
-                                  <span>View Profile</span>
+                                  <span>{t(lang, "cl.view_profile", "View Profile")}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -862,7 +839,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                                   className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
                                 >
                                   <Printer className="h-3.5 w-3.5 text-blue-600" />
-                                  <span>Print Dossier</span>
+                                  <span>{t(lang, "cl.print_dossier", "Print Dossier")}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -873,7 +850,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                                   className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
-                                  <span>Delete</span>
+                                  <span>{t(lang, "common.delete", "Delete")}</span>
                                 </button>
                               </div>
                             )}
@@ -886,7 +863,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               ) : (
                 <tr>
                   <td colSpan={13} className="px-6 py-12 text-center text-slate-400 font-medium italic">
-                    No matching customer leads found.
+                    {t(lang, "cl.no_matching_leads", "No matching customer leads found.")}
                   </td>
                 </tr>
               )}

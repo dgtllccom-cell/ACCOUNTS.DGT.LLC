@@ -191,13 +191,26 @@ export function AllEditVersionHistoryView() {
 
   function handleExportCsv() {
     if (!records.length) return;
-    const headers = ["#", "Bill / Ref No", "Module", "Country", "Branch", "Party", "Total Edits", "Original Date", "Last Edited At", "Last Edited By", "Risk Level", "Approval Status"];
+    const headers = [
+      "#",
+      t(lang, "audit.bill_ref_no", "Bill / Ref No"),
+      t(lang, "audit.filter_module", "Module"),
+      t(lang, "audit.filter_country", "Country"),
+      t(lang, "audit.filter_branch", "Branch"),
+      t(lang, "audit.party", "Party"),
+      t(lang, "audit.total_edits", "Total Edits"),
+      t(lang, "audit.original_date", "Original Date"),
+      t(lang, "audit.last_edited_at", "Last Edited At"),
+      t(lang, "audit.th_edited_by", "Last Edited By"),
+      t(lang, "audit.risk_level", "Risk Level"),
+      t(lang, "audit.approval_status", "Approval Status"),
+    ];
     const exportRows = records.map((r, i) => [
       String(i + 1),
       String(r.reference_no || r.entity_id || ""),
       String(r.module || ""),
-      String(r.country_name || "Global"),
-      String(r.branch_name || "Main Branch"),
+      String(r.country_name || "—"),
+      String(r.branch_name || "—"),
       String(r.party_name || "-"),
       String(r.edit_count || 1),
       new Date(r.original_created_at).toLocaleString(),
@@ -211,21 +224,21 @@ export function AllEditVersionHistoryView() {
 
   function handlePrint() {
     void openScopedGenericReport({
-      title: "All Edit / Version History — All Countries & Branches",
+      title: t(lang, "audit.edit_history_title", "All Edit / Version History — All Countries & Branches"),
       lang,
       orientation: "landscape",
       columns: [
-        { key: (r) => r.reference_no || r.entity_id || "", label: "Bill / Ref No" },
-        { key: "module", label: "Module" },
-        { key: (r) => r.country_name || "Global", label: "Country" },
-        { key: (r) => r.branch_name || "-", label: "Branch" },
-        { key: (r) => r.party_name || "-", label: "Party" },
-        { key: (r) => r.edit_count || 1, label: "Total Edits", align: "right" },
-        { key: "original_created_at", label: "Original Date", format: "date" },
-        { key: "created_at", label: "Last Edited At", format: "date" },
-        { key: (r) => `${r.user_name} (${r.user_role})`, label: "Last Edited By" },
-        { key: "risk_level", label: "Risk Level", format: "status" },
-        { key: "approval_status", label: "Approval Status", format: "status" },
+        { key: (r) => r.reference_no || r.entity_id || "", label: t(lang, "audit.bill_ref_no", "Bill / Ref No") },
+        { key: "module", label: t(lang, "audit.filter_module", "Module") },
+        { key: (r) => r.country_name || "—", label: t(lang, "audit.filter_country", "Country") },
+        { key: (r) => r.branch_name || "-", label: t(lang, "audit.filter_branch", "Branch") },
+        { key: (r) => r.party_name || "-", label: t(lang, "audit.party", "Party") },
+        { key: (r) => r.edit_count || 1, label: t(lang, "audit.total_edits", "Total Edits"), align: "right" },
+        { key: "original_created_at", label: t(lang, "audit.original_date", "Original Date"), format: "date" },
+        { key: "created_at", label: t(lang, "audit.last_edited_at", "Last Edited At"), format: "date" },
+        { key: (r) => `${r.user_name} (${r.user_role})`, label: t(lang, "audit.th_edited_by", "Last Edited By") },
+        { key: "risk_level", label: t(lang, "audit.risk_level", "Risk Level"), format: "status" },
+        { key: "approval_status", label: t(lang, "audit.approval_status", "Approval Status"), format: "status" },
       ],
       rows: records as unknown as Record<string, unknown>[],
     });
@@ -359,7 +372,7 @@ export function AllEditVersionHistoryView() {
                 {kpis.expiredAccess.toLocaleString()}
               </div>
               <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                Window closed
+                {t(lang, "audit.window_closed", "Window closed")}
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 flex items-center justify-center shadow-xs">
@@ -379,7 +392,7 @@ export function AllEditVersionHistoryView() {
                 {kpis.totalCountries}
               </div>
               <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                All operating countries
+                {t(lang, "audit.all_operating_countries", "All operating countries")}
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center shadow-xs">
@@ -399,7 +412,7 @@ export function AllEditVersionHistoryView() {
                 {kpis.totalBranches}
               </div>
               <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                All offices / branches
+                {t(lang, "audit.all_offices_branches", "All offices / branches")}
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 flex items-center justify-center shadow-xs">
@@ -430,11 +443,6 @@ export function AllEditVersionHistoryView() {
               {countriesList.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
-              <option value="pk">Pakistan</option>
-              <option value="ae">UAE</option>
-              <option value="af">Afghanistan</option>
-              <option value="ir">Iran</option>
-              <option value="in">India</option>
             </select>
           </div>
 
@@ -455,9 +463,6 @@ export function AllEditVersionHistoryView() {
               {branchesList.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-              <option value="pk_main">Pakistan Main Branch</option>
-              <option value="dxb_main">Dubai Main Branch</option>
-              <option value="khi_port">Karachi Port Branch</option>
             </select>
           </div>
 
@@ -501,9 +506,9 @@ export function AllEditVersionHistoryView() {
               className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
             >
               <option value="all">{t(lang, "audit.filter_all_users", "All Users")}</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="Ali Hassan">Ali Hassan</option>
-              <option value="Neha Sharma">Neha Sharma</option>
+              {Array.from(new Set(records.map((r) => r.user_name).filter(Boolean))).sort().map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
             </select>
           </div>
 
@@ -633,13 +638,13 @@ export function AllEditVersionHistoryView() {
                 <tr>
                   <td colSpan={13} className="py-12 text-center text-slate-400 font-medium">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
-                    Loading enterprise edit & version history...
+                    {t(lang, "audit.loading_edit_history", "Loading enterprise edit & version history...")}
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
                   <td colSpan={13} className="py-12 text-center text-slate-400 font-medium">
-                    No versioned records found matching current criteria.
+                    {t(lang, "audit.no_versioned_records", "No versioned records found matching current criteria.")}
                   </td>
                 </tr>
               ) : (

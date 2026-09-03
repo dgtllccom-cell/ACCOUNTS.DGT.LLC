@@ -39,7 +39,7 @@ const EMPTY_ENTRY: any = {
   declaration_type: "import",
   agent_name: "",
   agent_id: "",
-  customs_station: "Karachi Customs House",
+  customs_station: "",
   consignee_name: "",
   consignee_person_id: "",
   consignor_name: "",
@@ -124,7 +124,9 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to save entry");
 
-      setSuccessMessage(`Custom Declaration ${json.data.entry_no || "saved"} ${isEditing ? "updated" : "created"} successfully!`);
+      setSuccessMessage(
+        `${tt("ace.custom_declaration", "Custom Declaration")} ${json.data.entry_no || ""} ${isEditing ? tt("ace.updated", "updated") : tt("ace.created", "created")} ${tt("ace.successfully", "successfully!")}`.replace(/\s+/g, " ").trim()
+      );
       setForm(EMPTY_ENTRY);
       setIsEditing(false);
       loadData();
@@ -149,10 +151,10 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-indigo-500/30">
-                  Customs & Border Station Module
+                  {tt("ace.customs_module", "Customs & Border Station Module")}
                 </span>
                 <span className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-500/30">
-                  5-Language Translation Sync
+                  {tt("ace.lang_sync", "5-Language Translation Sync")}
                 </span>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">{tt("ace.title", "Agent Custom Declaration Form")}</h1>
@@ -197,7 +199,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.entry_ref", "Entry Ref / Serial No")}</label>
               <input
                 type="text"
-                placeholder="Auto-generated (or custom)"
+                placeholder={tt("ace.ph_entry_no", "Auto-generated (or custom)")}
                 value={form.entry_no}
                 onChange={(e) => setForm({ ...form, entry_no: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
@@ -348,7 +350,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
             <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.goods_remarks", "Goods Description & Remarks")}</label>
             <textarea
               rows={2}
-              placeholder="Detailed description of cargo items, tariff notes..."
+              placeholder={tt("ace.ph_remarks", "Detailed description of cargo items, tariff notes...")}
               value={form.remarks}
               onChange={(e) => setForm({ ...form, remarks: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
@@ -376,7 +378,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search GD no, entry, agent..."
+                  placeholder={tt("ace.ph_search", "Search GD no, entry, agent...")}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 w-64 focus:outline-none focus:border-indigo-500"

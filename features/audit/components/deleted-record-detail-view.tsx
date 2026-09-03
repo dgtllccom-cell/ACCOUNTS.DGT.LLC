@@ -30,11 +30,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import { VersionComparisonModal } from "./version-comparison-modal";
 
 export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
   const lang = useActiveLanguage();
+  const th = (s: string) => translateHeader(lang, s);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const router = useRouter();
 
@@ -139,7 +141,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-[1720px] p-12 text-center text-slate-400 font-medium">
-        Loading deleted record evidence and lifecycle...
+        {th("Loading deleted record evidence and lifecycle...")}
       </div>
     );
   }
@@ -232,13 +234,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
             <Calendar className="h-3.5 w-3.5 text-blue-600" />
-            <span>Created At</span>
+            <span>{th("Created At")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
             {new Date(rec.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5 font-medium">
-            by {rec.user_name || "—"}
+            {th("by")} {rec.user_name || "—"}
           </div>
         </div>
 
@@ -246,13 +248,10 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-rose-600 mb-1">
             <Trash2 className="h-3.5 w-3.5" />
-            <span>Deleted At</span>
+            <span>{th("Deleted At")}</span>
           </div>
           <div className="font-bold text-rose-700 dark:text-rose-400 text-[11px]">
             {new Date(rec.deleted_at || rec.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-0.5 font-medium">
-            (7 days later)
           </div>
         </div>
 
@@ -260,13 +259,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
             <User className="h-3.5 w-3.5 text-slate-600" />
-            <span>Deleted By</span>
+            <span>{th("Deleted By")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px] truncate">
             {rec.user_name || "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
-            @{rec.user_id || "superadmin"}
+            {rec.user_id ? `@${rec.user_id}` : "—"}
           </div>
         </div>
 
@@ -274,13 +273,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
             <ShieldCheck className="h-3.5 w-3.5 text-slate-600" />
-            <span>User Role</span>
+            <span>{th("User Role")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
-            {rec.user_role || "—"}
+            {rec.user_role ? translateHeader(lang, rec.user_role) : "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5">
-            System Role
+            {th("System Role")}
           </div>
         </div>
 
@@ -288,13 +287,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
             <Globe className="h-3.5 w-3.5 text-blue-600" />
-            <span>Country</span>
+            <span>{th("Country")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
-            {rec.country_name || "Pakistan"}
+            {rec.country_name || "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5">
-            Operating Country
+            {th("Operating Country")}
           </div>
         </div>
 
@@ -302,13 +301,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
             <Building2 className="h-3.5 w-3.5 text-teal-600" />
-            <span>Branch</span>
+            <span>{th("Branch")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px] truncate">
-            {rec.branch_name || "Pakistan Main Branch"}
+            {rec.branch_name || "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5">
-            Main Operating Branch
+            {th("Main Operating Branch")}
           </div>
         </div>
 
@@ -316,13 +315,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
             <Package className="h-3.5 w-3.5 text-blue-600" />
-            <span>Module</span>
+            <span>{th("Module")}</span>
           </div>
           <div className="font-bold text-blue-600 dark:text-blue-400 text-[11px]">
-            {rec.module || "Purchase"}
+            {rec.module || "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5">
-            Financial Module
+            {th("Financial Module")}
           </div>
         </div>
 
@@ -330,13 +329,13 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
           <div className="flex items-center gap-1 text-[10.5px] font-bold text-rose-600 mb-1">
             <ShieldAlert className="h-3.5 w-3.5" />
-            <span>Deletion Risk</span>
+            <span>{th("Deletion Risk")}</span>
           </div>
           <div className="font-black text-rose-700 dark:text-rose-400 text-[11px]">
-            {rec.risk_level || "High"}
+            {rec.risk_level ? translateHeader(lang, rec.risk_level) : "—"}
           </div>
           <div className="text-[10px] text-rose-600 mt-0.5 font-medium">
-            High Risk Deletion
+            {th("High Risk Deletion")}
           </div>
         </div>
       </section>

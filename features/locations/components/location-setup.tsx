@@ -223,7 +223,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
     setNewCountryIso3("");
     setNewCountryCurrency("USD");
     setNewCountryLang("en");
-    setBanner({ tone: "ok", text: "Country saved." });
+    setBanner({ tone: "ok", text: tt("locsetup.country_saved", "Country saved.") });
   }
 
   async function addState() {
@@ -243,7 +243,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
     setModal(null);
     setNewStateName("");
     setNewStateCode("");
-    setBanner({ tone: "ok", text: "State saved." });
+    setBanner({ tone: "ok", text: tt("locsetup.state_saved", "State saved.") });
   }
 
   async function addCity() {
@@ -266,7 +266,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
     setNewCityName("");
     setNewCityCode("");
     setNewCityZip("");
-    setBanner({ tone: "ok", text: "City saved." });
+    setBanner({ tone: "ok", text: tt("locsetup.city_saved", "City saved.") });
   }
 
   async function addArea() {
@@ -285,7 +285,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
     setModal(null);
     setNewAreaName("");
     setNewAreaCode("");
-    setBanner({ tone: "ok", text: "Area saved." });
+    setBanner({ tone: "ok", text: tt("locsetup.area_saved", "Area saved.") });
   }
 
   return (
@@ -488,7 +488,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
               <Label>{tt("locsetup.country_name", "Country Name")}</Label>
-              <Input value={newCountryName} onChange={(e) => setNewCountryName(e.target.value)} placeholder="Pakistan" />
+              <Input value={newCountryName} onChange={(e) => setNewCountryName(e.target.value)} placeholder={tt("locsetup.eg_country", "e.g. Pakistan")} />
             </div>
             <div className="space-y-2">
               <Label>{tt("locsetup.country_iso2", "ISO2")}</Label>
@@ -541,7 +541,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
           </div>
           <div className="space-y-2">
             <Label>{tt("locsetup.state_name", "State / Province Name")}</Label>
-            <Input value={newStateName} onChange={(e) => setNewStateName(e.target.value)} placeholder="Balochistan" />
+            <Input value={newStateName} onChange={(e) => setNewStateName(e.target.value)} placeholder={tt("locsetup.eg_state", "e.g. Balochistan")} />
           </div>
           <div className="space-y-2">
             <Label>{tt("locsetup.state_code", "State Code (optional)")}</Label>
@@ -577,7 +577,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
           </div>
           <div className="space-y-2">
             <Label>{tt("locsetup.city_name", "City Name")}</Label>
-            <Input value={newCityName} onChange={(e) => setNewCityName(e.target.value)} placeholder="Chaman" />
+            <Input value={newCityName} onChange={(e) => setNewCityName(e.target.value)} placeholder={tt("locsetup.eg_city", "e.g. Chaman")} />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
@@ -613,7 +613,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
           </div>
           <div className="space-y-2">
             <Label>{tt("locsetup.area_name", "Area / Location Name")}</Label>
-            <Input value={newAreaName} onChange={(e) => setNewAreaName(e.target.value)} placeholder="Main Bazaar" />
+            <Input value={newAreaName} onChange={(e) => setNewAreaName(e.target.value)} placeholder={tt("locsetup.eg_area", "e.g. Main Bazaar")} />
           </div>
           <div className="space-y-2">
             <Label>{tt("locsetup.area_code", "Area Code (optional)")}</Label>

@@ -186,29 +186,29 @@ export function AllDeletedRecordsView() {
 
   function handlePrint() {
     void openScopedGenericReport({
-      title: "Deleted Records Control — All Countries & Branches",
+      title: t(lang, "audit.deleted_control_title", "Deleted Records Control — All Countries & Branches"),
       lang,
       countryId: selectedCountry !== "all" ? selectedCountry : null,
       countryName: selectedCountry !== "all" ? records[0]?.country_name ?? null : null,
       filters: [
-        { label: "Country", value: selectedCountry === "all" ? "All" : (records[0]?.country_name || selectedCountry) },
-        { label: "Branch", value: selectedBranch === "all" ? "All" : selectedBranch },
-        { label: "Module", value: selectedModule === "all" ? "All" : selectedModule },
-        { label: "Date Range", value: [fromDate, toDate].filter(Boolean).join(" — ") || "All" },
+        { label: t(lang, "audit.filter_country", "Country"), value: selectedCountry === "all" ? t(lang, "common.all", "All") : (records[0]?.country_name || selectedCountry) },
+        { label: t(lang, "audit.filter_branch", "Branch"), value: selectedBranch === "all" ? t(lang, "common.all", "All") : selectedBranch },
+        { label: t(lang, "audit.filter_module", "Module"), value: selectedModule === "all" ? t(lang, "common.all", "All") : selectedModule },
+        { label: t(lang, "audit.date_range", "Date Range"), value: [fromDate, toDate].filter(Boolean).join(" — ") || t(lang, "common.all", "All") },
       ],
       orientation: "landscape",
       columns: [
-        { key: "deleted_at", label: "Deleted At", format: "date" },
-        { key: "original_date", label: "Original Date", format: "date" },
-        { key: "module", label: "Module" },
-        { key: (r) => r.country_name || "Global", label: "Country" },
-        { key: (r) => r.branch_name || "-", label: "Branch" },
-        { key: (r) => r.reference_no || r.entity_id || "", label: "Bill / Ref No" },
-        { key: (r) => r.party_name || "-", label: "Record / Party" },
-        { key: (r) => `${r.user_name} (${r.user_role})`, label: "Deleted By" },
-        { key: (r) => r.reason || "-", label: "Reason" },
-        { key: "risk_level", label: "Risk Level", format: "status" },
-        { key: "review_status", label: "Review Status", format: "status" },
+        { key: "deleted_at", label: t(lang, "audit.th_deleted_at", "Deleted At"), format: "date" },
+        { key: "original_date", label: t(lang, "audit.original_date", "Original Date"), format: "date" },
+        { key: "module", label: t(lang, "audit.filter_module", "Module") },
+        { key: (r) => r.country_name || "—", label: t(lang, "audit.filter_country", "Country") },
+        { key: (r) => r.branch_name || "-", label: t(lang, "audit.filter_branch", "Branch") },
+        { key: (r) => r.reference_no || r.entity_id || "", label: t(lang, "audit.bill_ref_no", "Bill / Ref No") },
+        { key: (r) => r.party_name || "-", label: t(lang, "audit.record_party", "Record / Party") },
+        { key: (r) => `${r.user_name} (${r.user_role})`, label: t(lang, "audit.th_deleted_by", "Deleted By") },
+        { key: (r) => r.reason || "-", label: t(lang, "audit.reason", "Reason") },
+        { key: "risk_level", label: t(lang, "audit.risk_level", "Risk Level"), format: "status" },
+        { key: "review_status", label: t(lang, "audit.review_status", "Review Status"), format: "status" },
       ],
       rows: records as unknown as Record<string, unknown>[],
     });
@@ -363,7 +363,7 @@ export function AllDeletedRecordsView() {
                 {kpis.totalCountries}
               </div>
               <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                All operating countries
+                {t(lang, "audit.all_operating_countries", "All operating countries")}
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center shadow-xs">
@@ -383,7 +383,7 @@ export function AllDeletedRecordsView() {
                 {kpis.totalBranches}
               </div>
               <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                All offices / branches
+                {t(lang, "audit.all_offices_branches", "All offices / branches")}
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 flex items-center justify-center shadow-xs">
@@ -481,10 +481,9 @@ export function AllDeletedRecordsView() {
               className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
             >
               <option value="all">{t(lang, "audit.filter_all_users", "All Users")}</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="Ali Hassan">Ali Hassan</option>
-              <option value="Neha Sharma">Neha Sharma</option>
-              <option value="Bilal Ahmed">Bilal Ahmed</option>
+              {Array.from(new Set(records.map((r) => r.user_name).filter(Boolean))).sort().map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
             </select>
           </div>
 
@@ -622,13 +621,13 @@ export function AllDeletedRecordsView() {
                 <tr>
                   <td colSpan={14} className="py-12 text-center text-slate-400 font-medium">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
-                    Loading enterprise deleted records...
+                    {t(lang, "audit.loading_deleted_records", "Loading enterprise deleted records...")}
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
                   <td colSpan={14} className="py-12 text-center text-slate-400 font-medium">
-                    No deleted records found matching current criteria.
+                    {t(lang, "audit.no_deleted_records", "No deleted records found matching current criteria.")}
                   </td>
                 </tr>
               ) : (

@@ -38,8 +38,8 @@ const EMPTY_AGENT: any = {
   contact_person: "",
   email: "",
   phone: "",
-  city_name: "Karachi",
-  country_name: "Pakistan",
+  city_name: "",
+  country_name: "",
   status: "active",
   remarks: "",
 };
@@ -134,10 +134,10 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-indigo-500/30">
-                  Shipping Line Module
+                  {tt("sae.shipping_line_module", "Shipping Line Module")}
                 </span>
                 <span className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-500/30">
-                  5-Language Translation Sync
+                  {tt("sae.lang_sync", "5-Language Translation Sync")}
                 </span>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">{tt("sag.title", "Shipping Agent Master Entry")}</h1>
@@ -182,7 +182,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
               <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.agent_code", "Agent Code")}</label>
               <input
                 type="text"
-                placeholder="Auto-generated (e.g. SHIP-AGT-001)"
+                placeholder={tt("sae.ph_agent_code", "Auto-generated (e.g. SHIP-AGT-001)")}
                 value={form.agent_code}
                 onChange={(e) => setForm({ ...form, agent_code: e.target.value })}
                 className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono transition-all"
@@ -307,7 +307,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
             <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.remarks", "Remarks")}</label>
             <textarea
               rows={2}
-              placeholder="Additional contact details, agency terms..."
+              placeholder={tt("sae.ph_remarks", "Additional contact details, agency terms...")}
               value={form.remarks}
               onChange={(e) => setForm({ ...form, remarks: e.target.value })}
               className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
@@ -334,7 +334,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search agent code, name, city..."
+                placeholder={tt("sae.ph_search", "Search agent code, name, city...")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="bg-background border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
