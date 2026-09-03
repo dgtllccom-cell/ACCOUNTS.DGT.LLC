@@ -927,6 +927,108 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bexp.open_drilldown"
+  | "bexp.dd_title"
+  | "bexp.dd_report_title"
+  | "bexp.dd_print"
+  | "bexp.dd_not_found"
+  | "bexp.retry"
+  | "bexp.refresh"
+  | "bexp.loading"
+  | "bexp.dd_col_sr"
+  | "bexp.dd_col_type"
+  | "bexp.dd_col_details"
+  | "bexp.dd_col_amount"
+  | "bexp.dd_col_tax"
+  | "bexp.dd_col_grand"
+  | "bexp.dd_col_posting"
+  | "bexp.dd_bill_no"
+  | "bexp.dd_source"
+  | "bexp.dd_party"
+  | "bexp.dd_date"
+  | "bexp.dd_manual_bill"
+  | "bexp.dd_country"
+  | "bexp.dd_branch"
+  | "bexp.dd_currency"
+  | "bexp.dd_eligibility"
+  | "bexp.dd_s_bill"
+  | "bexp.dd_s_goods"
+  | "bexp.dd_s_original"
+  | "bexp.dd_s_expenses"
+  | "bexp.dd_s_payments"
+  | "bexp.dd_s_drcr"
+  | "bexp.dd_s_cost"
+  | "bexp.dd_s_qty"
+  | "bexp.dd_s_sales"
+  | "bexp.dd_s_pnl"
+  | "bexp.dd_s_documents"
+  | "bexp.dd_s_audit"
+  | "bexp.dd_no_goods"
+  | "bexp.dd_g_name"
+  | "bexp.dd_g_variation"
+  | "bexp.dd_g_qty"
+  | "bexp.dd_g_weight"
+  | "bexp.dd_g_rate"
+  | "bexp.dd_g_amount"
+  | "bexp.dd_o_type"
+  | "bexp.dd_o_amount"
+  | "bexp.dd_o_landed"
+  | "bexp.dd_o_contract"
+  | "bexp.dd_o_customer"
+  | "bexp.dd_o_supplier"
+  | "bexp.dd_o_route"
+  | "bexp.dd_o_container"
+  | "bexp.dd_o_status"
+  | "bexp.dd_no_source"
+  | "bexp.dd_no_expenses"
+  | "bexp.dd_expense_total"
+  | "bexp.dd_no_payments"
+  | "bexp.dd_p_date"
+  | "bexp.dd_p_kind"
+  | "bexp.dd_p_ref"
+  | "bexp.dd_p_status"
+  | "bexp.dd_no_drcr"
+  | "bexp.dd_original_cost"
+  | "bexp.dd_landed_cost"
+  | "bexp.dd_unit_landed"
+  | "bexp.dd_qty_purchased"
+  | "bexp.dd_qty_sold"
+  | "bexp.dd_qty_remaining"
+  | "bexp.dd_remaining_value"
+  | "bexp.dd_no_sales"
+  | "bexp.dd_so_no"
+  | "bexp.dd_so_customer"
+  | "bexp.dd_so_date"
+  | "bexp.dd_so_qty"
+  | "bexp.dd_so_revenue"
+  | "bexp.dd_revenue"
+  | "bexp.dd_cost_of_sold"
+  | "bexp.dd_profit"
+  | "bexp.dd_profit_na"
+  | "bexp.dd_no_documents"
+  | "bexp.dd_no_audit"
+  | "bexp.etype_shipping"
+  | "bexp.etype_loading"
+  | "bexp.etype_clearing"
+  | "bexp.etype_transport"
+  | "bexp.etype_customs"
+  | "bexp.etype_handling"
+  | "bexp.etype_storage"
+  | "bexp.etype_insurance"
+  | "bexp.etype_other"
+  | "bexp.elig_active"
+  | "bexp.elig_withdrawn"
+  | "bexp.src_purchase_order"
+  | "bexp.src_local_purchase"
+  | "bexp.src_sales_order"
+  | "bexp.src_shipping_bl"
+  | "bexp.src_clearing_bill"
+  | "bexp.rzstatus_posted"
+  | "bexp.rzstatus_cancelled"
+  | "bexp.rzstatus_draft"
+  | "bexp.rzstatus_pending"
+  | "bexp.pnl_basis_sale_revenue_minus_linked_purchase_landed_cost_minus_expenses"
+  | "bexp.pnl_basis_linked_sales_revenue_minus_landed_cost_of_sold_qty"
   | "nav.bill_cost_profit"
   | "nav.bcp_overview"
   | "nav.bcp_purchase"
@@ -17904,6 +18006,312 @@ const en: Dict = {
 
 
 
+
+
+  "bexp.open_drilldown": "Cost & Profit drill-down",
+
+
+  "bexp.dd_title": "Bill Cost, Expenses & Profit — Drill-down",
+
+
+  "bexp.dd_report_title": "Bill Cost & Profit — Drill-down",
+
+
+  "bexp.dd_print": "Print A4",
+
+
+  "bexp.dd_not_found": "Bill not found.",
+
+
+  "bexp.retry": "Retry",
+
+
+  "bexp.refresh": "Refresh",
+
+
+  "bexp.loading": "Loading…",
+
+
+  "bexp.dd_col_sr": "Sr",
+
+
+  "bexp.dd_col_type": "Expense Type",
+
+
+  "bexp.dd_col_details": "Details",
+
+
+  "bexp.dd_col_amount": "Amount",
+
+
+  "bexp.dd_col_tax": "Tax",
+
+
+  "bexp.dd_col_grand": "Grand (Functional)",
+
+
+  "bexp.dd_col_posting": "Accounting",
+
+
+  "bexp.dd_bill_no": "Bill No.",
+
+
+  "bexp.dd_source": "Source Module",
+
+
+  "bexp.dd_party": "Party / Account",
+
+
+  "bexp.dd_date": "Bill Date",
+
+
+  "bexp.dd_manual_bill": "Manual Bill / Ref",
+
+
+  "bexp.dd_country": "Country",
+
+
+  "bexp.dd_branch": "Branch",
+
+
+  "bexp.dd_currency": "Currency",
+
+
+  "bexp.dd_eligibility": "Eligibility",
+
+
+  "bexp.dd_s_bill": "Bill Details",
+
+
+  "bexp.dd_s_goods": "Goods",
+
+
+  "bexp.dd_s_original": "Original Purchase / Sale",
+
+
+  "bexp.dd_s_expenses": "Related Expense Bills",
+
+
+  "bexp.dd_s_payments": "Payments",
+
+
+  "bexp.dd_s_drcr": "DR / CR Entries (Journal · Ledger · Roznamcha)",
+
+
+  "bexp.dd_s_cost": "Total Expense · Landed / Final Cost",
+
+
+  "bexp.dd_s_qty": "Purchased · Sold · Remaining Qty & Value",
+
+
+  "bexp.dd_s_sales": "Related Sales & Revenue",
+
+
+  "bexp.dd_s_pnl": "Profit / Loss",
+
+
+  "bexp.dd_s_documents": "Documents",
+
+
+  "bexp.dd_s_audit": "Audit Trail",
+
+
+  "bexp.dd_no_goods": "No goods lines on the source bill.",
+
+
+  "bexp.dd_g_name": "Goods",
+
+
+  "bexp.dd_g_variation": "Variation",
+
+
+  "bexp.dd_g_qty": "Qty",
+
+
+  "bexp.dd_g_weight": "Weight (kg)",
+
+
+  "bexp.dd_g_rate": "Rate",
+
+
+  "bexp.dd_g_amount": "Amount",
+
+
+  "bexp.dd_o_type": "Type",
+
+
+  "bexp.dd_o_amount": "Original Amount",
+
+
+  "bexp.dd_o_landed": "Recorded Landed Cost",
+
+
+  "bexp.dd_o_contract": "Contract No.",
+
+
+  "bexp.dd_o_customer": "Customer",
+
+
+  "bexp.dd_o_supplier": "Supplier",
+
+
+  "bexp.dd_o_route": "Route",
+
+
+  "bexp.dd_o_container": "Container",
+
+
+  "bexp.dd_o_status": "Status",
+
+
+  "bexp.dd_no_source": "Source bill record not available.",
+
+
+  "bexp.dd_no_expenses": "No additional expenses recorded.",
+
+
+  "bexp.dd_expense_total": "Posted Expense Total",
+
+
+  "bexp.dd_no_payments": "No payments recorded against the source bill.",
+
+
+  "bexp.dd_p_date": "Date",
+
+
+  "bexp.dd_p_kind": "Kind",
+
+
+  "bexp.dd_p_ref": "Reference",
+
+
+  "bexp.dd_p_status": "Status",
+
+
+  "bexp.dd_no_drcr": "No accounting entries posted yet.",
+
+
+  "bexp.dd_original_cost": "Original Bill (Functional)",
+
+
+  "bexp.dd_landed_cost": "Landed / Final Cost",
+
+
+  "bexp.dd_unit_landed": "Unit Landed Cost",
+
+
+  "bexp.dd_qty_purchased": "Qty Purchased",
+
+
+  "bexp.dd_qty_sold": "Qty Sold",
+
+
+  "bexp.dd_qty_remaining": "Qty Remaining",
+
+
+  "bexp.dd_remaining_value": "Remaining Value",
+
+
+  "bexp.dd_no_sales": "No linked sales orders.",
+
+
+  "bexp.dd_so_no": "Sales Order",
+
+
+  "bexp.dd_so_customer": "Customer",
+
+
+  "bexp.dd_so_date": "Date",
+
+
+  "bexp.dd_so_qty": "Qty",
+
+
+  "bexp.dd_so_revenue": "Revenue",
+
+
+  "bexp.dd_revenue": "Revenue",
+
+
+  "bexp.dd_cost_of_sold": "Cost of Sold Qty",
+
+
+  "bexp.dd_profit": "Profit / Loss",
+
+
+  "bexp.dd_profit_na": "Not computable — no linked sale",
+
+
+  "bexp.dd_no_documents": "No documents attached.",
+
+
+  "bexp.dd_no_audit": "No audit records.",
+
+
+  "bexp.etype_shipping": "Shipping",
+
+
+  "bexp.etype_loading": "Loading",
+
+
+  "bexp.etype_clearing": "Clearing",
+
+
+  "bexp.etype_transport": "Transport",
+
+
+  "bexp.etype_customs": "Customs",
+
+
+  "bexp.etype_handling": "Handling",
+
+
+  "bexp.etype_storage": "Storage",
+
+
+  "bexp.etype_insurance": "Insurance",
+
+
+  "bexp.etype_other": "Other",
+
+
+  "bexp.elig_active": "Active",
+
+
+  "bexp.elig_withdrawn": "Withdrawn",
+
+
+  "bexp.src_purchase_order": "Purchase Order",
+
+
+  "bexp.src_local_purchase": "Local Purchase",
+
+
+  "bexp.src_sales_order": "Sales Order",
+
+
+  "bexp.src_shipping_bl": "Shipping / BL",
+
+
+  "bexp.src_clearing_bill": "Clearing Bill",
+
+
+  "bexp.rzstatus_posted": "Posted",
+
+
+  "bexp.rzstatus_cancelled": "Cancelled",
+
+
+  "bexp.rzstatus_draft": "Draft",
+
+
+  "bexp.rzstatus_pending": "Pending",
+
+
+  "bexp.pnl_basis_sale_revenue_minus_linked_purchase_landed_cost_minus_expenses": "Profit = sale revenue − linked purchase landed cost − posted expenses",
+
+
+  "bexp.pnl_basis_linked_sales_revenue_minus_landed_cost_of_sold_qty": "Profit = linked sales revenue − landed cost of sold qty",
   "nav.bill_cost_profit": "Bill Cost, Expenses & Profit",
 
 
@@ -31769,6 +32177,312 @@ const ur: Dict = {
 
 
 
+
+
+  "bexp.open_drilldown": "لاگت اور منافع کی تفصیل",
+
+
+  "bexp.dd_title": "بل لاگت، اخراجات اور منافع — تفصیل",
+
+
+  "bexp.dd_report_title": "بل لاگت اور منافع — تفصیل",
+
+
+  "bexp.dd_print": "A4 پرنٹ",
+
+
+  "bexp.dd_not_found": "بل نہیں ملا۔",
+
+
+  "bexp.retry": "دوبارہ کوشش",
+
+
+  "bexp.refresh": "ریفریش",
+
+
+  "bexp.loading": "لوڈ ہو رہا ہے…",
+
+
+  "bexp.dd_col_sr": "نمبر",
+
+
+  "bexp.dd_col_type": "اخراج کی قسم",
+
+
+  "bexp.dd_col_details": "تفصیل",
+
+
+  "bexp.dd_col_amount": "رقم",
+
+
+  "bexp.dd_col_tax": "ٹیکس",
+
+
+  "bexp.dd_col_grand": "کل (فنکشنل)",
+
+
+  "bexp.dd_col_posting": "اکاؤنٹنگ",
+
+
+  "bexp.dd_bill_no": "بل نمبر",
+
+
+  "bexp.dd_source": "ماخذ ماڈیول",
+
+
+  "bexp.dd_party": "پارٹی / اکاؤنٹ",
+
+
+  "bexp.dd_date": "بل کی تاریخ",
+
+
+  "bexp.dd_manual_bill": "دستی بل / حوالہ",
+
+
+  "bexp.dd_country": "ملک",
+
+
+  "bexp.dd_branch": "برانچ",
+
+
+  "bexp.dd_currency": "کرنسی",
+
+
+  "bexp.dd_eligibility": "اہلیت",
+
+
+  "bexp.dd_s_bill": "بل کی تفصیل",
+
+
+  "bexp.dd_s_goods": "مال",
+
+
+  "bexp.dd_s_original": "اصل خرید / فروخت",
+
+
+  "bexp.dd_s_expenses": "متعلقہ اخراجات بل",
+
+
+  "bexp.dd_s_payments": "ادائیگیاں",
+
+
+  "bexp.dd_s_drcr": "ڈیبٹ / کریڈٹ اندراجات (جرنل · لیجر · روزنامچہ)",
+
+
+  "bexp.dd_s_cost": "کل اخراج · لینڈڈ / حتمی لاگت",
+
+
+  "bexp.dd_s_qty": "خریدا · فروخت · باقی مقدار و قیمت",
+
+
+  "bexp.dd_s_sales": "متعلقہ فروخت اور آمدنی",
+
+
+  "bexp.dd_s_pnl": "نفع / نقصان",
+
+
+  "bexp.dd_s_documents": "دستاویزات",
+
+
+  "bexp.dd_s_audit": "آڈٹ ٹریل",
+
+
+  "bexp.dd_no_goods": "ماخذ بل پر کوئی مال لائن نہیں۔",
+
+
+  "bexp.dd_g_name": "مال",
+
+
+  "bexp.dd_g_variation": "قسم",
+
+
+  "bexp.dd_g_qty": "مقدار",
+
+
+  "bexp.dd_g_weight": "وزن (کلو)",
+
+
+  "bexp.dd_g_rate": "ریٹ",
+
+
+  "bexp.dd_g_amount": "رقم",
+
+
+  "bexp.dd_o_type": "قسم",
+
+
+  "bexp.dd_o_amount": "اصل رقم",
+
+
+  "bexp.dd_o_landed": "ریکارڈ شدہ لینڈڈ لاگت",
+
+
+  "bexp.dd_o_contract": "کنٹریکٹ نمبر",
+
+
+  "bexp.dd_o_customer": "کسٹمر",
+
+
+  "bexp.dd_o_supplier": "سپلائر",
+
+
+  "bexp.dd_o_route": "روٹ",
+
+
+  "bexp.dd_o_container": "کنٹینر",
+
+
+  "bexp.dd_o_status": "اسٹیٹس",
+
+
+  "bexp.dd_no_source": "ماخذ بل ریکارڈ دستیاب نہیں۔",
+
+
+  "bexp.dd_no_expenses": "کوئی اضافی اخراج درج نہیں۔",
+
+
+  "bexp.dd_expense_total": "پوسٹ شدہ اخراج کل",
+
+
+  "bexp.dd_no_payments": "ماخذ بل پر کوئی ادائیگی درج نہیں۔",
+
+
+  "bexp.dd_p_date": "تاریخ",
+
+
+  "bexp.dd_p_kind": "قسم",
+
+
+  "bexp.dd_p_ref": "حوالہ",
+
+
+  "bexp.dd_p_status": "اسٹیٹس",
+
+
+  "bexp.dd_no_drcr": "ابھی کوئی اکاؤنٹنگ اندراج پوسٹ نہیں ہوا۔",
+
+
+  "bexp.dd_original_cost": "اصل بل (فنکشنل)",
+
+
+  "bexp.dd_landed_cost": "لینڈڈ / حتمی لاگت",
+
+
+  "bexp.dd_unit_landed": "فی یونٹ لینڈڈ لاگت",
+
+
+  "bexp.dd_qty_purchased": "خریدی گئی مقدار",
+
+
+  "bexp.dd_qty_sold": "فروخت شدہ مقدار",
+
+
+  "bexp.dd_qty_remaining": "باقی مقدار",
+
+
+  "bexp.dd_remaining_value": "باقی قیمت",
+
+
+  "bexp.dd_no_sales": "کوئی منسلک سیلز آرڈر نہیں۔",
+
+
+  "bexp.dd_so_no": "سیلز آرڈر",
+
+
+  "bexp.dd_so_customer": "کسٹمر",
+
+
+  "bexp.dd_so_date": "تاریخ",
+
+
+  "bexp.dd_so_qty": "مقدار",
+
+
+  "bexp.dd_so_revenue": "آمدنی",
+
+
+  "bexp.dd_revenue": "آمدنی",
+
+
+  "bexp.dd_cost_of_sold": "فروخت شدہ مقدار کی لاگت",
+
+
+  "bexp.dd_profit": "نفع / نقصان",
+
+
+  "bexp.dd_profit_na": "قابل حساب نہیں — کوئی منسلک فروخت نہیں",
+
+
+  "bexp.dd_no_documents": "کوئی دستاویز منسلک نہیں۔",
+
+
+  "bexp.dd_no_audit": "کوئی آڈٹ ریکارڈ نہیں۔",
+
+
+  "bexp.etype_shipping": "شپنگ",
+
+
+  "bexp.etype_loading": "لوڈنگ",
+
+
+  "bexp.etype_clearing": "کلیئرنگ",
+
+
+  "bexp.etype_transport": "ٹرانسپورٹ",
+
+
+  "bexp.etype_customs": "کسٹمز",
+
+
+  "bexp.etype_handling": "ہینڈلنگ",
+
+
+  "bexp.etype_storage": "اسٹوریج",
+
+
+  "bexp.etype_insurance": "انشورنس",
+
+
+  "bexp.etype_other": "دیگر",
+
+
+  "bexp.elig_active": "فعال",
+
+
+  "bexp.elig_withdrawn": "واپس لیا گیا",
+
+
+  "bexp.src_purchase_order": "پرچیز آرڈر",
+
+
+  "bexp.src_local_purchase": "لوکل پرچیز",
+
+
+  "bexp.src_sales_order": "سیلز آرڈر",
+
+
+  "bexp.src_shipping_bl": "شپنگ / BL",
+
+
+  "bexp.src_clearing_bill": "کلیئرنگ بل",
+
+
+  "bexp.rzstatus_posted": "پوسٹ شدہ",
+
+
+  "bexp.rzstatus_cancelled": "منسوخ",
+
+
+  "bexp.rzstatus_draft": "ڈرافٹ",
+
+
+  "bexp.rzstatus_pending": "زیر التوا",
+
+
+  "bexp.pnl_basis_sale_revenue_minus_linked_purchase_landed_cost_minus_expenses": "منافع = فروخت آمدنی − منسلک خرید لینڈڈ لاگت − پوسٹ شدہ اخراجات",
+
+
+  "bexp.pnl_basis_linked_sales_revenue_minus_landed_cost_of_sold_qty": "منافع = منسلک فروخت آمدنی − فروخت شدہ مقدار کی لینڈڈ لاگت",
   "nav.bill_cost_profit": "بل لاگت، اخراجات اور منافع",
 
 
@@ -45636,6 +46350,312 @@ const ar: Dict = {
 
 
 
+
+
+  "bexp.open_drilldown": "تفاصيل التكلفة والربح",
+
+
+  "bexp.dd_title": "تكلفة الفاتورة والمصروفات والربح — تفصيل",
+
+
+  "bexp.dd_report_title": "تكلفة الفاتورة والربح — تفصيل",
+
+
+  "bexp.dd_print": "طباعة A4",
+
+
+  "bexp.dd_not_found": "الفاتورة غير موجودة.",
+
+
+  "bexp.retry": "إعادة المحاولة",
+
+
+  "bexp.refresh": "تحديث",
+
+
+  "bexp.loading": "جارٍ التحميل…",
+
+
+  "bexp.dd_col_sr": "م",
+
+
+  "bexp.dd_col_type": "نوع المصروف",
+
+
+  "bexp.dd_col_details": "التفاصيل",
+
+
+  "bexp.dd_col_amount": "المبلغ",
+
+
+  "bexp.dd_col_tax": "الضريبة",
+
+
+  "bexp.dd_col_grand": "الإجمالي (بالعملة الوظيفية)",
+
+
+  "bexp.dd_col_posting": "المحاسبة",
+
+
+  "bexp.dd_bill_no": "رقم الفاتورة",
+
+
+  "bexp.dd_source": "الوحدة المصدر",
+
+
+  "bexp.dd_party": "الطرف / الحساب",
+
+
+  "bexp.dd_date": "تاريخ الفاتورة",
+
+
+  "bexp.dd_manual_bill": "فاتورة يدوية / مرجع",
+
+
+  "bexp.dd_country": "الدولة",
+
+
+  "bexp.dd_branch": "الفرع",
+
+
+  "bexp.dd_currency": "العملة",
+
+
+  "bexp.dd_eligibility": "الأهلية",
+
+
+  "bexp.dd_s_bill": "تفاصيل الفاتورة",
+
+
+  "bexp.dd_s_goods": "البضائع",
+
+
+  "bexp.dd_s_original": "الشراء / البيع الأصلي",
+
+
+  "bexp.dd_s_expenses": "فواتير المصروفات ذات الصلة",
+
+
+  "bexp.dd_s_payments": "المدفوعات",
+
+
+  "bexp.dd_s_drcr": "قيود مدين / دائن (اليومية · الأستاذ · روزنامجة)",
+
+
+  "bexp.dd_s_cost": "إجمالي المصروف · التكلفة النهائية",
+
+
+  "bexp.dd_s_qty": "المشترى · المباع · الكمية والقيمة المتبقية",
+
+
+  "bexp.dd_s_sales": "المبيعات والإيرادات ذات الصلة",
+
+
+  "bexp.dd_s_pnl": "الربح / الخسارة",
+
+
+  "bexp.dd_s_documents": "المستندات",
+
+
+  "bexp.dd_s_audit": "سجل التدقيق",
+
+
+  "bexp.dd_no_goods": "لا توجد بنود بضائع في الفاتورة المصدر.",
+
+
+  "bexp.dd_g_name": "البضائع",
+
+
+  "bexp.dd_g_variation": "التنوع",
+
+
+  "bexp.dd_g_qty": "الكمية",
+
+
+  "bexp.dd_g_weight": "الوزن (كجم)",
+
+
+  "bexp.dd_g_rate": "السعر",
+
+
+  "bexp.dd_g_amount": "المبلغ",
+
+
+  "bexp.dd_o_type": "النوع",
+
+
+  "bexp.dd_o_amount": "المبلغ الأصلي",
+
+
+  "bexp.dd_o_landed": "التكلفة الواصلة المسجلة",
+
+
+  "bexp.dd_o_contract": "رقم العقد",
+
+
+  "bexp.dd_o_customer": "العميل",
+
+
+  "bexp.dd_o_supplier": "المورّد",
+
+
+  "bexp.dd_o_route": "المسار",
+
+
+  "bexp.dd_o_container": "الحاوية",
+
+
+  "bexp.dd_o_status": "الحالة",
+
+
+  "bexp.dd_no_source": "سجل الفاتورة المصدر غير متوفر.",
+
+
+  "bexp.dd_no_expenses": "لم يتم تسجيل مصروفات إضافية.",
+
+
+  "bexp.dd_expense_total": "إجمالي المصروفات المرحّلة",
+
+
+  "bexp.dd_no_payments": "لا توجد مدفوعات مسجلة على الفاتورة المصدر.",
+
+
+  "bexp.dd_p_date": "التاريخ",
+
+
+  "bexp.dd_p_kind": "النوع",
+
+
+  "bexp.dd_p_ref": "المرجع",
+
+
+  "bexp.dd_p_status": "الحالة",
+
+
+  "bexp.dd_no_drcr": "لم يتم ترحيل أي قيود محاسبية بعد.",
+
+
+  "bexp.dd_original_cost": "الفاتورة الأصلية (بالعملة الوظيفية)",
+
+
+  "bexp.dd_landed_cost": "التكلفة الواصلة / النهائية",
+
+
+  "bexp.dd_unit_landed": "تكلفة الوحدة الواصلة",
+
+
+  "bexp.dd_qty_purchased": "الكمية المشتراة",
+
+
+  "bexp.dd_qty_sold": "الكمية المباعة",
+
+
+  "bexp.dd_qty_remaining": "الكمية المتبقية",
+
+
+  "bexp.dd_remaining_value": "القيمة المتبقية",
+
+
+  "bexp.dd_no_sales": "لا توجد أوامر بيع مرتبطة.",
+
+
+  "bexp.dd_so_no": "أمر البيع",
+
+
+  "bexp.dd_so_customer": "العميل",
+
+
+  "bexp.dd_so_date": "التاريخ",
+
+
+  "bexp.dd_so_qty": "الكمية",
+
+
+  "bexp.dd_so_revenue": "الإيراد",
+
+
+  "bexp.dd_revenue": "الإيراد",
+
+
+  "bexp.dd_cost_of_sold": "تكلفة الكمية المباعة",
+
+
+  "bexp.dd_profit": "الربح / الخسارة",
+
+
+  "bexp.dd_profit_na": "غير قابل للحساب — لا يوجد بيع مرتبط",
+
+
+  "bexp.dd_no_documents": "لا توجد مستندات مرفقة.",
+
+
+  "bexp.dd_no_audit": "لا توجد سجلات تدقيق.",
+
+
+  "bexp.etype_shipping": "الشحن",
+
+
+  "bexp.etype_loading": "التحميل",
+
+
+  "bexp.etype_clearing": "التخليص",
+
+
+  "bexp.etype_transport": "النقل",
+
+
+  "bexp.etype_customs": "الجمارك",
+
+
+  "bexp.etype_handling": "المناولة",
+
+
+  "bexp.etype_storage": "التخزين",
+
+
+  "bexp.etype_insurance": "التأمين",
+
+
+  "bexp.etype_other": "أخرى",
+
+
+  "bexp.elig_active": "نشط",
+
+
+  "bexp.elig_withdrawn": "مسحوب",
+
+
+  "bexp.src_purchase_order": "أمر الشراء",
+
+
+  "bexp.src_local_purchase": "شراء محلي",
+
+
+  "bexp.src_sales_order": "أمر البيع",
+
+
+  "bexp.src_shipping_bl": "الشحن / بوليصة الشحن",
+
+
+  "bexp.src_clearing_bill": "فاتورة التخليص",
+
+
+  "bexp.rzstatus_posted": "مُرحّل",
+
+
+  "bexp.rzstatus_cancelled": "مُلغى",
+
+
+  "bexp.rzstatus_draft": "مسودة",
+
+
+  "bexp.rzstatus_pending": "قيد الانتظار",
+
+
+  "bexp.pnl_basis_sale_revenue_minus_linked_purchase_landed_cost_minus_expenses": "الربح = إيراد البيع − التكلفة الواصلة للشراء المرتبط − المصروفات المرحّلة",
+
+
+  "bexp.pnl_basis_linked_sales_revenue_minus_landed_cost_of_sold_qty": "الربح = إيراد المبيعات المرتبطة − التكلفة الواصلة للكمية المباعة",
   "nav.bill_cost_profit": "تكلفة الفاتورة والمصروفات والربح",
 
 
@@ -59502,6 +60522,312 @@ const fa: Dict = {
 
 
 
+
+
+  "bexp.open_drilldown": "جزئیات هزینه و سود",
+
+
+  "bexp.dd_title": "هزینه فاکتور، مخارج و سود — جزئیات",
+
+
+  "bexp.dd_report_title": "هزینه و سود فاکتور — جزئیات",
+
+
+  "bexp.dd_print": "چاپ A4",
+
+
+  "bexp.dd_not_found": "فاکتور یافت نشد.",
+
+
+  "bexp.retry": "تلاش دوباره",
+
+
+  "bexp.refresh": "بازخوانی",
+
+
+  "bexp.loading": "در حال بارگذاری…",
+
+
+  "bexp.dd_col_sr": "ردیف",
+
+
+  "bexp.dd_col_type": "نوع هزینه",
+
+
+  "bexp.dd_col_details": "جزئیات",
+
+
+  "bexp.dd_col_amount": "مبلغ",
+
+
+  "bexp.dd_col_tax": "مالیات",
+
+
+  "bexp.dd_col_grand": "کل (ارز عملیاتی)",
+
+
+  "bexp.dd_col_posting": "حسابداری",
+
+
+  "bexp.dd_bill_no": "شماره فاکتور",
+
+
+  "bexp.dd_source": "ماژول منبع",
+
+
+  "bexp.dd_party": "طرف / حساب",
+
+
+  "bexp.dd_date": "تاریخ فاکتور",
+
+
+  "bexp.dd_manual_bill": "فاکتور دستی / مرجع",
+
+
+  "bexp.dd_country": "کشور",
+
+
+  "bexp.dd_branch": "شعبه",
+
+
+  "bexp.dd_currency": "ارز",
+
+
+  "bexp.dd_eligibility": "واجد شرایط بودن",
+
+
+  "bexp.dd_s_bill": "جزئیات فاکتور",
+
+
+  "bexp.dd_s_goods": "کالاها",
+
+
+  "bexp.dd_s_original": "خرید / فروش اصلی",
+
+
+  "bexp.dd_s_expenses": "فاکتورهای مخارج مرتبط",
+
+
+  "bexp.dd_s_payments": "پرداخت‌ها",
+
+
+  "bexp.dd_s_drcr": "ثبت‌های بدهکار / بستانکار (ژورنال · دفتر کل · روزنامچه)",
+
+
+  "bexp.dd_s_cost": "کل هزینه · هزینه نهایی",
+
+
+  "bexp.dd_s_qty": "خریداری · فروخته · مقدار و ارزش باقی‌مانده",
+
+
+  "bexp.dd_s_sales": "فروش و درآمد مرتبط",
+
+
+  "bexp.dd_s_pnl": "سود / زیان",
+
+
+  "bexp.dd_s_documents": "اسناد",
+
+
+  "bexp.dd_s_audit": "ردیابی حسابرسی",
+
+
+  "bexp.dd_no_goods": "هیچ ردیف کالایی در فاکتور منبع نیست.",
+
+
+  "bexp.dd_g_name": "کالا",
+
+
+  "bexp.dd_g_variation": "نوع",
+
+
+  "bexp.dd_g_qty": "مقدار",
+
+
+  "bexp.dd_g_weight": "وزن (کیلوگرم)",
+
+
+  "bexp.dd_g_rate": "نرخ",
+
+
+  "bexp.dd_g_amount": "مبلغ",
+
+
+  "bexp.dd_o_type": "نوع",
+
+
+  "bexp.dd_o_amount": "مبلغ اصلی",
+
+
+  "bexp.dd_o_landed": "هزینه تمام‌شده ثبت‌شده",
+
+
+  "bexp.dd_o_contract": "شماره قرارداد",
+
+
+  "bexp.dd_o_customer": "مشتری",
+
+
+  "bexp.dd_o_supplier": "تأمین‌کننده",
+
+
+  "bexp.dd_o_route": "مسیر",
+
+
+  "bexp.dd_o_container": "کانتینر",
+
+
+  "bexp.dd_o_status": "وضعیت",
+
+
+  "bexp.dd_no_source": "سابقه فاکتور منبع در دسترس نیست.",
+
+
+  "bexp.dd_no_expenses": "هیچ هزینه اضافی ثبت نشده.",
+
+
+  "bexp.dd_expense_total": "جمع هزینه‌های ثبت‌شده",
+
+
+  "bexp.dd_no_payments": "هیچ پرداختی برای فاکتور منبع ثبت نشده.",
+
+
+  "bexp.dd_p_date": "تاریخ",
+
+
+  "bexp.dd_p_kind": "نوع",
+
+
+  "bexp.dd_p_ref": "مرجع",
+
+
+  "bexp.dd_p_status": "وضعیت",
+
+
+  "bexp.dd_no_drcr": "هنوز هیچ ثبت حسابداری انجام نشده.",
+
+
+  "bexp.dd_original_cost": "فاکتور اصلی (ارز عملیاتی)",
+
+
+  "bexp.dd_landed_cost": "هزینه تمام‌شده / نهایی",
+
+
+  "bexp.dd_unit_landed": "هزینه تمام‌شده هر واحد",
+
+
+  "bexp.dd_qty_purchased": "مقدار خریداری‌شده",
+
+
+  "bexp.dd_qty_sold": "مقدار فروخته‌شده",
+
+
+  "bexp.dd_qty_remaining": "مقدار باقی‌مانده",
+
+
+  "bexp.dd_remaining_value": "ارزش باقی‌مانده",
+
+
+  "bexp.dd_no_sales": "هیچ سفارش فروش مرتبطی نیست.",
+
+
+  "bexp.dd_so_no": "سفارش فروش",
+
+
+  "bexp.dd_so_customer": "مشتری",
+
+
+  "bexp.dd_so_date": "تاریخ",
+
+
+  "bexp.dd_so_qty": "مقدار",
+
+
+  "bexp.dd_so_revenue": "درآمد",
+
+
+  "bexp.dd_revenue": "درآمد",
+
+
+  "bexp.dd_cost_of_sold": "هزینه مقدار فروخته‌شده",
+
+
+  "bexp.dd_profit": "سود / زیان",
+
+
+  "bexp.dd_profit_na": "قابل محاسبه نیست — فروش مرتبطی نیست",
+
+
+  "bexp.dd_no_documents": "هیچ سندی پیوست نشده.",
+
+
+  "bexp.dd_no_audit": "هیچ سابقه حسابرسی نیست.",
+
+
+  "bexp.etype_shipping": "حمل و نقل",
+
+
+  "bexp.etype_loading": "بارگیری",
+
+
+  "bexp.etype_clearing": "ترخیص",
+
+
+  "bexp.etype_transport": "حمل",
+
+
+  "bexp.etype_customs": "گمرک",
+
+
+  "bexp.etype_handling": "جابجایی",
+
+
+  "bexp.etype_storage": "انبارداری",
+
+
+  "bexp.etype_insurance": "بیمه",
+
+
+  "bexp.etype_other": "سایر",
+
+
+  "bexp.elig_active": "فعال",
+
+
+  "bexp.elig_withdrawn": "لغو‌شده",
+
+
+  "bexp.src_purchase_order": "سفارش خرید",
+
+
+  "bexp.src_local_purchase": "خرید محلی",
+
+
+  "bexp.src_sales_order": "سفارش فروش",
+
+
+  "bexp.src_shipping_bl": "حمل / بارنامه",
+
+
+  "bexp.src_clearing_bill": "فاکتور ترخیص",
+
+
+  "bexp.rzstatus_posted": "ثبت‌شده",
+
+
+  "bexp.rzstatus_cancelled": "لغو‌شده",
+
+
+  "bexp.rzstatus_draft": "پیش‌نویس",
+
+
+  "bexp.rzstatus_pending": "در انتظار",
+
+
+  "bexp.pnl_basis_sale_revenue_minus_linked_purchase_landed_cost_minus_expenses": "سود = درآمد فروش − هزینه تمام‌شده خرید مرتبط − مخارج ثبت‌شده",
+
+
+  "bexp.pnl_basis_linked_sales_revenue_minus_landed_cost_of_sold_qty": "سود = درآمد فروش مرتبط − هزینه تمام‌شده مقدار فروخته‌شده",
   "nav.bill_cost_profit": "هزینه فاکتور، مخارج و سود",
 
 
@@ -73374,6 +74700,312 @@ const ps: Dict = {
 
 
 
+
+
+  "bexp.open_drilldown": "د لګښت او ګټې تفصیل",
+
+
+  "bexp.dd_title": "د بل لګښت، لګښتونه او ګټه — تفصیل",
+
+
+  "bexp.dd_report_title": "د بل لګښت او ګټه — تفصیل",
+
+
+  "bexp.dd_print": "A4 چاپ",
+
+
+  "bexp.dd_not_found": "بل و نه موندل شو.",
+
+
+  "bexp.retry": "بیا هڅه",
+
+
+  "bexp.refresh": "تازه کول",
+
+
+  "bexp.loading": "بار کیږي…",
+
+
+  "bexp.dd_col_sr": "شمیره",
+
+
+  "bexp.dd_col_type": "د لګښت ډول",
+
+
+  "bexp.dd_col_details": "تفصیلات",
+
+
+  "bexp.dd_col_amount": "اندازه",
+
+
+  "bexp.dd_col_tax": "مالیه",
+
+
+  "bexp.dd_col_grand": "ټول (فعال اسعارو)",
+
+
+  "bexp.dd_col_posting": "محاسبه",
+
+
+  "bexp.dd_bill_no": "د بل شمیره",
+
+
+  "bexp.dd_source": "سرچینه ماډیول",
+
+
+  "bexp.dd_party": "اړخ / حساب",
+
+
+  "bexp.dd_date": "د بل نیټه",
+
+
+  "bexp.dd_manual_bill": "لاسي بل / حواله",
+
+
+  "bexp.dd_country": "هېواد",
+
+
+  "bexp.dd_branch": "څانګه",
+
+
+  "bexp.dd_currency": "اسعارو",
+
+
+  "bexp.dd_eligibility": "وړتیا",
+
+
+  "bexp.dd_s_bill": "د بل تفصیلات",
+
+
+  "bexp.dd_s_goods": "مالونه",
+
+
+  "bexp.dd_s_original": "اصلي پیرود / پلور",
+
+
+  "bexp.dd_s_expenses": "اړوند لګښت بلونه",
+
+
+  "bexp.dd_s_payments": "تادیات",
+
+
+  "bexp.dd_s_drcr": "د ډیبټ / کریډیټ ثبتونه (ژورنال · لیجر · روزنامچه)",
+
+
+  "bexp.dd_s_cost": "ټول لګښت · وروستی لګښت",
+
+
+  "bexp.dd_s_qty": "پیرودل شوی · پلورل شوی · پاتې مقدار او ارزښت",
+
+
+  "bexp.dd_s_sales": "اړوند پلور او عاید",
+
+
+  "bexp.dd_s_pnl": "ګټه / زیان",
+
+
+  "bexp.dd_s_documents": "اسناد",
+
+
+  "bexp.dd_s_audit": "د پلټنې لاره",
+
+
+  "bexp.dd_no_goods": "د سرچینې بل کې د مالونو کرښه نشته.",
+
+
+  "bexp.dd_g_name": "مال",
+
+
+  "bexp.dd_g_variation": "بدلون",
+
+
+  "bexp.dd_g_qty": "مقدار",
+
+
+  "bexp.dd_g_weight": "وزن (کیلو)",
+
+
+  "bexp.dd_g_rate": "نرخ",
+
+
+  "bexp.dd_g_amount": "اندازه",
+
+
+  "bexp.dd_o_type": "ډول",
+
+
+  "bexp.dd_o_amount": "اصلي اندازه",
+
+
+  "bexp.dd_o_landed": "ثبت شوی وروستی لګښت",
+
+
+  "bexp.dd_o_contract": "د تړون شمیره",
+
+
+  "bexp.dd_o_customer": "پیرودونکی",
+
+
+  "bexp.dd_o_supplier": "عرضه کوونکی",
+
+
+  "bexp.dd_o_route": "لاره",
+
+
+  "bexp.dd_o_container": "کانټینر",
+
+
+  "bexp.dd_o_status": "حالت",
+
+
+  "bexp.dd_no_source": "د سرچینې بل ریکارډ نشته.",
+
+
+  "bexp.dd_no_expenses": "کوم اضافي لګښت نه دی ثبت شوی.",
+
+
+  "bexp.dd_expense_total": "پوسټ شوي لګښتونه ټول",
+
+
+  "bexp.dd_no_payments": "د سرچینې بل لپاره کومه تادیه نه ده ثبت شوې.",
+
+
+  "bexp.dd_p_date": "نیټه",
+
+
+  "bexp.dd_p_kind": "ډول",
+
+
+  "bexp.dd_p_ref": "حواله",
+
+
+  "bexp.dd_p_status": "حالت",
+
+
+  "bexp.dd_no_drcr": "تر اوسه کوم محاسبوي ثبت نه دی پوسټ شوی.",
+
+
+  "bexp.dd_original_cost": "اصلي بل (فعال اسعارو)",
+
+
+  "bexp.dd_landed_cost": "وروستی لګښت",
+
+
+  "bexp.dd_unit_landed": "د یو واحد وروستی لګښت",
+
+
+  "bexp.dd_qty_purchased": "پیرودل شوی مقدار",
+
+
+  "bexp.dd_qty_sold": "پلورل شوی مقدار",
+
+
+  "bexp.dd_qty_remaining": "پاتې مقدار",
+
+
+  "bexp.dd_remaining_value": "پاتې ارزښت",
+
+
+  "bexp.dd_no_sales": "کوم تړلي پلور امرونه نشته.",
+
+
+  "bexp.dd_so_no": "د پلور امر",
+
+
+  "bexp.dd_so_customer": "پیرودونکی",
+
+
+  "bexp.dd_so_date": "نیټه",
+
+
+  "bexp.dd_so_qty": "مقدار",
+
+
+  "bexp.dd_so_revenue": "عاید",
+
+
+  "bexp.dd_revenue": "عاید",
+
+
+  "bexp.dd_cost_of_sold": "د پلورل شوي مقدار لګښت",
+
+
+  "bexp.dd_profit": "ګټه / زیان",
+
+
+  "bexp.dd_profit_na": "نه شي محاسبه کیدی — تړلی پلور نشته",
+
+
+  "bexp.dd_no_documents": "کوم سند نه دی نښلول شوی.",
+
+
+  "bexp.dd_no_audit": "د پلټنې ریکارډ نشته.",
+
+
+  "bexp.etype_shipping": "بار وړل",
+
+
+  "bexp.etype_loading": "بارول",
+
+
+  "bexp.etype_clearing": "پاکول",
+
+
+  "bexp.etype_transport": "لیږد",
+
+
+  "bexp.etype_customs": "ګمرک",
+
+
+  "bexp.etype_handling": "سمبالول",
+
+
+  "bexp.etype_storage": "ذخیره",
+
+
+  "bexp.etype_insurance": "بیمه",
+
+
+  "bexp.etype_other": "نور",
+
+
+  "bexp.elig_active": "فعال",
+
+
+  "bexp.elig_withdrawn": "بیرته اخیستل شوی",
+
+
+  "bexp.src_purchase_order": "د پیرود امر",
+
+
+  "bexp.src_local_purchase": "محلي پیرود",
+
+
+  "bexp.src_sales_order": "د پلور امر",
+
+
+  "bexp.src_shipping_bl": "بار وړل / BL",
+
+
+  "bexp.src_clearing_bill": "د پاکولو بل",
+
+
+  "bexp.rzstatus_posted": "پوسټ شوی",
+
+
+  "bexp.rzstatus_cancelled": "لغوه شوی",
+
+
+  "bexp.rzstatus_draft": "مسوده",
+
+
+  "bexp.rzstatus_pending": "پاتې",
+
+
+  "bexp.pnl_basis_sale_revenue_minus_linked_purchase_landed_cost_minus_expenses": "ګټه = د پلور عاید − د تړلي پیرود وروستی لګښت − پوسټ شوي لګښتونه",
+
+
+  "bexp.pnl_basis_linked_sales_revenue_minus_landed_cost_of_sold_qty": "ګټه = د تړلي پلور عاید − د پلورل شوي مقدار وروستی لګښت",
   "nav.bill_cost_profit": "د بل لګښت، لګښتونه او ګټه",
 
 

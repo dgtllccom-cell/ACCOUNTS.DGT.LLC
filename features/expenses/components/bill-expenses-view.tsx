@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import {
   FileText, Receipt, RefreshCw, Printer, Plus, Eye, Trash2, MoreHorizontal,
@@ -525,6 +526,13 @@ function BillExpenseRow({
                 <button className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMenuOpen(false); onView(); }}>
                   <Eye className="h-4 w-4" /> {s.t("open_detail", "Open")}
                 </button>
+                <Link
+                  href={`/dashboard/bill-cost-profit/bill/${r.id}`}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <BookCheck className="h-4 w-4" /> {s.t("open_drilldown", "Cost & Profit drill-down")}
+                </Link>
                 {r.eligibility === "active" && (
                   <button className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMenuOpen(false); onAdd(); }}>
                     <Plus className="h-4 w-4" /> {s.t("add_expense", "Add Expense")}
