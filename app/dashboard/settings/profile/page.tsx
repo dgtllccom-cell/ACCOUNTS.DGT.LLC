@@ -37,12 +37,36 @@ function initials(name: string | null | undefined, email: string | null | undefi
   );
 }
 
-/** Read-only display field. Values are never editable from this page. */
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Read-only display field. Values are never editable from this page.
+ *  `technical` renders opaque identifiers (UUIDs) in a muted monospace style with
+ *  the full value on hover, so they read as system metadata, not primary data. */
+function Field({
+  label,
+  value,
+  technical,
+}: {
+  label: string;
+  value: string | null | undefined;
+  technical?: boolean;
+}) {
+  const raw = value ?? "";
+  const isUuid = technical && UUID_RE.test(raw);
+  const shown = isUuid ? `…${raw.slice(-12)}` : raw || "—";
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100 break-words">{value || "-"}</p>
+      <p
+        className={
+          isUuid
+            ? "mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono break-all"
+            : "mt-1 text-sm font-bold text-slate-900 dark:text-slate-100 break-words"
+        }
+        title={isUuid ? raw : undefined}
+      >
+        {shown}
+      </p>
     </div>
   );
 }
@@ -103,7 +127,7 @@ export default async function UserProfileSettingsPage() {
         <CardContent>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <Field label={t(lang, "prof.f_full_name", "Employee / Full Name")} value={session.fullName} />
-            <Field label={t(lang, "roz.user_id", "User ID")} value={session.userId} />
+            <Field label={t(lang, "roz.user_id", "User ID")} value={session.userId} technical />
             <Field label={t(lang, "prof.f_user_role", "User Role")} value={roleLabel} />
             <Field label={t(lang, "common.country", "Country")} value={countryScope} />
             <Field label={t(lang, "crm.main_branch", "Main Branch")} value={mainBranchScope} />
@@ -127,7 +151,7 @@ export default async function UserProfileSettingsPage() {
             <CardDescription>{t(lang, "prof.creds_desc", "Only User ID, Login Email and Password can be updated. All other information is read-only.")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Field label={t(lang, "roz.user_id", "User ID")} value={session.userId} />
+            <Field label={t(lang, "roz.user_id", "User ID")} value={session.userId} technical />
             <Field label={t(lang, "prof.f_login_email", "Login Email")} value={session.email} />
             <Button asChild variant="outline" className="w-full rounded-xl">
               <Link href="/dashboard/settings/profile">{t(lang, "prof.edit_login", "Edit Login Information")}</Link>
