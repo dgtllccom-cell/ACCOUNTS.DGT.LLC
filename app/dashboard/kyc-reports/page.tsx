@@ -152,6 +152,8 @@ const KYC_EN: Record<string, string> = {
   "city_branch": "City Branch Node",
   "user_account": "Employee / User Account",
   "new_account": "New Ledger Account",
+  kycManagement: "KYC Management",
+  applyRange: "Apply Range",
 };
 
 function kycT(lang: SupportedLanguage, key: string) {
@@ -450,7 +452,7 @@ export default function KycReportsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-black text-foreground tracking-tight whitespace-nowrap">
-                KYC Management
+                {tUI("kycManagement")}
               </h1>
               <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
@@ -722,7 +724,7 @@ export default function KycReportsPage() {
                       }}
                       className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs"
                     >
-                      Apply Range
+                      {tUI("applyRange")}
                     </button>
                   </div>
                 </div>

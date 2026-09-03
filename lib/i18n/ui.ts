@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "kyc.kycManagement"
+  | "kyc.applyRange"
+  | "bankroz.update_status_clear"
+  | "bankroz.print_voucher"
+  | "port.settings_master_forms"
+  | "port.select_country_optional"
+  | "hr.view_full_dossier"
+  | "hr.edit_profile"
+  | "go.go_local_time"
   | "fpw.title"
   | "fpw.subtitle"
   | "fpw.email_ph"
@@ -17843,6 +17852,33 @@ const en: Dict = {
 
 
 
+
+
+  "kyc.kycManagement": "KYC Management",
+
+
+  "kyc.applyRange": "Apply Range",
+
+
+  "bankroz.update_status_clear": "Update Status / Clear",
+
+
+  "bankroz.print_voucher": "Print Voucher",
+
+
+  "port.settings_master_forms": "Settings / Master Forms",
+
+
+  "port.select_country_optional": "Select Country (Optional)",
+
+
+  "hr.view_full_dossier": "View Full Dossier",
+
+
+  "hr.edit_profile": "Edit Profile",
+
+
+  "go.go_local_time": "Local Time",
   "fpw.title": "Forgot Password",
 
 
@@ -31561,6 +31597,33 @@ const ur: Dict = {
 
 
 
+
+
+  "kyc.kycManagement": "KYC انتظام",
+
+
+  "kyc.applyRange": "رینج لاگو کریں",
+
+
+  "bankroz.update_status_clear": "اسٹیٹس اپ ڈیٹ کریں / کلیئر کریں",
+
+
+  "bankroz.print_voucher": "واؤچر پرنٹ کریں",
+
+
+  "port.settings_master_forms": "ترتیبات / ماسٹر فارمز",
+
+
+  "port.select_country_optional": "ملک منتخب کریں (اختیاری)",
+
+
+  "hr.view_full_dossier": "مکمل ڈوزیئر دیکھیں",
+
+
+  "hr.edit_profile": "پروفائل میں ترمیم کریں",
+
+
+  "go.go_local_time": "مقامی وقت",
   "fpw.title": "پاسورڈ بھول گئے",
 
 
@@ -45281,6 +45344,33 @@ const ar: Dict = {
 
 
 
+
+
+  "kyc.kycManagement": "إدارة اعرف عميلك",
+
+
+  "kyc.applyRange": "تطبيق النطاق",
+
+
+  "bankroz.update_status_clear": "تحديث الحالة / مسح",
+
+
+  "bankroz.print_voucher": "طباعة السند",
+
+
+  "port.settings_master_forms": "الإعدادات / النماذج الرئيسية",
+
+
+  "port.select_country_optional": "اختر الدولة (اختياري)",
+
+
+  "hr.view_full_dossier": "عرض الملف الكامل",
+
+
+  "hr.edit_profile": "تعديل الملف الشخصي",
+
+
+  "go.go_local_time": "التوقيت المحلي",
   "fpw.title": "نسيت كلمة المرور",
 
 
@@ -59000,6 +59090,33 @@ const fa: Dict = {
 
 
 
+
+
+  "kyc.kycManagement": "مدیریت احراز هویت مشتری",
+
+
+  "kyc.applyRange": "اعمال بازه",
+
+
+  "bankroz.update_status_clear": "به‌روزرسانی وضعیت / پاک کردن",
+
+
+  "bankroz.print_voucher": "چاپ رسید",
+
+
+  "port.settings_master_forms": "تنظیمات / فرم‌های اصلی",
+
+
+  "port.select_country_optional": "انتخاب کشور (اختیاری)",
+
+
+  "hr.view_full_dossier": "مشاهده پرونده کامل",
+
+
+  "hr.edit_profile": "ویرایش نمایه",
+
+
+  "go.go_local_time": "زمان محلی",
   "fpw.title": "فراموشی گذرواژه",
 
 
@@ -72725,6 +72842,33 @@ const ps: Dict = {
 
 
 
+
+
+  "kyc.kycManagement": "د KYC مدیریت",
+
+
+  "kyc.applyRange": "حد پلي کړئ",
+
+
+  "bankroz.update_status_clear": "حالت تازه کړئ / پاک کړئ",
+
+
+  "bankroz.print_voucher": "واؤچر چاپ کړئ",
+
+
+  "port.settings_master_forms": "تنظیمات / اصلي فورمې",
+
+
+  "port.select_country_optional": "هېواد وټاکئ (اختیاري)",
+
+
+  "hr.view_full_dossier": "بشپړه دوسیه وګورئ",
+
+
+  "hr.edit_profile": "پروفایل سمول",
+
+
+  "go.go_local_time": "سیمه ییز وخت",
   "fpw.title": "پاسورډ مو هیر شو",
 
 

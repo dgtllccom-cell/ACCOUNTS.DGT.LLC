@@ -256,7 +256,7 @@ export function PortMasterClient({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-            Settings / Master Forms
+            {tt("port.settings_master_forms", "Settings / Master Forms")}
           </p>
           <h1 className="mt-0.5 text-2xl font-bold tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground">{description}</p>
@@ -408,7 +408,7 @@ export function PortMasterClient({
                           size="sm"
                           onClick={() => handleDelete(port)}
                           className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          title="Delete"
+                          title={tt("common.delete","Delete")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -467,7 +467,7 @@ export function PortMasterClient({
                 <SearchSelect
                   label="Country"
                   value={formCountryId}
-                  placeholder="Select Country (Optional)"
+                  placeholder={tt("port.select_country_optional","Select Country (Optional)")}
                   options={countries.map((c) => ({ value: c.id, label: c.name, keywords: c.name }))}
                   onValueChange={(val) => setFormCountryId(val)}
                   createLabel="New Country"

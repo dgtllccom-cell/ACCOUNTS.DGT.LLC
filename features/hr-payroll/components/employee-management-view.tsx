@@ -436,7 +436,7 @@ export function EmployeeManagementView() {
                             variant="ghost"
                             onClick={() => setViewingEmployeeId(emp.id)}
                             className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl"
-                            title="View Full Dossier"
+                            title={t(lang, "hr.view_full_dossier", "View Full Dossier")}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -449,7 +449,7 @@ export function EmployeeManagementView() {
                               setShowFormModal(true);
                             }}
                             className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-xl"
-                            title="Edit Profile"
+                            title={t(lang, "hr.edit_profile", "Edit Profile")}
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
@@ -475,7 +475,7 @@ export function EmployeeManagementView() {
                                   className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 transition"
                                 >
                                   <Eye className="h-4 w-4" />
-                                  <span>View Full Dossier</span>
+                                  <span>{t(lang, "hr.view_full_dossier", "View Full Dossier")}</span>
                                 </button>
 
                                 <button

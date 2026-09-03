@@ -113,9 +113,9 @@ export function UserProfileReportModal({
       firstName: user.firstName,
       middleName: user.middleName,
       lastName: user.lastName,
-      countryName: user.countryName || "Pakistan",
-      branchName: user.cityBranchName || user.mainBranchName || "Main Branch",
-      branchCode: user.cityBranchCode || user.mainBranchCode || "MAIN-001",
+      countryName: user.countryName || "—",
+      branchName: user.cityBranchName || user.mainBranchName || "—",
+      branchCode: user.cityBranchCode || user.mainBranchCode || "—",
       branchType: user.designation || "Staff",
       role: user.role,
       registrationDate: user.createdAt || new Date().toISOString(),
@@ -360,7 +360,7 @@ export function UserProfileReportModal({
                         <td className="p-3">
                           {hasAny ? (
                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                              {mod.canPostApprove ? "Posting Authorized" : mod.canCreate ? "Data Entry" : "Read-Only"}
+                              {mod.canPostApprove ? th("Posting Authorized") : mod.canCreate ? th("Data Entry") : th("Read-Only")}
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800">
@@ -430,11 +430,11 @@ export function UserProfileReportModal({
         {/* Modal Footer */}
         <div className="bg-white dark:bg-slate-900 px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={onClose} className="text-xs">
-            Close Report
+            {th("Close Report")}
           </Button>
           <Button size="sm" onClick={handlePrint} className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1.5 font-semibold shadow-sm">
             <Printer className="h-3.5 w-3.5" />
-            Print A4 Report
+            {th("Print A4 Report")}
           </Button>
         </div>
       </div>

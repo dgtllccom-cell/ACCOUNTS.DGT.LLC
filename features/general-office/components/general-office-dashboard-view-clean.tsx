@@ -1503,7 +1503,7 @@ export function GeneralOfficeDashboardView() {
                                   className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-emerald-600"
                                 >
                                   <Edit3 className="h-3.5 w-3.5" />
-                                  <span>Edit Profile</span>
+                                  <span>{tr("Edit Profile")}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -1514,7 +1514,7 @@ export function GeneralOfficeDashboardView() {
                                   className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                                 >
                                   <Printer className="h-3.5 w-3.5" />
-                                  <span>Print Certificate</span>
+                                  <span>{tr("Print Certificate")}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -1525,7 +1525,7 @@ export function GeneralOfficeDashboardView() {
                                   className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-600"
                                 >
                                   <CreditCard className="h-3.5 w-3.5" />
-                                  <span>Loan / Advance</span>
+                                  <span>{tr("Loan / Advance")}</span>
                                 </button>
                                 {emp.person?.id && (
                                   <button
@@ -1580,7 +1580,7 @@ export function GeneralOfficeDashboardView() {
         <div>{ct(lang, "go.go_copyright_footer", "© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.")}</div>
         <div className="flex items-center gap-4 text-[11px] font-medium">
           <span>v3.2.0</span>
-          <span>Pakistan Standard Time (PST)</span>
+          <span>{typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : ct(lang, "go.go_local_time", "Local Time")}</span>
           <span className="flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             {ct(lang, "go.go_system_online", "System Online")}

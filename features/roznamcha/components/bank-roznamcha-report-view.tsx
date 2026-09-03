@@ -999,7 +999,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                         </div>
                         {isDue && (
                           <span className="inline-block mt-0.5 rounded bg-amber-100 px-1.5 py-0.2 text-[9px] font-black text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                            Due Today
+                            {tt("bankroz.due_today", "Due Today")}
                           </span>
                         )}
                       </td>
@@ -1058,7 +1058,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                         <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
-                            title="View Details"
+                            title={tt("common.view_details","View Details")}
                             onClick={() => {
                               setActionModalRow(row);
                               setActionType("view");
@@ -1069,7 +1069,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                           </button>
                           <button
                             type="button"
-                            title="Update Status / Clear"
+                            title={tt("bankroz.update_status_clear","Update Status / Clear")}
                             onClick={() => {
                               setActionModalRow(row);
                               setActionType(row.status === "cleared" ? "view" : "clear");
@@ -1080,7 +1080,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                           </button>
                           <button
                             type="button"
-                            title="Print Voucher"
+                            title={tt("bankroz.print_voucher","Print Voucher")}
                             onClick={handlePrintReport}
                             className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
                           >
@@ -1263,7 +1263,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             type="button"
             onClick={() => void loadData()}
             className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            title="Refresh"
+            title={tt("common.refresh","Refresh")}
           >
             <RefreshCw className="h-3.5 w-3.5 text-slate-600" />
           </button>
