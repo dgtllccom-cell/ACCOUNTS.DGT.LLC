@@ -927,6 +927,21 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bexp.f_posting"
+  | "bexp.posting_posted"
+  | "bexp.posting_view_journal"
+  | "bexp.posting_post"
+  | "bexp.posting_void"
+  | "bexp.posting_title"
+  | "bexp.posting_intro"
+  | "bexp.posting_expense_account"
+  | "bexp.posting_counter_account"
+  | "bexp.posting_select_account"
+  | "bexp.posting_confirm"
+  | "bexp.v_diff_accounts"
+  | "bexp.post_failed"
+  | "bexp.void_confirm"
+  | "bexp.void_failed"
   | "bexp.tab_shipping_bl"
   | "bexp.tab_clearing_bill"
   | "hr.step_configured"
@@ -17876,6 +17891,51 @@ const en: Dict = {
 
 
 
+
+
+  "bexp.f_posting": "Accounting",
+
+
+  "bexp.posting_posted": "Posted",
+
+
+  "bexp.posting_view_journal": "View journal",
+
+
+  "bexp.posting_post": "Post",
+
+
+  "bexp.posting_void": "Void posting",
+
+
+  "bexp.posting_title": "Post Expense to Accounts",
+
+
+  "bexp.posting_intro": "Books a balanced double entry through the existing Journal / Ledger / Roznamcha engine. Nothing new is created — the same posting path as a Daily-Payment expense.",
+
+
+  "bexp.posting_expense_account": "Expense Account (Debit)",
+
+
+  "bexp.posting_counter_account": "Counter Account (Credit — payable / bank / cash)",
+
+
+  "bexp.posting_select_account": "Select account…",
+
+
+  "bexp.posting_confirm": "Post to Accounts",
+
+
+  "bexp.v_diff_accounts": "The expense account and the counter account must be different.",
+
+
+  "bexp.post_failed": "Could not post this expense to the accounts.",
+
+
+  "bexp.void_confirm": "Reverse the accounting entry for this expense line? A balanced contra entry is posted; nothing is deleted.",
+
+
+  "bexp.void_failed": "Could not void this posting.",
   "bexp.tab_shipping_bl": "Shipping / BL",
 
 
@@ -31669,6 +31729,51 @@ const ur: Dict = {
 
 
 
+
+
+  "bexp.f_posting": "اکاؤنٹنگ",
+
+
+  "bexp.posting_posted": "پوسٹ شدہ",
+
+
+  "bexp.posting_view_journal": "جرنل دیکھیں",
+
+
+  "bexp.posting_post": "پوسٹ کریں",
+
+
+  "bexp.posting_void": "پوسٹنگ منسوخ کریں",
+
+
+  "bexp.posting_title": "اخراجات اکاؤنٹس میں پوسٹ کریں",
+
+
+  "bexp.posting_intro": "موجودہ جرنل / لیجر / روزنامچہ انجن کے ذریعے متوازن ڈبل انٹری درج کرتا ہے۔ کچھ نیا نہیں بنایا جاتا — ڈیلی پیمنٹ اخراجات جیسا ہی پوسٹنگ راستہ۔",
+
+
+  "bexp.posting_expense_account": "اخراجات اکاؤنٹ (ڈیبٹ)",
+
+
+  "bexp.posting_counter_account": "کاؤنٹر اکاؤنٹ (کریڈٹ — قابل ادائیگی / بینک / کیش)",
+
+
+  "bexp.posting_select_account": "اکاؤنٹ منتخب کریں…",
+
+
+  "bexp.posting_confirm": "اکاؤنٹس میں پوسٹ کریں",
+
+
+  "bexp.v_diff_accounts": "اخراجات اکاؤنٹ اور کاؤنٹر اکاؤنٹ مختلف ہونے چاہئیں۔",
+
+
+  "bexp.post_failed": "اس اخراج کو اکاؤنٹس میں پوسٹ نہیں کیا جا سکا۔",
+
+
+  "bexp.void_confirm": "اس اخراجات لائن کے اکاؤنٹنگ اندراج کو ریورس کریں؟ ایک متوازن الٹا اندراج پوسٹ ہوتا ہے؛ کچھ حذف نہیں ہوتا۔",
+
+
+  "bexp.void_failed": "اس پوسٹنگ کو منسوخ نہیں کیا جا سکا۔",
   "bexp.tab_shipping_bl": "شپنگ / BL",
 
 
@@ -45464,6 +45569,51 @@ const ar: Dict = {
 
 
 
+
+
+  "bexp.f_posting": "المحاسبة",
+
+
+  "bexp.posting_posted": "مُرحّل",
+
+
+  "bexp.posting_view_journal": "عرض القيد",
+
+
+  "bexp.posting_post": "ترحيل",
+
+
+  "bexp.posting_void": "إلغاء الترحيل",
+
+
+  "bexp.posting_title": "ترحيل المصروف إلى الحسابات",
+
+
+  "bexp.posting_intro": "يُسجّل قيدًا مزدوجًا متوازنًا عبر محرك دفتر اليومية / الأستاذ / الروزنامة الحالي. لا يُنشأ شيء جديد — نفس مسار الترحيل الخاص بمصروف الدفع اليومي.",
+
+
+  "bexp.posting_expense_account": "حساب المصروفات (مدين)",
+
+
+  "bexp.posting_counter_account": "الحساب المقابل (دائن — دائنون / بنك / نقد)",
+
+
+  "bexp.posting_select_account": "اختر الحساب…",
+
+
+  "bexp.posting_confirm": "ترحيل إلى الحسابات",
+
+
+  "bexp.v_diff_accounts": "يجب أن يكون حساب المصروفات والحساب المقابل مختلفين.",
+
+
+  "bexp.post_failed": "تعذّر ترحيل هذا المصروف إلى الحسابات.",
+
+
+  "bexp.void_confirm": "هل تريد عكس القيد المحاسبي لسطر المصروف هذا؟ يُسجّل قيد مقابل متوازن؛ لا يُحذف شيء.",
+
+
+  "bexp.void_failed": "تعذّر إلغاء هذا الترحيل.",
   "bexp.tab_shipping_bl": "الشحن / بوليصة الشحن",
 
 
@@ -59258,6 +59408,51 @@ const fa: Dict = {
 
 
 
+
+
+  "bexp.f_posting": "حسابداری",
+
+
+  "bexp.posting_posted": "ثبت شده",
+
+
+  "bexp.posting_view_journal": "مشاهده دفتر روزنامه",
+
+
+  "bexp.posting_post": "ثبت",
+
+
+  "bexp.posting_void": "ابطال ثبت",
+
+
+  "bexp.posting_title": "ثبت هزینه در حساب‌ها",
+
+
+  "bexp.posting_intro": "یک ثبت دوطرفه متوازن را از طریق موتور دفتر روزنامه / دفتر کل / روزنامچه موجود ثبت می‌کند. چیز جدیدی ایجاد نمی‌شود — همان مسیر ثبت هزینه پرداخت روزانه.",
+
+
+  "bexp.posting_expense_account": "حساب هزینه (بدهکار)",
+
+
+  "bexp.posting_counter_account": "حساب مقابل (بستانکار — پرداختنی / بانک / نقد)",
+
+
+  "bexp.posting_select_account": "انتخاب حساب…",
+
+
+  "bexp.posting_confirm": "ثبت در حساب‌ها",
+
+
+  "bexp.v_diff_accounts": "حساب هزینه و حساب مقابل باید متفاوت باشند.",
+
+
+  "bexp.post_failed": "این هزینه در حساب‌ها ثبت نشد.",
+
+
+  "bexp.void_confirm": "ثبت حسابداری این ردیف هزینه معکوس شود؟ یک ثبت متقابل متوازن ثبت می‌شود؛ چیزی حذف نمی‌شود.",
+
+
+  "bexp.void_failed": "ابطال این ثبت ممکن نشد.",
   "bexp.tab_shipping_bl": "حمل و نقل / بارنامه",
 
 
@@ -73058,6 +73253,51 @@ const ps: Dict = {
 
 
 
+
+
+  "bexp.f_posting": "حساب داري",
+
+
+  "bexp.posting_posted": "پوسټ شوی",
+
+
+  "bexp.posting_view_journal": "ژورنال وګورئ",
+
+
+  "bexp.posting_post": "پوسټ کړئ",
+
+
+  "bexp.posting_void": "پوسټ لغوه کړئ",
+
+
+  "bexp.posting_title": "لګښت حسابونو ته پوسټ کړئ",
+
+
+  "bexp.posting_intro": "د اوسني ژورنال / لیجر / روزنامچه انجن له لارې یو متوازن دوه اړخیز ثبت کوي. هیڅ نوی شی نه جوړیږي — د ورځني تادیې د لګښت په څیر ورته د پوسټ کولو لاره.",
+
+
+  "bexp.posting_expense_account": "د لګښت حساب (ډیبټ)",
+
+
+  "bexp.posting_counter_account": "مقابل حساب (کریډټ — د ورکړې وړ / بانک / نغدي)",
+
+
+  "bexp.posting_select_account": "حساب وټاکئ…",
+
+
+  "bexp.posting_confirm": "حسابونو ته پوسټ کړئ",
+
+
+  "bexp.v_diff_accounts": "د لګښت حساب او مقابل حساب باید توپیر ولري.",
+
+
+  "bexp.post_failed": "دا لګښت حسابونو ته پوسټ نشو کولی.",
+
+
+  "bexp.void_confirm": "د دې لګښت کرښې محاسبوي ثبت بیرته راوګرځوئ؟ یو متوازن مقابل ثبت پوسټ کیږي؛ هیڅ شی نه حذف کیږي.",
+
+
+  "bexp.void_failed": "دا پوسټ لغوه نشو کولی.",
   "bexp.tab_shipping_bl": "بار وړل / BL",
 
 

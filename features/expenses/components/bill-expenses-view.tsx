@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   FileText, Receipt, RefreshCw, Printer, Plus, Eye, Trash2, MoreHorizontal,
-  Link2, Building2, Calculator, BadgePercent, Search
+  Link2, Building2, Calculator, BadgePercent, Search, CheckCircle2, Undo2, BookCheck, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +53,7 @@ type Line = {
   taxAmount: number;
   grandAmount: number;
   postingStatus: "unposted" | "posted" | "void";
+  roznamchaEntryId?: string | null;
 };
 
 const EXPENSE_TYPES = ["shipping", "loading", "clearing", "transport", "customs", "handling", "storage", "insurance", "other"] as const;
@@ -480,6 +481,12 @@ function BillExpenseDetailModal({
   const [form, setForm] = useState({ expenseType: "shipping", details: "", currency: "", amount: "", exchangeRate: "1", taxPct: "0" });
   const formRef = useRef<HTMLDivElement>(null);
 
+  // Phase 2 — DR/CR posting
+  const [ledgers, setLedgers] = useState<Array<{ id: string; code: string | null; name: string; currency: string | null }>>([]);
+  const [postLine, setPostLine] = useState<Line | null>(null);
+  const [postForm, setPostForm] = useState({ expenseAccountId: "", counterAccountId: "" });
+  const [postBusy, setPostBusy] = useState(false);
+
   const reload = useCallback(async () => {
     setLoading(true);
     try {
@@ -498,6 +505,67 @@ function BillExpenseDetailModal({
   useEffect(() => {
     if (focusForm && !loading && formRef.current) formRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [focusForm, loading]);
+
+  // Load ledgers scoped to this bill's country/branch for the DR/CR pickers
+  const beScope = data?.billExpense;
+  useEffect(() => {
+    if (!beScope) return;
+    const qs = new URLSearchParams();
+    if (beScope.countryId) qs.set("countryId", beScope.countryId);
+    if (beScope.countryBranchId) qs.set("countryBranchId", beScope.countryBranchId);
+    if (beScope.cityBranchId) qs.set("cityBranchId", beScope.cityBranchId);
+    fetch(`/api/erp/ledgers?${qs.toString()}`)
+      .then((r) => r.json())
+      .then((j) => {
+        const rows = j?.data?.ledgers ?? j?.ledgers ?? j?.data ?? [];
+        if (Array.isArray(rows)) setLedgers(rows.map((l: any) => ({ id: l.id, code: l.code ?? null, name: l.name, currency: l.currency ?? null })));
+      })
+      .catch(() => {});
+  }, [beScope?.countryId, beScope?.countryBranchId, beScope?.cityBranchId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function doPost() {
+    if (!postLine || !postForm.expenseAccountId || !postForm.counterAccountId) return;
+    if (postForm.expenseAccountId === postForm.counterAccountId) {
+      setErr(s.t("v_diff_accounts", "The expense account and the counter account must be different."));
+      return;
+    }
+    setPostBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/erp/bill-expenses/${id}/lines/${postLine.id}/post`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(postForm)
+      });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j?.error?.message || "");
+      setPostLine(null);
+      setPostForm({ expenseAccountId: "", counterAccountId: "" });
+      await reload();
+      onChanged();
+    } catch (e) {
+      setErr(e instanceof Error && e.message ? e.message : s.t("post_failed", "Could not post this expense to the accounts."));
+    } finally {
+      setPostBusy(false);
+    }
+  }
+
+  async function voidLine(lineId: string) {
+    if (!confirm(s.t("void_confirm", "Reverse the accounting entry for this expense line? A balanced contra entry is posted; nothing is deleted."))) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/erp/bill-expenses/${id}/lines/${lineId}/void`, { method: "POST" });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j?.error?.message || "");
+      await reload();
+      onChanged();
+    } catch (e) {
+      setErr(e instanceof Error && e.message ? e.message : s.t("void_failed", "Could not void this posting."));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const be = data?.billExpense;
   const lines: Line[] = data?.lines ?? [];
@@ -665,13 +733,14 @@ function BillExpenseDetailModal({
                         <th className="px-3 py-2 text-right font-semibold">{s.t("f_exchange_rate", "Exchange Rate")}</th>
                         <th className="px-3 py-2 text-right font-semibold">{s.t("f_tax_pct", "Tax %")}</th>
                         <th className="px-3 py-2 text-right font-black bg-slate-100 dark:bg-slate-800">{s.t("f_grand_amount", "Grand Amount")}</th>
+                        <th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</th>
                         <th className="px-3 py-2 text-center font-semibold w-8">{s.t("col_actions", "Actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {lines.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="px-3 py-10 text-center text-slate-400">
+                          <td colSpan={9} className="px-3 py-10 text-center text-slate-400">
                             <Calculator className="mx-auto mb-2 h-6 w-6 opacity-20" />
                             {s.t("no_lines", "No additional expenses recorded against this bill yet.")}
                           </td>
@@ -693,7 +762,38 @@ function BillExpenseDetailModal({
                             </td>
                             <td className="bg-slate-50/50 px-3 py-2 text-right font-mono font-bold dark:bg-slate-800/40">{l.currency} {money(l.grandAmount)}</td>
                             <td className="px-3 py-2 text-center">
-                              {l.postingStatus !== "posted" && (
+                              {l.postingStatus === "posted" ? (
+                                <span className="inline-flex flex-col items-center gap-1">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                    <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
+                                  </span>
+                                  {l.roznamchaEntryId && (
+                                    <a
+                                      href={`/dashboard/roznamcha/super-admin?entry=${l.roznamchaEntryId}`}
+                                      className="text-[9px] font-mono text-blue-600 hover:underline dark:text-blue-400"
+                                    >
+                                      {s.t("posting_view_journal", "View journal")}
+                                    </a>
+                                  )}
+                                </span>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 gap-1 px-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300"
+                                  onClick={() => { setPostForm({ expenseAccountId: "", counterAccountId: "" }); setPostLine(l); }}
+                                  disabled={busy || be.eligibility !== "active"}
+                                >
+                                  <BookCheck className="h-3 w-3" /> {s.t("posting_post", "Post")}
+                                </Button>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              {l.postingStatus === "posted" ? (
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-amber-500 hover:bg-amber-50 hover:text-amber-700" onClick={() => voidLine(l.id)} disabled={busy} title={s.t("posting_void", "Void posting")}>
+                                  <Undo2 className="h-3 w-3" />
+                                </Button>
+                              ) : (
                                 <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:bg-red-50 hover:text-red-600" onClick={() => removeLine(l.id)} disabled={busy}>
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
@@ -774,6 +874,57 @@ function BillExpenseDetailModal({
           </Button>
         </div>
       </div>
+
+      {/* Phase 2 — DR/CR posting modal */}
+      {postLine && (
+        <SimpleModal onClose={() => setPostLine(null)} title={s.t("posting_title", "Post Expense to Accounts")} className="max-w-md w-[92vw]">
+          <div dir={s.dir} className="space-y-3 p-1 text-sm">
+            <p className="text-xs text-slate-500">
+              {s.t("posting_intro", "Books a balanced double entry through the existing Journal / Ledger / Roznamcha engine. Nothing new is created — the same posting path as a Daily-Payment expense.")}
+            </p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs dark:border-slate-800 dark:bg-slate-900/50">
+              <div className="flex justify-between"><span className="text-slate-500">{s.t("expense_type", "Expense Type")}</span><span className="font-bold">{s.t(`et_${postLine.expenseType}`, postLine.expenseType)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">{s.t("f_grand_amount", "Grand Amount")}</span><span className="font-mono font-bold">{postLine.currency} {money(postLine.grandAmount)}</span></div>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-300">{s.t("posting_expense_account", "Expense Account (Debit)")}</label>
+              <select
+                value={postForm.expenseAccountId}
+                onChange={(e) => setPostForm((f) => ({ ...f, expenseAccountId: e.target.value }))}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-700 dark:bg-slate-900"
+              >
+                <option value="">{s.t("posting_select_account", "Select account…")}</option>
+                {ledgers.map((l) => <option key={l.id} value={l.id}>{l.code ? `${l.code} — ` : ""}{l.name}{l.currency ? ` (${l.currency})` : ""}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-300">{s.t("posting_counter_account", "Counter Account (Credit — payable / bank / cash)")}</label>
+              <select
+                value={postForm.counterAccountId}
+                onChange={(e) => setPostForm((f) => ({ ...f, counterAccountId: e.target.value }))}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-700 dark:bg-slate-900"
+              >
+                <option value="">{s.t("posting_select_account", "Select account…")}</option>
+                {ledgers.map((l) => <option key={l.id} value={l.id}>{l.code ? `${l.code} — ` : ""}{l.name}{l.currency ? ` (${l.currency})` : ""}</option>)}
+              </select>
+            </div>
+            {postForm.expenseAccountId && postForm.counterAccountId && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-[11px] font-mono dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                <div>DR {ledgers.find((l) => l.id === postForm.expenseAccountId)?.name} &nbsp; {money(postLine.grandAmount)}</div>
+                <div>CR {ledgers.find((l) => l.id === postForm.counterAccountId)?.name} &nbsp; {money(postLine.grandAmount)}</div>
+              </div>
+            )}
+            {err && <p className="rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{err}</p>}
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" size="sm" onClick={() => setPostLine(null)} disabled={postBusy}>{s.t("cancel", "Cancel")}</Button>
+              <Button size="sm" onClick={doPost} disabled={postBusy || !postForm.expenseAccountId || !postForm.counterAccountId} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                {postBusy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <BookCheck className="mr-1.5 h-3.5 w-3.5" />}
+                {s.t("posting_confirm", "Post to Accounts")}
+              </Button>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
     </SimpleModal>
   );
 }

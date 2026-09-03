@@ -4152,3 +4152,61 @@ ZodError: [
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-09-03T00:28:01.211Z - VALIDATION_ERROR - Request validation failed: Search: Expected string, received null; Status format is invalid: Invalid enum value. Expected 'Active' | 'Inactive', received '' - {"formErrors":[],"fieldErrors":{"search":["Expected string, received null"],"status":["Invalid enum value. Expected 'Active' | 'Inactive', received ''"]}}
+
+[2026-09-03T18:01:06.669Z] Error: Ledger belongs to a different financial scope
+Error: Ledger belongs to a different financial scope
+    at w (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\73340.js:47:201)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async l (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\12840.js:18:988)
+    at async r (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\73340.js:8:5951)
+    at async E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:15:2568)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:22:3198)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:22:4201)
+2026-09-03T18:01:07.464Z - SERVER_ERROR - Account Scope mismatch - {}
+
+[2026-09-03T18:11:52.164Z] k: duplicate key value violates unique constraint "roznamcha_entries_voucher_idx"
+k: duplicate key value violates unique constraint "roznamcha_entries_voucher_idx"
+    at U (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:4:2009)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:4:2964
+    at TLSSocket.aP (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:4:2968)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:1:706
+    at new j (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:1:748)
+    at d (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:21:8479)
+    at w (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\73340.js:18:391)
+2026-09-03T18:11:52.690Z - DUPLICATE - This record already exists. - {}
+
+[2026-09-03T18:21:22.262Z] ApiClientError: This expense line is already posted. Void the posting to change it.
+ApiClientError: This expense line is already posted. Void the posting to change it.
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:12:210
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async l (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\12840.js:18:988)
+    at async E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:1:6852)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:22:3198)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:22:4201)
+    at async K (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\[lineId]\post\route.js:22:5323)
+2026-09-03T18:21:24.090Z - ALREADY_POSTED - This expense line is already posted. Void the posting to change it. - {}
+
+[2026-09-03T18:21:26.974Z] ApiClientError: A posted expense line cannot be edited. Reverse the posting first.
+ApiClientError: A posted expense line cannot be edited. Reverse the posting first.
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:18:217
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async l (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\12840.js:18:988)
+    at async H (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:15:528)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:32:3424)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:32:4427)
+    at async O (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:32:5549)
+2026-09-03T18:21:27.432Z - ALREADY_POSTED - A posted expense line cannot be edited. Reverse the posting first. - {}
