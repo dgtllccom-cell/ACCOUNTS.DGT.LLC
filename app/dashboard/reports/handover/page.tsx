@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { 
   FileText, 
   Download, 
@@ -191,6 +193,8 @@ const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
 ];
 
 export default function HandoverReportPage() {
+  const lang = useActiveLanguage();
+  const th = (s: string) => translateHeader(lang, s);
   const [activeTab, setActiveTab] = useState<"overview" | "access-register" | "timeline" | "database" | "i18n" | "rbac" | "guide">("access-register");
   const [isDownloading, setIsDownloading] = useState(false);
   const [accessSearch, setAccessSearch] = useState("");
@@ -300,11 +304,11 @@ export default function HandoverReportPage() {
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider">
-            <FileCheck className="w-3.5 h-3.5" /> Living Production System & Journal Report PDF
+            <FileCheck className="w-3.5 h-3.5" /> {th("Living Production System & Journal Report PDF")}
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Journal Report PDF ERP</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{th("Journal Report PDF ERP")}</h1>
           <p className="text-slate-400 text-sm max-w-3xl">
-            Country & Branch Login Access Register, complete ERP system architecture, database data migration proof, and living PDF handover.
+            {th("Country & Branch Login Access Register, complete ERP system architecture, database data migration proof, and living PDF handover.")}
           </p>
         </div>
 
@@ -314,14 +318,14 @@ export default function HandoverReportPage() {
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-sm transition-all"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5" />
-            Download Excel Register
+            {th("Download Excel Register")}
           </Button>
           <Button 
             onClick={handleDownloadAccessPdf} 
             className="bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs shadow-sm transition-all"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
-            Download PDF Register
+            {th("Download PDF Register")}
           </Button>
           <Button 
             onClick={handleDownloadPdf} 
@@ -329,7 +333,7 @@ export default function HandoverReportPage() {
             className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-sm transition-all"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
-            {isDownloading ? "Downloading..." : "Download Handover PDF"}
+            {isDownloading ? th("Downloading") + "..." : th("Download Handover PDF")}
           </Button>
         </div>
       </div>
@@ -338,32 +342,32 @@ export default function HandoverReportPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
           <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">14</div>
-          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">Branch Logins Registered</div>
+          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">{th("Branch Logins Registered")}</div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
           <div className="text-2xl font-bold text-blue-600 font-mono">33</div>
-          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">Verified DB Tables</div>
+          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">{th("Verified DB Tables")}</div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
           <div className="text-2xl font-bold text-emerald-600 font-mono">11,154</div>
-          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">Real DB Translations</div>
+          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">{th("Real DB Translations")}</div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
           <div className="text-2xl font-bold text-indigo-600 font-mono">100% PASS</div>
-          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">QA Production Status</div>
+          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">{th("QA Production Status")}</div>
         </div>
       </div>
 
       {/* Interactive Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 overflow-x-auto pb-1">
         {[
-          { key: "access-register", label: "Country / Branch Login Access Register", icon: KeyRound },
-          { key: "overview", label: "Executive Overview", icon: Layers },
-          { key: "timeline", label: "Daily Development Timeline (Living Log)", icon: Calendar },
-          { key: "database", label: "Database Post-Migration Audit (33 Tables)", icon: Database },
-          { key: "i18n", label: "5-Language Translation Audit", icon: Languages },
-          { key: "rbac", label: "Role & Permission Hierarchy", icon: ShieldCheck },
-          { key: "guide", label: "Developer Handover Guide", icon: BookOpen },
+          { key: "access-register", label: th("Country / Branch Login Access Register"), icon: KeyRound },
+          { key: "overview", label: th("Executive Overview"), icon: Layers },
+          { key: "timeline", label: th("Daily Development Timeline (Living Log)"), icon: Calendar },
+          { key: "database", label: th("Database Post-Migration Audit"), icon: Database },
+          { key: "i18n", label: th("5-Language Translation Audit"), icon: Languages },
+          { key: "rbac", label: th("Role & Permission Hierarchy"), icon: ShieldCheck },
+          { key: "guide", label: th("Developer Handover Guide"), icon: BookOpen },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
