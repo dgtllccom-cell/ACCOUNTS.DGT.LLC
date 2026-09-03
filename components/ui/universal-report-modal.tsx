@@ -110,8 +110,8 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
     });
     if (typeof grandTotal === "number") totals.__grandTotal = grandTotal;
     return {
-      title,
-      subtitle,
+      title: th(title),
+      subtitle: subtitle ? th(subtitle) : undefined,
       lang: currentLanguage,
       orientation: (columns.length > 8 ? "landscape" : "portrait") as "portrait" | "landscape",
       scope: {
@@ -125,7 +125,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
       filters,
       columns: columns.map((c) => ({
         key: c.key,
-        label: c.label,
+        label: th(c.label),
         align: c.align,
         format: (c.isCurrency ? "currency" : c.isNumeric ? "number" : undefined) as any,
         currency: c.isCurrency ? currency : undefined,
@@ -141,7 +141,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
   };
 
   const handleExportCSV = () => {
-    const headers = columns.map(c => `"${c.label.replace(/"/g, '""')}"`).join(",");
+    const headers = columns.map(c => `"${th(c.label).replace(/"/g, '""')}"`).join(",");
     const rows = data.map(row =>
       columns
         .map(c => {
@@ -173,12 +173,12 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
     </style></head><body>`;
 
     html += `<div class="header-title">${companyName}</div>`;
-    html += `<div class="header-title" style="font-size:14px; color:#2563eb;">${title}</div>`;
+    html += `<div class="header-title" style="font-size:14px; color:#2563eb;">${th(title)}</div>`;
     html += `<div class="meta">${countryName} | ${branchName} | ${nowString}</div><br/>`;
 
     html += `<table><thead><tr>`;
     columns.forEach(c => {
-      html += `<th>${c.label}</th>`;
+      html += `<th>${th(c.label)}</th>`;
     });
     html += `</tr></thead><tbody>`;
 
@@ -223,7 +223,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-10 text-white flex items-center gap-2">
-                {title}
+                {th(title)}
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
                   {data.length} {uiText(currentLanguage, "report.records")}
                 </span>
@@ -283,9 +283,9 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                   </span>
                 </div>
                 <h1 className="text-xl font-extrabold text-cyan-400 print:text-slate-800">
-                  {title}
+                  {th(title)}
                 </h1>
-                {subtitle && <p className="text-xs text-slate-400 print:text-slate-600">{subtitle}</p>}
+                {subtitle && <p className="text-xs text-slate-400 print:text-slate-600">{th(subtitle)}</p>}
               </div>
 
               {/* Scope & Metadata Details */}

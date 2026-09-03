@@ -927,6 +927,16 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "inv.search_ph"
+  | "inv.transfer"
+  | "inv.default_no_variation"
+  | "inv.size"
+  | "inv.brand"
+  | "inv.standard"
+  | "inv.reference_no"
+  | "inv.reference_no_ph"
+  | "inv.notes_ph"
+  | "inv.movement_details"
   | "common.select_country"
   | "wai.new_chat"
   | "wai.manage_accounts"
@@ -17580,6 +17590,26 @@ const en: Dict = {
 
 
 
+
+  "inv.search_ph": "Search goods, CHS, warehouse...",
+
+  "inv.transfer": "Transfer",
+
+  "inv.default_no_variation": "Default (No specific variation)",
+
+  "inv.size": "Size",
+
+  "inv.brand": "Brand",
+
+  "inv.standard": "Standard",
+
+  "inv.reference_no": "Reference No / Bill No",
+
+  "inv.reference_no_ph": "e.g. PO-2026-001 or INV-8891",
+
+  "inv.notes_ph": "Stock reception notes or delivery details...",
+
+  "inv.movement_details": "Stock Movement Details",
   "common.select_country": "Select Country...",
 
   "wai.new_chat": "New Chat",
@@ -30695,6 +30725,26 @@ const ur: Dict = {
 
 
 
+
+  "inv.search_ph": "اشیاء، CHS، گودام تلاش کریں...",
+
+  "inv.transfer": "منتقلی",
+
+  "inv.default_no_variation": "ڈیفالٹ (کوئی مخصوص قسم نہیں)",
+
+  "inv.size": "سائز",
+
+  "inv.brand": "برانڈ",
+
+  "inv.standard": "معیاری",
+
+  "inv.reference_no": "حوالہ نمبر / بل نمبر",
+
+  "inv.reference_no_ph": "مثلاً PO-2026-001 یا INV-8891",
+
+  "inv.notes_ph": "اسٹاک وصولی نوٹس یا ترسیل کی تفصیلات...",
+
+  "inv.movement_details": "اسٹاک موومنٹ کی تفصیلات",
   "common.select_country": "ملک منتخب کریں...",
 
   "wai.new_chat": "نئی چیٹ",
@@ -43812,6 +43862,26 @@ const ar: Dict = {
 
 
 
+
+  "inv.search_ph": "ابحث عن السلع، CHS، المستودع...",
+
+  "inv.transfer": "تحويل",
+
+  "inv.default_no_variation": "افتراضي (بدون تباين محدد)",
+
+  "inv.size": "الحجم",
+
+  "inv.brand": "العلامة التجارية",
+
+  "inv.standard": "قياسي",
+
+  "inv.reference_no": "رقم المرجع / رقم الفاتورة",
+
+  "inv.reference_no_ph": "مثال PO-2026-001 أو INV-8891",
+
+  "inv.notes_ph": "ملاحظات استلام المخزون أو تفاصيل التسليم...",
+
+  "inv.movement_details": "تفاصيل حركة المخزون",
   "common.select_country": "اختر الدولة...",
 
   "wai.new_chat": "محادثة جديدة",
@@ -56928,6 +56998,26 @@ const fa: Dict = {
 
 
 
+
+  "inv.search_ph": "جستجوی کالا، CHS، انبار...",
+
+  "inv.transfer": "انتقال",
+
+  "inv.default_no_variation": "پیش‌فرض (بدون تنوع خاص)",
+
+  "inv.size": "اندازه",
+
+  "inv.brand": "برند",
+
+  "inv.standard": "استاندارد",
+
+  "inv.reference_no": "شماره مرجع / شماره صورتحساب",
+
+  "inv.reference_no_ph": "مثلاً PO-2026-001 یا INV-8891",
+
+  "inv.notes_ph": "یادداشت‌های دریافت موجودی یا جزئیات تحویل...",
+
+  "inv.movement_details": "جزئیات حرکت موجودی",
   "common.select_country": "انتخاب کشور...",
 
   "wai.new_chat": "گفتگوی جدید",
@@ -70050,6 +70140,26 @@ const ps: Dict = {
 
 
 
+
+  "inv.search_ph": "توکي، CHS، ګدام ولټوئ...",
+
+  "inv.transfer": "لېږد",
+
+  "inv.default_no_variation": "ډیفالټ (ځانګړی ډول نشته)",
+
+  "inv.size": "کچه",
+
+  "inv.brand": "برنډ",
+
+  "inv.standard": "معیاري",
+
+  "inv.reference_no": "د حوالې شمېره / د بل شمېره",
+
+  "inv.reference_no_ph": "لکه PO-2026-001 یا INV-8891",
+
+  "inv.notes_ph": "د سټاک د ترلاسه کولو یادښتونه یا د سپارلو جزئیات...",
+
+  "inv.movement_details": "د سټاک د حرکت جزئیات",
   "common.select_country": "هېواد وټاکئ...",
 
   "wai.new_chat": "نوې خبرې اترې",

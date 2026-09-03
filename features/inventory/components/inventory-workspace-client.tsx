@@ -404,7 +404,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search goods, CHS, warehouse..."
+              placeholder={tt("inv.search_ph", "Search goods, CHS, warehouse...")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -430,11 +430,11 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               onChange={(e) => setSelectedMovementTypeFilter(e.target.value)}
               className="px-3 py-1.5 text-sm border rounded-md bg-background"
             >
-              <option value="">All Types</option>
+              <option value="">{tt("inv.all_types", "All Types")}</option>
               <option value="STOCK_IN">{tt("inv.stock_in", "Stock In")}</option>
               <option value="STOCK_OUT">{tt("inv.stock_out", "Stock Out")}</option>
-              <option value="ADJUSTMENT">Adjustment</option>
-              <option value="TRANSFER">Transfer</option>
+              <option value="ADJUSTMENT">{tt("inv.adjustment", "Adjustment")}</option>
+              <option value="TRANSFER">{tt("inv.transfer", "Transfer")}</option>
             </select>
           )}
           <Button
@@ -574,14 +574,14 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                           <button
                             onClick={() => setViewMovement(m)}
                             className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                            title="View Details"
+                            title={tr("View Details")}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(m)}
                             className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                            title="Edit Movement"
+                            title={tr("Edit Movement")}
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -626,10 +626,10 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 onChange={(e) => setForm({ ...form, goodsVariationId: e.target.value })}
                 className="w-full px-3 py-2 text-sm border rounded-md bg-background"
               >
-                <option value="">Default (No specific variation)</option>
+                <option value="">{tt("inv.default_no_variation", "Default (No specific variation)")}</option>
                 {selectedGoodsRecord.variations.map((v) => (
                   <option key={v.id} value={v.id}>
-                    Size: {v.size || "Standard"} | Brand: {v.brand || "Standard"}
+                    {tt("inv.size", "Size")}: {v.size || tt("inv.standard", "Standard")} | {tt("inv.brand", "Brand")}: {v.brand || tt("inv.standard", "Standard")}
                   </option>
                 ))}
               </select>
@@ -679,23 +679,23 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">Reference No / Bill No</label>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.reference_no", "Reference No / Bill No")}</label>
             <input
               type="text"
               value={form.referenceNo}
               onChange={(e) => setForm({ ...form, referenceNo: e.target.value })}
-              placeholder="PO-2026-001 or INV-8891"
+              placeholder={tt("inv.reference_no_ph", "e.g. PO-2026-001 or INV-8891")}
               className="w-full px-3 py-2 text-sm border rounded-md bg-background"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">Notes / Description</label>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.notes_desc", "Notes / Description")}</label>
             <textarea
               rows={2}
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Stock reception notes or delivery details..."
+              placeholder={tt("inv.notes_ph", "Stock reception notes or delivery details...")}
               className="w-full px-3 py-2 text-sm border rounded-md bg-background"
             />
           </div>
@@ -720,7 +720,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
         <SimpleModal
           isOpen={!!viewMovement}
           onClose={() => setViewMovement(null)}
-          title="Stock Movement Details"
+          title={tt("inv.movement_details", "Stock Movement Details")}
         >
           <div className="space-y-4 pt-2 text-sm">
             <div className="grid grid-cols-2 gap-4 bg-muted/40 p-3 rounded-md">
