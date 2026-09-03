@@ -927,6 +927,32 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "login.org_erp"
+  | "login.choose_path"
+  | "login.choose_path_sub"
+  | "login.connected"
+  | "login.card_admin_title"
+  | "login.card_admin_desc"
+  | "login.card_country_title"
+  | "login.card_country_desc"
+  | "login.card_city_title"
+  | "login.card_city_desc"
+  | "login.card_agent_title"
+  | "login.card_agent_desc"
+  | "login.badge_city_branch"
+  | "login.badge_clearing_agent"
+  | "login.tile_live_erp"
+  | "login.tile_live_erp_h"
+  | "login.tile_live_erp_p"
+  | "login.tile_brand"
+  | "login.tile_brand_h"
+  | "login.tile_brand_p"
+  | "login.tile_security"
+  | "login.tile_security_h"
+  | "login.tile_security_p"
+  | "login.access_portal"
+  | "login.signin_workspace"
+  | "login.signin_workspace_sub"
   | "transit.ph_goods_name"
   | "transit.ph_person"
   | "transit.ph_company"
@@ -17749,6 +17775,84 @@ const en: Dict = {
 
 
 
+
+
+  "login.org_erp": "Business Group ERP",
+
+
+  "login.choose_path": "Choose the right access path",
+
+
+  "login.choose_path_sub": "Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.",
+
+
+  "login.connected": "Connected",
+
+
+  "login.card_admin_title": "Admin Login",
+
+
+  "login.card_admin_desc": "Global access for configuration, audit, and cross-country ERP control.",
+
+
+  "login.card_country_title": "Country Login",
+
+
+  "login.card_country_desc": "Country-level access for scoped operations and branch oversight.",
+
+
+  "login.card_city_title": "City Login",
+
+
+  "login.card_city_desc": "City branch access for localized ERP operations and reporting.",
+
+
+  "login.card_agent_title": "Clearing Agent Login",
+
+
+  "login.card_agent_desc": "Shipping line and clearing workflow access for operational teams.",
+
+
+  "login.badge_city_branch": "City Branch",
+
+
+  "login.badge_clearing_agent": "Clearing Agent",
+
+
+  "login.tile_live_erp": "Live ERP",
+
+
+  "login.tile_live_erp_h": "Production-style layout",
+
+
+  "login.tile_live_erp_p": "Clear login paths for each operator group.",
+
+
+  "login.tile_brand": "Brand",
+
+
+  "login.tile_brand_h": "Business Group",
+
+
+  "login.tile_brand_p": "Professional ERP identity for the organization.",
+
+
+  "login.tile_security": "Security",
+
+
+  "login.tile_security_h": "Role-aware access",
+
+
+  "login.tile_security_p": "Login pages map to the right ERP scope.",
+
+
+  "login.access_portal": "ERP Access Portal",
+
+
+  "login.signin_workspace": "Sign in to the right workspace",
+
+
+  "login.signin_workspace_sub": "Use the universal login below, or jump straight into a role-specific portal from the cards on the right.",
   "transit.ph_goods_name": "e.g. goods description",
 
 
@@ -31233,6 +31337,84 @@ const ur: Dict = {
 
 
 
+
+
+  "login.org_erp": "بزنس گروپ ERP",
+
+
+  "login.choose_path": "درست رسائی کا راستہ منتخب کریں",
+
+
+  "login.choose_path_sub": "ایڈمن، کنٹری، سٹی اور کلیئرنگ ایجنٹ ٹیموں کے لیے علیحدہ لاگ اِن انٹری پوائنٹس — پیشہ ورانہ ERP تجربے کے لیے تیار۔",
+
+
+  "login.connected": "منسلک",
+
+
+  "login.card_admin_title": "ایڈمن لاگ اِن",
+
+
+  "login.card_admin_desc": "کنفیگریشن، آڈٹ اور بین الاقوامی ERP کنٹرول کے لیے عالمی رسائی۔",
+
+
+  "login.card_country_title": "کنٹری لاگ اِن",
+
+
+  "login.card_country_desc": "محدود آپریشنز اور برانچ نگرانی کے لیے ملکی سطح کی رسائی۔",
+
+
+  "login.card_city_title": "سٹی لاگ اِن",
+
+
+  "login.card_city_desc": "مقامی ERP آپریشنز اور رپورٹنگ کے لیے سٹی برانچ رسائی۔",
+
+
+  "login.card_agent_title": "کلیئرنگ ایجنٹ لاگ اِن",
+
+
+  "login.card_agent_desc": "آپریشنل ٹیموں کے لیے شپنگ لائن اور کلیئرنگ ورک فلو رسائی۔",
+
+
+  "login.badge_city_branch": "سٹی برانچ",
+
+
+  "login.badge_clearing_agent": "کلیئرنگ ایجنٹ",
+
+
+  "login.tile_live_erp": "لائیو ERP",
+
+
+  "login.tile_live_erp_h": "پروڈکشن طرز کا لے آؤٹ",
+
+
+  "login.tile_live_erp_p": "ہر آپریٹر گروپ کے لیے واضح لاگ اِن راستے۔",
+
+
+  "login.tile_brand": "برانڈ",
+
+
+  "login.tile_brand_h": "بزنس گروپ",
+
+
+  "login.tile_brand_p": "تنظیم کے لیے پیشہ ورانہ ERP شناخت۔",
+
+
+  "login.tile_security": "سیکیورٹی",
+
+
+  "login.tile_security_h": "کردار سے آگاہ رسائی",
+
+
+  "login.tile_security_p": "لاگ اِن صفحات درست ERP دائرے سے مطابقت رکھتے ہیں۔",
+
+
+  "login.access_portal": "ERP رسائی پورٹل",
+
+
+  "login.signin_workspace": "درست ورک اسپیس میں سائن اِن کریں",
+
+
+  "login.signin_workspace_sub": "نیچے یونیورسل لاگ اِن استعمال کریں، یا دائیں طرف کارڈز سے براہ راست کردار کے مطابق پورٹل میں جائیں۔",
   "transit.ph_goods_name": "مثلاً سامان کی تفصیل",
 
 
@@ -44719,6 +44901,84 @@ const ar: Dict = {
 
 
 
+
+
+  "login.org_erp": "نظام ERP لمجموعة الأعمال",
+
+
+  "login.choose_path": "اختر مسار الوصول الصحيح",
+
+
+  "login.choose_path_sub": "نقاط دخول منفصلة لفرق المشرف والدولة والمدينة ووكيل التخليص — مصممة لتجربة ERP احترافية.",
+
+
+  "login.connected": "متصل",
+
+
+  "login.card_admin_title": "دخول المشرف",
+
+
+  "login.card_admin_desc": "وصول عالمي للإعداد والتدقيق والتحكم في ERP عبر الدول.",
+
+
+  "login.card_country_title": "دخول الدولة",
+
+
+  "login.card_country_desc": "وصول على مستوى الدولة للعمليات المحددة والإشراف على الفروع.",
+
+
+  "login.card_city_title": "دخول المدينة",
+
+
+  "login.card_city_desc": "وصول فرع المدينة لعمليات ERP المحلية والتقارير.",
+
+
+  "login.card_agent_title": "دخول وكيل التخليص",
+
+
+  "login.card_agent_desc": "وصول سير عمل خطوط الشحن والتخليص للفرق التشغيلية.",
+
+
+  "login.badge_city_branch": "فرع المدينة",
+
+
+  "login.badge_clearing_agent": "وكيل التخليص",
+
+
+  "login.tile_live_erp": "ERP مباشر",
+
+
+  "login.tile_live_erp_h": "تخطيط بأسلوب الإنتاج",
+
+
+  "login.tile_live_erp_p": "مسارات دخول واضحة لكل مجموعة مشغّلين.",
+
+
+  "login.tile_brand": "العلامة التجارية",
+
+
+  "login.tile_brand_h": "مجموعة الأعمال",
+
+
+  "login.tile_brand_p": "هوية ERP احترافية للمؤسسة.",
+
+
+  "login.tile_security": "الأمن",
+
+
+  "login.tile_security_h": "وصول مدرك للأدوار",
+
+
+  "login.tile_security_p": "صفحات الدخول تتوافق مع نطاق ERP الصحيح.",
+
+
+  "login.access_portal": "بوابة الوصول إلى ERP",
+
+
+  "login.signin_workspace": "سجّل الدخول إلى مساحة العمل الصحيحة",
+
+
+  "login.signin_workspace_sub": "استخدم تسجيل الدخول الموحّد أدناه، أو انتقل مباشرة إلى بوابة خاصة بالدور من البطاقات على اليمين.",
   "transit.ph_goods_name": "مثال: وصف البضائع",
 
 
@@ -58204,6 +58464,84 @@ const fa: Dict = {
 
 
 
+
+
+  "login.org_erp": "ERP گروه تجاری",
+
+
+  "login.choose_path": "مسیر دسترسی مناسب را انتخاب کنید",
+
+
+  "login.choose_path_sub": "نقاط ورود جداگانه برای تیم‌های مدیر، کشور، شهر و نماینده ترخیص — برای تجربه ERP حرفه‌ای.",
+
+
+  "login.connected": "متصل",
+
+
+  "login.card_admin_title": "ورود مدیر",
+
+
+  "login.card_admin_desc": "دسترسی جهانی برای پیکربندی، حسابرسی و کنترل ERP بین‌کشوری.",
+
+
+  "login.card_country_title": "ورود کشور",
+
+
+  "login.card_country_desc": "دسترسی سطح کشور برای عملیات محدود و نظارت بر شعب.",
+
+
+  "login.card_city_title": "ورود شهر",
+
+
+  "login.card_city_desc": "دسترسی شعبه شهر برای عملیات و گزارش‌دهی محلی ERP.",
+
+
+  "login.card_agent_title": "ورود نماینده ترخیص",
+
+
+  "login.card_agent_desc": "دسترسی گردش کار خط کشتیرانی و ترخیص برای تیم‌های عملیاتی.",
+
+
+  "login.badge_city_branch": "شعبه شهر",
+
+
+  "login.badge_clearing_agent": "نماینده ترخیص",
+
+
+  "login.tile_live_erp": "ERP زنده",
+
+
+  "login.tile_live_erp_h": "چیدمان به سبک تولید",
+
+
+  "login.tile_live_erp_p": "مسیرهای ورود واضح برای هر گروه اپراتور.",
+
+
+  "login.tile_brand": "برند",
+
+
+  "login.tile_brand_h": "گروه تجاری",
+
+
+  "login.tile_brand_p": "هویت ERP حرفه‌ای برای سازمان.",
+
+
+  "login.tile_security": "امنیت",
+
+
+  "login.tile_security_h": "دسترسی آگاه از نقش",
+
+
+  "login.tile_security_p": "صفحات ورود با محدوده ERP صحیح مطابقت دارند.",
+
+
+  "login.access_portal": "پورتال دسترسی ERP",
+
+
+  "login.signin_workspace": "به فضای کاری مناسب وارد شوید",
+
+
+  "login.signin_workspace_sub": "از ورود جهانی زیر استفاده کنید، یا مستقیماً از کارت‌های سمت راست به پورتال مخصوص نقش بروید.",
   "transit.ph_goods_name": "مثلاً شرح کالا",
 
 
@@ -71695,6 +72033,84 @@ const ps: Dict = {
 
 
 
+
+
+  "login.org_erp": "د سوداګریزې ډلې ERP",
+
+
+  "login.choose_path": "د لاسرسي سمه لاره وټاکئ",
+
+
+  "login.choose_path_sub": "د اډمین، هېواد، ښار او د کلیرنس اجنټ ټیمونو لپاره جلا د ننوتلو ټکي — د مسلکي ERP تجربې لپاره.",
+
+
+  "login.connected": "وصل",
+
+
+  "login.card_admin_title": "د اډمین ننوتل",
+
+
+  "login.card_admin_desc": "د تنظیم، پلټنې او د هېوادونو ترمنځ د ERP کنټرول لپاره نړیوال لاسرسی.",
+
+
+  "login.card_country_title": "د هېواد ننوتل",
+
+
+  "login.card_country_desc": "د محدودو عملیاتو او د څانګې د څارنې لپاره د هېواد په کچه لاسرسی.",
+
+
+  "login.card_city_title": "د ښار ننوتل",
+
+
+  "login.card_city_desc": "د ځایي ERP عملیاتو او راپور ورکولو لپاره د ښار د څانګې لاسرسی.",
+
+
+  "login.card_agent_title": "د کلیرنس اجنټ ننوتل",
+
+
+  "login.card_agent_desc": "د عملیاتي ټیمونو لپاره د بار وړلو کرښې او د کلیرنس د کار د بهیر لاسرسی.",
+
+
+  "login.badge_city_branch": "د ښار څانګه",
+
+
+  "login.badge_clearing_agent": "د کلیرنس اجنټ",
+
+
+  "login.tile_live_erp": "ژوندی ERP",
+
+
+  "login.tile_live_erp_h": "د تولید ډوله ترتیب",
+
+
+  "login.tile_live_erp_p": "د هرې چلوونکې ډلې لپاره روښانه د ننوتلو لارې.",
+
+
+  "login.tile_brand": "برنډ",
+
+
+  "login.tile_brand_h": "سوداګریزه ډله",
+
+
+  "login.tile_brand_p": "د سازمان لپاره مسلکي ERP هویت.",
+
+
+  "login.tile_security": "امنیت",
+
+
+  "login.tile_security_h": "د رول څخه خبر لاسرسی",
+
+
+  "login.tile_security_p": "د ننوتلو مخونه د سم ERP ساحې سره سمون لري.",
+
+
+  "login.access_portal": "د ERP لاسرسي پورتال",
+
+
+  "login.signin_workspace": "سم کاري چاپېریال ته ننوځئ",
+
+
+  "login.signin_workspace_sub": "لاندې نړیوال ننوتل وکاروئ، یا په ښي اړخ کې د کارتونو څخه مستقیماً د رول ځانګړي پورتال ته ورشئ.",
   "transit.ph_goods_name": "لکه د توکو تشریح",
 
 

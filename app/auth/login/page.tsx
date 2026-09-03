@@ -4,6 +4,7 @@ import { LoginForm } from "@/features/auth/components/login-form";
 import { LoginErrorBoundary } from "@/features/auth/components/login-error-boundary";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 import { AuthPortalShell } from "@/features/auth/components/auth-portal-shell";
 
 export const metadata = {
@@ -17,30 +18,30 @@ export const fetchCache = "force-no-store";
 const ROLE_CARDS = [
   {
     href: "/auth/login/admin",
-    title: "Admin Login",
-    description: "Global access for configuration, audit, and cross-country ERP control.",
-    badge: "Super Admin",
+    titleKey: "login.card_admin_title", title: "Admin Login",
+    descKey: "login.card_admin_desc", description: "Global access for configuration, audit, and cross-country ERP control.",
+    badgeKey: "role.super_admin", badge: "Super Admin",
     icon: ShieldCheck,
   },
   {
     href: "/auth/login/country",
-    title: "Country Login",
-    description: "Country-level access for scoped operations and branch oversight.",
-    badge: "Country Admin",
+    titleKey: "login.card_country_title", title: "Country Login",
+    descKey: "login.card_country_desc", description: "Country-level access for scoped operations and branch oversight.",
+    badgeKey: "role.country_admin", badge: "Country Admin",
     icon: Globe2,
   },
   {
     href: "/auth/login/city",
-    title: "City Login",
-    description: "City branch access for localized ERP operations and reporting.",
-    badge: "City Branch",
+    titleKey: "login.card_city_title", title: "City Login",
+    descKey: "login.card_city_desc", description: "City branch access for localized ERP operations and reporting.",
+    badgeKey: "login.badge_city_branch", badge: "City Branch",
     icon: MapPin,
   },
   {
     href: "/auth/login/clearing-agent",
-    title: "Clearing Agent Login",
-    description: "Shipping line and clearing workflow access for operational teams.",
-    badge: "Clearing Agent",
+    titleKey: "login.card_agent_title", title: "Clearing Agent Login",
+    descKey: "login.card_agent_desc", description: "Shipping line and clearing workflow access for operational teams.",
+    badgeKey: "login.badge_clearing_agent", badge: "Clearing Agent",
     icon: Layers3,
   },
 ];
@@ -61,18 +62,18 @@ export default async function LoginPage({
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
               <Server className="h-3.5 w-3.5 text-blue-600" />
-              Damaan Business Group ERP
+              {t(lang, "login.org_erp", "Business Group ERP")}
             </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">
-              Choose the right access path
+              {t(lang, "login.choose_path", "Choose the right access path")}
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-6 font-medium text-slate-600 lg:text-base">
-              Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.
+              {t(lang, "login.choose_path_sub", "Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.")}
             </p>
           </div>
           <div className="hidden shrink-0 rounded-3xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-right shadow-sm lg:block">
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-emerald-700">Status</p>
-            <p className="mt-1 text-sm font-extrabold text-emerald-700">Connected</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-emerald-700">{t(lang, "common.status", "Status")}</p>
+            <p className="mt-1 text-sm font-extrabold text-emerald-700">{t(lang, "login.connected", "Connected")}</p>
           </div>
         </div>
 
@@ -92,17 +93,17 @@ export default async function LoginPage({
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
-                        {card.badge}
+                        {t(lang, card.badgeKey as never, card.badge)}
                       </p>
                       <h2 className="mt-1 text-sm font-black text-slate-900 dark:text-white">
-                        {card.title}
+                        {t(lang, card.titleKey as never, card.title)}
                       </h2>
                     </div>
                   </div>
                   <ArrowRight className="mt-1 h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-600" />
                 </div>
                 <p className="mt-3 text-xs leading-5 font-medium text-slate-600 dark:text-slate-400">
-                  {card.description}
+                  {t(lang, card.descKey as never, card.description)}
                 </p>
               </Link>
             );
@@ -113,26 +114,26 @@ export default async function LoginPage({
           <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <Server className="h-3.5 w-3.5 text-blue-600" />
-              Live ERP
+              {t(lang, "login.tile_live_erp", "Live ERP")}
             </div>
-            <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">Production-style layout</p>
-            <p className="mt-1 text-xs font-medium text-slate-500">Clear login paths for each operator group.</p>
+            <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">{t(lang, "login.tile_live_erp_h", "Production-style layout")}</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">{t(lang, "login.tile_live_erp_p", "Clear login paths for each operator group.")}</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <Building2 className="h-3.5 w-3.5 text-blue-600" />
-              Brand
+              {t(lang, "login.tile_brand", "Brand")}
             </div>
-            <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">Damaan Business Group</p>
-            <p className="mt-1 text-xs font-medium text-slate-500">Professional ERP identity for the organization.</p>
+            <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">{t(lang, "login.tile_brand_h", "Business Group")}</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">{t(lang, "login.tile_brand_p", "Professional ERP identity for the organization.")}</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-              Security
+              {t(lang, "login.tile_security", "Security")}
             </div>
-            <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">Role-aware access</p>
-            <p className="mt-1 text-xs font-medium text-slate-500">Login pages map to the right ERP scope.</p>
+            <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">{t(lang, "login.tile_security_h", "Role-aware access")}</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">{t(lang, "login.tile_security_p", "Login pages map to the right ERP scope.")}</p>
           </div>
         </div>
       </div>
@@ -146,13 +147,13 @@ export default async function LoginPage({
         <LoginErrorBoundary>
           <div className="mb-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 shadow-xs dark:border-blue-900/40 dark:from-slate-900 dark:to-slate-950">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
-              ERP Access Portal
+              {t(lang, "login.access_portal", "ERP Access Portal")}
             </p>
             <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900 dark:text-white">
-              Sign in to the right workspace
+              {t(lang, "login.signin_workspace", "Sign in to the right workspace")}
             </h2>
             <p className="mt-2 text-sm leading-6 font-medium text-slate-600 dark:text-slate-400">
-              Use the universal login below, or jump straight into a role-specific portal from the cards on the right.
+              {t(lang, "login.signin_workspace_sub", "Use the universal login below, or jump straight into a role-specific portal from the cards on the right.")}
             </p>
           </div>
 
