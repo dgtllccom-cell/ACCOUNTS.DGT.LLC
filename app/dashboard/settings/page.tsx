@@ -140,7 +140,7 @@ export default function SettingsPage() {
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight text-white">System Settings & Controls</h1>
                   <p className="text-xs text-slate-400">
-                    Enterprise configuration hub for branch, company, account, and permission workflows.
+                    {t(lang, "setmenu.hub_desc", "Enterprise configuration hub for branch, company, account, and permission workflows.")}
                   </p>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 type="text"
-                placeholder="Search settings modules, parameters..."
+                placeholder={t(lang, "setmenu.search_modules_ph", "Search settings modules, parameters...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-9 border-slate-700 bg-slate-800/90 pl-9 text-xs text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
@@ -193,7 +193,7 @@ export default function SettingsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-800 bg-slate-800/50 p-3.5 backdrop-blur">
               <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Active Setup Modules</span>
+                <span>{t(lang, "setmenu.active_setup_modules", "Active Setup Modules")}</span>
                 <Layers className="h-4 w-4 text-blue-400" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
@@ -204,7 +204,7 @@ export default function SettingsPage() {
 
             <div className="rounded-xl border border-slate-800 bg-slate-800/50 p-3.5 backdrop-blur">
               <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Official Mailboxes</span>
+                <span>{t(lang, "setmenu.official_mailboxes", "Official Mailboxes")}</span>
                 <Mail className="h-4 w-4 text-cyan-400" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
@@ -215,7 +215,7 @@ export default function SettingsPage() {
 
             <div className="rounded-xl border border-slate-800 bg-slate-800/50 p-3.5 backdrop-blur">
               <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>System Security</span>
+                <span>{t(lang, "setmenu.system_security", "System Security")}</span>
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
               </div>
               <div className="mt-2 flex items-baseline gap-3">
@@ -269,7 +269,7 @@ export default function SettingsPage() {
                 <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-300" />
                 <Input
                   type="text"
-                  placeholder="Type to filter settings or search parameter rules... (⌘K)"
+                  placeholder={t(lang, "setmenu.filter_rules_ph", "Type to filter settings or search parameter rules… (⌘K)")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 border-blue-400/30 bg-slate-900/60 pl-10 pr-12 text-xs text-white placeholder:text-blue-200/60 focus:border-blue-400"
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Filter settings..."
+                  placeholder={t(lang, "setmenu.filter_settings_ph", "Filter settings...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-8 pl-8 text-xs"

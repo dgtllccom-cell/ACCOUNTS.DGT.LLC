@@ -394,9 +394,9 @@ export default function HandoverReportPage() {
           <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4 rounded-xl flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs text-red-800 dark:text-red-300">
-              <div className="font-bold text-sm">Super Admin Restricted Credential Register</div>
+              <div className="font-bold text-sm">{th("Super Admin Restricted Credential Register")}</div>
               <p>
-                In compliance with strict security policies, plaintext passwords are never stored, exported, or displayed. Every login account is linked to the approved enterprise credential vault via its <strong>Password Vault Reference / Credential ID</strong>. To reset credentials, utilize the verified identity provisioning channel.
+                {th("In compliance with strict security policies, plaintext passwords are never stored, exported, or displayed. Every login account is linked to the approved enterprise credential vault via its Password Vault Reference / Credential ID. To reset credentials, utilize the verified identity provisioning channel.")}
               </p>
             </div>
           </div>
@@ -407,7 +407,7 @@ export default function HandoverReportPage() {
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search Country, Branch, Person, Vault ID..."
+                placeholder={th("Search Country, Branch, Person, Vault ID...")}
                 value={accessSearch}
                 onChange={(e) => setAccessSearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
@@ -420,13 +420,10 @@ export default function HandoverReportPage() {
                 onChange={(e) => setCountryFilter(e.target.value)}
                 className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none text-slate-700 dark:text-slate-300"
               >
-                <option value="all">All Countries</option>
-                <option value="Global">Global</option>
-                <option value="United Arab Emirates">UAE</option>
-                <option value="Pakistan">Pakistan</option>
-                <option value="Afghanistan">Afghanistan</option>
-                <option value="India">India</option>
-                <option value="Iran">Iran</option>
+                <option value="all">{th("All Countries")}</option>
+                {Array.from(new Set(accessRegister.map((e) => e.country).filter(Boolean))).sort().map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
 
               <select
@@ -434,12 +431,10 @@ export default function HandoverReportPage() {
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none text-slate-700 dark:text-slate-300"
               >
-                <option value="all">All Roles</option>
-                <option value="Super Admin">Super Admin</option>
-                <option value="Country Admin">Country Admin</option>
-                <option value="Main Branch Admin">Main Branch Admin</option>
-                <option value="City Branch User">City Branch User</option>
-                <option value="Clearing Agent">Clearing Agent</option>
+                <option value="all">{th("All Roles")}</option>
+                {Array.from(new Set(accessRegister.map((e) => e.role).filter(Boolean))).sort().map((r) => (
+                  <option key={r} value={r}>{th(r)}</option>
+                ))}
               </select>
             </div>
           </div>

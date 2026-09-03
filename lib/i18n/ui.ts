@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "setmenu.hub_desc"
+  | "setmenu.search_modules_ph"
+  | "setmenu.active_setup_modules"
+  | "setmenu.official_mailboxes"
+  | "setmenu.system_security"
+  | "setmenu.filter_rules_ph"
+  | "setmenu.filter_settings_ph"
   | "iab.title"
   | "iab.auto_dl_ready"
   | "iab.subtitle"
@@ -17547,6 +17554,20 @@ const en: Dict = {
 
 
 
+
+  "setmenu.hub_desc": "Enterprise configuration hub for branch, company, account, and permission workflows.",
+
+  "setmenu.search_modules_ph": "Search settings modules, parameters...",
+
+  "setmenu.active_setup_modules": "Active Setup Modules",
+
+  "setmenu.official_mailboxes": "Official Mailboxes",
+
+  "setmenu.system_security": "System Security",
+
+  "setmenu.filter_rules_ph": "Type to filter settings or search parameter rules… (⌘K)",
+
+  "setmenu.filter_settings_ph": "Filter settings...",
   "iab.title": "Install Digital Dock ERP Mobile & Desktop App",
 
   "iab.auto_dl_ready": "Automatic Download Ready",
@@ -30604,6 +30625,20 @@ const ur: Dict = {
 
 
 
+
+  "setmenu.hub_desc": "برانچ، کمپنی، اکاؤنٹ اور اجازت ورک فلوز کے لیے انٹرپرائز کنفیگریشن حب۔",
+
+  "setmenu.search_modules_ph": "ترتیبات ماڈیول، پیرامیٹرز تلاش کریں...",
+
+  "setmenu.active_setup_modules": "فعال سیٹ اپ ماڈیولز",
+
+  "setmenu.official_mailboxes": "آفیشل میل باکسز",
+
+  "setmenu.system_security": "سسٹم سیکیورٹی",
+
+  "setmenu.filter_rules_ph": "ترتیبات فلٹر کرنے یا پیرامیٹر رولز تلاش کرنے کے لیے ٹائپ کریں… (⌘K)",
+
+  "setmenu.filter_settings_ph": "ترتیبات فلٹر کریں...",
   "iab.title": "ڈیجیٹل ڈاک ERP موبائل اور ڈیسک ٹاپ ایپ انسٹال کریں",
 
   "iab.auto_dl_ready": "خودکار ڈاؤن لوڈ تیار",
@@ -43663,6 +43698,20 @@ const ar: Dict = {
 
 
 
+
+  "setmenu.hub_desc": "مركز إعداد المؤسسة لسير عمل الفروع والشركات والحسابات والأذونات.",
+
+  "setmenu.search_modules_ph": "ابحث في وحدات الإعدادات والمعلمات...",
+
+  "setmenu.active_setup_modules": "وحدات الإعداد النشطة",
+
+  "setmenu.official_mailboxes": "صناديق البريد الرسمية",
+
+  "setmenu.system_security": "أمن النظام",
+
+  "setmenu.filter_rules_ph": "اكتب لتصفية الإعدادات أو البحث في قواعد المعلمات… (⌘K)",
+
+  "setmenu.filter_settings_ph": "تصفية الإعدادات...",
   "iab.title": "ثبّت تطبيق ديجيتال دوك ERP للجوال وسطح المكتب",
 
   "iab.auto_dl_ready": "التنزيل التلقائي جاهز",
@@ -56721,6 +56770,20 @@ const fa: Dict = {
 
 
 
+
+  "setmenu.hub_desc": "مرکز پیکربندی سازمانی برای گردش کار شعبه، شرکت، حساب و مجوز.",
+
+  "setmenu.search_modules_ph": "جستجوی ماژول‌های تنظیمات، پارامترها...",
+
+  "setmenu.active_setup_modules": "ماژول‌های نصب فعال",
+
+  "setmenu.official_mailboxes": "صندوق‌های پستی رسمی",
+
+  "setmenu.system_security": "امنیت سیستم",
+
+  "setmenu.filter_rules_ph": "برای فیلتر تنظیمات یا جستجوی قوانین پارامتر تایپ کنید… (⌘K)",
+
+  "setmenu.filter_settings_ph": "فیلتر تنظیمات...",
   "iab.title": "برنامه موبایل و دسکتاپ دیجیتال داک ERP را نصب کنید",
 
   "iab.auto_dl_ready": "دانلود خودکار آماده",
@@ -69785,6 +69848,20 @@ const ps: Dict = {
 
 
 
+
+  "setmenu.hub_desc": "د څانګې، شرکت، حساب او د اجازو د کار د بهیر لپاره د تصدۍ د تنظیم مرکز.",
+
+  "setmenu.search_modules_ph": "د تنظیماتو ماډیولونه، پیرامیټرونه ولټوئ...",
+
+  "setmenu.active_setup_modules": "فعال د تنظیم ماډیولونه",
+
+  "setmenu.official_mailboxes": "رسمي میل بکسونه",
+
+  "setmenu.system_security": "د سیسټم امنیت",
+
+  "setmenu.filter_rules_ph": "د تنظیماتو فلټر کولو یا د پیرامیټر قواعدو لټولو لپاره ولیکئ… (⌘K)",
+
+  "setmenu.filter_settings_ph": "تنظیمات فلټر کړئ...",
   "iab.title": "د ډیجیټل ډاک ERP موبایل او ډیسک ټاپ اپلیکیشن نصب کړئ",
 
   "iab.auto_dl_ready": "اتومات ډاونلوډ چمتو",

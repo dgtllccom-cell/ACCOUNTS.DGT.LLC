@@ -14,6 +14,7 @@ import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports
 import { DataEmptyState } from "@/components/ui/data-empty-state";
 
 interface SettlementModuleViewProps {
+  /** Raw English fallback (translated via translateHeader if the string is in HEADER_TRANSLATIONS). */
   title: string;
   subtitle: string;
   defaultModule?: string;
@@ -21,8 +22,8 @@ interface SettlementModuleViewProps {
 }
 
 export function SettlementModuleView({
-  title,
-  subtitle,
+  title: titleRaw,
+  subtitle: subtitleRaw,
   defaultModule,
   defaultDirection = "all"
 }: SettlementModuleViewProps) {
@@ -41,6 +42,8 @@ export function SettlementModuleView({
 
   const lang = useActiveLanguage();
   const th = (s: string) => translateHeader(lang, s);
+  const title = th(titleRaw);
+  const subtitle = th(subtitleRaw);
   const scope = useErpScope();
 
   const money = (v: number, ccy?: string) =>

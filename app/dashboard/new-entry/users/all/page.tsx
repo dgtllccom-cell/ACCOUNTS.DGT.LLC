@@ -528,7 +528,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs h-9 px-3.5 rounded-xl cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5 mr-1.5" />
-              Print A4 Handover Sheet
+              {th("Print A4 Handover Sheet")}
             </Button>
 
             <Button
@@ -537,13 +537,13 @@ export default function SuperAdminAllUsersDirectoryPage() {
               className="border-border bg-background hover:bg-muted font-bold text-xs h-9 px-3.5 rounded-xl cursor-pointer"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
-              Export CSV
+              {th("Export CSV")}
             </Button>
 
             <Link href="/dashboard/new-entry/users/super-admin">
               <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs h-9 px-3.5 rounded-xl cursor-pointer">
                 <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                New User Form
+                {th("New User Form")}
               </Button>
             </Link>
 
@@ -552,7 +552,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
               disabled={loading}
               variant="ghost"
               className="text-muted-foreground hover:text-foreground h-9 px-2.5 rounded-xl cursor-pointer"
-              title="Refresh users list"
+              title={th("Refresh users list")}
             >
               <RefreshCw className={cn("w-4 h-4", loading && "animate-spin text-indigo-600")} />
             </Button>
@@ -674,7 +674,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 font-mono">{th("Online")}</span>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
-                Click any user row to open their <strong>Form Permissions Matrix</strong> or generate their official A4 Onboarding Handover Form.
+                Click any user row to open their <strong>{th("Form Permissions Matrix")}</strong> or generate their official A4 Onboarding Handover Form.
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
@@ -909,11 +909,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </div>
             <div className="text-right text-[10px] font-mono text-slate-500">
               <div>Generated: {new Date().toLocaleString()}</div>
-              <div>Scope: Global Enterprise Register</div>
+              <div>{th("Scope: Global Enterprise Register")}</div>
             </div>
           </div>
           <div className="bg-slate-100 p-2.5 rounded text-[10px] text-slate-700 font-medium">
-            <strong>Security Notice:</strong> This document contains official system access credentials. Handle strictly in accordance with company confidentiality policy.
+            <strong>{th("Security Notice:")}</strong> This document contains official system access credentials. Handle strictly in accordance with company confidentiality policy.
           </div>
         </div>
 
@@ -1015,7 +1015,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(`${window.location.origin}${u.loginUrl}`, `url-${u.userId}`)}
-                            title="Copy Direct Login URL"
+                            title={th("Copy Direct Login URL")}
                             className="text-muted-foreground hover:text-foreground print:hidden cursor-pointer"
                           >
                             {copiedKey === `url-${u.userId}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1024,7 +1024,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             href={u.loginUrl}
                             target="_blank"
                             rel="noreferrer"
-                            title="Open Login Page in New Tab"
+                            title={th("Open Login Page in New Tab")}
                             className="text-muted-foreground hover:text-blue-600 print:hidden cursor-pointer"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
@@ -1041,7 +1041,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(u.email, `email-${u.userId}`)}
-                            title="Copy Username / Email"
+                            title={th("Copy Username / Email")}
                             className="text-muted-foreground hover:text-foreground print:hidden cursor-pointer"
                           >
                             {copiedKey === `email-${u.userId}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1065,8 +1065,8 @@ export default function SuperAdminAllUsersDirectoryPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(u.passwordKey || "Admin@123", `pwd-${u.userId}`)}
-                            title="Copy Password (Admin@123)"
+                            onClick={() => u.passwordKey && copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
+                            title={th("Copy Password")}
                             className="text-muted-foreground hover:text-foreground print:hidden cursor-pointer"
                           >
                             {copiedKey === `pwd-${u.userId}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1107,7 +1107,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             size="sm"
                             onClick={() => openUserInspector(u)}
                             className="h-7 px-2.5 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs cursor-pointer"
-                            title="Inspect User Details & Forms Permission Matrix"
+                            title={th("Inspect User Details & Forms Permission Matrix")}
                           >
                             <SlidersHorizontal className="w-3 h-3 mr-1" />
                             Inspect
@@ -1116,7 +1116,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => { setPrintModalUser(u); setShowBatchPrint(false); }}
-                            title="Generate Individual A4 Onboarding Handover Form"
+                            title={th("Generate Individual A4 Onboarding Handover Form")}
                             className="h-7 px-2 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg cursor-pointer"
                           >
                             <Printer className="w-3 h-3 mr-1" />
@@ -1206,7 +1206,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 )}
               >
                 <UserCheck className="h-3.5 w-3.5" />
-                <span>Branch, Identity & Security Vault</span>
+                <span>{th("Branch, Identity & Security Vault")}</span>
               </button>
 
               <button
@@ -1233,7 +1233,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/40 p-3.5 rounded-2xl border border-border">
                     <div>
                       <h3 className="text-xs font-black uppercase text-foreground flex items-center gap-2">
-                        <span>Form Level Authorization & Permission Grants</span>
+                        <span>{th("Form Level Authorization & Permission Grants")}</span>
                         <span className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded">
                           {Object.values(userPermissions).filter((p) => p.allowed).length} / {ALL_SYSTEM_FORMS.length} Allowed
                         </span>
@@ -1445,8 +1445,8 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     </div>
 
                     <div className="pt-3 border-t border-slate-200 flex justify-between text-[9px] text-slate-500 font-medium">
-                      <span>Authorized by: Super Admin</span>
-                      <span>Security Stamp: Cryptographically Verified</span>
+                      <span>{th("Authorized by")}: {sess?.user?.fullName || sess?.fullName || sess?.user?.email || "—"}</span>
+                      <span>{th("Generated")}: {currentTime || "—"}</span>
                     </div>
                   </div>
 
@@ -1480,7 +1480,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   className="h-9 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   <Save className="h-3.5 w-3.5" />
-                  <span>Save Permission Grants</span>
+                  <span>{th("Save Permission Grants")}</span>
                 </Button>
               </div>
             </div>
