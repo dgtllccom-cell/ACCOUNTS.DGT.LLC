@@ -206,20 +206,13 @@ const PARALLEL_ALLOW = new Set([
   "features/journal/components/sales-order-payment-journal.tsx",    // 'en-GB' date locale strings
   "app/api/erp/qvc/accounts/route.ts",                // {en:"present"} status literal, not i18n
   "features/clearing-agent/components/truck-recreation-wizard.tsx", // {en:"",ur:"",...} record-translation DATA fields
+  "app/ext/form/[token]/location-translations.ts",   // curated place-name reference DATA (countries/provinces/cities/ports) for the offline public form — DB-VALUE-style, not UI chrome
 ]);
 // Genuine pre-existing parallel UI dictionaries — GRANDFATHERED. The gate blocks NEW
 // ones; these are tracked tech-debt to migrate into lib/i18n/ui.ts (see docs/i18n-audit-inventory.txt).
-const KNOWN_PARALLEL = new Set([
-  // Introduced by the External Form Links / Send-to-Customer feature — tracked
-  // tech-debt to migrate into lib/i18n/ui.ts (same as the earlier ALR/PPS/KYC set).
-  "app/ext/form/[token]/ext-form-client.tsx",
-  "features/customers/components/send-to-customer-modal.tsx",
-  "features/general-office/components/share-forms-tab.tsx",
-  // SmartSearchFilter (shipped 2026-08-28, commit 40f2796) — a 30-key ×5-lang
-  // parallel dict. Parity is complete; only the location is wrong. Grandfathered
-  // to unblock the build; tracked to migrate its keys into lib/i18n/ui.ts.
-  "components/ui/smart-search-filter.tsx",
-]);
+// 2026-09-03: the four originally-grandfathered UI dictionaries were migrated into
+// lib/i18n/ui.ts (ssf.* / sendcust.* / shareform.* / extform.*). This set is now empty.
+const KNOWN_PARALLEL = new Set([]);
 const parallelNew = [];
 const parallelKnown = [];
 let searchFiles = [];

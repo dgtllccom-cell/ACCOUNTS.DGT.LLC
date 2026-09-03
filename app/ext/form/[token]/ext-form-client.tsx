@@ -15,6 +15,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { t as centralT } from "@/lib/i18n/ui";
+import { locName } from "./location-translations";
 import {
   Shield,
   Globe,
@@ -64,804 +66,117 @@ const LANGS: { code: Lang; label: string; dir: "ltr" | "rtl"; nativeName: string
   { code: "ps", label: "Pashto", dir: "rtl", nativeName: "پښتو" },
 ];
 
-const dict: Record<string, Record<Lang, string>> = {
-  headerTitle: {
-    en: "DIGITAL DOCK ERP Public Customer Verification",
-    ur: "(DIGITAL DOCK ERP) کسٹمر کی پبلک تصدیق",
-    ar: "(DIGITAL DOCK ERP) التحقق العام للعميل",
-    fa: "(DIGITAL DOCK ERP) راستی‌آزمایی عمومی مشتری",
-    ps: "(DIGITAL DOCK ERP) د پیرودونکي عامه تایید",
-  },
-  headerSubtitle: {
-    en: "Easy 5 Steps",
-    ur: "آسان 5 مراحل",
-    ar: "5 خطوات سهلة",
-    fa: "۵ مرحله آسان",
-    ps: "۵ اسان پړاوونه",
-  },
-  step1: {
-    en: "Identity & Personal Info",
-    ur: "شناختی معلومات درج کریں",
-    ar: "إدخال الهوية والشخصية",
-    fa: "ورود اطلاعات هویتی",
-    ps: "د پیژندنې معلومات درج کړئ",
-  },
-  step2: {
-    en: "Upload Documents",
-    ur: "دستاویزات اپلوڈ کریں",
-    ar: "تحميل المستندات",
-    fa: "بارگذاری مدارک",
-    ps: "اسناد اپلوډ کړئ",
-  },
-  step3: {
-    en: "Verify Details",
-    ur: "تفصیلات کی تصدیق کریں",
-    ar: "التحقق من التفاصيل",
-    fa: "تأیید اطلاعات",
-    ps: "د توضیحاتو تایید کړئ",
-  },
-  step4: {
-    en: "Additional Info",
-    ur: "اضافی معلومات درج کریں",
-    ar: "إدخال معلومات إضافية",
-    fa: "ورود اطلاعات تکمیلی",
-    ps: "اضافي معلومات درج کړئ",
-  },
-  step5: {
-    en: "Generate & Download PDF",
-    ur: "PDF بنائیں اور ڈاؤنلوڈ کریں",
-    ar: "إنشاء وتحميل PDF",
-    fa: "ایجاد و دانلود PDF",
-    ps: "PDF جوړ او ډاونلوډ کړئ",
-  },
-  personalInfoTitle: {
-    en: "Personal Information",
-    ur: "ذاتی معلومات",
-    ar: "المعلومات الشخصية",
-    fa: "اطلاعات شخصی",
-    ps: "شخصي معلومات",
-  },
-  personalInfoSub: {
-    en: "Please enter your personal details.",
-    ur: "براہِ کرم اپنی ذاتی تفصیلات درج کریں۔",
-    ar: "يرجى إدخال بياناتك الشخصية.",
-    fa: "لطفاً اطلاعات شخصی خود را وارد کنید.",
-    ps: "مهرباني وکړئ خپل شخصي معلومات دننه کړئ.",
-  },
-  firstName: {
-    en: "First Name",
-    ur: "پہلا نام",
-    ar: "الاسم الأول",
-    fa: "نام",
-    ps: "لومړی نوم",
-  },
-  firstNamePh: {
-    en: "Enter first name",
-    ur: "پہلا نام درج کریں",
-    ar: "أدخل الاسم الأول",
-    fa: "نام را وارد کنید",
-    ps: "لومړی نوم ولیکئ",
-  },
-  lastName: {
-    en: "Last Name",
-    ur: "آخری نام",
-    ar: "اسم العائلة",
-    fa: "نام خانوادگی",
-    ps: "وروستی نوم",
-  },
-  lastNamePh: {
-    en: "Enter last name",
-    ur: "آخری نام درج کریں",
-    ar: "أدخل اسم العائلة",
-    fa: "نام خانوادگی را وارد کنید",
-    ps: "وروستی نوم ولیکئ",
-  },
-  fatherName: {
-    en: "Father's / Guardian's Name",
-    ur: "والد / سرپرست کا نام",
-    ar: "اسم الأب / ولي الأمر",
-    fa: "نام پدر / سرپرست",
-    ps: "د پلار / سرپرست نوم",
-  },
-  fatherNamePh: {
-    en: "Enter father / guardian name",
-    ur: "والد یا سرپرست کا نام درج کریں",
-    ar: "أدخل اسم الأب أو ولي الأمر",
-    fa: "نام پدر یا سرپرست را وارد کنید",
-    ps: "د پلار یا سرپرست نوم ولیکئ",
-  },
-  mobile: {
-    en: "Mobile / Phone",
-    ur: "موبائل / فون",
-    ar: "الجوال / الهاتف",
-    fa: "تلفن همراه",
-    ps: "ګرځنده تیلیفون / شمېره",
-  },
-  mobilePh: {
-    en: "Enter mobile number",
-    ur: "موبائل نمبر درج کریں",
-    ar: "أدخل رقم الجوال",
-    fa: "شماره موبایل را وارد کنید",
-    ps: "د مبایل شمېره ولیکئ",
-  },
-  addAnotherMobile: {
-    en: "+ Add Another Phone",
-    ur: "+ اضافی فون نمبر شامل کریں",
-    ar: "+ إضافة هاتف آخر",
-    fa: "+ افزودن شماره دیگر",
-    ps: "+ بله شمېره ورزیاته کړئ",
-  },
-  whatsapp: {
-    en: "WhatsApp Number",
-    ur: "واٹس ایپ نمبر",
-    ar: "رقم الواتساب",
-    fa: "شماره واتس‌اپ",
-    ps: "د واټس‌اپ شمېره",
-  },
-  whatsappPh: {
-    en: "Enter WhatsApp number",
-    ur: "واٹس ایپ نمبر درج کریں",
-    ar: "أدخل رقم الواتساب",
-    fa: "شماره واتس‌اپ را وارد کنید",
-    ps: "د واټس‌اپ شمېره ولیکئ",
-  },
-  addAnotherWhatsapp: {
-    en: "+ Add Another WhatsApp",
-    ur: "+ اضافی واٹس ایپ شامل کریں",
-    ar: "+ إضافة واتساب آخر",
-    fa: "+ افزودن واتس‌اپ دیگر",
-    ps: "+ بل واټس‌اپ ورزیاته کړئ",
-  },
-  email: {
-    en: "Email Address (English)",
-    ur: "ای میل ایڈریس (انگریزی میں لکھیں)",
-    ar: "البريد الإلكتروني (باللغة الإنجليزية)",
-    fa: "آدرس ایمیل (به انگلیسی)",
-    ps: "د بریښنالیک پته (په انګلیسي ولیکئ)",
-  },
-  emailPh: {
-    en: "name@example.com",
-    ur: "name@example.com",
-    ar: "name@example.com",
-    fa: "name@example.com",
-    ps: "name@example.com",
-  },
-  gender: {
-    en: "Gender",
-    ur: "جنس",
-    ar: "الجنس",
-    fa: "جنسیت",
-    ps: "جنسیت",
-  },
-  male: {
-    en: "Male",
-    ur: "مرد",
-    ar: "ذكر",
-    fa: "مرد",
-    ps: "نارینه",
-  },
-  female: {
-    en: "Female",
-    ur: "عورت",
-    ar: "أنثى",
-    fa: "زن",
-    ps: "ښځینه",
-  },
-  other: {
-    en: "Other",
-    ur: "دیگر",
-    ar: "آخر",
-    fa: "سایر",
-    ps: "نور",
-  },
-  documentsTitle: {
-    en: "Documents",
-    ur: "دستاویزات",
-    ar: "المستندات",
-    fa: "مدارک",
-    ps: "اسناد",
-  },
-  documentsSub: {
-    en: "Add your documents one by one.",
-    ur: "اپنی دستاویزات ایک ایک کر کے شامل کریں۔",
-    ar: "أضف مستنداتك واحداً تلو الآخر.",
-    fa: "مدارک خود را یکی یکی اضافه کنید.",
-    ps: "خپل اسناد یو یو ورزیات کړئ.",
-  },
-  docType: {
-    en: "Document Type",
-    ur: "دستاویز کی قسم",
-    ar: "نوع المستند",
-    fa: "نوع مدرک",
-    ps: "د سند ډول",
-  },
-  docNumber: {
-    en: "Document Number",
-    ur: "دستاویز نمبر",
-    ar: "رقم المستند",
-    fa: "شماره مدرک",
-    ps: "د سند شمېره",
-  },
-  docNumberPh: {
-    en: "Enter document number",
-    ur: "دستاویز نمبر درج کریں",
-    ar: "أدخل رقم المستند",
-    fa: "شماره مدرک را وارد کنید",
-    ps: "د سند شمېره ولیکئ",
-  },
-  frontSide: {
-    en: "Front Side",
-    ur: "سامنے کا رخ (Front)",
-    ar: "الوجه الأمامي",
-    fa: "روی مدرک (جلو)",
-    ps: "مخکینی مخ",
-  },
-  backSide: {
-    en: "Back Side",
-    ur: "پیچھے کا رخ (Back)",
-    ar: "الوجه الخلفي",
-    fa: "پشت مدرک (عقب)",
-    ps: "شاته مخ",
-  },
-  mainPage: {
-    en: "Main Info Page",
-    ur: "پہلا معلوماتی صفحہ",
-    ar: "صفحة البيانات الرئيسية",
-    fa: "صفحه مشخصات اصلی",
-    ps: "د اصلي معلوماتو پاڼه",
-  },
-  visaPage: {
-    en: "Visa / Back Page",
-    ur: "ویزا / پچھلا صفحہ",
-    ar: "صفحة التأشيرة / الخلفية",
-    fa: "صفحه ویزا / پشت",
-    ps: "د ویزې / شاته پاڼه",
-  },
-  cameraBtn: {
-    en: "Camera",
-    ur: "کیمرہ",
-    ar: "كاميرا",
-    fa: "دوربین",
-    ps: "کیمره",
-  },
-  galleryBtn: {
-    en: "Gallery",
-    ur: "گیلری",
-    ar: "المعرض",
-    fa: "گالری",
-    ps: "ګالري",
-  },
-  addDocBtn: {
-    en: "+ Add Document",
-    ur: "+ دستاویز شامل کریں",
-    ar: "+ إضافة مستند",
-    fa: "+ افزودن مدرک",
-    ps: "+ سند ورزیات کړئ",
-  },
-  contractsTitle: {
-    en: "Contracts & Attachments",
-    ur: "معاہدے اور دستاویزات",
-    ar: "العقود والمرفقات",
-    fa: "قراردادها و ضمائم",
-    ps: "قراردادونه او ضمیمې",
-  },
-  contractsSub: {
-    en: "Add applicable agreements or reference letters.",
-    ur: "متعلقہ معاہدے یا حوالہ جاتی دستاویزات شامل کریں۔",
-    ar: "أضف الاتفاقيات المعمول بها أو خطابات المرجعية.",
-    fa: "توافق‌نامه‌ها یا اسناد مربوطه را اضافه کنید.",
-    ps: "اړوند قراردادونه یا ضمیمې اضافه کړئ.",
-  },
-  contractType: {
-    en: "Contract Type",
-    ur: "معاہدے کی قسم",
-    ar: "نوع العقد",
-    fa: "نوع قرارداد",
-    ps: "د قرارداد ډول",
-  },
-  addContractBtn: {
-    en: "+ Add Contract",
-    ur: "+ معاہدہ شامل کریں",
-    ar: "+ إضافة عقد",
-    fa: "+ افزودن قرارداد",
-    ps: "+ قرارداد ورزیات کړئ",
-  },
-  step2Title: {
-    en: "Address Details",
-    ur: "پتے کی تفصیلات",
-    ar: "تفاصيل العنوان",
-    fa: "جزئیات آدرس",
-    ps: "د پتې تفصیلات",
-  },
-  step2Sub: {
-    en: "Select country, state, city and enter full street address.",
-    ur: "براہِ کرم ملک، صوبہ اور شہر منتخب کریں اور مکمل پتہ درج کریں۔",
-    ar: "يرجى تحديد الدولة والمحافظة والمدينة وإدخال العنوان الكامل.",
-    fa: "لطفاً کشور، استان و شهر را انتخاب کرده و آدرس کامل را وارد کنید.",
-    ps: "مهرباني وکړئ هیواد، ولایت او ښار وټاکئ او بشپړه پته ولیکئ.",
-  },
-  country: {
-    en: "Country",
-    ur: "ملک",
-    ar: "الدولة / البلد",
-    fa: "کشور",
-    ps: "هیواد",
-  },
-  stateProvince: {
-    en: "State / Province / Emirate",
-    ur: "صوبہ / ریاست / امارت",
-    ar: "المحافظة / الإمارة / الولاية",
-    fa: "استان / ایالت",
-    ps: "ولایت / ایالت",
-  },
-  city: {
-    en: "City / Port / Commercial Hub",
-    ur: "شہر / پورٹ / تجارتی مرکز",
-    ar: "المدينة / الميناء / المركز التجاري",
-    fa: "شهر / بندر / مرکز تجاری",
-    ps: "ښار / بندر / سوداګریز مرکز",
-  },
-  postalCode: {
-    en: "Postal / City Code (Auto-Filled)",
-    ur: "پوسٹل / سٹی کوڈ (خودکار درج)",
-    ar: "الرمز البريدي / رمز المدينة",
-    fa: "کد پستی / کد شهر",
-    ps: "پوسټل / ښار کوډ",
-  },
-  fullAddress: {
-    en: "Full Address (Street, Building, Office)",
-    ur: "مکمل پتہ (گلی، عمارت، مکان / دفتر)",
-    ar: "العنوان الكامل (الشارع، المبنى، المكتب)",
-    fa: "آدرس کامل (خیابان، ساختمان، پلاک)",
-    ps: "بشپړه پته (کوڅه، ودانۍ، دفتر)",
-  },
-  fullAddressPh: {
-    en: "Enter complete street address, suite, or flat number",
-    ur: "اپنا مکمل پتہ درج کریں (گلی، عمارت، مکان / دفتر)",
-    ar: "أدخل عنوان الشارع الكامل أو رقم المكتب أو الشقة",
-    fa: "آدرس دقیق خیابان، ساختمان و پلاک را وارد کنید",
-    ps: "خپله بشپړه پته (کوڅه، ودانۍ، دفتر) ولیکئ",
-  },
-  step3Title: {
-    en: "Review Your Information",
-    ur: "اپنی معلومات کا جائزہ لیں",
-    ar: "مراجعة معلوماتك",
-    fa: "بازبینی اطلاعات شما",
-    ps: "د خپلو معلوماتو بیاکتنه وکړئ",
-  },
-  step3Sub: {
-    en: "Please verify all details before final submission.",
-    ur: "جمع کروانے سے پہلے تمام تفصیلات کی تصدیق کر لیں۔",
-    ar: "يرجى التحقق من جميع البيانات قبل الإرسال النهائي.",
-    fa: "لطفاً قبل از ارسال نهایی تمام مشخصات را بازبینی کنید.",
-    ps: "مهرباني وکړئ د سپارلو دمخه ټول معلومات تایید کړئ.",
-  },
-  editBtn: {
-    en: "Edit",
-    ur: "ترمیم کریں",
-    ar: "تعديل",
-    fa: "ویرایش",
-    ps: "بدلون",
-  },
-  reviewVerifyBadge: {
-    en: "Are all details accurate? You can edit any section before submitting.",
-    ur: "کیا تمام معلومات درست ہیں؟ آپ ضرورت پڑنے پر کسی بھی حصے میں ترمیم کر سکتے ہیں۔",
-    ar: "هل جميع البيانات دقيقة؟ يمكنك تعديل أي قسم قبل الإرسال.",
-    fa: "آیا تمام اطلاعات صحیح است؟ می‌توانید هر بخش را ویرایش کنید.",
-    ps: "ایا ټول معلومات سم دي؟ تاسو کولی شئ اړین بدلونونه راولئ.",
-  },
-  step4Title: {
-    en: "Upload Profile Photo",
-    ur: "اپنی تصویر اپ لوڈ کریں",
-    ar: "تحميل الصورة الشخصية",
-    fa: "بارگذاری عکس پرسنلی",
-    ps: "خپل انځور پورته کړئ",
-  },
-  step4Sub: {
-    en: "Please upload your recent photo.",
-    ur: "براہِ کرم اپنی حالیہ تصویر اپ لوڈ کریں۔",
-    ar: "يرجى تحميل صورتك الشخصية الحديثة.",
-    fa: "لطفاً عکس پرسنلی جدید خود را بارگذاری کنید.",
-    ps: "مهرباني وکړئ خپل نوی عکس پورته کړئ.",
-  },
-  photoSizeHint: {
-    en: "JPG, PNG (Max 5MB)",
-    ur: "(5MB سے زیادہ نہ ہو JPG, PNG)",
-    ar: "JPG, PNG (الحد الأقصى 5 ميجابايت)",
-    fa: "JPG, PNG (حداکثر ۵ مگابایت)",
-    ps: "JPG, PNG (تر 5MB پورې)",
-  },
-  nextDocsBtn: {
-    en: "Next: Documents & Contracts →",
-    ur: "اگلا: دستاویزات اور معاہدے →",
-    ar: "التالي: المستندات والعقود ←",
-    fa: "بعدی: مدارک و قراردادها ←",
-    ps: "بل: اسناد او قراردادونه ←",
-  },
-  nextAddressBtn: {
-    en: "Next: Address Details →",
-    ur: "اگلا: پتہ اور رہائش →",
-    ar: "التالي: العنوان والإقامة ←",
-    fa: "بعدی: آدرس و اقامت ←",
-    ps: "بل: پته او استوګنه ←",
-  },
-  nextPhotoBtn: {
-    en: "Next: Profile Photo →",
-    ur: "اگلا: تصویر اپلوڈ کریں →",
-    ar: "التالي: الصورة الشخصية ←",
-    fa: "بعدی: عکس پرسنلی ←",
-    ps: "بل: انځور پورته کول ←",
-  },
-  nextReviewBtn: {
-    en: "Next: Review & Application Report →",
-    ur: "اگلا: مکمل جائزہ اور تصدیقی رپورٹ →",
-    ar: "التالي: المراجعة وتقرير الطلب ←",
-    fa: "بعدی: بازبینی و گزارش درخواست ←",
-    ps: "بل: کتنه او د غوښتنلیک راپور ←",
-  },
-  backBtn: {
-    en: "Back",
-    ur: "واپس",
-    ar: "رجوع",
-    fa: "بازگشت",
-    ps: "شاته",
-  },
-  submitFormBtn: {
-    en: "Submit Form",
-    ur: "فارم جمع کروائیں",
-    ar: "إرسال النموذج",
-    fa: "ارسال فرم",
-    ps: "فورم وسپارئ",
-  },
-  successTitle: {
-    en: "Form Submitted Successfully!",
-    ur: "فارم کامیابی سے جمع ہو گیا!",
-    ar: "تم إرسال النموذج بنجاح!",
-    fa: "فرم با موفقیت ارسال شد!",
-    ps: "فورم په بریالیتوب سره ثبت شو!",
-  },
-  successMsg: {
-    en: "Thank you! Your submission has been securely recorded in our ERP system.",
-    ur: "شکریہ! آپ کی معلومات اور دستاویزات محفوظ طریقے سے ERP سسٹم میں درج ہو چکی ہیں۔",
-    ar: "شكراً لك! تم استلام بياناتك ومستنداتك بأمان وتسجيلها في نظام ERP الخاص بنا.",
-    fa: "با تشکر! اطلاعات و مدارک شما با موفقیت و به صورت امن در سیستم ERP ثبت شد.",
-    ps: "مننه! ستاسو معلومات او اسناد په خوندي ډول زموږ په ERP سیسټم کې ثبت شول.",
-  },
-  receiptTitle: {
-    en: "Official Submission Receipt",
-    ur: "آفیشل سمبیشن رسید",
-    ar: "إيصال التقديم الرسمي",
-    fa: "رسید رسمی ثبت‌نام",
-    ps: "د ثبت رسمي رسید",
-  },
-  receiptRef: {
-    en: "Reference Token",
-    ur: "ریفرنس ٹوکن",
-    ar: "رمز المرجع",
-    fa: "کد پیگیری",
-    ps: "د حوالې کوډ",
-  },
-  submittedOn: {
-    en: "Submitted On",
-    ur: "جمع کرنے کی تاریخ",
-    ar: "تاريخ التقديم",
-    fa: "تاریخ ارسال",
-    ps: "د سپارلو نېټه",
-  },
-  printReceipt: {
-    en: "Print / Save Receipt",
-    ur: "رسید پرنٹ / محفوظ کریں",
-    ar: "طباعة / حفظ الإيصال",
-    fa: "چاپ / ذخیره رسید",
-    ps: "رسید چاپ / خوندي کړئ",
-  },
-  submitAnother: {
-    en: "Submit Another Form",
-    ur: "دوسرا فارم جمع کروائیں",
-    ar: "تقديم نموذج آخر",
-    fa: "ارسال فرم دیگر",
-    ps: "بل فورم وسپارئ",
-  },
-  errorInvalid: {
-    en: "Invalid or Expired Link",
-    ur: "غیر معتبر یا ختم شدہ لنک",
-    ar: "الرابط غير صالح أو منتهي الصلاحية",
-    fa: "لینک نامعتبر یا منقضی شده است",
-    ps: "لینک ناسم دی یا وخت یې پوره شوی دی",
-  },
-  loading: {
-    en: "Loading form...",
-    ur: "فارم لوڈ ہو رہا ہے...",
-    ar: "جارٍ تحميل النموذج...",
-    fa: "در حال بارگذاری فرم...",
-    ps: "فورم لوډ کیږي...",
-  },
-  issueDate: {
-    en: "Issue Date",
-    ur: "تاریخِ اجراء",
-    ar: "تاريخ الإصدار",
-    fa: "تاریخ صدور",
-    ps: "د صادرېدو نېټه",
-  },
-  expiryDate: {
-    en: "Expiry Date",
-    ur: "تاریخِ تنسیخ / میعاد",
-    ar: "تاريخ الانتهاء",
-    fa: "تاریخ انقضا",
-    ps: "د پای نېټه",
-  },
-  dob: {
-    en: "Date of Birth",
-    ur: "تاریخِ پیدائش",
-    ar: "تاريخ الميلاد",
-    fa: "تاریخ تولد",
-    ps: "د زېږېدو نېټه",
-  },
-  contactType: {
-    en: "Contact Type",
-    ur: "رابطے کی قسم",
-    ar: "نوع جهة الاتصال",
-    fa: "نوع تماس",
-    ps: "د اړیکې ډول",
-  },
-  customDocName: {
-    en: "Custom Document Name",
-    ur: "دستاویز کا نیا نام",
-    ar: "اسم المستند المخصص",
-    fa: "نام مدرک سفارشی",
-    ps: "د سند نوی نوم",
-  },
-  customDocNamePh: {
-    en: "e.g. Tazkira / QID / Business Card",
-    ur: "مثلاً تذکرہ / قطری شناختی کارڈ وغیرہ",
-    ar: "مثال: بطاقة شخصية / تذكرة / بطاقة عمل",
-    fa: "مثلاً تذکره / کارت هویت محلی",
-    ps: "لکه برېښنايي تذکره یا بل ځانګړی سند",
-  },
-  addContactBtn: {
-    en: "+ Add Another Contact",
-    ur: "+ نیا فون / رابطہ شامل کریں",
-    ar: "+ إضافة جهة اتصال أخرى",
-    fa: "+ افزودن تماس دیگر",
-    ps: "+ بله اړیکه ورزیاته کړئ",
-  },
-  phoneLabel: {
-    en: "Phone / Contact Number",
-    ur: "فون / رابطہ نمبر",
-    ar: "رقم الهاتف / الاتصال",
-    fa: "شماره تماس / تلفن",
-    ps: "د اړیکې / تیلیفون شمېره",
-  },
-  aiScanTitle: {
-    en: "⚡ Instant AI Document & Smart ID Scanner",
-    ur: "⚡ فوری اسمارٹ شناختی کارڈ اسکینر (آٹو فل)",
-    ar: "⚡ الماسح الذكي للهوية والمستندات (تعبئة تلقائية)",
-    fa: "⚡ اسکنر هوشمند کارت شناسایی (تکمیل خودکار)",
-    ps: "⚡ د هویت د کارت هوښیار سکینر (خپلکار ډکول)",
-  },
-  aiScanSubtitle: {
-    en: "Take a photo of your ID card — names, ID number & dates are auto-extracted instantly!",
-    ur: "شناختی کارڈ کی تصویر لیں — نام، شناختی نمبر اور تاریخیں خود بخود درج ہو جائیں گی!",
-    ar: "التقط صورة لبطاقة الهوية — سيتم استخراج الاسم ورقم الهوية والتواريخ تلقائيًا!",
-    fa: "از کارت شناسایی عکس بگیرید — نام، شماره و تاریخ‌ها خودکار پر می‌شوند!",
-    ps: "د هویت د کارت انځور واخلئ — نوم، د کارت شمېره او نېټې به پخپله ډکې شي!",
-  },
-  aiScanningBadge: {
-    en: "⚡ Scanning & Auto-Extracting details...",
-    ur: "⚡ اسمارٹ اسکیننگ جاری ہے، تفصیلات حاصل کی جا رہی ہیں...",
-    ar: "⚡ جارٍ المسح واستخراج البيانات تلقائيًا...",
-    fa: "⚡ در حال اسکن و استخراج هوشمند اطلاعات...",
-    ps: "⚡ سکین روان دی، معلومات په اوتومات ډول راایستل کیږي...",
-  },
-  aiScanSuccessMsg: {
-    en: "Document details auto-extracted! You can review or edit anytime.",
-    ur: "دستاویز کی تفصیلات خود بخود درج ہو گئیں۔ آپ ضرورت کے مطابق ترمیم کر سکتے ہیں۔",
-    ar: "تم استخراج بيانات المستند بنجاح! يمكنك مراجعتها أو تعديلها في أي وقت.",
-    fa: "اطلاعات مدرک با موفقیت استخراج شد! می‌توانید در صورت نیاز ویرایش کنید.",
-    ps: "د سند معلومات په بریالیتوب سره راواخیستل شول! تاسو یې هر وخت سمولی شئ.",
-  },
-  retakeBtn: {
-    en: "Retake",
-    ur: "دوبارہ تصویر لیں",
-    ar: "إعادة التقاط",
-    fa: "عکس مجدد",
-    ps: "بیا انځور واخلئ",
-  },
-  clearBtn: {
-    en: "Clear",
-    ur: "صاف کریں",
-    ar: "مسح",
-    fa: "پاک کردن",
-    ps: "پاک کړئ",
-  },
-  viewFullBtn: {
-    en: "View Full",
-    ur: "بڑی تصویر دیکھیں",
-    ar: "عرض الصورة",
-    fa: "مشاهده کامل",
-    ps: "بشپړ انځور کتل",
-  },
-  frontSideReady: {
-    en: "Front Side (Ready)",
-    ur: "سامنے والی سائیڈ (تیار ہے)",
-    ar: "الجهة الأمامية (جاهزة)",
-    fa: "رویه کارت (آماده)",
-    ps: "مخکینی اړخ (چمتو دی)",
-  },
-  backSideReady: {
-    en: "Back Side (Ready)",
-    ur: "پچھلی سائیڈ (تیار ہے)",
-    ar: "الجهة الخلفية (جاهزة)",
-    fa: "پشت کارت (آماده)",
-    ps: "شا اړخ (چمتو دی)",
-  },
-  downloadSlipBtn: {
-    en: "Download Application Slip (PDF)",
-    ur: "درخواست کی تصدیقی سلپ ڈاؤنلوڈ کریں (PDF)",
-    ar: "تحميل استمارة التقديم الرسمية (PDF)",
-    fa: "دانلود برگ درخواست رسمی (PDF)",
-    ps: "د غوښتنلیک رسمي پاڼه ډاونلوډ کړئ (PDF)",
-  },
-  printSlipBtn: {
-    en: "Print Application Sheet",
-    ur: "درخواست فارم پرنٹ کریں",
-    ar: "طباعة استمارة التقديم",
-    fa: "چاپ برگ درخواست",
-    ps: "د غوښتنلیک پاڼه چاپ کړئ",
-  },
-  appSlipHeading: {
-    en: "Official Registration & Verification Sheet",
-    ur: "آفیشل رجسٹریشن اور تصدیقی رپورٹ",
-    ar: "استمارة التسجيل والتحقق الرسمية",
-    fa: "برگ رسمی ثبت‌نام و راستی‌آزمایی",
-    ps: "د ثبت نام او تایید رسمي پاڼه",
-  },
-  appSlipSub: {
-    en: "Please review and download your complete verification application before final submission.",
-    ur: "براہِ کرم حتمی جمع کروانے سے پہلے اپنی مکمل تصدیقی درخواست کا جائزہ لیں اور ڈاؤنلوڈ کریں۔",
-    ar: "يرجى مراجعة استمارة التقديم وتحميلها لحفظ سجلك قبل الإرسال النهائي.",
-    fa: "لطفاً قبل از ارسال نهایی، برگ درخواست خود را بازبینی و ذخیره کنید.",
-    ps: "مهرباني وکړئ د وروستي سپارلو مخکې خپله بشپړه تایید شوې پاڼه وګورئ او ډاونلوډ یې کړئ.",
-  },
-  declarationText: {
-    en: "I hereby confirm that the personal details, contact information, address, and uploaded documents provided in this application are accurate, true, and complete.",
-    ur: "میں تصدیق کرتا/کرتی ہوں کہ اس درخواست میں درج کی گئی تمام ذاتی معلومات، رابطہ نمبر، پتہ اور منسلک دستاویزات بالکل درست اور مکمل ہیں۔",
-    ar: "أقر وأؤكد بموجب هذا أن جميع البيانات الشخصية وأرقام الاتصال والعنوان والمستندات المرفقة صحيحة ودقيقة وكاملة.",
-    fa: "بدینوسیله تأیید می‌نمایم که کلیه اطلاعات شخصی، شماره‌های تماس، آدرس و مدارک بارگذاری‌شده دقیق، صحیح و کامل می‌باشند.",
-    ps: "زه دلته تصدیق کوم چې په دې غوښتنلیک کې وړاندې شوي شخصي معلومات، د اړیکې شمېرې، پته او اسناد بشپړ سم او باوري دي.",
-  },
+const dictEn: Record<string, string> = {
+  "headerTitle": "DIGITAL DOCK ERP Public Customer Verification",
+  "headerSubtitle": "Easy 5 Steps",
+  "step1": "Identity & Personal Info",
+  "step2": "Upload Documents",
+  "step3": "Verify Details",
+  "step4": "Additional Info",
+  "step5": "Generate & Download PDF",
+  "personalInfoTitle": "Personal Information",
+  "personalInfoSub": "Please enter your personal details.",
+  "firstName": "First Name",
+  "firstNamePh": "Enter first name",
+  "lastName": "Last Name",
+  "lastNamePh": "Enter last name",
+  "fatherName": "Father's / Guardian's Name",
+  "fatherNamePh": "Enter father / guardian name",
+  "mobile": "Mobile / Phone",
+  "mobilePh": "Enter mobile number",
+  "addAnotherMobile": "+ Add Another Phone",
+  "whatsapp": "WhatsApp Number",
+  "whatsappPh": "Enter WhatsApp number",
+  "addAnotherWhatsapp": "+ Add Another WhatsApp",
+  "email": "Email Address (English)",
+  "gender": "Gender",
+  "male": "Male",
+  "female": "Female",
+  "other": "Other",
+  "documentsTitle": "Documents",
+  "documentsSub": "Add your documents one by one.",
+  "docType": "Document Type",
+  "docNumber": "Document Number",
+  "docNumberPh": "Enter document number",
+  "frontSide": "Front Side",
+  "backSide": "Back Side",
+  "mainPage": "Main Info Page",
+  "visaPage": "Visa / Back Page",
+  "cameraBtn": "Camera",
+  "galleryBtn": "Gallery",
+  "addDocBtn": "+ Add Document",
+  "contractsTitle": "Contracts & Attachments",
+  "contractsSub": "Add applicable agreements or reference letters.",
+  "contractType": "Contract Type",
+  "addContractBtn": "+ Add Contract",
+  "step2Title": "Address Details",
+  "step2Sub": "Select country, state, city and enter full street address.",
+  "country": "Country",
+  "stateProvince": "State / Province / Emirate",
+  "city": "City / Port / Commercial Hub",
+  "postalCode": "Postal / City Code (Auto-Filled)",
+  "fullAddress": "Full Address (Street, Building, Office)",
+  "fullAddressPh": "Enter complete street address, suite, or flat number",
+  "step3Title": "Review Your Information",
+  "step3Sub": "Please verify all details before final submission.",
+  "editBtn": "Edit",
+  "reviewVerifyBadge": "Are all details accurate? You can edit any section before submitting.",
+  "step4Title": "Upload Profile Photo",
+  "step4Sub": "Please upload your recent photo.",
+  "photoSizeHint": "JPG, PNG (Max 5MB)",
+  "nextDocsBtn": "Next: Documents & Contracts →",
+  "nextAddressBtn": "Next: Address Details →",
+  "nextPhotoBtn": "Next: Profile Photo →",
+  "nextReviewBtn": "Next: Review & Application Report →",
+  "backBtn": "Back",
+  "submitFormBtn": "Submit Form",
+  "successTitle": "Form Submitted Successfully!",
+  "successMsg": "Thank you! Your submission has been securely recorded in our ERP system.",
+  "receiptTitle": "Official Submission Receipt",
+  "receiptRef": "Reference Token",
+  "submittedOn": "Submitted On",
+  "printReceipt": "Print / Save Receipt",
+  "submitAnother": "Submit Another Form",
+  "errorInvalid": "Invalid or Expired Link",
+  "loading": "Loading form...",
+  "issueDate": "Issue Date",
+  "expiryDate": "Expiry Date",
+  "dob": "Date of Birth",
+  "contactType": "Contact Type",
+  "customDocName": "Custom Document Name",
+  "customDocNamePh": "e.g. Tazkira / QID / Business Card",
+  "addContactBtn": "+ Add Another Contact",
+  "phoneLabel": "Phone / Contact Number",
+  "aiScanTitle": "⚡ Instant AI Document & Smart ID Scanner",
+  "aiScanSubtitle": "Take a photo of your ID card — names, ID number & dates are auto-extracted instantly!",
+  "aiScanningBadge": "⚡ Scanning & Auto-Extracting details...",
+  "aiScanSuccessMsg": "Document details auto-extracted! You can review or edit anytime.",
+  "retakeBtn": "Retake",
+  "clearBtn": "Clear",
+  "viewFullBtn": "View Full",
+  "frontSideReady": "Front Side (Ready)",
+  "backSideReady": "Back Side (Ready)",
+  "downloadSlipBtn": "Download Application Slip (PDF)",
+  "printSlipBtn": "Print Application Sheet",
+  "appSlipHeading": "Official Registration & Verification Sheet",
+  "appSlipSub": "Please review and download your complete verification application before final submission.",
+  "declarationText": "I hereby confirm that the personal details, contact information, address, and uploaded documents provided in this application are accurate, true, and complete.",
 };
 
-function t(key: string, lang: Lang): string {
-  return dict[key]?.[lang] ?? dict[key]?.en ?? key;
+function t(key: string, lang: string): string {
+  return centralT(lang as never, ("extform." + key) as never, dictEn[key] ?? key);
 }
+
+// Enum-option label lookup (Contact / Document / Contract types) — central dict, value as fallback.
+const optSlug = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+const ctLabel = (v: string, lang: string) => centralT(lang as never, ("extform.ct_" + optSlug(v)) as never, v);
+const docLabel = (v: string, lang: string) => centralT(lang as never, ("extform.doc_" + optSlug(v)) as never, v);
+const cntLabel = (v: string, lang: string) => centralT(lang as never, ("extform.cnt_" + optSlug(v)) as never, v);
 
 // ─── Location Dataset & 5-Language Translations ───────────────────────────────
 
-const LOCATION_TRANSLATIONS: Record<string, Record<Lang, string>> = {
-  // Countries
-  Pakistan: { en: "Pakistan (PK)", ur: "پاکستان (PK)", ar: "باكستان (PK)", fa: "پاکستان (PK)", ps: "پاکستان (PK)" },
-  "United Arab Emirates": { en: "United Arab Emirates (UAE)", ur: "متحدہ عرب امارات (UAE)", ar: "الإمارات العربية المتحدة (UAE)", fa: "امارات متحده عربی (UAE)", ps: "متحده عربي امارات (UAE)" },
-  Afghanistan: { en: "Afghanistan (AF)", ur: "افغانستان (AF)", ar: "أفغانستان (AF)", fa: "افغانستان (AF)", ps: "افغانستان (AF)" },
-  "Saudi Arabia": { en: "Saudi Arabia (KSA)", ur: "سعودی عرب (KSA)", ar: "المملكة العربية السعودية (KSA)", fa: "عربستان سعودی (KSA)", ps: "سعودي عربستان (KSA)" },
-  China: { en: "China (CN)", ur: "چین (CN)", ar: "الصين (CN)", fa: "چین (CN)", ps: "چین (CN)" },
-  Turkey: { en: "Turkey (TR)", ur: "ترکی (TR)", ar: "تركيا (TR)", fa: "ترکیه (TR)", ps: "ترکیه (TR)" },
-  Iran: { en: "Iran (IR)", ur: "ایران (IR)", ar: "إيران (IR)", fa: "ایران (IR)", ps: "ایران (IR)" },
-  Oman: { en: "Oman (OM)", ur: "عمان (OM)", ar: "عمان (OM)", fa: "عمان (OM)", ps: "عمان (OM)" },
-  "United Kingdom": { en: "United Kingdom (UK)", ur: "برطانیہ (UK)", ar: "المملكة المتحدة (UK)", fa: "انگلستان (UK)", ps: "برطانیه (UK)" },
-  "United States": { en: "United States (USA)", ur: "امریکہ (USA)", ar: "الولايات المتحدة (USA)", fa: "ایالات متحده (USA)", ps: "امريکا (USA)" },
+// LOCATION_TRANSLATIONS + locName() moved to ./location-translations.ts
 
-  // States
-  Sindh: { en: "Sindh", ur: "سندھ", ar: "السند", fa: "سند", ps: "سندھ" },
-  Punjab: { en: "Punjab", ur: "پنجاب", ar: "البنجاب", fa: "پنجاب", ps: "پنجاب" },
-  "Khyber Pakhtunkhwa": { en: "Khyber Pakhtunkhwa", ur: "خیبر پختونخوا", ar: "خيبر بختونخوا", fa: "خیبر پختونخوا", ps: "خيبر پښتونخوا" },
-  Balochistan: { en: "Balochistan", ur: "بلوچستان", ar: "بلوشستان", fa: "بلوچستان", ps: "بلوچستان" },
-  "Islamabad Capital Territory": { en: "Islamabad Capital", ur: "اسلام آباد کیپیٹل", ar: "إسلام آباد العاصمة", fa: "اسلام‌آباد پایتخت", ps: "اسلام آباد پلازمېنه" },
-  "Azad Jammu & Kashmir": { en: "Azad Kashmir", ur: "آزاد کشمیر", ar: "كشمير الحرة", fa: "کشمیر آزاد", ps: "آزاد کشمیر" },
-  Dubai: { en: "Dubai", ur: "دبئی", ar: "دبي", fa: "دبی", ps: "دوبۍ" },
-  "Abu Dhabi": { en: "Abu Dhabi", ur: "ابوظہبی", ar: "أبوظبي", fa: "ابوظبی", ps: "ابوظبۍ" },
-  Sharjah: { en: "Sharjah", ur: "شارجہ", ar: "الشارقة", fa: "شارجه", ps: "شارجه" },
-  Ajman: { en: "Ajman", ur: "عجمان", ar: "عجمان", fa: "عجمان", ps: "عجمان" },
-  Kabul: { en: "Kabul", ur: "کابل", ar: "كابل", fa: "کابل", ps: "کابل" },
-  Kandahar: { en: "Kandahar", ur: "قندھار", ar: "قندهار", fa: "قندهار", ps: "کندهار" },
-  Herat: { en: "Herat", ur: "ہرات", ar: "هرات", fa: "هرات", ps: "هرات" },
-  Nangarhar: { en: "Nangarhar", ur: "ننگرہار", ar: "ننگرهار", fa: "ننگرهار", ps: "ننګرهار" },
-  Balkh: { en: "Balkh", ur: "بلخ", ar: "بلخ", fa: "بلخ", ps: "بلخ" },
-  Nimruz: { en: "Nimruz", ur: "نیمروز", ar: "نیمروز", fa: "نیمروز", ps: "نیمروز" },
-  Riyadh: { en: "Riyadh Region", ur: "ریاض ریجن", ar: "منطقة الرياض", fa: "منطقه ریاض", ps: "د ریاض سیمه" },
-  Makkah: { en: "Makkah / Jeddah", ur: "مکہ / جدہ", ar: "منطقة مكة / جدة", fa: "مکه / جده", ps: "مکه / جده" },
-  "Eastern Province": { en: "Eastern Province", ur: "مشرقی صوبہ (دمام)", ar: "المنطقة الشرقية", fa: "استان شرقی", ps: "ختیځ ولایت" },
-  Zhejiang: { en: "Zhejiang (Yiwu)", ur: "ژجیانگ (ایوو)", ar: "تشجيانغ (إيوو)", fa: "چجیانگ (ایوو)", ps: "ژجیانګ (ایوو)" },
-  Guangdong: { en: "Guangdong (Guangzhou)", ur: "گوانگ ڈونگ (گوانگزو)", ar: "غوانغدونغ", fa: "گوانگ‌دونگ", ps: "ګوانګډونګ" },
-  Shanghai: { en: "Shanghai", ur: "شنگھائی", ar: "شنغهاي", fa: "شانگهای", ps: "شانګهای" },
-  Istanbul: { en: "Istanbul", ur: "استنبول", ar: "إسطنبول", fa: "استانبول", ps: "استانبول" },
-  Mersin: { en: "Mersin", ur: "مرسین", ar: "مرسين", fa: "مرسین", ps: "مرسین" },
-  Hormozgan: { en: "Hormozgan", ur: "ہرمزگان", ar: "هرمزغان", fa: "هرمزگان", ps: "هرمزګان" },
-  "Sistan & Baluchestan": { en: "Sistan & Baluchestan", ur: "سیستان و بلوچستان", ar: "سيستان وبلوشستان", fa: "سیستان و بلوچستان", ps: "سیستان او بلوچستان" },
-  Tehran: { en: "Tehran", ur: "تہران", ar: "طهران", fa: "تهران", ps: "تهران" },
-  Muscat: { en: "Muscat", ur: "مسقط", ar: "مسقط", fa: "مسقط", ps: "مسقط" },
-  "Al Batinah": { en: "Al Batinah (Sohar)", ur: "الباطنہ (صحار)", ar: "الباطنة (صحار)", fa: "الباطنه (صحار)", ps: "الباطنه (صحار)" },
-  England: { en: "England", ur: "انگلستان", ar: "إنجلترا", fa: "انگلستان", ps: "انګلستان" },
-  California: { en: "California", ur: "کیلیفورنیا", ar: "كاليفورنيا", fa: "کالیفرنیا", ps: "کلیفورنیا" },
-  Texas: { en: "Texas", ur: "ٹیکساس", ar: "تكساس", fa: "تگزاس", ps: "ټیکساس" },
-  "New York": { en: "New York", ur: "نیویارک", ar: "نيويورك", fa: "نیویورک", ps: "نیویارک" },
-
-  // Cities
-  Karachi: { en: "Karachi (KHI)", ur: "کراچی (KHI)", ar: "كراتشي (KHI)", fa: "کراچی (KHI)", ps: "کراچۍ (KHI)" },
-  Hyderabad: { en: "Hyderabad (HYD)", ur: "حیدرآباد (HYD)", ar: "حيدر آباد (HYD)", fa: "حیدرآباد (HYD)", ps: "حیدرآباد (HYD)" },
-  Sukkur: { en: "Sukkur (SKR)", ur: "سکھر (SKR)", ar: "سکھر (SKR)", fa: "سکھر (SKR)", ps: "سکھر (SKR)" },
-  Larkana: { en: "Larkana (LRK)", ur: "لاڑکانہ (LRK)", ar: "لاركانا (LRK)", fa: "لارکانه (LRK)", ps: "لاړکانه (LRK)" },
-  "Mirpur Khas": { en: "Mirpur Khas (MPK)", ur: "میرپور خاص (MPK)", ar: "ميربور خاص (MPK)", fa: "میرپور خاص (MPK)", ps: "میرپور خاص (MPK)" },
-  Nawabshah: { en: "Nawabshah (NBS)", ur: "نواب شاہ (NBS)", ar: "نوابشاه (NBS)", fa: "نواب‌شاه (NBS)", ps: "نوابشاه (NBS)" },
-  Lahore: { en: "Lahore (LHE)", ur: "لاہور (LHE)", ar: "لاهور (LHE)", fa: "لاهور (LHE)", ps: "لاهور (LHE)" },
-  Rawalpindi: { en: "Rawalpindi (RWP)", ur: "راولپنڈی (RWP)", ar: "راولبندي (RWP)", fa: "راولپندی (RWP)", ps: "راولپنډۍ (RWP)" },
-  Faisalabad: { en: "Faisalabad (FSD)", ur: "فیصل آباد (FSD)", ar: "فيصل آباد (FSD)", fa: "فیصل‌آباد (FSD)", ps: "فیصل آباد (FSD)" },
-  Multan: { en: "Multan (MUX)", ur: "ملتان (MUX)", ar: "ملتان (MUX)", fa: "ملتان (MUX)", ps: "ملتان (MUX)" },
-  Gujranwala: { en: "Gujranwala (GUJ)", ur: "گوجرانوالہ (GUJ)", ar: "غوجرانوالا (GUJ)", fa: "گوجرانوالا (GUJ)", ps: "ګوجرانواله (GUJ)" },
-  Sialkot: { en: "Sialkot (SKT)", ur: "سیالکوٹ (SKT)", ar: "سيالكوت (SKT)", fa: "سیالکوت (SKT)", ps: "سیالکوټ (SKT)" },
-  Bahawalpur: { en: "Bahawalpur (BWP)", ur: "بہاولپور (BWP)", ar: "بهاولبور (BWP)", fa: "بهاولپور (BWP)", ps: "بهاولپور (BWP)" },
-  Sargodha: { en: "Sargodha (SGD)", ur: "سرگودھا (SGD)", ar: "سرغودها (SGD)", fa: "سرگودها (SGD)", ps: "سرګودها (SGD)" },
-  Sheikhupura: { en: "Sheikhupura (SKP)", ur: "شیخوپورہ (SKP)", ar: "شيخوبورا (SKP)", fa: "شیخوپوره (SKP)", ps: "شیخوپوره (SKP)" },
-  "Rahim Yar Khan": { en: "Rahim Yar Khan (RYK)", ur: "رحیم یار خان (RYK)", ar: "رحيم يار خان (RYK)", fa: "رحیم‌یارخان (RYK)", ps: "رحیم یار خان (RYK)" },
-  Peshawar: { en: "Peshawar (PEW)", ur: "پشاور (PEW)", ar: "بيشاور (PEW)", fa: "پیشاور (PEW)", ps: "پېښور (PEW)" },
-  Mardan: { en: "Mardan (MDN)", ur: "مردان (MDN)", ar: "مردان (MDN)", fa: "مردان (MDN)", ps: "مردان (MDN)" },
-  Abbottabad: { en: "Abbottabad (ABT)", ur: "ایبٹ آباد (ABT)", ar: "أبوت آباد (ABT)", fa: "ایبت‌آباد (ABT)", ps: "ایبټ اباد (ABT)" },
-  "Swat (Mingora)": { en: "Swat / Mingora (SWT)", ur: "سوات / مینگورہ (SWT)", ar: "سوات (SWT)", fa: "سوات (SWT)", ps: "سوات / مینګوره (SWT)" },
-  "Dera Ismail Khan": { en: "D.I. Khan (DIK)", ur: "ڈیرہ اسماعیل خان (DIK)", ar: "ديرا إسماعيل خان (DIK)", fa: "دیره اسماعیل خان (DIK)", ps: "ډیره اسماعیل خان (DIK)" },
-  Kohat: { en: "Kohat (KHT)", ur: "کوہاٹ (KHT)", ar: "كوهات (KHT)", fa: "کوهات (KHT)", ps: "کوهاټ (KHT)" },
-  Bannu: { en: "Bannu (BNU)", ur: "بنوں (BNU)", ar: "بنو (BNU)", fa: "بنو (BNU)", ps: "بنو (BNU)" },
-  Quetta: { en: "Quetta (UET)", ur: "کوئٹہ (UET)", ar: "كويته (UET)", fa: "کویته (UET)", ps: "کوټه (UET)" },
-  Gwadar: { en: "Gwadar Port (GWD)", ur: "گوادر پورٹ (GWD)", ar: "ميناء جوادر (GWD)", fa: "بندر گوادر (GWD)", ps: "ګوادر بندر (GWD)" },
-  "Chaman (Border)": { en: "Chaman Border (CHM)", ur: "چمن بارڈر (CHM)", ar: "معبر چمن (CHM)", fa: "مرز چمن (CHM)", ps: "چمن پوله (CHM)" },
-  Turbat: { en: "Turbat (TBT)", ur: "تربت (TBT)", ar: "تربت (TBT)", fa: "تربت (TBT)", ps: "تربت (TBT)" },
-  "Hub Industrial": { en: "Hub Industrial (HUB)", ur: "حب انڈسٹریل (HUB)", ar: "حب الصناعية (HUB)", fa: "شهرک صنعتی حب (HUB)", ps: "حب صنعتي ښارګوټی (HUB)" },
-  Sibi: { en: "Sibi (SBI)", ur: "سبی (SBI)", ar: "سيبي (SBI)", fa: "سبی (SBI)", ps: "سبۍ (SBI)" },
-  Khuzdar: { en: "Khuzdar (KZD)", ur: "خضدار (KZD)", ar: "خضدار (KZD)", fa: "خضدار (KZD)", ps: "خضدار (KZD)" },
-  Islamabad: { en: "Islamabad (ISB)", ur: "اسلام آباد (ISB)", ar: "إسلام آباد (ISB)", fa: "اسلام‌آباد (ISB)", ps: "اسلام آباد (ISB)" },
-  Muzaffarabad: { en: "Muzaffarabad (MZD)", ur: "مظفرآباد (MZD)", ar: "مظفر آباد (MZD)", fa: "مظفرآباد (MZD)", ps: "مظفراباد (MZD)" },
-  Mirpur: { en: "Mirpur (MPR)", ur: "میرپور (MPR)", ar: "ميربور (MPR)", fa: "میرپور (MPR)", ps: "میرپور (MPR)" },
-
-  // UAE Cities
-  "Dubai (Deira / Port Rashid)": { en: "Dubai (Deira / Port Rashid)", ur: "دبئی (دیرہ / پورٹ راشد)", ar: "دبي (ديرة / ميناء راشد)", fa: "دبی (دیره / بندر راشد)", ps: "دوبۍ (دیره / راشد بندر)" },
-  "Jebel Ali Free Zone (JAFZA)": { en: "Jebel Ali Free Zone (JAFZA)", ur: "جبل علی فری زون (JAFZA)", ar: "منطقة جبل علي الحرة (JAFZA)", fa: "منطقه آزاد جبل علی (JAFZA)", ps: "جبل علي ازاده سيمه (JAFZA)" },
-  "Bur Dubai": { en: "Bur Dubai", ur: "بر دبئی", ar: "بر دبي", fa: "بر دبی", ps: "بر دوبۍ" },
-  "Al Quoz Industrial": { en: "Al Quoz Industrial", ur: "القوز انڈسٹریل", ar: "القوز الصناعية", fa: "القوز صنعتی", ps: "القوز صنعتي" },
-  "Abu Dhabi City": { en: "Abu Dhabi City (AUH)", ur: "ابوظہبی سٹی (AUH)", ar: "مدينة أبوظبي (AUH)", fa: "شهر ابوظبی (AUH)", ps: "ابوظبۍ ښار (AUH)" },
-  "Musaffah Industrial": { en: "Musaffah Industrial (MSF)", ur: "مصفح انڈسٹریل (MSF)", ar: "مصفح الصناعية (MSF)", fa: "مصفح صنعتی (MSF)", ps: "مصفح صنعتي (MSF)" },
-  "Khalifa Port (KIZAD)": { en: "Khalifa Port (KIZAD)", ur: "خلیفہ پورٹ (KIZAD)", ar: "ميناء خليفة (KIZAD)", fa: "بندر خلیفه (KIZAD)", ps: "خليفه بندر (KIZAD)" },
-  "Al Ain": { en: "Al Ain (AAN)", ur: "العین (AAN)", ar: "العين (AAN)", fa: "العین (AAN)", ps: "العین (AAN)" },
-  "Sharjah City": { en: "Sharjah City (SHJ)", ur: "شارجہ سٹی (SHJ)", ar: "مدينة الشارقة (SHJ)", fa: "شهر شارجه (SHJ)", ps: "شارجه ښار (SHJ)" },
-  "Hamriyah Free Zone": { en: "Hamriyah Free Zone (HFZ)", ur: "حمریہ فری زون (HFZ)", ar: "منطقة الحمرية الحرة (HFZ)", fa: "منطقه آزاد حمریه (HFZ)", ps: "د حمريه ازاده سيمه (HFZ)" },
-  "Khor Fakkan": { en: "Khor Fakkan Port (KLF)", ur: "خورفکاں پورٹ (KLF)", ar: "ميناء خورفكان (KLF)", fa: "بندر خورفکان (KLF)", ps: "خورفکان بندر (KLF)" },
-  "Ajman Free Zone / City": { en: "Ajman City / Free Zone", ur: "عجمان سٹی / فری زون", ar: "مدينة عجمان / المنطقة الحرة", fa: "عجمان / منطقه آزاد", ps: "عجمان ښار / ازاده سيمه" },
-
-  // Afghanistan Cities
-  "Kabul City": { en: "Kabul City (KBL)", ur: "کابل شہر (KBL)", ar: "مدينة كابل (KBL)", fa: "شهر کابل (KBL)", ps: "کابل ښار (KBL)" },
-  "Kandahar City": { en: "Kandahar City (KDH)", ur: "قندھار سٹی (KDH)", ar: "مدينة قندهار (KDH)", fa: "شهر قندهار (KDH)", ps: "کندهار ښار (KDH)" },
-  "Spin Boldak Border Crossing": { en: "Spin Boldak Border (SBD)", ur: "سپین بولدک بارڈر (SBD)", ar: "معبر سبين بولداك (SBD)", fa: "مرز اسپین بولدک (SBD)", ps: "سپين بولدک پوله (SBD)" },
-  "Herat City": { en: "Herat City (HEA)", ur: "ہرات سٹی (HEA)", ar: "مدينة هرات (HEA)", fa: "شهر هرات (HEA)", ps: "هرات ښار (HEA)" },
-  "Islam Qala Border Crossing": { en: "Islam Qala Border (ISQ)", ur: "اسلام قلعہ بارڈر (ISQ)", ar: "معبر إسلام قلعة (ISQ)", fa: "مرز اسلام قلعه (ISQ)", ps: "اسلام کلا پوله (ISQ)" },
-  "Torghundi Border": { en: "Torghundi Border (TGH)", ur: "تور غنڈی بارڈر (TGH)", ar: "معبر تورغندي (TGH)", fa: "مرز تورغندی (TGH)", ps: "تورغونډۍ پوله (TGH)" },
-  "Jalalabad City": { en: "Jalalabad (JAA)", ur: "جلال آباد (JAA)", ar: "جلال آباد (JAA)", fa: "جلال‌آباد (JAA)", ps: "جلال اباد (JAA)" },
-  "Torkham Border Crossing": { en: "Torkham Border (TKM)", ur: "تورخم بارڈر (TKM)", ar: "معبر طورخم (TKM)", fa: "مرز تورخم (TKM)", ps: "تورخم پوله (TKM)" },
-  "Mazar-i-Sharif": { en: "Mazar-i-Sharif (MZR)", ur: "مزار شریف (MZR)", ar: "مزار شريف (MZR)", fa: "مزار شریف (MZR)", ps: "مزار شریف (MZR)" },
-  "Hairatan Port / Border": { en: "Hairatan Port (HRT)", ur: "حیرتان پورٹ / بارڈر (HRT)", ar: "ميناء حيرتان (HRT)", fa: "بندر حیرتان (HRT)", ps: "حیرتان بندر (HRT)" },
-  "Zaranj (Milak Border)": { en: "Zaranj / Milak Border (ZRJ)", ur: "زرنج / میلک بارڈر (ZRJ)", ar: "معبر زرنج (ZRJ)", fa: "مرز زرنج / میلک (ZRJ)", ps: "زرنج / میلک پوله (ZRJ)" },
-
-  // Saudi Cities
-  "Riyadh City": { en: "Riyadh City (RUH)", ur: "ریاض سٹی (RUH)", ar: "مدينة الرياض (RUH)", fa: "شهر ریاض (RUH)", ps: "ریاض ښار (RUH)" },
-  "Jeddah Islamic Port / City": { en: "Jeddah Islamic Port (JED)", ur: "جدہ اسلامک پورٹ (JED)", ar: "ميناء جدة الإسلامي (JED)", fa: "بندر اسلامی جده (JED)", ps: "د جدې اسلامي بندر (JED)" },
-  "King Abdulaziz Port (Dammam)": { en: "King Abdulaziz Port (DMM)", ur: "کنگ عبدالعزیز پورٹ دمام (DMM)", ar: "ميناء الملك عبد العزيز (DMM)", fa: "بندر ملک عبدالعزیز دمام (DMM)", ps: "د ملک عبدالعزیز بندر دمام (DMM)" },
-
-  // China Cities
-  "Yiwu (International Trade City)": { en: "Yiwu Trade City (YIW)", ur: "ایوو انٹرنیشنل ٹریڈ سٹی (YIW)", ar: "مدينة إيوو التجارية (YIW)", fa: "شهر تجاری ایوو (YIW)", ps: "د ایوو سوداګریز ښار (YIW)" },
-  "Guangzhou (Huangpu / Nansha Port)": { en: "Guangzhou Port (CAN)", ur: "گوانگزو پورٹ (CAN)", ar: "ميناء غوانغدونغ (CAN)", fa: "بندر گوانگژو (CAN)", ps: "ګوانګډونګ بندر (CAN)" },
-  "Shanghai Port": { en: "Shanghai Port (SHA)", ur: "شنگھائی پورٹ (SHA)", ar: "ميناء شنغهاي (SHA)", fa: "بندر شانگهای (SHA)", ps: "شانګهای بندر (SHA)" },
-};
-
-function locName(key: string, lang: Lang): string {
-  return LOCATION_TRANSLATIONS[key]?.[lang] ?? LOCATION_TRANSLATIONS[key]?.en ?? key;
-}
 
 interface CityData {
   name: string;
@@ -1114,159 +429,33 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
 
 // ─── Document & Contract & Contact Types with 5-Language Labels ───────────────
 
-const CONTACT_TYPES: { value: string; labels: Record<Lang, string> }[] = [
-  { value: "Mobile", labels: { en: "Mobile Phone", ur: "موبائل فون", ar: "هاتف جوال", fa: "تلفن همراه", ps: "ګرځنده تیلیفون" } },
-  { value: "WhatsApp", labels: { en: "WhatsApp Number", ur: "واٹس ایپ نمبر", ar: "رقم الواتساب", fa: "شماره واتس‌اپ", ps: "د واټس‌اپ شمېره" } },
-  { value: "Phone", labels: { en: "Phone / Landline", ur: "لینڈ لائن / فون", ar: "هاتف ثابت", fa: "تلفن ثابت", ps: "ثابت تیلیفون" } },
-  { value: "Office", labels: { en: "Office Contact", ur: "دفتری فون", ar: "هاتف المكتب", fa: "تلفن دفتر", ps: "د دفتر تیلیفون" } },
-  { value: "Emergency", labels: { en: "Emergency Contact", ur: "ہنگامی رابطہ", ar: "جهة اتصال الطوارئ", fa: "تماس اضطراری", ps: "بیړنۍ اړیکه" } },
-  { value: "Custom", labels: { en: "Other / Custom", ur: "دیگر رابطہ", ar: "آخر / مخصص", fa: "سایر / سفارشی", ps: "نور / دودیز" } },
+const CONTACT_TYPES: { value: string }[] = [
+  { value: "Mobile" },
+  { value: "WhatsApp" },
+  { value: "Phone" },
+  { value: "Office" },
+  { value: "Emergency" },
+  { value: "Custom" },
 ];
 
-const DOC_TYPES: { value: string; labels: Record<Lang, string> }[] = [
-  {
-    value: "CNIC",
-    labels: {
-      en: "CNIC / National ID Card",
-      ur: "شناختی کارڈ / قومی شناختی کارڈ (CNIC)",
-      ar: "بطاقة الهوية الوطنية (CNIC)",
-      fa: "کارت ملی / کارت شناسایی (CNIC)",
-      ps: "ملي پېژندپاڼه / تذکره (CNIC)",
-    },
-  },
-  {
-    value: "Passport",
-    labels: {
-      en: "Passport",
-      ur: "پاسپورٹ (Passport)",
-      ar: "جواز السفر (Passport)",
-      fa: "گذرنامه / پاسپورت",
-      ps: "پاسپورت (Passport)",
-    },
-  },
-  {
-    value: "Emirates ID",
-    labels: {
-      en: "Emirates ID (UAE)",
-      ur: "ایمریٹس آئی ڈی (UAE)",
-      ar: "الهوية الإماراتية (UAE)",
-      fa: "کارت شناسایی امارات (UAE)",
-      ps: "د اماراتو پیژندپاڼه (UAE)",
-    },
-  },
-  {
-    value: "Tazkira",
-    labels: {
-      en: "Tazkira / National ID (AFG)",
-      ur: "افغانستان کا تذکرہ (Tazkira)",
-      ar: "تذكرة الهوية الأفغانية (Tazkira)",
-      fa: "تذکره تابعیت افغانستان",
-      ps: "د افغانستان برېښنايي تذکره",
-    },
-  },
-  {
-    value: "Iqama",
-    labels: {
-      en: "Iqama / Resident Card",
-      ur: "اقامہ / رہائشی کارڈ (Iqama)",
-      ar: "الإقامة / بطاقة مقيم",
-      fa: "کارت اقامت / اقامه",
-      ps: "د اقامې کارت",
-    },
-  },
-  {
-    value: "Aadhaar Card",
-    labels: {
-      en: "Aadhaar Card",
-      ur: "آدھار کارڈ (Aadhaar)",
-      ar: "بطاقة آدهار (Aadhaar)",
-      fa: "کارت آدهار",
-      ps: "د آدهار کارت",
-    },
-  },
-  {
-    value: "Driving License",
-    labels: {
-      en: "Driving License",
-      ur: "ڈرائیونگ لائسنس",
-      ar: "رخصة القيادة",
-      fa: "گواهینامه رانندگی",
-      ps: "د موټر چلولو جواز",
-    },
-  },
-  {
-    value: "Trade / Tax License",
-    labels: {
-      en: "Trade / Tax License",
-      ur: "تجارتی / ٹیکس لائسنس",
-      ar: "الرخصة التجارية / الضريبية",
-      fa: "جواز کسب / مالیاتی",
-      ps: "سوداګریز / مالیاتي جواز",
-    },
-  },
-  {
-    value: "Custom",
-    labels: {
-      en: "+ Add Custom Document Type",
-      ur: "+ دیگر نئی قسم کا نام درج کریں",
-      ar: "+ إضافة نوع مستند مخصص",
-      fa: "+ افزودن نوع مدرک جدید",
-      ps: "+ نوی ډول سند ورزیات کړئ",
-    },
-  },
+const DOC_TYPES: { value: string }[] = [
+  { value: "CNIC" },
+  { value: "Passport" },
+  { value: "Emirates ID" },
+  { value: "Tazkira" },
+  { value: "Iqama" },
+  { value: "Aadhaar Card" },
+  { value: "Driving License" },
+  { value: "Trade / Tax License" },
+  { value: "Custom" },
 ];
 
-const CONTRACT_TYPES: { value: string; labels: Record<Lang, string> }[] = [
-  {
-    value: "Employment Contract",
-    labels: {
-      en: "Employment Contract",
-      ur: "ملازمت کا معاہدہ",
-      ar: "عقد العمل",
-      fa: "قرارداد استخدامی",
-      ps: "د کار قرارداد",
-    },
-  },
-  {
-    value: "Customer Service Agreement",
-    labels: {
-      en: "Customer Service Agreement",
-      ur: "کسٹمر سروس معاہدہ",
-      ar: "اتفاقية خدمة العملاء",
-      fa: "توافق‌نامه خدمات مشتریان",
-      ps: "د پیرودونکي د خدمت تړون",
-    },
-  },
-  {
-    value: "Trade & Clearing Terms",
-    labels: {
-      en: "Trade & Clearing Terms",
-      ur: "تجارت و کلیرنگ شرائط",
-      ar: "شروط التجارة والتخليص",
-      fa: "شرایط تجارت و ترخیص",
-      ps: "د سوداګرۍ او تصفیې شرایط",
-    },
-  },
-  {
-    value: "NDA & Confidentiality",
-    labels: {
-      en: "NDA & Confidentiality Agreement",
-      ur: "خفیہ رکھنے کا معاہدہ (NDA)",
-      ar: "اتفاقية عدم الإفصاح والسرية",
-      fa: "قرارداد محرمانگی و عدم افشا",
-      ps: "د محرمیت تړون (NDA)",
-    },
-  },
-  {
-    value: "Other Attachment",
-    labels: {
-      en: "Other Attachment / Contract",
-      ur: "دیگر معاہدہ / اٹیچمنٹ",
-      ar: "مرفق / عقد آخر",
-      fa: "سایر ضمائم / قراردادها",
-      ps: "نور قرارداد / ضمیمه",
-    },
-  },
+const CONTRACT_TYPES: { value: string }[] = [
+  { value: "Employment Contract" },
+  { value: "Customer Service Agreement" },
+  { value: "Trade & Clearing Terms" },
+  { value: "NDA & Confidentiality" },
+  { value: "Other Attachment" },
 ];
 
 interface ContactEntry {
@@ -1744,7 +933,7 @@ export function ExtFormClient({ token }: { token: string }) {
 
           ctx.fillStyle = "#4338ca";
           ctx.font = "bold 20px sans-serif";
-          const label = c.type === "Custom" && c.customLabel ? c.customLabel : (CONTACT_TYPES.find(ct => ct.value === c.type)?.labels[lang] || c.type);
+          const label = c.type === "Custom" && c.customLabel ? c.customLabel : (ctLabel(c.type, lang));
           ctx.fillText(`${label}:`, 110, yPos);
 
           ctx.fillStyle = "#0f172a";
@@ -1790,7 +979,7 @@ export function ExtFormClient({ token }: { token: string }) {
       ctx.strokeStyle = "#c7d2fe";
       ctx.stroke();
 
-      const docDisplayType = DOC_TYPES.find((dt) => dt.value === docType)?.labels[lang] || docType;
+      const docDisplayType = docLabel(docType, lang) || docType;
       ctx.fillStyle = "#312e81";
       ctx.font = "bold 22px sans-serif";
       ctx.fillText(docDisplayType, 110, yPos);
@@ -1858,7 +1047,7 @@ export function ExtFormClient({ token }: { token: string }) {
       mobiles: mobContacts.map((c) => c.value.trim()),
       whatsapps: waContacts.map((c) => c.value.trim()),
       contacts: contactsList.filter((c) => c.value.trim()).map((c) => ({
-        type: c.type === "Custom" && c.customLabel ? c.customLabel : (CONTACT_TYPES.find(ct => ct.value === c.type)?.labels[lang] || c.type),
+        type: c.type === "Custom" && c.customLabel ? c.customLabel : (ctLabel(c.type, lang)),
         value: c.value.trim()
       })),
       email,
@@ -2223,7 +1412,7 @@ export function ExtFormClient({ token }: { token: string }) {
                               >
                                 {CONTACT_TYPES.map((ct) => (
                                   <option key={ct.value} value={ct.value}>
-                                    {ct.labels[lang] || ct.labels.en}
+                                    {ctLabel(ct.value, lang)}
                                   </option>
                                 ))}
                               </select>
@@ -2315,7 +1504,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           dir="ltr"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder={t("emailPh", lang)}
+                          placeholder="name@example.com"
                           className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
                         />
                       </div>
@@ -2397,7 +1586,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       >
                         {DOC_TYPES.map((dt) => (
                           <option key={dt.value} value={dt.value}>
-                            {dt.labels[lang] || dt.labels.en}
+                            {docLabel(dt.value, lang)}
                           </option>
                         ))}
                       </select>
@@ -2686,7 +1875,7 @@ export function ExtFormClient({ token }: { token: string }) {
                                 <FileText size={14} className="text-indigo-600" />
                                 <div>
                                   <span className="font-bold text-xs text-slate-800">
-                                    {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                                    {docLabel(doc.type, lang) || doc.type}
                                   </span>
                                   <span className="text-[11px] text-slate-600 font-mono ms-2">
                                     #{doc.number}
@@ -2763,7 +1952,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       >
                         {CONTRACT_TYPES.map((ct) => (
                           <option key={ct.value} value={ct.value}>
-                            {ct.labels[lang] || ct.labels.en}
+                            {ctLabel(ct.value, lang)}
                           </option>
                         ))}
                       </select>
@@ -2788,7 +1977,7 @@ export function ExtFormClient({ token }: { token: string }) {
                             <div className="flex items-center gap-2">
                               <FileCheck size={14} className="text-purple-600" />
                               <span className="font-bold text-xs text-slate-800">
-                                {CONTRACT_TYPES.find((c) => c.value === cnt.type)?.labels[lang] || cnt.type}
+                                {cntLabel(cnt.type, lang) || cnt.type}
                               </span>
                             </div>
                             <button
@@ -3158,7 +2347,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       {contactsList.filter(c => c.value.trim()).map((c) => (
                         <div key={c.id} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
                           <span className="font-bold text-indigo-700 text-[11px]">
-                            {c.type === "Custom" && c.customLabel ? c.customLabel : (CONTACT_TYPES.find(ct => ct.value === c.type)?.labels[lang] || c.type)}
+                            {c.type === "Custom" && c.customLabel ? c.customLabel : (ctLabel(c.type, lang))}
                           </span>
                           <span className="font-mono font-bold text-slate-800">{c.value}</span>
                         </div>
@@ -3191,7 +2380,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           <div className="p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-200 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-black text-slate-900">
-                                {DOC_TYPES.find((d) => d.value === docType)?.labels[lang] || (docType === "Custom" ? customDocType : docType)}
+                                {docLabel(docType, lang) || (docType === "Custom" ? customDocType : docType)}
                               </span>
                               {docNumber && (
                                 <span className="text-xs font-mono font-bold text-indigo-700">#{docNumber}</span>
@@ -3239,7 +2428,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           <div key={doc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-black text-slate-900">
-                                {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                                {docLabel(doc.type, lang) || doc.type}
                               </span>
                               {doc.number && doc.number !== "N/A" && (
                                 <span className="text-xs font-mono font-bold text-indigo-700">#{doc.number}</span>
@@ -3374,7 +2563,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           <div className="p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-200 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-black text-slate-900">
-                                {DOC_TYPES.find((d) => d.value === docType)?.labels[lang] || (docType === "Custom" ? customDocType : docType)}
+                                {docLabel(docType, lang) || (docType === "Custom" ? customDocType : docType)}
                               </span>
                               <span className="text-xs font-mono font-bold text-indigo-700">#{docNumber || "N/A"}</span>
                             </div>
@@ -3420,7 +2609,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           <div key={doc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-black text-slate-900">
-                                {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                                {docLabel(doc.type, lang) || doc.type}
                               </span>
                               <span className="text-xs font-mono font-bold text-indigo-700">#{doc.number}</span>
                             </div>
@@ -3668,7 +2857,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     }]).map((d) => (
                       <div key={d.id} className="bg-white p-2 rounded-xl border border-slate-200 space-y-1">
                         <span className="font-bold text-[11px] text-slate-800 block">
-                          {DOC_TYPES.find((dt) => dt.value === d.type)?.labels[lang] || d.type}
+                          {docLabel(d.type, lang) || d.type}
                         </span>
                         {d.number && d.number !== "N/A" && (
                           <span className="text-[10px] font-mono text-slate-500 block">#{d.number}</span>

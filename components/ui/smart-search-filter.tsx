@@ -37,227 +37,48 @@ import {
   Layers
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as centralT } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 // ─── 5-Language Dictionary ───────────────────────────────────────────────────
 
 type Lang = SupportedLanguage;
 
-const filterDict: Record<string, Record<Lang, string>> = {
-  headerTitle: {
-    en: "Smart Search & Filter",
-    ur: "سمارٹ سرچ اور فلٹر",
-    ar: "البحث والتصفية الذكية",
-    fa: "جستجو و فیلتر هوشمند",
-    ps: "هوښیار لټون او فلټر"
-  },
-  badgeCompact: {
-    en: "Compact • Responsive",
-    ur: "کومپیکٹ • رسپانسو",
-    ar: "مدمج • متجاوب",
-    fa: "فشرده • پاسخگو",
-    ps: "کمپیکٹ • ځواب ویونکی"
-  },
-  headerSubtitle: {
-    en: "Find, Filter and Analyze Faster",
-    ur: "تیزی سے تلاش کریں، فلٹر کریں اور تجزیہ کریں",
-    ar: "ابحث وصفِّ وحلل بسرعة أكبر",
-    fa: "سریع‌تر جستجو، فیلتر و تحلیل کنید",
-    ps: "ګړندی لټون، فلټر او تحلیل کړئ"
-  },
-  searchPlaceholder: {
-    en: "Search bill, reference or keywords...",
-    ur: "بل، حوالہ یا مطلوبہ الفاظ تلاش کریں...",
-    ar: "ابحث برقم الفاتورة أو المرجع أو الكلمات...",
-    fa: "جستجوی صورتحساب، مرجع یا کلمات کلیدی...",
-    ps: "بل، حواله یا کلیدي کلمې وپلټئ..."
-  },
-  btnReset: {
-    en: "Reset",
-    ur: "ری سیٹ",
-    ar: "إعادة ضبط",
-    fa: "بازنشانی",
-    ps: "بیا تنظیمول"
-  },
-  btnFilter: {
-    en: "Filter",
-    ur: "فلٹر",
-    ar: "تصفية",
-    fa: "فیلتر",
-    ps: "فلټر"
-  },
-  btnApplyFilter: {
-    en: "Apply Filter",
-    ur: "فلٹر لاگو کریں",
-    ar: "تطبيق التصفية",
-    fa: "اعمال فیلتر",
-    ps: "فلټر تطبیق کړئ"
-  },
-  lblRiskLevel: {
-    en: "Risk Level",
-    ur: "رسک لیول",
-    ar: "مستوى المخاطر",
-    fa: "سطح ریسک",
-    ps: "د خطر کچه"
-  },
-  allRiskLevels: {
-    en: "All Risk Levels",
-    ur: "تمام رسک لیولز",
-    ar: "جميع مستويات المخاطر",
-    fa: "همه سطوح ریسک",
-    ps: "د خطر ټولې کچې"
-  },
-  lblCountry: {
-    en: "Country",
-    ur: "ملک",
-    ar: "الدولة",
-    fa: "کشور",
-    ps: "هیواد"
-  },
-  allCountries: {
-    en: "All Countries",
-    ur: "تمام ممالک",
-    ar: "جميع الدول",
-    fa: "همه کشورها",
-    ps: "ټول هیوادونه"
-  },
-  lblBranch: {
-    en: "Branch",
-    ur: "برانچ",
-    ar: "الفرع",
-    fa: "شعبه",
-    ps: "څانګه"
-  },
-  allBranches: {
-    en: "All Branches",
-    ur: "تمام برانچز",
-    ar: "جميع الفروع",
-    fa: "همه شعب",
-    ps: "ټولې څانګې"
-  },
-  lblMainBranch: {
-    en: "Main / City Branch",
-    ur: "مین / سٹی برانچ",
-    ar: "الفرع الرئيسي / فرع المدينة",
-    fa: "شعبه اصلی / شهری",
-    ps: "اصلي / ښاري څانګه"
-  },
-  allMainBranches: {
-    en: "All Main Branches",
-    ur: "تمام مین برانچز",
-    ar: "جميع الفروع الرئيسية",
-    fa: "همه شعب اصلی",
-    ps: "ټولې اصلي څانګې"
-  },
-  lblApprovalStatus: {
-    en: "Approval Status",
-    ur: "منظوری کی حیثیت",
-    ar: "حالة الاعتماد",
-    fa: "وضعیت تایید",
-    ps: "د تصویب حالت"
-  },
-  allStatuses: {
-    en: "All Statuses",
-    ur: "تمام حیثیتیں",
-    ar: "جميع الحالات",
-    fa: "همه وضعیت‌ها",
-    ps: "ټول حالتونه"
-  },
-  lblFromDate: {
-    en: "From Date",
-    ur: "تاریخ سے",
-    ar: "من تاريخ",
-    fa: "از تاریخ",
-    ps: "له نیټې"
-  },
-  lblToDate: {
-    en: "To Date",
-    ur: "تاریخ تک",
-    ar: "إلى تاريخ",
-    fa: "تا تاریخ",
-    ps: "تر نیټې"
-  },
-  lblModule: {
-    en: "Module",
-    ur: "ماڈیول",
-    ar: "الوحدة",
-    fa: "ماژول",
-    ps: "ماډیول"
-  },
-  allModules: {
-    en: "All Modules",
-    ur: "تمام ماڈیولز",
-    ar: "جميع الوحدات",
-    fa: "همه ماژول‌ها",
-    ps: "ټول ماډیولونه"
-  },
-  lblEditedBy: {
-    en: "Edited By",
-    ur: "ترمیم کنندہ",
-    ar: "تم التعديل بواسطة",
-    fa: "ویرایش توسط",
-    ps: "سمول لخوا"
-  },
-  allUsers: {
-    en: "All Users",
-    ur: "تمام صارفین",
-    ar: "جميع المستخدمين",
-    fa: "همه کاربران",
-    ps: "ټول کارونکي"
-  },
-  lblCurrency: {
-    en: "Currency",
-    ur: "کرنسی",
-    ar: "العملة",
-    fa: "ارز",
-    ps: "اسعار"
-  },
-  allCurrencies: {
-    en: "All Currencies",
-    ur: "تمام کرنسیاں",
-    ar: "جميع العملات",
-    fa: "همه ارزها",
-    ps: "ټول اسعار"
-  },
-  searchInsideDropdown: {
-    en: "Search...",
-    ur: "تلاش کریں...",
-    ar: "بحث...",
-    fa: "جستجو...",
-    ps: "لټون..."
-  },
-  noResultsFound: {
-    en: "No options found",
-    ur: "کوئی آپشن نہیں ملا",
-    ar: "لا توجد خيارات",
-    fa: "گزینه‌ای یافت نشد",
-    ps: "هیڅ انتخاب ونه موندل شو"
-  },
-  cascadingFlowHint: {
-    en: "Cascading Dropdown Flow: Country → Branch → Main Branch",
-    ur: "آبشاری فلو: ملک → برانچ → مین برانچ",
-    ar: "تدفق متتالي: الدولة ← الفرع ← الفرع الرئيسي",
-    fa: "جریان آبشاری: کشور ← شعبه ← شعبه اصلی",
-    ps: "ځړیدونکی بهیر: هیواد ← څانګه ← اصلي څانګه"
-  },
-  activeFiltersCount: {
-    en: "Active Filters",
-    ur: "فعال فلٹرز",
-    ar: "عوامل التصفية النشطة",
-    fa: "فیلترهای فعال",
-    ps: "فعال فلټرونه"
-  },
-  closeMobileFilters: {
-    en: "Close",
-    ur: "بند کریں",
-    ar: "إغلاق",
-    fa: "بستن",
-    ps: "بندول"
-  }
+const filterDictEn: Record<string, string> = {
+  "headerTitle": "Smart Search & Filter",
+  "badgeCompact": "Compact • Responsive",
+  "headerSubtitle": "Find, Filter and Analyze Faster",
+  "searchPlaceholder": "Search bill, reference or keywords...",
+  "btnReset": "Reset",
+  "btnFilter": "Filter",
+  "btnApplyFilter": "Apply Filter",
+  "lblRiskLevel": "Risk Level",
+  "allRiskLevels": "All Risk Levels",
+  "lblCountry": "Country",
+  "allCountries": "All Countries",
+  "lblBranch": "Branch",
+  "allBranches": "All Branches",
+  "lblMainBranch": "Main / City Branch",
+  "allMainBranches": "All Main Branches",
+  "lblApprovalStatus": "Approval Status",
+  "allStatuses": "All Statuses",
+  "lblFromDate": "From Date",
+  "lblToDate": "To Date",
+  "lblModule": "Module",
+  "allModules": "All Modules",
+  "lblEditedBy": "Edited By",
+  "allUsers": "All Users",
+  "lblCurrency": "Currency",
+  "allCurrencies": "All Currencies",
+  "searchInsideDropdown": "Search...",
+  "noResultsFound": "No options found",
+  "cascadingFlowHint": "Cascading Dropdown Flow: Country → Branch → Main Branch",
+  "activeFiltersCount": "Active Filters",
+  "closeMobileFilters": "Close",
 };
 
-function tx(key: string, lang: Lang): string {
-  return filterDict[key]?.[lang] ?? filterDict[key]?.["en"] ?? key;
+function tx(key: string, lang: string): string {
+  return centralT(lang as never, ("ssf." + key) as never, filterDictEn[key] ?? key);
 }
 
 // ─── Filter Option Types ──────────────────────────────────────────────────────

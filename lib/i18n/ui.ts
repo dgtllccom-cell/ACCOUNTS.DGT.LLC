@@ -927,6 +927,210 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "extform.ct_mobile"
+  | "extform.ct_whatsapp"
+  | "extform.ct_phone"
+  | "extform.ct_office"
+  | "extform.ct_emergency"
+  | "extform.ct_custom"
+  | "extform.doc_cnic"
+  | "extform.doc_passport"
+  | "extform.doc_emirates_id"
+  | "extform.doc_tazkira"
+  | "extform.doc_iqama"
+  | "extform.doc_aadhaar_card"
+  | "extform.doc_driving_license"
+  | "extform.doc_trade_tax_license"
+  | "extform.doc_custom"
+  | "extform.cnt_employment_contract"
+  | "extform.cnt_customer_service_agreement"
+  | "extform.cnt_trade_clearing_terms"
+  | "extform.cnt_nda_confidentiality"
+  | "extform.cnt_other_attachment"
+  | "extform.headerTitle"
+  | "extform.headerSubtitle"
+  | "extform.step1"
+  | "extform.step2"
+  | "extform.step3"
+  | "extform.step4"
+  | "extform.step5"
+  | "extform.personalInfoTitle"
+  | "extform.personalInfoSub"
+  | "extform.firstName"
+  | "extform.firstNamePh"
+  | "extform.lastName"
+  | "extform.lastNamePh"
+  | "extform.fatherName"
+  | "extform.fatherNamePh"
+  | "extform.mobile"
+  | "extform.mobilePh"
+  | "extform.addAnotherMobile"
+  | "extform.whatsapp"
+  | "extform.whatsappPh"
+  | "extform.addAnotherWhatsapp"
+  | "extform.email"
+    | "extform.gender"
+  | "extform.male"
+  | "extform.female"
+  | "extform.other"
+  | "extform.documentsTitle"
+  | "extform.documentsSub"
+  | "extform.docType"
+  | "extform.docNumber"
+  | "extform.docNumberPh"
+  | "extform.frontSide"
+  | "extform.backSide"
+  | "extform.mainPage"
+  | "extform.visaPage"
+  | "extform.cameraBtn"
+  | "extform.galleryBtn"
+  | "extform.addDocBtn"
+  | "extform.contractsTitle"
+  | "extform.contractsSub"
+  | "extform.contractType"
+  | "extform.addContractBtn"
+  | "extform.step2Title"
+  | "extform.step2Sub"
+  | "extform.country"
+  | "extform.stateProvince"
+  | "extform.city"
+  | "extform.postalCode"
+  | "extform.fullAddress"
+  | "extform.fullAddressPh"
+  | "extform.step3Title"
+  | "extform.step3Sub"
+  | "extform.editBtn"
+  | "extform.reviewVerifyBadge"
+  | "extform.step4Title"
+  | "extform.step4Sub"
+  | "extform.photoSizeHint"
+  | "extform.nextDocsBtn"
+  | "extform.nextAddressBtn"
+  | "extform.nextPhotoBtn"
+  | "extform.nextReviewBtn"
+  | "extform.backBtn"
+  | "extform.submitFormBtn"
+  | "extform.successTitle"
+  | "extform.successMsg"
+  | "extform.receiptTitle"
+  | "extform.receiptRef"
+  | "extform.submittedOn"
+  | "extform.printReceipt"
+  | "extform.submitAnother"
+  | "extform.errorInvalid"
+  | "extform.loading"
+  | "extform.issueDate"
+  | "extform.expiryDate"
+  | "extform.dob"
+  | "extform.contactType"
+  | "extform.customDocName"
+  | "extform.customDocNamePh"
+  | "extform.addContactBtn"
+  | "extform.phoneLabel"
+  | "extform.aiScanTitle"
+  | "extform.aiScanSubtitle"
+  | "extform.aiScanningBadge"
+  | "extform.aiScanSuccessMsg"
+  | "extform.retakeBtn"
+  | "extform.clearBtn"
+  | "extform.viewFullBtn"
+  | "extform.frontSideReady"
+  | "extform.backSideReady"
+  | "extform.downloadSlipBtn"
+  | "extform.printSlipBtn"
+  | "extform.appSlipHeading"
+  | "extform.appSlipSub"
+  | "extform.declarationText"
+  | "shareform.title"
+  | "shareform.subtitle"
+  | "shareform.generateTitle"
+  | "shareform.selectFormType"
+  | "shareform.customer"
+  | "shareform.employee"
+  | "shareform.company"
+  | "shareform.agent"
+  | "shareform.expiryLabel"
+  | "shareform.expiry24h"
+  | "shareform.expiry48h"
+  | "shareform.expiry7d"
+  | "shareform.expiry14d"
+  | "shareform.expiry30d"
+  | "shareform.expiryNever"
+  | "shareform.notesLabel"
+  | "shareform.generateBtn"
+  | "shareform.generatedLink"
+  | "shareform.copyLink"
+  | "shareform.copied"
+  | "shareform.whatsappShare"
+  | "shareform.linksRegistry"
+  | "shareform.colSerial"
+  | "shareform.colFormType"
+  | "shareform.colStatus"
+  | "shareform.colCreatedBy"
+  | "shareform.colCreatedAt"
+  | "shareform.colExpiry"
+  | "shareform.colSubmission"
+  | "shareform.colActions"
+  | "shareform.statusActive"
+  | "shareform.statusUsed"
+  | "shareform.statusExpired"
+  | "shareform.statusRevoked"
+  | "shareform.revokeBtn"
+  | "shareform.copyShort"
+  | "shareform.viewForm"
+  | "shareform.noLinks"
+  | "shareform.refreshBtn"
+  | "shareform.whatsappMsg"
+  | "shareform.never"
+  | "shareform.pending"
+  | "shareform.selectFormFirst"
+  | "shareform.submissionDetails"
+  | "shareform.closeModal"
+  | "shareform.personalInfo"
+  | "shareform.addressInfo"
+  | "shareform.documentsInfo"
+  | "shareform.contractsInfo"
+  | "shareform.photoInfo"
+  | "shareform.openLink"
+  | "shareform.resendLink"
+  | "sendcust.title"
+  | "sendcust.subtitle"
+  | "sendcust.generating"
+  | "sendcust.copyLink"
+  | "sendcust.copied"
+  | "sendcust.whatsappShare"
+  | "sendcust.whatsappMsg"
+  | "sendcust.close"
+  | "ssf.headerTitle"
+  | "ssf.badgeCompact"
+  | "ssf.headerSubtitle"
+  | "ssf.searchPlaceholder"
+  | "ssf.btnReset"
+  | "ssf.btnFilter"
+  | "ssf.btnApplyFilter"
+  | "ssf.lblRiskLevel"
+  | "ssf.allRiskLevels"
+  | "ssf.lblCountry"
+  | "ssf.allCountries"
+  | "ssf.lblBranch"
+  | "ssf.allBranches"
+  | "ssf.lblMainBranch"
+  | "ssf.allMainBranches"
+  | "ssf.lblApprovalStatus"
+  | "ssf.allStatuses"
+  | "ssf.lblFromDate"
+  | "ssf.lblToDate"
+  | "ssf.lblModule"
+  | "ssf.allModules"
+  | "ssf.lblEditedBy"
+  | "ssf.allUsers"
+  | "ssf.lblCurrency"
+  | "ssf.allCurrencies"
+  | "ssf.searchInsideDropdown"
+  | "ssf.noResultsFound"
+  | "ssf.cascadingFlowHint"
+  | "ssf.activeFiltersCount"
+  | "ssf.closeMobileFilters"
   | "common.previous_page"
   | "common.next_page"
   | "cl.aria_select_all"
@@ -17294,6 +17498,414 @@ const en: Dict = {
 
 
 
+
+
+
+
+
+  "extform.ct_mobile": "Mobile Phone",
+
+  "extform.ct_whatsapp": "WhatsApp Number",
+
+  "extform.ct_phone": "Phone / Landline",
+
+  "extform.ct_office": "Office Contact",
+
+  "extform.ct_emergency": "Emergency Contact",
+
+  "extform.ct_custom": "Other / Custom",
+
+  "extform.doc_cnic": "CNIC / National ID Card",
+
+  "extform.doc_passport": "Passport",
+
+  "extform.doc_emirates_id": "Emirates ID (UAE)",
+
+  "extform.doc_tazkira": "Tazkira / National ID (AFG)",
+
+  "extform.doc_iqama": "Iqama / Resident Card",
+
+  "extform.doc_aadhaar_card": "Aadhaar Card",
+
+  "extform.doc_driving_license": "Driving License",
+
+  "extform.doc_trade_tax_license": "Trade / Tax License",
+
+  "extform.doc_custom": "+ Add Custom Document Type",
+
+  "extform.cnt_employment_contract": "Employment Contract",
+
+  "extform.cnt_customer_service_agreement": "Customer Service Agreement",
+
+  "extform.cnt_trade_clearing_terms": "Trade & Clearing Terms",
+
+  "extform.cnt_nda_confidentiality": "NDA & Confidentiality Agreement",
+
+  "extform.cnt_other_attachment": "Other Attachment / Contract",
+  "extform.headerTitle": "DIGITAL DOCK ERP Public Customer Verification",
+
+  "extform.headerSubtitle": "Easy 5 Steps",
+
+  "extform.step1": "Identity & Personal Info",
+
+  "extform.step2": "Upload Documents",
+
+  "extform.step3": "Verify Details",
+
+  "extform.step4": "Additional Info",
+
+  "extform.step5": "Generate & Download PDF",
+
+  "extform.personalInfoTitle": "Personal Information",
+
+  "extform.personalInfoSub": "Please enter your personal details.",
+
+  "extform.firstName": "First Name",
+
+  "extform.firstNamePh": "Enter first name",
+
+  "extform.lastName": "Last Name",
+
+  "extform.lastNamePh": "Enter last name",
+
+  "extform.fatherName": "Father's / Guardian's Name",
+
+  "extform.fatherNamePh": "Enter father / guardian name",
+
+  "extform.mobile": "Mobile / Phone",
+
+  "extform.mobilePh": "Enter mobile number",
+
+  "extform.addAnotherMobile": "+ Add Another Phone",
+
+  "extform.whatsapp": "WhatsApp Number",
+
+  "extform.whatsappPh": "Enter WhatsApp number",
+
+  "extform.addAnotherWhatsapp": "+ Add Another WhatsApp",
+
+  "extform.email": "Email Address (English)",
+
+  "extform.gender": "Gender",
+
+  "extform.male": "Male",
+
+  "extform.female": "Female",
+
+  "extform.other": "Other",
+
+  "extform.documentsTitle": "Documents",
+
+  "extform.documentsSub": "Add your documents one by one.",
+
+  "extform.docType": "Document Type",
+
+  "extform.docNumber": "Document Number",
+
+  "extform.docNumberPh": "Enter document number",
+
+  "extform.frontSide": "Front Side",
+
+  "extform.backSide": "Back Side",
+
+  "extform.mainPage": "Main Info Page",
+
+  "extform.visaPage": "Visa / Back Page",
+
+  "extform.cameraBtn": "Camera",
+
+  "extform.galleryBtn": "Gallery",
+
+  "extform.addDocBtn": "+ Add Document",
+
+  "extform.contractsTitle": "Contracts & Attachments",
+
+  "extform.contractsSub": "Add applicable agreements or reference letters.",
+
+  "extform.contractType": "Contract Type",
+
+  "extform.addContractBtn": "+ Add Contract",
+
+  "extform.step2Title": "Address Details",
+
+  "extform.step2Sub": "Select country, state, city and enter full street address.",
+
+  "extform.country": "Country",
+
+  "extform.stateProvince": "State / Province / Emirate",
+
+  "extform.city": "City / Port / Commercial Hub",
+
+  "extform.postalCode": "Postal / City Code (Auto-Filled)",
+
+  "extform.fullAddress": "Full Address (Street, Building, Office)",
+
+  "extform.fullAddressPh": "Enter complete street address, suite, or flat number",
+
+  "extform.step3Title": "Review Your Information",
+
+  "extform.step3Sub": "Please verify all details before final submission.",
+
+  "extform.editBtn": "Edit",
+
+  "extform.reviewVerifyBadge": "Are all details accurate? You can edit any section before submitting.",
+
+  "extform.step4Title": "Upload Profile Photo",
+
+  "extform.step4Sub": "Please upload your recent photo.",
+
+  "extform.photoSizeHint": "JPG, PNG (Max 5MB)",
+
+  "extform.nextDocsBtn": "Next: Documents & Contracts →",
+
+  "extform.nextAddressBtn": "Next: Address Details →",
+
+  "extform.nextPhotoBtn": "Next: Profile Photo →",
+
+  "extform.nextReviewBtn": "Next: Review & Application Report →",
+
+  "extform.backBtn": "Back",
+
+  "extform.submitFormBtn": "Submit Form",
+
+  "extform.successTitle": "Form Submitted Successfully!",
+
+  "extform.successMsg": "Thank you! Your submission has been securely recorded in our ERP system.",
+
+  "extform.receiptTitle": "Official Submission Receipt",
+
+  "extform.receiptRef": "Reference Token",
+
+  "extform.submittedOn": "Submitted On",
+
+  "extform.printReceipt": "Print / Save Receipt",
+
+  "extform.submitAnother": "Submit Another Form",
+
+  "extform.errorInvalid": "Invalid or Expired Link",
+
+  "extform.loading": "Loading form...",
+
+  "extform.issueDate": "Issue Date",
+
+  "extform.expiryDate": "Expiry Date",
+
+  "extform.dob": "Date of Birth",
+
+  "extform.contactType": "Contact Type",
+
+  "extform.customDocName": "Custom Document Name",
+
+  "extform.customDocNamePh": "e.g. Tazkira / QID / Business Card",
+
+  "extform.addContactBtn": "+ Add Another Contact",
+
+  "extform.phoneLabel": "Phone / Contact Number",
+
+  "extform.aiScanTitle": "⚡ Instant AI Document & Smart ID Scanner",
+
+  "extform.aiScanSubtitle": "Take a photo of your ID card — names, ID number & dates are auto-extracted instantly!",
+
+  "extform.aiScanningBadge": "⚡ Scanning & Auto-Extracting details...",
+
+  "extform.aiScanSuccessMsg": "Document details auto-extracted! You can review or edit anytime.",
+
+  "extform.retakeBtn": "Retake",
+
+  "extform.clearBtn": "Clear",
+
+  "extform.viewFullBtn": "View Full",
+
+  "extform.frontSideReady": "Front Side (Ready)",
+
+  "extform.backSideReady": "Back Side (Ready)",
+
+  "extform.downloadSlipBtn": "Download Application Slip (PDF)",
+
+  "extform.printSlipBtn": "Print Application Sheet",
+
+  "extform.appSlipHeading": "Official Registration & Verification Sheet",
+
+  "extform.appSlipSub": "Please review and download your complete verification application before final submission.",
+
+  "extform.declarationText": "I hereby confirm that the personal details, contact information, address, and uploaded documents provided in this application are accurate, true, and complete.",
+  "shareform.title": "Share Form / External Form Link",
+
+  "shareform.subtitle": "Generate secure links to share ERP forms with external recipients — no login required on their end.",
+
+  "shareform.generateTitle": "Generate New Form Link",
+
+  "shareform.selectFormType": "Select Form Type",
+
+  "shareform.customer": "Customer Registration",
+
+  "shareform.employee": "Employee Registration",
+
+  "shareform.company": "Company Registration",
+
+  "shareform.agent": "Agent Registration",
+
+  "shareform.expiryLabel": "Link Expiry",
+
+  "shareform.expiry24h": "24 Hours",
+
+  "shareform.expiry48h": "48 Hours",
+
+  "shareform.expiry7d": "7 Days (Default)",
+
+  "shareform.expiry14d": "14 Days",
+
+  "shareform.expiry30d": "30 Days",
+
+  "shareform.expiryNever": "Never Expires",
+
+  "shareform.notesLabel": "Notes (optional)",
+
+  "shareform.generateBtn": "Generate Secure Link",
+
+  "shareform.generatedLink": "Your Secure Link",
+
+  "shareform.copyLink": "Copy Link",
+
+  "shareform.copied": "Copied!",
+
+  "shareform.whatsappShare": "WhatsApp Share",
+
+  "shareform.linksRegistry": "Generated Links Registry",
+
+  "shareform.colSerial": "#",
+
+  "shareform.colFormType": "Form Type",
+
+  "shareform.colStatus": "Status",
+
+  "shareform.colCreatedBy": "Created By",
+
+  "shareform.colCreatedAt": "Created",
+
+  "shareform.colExpiry": "Expires",
+
+  "shareform.colSubmission": "Submission",
+
+  "shareform.colActions": "Actions",
+
+  "shareform.statusActive": "Active",
+
+  "shareform.statusUsed": "Submitted",
+
+  "shareform.statusExpired": "Expired",
+
+  "shareform.statusRevoked": "Revoked",
+
+  "shareform.revokeBtn": "Revoke",
+
+  "shareform.copyShort": "Copy",
+
+  "shareform.viewForm": "View Form",
+
+  "shareform.noLinks": "No links generated yet. Use the form above to create your first link.",
+
+  "shareform.refreshBtn": "Refresh",
+
+  "shareform.whatsappMsg": "Please fill this secure form to register your information",
+
+  "shareform.never": "Never",
+
+  "shareform.pending": "Pending",
+
+  "shareform.selectFormFirst": "Please select a form type first",
+
+  "shareform.submissionDetails": "Submitted Form Details",
+
+  "shareform.closeModal": "Close",
+
+  "shareform.personalInfo": "Personal Information",
+
+  "shareform.addressInfo": "Address Details",
+
+  "shareform.documentsInfo": "Uploaded Documents",
+
+  "shareform.contractsInfo": "Contracts & Attachments",
+
+  "shareform.photoInfo": "Candidate Photo",
+
+  "shareform.openLink": "Open Form Link",
+
+  "shareform.resendLink": "Re-send Fresh Link",
+  "sendcust.title": "SEND TO CUSTOMER — Secure External Form Link",
+
+  "sendcust.subtitle": "Generate a secure link to send directly to your customer. They will open and fill their details on mobile/desktop without needing an ERP login.",
+
+  "sendcust.generating": "Generating secure link...",
+
+  "sendcust.copyLink": "Copy Link",
+
+  "sendcust.copied": "Link Copied!",
+
+  "sendcust.whatsappShare": "Share via WhatsApp",
+
+  "sendcust.whatsappMsg": "Dear Customer, please fill your registration details using this secure link",
+
+  "sendcust.close": "Close",
+  "ssf.headerTitle": "Smart Search & Filter",
+
+  "ssf.badgeCompact": "Compact • Responsive",
+
+  "ssf.headerSubtitle": "Find, Filter and Analyze Faster",
+
+  "ssf.searchPlaceholder": "Search bill, reference or keywords...",
+
+  "ssf.btnReset": "Reset",
+
+  "ssf.btnFilter": "Filter",
+
+  "ssf.btnApplyFilter": "Apply Filter",
+
+  "ssf.lblRiskLevel": "Risk Level",
+
+  "ssf.allRiskLevels": "All Risk Levels",
+
+  "ssf.lblCountry": "Country",
+
+  "ssf.allCountries": "All Countries",
+
+  "ssf.lblBranch": "Branch",
+
+  "ssf.allBranches": "All Branches",
+
+  "ssf.lblMainBranch": "Main / City Branch",
+
+  "ssf.allMainBranches": "All Main Branches",
+
+  "ssf.lblApprovalStatus": "Approval Status",
+
+  "ssf.allStatuses": "All Statuses",
+
+  "ssf.lblFromDate": "From Date",
+
+  "ssf.lblToDate": "To Date",
+
+  "ssf.lblModule": "Module",
+
+  "ssf.allModules": "All Modules",
+
+  "ssf.lblEditedBy": "Edited By",
+
+  "ssf.allUsers": "All Users",
+
+  "ssf.lblCurrency": "Currency",
+
+  "ssf.allCurrencies": "All Currencies",
+
+  "ssf.searchInsideDropdown": "Search...",
+
+  "ssf.noResultsFound": "No options found",
+
+  "ssf.cascadingFlowHint": "Cascading Dropdown Flow: Country → Branch → Main Branch",
+
+  "ssf.activeFiltersCount": "Active Filters",
+
+  "ssf.closeMobileFilters": "Close",
   "common.previous_page": "Previous page",
 
   "common.next_page": "Next page",
@@ -29859,6 +30471,414 @@ const ur: Dict = {
 
 
 
+
+
+
+
+
+  "extform.ct_mobile": "موبائل فون",
+
+  "extform.ct_whatsapp": "واٹس ایپ نمبر",
+
+  "extform.ct_phone": "لینڈ لائن / فون",
+
+  "extform.ct_office": "دفتری فون",
+
+  "extform.ct_emergency": "ہنگامی رابطہ",
+
+  "extform.ct_custom": "دیگر رابطہ",
+
+  "extform.doc_cnic": "شناختی کارڈ / قومی شناختی کارڈ (CNIC)",
+
+  "extform.doc_passport": "پاسپورٹ (Passport)",
+
+  "extform.doc_emirates_id": "ایمریٹس آئی ڈی (UAE)",
+
+  "extform.doc_tazkira": "افغانستان کا تذکرہ (Tazkira)",
+
+  "extform.doc_iqama": "اقامہ / رہائشی کارڈ (Iqama)",
+
+  "extform.doc_aadhaar_card": "آدھار کارڈ (Aadhaar)",
+
+  "extform.doc_driving_license": "ڈرائیونگ لائسنس",
+
+  "extform.doc_trade_tax_license": "تجارتی / ٹیکس لائسنس",
+
+  "extform.doc_custom": "+ دیگر نئی قسم کا نام درج کریں",
+
+  "extform.cnt_employment_contract": "ملازمت کا معاہدہ",
+
+  "extform.cnt_customer_service_agreement": "کسٹمر سروس معاہدہ",
+
+  "extform.cnt_trade_clearing_terms": "تجارت و کلیرنگ شرائط",
+
+  "extform.cnt_nda_confidentiality": "خفیہ رکھنے کا معاہدہ (NDA)",
+
+  "extform.cnt_other_attachment": "دیگر معاہدہ / اٹیچمنٹ",
+  "extform.headerTitle": "(DIGITAL DOCK ERP) کسٹمر کی پبلک تصدیق",
+
+  "extform.headerSubtitle": "آسان 5 مراحل",
+
+  "extform.step1": "شناختی معلومات درج کریں",
+
+  "extform.step2": "دستاویزات اپلوڈ کریں",
+
+  "extform.step3": "تفصیلات کی تصدیق کریں",
+
+  "extform.step4": "اضافی معلومات درج کریں",
+
+  "extform.step5": "PDF بنائیں اور ڈاؤنلوڈ کریں",
+
+  "extform.personalInfoTitle": "ذاتی معلومات",
+
+  "extform.personalInfoSub": "براہِ کرم اپنی ذاتی تفصیلات درج کریں۔",
+
+  "extform.firstName": "پہلا نام",
+
+  "extform.firstNamePh": "پہلا نام درج کریں",
+
+  "extform.lastName": "آخری نام",
+
+  "extform.lastNamePh": "آخری نام درج کریں",
+
+  "extform.fatherName": "والد / سرپرست کا نام",
+
+  "extform.fatherNamePh": "والد یا سرپرست کا نام درج کریں",
+
+  "extform.mobile": "موبائل / فون",
+
+  "extform.mobilePh": "موبائل نمبر درج کریں",
+
+  "extform.addAnotherMobile": "+ اضافی فون نمبر شامل کریں",
+
+  "extform.whatsapp": "واٹس ایپ نمبر",
+
+  "extform.whatsappPh": "واٹس ایپ نمبر درج کریں",
+
+  "extform.addAnotherWhatsapp": "+ اضافی واٹس ایپ شامل کریں",
+
+  "extform.email": "ای میل ایڈریس (انگریزی میں لکھیں)",
+
+  "extform.gender": "جنس",
+
+  "extform.male": "مرد",
+
+  "extform.female": "عورت",
+
+  "extform.other": "دیگر",
+
+  "extform.documentsTitle": "دستاویزات",
+
+  "extform.documentsSub": "اپنی دستاویزات ایک ایک کر کے شامل کریں۔",
+
+  "extform.docType": "دستاویز کی قسم",
+
+  "extform.docNumber": "دستاویز نمبر",
+
+  "extform.docNumberPh": "دستاویز نمبر درج کریں",
+
+  "extform.frontSide": "سامنے کا رخ (Front)",
+
+  "extform.backSide": "پیچھے کا رخ (Back)",
+
+  "extform.mainPage": "پہلا معلوماتی صفحہ",
+
+  "extform.visaPage": "ویزا / پچھلا صفحہ",
+
+  "extform.cameraBtn": "کیمرہ",
+
+  "extform.galleryBtn": "گیلری",
+
+  "extform.addDocBtn": "+ دستاویز شامل کریں",
+
+  "extform.contractsTitle": "معاہدے اور دستاویزات",
+
+  "extform.contractsSub": "متعلقہ معاہدے یا حوالہ جاتی دستاویزات شامل کریں۔",
+
+  "extform.contractType": "معاہدے کی قسم",
+
+  "extform.addContractBtn": "+ معاہدہ شامل کریں",
+
+  "extform.step2Title": "پتے کی تفصیلات",
+
+  "extform.step2Sub": "براہِ کرم ملک، صوبہ اور شہر منتخب کریں اور مکمل پتہ درج کریں۔",
+
+  "extform.country": "ملک",
+
+  "extform.stateProvince": "صوبہ / ریاست / امارت",
+
+  "extform.city": "شہر / پورٹ / تجارتی مرکز",
+
+  "extform.postalCode": "پوسٹل / سٹی کوڈ (خودکار درج)",
+
+  "extform.fullAddress": "مکمل پتہ (گلی، عمارت، مکان / دفتر)",
+
+  "extform.fullAddressPh": "اپنا مکمل پتہ درج کریں (گلی، عمارت، مکان / دفتر)",
+
+  "extform.step3Title": "اپنی معلومات کا جائزہ لیں",
+
+  "extform.step3Sub": "جمع کروانے سے پہلے تمام تفصیلات کی تصدیق کر لیں۔",
+
+  "extform.editBtn": "ترمیم کریں",
+
+  "extform.reviewVerifyBadge": "کیا تمام معلومات درست ہیں؟ آپ ضرورت پڑنے پر کسی بھی حصے میں ترمیم کر سکتے ہیں۔",
+
+  "extform.step4Title": "اپنی تصویر اپ لوڈ کریں",
+
+  "extform.step4Sub": "براہِ کرم اپنی حالیہ تصویر اپ لوڈ کریں۔",
+
+  "extform.photoSizeHint": "(5MB سے زیادہ نہ ہو JPG, PNG)",
+
+  "extform.nextDocsBtn": "اگلا: دستاویزات اور معاہدے →",
+
+  "extform.nextAddressBtn": "اگلا: پتہ اور رہائش →",
+
+  "extform.nextPhotoBtn": "اگلا: تصویر اپلوڈ کریں →",
+
+  "extform.nextReviewBtn": "اگلا: مکمل جائزہ اور تصدیقی رپورٹ →",
+
+  "extform.backBtn": "واپس",
+
+  "extform.submitFormBtn": "فارم جمع کروائیں",
+
+  "extform.successTitle": "فارم کامیابی سے جمع ہو گیا!",
+
+  "extform.successMsg": "شکریہ! آپ کی معلومات اور دستاویزات محفوظ طریقے سے ERP سسٹم میں درج ہو چکی ہیں۔",
+
+  "extform.receiptTitle": "آفیشل سمبیشن رسید",
+
+  "extform.receiptRef": "ریفرنس ٹوکن",
+
+  "extform.submittedOn": "جمع کرنے کی تاریخ",
+
+  "extform.printReceipt": "رسید پرنٹ / محفوظ کریں",
+
+  "extform.submitAnother": "دوسرا فارم جمع کروائیں",
+
+  "extform.errorInvalid": "غیر معتبر یا ختم شدہ لنک",
+
+  "extform.loading": "فارم لوڈ ہو رہا ہے...",
+
+  "extform.issueDate": "تاریخِ اجراء",
+
+  "extform.expiryDate": "تاریخِ تنسیخ / میعاد",
+
+  "extform.dob": "تاریخِ پیدائش",
+
+  "extform.contactType": "رابطے کی قسم",
+
+  "extform.customDocName": "دستاویز کا نیا نام",
+
+  "extform.customDocNamePh": "مثلاً تذکرہ / قطری شناختی کارڈ وغیرہ",
+
+  "extform.addContactBtn": "+ نیا فون / رابطہ شامل کریں",
+
+  "extform.phoneLabel": "فون / رابطہ نمبر",
+
+  "extform.aiScanTitle": "⚡ فوری اسمارٹ شناختی کارڈ اسکینر (آٹو فل)",
+
+  "extform.aiScanSubtitle": "شناختی کارڈ کی تصویر لیں — نام، شناختی نمبر اور تاریخیں خود بخود درج ہو جائیں گی!",
+
+  "extform.aiScanningBadge": "⚡ اسمارٹ اسکیننگ جاری ہے، تفصیلات حاصل کی جا رہی ہیں...",
+
+  "extform.aiScanSuccessMsg": "دستاویز کی تفصیلات خود بخود درج ہو گئیں۔ آپ ضرورت کے مطابق ترمیم کر سکتے ہیں۔",
+
+  "extform.retakeBtn": "دوبارہ تصویر لیں",
+
+  "extform.clearBtn": "صاف کریں",
+
+  "extform.viewFullBtn": "بڑی تصویر دیکھیں",
+
+  "extform.frontSideReady": "سامنے والی سائیڈ (تیار ہے)",
+
+  "extform.backSideReady": "پچھلی سائیڈ (تیار ہے)",
+
+  "extform.downloadSlipBtn": "درخواست کی تصدیقی سلپ ڈاؤنلوڈ کریں (PDF)",
+
+  "extform.printSlipBtn": "درخواست فارم پرنٹ کریں",
+
+  "extform.appSlipHeading": "آفیشل رجسٹریشن اور تصدیقی رپورٹ",
+
+  "extform.appSlipSub": "براہِ کرم حتمی جمع کروانے سے پہلے اپنی مکمل تصدیقی درخواست کا جائزہ لیں اور ڈاؤنلوڈ کریں۔",
+
+  "extform.declarationText": "میں تصدیق کرتا/کرتی ہوں کہ اس درخواست میں درج کی گئی تمام ذاتی معلومات، رابطہ نمبر، پتہ اور منسلک دستاویزات بالکل درست اور مکمل ہیں۔",
+  "shareform.title": "فارم شیئر / بیرونی فارم لنک",
+
+  "shareform.subtitle": "ERP فارم بیرونی وصول کنندگان کے ساتھ شیئر کرنے کے لیے محفوظ لنک بنائیں — انہیں لاگ اِن کی ضرورت نہیں۔",
+
+  "shareform.generateTitle": "نیا فارم لنک بنائیں",
+
+  "shareform.selectFormType": "فارم کی قسم منتخب کریں",
+
+  "shareform.customer": "کسٹمر رجسٹریشن",
+
+  "shareform.employee": "ملازم رجسٹریشن",
+
+  "shareform.company": "کمپنی رجسٹریشن",
+
+  "shareform.agent": "ایجنٹ رجسٹریشن",
+
+  "shareform.expiryLabel": "لنک کی میعاد",
+
+  "shareform.expiry24h": "24 گھنٹے",
+
+  "shareform.expiry48h": "48 گھنٹے",
+
+  "shareform.expiry7d": "7 دن (ڈیفالٹ)",
+
+  "shareform.expiry14d": "14 دن",
+
+  "shareform.expiry30d": "30 دن",
+
+  "shareform.expiryNever": "کبھی ختم نہ ہو",
+
+  "shareform.notesLabel": "نوٹس (اختیاری)",
+
+  "shareform.generateBtn": "محفوظ لنک بنائیں",
+
+  "shareform.generatedLink": "آپ کا محفوظ لنک",
+
+  "shareform.copyLink": "لنک کاپی کریں",
+
+  "shareform.copied": "کاپی ہو گیا!",
+
+  "shareform.whatsappShare": "واٹس ایپ پر بھیجیں",
+
+  "shareform.linksRegistry": "بنائے گئے لنکس کا رجسٹر",
+
+  "shareform.colSerial": "#",
+
+  "shareform.colFormType": "فارم کی قسم",
+
+  "shareform.colStatus": "حیثیت",
+
+  "shareform.colCreatedBy": "بنانے والا",
+
+  "shareform.colCreatedAt": "تاریخِ تخلیق",
+
+  "shareform.colExpiry": "میعاد",
+
+  "shareform.colSubmission": "جمع کروائی",
+
+  "shareform.colActions": "اقدامات",
+
+  "shareform.statusActive": "فعال",
+
+  "shareform.statusUsed": "جمع شدہ",
+
+  "shareform.statusExpired": "میعاد ختم",
+
+  "shareform.statusRevoked": "منسوخ",
+
+  "shareform.revokeBtn": "منسوخ کریں",
+
+  "shareform.copyShort": "کاپی",
+
+  "shareform.viewForm": "فارم دیکھیں",
+
+  "shareform.noLinks": "ابھی کوئی لنک نہیں بنایا گیا۔ اوپر فارم استعمال کر کے پہلا لنک بنائیں۔",
+
+  "shareform.refreshBtn": "ریفریش",
+
+  "shareform.whatsappMsg": "براہ کرم اپنی معلومات درج کرانے کے لیے یہ محفوظ فارم بھریں",
+
+  "shareform.never": "کبھی نہیں",
+
+  "shareform.pending": "زیر التواء",
+
+  "shareform.selectFormFirst": "پہلے فارم کی قسم منتخب کریں",
+
+  "shareform.submissionDetails": "جمع شدہ فارم کی تفصیلات",
+
+  "shareform.closeModal": "بند کریں",
+
+  "shareform.personalInfo": "ذاتی معلومات",
+
+  "shareform.addressInfo": "پتے کی تفصیلات",
+
+  "shareform.documentsInfo": "اپ لوڈ شدہ دستاویزات",
+
+  "shareform.contractsInfo": "معاہدے اور دستاویزات",
+
+  "shareform.photoInfo": "امیدوار کی تصویر",
+
+  "shareform.openLink": "فارم لنک کھولیں",
+
+  "shareform.resendLink": "دوبارہ نیا لنک بھیجیں",
+  "sendcust.title": "کسٹمر کو بھیجیں — محفوظ بیرونی فارم لنک",
+
+  "sendcust.subtitle": "اپنے کسٹمر کو براہ راست بھیجنے کے لیے ایک محفوظ لنک بنائیں تاکہ وہ بغیر لاگ اِن کیے موبائل یا کمپیوٹر پر فارم بھر سکیں۔",
+
+  "sendcust.generating": "محفوظ لنک تیار ہو رہا ہے...",
+
+  "sendcust.copyLink": "لنک کاپی کریں",
+
+  "sendcust.copied": "لنک کاپی ہو گیا!",
+
+  "sendcust.whatsappShare": "واٹس ایپ پر بھیجیں",
+
+  "sendcust.whatsappMsg": "محترم کسٹمر! براہِ کرم اس محفوظ لنک کے ذریعے اپنی رجسٹریشن کی تفصیلات درج فرمائیں",
+
+  "sendcust.close": "بند کریں",
+  "ssf.headerTitle": "سمارٹ سرچ اور فلٹر",
+
+  "ssf.badgeCompact": "کومپیکٹ • رسپانسو",
+
+  "ssf.headerSubtitle": "تیزی سے تلاش کریں، فلٹر کریں اور تجزیہ کریں",
+
+  "ssf.searchPlaceholder": "بل، حوالہ یا مطلوبہ الفاظ تلاش کریں...",
+
+  "ssf.btnReset": "ری سیٹ",
+
+  "ssf.btnFilter": "فلٹر",
+
+  "ssf.btnApplyFilter": "فلٹر لاگو کریں",
+
+  "ssf.lblRiskLevel": "رسک لیول",
+
+  "ssf.allRiskLevels": "تمام رسک لیولز",
+
+  "ssf.lblCountry": "ملک",
+
+  "ssf.allCountries": "تمام ممالک",
+
+  "ssf.lblBranch": "برانچ",
+
+  "ssf.allBranches": "تمام برانچز",
+
+  "ssf.lblMainBranch": "مین / سٹی برانچ",
+
+  "ssf.allMainBranches": "تمام مین برانچز",
+
+  "ssf.lblApprovalStatus": "منظوری کی حیثیت",
+
+  "ssf.allStatuses": "تمام حیثیتیں",
+
+  "ssf.lblFromDate": "تاریخ سے",
+
+  "ssf.lblToDate": "تاریخ تک",
+
+  "ssf.lblModule": "ماڈیول",
+
+  "ssf.allModules": "تمام ماڈیولز",
+
+  "ssf.lblEditedBy": "ترمیم کنندہ",
+
+  "ssf.allUsers": "تمام صارفین",
+
+  "ssf.lblCurrency": "کرنسی",
+
+  "ssf.allCurrencies": "تمام کرنسیاں",
+
+  "ssf.searchInsideDropdown": "تلاش کریں...",
+
+  "ssf.noResultsFound": "کوئی آپشن نہیں ملا",
+
+  "ssf.cascadingFlowHint": "آبشاری فلو: ملک → برانچ → مین برانچ",
+
+  "ssf.activeFiltersCount": "فعال فلٹرز",
+
+  "ssf.closeMobileFilters": "بند کریں",
   "common.previous_page": "پچھلا صفحہ",
 
   "common.next_page": "اگلا صفحہ",
@@ -42426,6 +43446,414 @@ const ar: Dict = {
 
 
 
+
+
+
+
+
+  "extform.ct_mobile": "هاتف جوال",
+
+  "extform.ct_whatsapp": "رقم الواتساب",
+
+  "extform.ct_phone": "هاتف ثابت",
+
+  "extform.ct_office": "هاتف المكتب",
+
+  "extform.ct_emergency": "جهة اتصال الطوارئ",
+
+  "extform.ct_custom": "آخر / مخصص",
+
+  "extform.doc_cnic": "بطاقة الهوية الوطنية (CNIC)",
+
+  "extform.doc_passport": "جواز السفر (Passport)",
+
+  "extform.doc_emirates_id": "الهوية الإماراتية (UAE)",
+
+  "extform.doc_tazkira": "تذكرة الهوية الأفغانية (Tazkira)",
+
+  "extform.doc_iqama": "الإقامة / بطاقة مقيم",
+
+  "extform.doc_aadhaar_card": "بطاقة آدهار (Aadhaar)",
+
+  "extform.doc_driving_license": "رخصة القيادة",
+
+  "extform.doc_trade_tax_license": "الرخصة التجارية / الضريبية",
+
+  "extform.doc_custom": "+ إضافة نوع مستند مخصص",
+
+  "extform.cnt_employment_contract": "عقد العمل",
+
+  "extform.cnt_customer_service_agreement": "اتفاقية خدمة العملاء",
+
+  "extform.cnt_trade_clearing_terms": "شروط التجارة والتخليص",
+
+  "extform.cnt_nda_confidentiality": "اتفاقية عدم الإفصاح والسرية",
+
+  "extform.cnt_other_attachment": "مرفق / عقد آخر",
+  "extform.headerTitle": "(DIGITAL DOCK ERP) التحقق العام للعميل",
+
+  "extform.headerSubtitle": "5 خطوات سهلة",
+
+  "extform.step1": "إدخال الهوية والشخصية",
+
+  "extform.step2": "تحميل المستندات",
+
+  "extform.step3": "التحقق من التفاصيل",
+
+  "extform.step4": "إدخال معلومات إضافية",
+
+  "extform.step5": "إنشاء وتحميل PDF",
+
+  "extform.personalInfoTitle": "المعلومات الشخصية",
+
+  "extform.personalInfoSub": "يرجى إدخال بياناتك الشخصية.",
+
+  "extform.firstName": "الاسم الأول",
+
+  "extform.firstNamePh": "أدخل الاسم الأول",
+
+  "extform.lastName": "اسم العائلة",
+
+  "extform.lastNamePh": "أدخل اسم العائلة",
+
+  "extform.fatherName": "اسم الأب / ولي الأمر",
+
+  "extform.fatherNamePh": "أدخل اسم الأب أو ولي الأمر",
+
+  "extform.mobile": "الجوال / الهاتف",
+
+  "extform.mobilePh": "أدخل رقم الجوال",
+
+  "extform.addAnotherMobile": "+ إضافة هاتف آخر",
+
+  "extform.whatsapp": "رقم الواتساب",
+
+  "extform.whatsappPh": "أدخل رقم الواتساب",
+
+  "extform.addAnotherWhatsapp": "+ إضافة واتساب آخر",
+
+  "extform.email": "البريد الإلكتروني (باللغة الإنجليزية)",
+
+  "extform.gender": "الجنس",
+
+  "extform.male": "ذكر",
+
+  "extform.female": "أنثى",
+
+  "extform.other": "آخر",
+
+  "extform.documentsTitle": "المستندات",
+
+  "extform.documentsSub": "أضف مستنداتك واحداً تلو الآخر.",
+
+  "extform.docType": "نوع المستند",
+
+  "extform.docNumber": "رقم المستند",
+
+  "extform.docNumberPh": "أدخل رقم المستند",
+
+  "extform.frontSide": "الوجه الأمامي",
+
+  "extform.backSide": "الوجه الخلفي",
+
+  "extform.mainPage": "صفحة البيانات الرئيسية",
+
+  "extform.visaPage": "صفحة التأشيرة / الخلفية",
+
+  "extform.cameraBtn": "كاميرا",
+
+  "extform.galleryBtn": "المعرض",
+
+  "extform.addDocBtn": "+ إضافة مستند",
+
+  "extform.contractsTitle": "العقود والمرفقات",
+
+  "extform.contractsSub": "أضف الاتفاقيات المعمول بها أو خطابات المرجعية.",
+
+  "extform.contractType": "نوع العقد",
+
+  "extform.addContractBtn": "+ إضافة عقد",
+
+  "extform.step2Title": "تفاصيل العنوان",
+
+  "extform.step2Sub": "يرجى تحديد الدولة والمحافظة والمدينة وإدخال العنوان الكامل.",
+
+  "extform.country": "الدولة / البلد",
+
+  "extform.stateProvince": "المحافظة / الإمارة / الولاية",
+
+  "extform.city": "المدينة / الميناء / المركز التجاري",
+
+  "extform.postalCode": "الرمز البريدي / رمز المدينة",
+
+  "extform.fullAddress": "العنوان الكامل (الشارع، المبنى، المكتب)",
+
+  "extform.fullAddressPh": "أدخل عنوان الشارع الكامل أو رقم المكتب أو الشقة",
+
+  "extform.step3Title": "مراجعة معلوماتك",
+
+  "extform.step3Sub": "يرجى التحقق من جميع البيانات قبل الإرسال النهائي.",
+
+  "extform.editBtn": "تعديل",
+
+  "extform.reviewVerifyBadge": "هل جميع البيانات دقيقة؟ يمكنك تعديل أي قسم قبل الإرسال.",
+
+  "extform.step4Title": "تحميل الصورة الشخصية",
+
+  "extform.step4Sub": "يرجى تحميل صورتك الشخصية الحديثة.",
+
+  "extform.photoSizeHint": "JPG, PNG (الحد الأقصى 5 ميجابايت)",
+
+  "extform.nextDocsBtn": "التالي: المستندات والعقود ←",
+
+  "extform.nextAddressBtn": "التالي: العنوان والإقامة ←",
+
+  "extform.nextPhotoBtn": "التالي: الصورة الشخصية ←",
+
+  "extform.nextReviewBtn": "التالي: المراجعة وتقرير الطلب ←",
+
+  "extform.backBtn": "رجوع",
+
+  "extform.submitFormBtn": "إرسال النموذج",
+
+  "extform.successTitle": "تم إرسال النموذج بنجاح!",
+
+  "extform.successMsg": "شكراً لك! تم استلام بياناتك ومستنداتك بأمان وتسجيلها في نظام ERP الخاص بنا.",
+
+  "extform.receiptTitle": "إيصال التقديم الرسمي",
+
+  "extform.receiptRef": "رمز المرجع",
+
+  "extform.submittedOn": "تاريخ التقديم",
+
+  "extform.printReceipt": "طباعة / حفظ الإيصال",
+
+  "extform.submitAnother": "تقديم نموذج آخر",
+
+  "extform.errorInvalid": "الرابط غير صالح أو منتهي الصلاحية",
+
+  "extform.loading": "جارٍ تحميل النموذج...",
+
+  "extform.issueDate": "تاريخ الإصدار",
+
+  "extform.expiryDate": "تاريخ الانتهاء",
+
+  "extform.dob": "تاريخ الميلاد",
+
+  "extform.contactType": "نوع جهة الاتصال",
+
+  "extform.customDocName": "اسم المستند المخصص",
+
+  "extform.customDocNamePh": "مثال: بطاقة شخصية / تذكرة / بطاقة عمل",
+
+  "extform.addContactBtn": "+ إضافة جهة اتصال أخرى",
+
+  "extform.phoneLabel": "رقم الهاتف / الاتصال",
+
+  "extform.aiScanTitle": "⚡ الماسح الذكي للهوية والمستندات (تعبئة تلقائية)",
+
+  "extform.aiScanSubtitle": "التقط صورة لبطاقة الهوية — سيتم استخراج الاسم ورقم الهوية والتواريخ تلقائيًا!",
+
+  "extform.aiScanningBadge": "⚡ جارٍ المسح واستخراج البيانات تلقائيًا...",
+
+  "extform.aiScanSuccessMsg": "تم استخراج بيانات المستند بنجاح! يمكنك مراجعتها أو تعديلها في أي وقت.",
+
+  "extform.retakeBtn": "إعادة التقاط",
+
+  "extform.clearBtn": "مسح",
+
+  "extform.viewFullBtn": "عرض الصورة",
+
+  "extform.frontSideReady": "الجهة الأمامية (جاهزة)",
+
+  "extform.backSideReady": "الجهة الخلفية (جاهزة)",
+
+  "extform.downloadSlipBtn": "تحميل استمارة التقديم الرسمية (PDF)",
+
+  "extform.printSlipBtn": "طباعة استمارة التقديم",
+
+  "extform.appSlipHeading": "استمارة التسجيل والتحقق الرسمية",
+
+  "extform.appSlipSub": "يرجى مراجعة استمارة التقديم وتحميلها لحفظ سجلك قبل الإرسال النهائي.",
+
+  "extform.declarationText": "أقر وأؤكد بموجب هذا أن جميع البيانات الشخصية وأرقام الاتصال والعنوان والمستندات المرفقة صحيحة ودقيقة وكاملة.",
+  "shareform.title": "مشاركة النموذج / رابط النموذج الخارجي",
+
+  "shareform.subtitle": "أنشئ روابط آمنة لمشاركة نماذج ERP مع المستلمين الخارجيين — لا يلزمهم تسجيل دخول.",
+
+  "shareform.generateTitle": "إنشاء رابط نموذج جديد",
+
+  "shareform.selectFormType": "اختر نوع النموذج",
+
+  "shareform.customer": "تسجيل العميل",
+
+  "shareform.employee": "تسجيل الموظف",
+
+  "shareform.company": "تسجيل الشركة",
+
+  "shareform.agent": "تسجيل الوكيل",
+
+  "shareform.expiryLabel": "صلاحية الرابط",
+
+  "shareform.expiry24h": "24 ساعة",
+
+  "shareform.expiry48h": "48 ساعة",
+
+  "shareform.expiry7d": "7 أيام (افتراضي)",
+
+  "shareform.expiry14d": "14 يوماً",
+
+  "shareform.expiry30d": "30 يوماً",
+
+  "shareform.expiryNever": "بدون انتهاء صلاحية",
+
+  "shareform.notesLabel": "ملاحظات (اختياري)",
+
+  "shareform.generateBtn": "إنشاء رابط آمن",
+
+  "shareform.generatedLink": "الرابط الآمن الخاص بك",
+
+  "shareform.copyLink": "نسخ الرابط",
+
+  "shareform.copied": "تم النسخ!",
+
+  "shareform.whatsappShare": "مشاركة عبر واتساب",
+
+  "shareform.linksRegistry": "سجل الروابط المُنشأة",
+
+  "shareform.colSerial": "#",
+
+  "shareform.colFormType": "نوع النموذج",
+
+  "shareform.colStatus": "الحالة",
+
+  "shareform.colCreatedBy": "أنشأ بواسطة",
+
+  "shareform.colCreatedAt": "تاريخ الإنشاء",
+
+  "shareform.colExpiry": "تاريخ الانتهاء",
+
+  "shareform.colSubmission": "التقديم",
+
+  "shareform.colActions": "الإجراءات",
+
+  "shareform.statusActive": "نشط",
+
+  "shareform.statusUsed": "مُقدَّم",
+
+  "shareform.statusExpired": "منتهي الصلاحية",
+
+  "shareform.statusRevoked": "ملغى",
+
+  "shareform.revokeBtn": "إلغاء",
+
+  "shareform.copyShort": "نسخ",
+
+  "shareform.viewForm": "عرض النموذج",
+
+  "shareform.noLinks": "لم يتم إنشاء أي روابط بعد. استخدم النموذج أعلاه لإنشاء أول رابط.",
+
+  "shareform.refreshBtn": "تحديث",
+
+  "shareform.whatsappMsg": "يرجى ملء هذا النموذج الآمن لتسجيل معلوماتك",
+
+  "shareform.never": "أبداً",
+
+  "shareform.pending": "معلق",
+
+  "shareform.selectFormFirst": "يرجى اختيار نوع النموذج أولاً",
+
+  "shareform.submissionDetails": "تفاصيل النموذج المُقدّم",
+
+  "shareform.closeModal": "إغلاق",
+
+  "shareform.personalInfo": "المعلومات الشخصية",
+
+  "shareform.addressInfo": "تفاصيل العنوان",
+
+  "shareform.documentsInfo": "المستندات المرفوعة",
+
+  "shareform.contractsInfo": "العقود والمرفقات",
+
+  "shareform.photoInfo": "صورة المرشح",
+
+  "shareform.openLink": "فتح رابط النموذج",
+
+  "shareform.resendLink": "إعادة إرسال رابط جديد",
+  "sendcust.title": "إرسال إلى العميل — رابط النموذج الخارجي الآمن",
+
+  "sendcust.subtitle": "قم بإنشاء رابط آمن لإرساله مباشرة إلى عميلك لملء بياناته دون الحاجة إلى تسجيل الدخول.",
+
+  "sendcust.generating": "جاري إنشاء الرابط الآمن...",
+
+  "sendcust.copyLink": "نسخ الرابط",
+
+  "sendcust.copied": "تم نسخ الرابط!",
+
+  "sendcust.whatsappShare": "مشاركة عبر واتساب",
+
+  "sendcust.whatsappMsg": "عزيزي العميل، يرجى ملء بيانات التسجيل عبر هذا الرابط الآمن",
+
+  "sendcust.close": "إغلاق",
+  "ssf.headerTitle": "البحث والتصفية الذكية",
+
+  "ssf.badgeCompact": "مدمج • متجاوب",
+
+  "ssf.headerSubtitle": "ابحث وصفِّ وحلل بسرعة أكبر",
+
+  "ssf.searchPlaceholder": "ابحث برقم الفاتورة أو المرجع أو الكلمات...",
+
+  "ssf.btnReset": "إعادة ضبط",
+
+  "ssf.btnFilter": "تصفية",
+
+  "ssf.btnApplyFilter": "تطبيق التصفية",
+
+  "ssf.lblRiskLevel": "مستوى المخاطر",
+
+  "ssf.allRiskLevels": "جميع مستويات المخاطر",
+
+  "ssf.lblCountry": "الدولة",
+
+  "ssf.allCountries": "جميع الدول",
+
+  "ssf.lblBranch": "الفرع",
+
+  "ssf.allBranches": "جميع الفروع",
+
+  "ssf.lblMainBranch": "الفرع الرئيسي / فرع المدينة",
+
+  "ssf.allMainBranches": "جميع الفروع الرئيسية",
+
+  "ssf.lblApprovalStatus": "حالة الاعتماد",
+
+  "ssf.allStatuses": "جميع الحالات",
+
+  "ssf.lblFromDate": "من تاريخ",
+
+  "ssf.lblToDate": "إلى تاريخ",
+
+  "ssf.lblModule": "الوحدة",
+
+  "ssf.allModules": "جميع الوحدات",
+
+  "ssf.lblEditedBy": "تم التعديل بواسطة",
+
+  "ssf.allUsers": "جميع المستخدمين",
+
+  "ssf.lblCurrency": "العملة",
+
+  "ssf.allCurrencies": "جميع العملات",
+
+  "ssf.searchInsideDropdown": "بحث...",
+
+  "ssf.noResultsFound": "لا توجد خيارات",
+
+  "ssf.cascadingFlowHint": "تدفق متتالي: الدولة ← الفرع ← الفرع الرئيسي",
+
+  "ssf.activeFiltersCount": "عوامل التصفية النشطة",
+
+  "ssf.closeMobileFilters": "إغلاق",
   "common.previous_page": "الصفحة السابقة",
 
   "common.next_page": "الصفحة التالية",
@@ -54992,6 +56420,414 @@ const fa: Dict = {
 
 
 
+
+
+
+
+
+  "extform.ct_mobile": "تلفن همراه",
+
+  "extform.ct_whatsapp": "شماره واتس‌اپ",
+
+  "extform.ct_phone": "تلفن ثابت",
+
+  "extform.ct_office": "تلفن دفتر",
+
+  "extform.ct_emergency": "تماس اضطراری",
+
+  "extform.ct_custom": "سایر / سفارشی",
+
+  "extform.doc_cnic": "کارت ملی / کارت شناسایی (CNIC)",
+
+  "extform.doc_passport": "گذرنامه / پاسپورت",
+
+  "extform.doc_emirates_id": "کارت شناسایی امارات (UAE)",
+
+  "extform.doc_tazkira": "تذکره تابعیت افغانستان",
+
+  "extform.doc_iqama": "کارت اقامت / اقامه",
+
+  "extform.doc_aadhaar_card": "کارت آدهار",
+
+  "extform.doc_driving_license": "گواهینامه رانندگی",
+
+  "extform.doc_trade_tax_license": "جواز کسب / مالیاتی",
+
+  "extform.doc_custom": "+ افزودن نوع مدرک جدید",
+
+  "extform.cnt_employment_contract": "قرارداد استخدامی",
+
+  "extform.cnt_customer_service_agreement": "توافق‌نامه خدمات مشتریان",
+
+  "extform.cnt_trade_clearing_terms": "شرایط تجارت و ترخیص",
+
+  "extform.cnt_nda_confidentiality": "قرارداد محرمانگی و عدم افشا",
+
+  "extform.cnt_other_attachment": "سایر ضمائم / قراردادها",
+  "extform.headerTitle": "(DIGITAL DOCK ERP) راستی‌آزمایی عمومی مشتری",
+
+  "extform.headerSubtitle": "۵ مرحله آسان",
+
+  "extform.step1": "ورود اطلاعات هویتی",
+
+  "extform.step2": "بارگذاری مدارک",
+
+  "extform.step3": "تأیید اطلاعات",
+
+  "extform.step4": "ورود اطلاعات تکمیلی",
+
+  "extform.step5": "ایجاد و دانلود PDF",
+
+  "extform.personalInfoTitle": "اطلاعات شخصی",
+
+  "extform.personalInfoSub": "لطفاً اطلاعات شخصی خود را وارد کنید.",
+
+  "extform.firstName": "نام",
+
+  "extform.firstNamePh": "نام را وارد کنید",
+
+  "extform.lastName": "نام خانوادگی",
+
+  "extform.lastNamePh": "نام خانوادگی را وارد کنید",
+
+  "extform.fatherName": "نام پدر / سرپرست",
+
+  "extform.fatherNamePh": "نام پدر یا سرپرست را وارد کنید",
+
+  "extform.mobile": "تلفن همراه",
+
+  "extform.mobilePh": "شماره موبایل را وارد کنید",
+
+  "extform.addAnotherMobile": "+ افزودن شماره دیگر",
+
+  "extform.whatsapp": "شماره واتس‌اپ",
+
+  "extform.whatsappPh": "شماره واتس‌اپ را وارد کنید",
+
+  "extform.addAnotherWhatsapp": "+ افزودن واتس‌اپ دیگر",
+
+  "extform.email": "آدرس ایمیل (به انگلیسی)",
+
+  "extform.gender": "جنسیت",
+
+  "extform.male": "مرد",
+
+  "extform.female": "زن",
+
+  "extform.other": "سایر",
+
+  "extform.documentsTitle": "مدارک",
+
+  "extform.documentsSub": "مدارک خود را یکی یکی اضافه کنید.",
+
+  "extform.docType": "نوع مدرک",
+
+  "extform.docNumber": "شماره مدرک",
+
+  "extform.docNumberPh": "شماره مدرک را وارد کنید",
+
+  "extform.frontSide": "روی مدرک (جلو)",
+
+  "extform.backSide": "پشت مدرک (عقب)",
+
+  "extform.mainPage": "صفحه مشخصات اصلی",
+
+  "extform.visaPage": "صفحه ویزا / پشت",
+
+  "extform.cameraBtn": "دوربین",
+
+  "extform.galleryBtn": "گالری",
+
+  "extform.addDocBtn": "+ افزودن مدرک",
+
+  "extform.contractsTitle": "قراردادها و ضمائم",
+
+  "extform.contractsSub": "توافق‌نامه‌ها یا اسناد مربوطه را اضافه کنید.",
+
+  "extform.contractType": "نوع قرارداد",
+
+  "extform.addContractBtn": "+ افزودن قرارداد",
+
+  "extform.step2Title": "جزئیات آدرس",
+
+  "extform.step2Sub": "لطفاً کشور، استان و شهر را انتخاب کرده و آدرس کامل را وارد کنید.",
+
+  "extform.country": "کشور",
+
+  "extform.stateProvince": "استان / ایالت",
+
+  "extform.city": "شهر / بندر / مرکز تجاری",
+
+  "extform.postalCode": "کد پستی / کد شهر",
+
+  "extform.fullAddress": "آدرس کامل (خیابان، ساختمان، پلاک)",
+
+  "extform.fullAddressPh": "آدرس دقیق خیابان، ساختمان و پلاک را وارد کنید",
+
+  "extform.step3Title": "بازبینی اطلاعات شما",
+
+  "extform.step3Sub": "لطفاً قبل از ارسال نهایی تمام مشخصات را بازبینی کنید.",
+
+  "extform.editBtn": "ویرایش",
+
+  "extform.reviewVerifyBadge": "آیا تمام اطلاعات صحیح است؟ می‌توانید هر بخش را ویرایش کنید.",
+
+  "extform.step4Title": "بارگذاری عکس پرسنلی",
+
+  "extform.step4Sub": "لطفاً عکس پرسنلی جدید خود را بارگذاری کنید.",
+
+  "extform.photoSizeHint": "JPG, PNG (حداکثر ۵ مگابایت)",
+
+  "extform.nextDocsBtn": "بعدی: مدارک و قراردادها ←",
+
+  "extform.nextAddressBtn": "بعدی: آدرس و اقامت ←",
+
+  "extform.nextPhotoBtn": "بعدی: عکس پرسنلی ←",
+
+  "extform.nextReviewBtn": "بعدی: بازبینی و گزارش درخواست ←",
+
+  "extform.backBtn": "بازگشت",
+
+  "extform.submitFormBtn": "ارسال فرم",
+
+  "extform.successTitle": "فرم با موفقیت ارسال شد!",
+
+  "extform.successMsg": "با تشکر! اطلاعات و مدارک شما با موفقیت و به صورت امن در سیستم ERP ثبت شد.",
+
+  "extform.receiptTitle": "رسید رسمی ثبت‌نام",
+
+  "extform.receiptRef": "کد پیگیری",
+
+  "extform.submittedOn": "تاریخ ارسال",
+
+  "extform.printReceipt": "چاپ / ذخیره رسید",
+
+  "extform.submitAnother": "ارسال فرم دیگر",
+
+  "extform.errorInvalid": "لینک نامعتبر یا منقضی شده است",
+
+  "extform.loading": "در حال بارگذاری فرم...",
+
+  "extform.issueDate": "تاریخ صدور",
+
+  "extform.expiryDate": "تاریخ انقضا",
+
+  "extform.dob": "تاریخ تولد",
+
+  "extform.contactType": "نوع تماس",
+
+  "extform.customDocName": "نام مدرک سفارشی",
+
+  "extform.customDocNamePh": "مثلاً تذکره / کارت هویت محلی",
+
+  "extform.addContactBtn": "+ افزودن تماس دیگر",
+
+  "extform.phoneLabel": "شماره تماس / تلفن",
+
+  "extform.aiScanTitle": "⚡ اسکنر هوشمند کارت شناسایی (تکمیل خودکار)",
+
+  "extform.aiScanSubtitle": "از کارت شناسایی عکس بگیرید — نام، شماره و تاریخ‌ها خودکار پر می‌شوند!",
+
+  "extform.aiScanningBadge": "⚡ در حال اسکن و استخراج هوشمند اطلاعات...",
+
+  "extform.aiScanSuccessMsg": "اطلاعات مدرک با موفقیت استخراج شد! می‌توانید در صورت نیاز ویرایش کنید.",
+
+  "extform.retakeBtn": "عکس مجدد",
+
+  "extform.clearBtn": "پاک کردن",
+
+  "extform.viewFullBtn": "مشاهده کامل",
+
+  "extform.frontSideReady": "رویه کارت (آماده)",
+
+  "extform.backSideReady": "پشت کارت (آماده)",
+
+  "extform.downloadSlipBtn": "دانلود برگ درخواست رسمی (PDF)",
+
+  "extform.printSlipBtn": "چاپ برگ درخواست",
+
+  "extform.appSlipHeading": "برگ رسمی ثبت‌نام و راستی‌آزمایی",
+
+  "extform.appSlipSub": "لطفاً قبل از ارسال نهایی، برگ درخواست خود را بازبینی و ذخیره کنید.",
+
+  "extform.declarationText": "بدینوسیله تأیید می‌نمایم که کلیه اطلاعات شخصی، شماره‌های تماس، آدرس و مدارک بارگذاری‌شده دقیق، صحیح و کامل می‌باشند.",
+  "shareform.title": "اشتراک فرم / لینک فرم خارجی",
+
+  "shareform.subtitle": "لینک‌های امن برای اشتراک فرم‌های ERP با گیرندگان خارجی ایجاد کنید — بدون نیاز به ورود.",
+
+  "shareform.generateTitle": "ایجاد لینک فرم جدید",
+
+  "shareform.selectFormType": "نوع فرم را انتخاب کنید",
+
+  "shareform.customer": "ثبت مشتری",
+
+  "shareform.employee": "ثبت کارمند",
+
+  "shareform.company": "ثبت شرکت",
+
+  "shareform.agent": "ثبت نماینده",
+
+  "shareform.expiryLabel": "انقضای لینک",
+
+  "shareform.expiry24h": "۲۴ ساعت",
+
+  "shareform.expiry48h": "۴۸ ساعت",
+
+  "shareform.expiry7d": "۷ روز (پیش‌فرض)",
+
+  "shareform.expiry14d": "۱۴ روز",
+
+  "shareform.expiry30d": "۳۰ روز",
+
+  "shareform.expiryNever": "بدون انقضا",
+
+  "shareform.notesLabel": "یادداشت (اختیاری)",
+
+  "shareform.generateBtn": "ایجاد لینک امن",
+
+  "shareform.generatedLink": "لینک امن شما",
+
+  "shareform.copyLink": "کپی لینک",
+
+  "shareform.copied": "کپی شد!",
+
+  "shareform.whatsappShare": "اشتراک در واتساپ",
+
+  "shareform.linksRegistry": "رجیستری لینک‌های ایجاد شده",
+
+  "shareform.colSerial": "#",
+
+  "shareform.colFormType": "نوع فرم",
+
+  "shareform.colStatus": "وضعیت",
+
+  "shareform.colCreatedBy": "ایجاد کننده",
+
+  "shareform.colCreatedAt": "تاریخ ایجاد",
+
+  "shareform.colExpiry": "انقضا",
+
+  "shareform.colSubmission": "ارسال",
+
+  "shareform.colActions": "عملیات",
+
+  "shareform.statusActive": "فعال",
+
+  "shareform.statusUsed": "ارسال شده",
+
+  "shareform.statusExpired": "منقضی",
+
+  "shareform.statusRevoked": "لغو شده",
+
+  "shareform.revokeBtn": "لغو",
+
+  "shareform.copyShort": "کپی",
+
+  "shareform.viewForm": "مشاهده فرم",
+
+  "shareform.noLinks": "هنوز لینکی ایجاد نشده. از فرم بالا برای ایجاد اولین لینک استفاده کنید.",
+
+  "shareform.refreshBtn": "تازه‌سازی",
+
+  "shareform.whatsappMsg": "لطفاً این فرم امن را برای ثبت اطلاعات خود پر کنید",
+
+  "shareform.never": "هرگز",
+
+  "shareform.pending": "در انتظار",
+
+  "shareform.selectFormFirst": "لطفاً ابتدا نوع فرم را انتخاب کنید",
+
+  "shareform.submissionDetails": "جزئیات فرم ارسال شده",
+
+  "shareform.closeModal": "بستن",
+
+  "shareform.personalInfo": "اطلاعات شخصی",
+
+  "shareform.addressInfo": "جزئیات آدرس",
+
+  "shareform.documentsInfo": "اسناد بارگذاری شده",
+
+  "shareform.contractsInfo": "قراردادها و ضمائم",
+
+  "shareform.photoInfo": "عکس متقاضی",
+
+  "shareform.openLink": "باز کردن لینک فرم",
+
+  "shareform.resendLink": "ارسال مجدد لینک جدید",
+  "sendcust.title": "ارسال به مشتری — لینک فرم خارجی امن",
+
+  "sendcust.subtitle": "یک لینک امن ایجاد کنید تا مستقیماً برای مشتری ارسال شود و بتواند بدون نیاز به ورود فرم را تکمیل کند.",
+
+  "sendcust.generating": "در حال ایجاد لینک امن...",
+
+  "sendcust.copyLink": "کپی لینک",
+
+  "sendcust.copied": "لینک کپی شد!",
+
+  "sendcust.whatsappShare": "اشتراک در واتساپ",
+
+  "sendcust.whatsappMsg": "مشتری گرامی، لطفاً اطلاعات ثبت‌نام خود را از طریق این لینک امن تکمیل نمایید",
+
+  "sendcust.close": "بستن",
+  "ssf.headerTitle": "جستجو و فیلتر هوشمند",
+
+  "ssf.badgeCompact": "فشرده • پاسخگو",
+
+  "ssf.headerSubtitle": "سریع‌تر جستجو، فیلتر و تحلیل کنید",
+
+  "ssf.searchPlaceholder": "جستجوی صورتحساب، مرجع یا کلمات کلیدی...",
+
+  "ssf.btnReset": "بازنشانی",
+
+  "ssf.btnFilter": "فیلتر",
+
+  "ssf.btnApplyFilter": "اعمال فیلتر",
+
+  "ssf.lblRiskLevel": "سطح ریسک",
+
+  "ssf.allRiskLevels": "همه سطوح ریسک",
+
+  "ssf.lblCountry": "کشور",
+
+  "ssf.allCountries": "همه کشورها",
+
+  "ssf.lblBranch": "شعبه",
+
+  "ssf.allBranches": "همه شعب",
+
+  "ssf.lblMainBranch": "شعبه اصلی / شهری",
+
+  "ssf.allMainBranches": "همه شعب اصلی",
+
+  "ssf.lblApprovalStatus": "وضعیت تایید",
+
+  "ssf.allStatuses": "همه وضعیت‌ها",
+
+  "ssf.lblFromDate": "از تاریخ",
+
+  "ssf.lblToDate": "تا تاریخ",
+
+  "ssf.lblModule": "ماژول",
+
+  "ssf.allModules": "همه ماژول‌ها",
+
+  "ssf.lblEditedBy": "ویرایش توسط",
+
+  "ssf.allUsers": "همه کاربران",
+
+  "ssf.lblCurrency": "ارز",
+
+  "ssf.allCurrencies": "همه ارزها",
+
+  "ssf.searchInsideDropdown": "جستجو...",
+
+  "ssf.noResultsFound": "گزینه‌ای یافت نشد",
+
+  "ssf.cascadingFlowHint": "جریان آبشاری: کشور ← شعبه ← شعبه اصلی",
+
+  "ssf.activeFiltersCount": "فیلترهای فعال",
+
+  "ssf.closeMobileFilters": "بستن",
   "common.previous_page": "صفحه قبلی",
 
   "common.next_page": "صفحه بعدی",
@@ -67564,6 +69400,414 @@ const ps: Dict = {
 
 
 
+
+
+
+
+
+  "extform.ct_mobile": "ګرځنده تیلیفون",
+
+  "extform.ct_whatsapp": "د واټس‌اپ شمېره",
+
+  "extform.ct_phone": "ثابت تیلیفون",
+
+  "extform.ct_office": "د دفتر تیلیفون",
+
+  "extform.ct_emergency": "بیړنۍ اړیکه",
+
+  "extform.ct_custom": "نور / دودیز",
+
+  "extform.doc_cnic": "ملي پېژندپاڼه / تذکره (CNIC)",
+
+  "extform.doc_passport": "پاسپورت (Passport)",
+
+  "extform.doc_emirates_id": "د اماراتو پیژندپاڼه (UAE)",
+
+  "extform.doc_tazkira": "د افغانستان برېښنايي تذکره",
+
+  "extform.doc_iqama": "د اقامې کارت",
+
+  "extform.doc_aadhaar_card": "د آدهار کارت",
+
+  "extform.doc_driving_license": "د موټر چلولو جواز",
+
+  "extform.doc_trade_tax_license": "سوداګریز / مالیاتي جواز",
+
+  "extform.doc_custom": "+ نوی ډول سند ورزیات کړئ",
+
+  "extform.cnt_employment_contract": "د کار قرارداد",
+
+  "extform.cnt_customer_service_agreement": "د پیرودونکي د خدمت تړون",
+
+  "extform.cnt_trade_clearing_terms": "د سوداګرۍ او تصفیې شرایط",
+
+  "extform.cnt_nda_confidentiality": "د محرمیت تړون (NDA)",
+
+  "extform.cnt_other_attachment": "نور قرارداد / ضمیمه",
+  "extform.headerTitle": "(DIGITAL DOCK ERP) د پیرودونکي عامه تایید",
+
+  "extform.headerSubtitle": "۵ اسان پړاوونه",
+
+  "extform.step1": "د پیژندنې معلومات درج کړئ",
+
+  "extform.step2": "اسناد اپلوډ کړئ",
+
+  "extform.step3": "د توضیحاتو تایید کړئ",
+
+  "extform.step4": "اضافي معلومات درج کړئ",
+
+  "extform.step5": "PDF جوړ او ډاونلوډ کړئ",
+
+  "extform.personalInfoTitle": "شخصي معلومات",
+
+  "extform.personalInfoSub": "مهرباني وکړئ خپل شخصي معلومات دننه کړئ.",
+
+  "extform.firstName": "لومړی نوم",
+
+  "extform.firstNamePh": "لومړی نوم ولیکئ",
+
+  "extform.lastName": "وروستی نوم",
+
+  "extform.lastNamePh": "وروستی نوم ولیکئ",
+
+  "extform.fatherName": "د پلار / سرپرست نوم",
+
+  "extform.fatherNamePh": "د پلار یا سرپرست نوم ولیکئ",
+
+  "extform.mobile": "ګرځنده تیلیفون / شمېره",
+
+  "extform.mobilePh": "د مبایل شمېره ولیکئ",
+
+  "extform.addAnotherMobile": "+ بله شمېره ورزیاته کړئ",
+
+  "extform.whatsapp": "د واټس‌اپ شمېره",
+
+  "extform.whatsappPh": "د واټس‌اپ شمېره ولیکئ",
+
+  "extform.addAnotherWhatsapp": "+ بل واټس‌اپ ورزیاته کړئ",
+
+  "extform.email": "د بریښنالیک پته (په انګلیسي ولیکئ)",
+
+  "extform.gender": "جنسیت",
+
+  "extform.male": "نارینه",
+
+  "extform.female": "ښځینه",
+
+  "extform.other": "نور",
+
+  "extform.documentsTitle": "اسناد",
+
+  "extform.documentsSub": "خپل اسناد یو یو ورزیات کړئ.",
+
+  "extform.docType": "د سند ډول",
+
+  "extform.docNumber": "د سند شمېره",
+
+  "extform.docNumberPh": "د سند شمېره ولیکئ",
+
+  "extform.frontSide": "مخکینی مخ",
+
+  "extform.backSide": "شاته مخ",
+
+  "extform.mainPage": "د اصلي معلوماتو پاڼه",
+
+  "extform.visaPage": "د ویزې / شاته پاڼه",
+
+  "extform.cameraBtn": "کیمره",
+
+  "extform.galleryBtn": "ګالري",
+
+  "extform.addDocBtn": "+ سند ورزیات کړئ",
+
+  "extform.contractsTitle": "قراردادونه او ضمیمې",
+
+  "extform.contractsSub": "اړوند قراردادونه یا ضمیمې اضافه کړئ.",
+
+  "extform.contractType": "د قرارداد ډول",
+
+  "extform.addContractBtn": "+ قرارداد ورزیات کړئ",
+
+  "extform.step2Title": "د پتې تفصیلات",
+
+  "extform.step2Sub": "مهرباني وکړئ هیواد، ولایت او ښار وټاکئ او بشپړه پته ولیکئ.",
+
+  "extform.country": "هیواد",
+
+  "extform.stateProvince": "ولایت / ایالت",
+
+  "extform.city": "ښار / بندر / سوداګریز مرکز",
+
+  "extform.postalCode": "پوسټل / ښار کوډ",
+
+  "extform.fullAddress": "بشپړه پته (کوڅه، ودانۍ، دفتر)",
+
+  "extform.fullAddressPh": "خپله بشپړه پته (کوڅه، ودانۍ، دفتر) ولیکئ",
+
+  "extform.step3Title": "د خپلو معلوماتو بیاکتنه وکړئ",
+
+  "extform.step3Sub": "مهرباني وکړئ د سپارلو دمخه ټول معلومات تایید کړئ.",
+
+  "extform.editBtn": "بدلون",
+
+  "extform.reviewVerifyBadge": "ایا ټول معلومات سم دي؟ تاسو کولی شئ اړین بدلونونه راولئ.",
+
+  "extform.step4Title": "خپل انځور پورته کړئ",
+
+  "extform.step4Sub": "مهرباني وکړئ خپل نوی عکس پورته کړئ.",
+
+  "extform.photoSizeHint": "JPG, PNG (تر 5MB پورې)",
+
+  "extform.nextDocsBtn": "بل: اسناد او قراردادونه ←",
+
+  "extform.nextAddressBtn": "بل: پته او استوګنه ←",
+
+  "extform.nextPhotoBtn": "بل: انځور پورته کول ←",
+
+  "extform.nextReviewBtn": "بل: کتنه او د غوښتنلیک راپور ←",
+
+  "extform.backBtn": "شاته",
+
+  "extform.submitFormBtn": "فورم وسپارئ",
+
+  "extform.successTitle": "فورم په بریالیتوب سره ثبت شو!",
+
+  "extform.successMsg": "مننه! ستاسو معلومات او اسناد په خوندي ډول زموږ په ERP سیسټم کې ثبت شول.",
+
+  "extform.receiptTitle": "د ثبت رسمي رسید",
+
+  "extform.receiptRef": "د حوالې کوډ",
+
+  "extform.submittedOn": "د سپارلو نېټه",
+
+  "extform.printReceipt": "رسید چاپ / خوندي کړئ",
+
+  "extform.submitAnother": "بل فورم وسپارئ",
+
+  "extform.errorInvalid": "لینک ناسم دی یا وخت یې پوره شوی دی",
+
+  "extform.loading": "فورم لوډ کیږي...",
+
+  "extform.issueDate": "د صادرېدو نېټه",
+
+  "extform.expiryDate": "د پای نېټه",
+
+  "extform.dob": "د زېږېدو نېټه",
+
+  "extform.contactType": "د اړیکې ډول",
+
+  "extform.customDocName": "د سند نوی نوم",
+
+  "extform.customDocNamePh": "لکه برېښنايي تذکره یا بل ځانګړی سند",
+
+  "extform.addContactBtn": "+ بله اړیکه ورزیاته کړئ",
+
+  "extform.phoneLabel": "د اړیکې / تیلیفون شمېره",
+
+  "extform.aiScanTitle": "⚡ د هویت د کارت هوښیار سکینر (خپلکار ډکول)",
+
+  "extform.aiScanSubtitle": "د هویت د کارت انځور واخلئ — نوم، د کارت شمېره او نېټې به پخپله ډکې شي!",
+
+  "extform.aiScanningBadge": "⚡ سکین روان دی، معلومات په اوتومات ډول راایستل کیږي...",
+
+  "extform.aiScanSuccessMsg": "د سند معلومات په بریالیتوب سره راواخیستل شول! تاسو یې هر وخت سمولی شئ.",
+
+  "extform.retakeBtn": "بیا انځور واخلئ",
+
+  "extform.clearBtn": "پاک کړئ",
+
+  "extform.viewFullBtn": "بشپړ انځور کتل",
+
+  "extform.frontSideReady": "مخکینی اړخ (چمتو دی)",
+
+  "extform.backSideReady": "شا اړخ (چمتو دی)",
+
+  "extform.downloadSlipBtn": "د غوښتنلیک رسمي پاڼه ډاونلوډ کړئ (PDF)",
+
+  "extform.printSlipBtn": "د غوښتنلیک پاڼه چاپ کړئ",
+
+  "extform.appSlipHeading": "د ثبت نام او تایید رسمي پاڼه",
+
+  "extform.appSlipSub": "مهرباني وکړئ د وروستي سپارلو مخکې خپله بشپړه تایید شوې پاڼه وګورئ او ډاونلوډ یې کړئ.",
+
+  "extform.declarationText": "زه دلته تصدیق کوم چې په دې غوښتنلیک کې وړاندې شوي شخصي معلومات، د اړیکې شمېرې، پته او اسناد بشپړ سم او باوري دي.",
+  "shareform.title": "فورم شریکول / بهرنی فورم لینک",
+
+  "shareform.subtitle": "د بیرونی ترلاسه کونکو سره د ERP فورمونو شریکولو لپاره خوندي لینکونه جوړ کړئ — د ورود اړتیا نشته.",
+
+  "shareform.generateTitle": "نوی فورم لینک جوړ کړئ",
+
+  "shareform.selectFormType": "د فورم ډول وټاکئ",
+
+  "shareform.customer": "د پیرودونکي ثبت",
+
+  "shareform.employee": "د کارمند ثبت",
+
+  "shareform.company": "د شرکت ثبت",
+
+  "shareform.agent": "د ایجنټ ثبت",
+
+  "shareform.expiryLabel": "د لینک پای",
+
+  "shareform.expiry24h": "۲۴ ساعتونه",
+
+  "shareform.expiry48h": "۴۸ ساعتونه",
+
+  "shareform.expiry7d": "۷ ورځې (ډیفالټ)",
+
+  "shareform.expiry14d": "۱۴ ورځې",
+
+  "shareform.expiry30d": "۳۰ ورځې",
+
+  "shareform.expiryNever": "هیڅکله پای نه رسیږي",
+
+  "shareform.notesLabel": "نوټونه (اختیاري)",
+
+  "shareform.generateBtn": "خوندي لینک جوړ کړئ",
+
+  "shareform.generatedLink": "ستاسو خوندی لینک",
+
+  "shareform.copyLink": "لینک کاپي کړئ",
+
+  "shareform.copied": "کاپي شو!",
+
+  "shareform.whatsappShare": "واټساپ کې شریک کړئ",
+
+  "shareform.linksRegistry": "جوړ شوي لینکونو ثبت",
+
+  "shareform.colSerial": "#",
+
+  "shareform.colFormType": "د فورم ډول",
+
+  "shareform.colStatus": "حالت",
+
+  "shareform.colCreatedBy": "جوړونکی",
+
+  "shareform.colCreatedAt": "جوړیدو نیټه",
+
+  "shareform.colExpiry": "پای",
+
+  "shareform.colSubmission": "وسپارنه",
+
+  "shareform.colActions": "کړنې",
+
+  "shareform.statusActive": "فعال",
+
+  "shareform.statusUsed": "وسپارل شوی",
+
+  "shareform.statusExpired": "پای شوی",
+
+  "shareform.statusRevoked": "لغو شوی",
+
+  "shareform.revokeBtn": "لغو کړئ",
+
+  "shareform.copyShort": "کاپي",
+
+  "shareform.viewForm": "فورم کتل",
+
+  "shareform.noLinks": "تر اوسه هیڅ لینک نه دی جوړ شوی. لومړی لینک جوړولو لپاره پورته فورم وکاروئ.",
+
+  "shareform.refreshBtn": "تازه کړئ",
+
+  "shareform.whatsappMsg": "مهرباني وکړئ خپل معلومات ثبتولو لپاره دا خوندی فورم ډک کړئ",
+
+  "shareform.never": "هیڅکله",
+
+  "shareform.pending": "پاتې",
+
+  "shareform.selectFormFirst": "لومړی د فورم ډول وټاکئ",
+
+  "shareform.submissionDetails": "د سپارل شوي فورم تفصیلات",
+
+  "shareform.closeModal": "بندول",
+
+  "shareform.personalInfo": "شخصي معلومات",
+
+  "shareform.addressInfo": "د پتې تفصیلات",
+
+  "shareform.documentsInfo": "پورته شوي اسناد",
+
+  "shareform.contractsInfo": "قراردادونه او ضمیمې",
+
+  "shareform.photoInfo": "د کاندید عکس",
+
+  "shareform.openLink": "د فورم لینک پرانیستل",
+
+  "shareform.resendLink": "بیا نوی لینک واستوئ",
+  "sendcust.title": "پیرودونکي ته لیږل — خوندي بهرنی فورم لینک",
+
+  "sendcust.subtitle": "خپل پیرودونکي ته مستقیم لیږلو لپاره یو خوندي لینک جوړ کړئ ترڅو پرته له ننوتلو څخه فورم ډک کړي.",
+
+  "sendcust.generating": "خوندي لینک جوړیږي...",
+
+  "sendcust.copyLink": "لینک کاپي کړئ",
+
+  "sendcust.copied": "لینک کاپي شو!",
+
+  "sendcust.whatsappShare": "واټساپ کې شریک کړئ",
+
+  "sendcust.whatsappMsg": "محترم پیرودونکې، مهرباني وکړئ پدې خوندي لینک کې خپل د ثبت معلومات ډک کړئ",
+
+  "sendcust.close": "بندول",
+  "ssf.headerTitle": "هوښیار لټون او فلټر",
+
+  "ssf.badgeCompact": "کمپیکٹ • ځواب ویونکی",
+
+  "ssf.headerSubtitle": "ګړندی لټون، فلټر او تحلیل کړئ",
+
+  "ssf.searchPlaceholder": "بل، حواله یا کلیدي کلمې وپلټئ...",
+
+  "ssf.btnReset": "بیا تنظیمول",
+
+  "ssf.btnFilter": "فلټر",
+
+  "ssf.btnApplyFilter": "فلټر تطبیق کړئ",
+
+  "ssf.lblRiskLevel": "د خطر کچه",
+
+  "ssf.allRiskLevels": "د خطر ټولې کچې",
+
+  "ssf.lblCountry": "هیواد",
+
+  "ssf.allCountries": "ټول هیوادونه",
+
+  "ssf.lblBranch": "څانګه",
+
+  "ssf.allBranches": "ټولې څانګې",
+
+  "ssf.lblMainBranch": "اصلي / ښاري څانګه",
+
+  "ssf.allMainBranches": "ټولې اصلي څانګې",
+
+  "ssf.lblApprovalStatus": "د تصویب حالت",
+
+  "ssf.allStatuses": "ټول حالتونه",
+
+  "ssf.lblFromDate": "له نیټې",
+
+  "ssf.lblToDate": "تر نیټې",
+
+  "ssf.lblModule": "ماډیول",
+
+  "ssf.allModules": "ټول ماډیولونه",
+
+  "ssf.lblEditedBy": "سمول لخوا",
+
+  "ssf.allUsers": "ټول کارونکي",
+
+  "ssf.lblCurrency": "اسعار",
+
+  "ssf.allCurrencies": "ټول اسعار",
+
+  "ssf.searchInsideDropdown": "لټون...",
+
+  "ssf.noResultsFound": "هیڅ انتخاب ونه موندل شو",
+
+  "ssf.cascadingFlowHint": "ځړیدونکی بهیر: هیواد ← څانګه ← اصلي څانګه",
+
+  "ssf.activeFiltersCount": "فعال فلټرونه",
+
+  "ssf.closeMobileFilters": "بندول",
   "common.previous_page": "مخکینی مخ",
 
   "common.next_page": "راتلونکی مخ",

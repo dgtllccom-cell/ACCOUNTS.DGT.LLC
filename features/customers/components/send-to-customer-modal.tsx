@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { t as centralT } from "@/lib/i18n/ui";
 import { Link2, Copy, MessageCircle, CheckCircle2, Shield, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -12,67 +13,19 @@ interface SendToCustomerModalProps {
   defaultFormType?: "customer" | "employee" | "company" | "agent";
 }
 
-const dict: Record<string, Record<string, string>> = {
-  title: {
-    en: "SEND TO CUSTOMER — Secure External Form Link",
-    ur: "کسٹمر کو بھیجیں — محفوظ بیرونی فارم لنک",
-    ar: "إرسال إلى العميل — رابط النموذج الخارجي الآمن",
-    fa: "ارسال به مشتری — لینک فرم خارجی امن",
-    ps: "پیرودونکي ته لیږل — خوندي بهرنی فورم لینک"
-  },
-  subtitle: {
-    en: "Generate a secure link to send directly to your customer. They will open and fill their details on mobile/desktop without needing an ERP login.",
-    ur: "اپنے کسٹمر کو براہ راست بھیجنے کے لیے ایک محفوظ لنک بنائیں تاکہ وہ بغیر لاگ اِن کیے موبائل یا کمپیوٹر پر فارم بھر سکیں۔",
-    ar: "قم بإنشاء رابط آمن لإرساله مباشرة إلى عميلك لملء بياناته دون الحاجة إلى تسجيل الدخول.",
-    fa: "یک لینک امن ایجاد کنید تا مستقیماً برای مشتری ارسال شود و بتواند بدون نیاز به ورود فرم را تکمیل کند.",
-    ps: "خپل پیرودونکي ته مستقیم لیږلو لپاره یو خوندي لینک جوړ کړئ ترڅو پرته له ننوتلو څخه فورم ډک کړي."
-  },
-  generating: {
-    en: "Generating secure link...",
-    ur: "محفوظ لنک تیار ہو رہا ہے...",
-    ar: "جاري إنشاء الرابط الآمن...",
-    fa: "در حال ایجاد لینک امن...",
-    ps: "خوندي لینک جوړیږي..."
-  },
-  copyLink: {
-    en: "Copy Link",
-    ur: "لنک کاپی کریں",
-    ar: "نسخ الرابط",
-    fa: "کپی لینک",
-    ps: "لینک کاپي کړئ"
-  },
-  copied: {
-    en: "Link Copied!",
-    ur: "لنک کاپی ہو گیا!",
-    ar: "تم نسخ الرابط!",
-    fa: "لینک کپی شد!",
-    ps: "لینک کاپي شو!"
-  },
-  whatsappShare: {
-    en: "Share via WhatsApp",
-    ur: "واٹس ایپ پر بھیجیں",
-    ar: "مشاركة عبر واتساب",
-    fa: "اشتراک در واتساپ",
-    ps: "واټساپ کې شریک کړئ"
-  },
-  whatsappMsg: {
-    en: "Dear Customer, please fill your registration details using this secure link",
-    ur: "محترم کسٹمر! براہِ کرم اس محفوظ لنک کے ذریعے اپنی رجسٹریشن کی تفصیلات درج فرمائیں",
-    ar: "عزيزي العميل، يرجى ملء بيانات التسجيل عبر هذا الرابط الآمن",
-    fa: "مشتری گرامی، لطفاً اطلاعات ثبت‌نام خود را از طریق این لینک امن تکمیل نمایید",
-    ps: "محترم پیرودونکې، مهرباني وکړئ پدې خوندي لینک کې خپل د ثبت معلومات ډک کړئ"
-  },
-  close: {
-    en: "Close",
-    ur: "بند کریں",
-    ar: "إغلاق",
-    fa: "بستن",
-    ps: "بندول"
-  }
+const dictEn: Record<string, string> = {
+  "title": "SEND TO CUSTOMER — Secure External Form Link",
+  "subtitle": "Generate a secure link to send directly to your customer. They will open and fill their details on mobile/desktop without needing an ERP login.",
+  "generating": "Generating secure link...",
+  "copyLink": "Copy Link",
+  "copied": "Link Copied!",
+  "whatsappShare": "Share via WhatsApp",
+  "whatsappMsg": "Dear Customer, please fill your registration details using this secure link",
+  "close": "Close",
 };
 
-function t(key: string, lang: SupportedLanguage): string {
-  return dict[key]?.[lang] ?? dict[key]?.["en"] ?? key;
+function t(key: string, lang: string): string {
+  return centralT(lang as never, ("sendcust." + key) as never, dictEn[key] ?? key);
 }
 
 export function SendToCustomerModal({
