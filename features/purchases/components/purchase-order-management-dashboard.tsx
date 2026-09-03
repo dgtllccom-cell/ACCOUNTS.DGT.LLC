@@ -56,6 +56,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { MultilingualText } from "@/lib/i18n/multilingual-translator";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
+import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 
 type PurchaseReport = {
@@ -2684,6 +2685,8 @@ export function PurchaseOrderManagementDashboard() {
                 recordId={selected.id}
                 onSaved={loadReports}
               />
+              <AddExpenseBillButton sourceId={selected.id} lang={activeLang} />
+
               <Button
                 type="button"
                 variant="outline"

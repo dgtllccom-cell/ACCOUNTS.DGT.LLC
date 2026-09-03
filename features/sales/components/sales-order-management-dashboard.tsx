@@ -32,6 +32,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { t } from "@/lib/i18n/ui";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
+import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 
@@ -473,6 +474,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                       <td className="px-3 py-2.5 text-center">
                         <div className="inline-flex items-center justify-center gap-2">
                           <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={loadOrders} />
+                          <AddExpenseBillButton sourceId={order.id} lang={activeLang} size="icon" variant="outline" className="h-8 w-8 p-0" />
                           <Button
                             onClick={() => handlePrint(order)}
                             variant="outline"

@@ -9,6 +9,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 
 type PaymentBillRow = {
   id: string;
@@ -587,13 +588,16 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => handleEdit(r)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-700"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          {tt("clbill.edit", "Edit")}
-                        </button>
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => handleEdit(r)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-700"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            {tt("clbill.edit", "Edit")}
+                          </button>
+                          <AddExpenseBillButton sourceId={r.id} lang={lang} size="sm" variant="outline" />
+                        </div>
                       </td>
                     </tr>
                   ))}

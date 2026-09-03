@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bexp.aeb_label"
+  | "bexp.aeb_not_ready"
+  | "bexp.aeb_failed"
   | "nav.bcp_reports"
   | "bexp.rpt_bill_wise_expense"
   | "bexp.rpt_bill_wise_final_cost"
@@ -18066,6 +18069,15 @@ const en: Dict = {
 
 
 
+
+
+  "bexp.aeb_label": "Add Expense Bill",
+
+
+  "bexp.aeb_not_ready": "This bill is not yet eligible for expenses. Submit / post it first.",
+
+
+  "bexp.aeb_failed": "Could not open the expense bill.",
   "nav.bcp_reports": "Reports",
 
 
@@ -32405,6 +32417,15 @@ const ur: Dict = {
 
 
 
+
+
+  "bexp.aeb_label": "اخراجات بل شامل کریں",
+
+
+  "bexp.aeb_not_ready": "یہ بل ابھی اخراجات کے لیے اہل نہیں۔ پہلے اسے جمع / پوسٹ کریں۔",
+
+
+  "bexp.aeb_failed": "اخراجات بل نہیں کھل سکا۔",
   "nav.bcp_reports": "رپورٹس",
 
 
@@ -46746,6 +46767,15 @@ const ar: Dict = {
 
 
 
+
+
+  "bexp.aeb_label": "إضافة فاتورة مصروفات",
+
+
+  "bexp.aeb_not_ready": "هذه الفاتورة غير مؤهلة للمصروفات بعد. قم بإرسالها / ترحيلها أولاً.",
+
+
+  "bexp.aeb_failed": "تعذر فتح فاتورة المصروفات.",
   "nav.bcp_reports": "التقارير",
 
 
@@ -61086,6 +61116,15 @@ const fa: Dict = {
 
 
 
+
+
+  "bexp.aeb_label": "افزودن فاکتور مخارج",
+
+
+  "bexp.aeb_not_ready": "این فاکتور هنوز واجد شرایط مخارج نیست. ابتدا آن را ثبت / ارسال کنید.",
+
+
+  "bexp.aeb_failed": "فاکتور مخارج باز نشد.",
   "nav.bcp_reports": "گزارش‌ها",
 
 
@@ -75432,6 +75471,15 @@ const ps: Dict = {
 
 
 
+
+
+  "bexp.aeb_label": "د لګښت بل اضافه کړئ",
+
+
+  "bexp.aeb_not_ready": "دا بل تر اوسه د لګښتونو وړ نه دی. لومړی یې وسپارئ / پوسټ کړئ.",
+
+
+  "bexp.aeb_failed": "د لګښت بل نه شو پرانیستل.",
   "nav.bcp_reports": "راپورونه",
 
 

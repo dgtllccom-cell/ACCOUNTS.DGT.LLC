@@ -526,6 +526,14 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                 <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={_("ble.menu_pdf", "PDF Download")} onClick={printReport} />
                 <MenuAction icon={<Mail className="h-4 w-4" />} label={_("ble.menu_email", "Email B/L")} onClick={() => setMenuOpen(false)} />
                 <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={_("ble.menu_csv", "Export CSV")} onClick={exportCsv} />
+                <MenuAction
+                  icon={<SquareArrowOutUpRight className="h-4 w-4" />}
+                  label={_("bexp.aeb_label", "Add Expense Bill")}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    window.location.href = "/dashboard/bill-cost-profit/purchase";
+                  }}
+                />
                 <MenuAction icon={<SquareArrowOutUpRight className="h-4 w-4" />} label={_("ble.menu_fullscreen", "Full Screen View")} onClick={() => document.documentElement.requestFullscreen?.()} />
               </div>
             ) : null}

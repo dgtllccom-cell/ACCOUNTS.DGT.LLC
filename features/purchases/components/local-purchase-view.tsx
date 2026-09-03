@@ -17,6 +17,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { t } from "@/lib/i18n/ui";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
@@ -2924,6 +2925,12 @@ export function LocalPurchaseView({
                                     >
                                       <Printer className="h-3.5 w-3.5 text-purple-600" /> Print / Export PDF
                                     </button>
+
+                                    {rowStatus !== "draft" && (
+                                      <div className="px-3 py-1.5">
+                                        <AddExpenseBillButton sourceId={row.id} lang={lang} variant="ghost" className="h-auto w-full justify-start p-0 text-[10px] font-bold text-slate-700 hover:text-indigo-600" />
+                                      </div>
+                                    )}
 
                                     {rowStatus === "draft" && (
                                       <button
