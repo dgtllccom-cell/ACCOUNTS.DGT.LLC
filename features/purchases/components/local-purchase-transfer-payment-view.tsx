@@ -248,7 +248,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
             className="h-9 text-xs font-bold border-slate-200 dark:border-slate-800"
           >
             <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin text-blue-600" : ""}`} />
-            Sync Pending
+            {tt("lptp.sync_pending", "Sync Pending")}
           </Button>
         </div>
       </div>
@@ -259,7 +259,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
           <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
             <Send className="h-4 w-4 text-amber-600" />
             <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              Pending GL Transfers
+              {tt("lptp.pending_gl_transfers", "Pending GL Transfers")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
@@ -267,7 +267,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
               {filteredPurchases.length}
             </div>
             <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
-              Accepted bills awaiting verification
+              {tt("lptp.accepted_bills_awaiting", "Accepted bills awaiting verification")}
             </p>
           </CardContent>
         </Card>
@@ -276,7 +276,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
           <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
             <Coins className="h-4 w-4 text-emerald-600" />
             <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              Total Pending Value
+              {tt("lptp.total_pending_value", "Total Pending Value")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
@@ -284,7 +284,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
               {totalPendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
-              Aggregate unposted purchase cost
+              {tt("lptp.aggregate_unposted_cost", "Aggregate unposted purchase cost")}
             </p>
           </CardContent>
         </Card>
@@ -293,12 +293,12 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
           <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
             <Building2 className="h-4 w-4 text-blue-600" />
             <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              Authorized Branch
+              {tt("lptp.authorized_branch", "Authorized Branch")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 flex flex-col justify-center">
             <div className="text-sm font-black text-slate-700 dark:text-slate-350 uppercase">
-              {session.branchName || "Global Head Office"}
+              {session.branchName || "—"}
             </div>
             <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
               {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
@@ -409,7 +409,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                             onClick={() => setSelectedRowForVoucher(row)}
                             className="h-6 px-2 text-[9px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
                           >
-                            View Voucher
+                            {tt("lptp.view_voucher", "View Voucher")}
                           </Button>
                         </td>
                       </tr>

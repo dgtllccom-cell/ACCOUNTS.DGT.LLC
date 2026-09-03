@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ErpSession } from "@/lib/auth/session";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import {
   BarChart3,
   Calendar,
@@ -42,6 +43,7 @@ const REPORT_TYPES = [
 
 export function CrmReportsView({ session }: CrmReportsViewProps) {
   const lang = useActiveLanguage();
+  const th = (s: string) => translateHeader(lang, s);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   const [reportType, setReportType] = useState<string>("daily_action");
@@ -112,24 +114,24 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
     const recs = data?.records || [];
     void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
       openGenericErpReport({
-        title: `CRM Report — ${reportType || "Smart Due"}`,
+        title: `${t(lang, "crmr.report_title", "CRM Report")} — ${reportType || t(lang, "crmr.smart_due", "Smart Due")}`,
         lang,
         orientation: "landscape",
         columns: [
-          { key: "globalSerial", label: "Global Serial" },
-          { key: "referenceNo", label: "Reference No" },
-          { key: "itemType", label: "Type" },
-          { key: "partyName", label: "Party" },
-          { key: "dueDate", label: "Due Date", format: "date" },
-          { key: "amount", label: "Amount", align: "right", format: "currency" },
-          { key: "paidAmount", label: "Paid", align: "right", format: "currency" },
-          { key: "remainingAmount", label: "Remaining", align: "right", format: "currency" },
-          { key: "currency", label: "Currency" },
-          { key: "status", label: "Status", format: "status" },
-          { key: "responsibleUser", label: "Responsible User" },
+          { key: "globalSerial", label: t(lang, "crmr.col_global_serial", "Global Serial") },
+          { key: "referenceNo", label: t(lang, "crmr.col_reference_no", "Reference No") },
+          { key: "itemType", label: t(lang, "crmr.col_type", "Type") },
+          { key: "partyName", label: t(lang, "crmr.col_party", "Party") },
+          { key: "dueDate", label: t(lang, "crmr.col_due_date", "Due Date"), format: "date" },
+          { key: "amount", label: t(lang, "crmr.col_amount", "Amount"), align: "right", format: "currency" },
+          { key: "paidAmount", label: t(lang, "crmr.col_paid", "Paid"), align: "right", format: "currency" },
+          { key: "remainingAmount", label: t(lang, "crmr.col_remaining", "Remaining"), align: "right", format: "currency" },
+          { key: "currency", label: t(lang, "crmr.col_currency", "Currency") },
+          { key: "status", label: t(lang, "crmr.col_status", "Status"), format: "status" },
+          { key: "responsibleUser", label: t(lang, "crmr.col_responsible_user", "Responsible User") },
         ],
         rows: recs as Record<string, unknown>[],
-        filters: [{ label: "Report Type", value: String(reportType || "-") }, { label: "Records", value: String(recs.length) }],
+        filters: [{ label: t(lang, "crmr.col_report_type", "Report Type"), value: String(reportType || "-") }, { label: t(lang, "crmr.records", "Records"), value: String(recs.length) }],
         totalsRow: {
           amount: recs.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0),
           paidAmount: recs.reduce((s: number, r: any) => s + (Number(r.paidAmount) || 0), 0),
@@ -153,11 +155,11 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
                 {t(lang, "crm.menu_reports", "CRM Universal Reports & Due Center")}
               </h1>
               <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Enterprise Live
+                {t(lang, "crmr.enterprise_live", "Enterprise Live")}
               </span>
             </div>
             <p className="text-xs font-medium text-slate-500 mt-1">
-              Multi-Tier Scope Consolidated Reports • 100+ Countries • Universal Print & PDF Ready
+              {t(lang, "crmr.subtitle", "Multi-Tier Scope Consolidated Reports • 100+ Countries • Universal Print & PDF Ready")}
             </p>
           </div>
         </div>
@@ -208,14 +210,14 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             className="h-8 text-xs font-semibold px-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-            placeholder="From Date"
+            placeholder={t(lang, "crmr.from_date", "From Date")}
           />
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             className="h-8 text-xs font-semibold px-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-            placeholder="To Date"
+            placeholder={t(lang, "crmr.to_date", "To Date")}
           />
         </div>
 
@@ -284,29 +286,29 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
             <thead className="bg-slate-50 dark:bg-slate-950 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-3 py-3 text-center w-12">#</th>
-                <th className="px-3 py-3 text-left">Serial / Ref</th>
-                <th className="px-3 py-3 text-left">Item Type</th>
-                <th className="px-3 py-3 text-left">Party / Customer</th>
-                <th className="px-3 py-3 text-left">Country / Branch</th>
-                <th className="px-3 py-3 text-center">Due Date</th>
-                <th className="px-3 py-3 text-right">Total Amount</th>
-                <th className="px-3 py-3 text-right">Paid</th>
-                <th className="px-3 py-3 text-right">Remaining</th>
-                <th className="px-3 py-3 text-center">Status</th>
-                <th className="px-3 py-3 text-left">Assigned User</th>
+                <th className="px-3 py-3 text-left">{th("Serial / Ref")}</th>
+                <th className="px-3 py-3 text-left">{th("Item Type")}</th>
+                <th className="px-3 py-3 text-left">{th("Party / Customer")}</th>
+                <th className="px-3 py-3 text-left">{th("Country / Branch")}</th>
+                <th className="px-3 py-3 text-center">{th("Due Date")}</th>
+                <th className="px-3 py-3 text-right">{th("Total Amount")}</th>
+                <th className="px-3 py-3 text-right">{th("Paid")}</th>
+                <th className="px-3 py-3 text-right">{th("Remaining")}</th>
+                <th className="px-3 py-3 text-center">{th("Status")}</th>
+                <th className="px-3 py-3 text-left">{th("Assigned User")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
               {loading ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-slate-400 font-bold">
-                    Loading universal CRM records...
+                    {t(lang, "crmr.loading_records", "Loading universal CRM records...")}
                   </td>
                 </tr>
               ) : !data?.records?.length ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-slate-400 font-bold">
-                    No CRM records found matching the selected filter criteria.
+                    {t(lang, "crmr.no_records", "No CRM records found matching the selected filter criteria.")}
                   </td>
                 </tr>
               ) : (

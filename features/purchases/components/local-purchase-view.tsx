@@ -22,6 +22,7 @@ import { BranchScopeDropdown } from "@/features/purchases/components/branch-scop
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { PersonPicker } from "@/components/erp/person-picker";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -1703,7 +1704,7 @@ export function LocalPurchaseView({
                           onChange={e => setPaymentMode(e.target.value)}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-slate-700"
                         >
-                          {PAYMENT_MODES.map(pm => <option key={pm.value} value={pm.value}>{pm.label}</option>)}
+                          {PAYMENT_MODES.map(pm => <option key={pm.value} value={pm.value}>{translateOptionLabel(lang, pm.label)}</option>)}
                         </select>
                       </div>
                     </div>
@@ -1711,14 +1712,14 @@ export function LocalPurchaseView({
                     {/* 6. Origin Country */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                        <Globe className="h-3 w-3 text-blue-600" /> Origin Country
+                        <Globe className="h-3 w-3 text-blue-600" /> {t(lang, "lp.origin_country", "Origin Country")}
                       </label>
                       <select
                         value={originCountryId}
                         onChange={e => setOriginCountryId(e.target.value)}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold"
                       >
-                        <option value="">Local (Branch Country)</option>
+                        <option value="">{t(lang, "lp.local_branch_country", "Local (Branch Country)")}</option>
                         {countries.map(c => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
@@ -2337,7 +2338,7 @@ export function LocalPurchaseView({
                           <Flag className="h-3.5 w-3.5 text-amber-600" /> {t(lang, "lp.export_workflow", "Export Shipment Workflow")}
                         </p>
                         <p className="text-[10px] leading-relaxed">
-                          This purchase is designated for export. Shipment routes, customs documentation, and container loading tracking must be completed via the Export Loading & Shipping modules after booking.
+                          {t(lang, "lp.export_note", "This purchase is designated for export. Shipment routes, customs documentation, and container loading tracking must be completed via the Export Loading & Shipping modules after booking.")}
                         </p>
                       </div>
                     )}
@@ -2436,12 +2437,12 @@ export function LocalPurchaseView({
                     <div className="flex gap-2">
                       <Button type="button" variant="outline" onClick={() => setCurrentStep(3)}
                         className="w-1/2 h-9 rounded-xl text-xs font-bold border-slate-300">
-                        <ArrowLeft className="h-3.5 w-3.5" /> Back
+                        <ArrowLeft className="h-3.5 w-3.5" /> {t(lang, "common.back", "Back")}
                       </Button>
                       <Button type="button" variant="outline"
-                        onClick={() => { setIsFormOpen(false); alert("Bill saved to draft."); }}
+                        onClick={() => { setIsFormOpen(false); alert(t(lang, "lp.bill_saved_draft", "Bill saved to draft.")); }}
                         className="w-1/2 h-9 rounded-xl text-xs font-bold border-slate-300 text-slate-700 hover:bg-slate-100">
-                        Save Draft
+                        {t(lang, "common.save_draft", "Save Draft")}
                       </Button>
                     </div>
 
@@ -2737,7 +2738,7 @@ export function LocalPurchaseView({
                 onClick={() => setIsFormOpen(false)}
                 className="w-full h-9 text-slate-500 hover:text-slate-700 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-xl transition"
               >
-                Close Form
+                {t(lang, "lp.close_form", "Close Form")}
               </Button>
             </div>
           </div>
@@ -2760,15 +2761,15 @@ export function LocalPurchaseView({
                   title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
                   subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                   columns={[
-                    { key: "voucherNo", label: "Voucher No", align: "left" },
-                    { key: "date", label: "Date", align: "left" },
-                    { key: "supplier", label: "Supplier", align: "left" },
-                    { key: "goods", label: "Goods Name", align: "left" },
-                    { key: "qty", label: "Quantity", align: "right" },
-                    { key: "netWeight", label: "Net Weight", align: "right" },
-                    { key: "rate", label: "Rate", align: "right" },
-                    { key: "finalAmount", label: "Final Amount ($)", align: "right", format: "currency" },
-                    { key: "status", label: "Status", align: "center" }
+                    { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
+                    { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
+                    { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
+                    { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
+                    { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
+                    { key: "netWeight", label: t(lang, "lp.col_net_weight", "Net Weight"), align: "right" },
+                    { key: "rate", label: t(lang, "lp.col_rate", "Rate"), align: "right" },
+                    { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount ($)"), align: "right", format: "currency" },
+                    { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
                   ]}
                   rows={filteredPurchases.map((p) => ({
                     voucherNo: p.voucher_no || p.invoice_no || "-",
@@ -2820,7 +2821,7 @@ export function LocalPurchaseView({
                       <tr>
                         <td colSpan={22} className="p-8 text-center text-slate-400 font-mono">
                           <Loader2 className="h-5 w-5 animate-spin mx-auto text-blue-600 mb-2" />
-                          Loading bills...
+                          {t(lang, "lp.loading_bills", "Loading bills...")}
                         </td>
                       </tr>
                     ) : filteredPurchases.length === 0 ? (
@@ -3116,7 +3117,7 @@ export function LocalPurchaseView({
                 onClick={() => setIsScopeModalOpen(false)}
                 className="w-1/2 h-9 rounded-xl text-xs font-bold"
               >
-                Cancel
+                {t(lang, "common.cancel", "Cancel")}
               </Button>
               <Button
                 type="button"
@@ -3130,7 +3131,7 @@ export function LocalPurchaseView({
                 }}
                 className="w-1/2 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider shadow-md shadow-blue-100"
               >
-                Confirm Scope
+                {t(lang, "lp.btn_confirm_scope", "Confirm Scope")}
               </Button>
             </div>
           </div>
@@ -3180,14 +3181,14 @@ export function LocalPurchaseView({
                   onClick={() => setIsAddingGoodsModal(false)}
                   className="w-1/2 h-9 rounded-xl text-xs font-bold"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={submittingNewGoods}
                   className="w-1/2 h-9 rounded-xl bg-blue-600 text-white text-xs font-bold"
                 >
-                  Save Goods
+                  {t(lang, "lp.btn_save_goods", "Save Goods")}
                 </Button>
               </div>
             </form>
@@ -3236,14 +3237,14 @@ export function LocalPurchaseView({
                   onClick={() => { setIsEditingGoodsModal(false); setEditGoodsTarget(null); }}
                   className="w-1/2 h-9 rounded-xl text-xs font-bold"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={submittingEditGoods}
                   className="w-1/2 h-9 rounded-xl bg-blue-600 text-white text-xs font-bold"
                 >
-                  Update Goods
+                  {t(lang, "lp.btn_update_goods", "Update Goods")}
                 </Button>
               </div>
             </form>
@@ -3284,14 +3285,14 @@ export function LocalPurchaseView({
                   onClick={() => setIsAddingBrandModal(false)}
                   className="w-1/2 h-9 rounded-xl text-xs font-bold"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={submittingNewBrand}
                   className="w-1/2 h-9 rounded-xl bg-blue-600 text-white text-xs font-bold"
                 >
-                  Save Brand
+                  {t(lang, "lp.btn_save_brand", "Save Brand")}
                 </Button>
               </div>
             </form>
@@ -3332,14 +3333,14 @@ export function LocalPurchaseView({
                   onClick={() => setIsAddingSizeModal(false)}
                   className="w-1/2 h-9 rounded-xl text-xs font-bold"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={submittingNewSize}
                   className="w-1/2 h-9 rounded-xl bg-blue-600 text-white text-xs font-bold"
                 >
-                  Save Size
+                  {t(lang, "lp.btn_save_size", "Save Size")}
                 </Button>
               </div>
             </form>

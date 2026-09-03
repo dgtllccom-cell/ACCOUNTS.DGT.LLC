@@ -842,28 +842,28 @@ function kpis(rows: PurchaseOrderRow[], baseCurrency: string, lang: LanguageCode
     {
       label: t("total_purchase_lc", lang),
       value: money(totalPurchaseUSD, purchCur),
-      sublabel: "Original Currency Total",
+      sublabel: translateHeader(lang, "Original Currency Total"),
       icon: <FileText className="h-5 w-5" />,
       tone: "blue"
     },
     {
       label: t("kpi_total_invoice_value", lang),
       value: money(totalInvoiceValueLC, localCur),
-      sublabel: "Local Currency Total",
+      sublabel: translateHeader(lang, "Local Currency Total"),
       icon: <Banknote className="h-5 w-5" />,
       tone: "green"
     },
     {
       label: t("kpi_total_advance_paid", lang),
       value: money(totalAdvancePaidLC, localCur),
-      sublabel: "Advance Paid to Date",
+      sublabel: translateHeader(lang, "Advance Paid to Date"),
       icon: <CheckCircle className="h-5 w-5" />,
       tone: "amber"
     },
     {
       label: t("kpi_total_outstanding_balance", lang),
       value: money(totalOutstandingBalanceLC, localCur),
-      sublabel: "Remaining Due to Clear",
+      sublabel: translateHeader(lang, "Remaining Due to Clear"),
       icon: <XCircle className="h-5 w-5" />,
       tone: "red"
     },
@@ -1185,7 +1185,7 @@ function NestedPaymentHistory({
                 className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-[11px] font-black uppercase tracking-wider text-slate-950 shadow-sm transition hover:bg-blue-50"
               >
                 <Eye className="h-4 w-4" />
-                Open Full Bill
+                {translateHeader(currentLanguage, "Open Full Bill")}
               </button>
             )}
           </div>
@@ -1216,7 +1216,7 @@ function NestedPaymentHistory({
       {/* Visual Calculation Flow sequence */}
       <div className="bg-slate-50 dark:bg-slate-900/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-800/80 shadow-inner">
         <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-1.5">
-          Purchase Order Financial Conversion Flow
+          {translateHeader(currentLanguage, "Purchase Order Financial Conversion Flow")}
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch">
           {/* Column 1: Original Currency Breakdown */}
@@ -1652,7 +1652,7 @@ function DashboardSummaryHeader({
     if (!summaryRows || summaryRows.length === 0) {
       return (
         <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-          No summary data available
+          {translateHeader(currentLanguage, "No summary data available")}
         </div>
       );
     }
@@ -1775,7 +1775,7 @@ function DashboardSummaryHeader({
     <div className="flex justify-between items-center gap-2 border-b border-slate-100/50 dark:border-slate-850/20 pb-2 last:border-0 last:pb-0">
       <span className="flex items-center gap-2 text-[10.5px] text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">
         {icon}
-        {label}:
+        {translateHeader(lang, label)}:
       </span>
       <div className={cn("font-extrabold text-[11.5px] truncate max-w-[120px] uppercase", textClass)}>{value}</div>
     </div>
@@ -1787,7 +1787,7 @@ function DashboardSummaryHeader({
         <div className="bg-blue-600 p-1 rounded-full text-white">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+        <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {translateHeader(lang, "BRANCH & USER DETAILS")}</h4>
       </div>
       <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
         {renderDetailItem(<Globe className="h-3.5 w-3.5 text-slate-400" />, "Country", (
@@ -1804,7 +1804,7 @@ function DashboardSummaryHeader({
         <div className="flex justify-between items-center gap-2">
           <span className="flex items-center gap-2 text-[10.5px] text-slate-400 font-bold uppercase tracking-wider">
             <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" />
-            Status:
+            {translateHeader(lang, "Status")}:
           </span>
           <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[10px] uppercase font-black tracking-wider">{translateHeader(lang, "Active")}</span>
         </div>
@@ -4760,7 +4760,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <div>
                       <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Type")}</span>
                       <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
-                        BOOKING
+                        {translateHeader(currentLanguage, "BOOKING")}
                       </span>
                     </div>
                     <div>
@@ -4995,7 +4995,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 {/* ââ TABLE 1: GOODS / ITEMS DETAILS ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                   <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Goods / Items Details
+                    {translateHeader(currentLanguage, "Goods / Items Details")}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse font-sans">
@@ -5004,8 +5004,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <th className="px-3 py-2 text-center w-10">#</th>
                           <th className="px-3 py-2">{translateHeader(currentLanguage, "GOODS / SIZE / BRAND / ORIGIN")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "QTY")}</th>
-                          <th className="px-3 py-2 text-right">KGS</th>
-                          <th className="px-3 py-2 text-right">NET KGS</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "KGS")}</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "NET KGS")}</th>
                           <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "TOTAL")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "PRICE")}</th>
                           <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "AMOUNT")}</th>
@@ -5048,7 +5048,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 {/* ââ TABLE 2: PURCHASE ROZNAMCHA DETAILS ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                   <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Purchase Roznamcha Details
+                    {translateHeader(currentLanguage, "Purchase Roznamcha Details")}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
@@ -5218,7 +5218,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <div className="flex items-center gap-2">
                       <span className="h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">â</span>
                       <h3 className="text-sm font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
-                        Record New Payment Voucher / Roznamcha Settlement
+                        {translateHeader(currentLanguage, "Record New Payment Voucher / Roznamcha Settlement")}
                       </h3>
                     </div>
 
@@ -5228,7 +5228,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
                     >
                       {isDoubleEntryExpanded ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      <span>{isDoubleEntryExpanded ? "Collapse Entry Form" : "+ Add Payment Entry"}</span>
+                      <span>{isDoubleEntryExpanded ? translateHeader(currentLanguage, "Collapse Entry Form") : translateHeader(currentLanguage, "+ Add Payment Entry")}</span>
                     </button>
                   </div>
 
@@ -5245,7 +5245,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                               value={`${doubleEntry.debitName} (${doubleEntry.debitCode})`}
                             />
                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 pointer-events-none">
-                              Auto Party
+                              {translateHeader(currentLanguage, "Auto Party")}
                             </span>
                           </div>
                         </FieldBlock>
@@ -5278,7 +5278,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
                       {/* 2. ROZNAMCHA / VOUCHER CONTROLS */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                        <FieldBlock label="Roznamcha Type" required>
+                        <FieldBlock label={translateHeader(currentLanguage, "Roznamcha Type")} required>
                           <select
                             className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
                             value={roznamchaType}
@@ -5332,7 +5332,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       {/* Dynamic Bank / Method Details */}
                       {paymentType === "bank" && (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
-                          <FieldBlock label="Select Bank Name" required>
+                          <FieldBlock label={translateHeader(currentLanguage, "Select Bank Name")} required>
                             <BankPicker
                               label=""
                               value={typeDetails.bankId || ""}
@@ -5352,7 +5352,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             />
                           </FieldBlock>
 
-                          <FieldBlock label="Bank Account / IBAN / Ref No.">
+                          <FieldBlock label={translateHeader(currentLanguage, "Bank Account / IBAN / Ref No.")}>
                             <Input
                               className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                               placeholder={translateHeader(currentLanguage, "Account / IBAN...")}
@@ -5361,7 +5361,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             />
                           </FieldBlock>
 
-                          <FieldBlock label="Cheque / Transaction ID">
+                          <FieldBlock label={translateHeader(currentLanguage, "Cheque / Transaction ID")}>
                             <Input
                               className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                               placeholder={translateHeader(currentLanguage, "Cheque No. / TT Slip ID...")}
@@ -5374,7 +5374,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
                       {paymentType === "business" && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 rounded-xl">
-                          <FieldBlock label="Custom Payment Method" required>
+                          <FieldBlock label={translateHeader(currentLanguage, "Custom Payment Method")} required>
                             <div className="flex gap-1.5">
                               <select
                                 className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100"
@@ -5394,12 +5394,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                 onClick={() => openAddOption("method")}
                                 className="h-8 px-2 text-xs text-purple-700 dark:text-purple-300 font-bold shrink-0"
                               >
-                                + Add Method
+                                {translateHeader(currentLanguage, "+ Add Method")}
                               </Button>
                             </div>
                           </FieldBlock>
 
-                          <FieldBlock label="Channel Reference / Agent Name">
+                          <FieldBlock label={translateHeader(currentLanguage, "Channel Reference / Agent Name")}>
                             <Input
                               className="h-8 text-xs bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                               placeholder={translateHeader(currentLanguage, "Agent name / Reference...")}
@@ -5459,7 +5459,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                               <span>{translateHeader(currentLanguage, "Currency Rate & Conversion Helper")}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                              <FieldBlock label="Foreign Amount">
+                              <FieldBlock label={translateHeader(currentLanguage, "Foreign Amount")}>
                                 <Input
                                   className="h-7 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                                   value={calcAmount}
@@ -5468,7 +5468,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   type="number"
                                 />
                               </FieldBlock>
-                              <FieldBlock label="Conversion Rate">
+                              <FieldBlock label={translateHeader(currentLanguage, "Conversion Rate")}>
                                 <Input
                                   className="h-7 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                                   value={exchangeRate}
@@ -5477,7 +5477,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   type="number"
                                 />
                               </FieldBlock>
-                              <FieldBlock label="Operation">
+                              <FieldBlock label={translateHeader(currentLanguage, "Operation")}>
                                 <select
                                   className="flex h-7 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold"
                                   value={calcOp}
@@ -5526,18 +5526,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                               <div className="flex items-center gap-1.5">
                                 <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "DR")}</span>
                                 <span className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-                                  DR ACCOUNTS
+                                  {translateHeader(currentLanguage, "DR ACCOUNTS")}
                                 </span>
                               </div>
                               <span className="text-[9.5px] font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-800">
-                                Settlement Target
+                                {translateHeader(currentLanguage, "Settlement Target")}
                               </span>
                             </div>
                             <div className="mt-2.5 space-y-1 text-xs">
                               <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Account Name")}</div>
                               <div className="font-extrabold text-slate-900 dark:text-white text-sm">{doubleEntry.debitName}</div>
                               <div className="flex justify-between text-[11px] pt-1">
-                                <span className="text-slate-600 dark:text-slate-400">Account No: {doubleEntry.debitCode}</span>
+                                <span className="text-slate-600 dark:text-slate-400">{translateHeader(currentLanguage, "Account No")}: {doubleEntry.debitCode}</span>
                                 <span className="text-slate-700 dark:text-slate-300 font-semibold">{doubleEntry.debitBranch}</span>
                               </div>
                             </div>
@@ -5549,18 +5549,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                               <div className="flex items-center gap-1.5">
                                 <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "CR")}</span>
                                 <span className="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-400">
-                                  CR ACCOUNT'S
+                                  {translateHeader(currentLanguage, "CR ACCOUNT'S")}
                                 </span>
                               </div>
                               <span className="text-[9.5px] font-bold text-rose-700 dark:text-rose-400 bg-white dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
-                                Payment Source
+                                {translateHeader(currentLanguage, "Payment Source")}
                               </span>
                             </div>
                             <div className="mt-2.5 space-y-1 text-xs">
                               <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Selected Source Account")}</div>
                               <div className="font-extrabold text-slate-900 dark:text-white text-sm">{doubleEntry.creditName}</div>
                               <div className="flex justify-between text-[11px] pt-1">
-                                <span className="text-slate-600 dark:text-slate-400">Account No: {doubleEntry.creditCode}</span>
+                                <span className="text-slate-600 dark:text-slate-400">{translateHeader(currentLanguage, "Account No")}: {doubleEntry.creditCode}</span>
                                 <span className="text-emerald-700 dark:text-emerald-400 font-bold">{sourceBalanceText}</span>
                               </div>
                             </div>
@@ -5691,10 +5691,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t">
                 <Button type="button" variant="outline" onClick={() => setAddOptionOpen(false)}>
-                  Cancel
+                  {translateHeader(currentLanguage, "Cancel")}
                 </Button>
                 <Button type="button" className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs" onClick={commitAddOption}>
-                  Save Bank
+                  {translateHeader(currentLanguage, "Save Bank")}
                 </Button>
               </div>
             </div>
@@ -5707,10 +5707,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     className="text-xs font-semibold"
                     value={addOptionValue}
                     onChange={(e) => setAddOptionValue(e.target.value)}
-                    placeholder="e.g. EasyPaisa / JazzCash"
+                    placeholder={translateHeader(currentLanguage, "e.g. EasyPaisa / JazzCash")}
                   />
                   <Button type="button" className="bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs" onClick={commitAddOption}>
-                    Add
+                    {translateHeader(currentLanguage, "Add")}
                   </Button>
                 </div>
               </div>
@@ -5737,7 +5737,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px] font-bold"
                           onClick={() => deleteCustomMethod(m)}
                         >
-                          Delete
+                          {translateHeader(currentLanguage, "Delete")}
                         </Button>
                       </div>
                     ))}
@@ -5745,13 +5745,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 </div>
               ) : (
                 <p className="text-xs font-semibold text-slate-400 italic text-center py-2">
-                  No custom payment methods added yet.
+                  {translateHeader(currentLanguage, "No custom payment methods added yet.")}
                 </p>
               )}
 
               <div className="flex justify-end pt-2 border-t">
                 <Button type="button" variant="outline" onClick={() => setAddOptionOpen(false)}>
-                  Close
+                  {translateHeader(currentLanguage, "Close")}
                 </Button>
               </div>
             </div>
@@ -5840,10 +5840,10 @@ function MiniFilter({ label, value, options, onChange }: { label: string; value:
   const currentLanguage = useActiveLanguage() as LanguageCode;
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{translateHeader(currentLanguage, label)}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none focus:border-primary">
         <option value="">{translateHeader(currentLanguage, "All")}</option>
-        {options.map((option) => <option key={option} value={option.toLowerCase()}>{option}</option>)}
+        {options.map((option) => <option key={option} value={option.toLowerCase()}>{translateHeader(currentLanguage, option)}</option>)}
       </select>
     </label>
   );
@@ -5862,40 +5862,42 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label="Plate View" onClick={() => handleReportAction(() => undefined)} />
-        <MenuAction icon={<DownloadActionIcon />} label="Download" onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<FileSpreadsheet />} label="Export Excel" onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<DownloadActionIcon />} label="Export PDF" onClick={() => handleReportAction(() => {
+        <MenuAction icon={<Eye />} label={translateHeader(currentLanguage, "Plate View")} onClick={() => handleReportAction(() => undefined)} />
+        <MenuAction icon={<DownloadActionIcon />} label={translateHeader(currentLanguage, "Download")} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
+        <MenuAction icon={<FileSpreadsheet />} label={translateHeader(currentLanguage, "Export Excel")} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
+        <MenuAction icon={<DownloadActionIcon />} label={translateHeader(currentLanguage, "Export PDF")} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
-              title: "Purchase Order Payment Journal",
-              subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
+              title: translateHeader(currentLanguage, "Purchase Order Payment Journal"),
+              subtitle: `${translateHeader(currentLanguage, "Mode")}: ${mode.toUpperCase()} | ${translateHeader(currentLanguage, "Total")} ${rows.length} ${translateHeader(currentLanguage, "Records")}`,
+              lang: currentLanguage,
               columns: [
-                { key: "po_no", label: "PO Booking #" },
-                { key: "branch", label: "Branch" },
-                { key: "supplier_customer", label: "Party Name" },
-                { key: "mode", label: "Mode" },
-                { key: "bank_name", label: "Bank Account" },
-                { key: "amount", label: "Amount", format: "currency" },
-                { key: "status", label: "Status", format: "status" }
+                { key: "po_no", label: translateHeader(currentLanguage, "PO Booking #") },
+                { key: "branch", label: translateHeader(currentLanguage, "Branch") },
+                { key: "supplier_customer", label: translateHeader(currentLanguage, "Party Name") },
+                { key: "mode", label: translateHeader(currentLanguage, "Mode") },
+                { key: "bank_name", label: translateHeader(currentLanguage, "Bank Account") },
+                { key: "amount", label: translateHeader(currentLanguage, "Amount"), format: "currency" },
+                { key: "status", label: translateHeader(currentLanguage, "Status"), format: "status" }
               ],
               rows: rows as Record<string, unknown>[]
             });
           });
         })} />
-        <MenuAction icon={<Printer />} label="Print" onClick={() => handleReportAction(() => {
+        <MenuAction icon={<Printer />} label={translateHeader(currentLanguage, "Print")} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
-              title: "Purchase Order Payment Journal",
-              subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
+              title: translateHeader(currentLanguage, "Purchase Order Payment Journal"),
+              subtitle: `${translateHeader(currentLanguage, "Mode")}: ${mode.toUpperCase()} | ${translateHeader(currentLanguage, "Total")} ${rows.length} ${translateHeader(currentLanguage, "Records")}`,
+              lang: currentLanguage,
               columns: [
-                { key: "po_no", label: "PO Booking #" },
-                { key: "branch", label: "Branch" },
-                { key: "supplier_customer", label: "Party Name" },
-                { key: "mode", label: "Mode" },
-                { key: "bank_name", label: "Bank Account" },
-                { key: "amount", label: "Amount", format: "currency" },
-                { key: "status", label: "Status", format: "status" }
+                { key: "po_no", label: translateHeader(currentLanguage, "PO Booking #") },
+                { key: "branch", label: translateHeader(currentLanguage, "Branch") },
+                { key: "supplier_customer", label: translateHeader(currentLanguage, "Party Name") },
+                { key: "mode", label: translateHeader(currentLanguage, "Mode") },
+                { key: "bank_name", label: translateHeader(currentLanguage, "Bank Account") },
+                { key: "amount", label: translateHeader(currentLanguage, "Amount"), format: "currency" },
+                { key: "status", label: translateHeader(currentLanguage, "Status"), format: "status" }
               ],
               rows: rows as Record<string, unknown>[]
             });
@@ -5970,11 +5972,11 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
           onMouseDown={(e) => e.stopPropagation()}
         >
           {[
-            { icon: <Eye style={{ width: 14, height: 14 }} />, label: "View Details", color: "#2563eb", fn: () => handleItem(onSelect) },
-            { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: "Payment History", color: "#7c3aed", fn: () => handleItem(onSelect) },
-            { icon: <Banknote style={{ width: 14, height: 14 }} />, label: "Journal Entry", color: "#059669", fn: () => handleItem(onSelect) },
-            { icon: <Printer style={{ width: 14, height: 14 }} />, label: "Print", color: "#475569", fn: () => handleItem(onSelect) },
-            { icon: <DownloadActionIcon />, label: "Export PDF", color: "#dc2626", fn: () => handleItem(onSelect) },
+            { icon: <Eye style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "View Details"), color: "#2563eb", fn: () => handleItem(onSelect) },
+            { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "Payment History"), color: "#7c3aed", fn: () => handleItem(onSelect) },
+            { icon: <Banknote style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "Journal Entry"), color: "#059669", fn: () => handleItem(onSelect) },
+            { icon: <Printer style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "Print"), color: "#475569", fn: () => handleItem(onSelect) },
+            { icon: <DownloadActionIcon />, label: translateHeader(currentLanguage, "Export PDF"), color: "#dc2626", fn: () => handleItem(onSelect) },
           ].map(({ icon, label, color, fn }) => (
             <button
               key={label}

@@ -416,12 +416,6 @@ export function AllDeletedRecordsView() {
               {countriesList.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
-              <option value="pk">Pakistan</option>
-              <option value="ae">UAE</option>
-              <option value="af">Afghanistan</option>
-              <option value="ir">Iran</option>
-              <option value="in">India</option>
-              <option value="sa">Saudi Arabia</option>
             </select>
           </div>
 
@@ -442,10 +436,6 @@ export function AllDeletedRecordsView() {
               {branchesList.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-              <option value="pk_main">Pakistan Main Branch</option>
-              <option value="dxb_main">Dubai Main Branch</option>
-              <option value="khi_port">Karachi Port Branch</option>
-              <option value="kbl_main">Kabul Central Branch</option>
             </select>
           </div>
 

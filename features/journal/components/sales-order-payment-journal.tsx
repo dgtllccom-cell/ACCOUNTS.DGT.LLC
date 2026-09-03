@@ -805,28 +805,28 @@ function kpis(rows: PurchaseOrderRow[], baseCurrency: string, lang: LanguageCode
     {
       label: t("total_purchase_lc", lang),
       value: money(totalPurchaseUSD, purchCur),
-      sublabel: "Original Currency Total",
+      sublabel: translateHeader(lang, "Original Currency Total"),
       icon: <FileText className="h-5 w-5" />,
       tone: "blue"
     },
     {
       label: t("kpi_total_invoice_value", lang),
       value: money(totalInvoiceValueLC, localCur),
-      sublabel: "Local Currency Total",
+      sublabel: translateHeader(lang, "Local Currency Total"),
       icon: <Banknote className="h-5 w-5" />,
       tone: "green"
     },
     {
       label: t("kpi_total_advance_paid", lang),
       value: money(totalAdvancePaidLC, localCur),
-      sublabel: "Advance Paid to Date",
+      sublabel: translateHeader(lang, "Advance Paid to Date"),
       icon: <CheckCircle className="h-5 w-5" />,
       tone: "amber"
     },
     {
       label: t("kpi_total_outstanding_balance", lang),
       value: money(totalOutstandingBalanceLC, localCur),
-      sublabel: "Remaining Due to Clear",
+      sublabel: translateHeader(lang, "Remaining Due to Clear"),
       icon: <XCircle className="h-5 w-5" />,
       tone: "red"
     },
@@ -1142,7 +1142,7 @@ function NestedPaymentHistory({
                 className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-[11px] font-black uppercase tracking-wider text-slate-950 shadow-sm transition hover:bg-blue-50"
               >
                 <Eye className="h-4 w-4" />
-                Open Full Bill
+                {translateHeader(currentLanguage, "Open Full Bill")}
               </button>
             )}
           </div>
@@ -1173,7 +1173,7 @@ function NestedPaymentHistory({
       {/* Visual Calculation Flow sequence */}
       <div className="bg-slate-50 dark:bg-slate-900/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-800/80 shadow-inner">
         <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-1.5">
-          Sales Order Financial Conversion Flow
+          {translateHeader(currentLanguage, "Sales Order Financial Conversion Flow")}
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch">
           {/* Column 1: Original Currency Breakdown */}
@@ -1613,7 +1613,7 @@ function DashboardSummaryHeader({
     if (!summaryRows || summaryRows.length === 0) {
       return (
         <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-          No summary data available
+          {translateHeader(currentLanguage, "No summary data available")}
         </div>
       );
     }
@@ -1736,7 +1736,7 @@ function DashboardSummaryHeader({
     <div className="flex justify-between items-center gap-2 border-b border-slate-100/50 dark:border-slate-850/20 pb-2 last:border-0 last:pb-0">
       <span className="flex items-center gap-2 text-[10.5px] text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">
         {icon}
-        {label}:
+        {translateHeader(currentLanguage, label)}:
       </span>
       <div className={cn("font-extrabold text-[11.5px] truncate max-w-[120px] uppercase", textClass)}>{value}</div>
     </div>
@@ -1748,7 +1748,7 @@ function DashboardSummaryHeader({
         <div className="bg-blue-600 p-1 rounded-full text-white">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+        <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {translateHeader(currentLanguage, "BRANCH & USER DETAILS")}</h4>
       </div>
       <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
         {renderDetailItem(<Globe className="h-3.5 w-3.5 text-slate-400" />, "Country", (
@@ -1765,7 +1765,7 @@ function DashboardSummaryHeader({
         <div className="flex justify-between items-center gap-2">
           <span className="flex items-center gap-2 text-[10.5px] text-slate-400 font-bold uppercase tracking-wider">
             <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" />
-            Status:
+            {translateHeader(lang, "Status")}:
           </span>
           <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[10px] uppercase font-black tracking-wider">{translateHeader(lang, "Active")}</span>
         </div>
@@ -4654,7 +4654,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 dark:bg-slate-900/50 dark:border-slate-800 shadow-sm space-y-4">
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-3">
-                      Sales Order & Loading Specifications
+                      {translateHeader(currentLanguage, "Sales Order & Loading Specifications")}
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                       <div>
@@ -4707,7 +4707,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                             onClick={() => setSelectedLoadingRecord(null)}
                             className="text-[9px] font-bold text-rose-500 hover:text-rose-700 hover:underline transition uppercase tracking-wider"
                           >
-                            Change Container
+                            {translateHeader(currentLanguage, "Change Container")}
                           </button>
                         )}
                       </div>
@@ -4848,11 +4848,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         </span>
                       ) : isAdvComplete ? (
                         <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                          <CheckCircle className="h-3 w-3" /> Advance Done
+                          <CheckCircle className="h-3 w-3" /> {translateHeader(currentLanguage, "Advance Done")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          Advance Pending
+                          {translateHeader(currentLanguage, "Advance Pending")}
                         </span>
                       )}
                     </div>
@@ -5101,7 +5101,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   </div>
                 ) : (
                   <div className="text-xs text-slate-400 italic py-8 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                    No loaded containers found for this sales order.
+                    {translateHeader(currentLanguage, "No loaded containers found for this sales order.")}
                     <div className="text-[10px] text-slate-400 mt-1 font-normal">{translateHeader(currentLanguage, "Please make sure the containers are added and loaded in the Loading module first.")}</div>
                   </div>
                 )}
@@ -5917,11 +5917,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         <div className="flex items-center gap-1.5">
                           <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "DR")}</span>
                           <span className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                            DR ACCOUNTS
+                            {translateHeader(currentLanguage, "DR ACCOUNTS")}
                           </span>
                         </div>
                         <span className="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-                          Settlement Target
+                          {translateHeader(currentLanguage, "Settlement Target")}
                         </span>
                       </div>
 
@@ -5953,11 +5953,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         <div className="flex items-center gap-1.5">
                           <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "CR")}</span>
                           <span className="text-[11px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">
-                            CR ACCOUNT'S
+                            {translateHeader(currentLanguage, "CR ACCOUNT'S")}
                           </span>
                         </div>
                         <span className="text-[9px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
-                          Payment Source
+                          {translateHeader(currentLanguage, "Payment Source")}
                         </span>
                       </div>
 
@@ -6356,10 +6356,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t">
                 <Button type="button" variant="outline" onClick={() => setAddOptionOpen(false)}>
-                  Cancel
+                  {translateHeader(currentLanguage, "Cancel")}
                 </Button>
                 <Button type="button" className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs" onClick={commitAddOption}>
-                  Save Bank
+                  {translateHeader(currentLanguage, "Save Bank")}
                 </Button>
               </div>
             </div>
@@ -6372,10 +6372,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     className="text-xs font-semibold"
                     value={addOptionValue}
                     onChange={(e) => setAddOptionValue(e.target.value)}
-                    placeholder="e.g. EasyPaisa / JazzCash"
+                    placeholder={translateHeader(currentLanguage, "e.g. EasyPaisa / JazzCash")}
                   />
                   <Button type="button" className="bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs" onClick={commitAddOption}>
-                    Add
+                    {translateHeader(currentLanguage, "Add")}
                   </Button>
                 </div>
               </div>
@@ -6401,7 +6401,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                           className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px] font-bold"
                           onClick={() => deleteCustomMethod(m)}
                         >
-                          Delete
+                          {translateHeader(currentLanguage, "Delete")}
                         </Button>
                       </div>
                     ))}
@@ -6409,13 +6409,13 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 </div>
               ) : (
                 <p className="text-xs font-semibold text-slate-400 italic text-center py-2">
-                  No custom payment methods added yet.
+                  {translateHeader(currentLanguage, "No custom payment methods added yet.")}
                 </p>
               )}
 
               <div className="flex justify-end pt-2 border-t">
                 <Button type="button" variant="outline" onClick={() => setAddOptionOpen(false)}>
-                  Close
+                  {translateHeader(currentLanguage, "Close")}
                 </Button>
               </div>
             </div>
@@ -6504,10 +6504,10 @@ function MiniFilter({ label, value, options, onChange }: { label: string; value:
   const currentLanguage = useActiveLanguage() as LanguageCode;
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{translateHeader(currentLanguage, label)}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none focus:border-primary">
         <option value="">{translateHeader(currentLanguage, "All")}</option>
-        {options.map((option) => <option key={option} value={option.toLowerCase()}>{option}</option>)}
+        {options.map((option) => <option key={option} value={option.toLowerCase()}>{translateHeader(currentLanguage, option)}</option>)}
       </select>
     </label>
   );
@@ -6533,7 +6533,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
               title: t("sales_order_payment_journal", currentLanguage),
-              subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
+              subtitle: `${translateHeader(currentLanguage, "Mode")}: ${mode.toUpperCase()} | ${translateHeader(currentLanguage, "Total")} ${rows.length} ${translateHeader(currentLanguage, "Records")}`,
               columns: [
                 { key: "po_no", label: t("col_po_booking", currentLanguage) },
                 { key: "branch", label: t("branch", currentLanguage) },
@@ -6541,7 +6541,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
                 { key: "mode", label: t("col_mode", currentLanguage) },
                 { key: "bank_name", label: t("col_bank_account", currentLanguage) },
                 { key: "amount", label: t("col_amount", currentLanguage), format: "currency" },
-                { key: "status", label: "Status", format: "status" }
+                { key: "status", label: translateHeader(currentLanguage, "Status"), format: "status" }
               ],
               rows: rows as Record<string, unknown>[]
             });
@@ -6551,7 +6551,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
               title: t("sales_order_payment_journal", currentLanguage),
-              subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
+              subtitle: `${translateHeader(currentLanguage, "Mode")}: ${mode.toUpperCase()} | ${translateHeader(currentLanguage, "Total")} ${rows.length} ${translateHeader(currentLanguage, "Records")}`,
               columns: [
                 { key: "po_no", label: t("col_po_booking", currentLanguage) },
                 { key: "branch", label: t("branch", currentLanguage) },
@@ -6559,7 +6559,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
                 { key: "mode", label: t("col_mode", currentLanguage) },
                 { key: "bank_name", label: t("col_bank_account", currentLanguage) },
                 { key: "amount", label: t("col_amount", currentLanguage), format: "currency" },
-                { key: "status", label: "Status", format: "status" }
+                { key: "status", label: translateHeader(currentLanguage, "Status"), format: "status" }
               ],
               rows: rows as Record<string, unknown>[]
             });

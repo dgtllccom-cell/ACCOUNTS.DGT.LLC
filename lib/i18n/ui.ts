@@ -927,6 +927,101 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "lptp.sync_pending"
+  | "lptp.pending_gl_transfers"
+  | "lptp.accepted_bills_awaiting"
+  | "lptp.total_pending_value"
+  | "lptp.aggregate_unposted_cost"
+  | "lptp.authorized_branch"
+  | "lptp.view_voucher"
+  | "common.save_draft"
+  | "lp.local_branch_country"
+  | "lp.export_note"
+  | "lp.bill_saved_draft"
+  | "lp.close_form"
+  | "lp.col_supplier"
+  | "lp.col_net_weight"
+  | "lp.loading_bills"
+  | "lp.btn_confirm_scope"
+  | "lp.btn_save_goods"
+  | "lp.btn_update_goods"
+  | "lp.btn_save_brand"
+  | "lp.btn_save_size"
+  | "crmr.report_title"
+  | "crmr.smart_due"
+  | "crmr.col_global_serial"
+  | "crmr.col_reference_no"
+  | "crmr.col_type"
+  | "crmr.col_party"
+  | "crmr.col_due_date"
+  | "crmr.col_amount"
+  | "crmr.col_paid"
+  | "crmr.col_remaining"
+  | "crmr.col_currency"
+  | "crmr.col_status"
+  | "crmr.col_responsible_user"
+  | "crmr.col_report_type"
+  | "crmr.records"
+  | "crmr.enterprise_live"
+  | "crmr.subtitle"
+  | "crmr.from_date"
+  | "crmr.to_date"
+  | "crmr.loading_records"
+  | "crmr.no_records"
+  | "eaud.col_actions"
+  | "eaud.col_deleted_at"
+  | "eaud.col_deleted_by"
+  | "eaud.col_deletions"
+  | "eaud.col_edited_at"
+  | "eaud.col_edited_by"
+  | "eaud.col_edits"
+  | "eaud.col_email"
+  | "eaud.col_entity"
+  | "eaud.col_entries"
+  | "eaud.col_fields"
+  | "eaud.col_last_active"
+  | "eaud.col_reason"
+  | "eaud.col_reference"
+  | "eaud.col_tab"
+  | "eaud.daily_desc"
+  | "eaud.deleted_vault_desc"
+  | "eaud.deleted_vault_title"
+  | "eaud.edits_word"
+  | "eaud.filter_date"
+  | "eaud.hard_delete"
+  | "eaud.monthly_desc"
+  | "eaud.no_edited_records"
+  | "eaud.no_soft_deleted"
+  | "eaud.no_user_activity"
+  | "eaud.refresh"
+  | "eaud.restore"
+  | "eaud.rpt_daily_branch"
+  | "eaud.rpt_deleted"
+  | "eaud.rpt_monthly_edit"
+  | "eaud.rpt_user_activity"
+  | "eaud.search"
+  | "eaud.search_deleted_ph"
+  | "eaud.timeline_desc"
+  | "eaud.total_traceable"
+  | "eaud.users_desc"
+  | "eaud.view"
+  | "eaud.view_timeline"
+  | "plr.total_records"
+  | "plr.loaded"
+  | "plr.received"
+  | "plr.confirm_transfer_journal"
+  | "plr.transfer_to_journal"
+  | "plr.no_container_loadings"
+  | "plr.create_first_loading"
+  | "plr.no_records_found"
+  | "plr.all_auth_countries"
+  | "plr.all_auth_branches"
+  | "plr.f_invoice_po"
+  | "plr.f_loading_status"
+  | "plr.f_search"
+  | "plr.all_records"
+  | "plr.loading_records"
+  | "plr.add_loading"
   | "slstage.carrier_identification"
   | "slstage.carrier_remarks_ph"
   | "slstage.clear_search"
@@ -17022,6 +17117,196 @@ const en: Dict = {
 
   "mgmt.country_added": "Country added to master data.",
 
+
+
+
+
+
+  "lptp.sync_pending": "Sync Pending",
+
+  "lptp.pending_gl_transfers": "Pending GL Transfers",
+
+  "lptp.accepted_bills_awaiting": "Accepted bills awaiting verification",
+
+  "lptp.total_pending_value": "Total Pending Value",
+
+  "lptp.aggregate_unposted_cost": "Aggregate unposted purchase cost",
+
+  "lptp.authorized_branch": "Authorized Branch",
+
+  "lptp.view_voucher": "View Voucher",
+  "common.save_draft": "Save Draft",
+
+  "lp.local_branch_country": "Local (Branch Country)",
+
+  "lp.export_note": "This purchase is designated for export. Shipment routes, customs documentation, and container loading tracking must be completed via the Export Loading & Shipping modules after booking.",
+
+  "lp.bill_saved_draft": "Bill saved to draft.",
+
+  "lp.close_form": "Close Form",
+
+  "lp.col_supplier": "Supplier",
+
+  "lp.col_net_weight": "Net Weight",
+
+  "lp.loading_bills": "Loading bills...",
+
+  "lp.btn_confirm_scope": "Confirm Scope",
+
+  "lp.btn_save_goods": "Save Goods",
+
+  "lp.btn_update_goods": "Update Goods",
+
+  "lp.btn_save_brand": "Save Brand",
+
+  "lp.btn_save_size": "Save Size",
+  "crmr.report_title": "CRM Report",
+
+  "crmr.smart_due": "Smart Due",
+
+  "crmr.col_global_serial": "Global Serial",
+
+  "crmr.col_reference_no": "Reference No",
+
+  "crmr.col_type": "Type",
+
+  "crmr.col_party": "Party",
+
+  "crmr.col_due_date": "Due Date",
+
+  "crmr.col_amount": "Amount",
+
+  "crmr.col_paid": "Paid",
+
+  "crmr.col_remaining": "Remaining",
+
+  "crmr.col_currency": "Currency",
+
+  "crmr.col_status": "Status",
+
+  "crmr.col_responsible_user": "Responsible User",
+
+  "crmr.col_report_type": "Report Type",
+
+  "crmr.records": "Records",
+
+  "crmr.enterprise_live": "Enterprise Live",
+
+  "crmr.subtitle": "Multi-Tier Scope Consolidated Reports • 100+ Countries • Universal Print & PDF Ready",
+
+  "crmr.from_date": "From Date",
+
+  "crmr.to_date": "To Date",
+
+  "crmr.loading_records": "Loading universal CRM records...",
+
+  "crmr.no_records": "No CRM records found matching the selected filter criteria.",
+  "eaud.col_actions": "Actions",
+
+  "eaud.col_deleted_at": "Deleted At",
+
+  "eaud.col_deleted_by": "Deleted By",
+
+  "eaud.col_deletions": "Deletions",
+
+  "eaud.col_edited_at": "Edited At",
+
+  "eaud.col_edited_by": "Edited By",
+
+  "eaud.col_edits": "Edits",
+
+  "eaud.col_email": "Email",
+
+  "eaud.col_entity": "Entity",
+
+  "eaud.col_entries": "Entries",
+
+  "eaud.col_fields": "Fields",
+
+  "eaud.col_last_active": "Last Active",
+
+  "eaud.col_reason": "Reason",
+
+  "eaud.col_reference": "Reference",
+
+  "eaud.col_tab": "Tab",
+
+  "eaud.daily_desc": "Live daily aggregated breakdown of Purchases, Sales, Payments, Roznamcha, Cash Flow, and Edits by Branch.",
+
+  "eaud.deleted_vault_desc": "Soft-deleted records are preserved permanently with reason, user, and full historical snapshots.",
+
+  "eaud.deleted_vault_title": "Deleted Records Archive & Restore Vault",
+
+  "eaud.edits_word": "edits",
+
+  "eaud.filter_date": "Filter Date",
+
+  "eaud.hard_delete": "Hard Delete",
+
+  "eaud.monthly_desc": "Every modification across Purchases, Sales, Roznamcha, and Ledgers creates an immutable timeline version.",
+
+  "eaud.no_edited_records": "No edited records found for this period.",
+
+  "eaud.no_soft_deleted": "No soft-deleted records in vault.",
+
+  "eaud.no_user_activity": "No user activity recorded.",
+
+  "eaud.refresh": "Refresh",
+
+  "eaud.restore": "Restore",
+
+  "eaud.rpt_daily_branch": "Audit — Daily Branch Activity",
+
+  "eaud.rpt_deleted": "Audit — Deleted Records",
+
+  "eaud.rpt_monthly_edit": "Audit — Monthly Edit History",
+
+  "eaud.rpt_user_activity": "Audit — User Activity",
+
+  "eaud.search": "Search",
+
+  "eaud.search_deleted_ph": "Search deleted records...",
+
+  "eaud.timeline_desc": "Click on any record below to view its complete date-by-date version history, exact time, and field-level diffs.",
+
+  "eaud.total_traceable": "Total Traceable Audit Events:",
+
+  "eaud.users_desc": "Track user login sessions, records created, edited, and soft-deleted across all forms.",
+
+  "eaud.view": "View",
+
+  "eaud.view_timeline": "View Timeline",
+  "plr.total_records": "Total Records",
+
+  "plr.loaded": "Loaded",
+
+  "plr.received": "Received",
+
+  "plr.confirm_transfer_journal": "Confirm & Transfer to Journal",
+
+  "plr.transfer_to_journal": "Transfer to Journal",
+
+  "plr.no_container_loadings": "No container shipment loadings created yet for Purchase Booking",
+
+  "plr.create_first_loading": "Create First Loading Entry",
+
+  "plr.no_records_found": "No purchase loading records found.",
+
+  "plr.all_auth_countries": "All Authorized Countries",
+
+  "plr.all_auth_branches": "All Authorized Branches",
+
+  "plr.f_invoice_po": "Invoice / PO",
+
+  "plr.f_loading_status": "Loading Status",
+
+  "plr.f_search": "Search",
+
+  "plr.all_records": "All Records",
+
+  "plr.loading_records": "Loading records...",
+
+  "plr.add_loading": "Add Loading",
   "slstage.carrier_identification": "Carrier & Identification",
 
   "slstage.carrier_remarks_ph": "Enter carrier remarks, transshipment details, container loading notes...",
@@ -29065,6 +29350,196 @@ const ur: Dict = {
 
   "mgmt.country_added": "ملک ماسٹر ڈیٹا میں شامل ہو گیا۔",
 
+
+
+
+
+
+  "lptp.sync_pending": "زیر التوا سنک کریں",
+
+  "lptp.pending_gl_transfers": "زیر التوا جی ایل ٹرانسفرز",
+
+  "lptp.accepted_bills_awaiting": "تصدیق کے منتظر منظور شدہ بلز",
+
+  "lptp.total_pending_value": "کل زیر التوا قدر",
+
+  "lptp.aggregate_unposted_cost": "مجموعی غیر پوسٹ شدہ خرید لاگت",
+
+  "lptp.authorized_branch": "مجاز برانچ",
+
+  "lptp.view_voucher": "واؤچر دیکھیں",
+  "common.save_draft": "مسودہ محفوظ کریں",
+
+  "lp.local_branch_country": "مقامی (برانچ ملک)",
+
+  "lp.export_note": "یہ خریداری برآمد کے لیے مخصوص ہے۔ بکنگ کے بعد شپمنٹ روٹس، کسٹمز دستاویزات اور کنٹینر لوڈنگ ٹریکنگ ایکسپورٹ لوڈنگ اور شپنگ ماڈیولز کے ذریعے مکمل کرنی ہوں گی۔",
+
+  "lp.bill_saved_draft": "بل مسودے میں محفوظ ہو گیا۔",
+
+  "lp.close_form": "فارم بند کریں",
+
+  "lp.col_supplier": "سپلائر",
+
+  "lp.col_net_weight": "خالص وزن",
+
+  "lp.loading_bills": "بلز لوڈ ہو رہے ہیں...",
+
+  "lp.btn_confirm_scope": "دائرہ تصدیق کریں",
+
+  "lp.btn_save_goods": "اشیاء محفوظ کریں",
+
+  "lp.btn_update_goods": "اشیاء اپ ڈیٹ کریں",
+
+  "lp.btn_save_brand": "برانڈ محفوظ کریں",
+
+  "lp.btn_save_size": "سائز محفوظ کریں",
+  "crmr.report_title": "سی آر ایم رپورٹ",
+
+  "crmr.smart_due": "اسمارٹ ڈیو",
+
+  "crmr.col_global_serial": "گلوبل سیریل",
+
+  "crmr.col_reference_no": "حوالہ نمبر",
+
+  "crmr.col_type": "قسم",
+
+  "crmr.col_party": "پارٹی",
+
+  "crmr.col_due_date": "مقررہ تاریخ",
+
+  "crmr.col_amount": "رقم",
+
+  "crmr.col_paid": "ادا شدہ",
+
+  "crmr.col_remaining": "باقی",
+
+  "crmr.col_currency": "کرنسی",
+
+  "crmr.col_status": "اسٹیٹس",
+
+  "crmr.col_responsible_user": "ذمہ دار صارف",
+
+  "crmr.col_report_type": "رپورٹ کی قسم",
+
+  "crmr.records": "ریکارڈز",
+
+  "crmr.enterprise_live": "انٹرپرائز لائیو",
+
+  "crmr.subtitle": "ملٹی ٹیئر اسکوپ مربوط رپورٹس • 100+ ممالک • یونیورسل پرنٹ اور PDF تیار",
+
+  "crmr.from_date": "تاریخ سے",
+
+  "crmr.to_date": "تاریخ تک",
+
+  "crmr.loading_records": "یونیورسل سی آر ایم ریکارڈز لوڈ ہو رہے ہیں...",
+
+  "crmr.no_records": "منتخب فلٹر معیار سے مماثل کوئی سی آر ایم ریکارڈ نہیں ملا۔",
+  "eaud.col_actions": "اعمال",
+
+  "eaud.col_deleted_at": "حذف کی تاریخ",
+
+  "eaud.col_deleted_by": "حذف کرنے والا",
+
+  "eaud.col_deletions": "حذف",
+
+  "eaud.col_edited_at": "ترمیم کی تاریخ",
+
+  "eaud.col_edited_by": "ترمیم کرنے والا",
+
+  "eaud.col_edits": "ترامیم",
+
+  "eaud.col_email": "ای میل",
+
+  "eaud.col_entity": "ادارہ",
+
+  "eaud.col_entries": "اندراجات",
+
+  "eaud.col_fields": "فیلڈز",
+
+  "eaud.col_last_active": "آخری فعالیت",
+
+  "eaud.col_reason": "وجہ",
+
+  "eaud.col_reference": "حوالہ",
+
+  "eaud.col_tab": "ٹیب",
+
+  "eaud.daily_desc": "برانچ کے لحاظ سے پرچیز، سیلز، ادائیگیاں، روزنامچہ، کیش فلو اور ترامیم کی روزانہ مجموعی تفصیل۔",
+
+  "eaud.deleted_vault_desc": "سافٹ ڈیلیٹ ریکارڈز وجہ، صارف اور مکمل تاریخی اسنیپ شاٹس کے ساتھ مستقل طور پر محفوظ رہتے ہیں۔",
+
+  "eaud.deleted_vault_title": "حذف شدہ ریکارڈز آرکائیو اور بحالی والٹ",
+
+  "eaud.edits_word": "ترامیم",
+
+  "eaud.filter_date": "تاریخ فلٹر کریں",
+
+  "eaud.hard_delete": "مستقل حذف",
+
+  "eaud.monthly_desc": "پرچیز، سیلز، روزنامچہ اور لیجرز میں ہر تبدیلی ایک ناقابلِ تبدیل ٹائم لائن ورژن بناتی ہے۔",
+
+  "eaud.no_edited_records": "اس مدت کے لیے کوئی ترمیم شدہ ریکارڈ نہیں ملا۔",
+
+  "eaud.no_soft_deleted": "والٹ میں کوئی سافٹ ڈیلیٹ ریکارڈ نہیں۔",
+
+  "eaud.no_user_activity": "کوئی صارف سرگرمی ریکارڈ نہیں ہوئی۔",
+
+  "eaud.refresh": "تازہ کریں",
+
+  "eaud.restore": "بحال کریں",
+
+  "eaud.rpt_daily_branch": "آڈٹ — روزانہ برانچ سرگرمی",
+
+  "eaud.rpt_deleted": "آڈٹ — حذف شدہ ریکارڈز",
+
+  "eaud.rpt_monthly_edit": "آڈٹ — ماہانہ ترمیم کی تاریخ",
+
+  "eaud.rpt_user_activity": "آڈٹ — صارف کی سرگرمی",
+
+  "eaud.search": "تلاش",
+
+  "eaud.search_deleted_ph": "حذف شدہ ریکارڈز تلاش کریں...",
+
+  "eaud.timeline_desc": "مکمل تاریخ وار ورژن ہسٹری، درست وقت اور فیلڈ سطح کے فرق دیکھنے کے لیے نیچے کسی بھی ریکارڈ پر کلک کریں۔",
+
+  "eaud.total_traceable": "کل قابلِ ٹریس آڈٹ ایونٹس:",
+
+  "eaud.users_desc": "تمام فارمز میں صارف کے لاگ ان سیشنز، بنائے، ترمیم شدہ اور سافٹ ڈیلیٹ ریکارڈز کو ٹریک کریں۔",
+
+  "eaud.view": "دیکھیں",
+
+  "eaud.view_timeline": "ٹائم لائن دیکھیں",
+  "plr.total_records": "کل ریکارڈز",
+
+  "plr.loaded": "لوڈ شدہ",
+
+  "plr.received": "موصول شدہ",
+
+  "plr.confirm_transfer_journal": "تصدیق کریں اور جرنل میں منتقل کریں",
+
+  "plr.transfer_to_journal": "جرنل میں منتقل کریں",
+
+  "plr.no_container_loadings": "پرچیز بکنگ کے لیے ابھی تک کوئی کنٹینر شپمنٹ لوڈنگ نہیں بنائی گئی",
+
+  "plr.create_first_loading": "پہلا لوڈنگ اندراج بنائیں",
+
+  "plr.no_records_found": "کوئی پرچیز لوڈنگ ریکارڈ نہیں ملا۔",
+
+  "plr.all_auth_countries": "تمام مجاز ممالک",
+
+  "plr.all_auth_branches": "تمام مجاز برانچز",
+
+  "plr.f_invoice_po": "انوائس / PO",
+
+  "plr.f_loading_status": "لوڈنگ اسٹیٹس",
+
+  "plr.f_search": "تلاش",
+
+  "plr.all_records": "تمام ریکارڈز",
+
+  "plr.loading_records": "ریکارڈز لوڈ ہو رہے ہیں...",
+
+  "plr.add_loading": "لوڈنگ شامل کریں",
   "slstage.carrier_identification": "کیریئر اور شناخت",
 
   "slstage.carrier_remarks_ph": "کیریئر ریمارکس، ٹرانس شپمنٹ تفصیلات، کنٹینر لوڈنگ نوٹس درج کریں...",
@@ -41110,6 +41585,196 @@ const ar: Dict = {
 
   "mgmt.country_added": "تمت إضافة الدولة إلى البيانات الرئيسية.",
 
+
+
+
+
+
+  "lptp.sync_pending": "مزامنة المعلّقة",
+
+  "lptp.pending_gl_transfers": "تحويلات دفتر الأستاذ المعلّقة",
+
+  "lptp.accepted_bills_awaiting": "فواتير مقبولة بانتظار التحقق",
+
+  "lptp.total_pending_value": "إجمالي القيمة المعلّقة",
+
+  "lptp.aggregate_unposted_cost": "إجمالي تكلفة الشراء غير المرحّلة",
+
+  "lptp.authorized_branch": "الفرع المصرّح به",
+
+  "lptp.view_voucher": "عرض السند",
+  "common.save_draft": "حفظ المسودة",
+
+  "lp.local_branch_country": "محلي (بلد الفرع)",
+
+  "lp.export_note": "هذا الشراء مخصص للتصدير. يجب إكمال مسارات الشحن ووثائق الجمارك وتتبع تحميل الحاويات عبر وحدات تحميل التصدير والشحن بعد الحجز.",
+
+  "lp.bill_saved_draft": "تم حفظ الفاتورة كمسودة.",
+
+  "lp.close_form": "إغلاق النموذج",
+
+  "lp.col_supplier": "المورّد",
+
+  "lp.col_net_weight": "الوزن الصافي",
+
+  "lp.loading_bills": "جارٍ تحميل الفواتير...",
+
+  "lp.btn_confirm_scope": "تأكيد النطاق",
+
+  "lp.btn_save_goods": "حفظ البضائع",
+
+  "lp.btn_update_goods": "تحديث البضائع",
+
+  "lp.btn_save_brand": "حفظ العلامة التجارية",
+
+  "lp.btn_save_size": "حفظ الحجم",
+  "crmr.report_title": "تقرير إدارة العلاقات",
+
+  "crmr.smart_due": "الاستحقاق الذكي",
+
+  "crmr.col_global_serial": "التسلسل العالمي",
+
+  "crmr.col_reference_no": "رقم المرجع",
+
+  "crmr.col_type": "النوع",
+
+  "crmr.col_party": "الطرف",
+
+  "crmr.col_due_date": "تاريخ الاستحقاق",
+
+  "crmr.col_amount": "المبلغ",
+
+  "crmr.col_paid": "المدفوع",
+
+  "crmr.col_remaining": "المتبقي",
+
+  "crmr.col_currency": "العملة",
+
+  "crmr.col_status": "الحالة",
+
+  "crmr.col_responsible_user": "المستخدم المسؤول",
+
+  "crmr.col_report_type": "نوع التقرير",
+
+  "crmr.records": "السجلات",
+
+  "crmr.enterprise_live": "المؤسسة مباشر",
+
+  "crmr.subtitle": "تقارير موحّدة متعددة المستويات • أكثر من 100 دولة • جاهزة للطباعة الشاملة و PDF",
+
+  "crmr.from_date": "من تاريخ",
+
+  "crmr.to_date": "إلى تاريخ",
+
+  "crmr.loading_records": "جارٍ تحميل سجلات إدارة العلاقات الشاملة...",
+
+  "crmr.no_records": "لم يتم العثور على سجلات إدارة علاقات مطابقة لمعايير التصفية المحددة.",
+  "eaud.col_actions": "الإجراءات",
+
+  "eaud.col_deleted_at": "تاريخ الحذف",
+
+  "eaud.col_deleted_by": "حُذف بواسطة",
+
+  "eaud.col_deletions": "عمليات الحذف",
+
+  "eaud.col_edited_at": "تاريخ التعديل",
+
+  "eaud.col_edited_by": "عُدّل بواسطة",
+
+  "eaud.col_edits": "التعديلات",
+
+  "eaud.col_email": "البريد الإلكتروني",
+
+  "eaud.col_entity": "الكيان",
+
+  "eaud.col_entries": "القيود",
+
+  "eaud.col_fields": "الحقول",
+
+  "eaud.col_last_active": "آخر نشاط",
+
+  "eaud.col_reason": "السبب",
+
+  "eaud.col_reference": "المرجع",
+
+  "eaud.col_tab": "علامة التبويب",
+
+  "eaud.daily_desc": "تفصيل يومي مجمّع مباشر للمشتريات والمبيعات والمدفوعات واليومية والتدفق النقدي والتعديلات حسب الفرع.",
+
+  "eaud.deleted_vault_desc": "تُحفظ السجلات المحذوفة مبدئيًا بشكل دائم مع السبب والمستخدم واللقطات التاريخية الكاملة.",
+
+  "eaud.deleted_vault_title": "أرشيف السجلات المحذوفة وخزنة الاستعادة",
+
+  "eaud.edits_word": "تعديلات",
+
+  "eaud.filter_date": "تصفية التاريخ",
+
+  "eaud.hard_delete": "حذف نهائي",
+
+  "eaud.monthly_desc": "كل تعديل عبر المشتريات والمبيعات واليومية ودفاتر الأستاذ ينشئ نسخة زمنية غير قابلة للتغيير.",
+
+  "eaud.no_edited_records": "لم يتم العثور على سجلات معدّلة لهذه الفترة.",
+
+  "eaud.no_soft_deleted": "لا توجد سجلات محذوفة مبدئيًا في الخزنة.",
+
+  "eaud.no_user_activity": "لم يُسجَّل أي نشاط للمستخدم.",
+
+  "eaud.refresh": "تحديث",
+
+  "eaud.restore": "استعادة",
+
+  "eaud.rpt_daily_branch": "التدقيق — نشاط الفرع اليومي",
+
+  "eaud.rpt_deleted": "التدقيق — السجلات المحذوفة",
+
+  "eaud.rpt_monthly_edit": "التدقيق — سجل التعديلات الشهري",
+
+  "eaud.rpt_user_activity": "التدقيق — نشاط المستخدم",
+
+  "eaud.search": "بحث",
+
+  "eaud.search_deleted_ph": "ابحث في السجلات المحذوفة...",
+
+  "eaud.timeline_desc": "انقر على أي سجل أدناه لعرض سجل نسخه الكامل يومًا بيوم والوقت الدقيق والفروق على مستوى الحقل.",
+
+  "eaud.total_traceable": "إجمالي أحداث التدقيق القابلة للتتبع:",
+
+  "eaud.users_desc": "تتبّع جلسات تسجيل دخول المستخدم والسجلات المُنشأة والمعدّلة والمحذوفة مبدئيًا عبر جميع النماذج.",
+
+  "eaud.view": "عرض",
+
+  "eaud.view_timeline": "عرض الجدول الزمني",
+  "plr.total_records": "إجمالي السجلات",
+
+  "plr.loaded": "محمّل",
+
+  "plr.received": "مستلَم",
+
+  "plr.confirm_transfer_journal": "تأكيد ونقل إلى اليومية",
+
+  "plr.transfer_to_journal": "نقل إلى اليومية",
+
+  "plr.no_container_loadings": "لم يتم إنشاء أي تحميلات شحن حاويات بعد لحجز الشراء",
+
+  "plr.create_first_loading": "إنشاء أول قيد تحميل",
+
+  "plr.no_records_found": "لم يتم العثور على سجلات تحميل مشتريات.",
+
+  "plr.all_auth_countries": "جميع الدول المصرح بها",
+
+  "plr.all_auth_branches": "جميع الفروع المصرح بها",
+
+  "plr.f_invoice_po": "الفاتورة / أمر الشراء",
+
+  "plr.f_loading_status": "حالة التحميل",
+
+  "plr.f_search": "بحث",
+
+  "plr.all_records": "كل السجلات",
+
+  "plr.loading_records": "جارٍ تحميل السجلات...",
+
+  "plr.add_loading": "إضافة تحميل",
   "slstage.carrier_identification": "الناقل والتعريف",
 
   "slstage.carrier_remarks_ph": "أدخل ملاحظات الناقل وتفاصيل إعادة الشحن وملاحظات تحميل الحاويات...",
@@ -53154,6 +53819,196 @@ const fa: Dict = {
 
   "mgmt.country_added": "کشور به داده‌های اصلی افزوده شد.",
 
+
+
+
+
+
+  "lptp.sync_pending": "همگام‌سازی در انتظار",
+
+  "lptp.pending_gl_transfers": "انتقالات دفتر کل در انتظار",
+
+  "lptp.accepted_bills_awaiting": "صورت‌حساب‌های پذیرفته‌شده در انتظار تأیید",
+
+  "lptp.total_pending_value": "ارزش کل در انتظار",
+
+  "lptp.aggregate_unposted_cost": "مجموع هزینه خرید ثبت‌نشده",
+
+  "lptp.authorized_branch": "شعبه مجاز",
+
+  "lptp.view_voucher": "مشاهده رسید",
+  "common.save_draft": "ذخیره پیش‌نویس",
+
+  "lp.local_branch_country": "محلی (کشور شعبه)",
+
+  "lp.export_note": "این خرید برای صادرات تعیین شده است. مسیرهای حمل، مستندات گمرکی و ردیابی بارگیری کانتینر باید پس از رزرو از طریق ماژول‌های بارگیری صادرات و حمل تکمیل شود.",
+
+  "lp.bill_saved_draft": "صورت‌حساب در پیش‌نویس ذخیره شد.",
+
+  "lp.close_form": "بستن فرم",
+
+  "lp.col_supplier": "تأمین‌کننده",
+
+  "lp.col_net_weight": "وزن خالص",
+
+  "lp.loading_bills": "در حال بارگذاری صورت‌حساب‌ها...",
+
+  "lp.btn_confirm_scope": "تأیید محدوده",
+
+  "lp.btn_save_goods": "ذخیره کالاها",
+
+  "lp.btn_update_goods": "به‌روزرسانی کالاها",
+
+  "lp.btn_save_brand": "ذخیره برند",
+
+  "lp.btn_save_size": "ذخیره اندازه",
+  "crmr.report_title": "گزارش CRM",
+
+  "crmr.smart_due": "سررسید هوشمند",
+
+  "crmr.col_global_serial": "سریال جهانی",
+
+  "crmr.col_reference_no": "شماره مرجع",
+
+  "crmr.col_type": "نوع",
+
+  "crmr.col_party": "طرف",
+
+  "crmr.col_due_date": "تاریخ سررسید",
+
+  "crmr.col_amount": "مبلغ",
+
+  "crmr.col_paid": "پرداخت‌شده",
+
+  "crmr.col_remaining": "باقی‌مانده",
+
+  "crmr.col_currency": "ارز",
+
+  "crmr.col_status": "وضعیت",
+
+  "crmr.col_responsible_user": "کاربر مسئول",
+
+  "crmr.col_report_type": "نوع گزارش",
+
+  "crmr.records": "سوابق",
+
+  "crmr.enterprise_live": "سازمانی زنده",
+
+  "crmr.subtitle": "گزارش‌های تلفیقی چندسطحی • بیش از ۱۰۰ کشور • آماده چاپ جهانی و PDF",
+
+  "crmr.from_date": "از تاریخ",
+
+  "crmr.to_date": "تا تاریخ",
+
+  "crmr.loading_records": "در حال بارگذاری سوابق جهانی CRM...",
+
+  "crmr.no_records": "هیچ سابقه CRM منطبق با معیارهای فیلتر انتخاب‌شده یافت نشد.",
+  "eaud.col_actions": "اقدامات",
+
+  "eaud.col_deleted_at": "زمان حذف",
+
+  "eaud.col_deleted_by": "حذف‌کننده",
+
+  "eaud.col_deletions": "حذف‌ها",
+
+  "eaud.col_edited_at": "زمان ویرایش",
+
+  "eaud.col_edited_by": "ویرایش‌کننده",
+
+  "eaud.col_edits": "ویرایش‌ها",
+
+  "eaud.col_email": "ایمیل",
+
+  "eaud.col_entity": "موجودیت",
+
+  "eaud.col_entries": "ورودی‌ها",
+
+  "eaud.col_fields": "فیلدها",
+
+  "eaud.col_last_active": "آخرین فعالیت",
+
+  "eaud.col_reason": "دلیل",
+
+  "eaud.col_reference": "مرجع",
+
+  "eaud.col_tab": "زبانه",
+
+  "eaud.daily_desc": "تفکیک تجمیعی روزانه زنده خریدها، فروش‌ها، پرداخت‌ها، روزنامچه، جریان نقدی و ویرایش‌ها بر اساس شعبه.",
+
+  "eaud.deleted_vault_desc": "سوابق حذف‌شده نرم به‌طور دائمی همراه با دلیل، کاربر و عکس‌های تاریخی کامل نگهداری می‌شوند.",
+
+  "eaud.deleted_vault_title": "بایگانی سوابق حذف‌شده و گاوصندوق بازیابی",
+
+  "eaud.edits_word": "ویرایش",
+
+  "eaud.filter_date": "فیلتر تاریخ",
+
+  "eaud.hard_delete": "حذف کامل",
+
+  "eaud.monthly_desc": "هر تغییر در خریدها، فروش‌ها، روزنامچه و دفاتر کل یک نسخه خط زمانی تغییرناپذیر ایجاد می‌کند.",
+
+  "eaud.no_edited_records": "هیچ سابقه ویرایش‌شده‌ای برای این دوره یافت نشد.",
+
+  "eaud.no_soft_deleted": "هیچ سابقه حذف نرمی در گاوصندوق نیست.",
+
+  "eaud.no_user_activity": "هیچ فعالیت کاربری ثبت نشده است.",
+
+  "eaud.refresh": "تازه‌سازی",
+
+  "eaud.restore": "بازیابی",
+
+  "eaud.rpt_daily_branch": "حسابرسی — فعالیت روزانه شعبه",
+
+  "eaud.rpt_deleted": "حسابرسی — سوابق حذف‌شده",
+
+  "eaud.rpt_monthly_edit": "حسابرسی — تاریخچه ویرایش ماهانه",
+
+  "eaud.rpt_user_activity": "حسابرسی — فعالیت کاربر",
+
+  "eaud.search": "جستجو",
+
+  "eaud.search_deleted_ph": "جستجوی سوابق حذف‌شده...",
+
+  "eaud.timeline_desc": "برای مشاهده تاریخچه کامل نسخه‌ها روز به روز، زمان دقیق و تفاوت‌های سطح فیلد، روی هر رکورد زیر کلیک کنید.",
+
+  "eaud.total_traceable": "مجموع رویدادهای قابل ردیابی حسابرسی:",
+
+  "eaud.users_desc": "پیگیری جلسات ورود کاربر، سوابق ایجادشده، ویرایش‌شده و حذف نرم‌شده در همه فرم‌ها.",
+
+  "eaud.view": "مشاهده",
+
+  "eaud.view_timeline": "مشاهده خط زمانی",
+  "plr.total_records": "مجموع سوابق",
+
+  "plr.loaded": "بارگیری‌شده",
+
+  "plr.received": "دریافت‌شده",
+
+  "plr.confirm_transfer_journal": "تأیید و انتقال به روزنامه",
+
+  "plr.transfer_to_journal": "انتقال به روزنامه",
+
+  "plr.no_container_loadings": "هنوز هیچ بارگیری محموله کانتینری برای رزرو خرید ایجاد نشده است",
+
+  "plr.create_first_loading": "ایجاد اولین ثبت بارگیری",
+
+  "plr.no_records_found": "هیچ سابقه بارگیری خریدی یافت نشد.",
+
+  "plr.all_auth_countries": "همه کشورهای مجاز",
+
+  "plr.all_auth_branches": "همه شعب مجاز",
+
+  "plr.f_invoice_po": "فاکتور / سفارش خرید",
+
+  "plr.f_loading_status": "وضعیت بارگیری",
+
+  "plr.f_search": "جستجو",
+
+  "plr.all_records": "همه سوابق",
+
+  "plr.loading_records": "در حال بارگذاری سوابق...",
+
+  "plr.add_loading": "افزودن بارگیری",
   "slstage.carrier_identification": "حامل و شناسه",
 
   "slstage.carrier_remarks_ph": "ملاحظات حامل، جزئیات ترابری مجدد و یادداشت‌های بارگیری کانتینر را وارد کنید...",
@@ -65204,6 +66059,196 @@ const ps: Dict = {
 
   "mgmt.country_added": "هېواد اصلي معلوماتو ته اضافه شو.",
 
+
+
+
+
+
+  "lptp.sync_pending": "پاتې سینک کړئ",
+
+  "lptp.pending_gl_transfers": "پاتې د GL لیږدونه",
+
+  "lptp.accepted_bills_awaiting": "د تایید په تمه منل شوي بیلونه",
+
+  "lptp.total_pending_value": "ټول پاتې ارزښت",
+
+  "lptp.aggregate_unposted_cost": "د نه ثبت شوي پیرود ټوله لګښت",
+
+  "lptp.authorized_branch": "مجازه څانګه",
+
+  "lptp.view_voucher": "واوچر وګورئ",
+  "common.save_draft": "مسوده خوندي کړئ",
+
+  "lp.local_branch_country": "ځايي (د څانګې هېواد)",
+
+  "lp.export_note": "دا پیرود د صادراتو لپاره ټاکل شوی. د بکنګ وروسته د لیږد لارې، ګمرکي اسناد او د کنټینر د بار اخیستلو تعقیب باید د صادراتو د بار اخیستلو او لیږد ماډیولونو له لارې بشپړ شي.",
+
+  "lp.bill_saved_draft": "بیل مسودې ته خوندي شو.",
+
+  "lp.close_form": "فورمه بندول",
+
+  "lp.col_supplier": "سپلایر",
+
+  "lp.col_net_weight": "خالص وزن",
+
+  "lp.loading_bills": "بیلونه پورته کیږي...",
+
+  "lp.btn_confirm_scope": "ساحه تصدیق کړئ",
+
+  "lp.btn_save_goods": "توکي خوندي کړئ",
+
+  "lp.btn_update_goods": "توکي تازه کړئ",
+
+  "lp.btn_save_brand": "برنډ خوندي کړئ",
+
+  "lp.btn_save_size": "کچه خوندي کړئ",
+  "crmr.report_title": "د CRM راپور",
+
+  "crmr.smart_due": "سمارټ نیټه",
+
+  "crmr.col_global_serial": "نړیوال سریال",
+
+  "crmr.col_reference_no": "د حوالې شمېره",
+
+  "crmr.col_type": "ډول",
+
+  "crmr.col_party": "پارټي",
+
+  "crmr.col_due_date": "د سررسید نیټه",
+
+  "crmr.col_amount": "اندازه",
+
+  "crmr.col_paid": "ورکړل شوی",
+
+  "crmr.col_remaining": "پاتې",
+
+  "crmr.col_currency": "اسعار",
+
+  "crmr.col_status": "حالت",
+
+  "crmr.col_responsible_user": "مسؤول کارونکی",
+
+  "crmr.col_report_type": "د راپور ډول",
+
+  "crmr.records": "ریکارډونه",
+
+  "crmr.enterprise_live": "تصدۍ ژوندۍ",
+
+  "crmr.subtitle": "څو کچیز ساحه یوځای شوي راپورونه • ۱۰۰+ هېوادونه • نړیوال چاپ او PDF چمتو",
+
+  "crmr.from_date": "له نیټې",
+
+  "crmr.to_date": "تر نیټې",
+
+  "crmr.loading_records": "نړیوال د CRM ریکارډونه پورته کیږي...",
+
+  "crmr.no_records": "د غوره شویو فلټر معیارونو سره سمون لرونکی هیڅ د CRM ریکارډ ونه موندل شو.",
+  "eaud.col_actions": "کړنې",
+
+  "eaud.col_deleted_at": "د حذف نیټه",
+
+  "eaud.col_deleted_by": "حذف کوونکی",
+
+  "eaud.col_deletions": "حذفونه",
+
+  "eaud.col_edited_at": "د سمون نیټه",
+
+  "eaud.col_edited_by": "سمونکی",
+
+  "eaud.col_edits": "سمونونه",
+
+  "eaud.col_email": "بریښنالیک",
+
+  "eaud.col_entity": "اداره",
+
+  "eaud.col_entries": "ننوتنې",
+
+  "eaud.col_fields": "ساحې",
+
+  "eaud.col_last_active": "وروستی فعالیت",
+
+  "eaud.col_reason": "دلیل",
+
+  "eaud.col_reference": "حواله",
+
+  "eaud.col_tab": "ټب",
+
+  "eaud.daily_desc": "د څانګې له مخې د پیرود، پلور، تادیاتو، روزنامچې، نغدي جریان او سمونونو ژوندۍ ورځنۍ ټولګه.",
+
+  "eaud.deleted_vault_desc": "نرم-حذف شوي ریکارډونه د دلیل، کارونکي او بشپړ تاریخي انځورونو سره د تل لپاره ساتل کیږي.",
+
+  "eaud.deleted_vault_title": "د حذف شویو ریکارډونو آرشیف او د بیا رغولو والټ",
+
+  "eaud.edits_word": "سمونونه",
+
+  "eaud.filter_date": "نیټه فلټر کړئ",
+
+  "eaud.hard_delete": "دایمي حذف",
+
+  "eaud.monthly_desc": "په پیرود، پلور، روزنامچه او لېجرونو کې هره بدلون یو نه بدلیدونکی د مهال ویش نسخه جوړوي.",
+
+  "eaud.no_edited_records": "د دې دورې لپاره هیڅ سمون شوی ریکارډ ونه موندل شو.",
+
+  "eaud.no_soft_deleted": "په والټ کې هیڅ نرم-حذف شوی ریکارډ نشته.",
+
+  "eaud.no_user_activity": "د کارونکي هیڅ فعالیت نه دی ثبت شوی.",
+
+  "eaud.refresh": "تازه کول",
+
+  "eaud.restore": "بیا رغول",
+
+  "eaud.rpt_daily_branch": "پلټنه — د څانګې ورځنی فعالیت",
+
+  "eaud.rpt_deleted": "پلټنه — حذف شوي ریکارډونه",
+
+  "eaud.rpt_monthly_edit": "پلټنه — د میاشتنۍ سمون تاریخ",
+
+  "eaud.rpt_user_activity": "پلټنه — د کارونکي فعالیت",
+
+  "eaud.search": "لټون",
+
+  "eaud.search_deleted_ph": "حذف شوي ریکارډونه ولټوئ...",
+
+  "eaud.timeline_desc": "د بشپړ ورځ په ورځ نسخه تاریخ، دقیق وخت او د ساحې کچې توپیرونو لیدو لپاره لاندې پر هر ریکارډ کلیک وکړئ.",
+
+  "eaud.total_traceable": "د تعقیب وړ د پلټنې ټول پیښې:",
+
+  "eaud.users_desc": "په ټولو فورمو کې د کارونکي د ننوتلو ناستې، جوړ شوي، سمون شوي او نرم-حذف شوي ریکارډونه تعقیب کړئ.",
+
+  "eaud.view": "کتل",
+
+  "eaud.view_timeline": "مهال ویش وګورئ",
+  "plr.total_records": "ټول ریکارډونه",
+
+  "plr.loaded": "بار شوی",
+
+  "plr.received": "ترلاسه شوی",
+
+  "plr.confirm_transfer_journal": "تصدیق او ژورنال ته لیږد",
+
+  "plr.transfer_to_journal": "ژورنال ته لیږد",
+
+  "plr.no_container_loadings": "د پیرود بکنګ لپاره تر اوسه هیڅ د کنټینر د بار وړنه نه ده جوړه شوې",
+
+  "plr.create_first_loading": "لومړۍ د بار اخیستلو ننوتنه جوړه کړئ",
+
+  "plr.no_records_found": "د پیرود د بار اخیستلو هیڅ ریکارډ ونه موندل شو.",
+
+  "plr.all_auth_countries": "ټول مجاز هېوادونه",
+
+  "plr.all_auth_branches": "ټولې مجازې څانګې",
+
+  "plr.f_invoice_po": "انوائس / PO",
+
+  "plr.f_loading_status": "د بار اخیستلو حالت",
+
+  "plr.f_search": "لټون",
+
+  "plr.all_records": "ټول ریکارډونه",
+
+  "plr.loading_records": "ریکارډونه پورته کیږي...",
+
+  "plr.add_loading": "بار اخیستل اضافه کړئ",
   "slstage.carrier_identification": "لیږدونکی او پېژندنه",
 
   "slstage.carrier_remarks_ph": "د لیږدونکي یادښتونه، د بیا لیږد جزئیات، د کنټینر بار اخیستلو یادښتونه دننه کړئ...",

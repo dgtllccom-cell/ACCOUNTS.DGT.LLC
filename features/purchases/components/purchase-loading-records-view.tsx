@@ -1606,7 +1606,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.branch_mobile", "Branch Mobile")}:</span>
-                    <span className="font-mono font-bold text-blue-600">{form.branchMobile || "+92-300-1234567"}</span>
+                    <span className="font-mono font-bold text-blue-600">{form.branchMobile || "-"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.loading_mode", "Loading Mode")}:</span>
@@ -1635,67 +1635,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="pt-2 pb-1">
                     <div className="text-[10px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
-                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "Purchase Account"}</div>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "-"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.branch", "Branch")}:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">PAKPKB</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{form.branchName || form.branchCode || "-"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.currency", "Currency")}:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{form.currency || "PKR"}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">{tt("common.company", "Company")}:</span>
-                    <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate pl-4" title={form.purchaseAccountName}>{form.purchaseAccountName || "NAJEEB AND COMPANY"}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-1">
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">KIND</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">INCOME</div>
-                    </div>
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">TYPE</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{tt("plr.col_sub_acct", "Sub-Acct")}</div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 rounded-lg bg-slate-50/80 p-3 border border-slate-100 dark:bg-slate-900/40 dark:border-slate-800">
-                     <h4 className="mb-2 text-[9px] font-bold uppercase tracking-widest text-blue-500">SERIALS & REF</h4>
-                     <div className="grid grid-cols-2 gap-y-2 gap-x-2 text-[10px]">
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_acct_sn", "Acct S/N")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">6</div>
-                       </div>
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_country_sn", "Country S/N")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">PAK-000006</div>
-                       </div>
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_branch_sn", "Branch S/N")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">PAK-CHM-000002</div>
-                       </div>
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_manual_ref", "Manual Ref")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">00124</div>
-                       </div>
-                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">OPENING BAL</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">0.00</div>
-                    </div>
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">CURRENT BAL</div>
-                       <div className="text-[11px] font-bold text-emerald-600">0.00</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-2 text-[10px] font-mono text-slate-500">
-                    <div>MOB: +92 32283832844</div>
-                    <div>WA: +923228383284</div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{form.currency || "-"}</span>
                   </div>
               </div>
             </div>
@@ -1715,62 +1663,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="pt-2 pb-1">
                     <div className="text-[10px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
-                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "Sales Account"}</div>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "-"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.branch", "Branch")}:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">PAK-PKBA-001</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{form.branchName || form.branchCode || "-"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.currency", "Currency")}:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{form.currency || "PKR"}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">{tt("common.company", "Company")}:</span>
-                    <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate pl-4" title={form.salesAccountName}>{form.salesAccountName || "ABC Trading LLC"}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-1">
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">KIND</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">ASSET</div>
-                    </div>
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">TYPE</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{tt("plr.col_sub_acct", "Sub-Acct")}</div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 rounded-lg bg-slate-50/80 p-3 border border-slate-100 dark:bg-slate-900/40 dark:border-slate-800">
-                     <h4 className="mb-2 text-[9px] font-bold uppercase tracking-widest text-blue-500">SERIALS & REF</h4>
-                     <div className="grid grid-cols-2 gap-y-2 gap-x-2 text-[10px]">
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_acct_sn", "Acct S/N")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">11</div>
-                       </div>
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_country_sn", "Country S/N")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">PAK-000011</div>
-                       </div>
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_branch_sn", "Branch S/N")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">PAK-CHM-000005</div>
-                       </div>
-                       <div>
-                         <div className="text-slate-400">{tt("plr.col_manual_ref", "Manual Ref")}</div>
-                         <div className="font-bold text-slate-700 dark:text-slate-300">C450</div>
-                       </div>
-                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">OPENING BAL</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">0.00</div>
-                    </div>
-                    <div>
-                       <div className="text-[9px] uppercase tracking-widest text-slate-400">CURRENT BAL</div>
-                       <div className="text-[11px] font-bold text-emerald-600">0.00</div>
-                    </div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{form.currency || "-"}</span>
                   </div>
               </div>
             </div>
@@ -1887,7 +1788,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 setTransferConfirmData(null);
                 window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
               }} className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
-                Confirm & Transfer to Journal
+                {tt("plr.confirm_transfer_journal", "Confirm & Transfer to Journal")}
               </Button>
             </div>
           </div>
@@ -3086,14 +2987,14 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
     openLoadingRecordsPrintReport({
       rows: loadingPrintRows,
       companyInfo: {
-        country: countryNames.length === 1 ? countryNames[0] : "All Authorized Countries",
-        branch: branchNames.length === 1 ? branchNames[0] : "All Authorized Branches",
-        printedBy: apiSession?.fullName || apiSession?.email || "ERP User"
+        country: countryNames.length === 1 ? countryNames[0] : tt("plr.all_auth_countries", "All Authorized Countries"),
+        branch: branchNames.length === 1 ? branchNames[0] : tt("plr.all_auth_branches", "All Authorized Branches"),
+        printedBy: apiSession?.fullName || apiSession?.email || "-"
       },
       filters: [
-        { label: "Invoice / PO", value: selectedInvoicePoNo || tt("plr.all_invoices", "All Invoices / POs") },
-        { label: "Loading Status", value: status === "all" ? "All Status" : status.toUpperCase() },
-        { label: "Search", value: query.trim() || "All Records" }
+        { label: tt("plr.f_invoice_po", "Invoice / PO"), value: selectedInvoicePoNo || tt("plr.all_invoices", "All Invoices / POs") },
+        { label: tt("plr.f_loading_status", "Loading Status"), value: status === "all" ? tt("common.all_status", "All Status") : translateOptionLabel(activeLang, status.toUpperCase()) },
+        { label: tt("plr.f_search", "Search"), value: query.trim() || tt("plr.all_records", "All Records") }
       ]
     });
   };
@@ -3130,8 +3031,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           <SearchableSelect
             value={status}
             onChange={(val) => setStatus(val as "all" | LoadingStatus)}
-            options={statusOptions.map(opt => ({ label: opt === "all" ? tt("common.all_status", "All Status") : opt.toUpperCase(), value: opt }))}
-            placeholder="All Status"
+            options={statusOptions.map(opt => ({ label: opt === "all" ? tt("common.all_status", "All Status") : translateOptionLabel(activeLang, opt.toUpperCase()), value: opt }))}
+            placeholder={tt("common.all_status", "All Status")}
             className="w-32 text-xs font-semibold relative z-[45]"
           />
           <Button type="button" size="sm" variant="outline" onClick={() => void loadRecords()} disabled={loading} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
@@ -3179,7 +3080,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.purchase_code", "Purchase Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.sales_code", "Sales Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("common.supplier", "Supplier")}</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.company_branch", "Company & Branch")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "Main Branch"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.company_branch", "Company & Branch")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "-"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.goods_brand", "Goods & Brand")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.contract_qty", "Contract Qty (Bags)")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
               
@@ -3497,10 +3398,10 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       })()}
 
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-        <Metric label="Total Records" value={summary.total} tone="slate" />
-        <Metric label="Loaded" value={summary.loaded} tone="green" />
-        <Metric label="Pending" value={summary.pending} tone="amber" />
-        <Metric label="Received" value={summary.received} tone="blue" />
+        <Metric label={tt("plr.total_records", "Total Records")} value={summary.total} tone="slate" />
+        <Metric label={tt("plr.loaded", "Loaded")} value={summary.loaded} tone="green" />
+        <Metric label={tt("plr.pending", "Pending")} value={summary.pending} tone="amber" />
+        <Metric label={tt("plr.received", "Received")} value={summary.received} tone="blue" />
       </div>
 
       {setupMessage ? (
@@ -3566,7 +3467,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                   {loading ? (
                     <tr>
                       <td colSpan={24} className="px-3 py-8 text-center text-muted-foreground">
-                        Loading records...
+                        {tt("plr.loading_records", "Loading records...")}
                       </td>
                     </tr>
                   ) : poGroups.length ? (
@@ -3715,7 +3616,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                   className="h-7 px-2 text-[10px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm"
                                 >
                                   <Plus className="h-3 w-3 text-emerald-600" />
-                                  Add Loading
+                                  {tt("plr.add_loading", "Add Loading")}
                                 </Button>
                                 <Button
                                   type="button"
@@ -3815,7 +3716,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                       onClick={() => setSelectedLoadDetailsRecord(r)}
                                                       className="h-6 px-2 text-[9px] font-bold uppercase bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm"
                                                     >
-                                                      Transfer to Journal
+                                                      {tt("plr.transfer_to_journal", "Transfer to Journal")}
                                                     </Button>
                                                     <CustomDropdown record={r} onLoadDetails={setSelectedLoadDetailsRecord} onReceive={setReceivingRecord} />
                                                   </div>
@@ -3828,7 +3729,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                     </div>
                                   ) : (
                                     <div className="p-6 text-center space-y-3 bg-slate-50/50 dark:bg-slate-950/40 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
-                                      <p className="text-xs font-semibold text-slate-500">No container shipment loadings created yet for Purchase Booking <span className="font-bold text-blue-600">{poNo}</span>.</p>
+                                      <p className="text-xs font-semibold text-slate-500">{tt("plr.no_container_loadings", "No container shipment loadings created yet for Purchase Booking")} <span className="font-bold text-blue-600">{poNo}</span>.</p>
                                       <Button
                                         type="button"
                                         size="sm"
@@ -3836,7 +3737,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                         className="h-8 px-4 text-xs font-bold uppercase bg-blue-600 hover:bg-blue-700 text-white rounded-lg gap-1.5 shadow-sm"
                                       >
                                         <Plus className="h-3.5 w-3.5" />
-                                        Create First Loading Entry
+                                        {tt("plr.create_first_loading", "Create First Loading Entry")}
                                       </Button>
                                     </div>
                                   )}
@@ -3850,7 +3751,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                   ) : (
                     <tr>
                       <td colSpan={18} className="px-3 py-8 text-center text-muted-foreground">
-                        No purchase loading records found.
+                        {tt("plr.no_records_found", "No purchase loading records found.")}
                       </td>
                     </tr>
                   )}

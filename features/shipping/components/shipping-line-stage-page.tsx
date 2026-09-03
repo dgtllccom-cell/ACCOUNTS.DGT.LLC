@@ -64,13 +64,13 @@ type ShippingRecord = {
 };
 
 const shipmentStatuses = [
-  { value: "draft", label: "Draft", color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/60 dark:text-slate-400 dark:border-slate-800" },
-  { value: "booked", label: "Booked", color: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60" },
-  { value: "in_transit", label: "In Transit", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60" },
-  { value: "arrived", label: "Arrived", color: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60" },
-  { value: "cleared", label: "Cleared", color: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60" },
-  { value: "delivered", label: "Delivered", color: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60" },
-  { value: "cancelled", label: "Cancelled", color: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60" }
+  { value: "draft", fallbackEn: "Draft", color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/60 dark:text-slate-400 dark:border-slate-800" },
+  { value: "booked", fallbackEn: "Booked", color: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60" },
+  { value: "in_transit", fallbackEn: "In Transit", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60" },
+  { value: "arrived", fallbackEn: "Arrived", color: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60" },
+  { value: "cleared", fallbackEn: "Cleared", color: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60" },
+  { value: "delivered", fallbackEn: "Delivered", color: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60" },
+  { value: "cancelled", fallbackEn: "Cancelled", color: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60" }
 ];
 
 export function ShippingLineStagePage({
@@ -680,7 +680,7 @@ export function ShippingLineStagePage({
                           className="w-full bg-background border border-border/80 rounded-xl px-3 py-2.5 mt-1.5 h-10 text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 font-semibold"
                         >
                           {shipmentStatuses.map((st) => (
-                            <option key={st.value} value={st.value}>{tt(`slstage.status_${st.value}`, st.label)}</option>
+                            <option key={st.value} value={st.value}>{tt(`slstage.status_${st.value}`, st.fallbackEn)}</option>
                           ))}
                         </select>
                       </div>
@@ -770,7 +770,7 @@ export function ShippingLineStagePage({
                         <td className="px-5 py-3.5 text-muted-foreground">{r.eta ?? "-"}</td>
                         <td className="px-5 py-3.5">
                           <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold border", statusObj?.color)}>
-                            {statusObj ? tt(`slstage.status_${statusObj.value}`, statusObj.label) : r.shipment_status}
+                            {statusObj ? tt(`slstage.status_${statusObj.value}`, statusObj.fallbackEn) : r.shipment_status}
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-[11px] text-muted-foreground max-w-xs truncate" title={r.report_payload?.carrierRemarks || ""}>

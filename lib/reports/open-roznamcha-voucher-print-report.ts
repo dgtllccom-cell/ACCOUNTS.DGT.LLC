@@ -29,13 +29,19 @@ export function openRoznamchaVoucherPrintReport(input: {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   const compName = companyInfo.name || "DIGITAL DOCK ERP";
-  const compTagline = companyInfo.tagline || "Smart Business, Strong Future";
-  const compAddress = companyInfo.address || "Office No. 1, 1st Floor, Idat Plaza, Doctor Bano Road, Quetta, Pakistan";
-  const compPhone = companyInfo.phone || "+92 333 7764008";
-  const compEmail = companyInfo.email || "najib@dgt.llc";
-  const compWebsite = companyInfo.website || "www.dgtllc.com";
-  const branchName = d.branchName || companyInfo.branch || "MAIN BRANCH";
-  const createdBy = d.createdByName || companyInfo.printedBy || "SUPER ADMIN";
+  const compTagline = companyInfo.tagline || "";
+  const compAddress = companyInfo.address || "";
+  const compPhone = companyInfo.phone || "";
+  const compEmail = companyInfo.email || "";
+  const compWebsite = companyInfo.website || "";
+  const branchName = d.branchName || companyInfo.branch || "";
+  const createdBy = d.createdByName || companyInfo.printedBy || "";
+  const contactBits = [
+    compAddress ? `📍 ${escapeHtml(compAddress)}` : "",
+    compPhone ? `📞 ${escapeHtml(compPhone)}` : "",
+    compEmail ? `✉️ ${escapeHtml(compEmail)}` : "",
+    compWebsite ? `🌐 ${escapeHtml(compWebsite)}` : "",
+  ].filter(Boolean).join(" | ");
 
   const amountInWords = numberToWords(d.amount);
   const voucherTitle = d.type === "payment" ? "CASH PAYMENT VOUCHER" : d.type === "expenses" ? "EXPENSE PAYMENT VOUCHER" : d.type === "exchange" ? "MONEY EXCHANGE VOUCHER" : "CASH RECEIPT VOUCHER";
@@ -50,10 +56,8 @@ export function openRoznamchaVoucherPrintReport(input: {
           <div class="lh-logo">⚓</div>
           <div>
             <div class="lh-company">${escapeHtml(compName)}</div>
-            <div class="lh-tagline">${escapeHtml(compTagline)} &bull; ${escapeHtml(branchName)}</div>
-            <div class="lh-contact">
-              📍 ${escapeHtml(compAddress)} | 📞 ${escapeHtml(compPhone)} | ✉️ ${escapeHtml(compEmail)} | 🌐 ${escapeHtml(compWebsite)}
-            </div>
+            ${(compTagline || branchName) ? `<div class="lh-tagline">${[escapeHtml(compTagline), escapeHtml(branchName)].filter(Boolean).join(" &bull; ")}</div>` : ""}
+            ${contactBits ? `<div class="lh-contact">${contactBits}</div>` : ""}
           </div>
         </div>
 
@@ -67,7 +71,7 @@ export function openRoznamchaVoucherPrintReport(input: {
       <div class="meta-grid">
         <div class="meta-item">
           <span class="meta-lbl">Voucher / Receipt #:</span>
-          <span class="meta-val font-mono">${escapeHtml(d.receiptNo || d.voucherNo || "CE-1001")}</span>
+          <span class="meta-val font-mono">${escapeHtml(d.receiptNo || d.voucherNo || "-")}</span>
         </div>
         <div class="meta-item">
           <span class="meta-lbl">Date & Time:</span>
@@ -75,7 +79,7 @@ export function openRoznamchaVoucherPrintReport(input: {
         </div>
         <div class="meta-item">
           <span class="meta-lbl">Account Code:</span>
-          <span class="meta-val font-mono">${escapeHtml(d.accountNo || "1010-CASH")}</span>
+          <span class="meta-val font-mono">${escapeHtml(d.accountNo || "-")}</span>
         </div>
         <div class="meta-item">
           <span class="meta-lbl">Account Title:</span>
@@ -117,7 +121,7 @@ export function openRoznamchaVoucherPrintReport(input: {
       <div class="sign-strip">
         <div class="sign-col">
           <div class="sign-line"></div>
-          <div class="sign-lbl">Prepared By (${escapeHtml(createdBy)})</div>
+          <div class="sign-lbl">${createdBy ? `Prepared By (${escapeHtml(createdBy)})` : "Prepared By"}</div>
         </div>
         <div class="sign-col">
           <div class="sign-line"></div>

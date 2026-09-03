@@ -75,53 +75,53 @@ export function EnterpriseAuditMonitoringDashboard() {
   // Print / PDF — a dedicated report of the active tab (not the dashboard DOM).
   const handlePrintReport = () => {
     void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
-      let title = "Enterprise Audit Monitoring";
+      let title = tt("eaud.center_title", "Enterprise Audit Monitoring");
       let columns: any[] = [];
       let rows: any[] = [];
       if (activeTab === "deleted") {
-        title = "Audit — Deleted Records";
+        title = tt("eaud.rpt_deleted", "Audit — Deleted Records");
         rows = deletedRecords || [];
         columns = [
-          { key: "entity_type", label: "Entity" },
-          { key: "reference_no", label: "Reference" },
-          { key: "deleted_by_name", label: "Deleted By" },
-          { key: "deleted_at", label: "Deleted At", format: "date" },
-          { key: "reason", label: "Reason" },
+          { key: "entity_type", label: tt("eaud.col_entity", "Entity") },
+          { key: "reference_no", label: tt("eaud.col_reference", "Reference") },
+          { key: "deleted_by_name", label: tt("eaud.col_deleted_by", "Deleted By") },
+          { key: "deleted_at", label: tt("eaud.col_deleted_at", "Deleted At"), format: "date" },
+          { key: "reason", label: tt("eaud.col_reason", "Reason") },
         ];
       } else if (activeTab === "users") {
-        title = "Audit — User Activity";
+        title = tt("eaud.rpt_user_activity", "Audit — User Activity");
         rows = userActivityData?.users || [];
         columns = [
-          { key: "full_name", label: "User" },
-          { key: "email", label: "Email" },
-          { key: "total_actions", label: "Actions", align: "right", format: "number" },
-          { key: "last_active", label: "Last Active", format: "date" },
+          { key: "full_name", label: tt("eaud.col_user", "User") },
+          { key: "email", label: tt("eaud.col_email", "Email") },
+          { key: "total_actions", label: tt("eaud.col_actions", "Actions"), align: "right", format: "number" },
+          { key: "last_active", label: tt("eaud.col_last_active", "Last Active"), format: "date" },
         ];
       } else if (activeTab === "daily") {
-        title = "Audit — Daily Branch Activity";
+        title = tt("eaud.rpt_daily_branch", "Audit — Daily Branch Activity");
         rows = dailyBranchData?.branches || [];
         columns = [
-          { key: "branch_name", label: "Branch" },
-          { key: "country_name", label: "Country" },
-          { key: "entries", label: "Entries", align: "right", format: "number" },
-          { key: "edits", label: "Edits", align: "right", format: "number" },
-          { key: "deletions", label: "Deletions", align: "right", format: "number" },
+          { key: "branch_name", label: tt("eaud.col_country_branch", "Branch") },
+          { key: "country_name", label: tt("common.country", "Country") },
+          { key: "entries", label: tt("eaud.col_entries", "Entries"), align: "right", format: "number" },
+          { key: "edits", label: tt("eaud.col_edits", "Edits"), align: "right", format: "number" },
+          { key: "deletions", label: tt("eaud.col_deletions", "Deletions"), align: "right", format: "number" },
         ];
       } else {
-        title = "Audit — Monthly Edit History";
+        title = tt("eaud.rpt_monthly_edit", "Audit — Monthly Edit History");
         rows = monthlyEdits?.records || monthlyEdits?.edits || [];
         columns = [
-          { key: "entity_type", label: "Entity" },
-          { key: "reference_no", label: "Reference" },
-          { key: "edited_by_name", label: "Edited By" },
-          { key: "edited_at", label: "Edited At", format: "date" },
-          { key: "field_count", label: "Fields", align: "right", format: "number" },
+          { key: "entity_type", label: tt("eaud.col_entity", "Entity") },
+          { key: "reference_no", label: tt("eaud.col_reference", "Reference") },
+          { key: "edited_by_name", label: tt("eaud.col_edited_by", "Edited By") },
+          { key: "edited_at", label: tt("eaud.col_edited_at", "Edited At"), format: "date" },
+          { key: "field_count", label: tt("eaud.col_fields", "Fields"), align: "right", format: "number" },
         ];
       }
       openGenericErpReport({
         title, lang, orientation: "landscape", columns,
         rows: rows as Record<string, unknown>[],
-        filters: [{ label: "Tab", value: activeTab }, { label: "Records", value: String(rows.length) }],
+        filters: [{ label: tt("eaud.col_tab", "Tab"), value: activeTab }, { label: tt("eaud.unique_records", "Records"), value: String(rows.length) }],
       });
     });
   };
@@ -353,12 +353,12 @@ export function EnterpriseAuditMonitoringDashboard() {
                 <div>
                   <CardTitle className="text-base font-bold">{tt("eaud.monthly_tab", "Monthly Edit History & Version Drilldown")}</CardTitle>
                   <CardDescription>
-                    Every modification across Purchases, Sales, Roznamcha, and Ledgers creates an immutable timeline version.
+                    {tt("eaud.monthly_desc", "Every modification across Purchases, Sales, Roznamcha, and Ledgers creates an immutable timeline version.")}
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={fetchMonthlyEdits} className="gap-1">
                   <RotateCcw className="h-3.5 w-3.5" />
-                  Refresh
+                  {tt("eaud.refresh", "Refresh")}
                 </Button>
               </div>
             </CardHeader>
@@ -376,7 +376,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                           monthlyEdits.moduleBreakdown.map((m: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center py-1 border-b last:border-0">
                               <span className="font-medium capitalize">{m.entity_type.replace(/_/g, " ")}</span>
-                              <Badge variant="secondary">{m.edit_count} edits</Badge>
+                              <Badge variant="secondary">{m.edit_count} {tt("eaud.edits_word", "edits")}</Badge>
                             </div>
                           ))
                         ) : (
@@ -392,7 +392,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                           monthlyEdits.countryBreakdown.map((c: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center py-1 border-b last:border-0">
                               <span className="font-medium">{c.country_label}</span>
-                              <Badge variant="secondary">{c.edit_count} edits</Badge>
+                              <Badge variant="secondary">{c.edit_count} {tt("eaud.edits_word", "edits")}</Badge>
                             </div>
                           ))
                         ) : (
@@ -404,10 +404,10 @@ export function EnterpriseAuditMonitoringDashboard() {
                     <div className="border rounded-lg p-3 bg-sky-50/50 dark:bg-sky-950/20 border-sky-200">
                       <div className="font-semibold text-xs text-sky-800 dark:text-sky-300 mb-1">{tt("eaud.timeline", "Timeline Inspection")}</div>
                       <p className="text-xs text-muted-foreground mb-3">
-                        Click on any record below to view its complete date-by-date version history, exact time, and field-level diffs.
+                        {tt("eaud.timeline_desc", "Click on any record below to view its complete date-by-date version history, exact time, and field-level diffs.")}
                       </p>
                       <div className="text-xs font-medium text-sky-700">
-                        Total Traceable Audit Events: {monthlyEdits?.stats?.total_edits || 0}
+                        {tt("eaud.total_traceable", "Total Traceable Audit Events:")} {monthlyEdits?.stats?.total_edits || 0}
                       </div>
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                                     className="h-7 text-xs gap-1 text-sky-600 hover:text-sky-700"
                                   >
                                     <Eye className="h-3 w-3" />
-                                    View Timeline
+                                    {tt("eaud.view_timeline", "View Timeline")}
                                   </Button>
                                 </td>
                               </tr>
@@ -456,7 +456,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                           ) : (
                             <tr>
                               <td colSpan={6} className="p-6 text-center text-muted-foreground">
-                                No edited records found for this period.
+                                {tt("eaud.no_edited_records", "No edited records found for this period.")}
                               </td>
                             </tr>
                           )}
@@ -477,17 +477,17 @@ export function EnterpriseAuditMonitoringDashboard() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-base font-bold text-rose-700 dark:text-rose-400">
-                    Deleted Records Archive & Restore Vault
+                    {tt("eaud.deleted_vault_title", "Deleted Records Archive & Restore Vault")}
                   </CardTitle>
                   <CardDescription>
-                    Soft-deleted records are preserved permanently with reason, user, and full historical snapshots.
+                    {tt("eaud.deleted_vault_desc", "Soft-deleted records are preserved permanently with reason, user, and full historical snapshots.")}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative w-64">
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
-                      placeholder="Search deleted records..."
+                      placeholder={tt("eaud.search_deleted_ph", "Search deleted records...")}
                       value={deletedSearch}
                       onChange={(e) => setDeletedSearch(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && fetchDeletedRecords()}
@@ -495,7 +495,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                     />
                   </div>
                   <Button variant="outline" size="sm" onClick={fetchDeletedRecords} className="h-8 text-xs">
-                    Search
+                    {tt("eaud.search", "Search")}
                   </Button>
                 </div>
               </div>
@@ -527,7 +527,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                             </td>
                             <td className="p-2.5 font-semibold capitalize">{del.entity_type.replace(/_/g, " ")}</td>
                             <td className="p-2.5 font-mono">{del.reference_no || del.entity_id}</td>
-                            <td className="p-2.5">{del.user_name || "Admin"} ({del.user_role || "User"})</td>
+                            <td className="p-2.5">{del.user_name || "—"} ({del.user_role ? tt(`role.${del.user_role}` as never, del.user_role) : "—"})</td>
                             <td className="p-2.5 text-muted-foreground">{del.country_name || "—"} / {del.branch_name || "—"}</td>
                             <td className="p-2.5 text-rose-700 dark:text-rose-400 max-w-xs truncate">{del.reason || "Soft Deleted"}</td>
                             <td className="p-2.5 text-muted-foreground">{new Date(del.deleted_at).toLocaleString()}</td>
@@ -539,7 +539,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                                 className="h-7 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50 border-sky-200"
                               >
                                 <Eye className="h-3 w-3 mr-1" />
-                                View
+                                {tt("eaud.view", "View")}
                               </Button>
                               <Button
                                 variant="outline"
@@ -548,7 +548,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                                 className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
                               >
                                 <RotateCcw className="h-3 w-3 mr-1" />
-                                Restore
+                                {tt("eaud.restore", "Restore")}
                               </Button>
                               <Button
                                 variant="outline"
@@ -557,7 +557,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                                 className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
-                                Hard Delete
+                                {tt("eaud.hard_delete", "Hard Delete")}
                               </Button>
                             </td>
                           </tr>
@@ -565,7 +565,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                       ) : (
                         <tr>
                           <td colSpan={8} className="p-6 text-center text-muted-foreground">
-                            No soft-deleted records in vault.
+                            {tt("eaud.no_soft_deleted", "No soft-deleted records in vault.")}
                           </td>
                         </tr>
                       )}
@@ -585,7 +585,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                 <div>
                   <CardTitle className="text-base font-bold">{tt("eaud.daily_tab", "Daily Branch Monitoring & Accountability")}</CardTitle>
                   <CardDescription>
-                    Live daily aggregated breakdown of Purchases, Sales, Payments, Roznamcha, Cash Flow, and Edits by Branch.
+                    {tt("eaud.daily_desc", "Live daily aggregated breakdown of Purchases, Sales, Payments, Roznamcha, Cash Flow, and Edits by Branch.")}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -596,7 +596,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                     className="h-8 w-36 text-xs"
                   />
                   <Button variant="outline" size="sm" onClick={fetchDailyBranchActivity} className="h-8 text-xs">
-                    Filter Date
+                    {tt("eaud.filter_date", "Filter Date")}
                   </Button>
                 </div>
               </div>
@@ -698,7 +698,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             <CardHeader>
               <CardTitle className="text-base font-bold">{tt("eaud.title", "User Activity & Productivity Audit")}</CardTitle>
               <CardDescription>
-                Track user login sessions, records created, edited, and soft-deleted across all forms.
+                {tt("eaud.users_desc", "Track user login sessions, records created, edited, and soft-deleted across all forms.")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -726,20 +726,20 @@ export function EnterpriseAuditMonitoringDashboard() {
                               {u.full_name || u.email}
                               <div className="text-[10px] text-muted-foreground font-normal">{u.email}</div>
                             </td>
-                            <td className="p-2.5 capitalize">{u.role?.replace(/_/g, " ")}</td>
-                            <td className="p-2.5 text-muted-foreground">{u.country_name || "Global"} / {u.branch_name || "Main"}</td>
+                            <td className="p-2.5 capitalize">{u.role ? tt(`role.${u.role}` as never, u.role.replace(/_/g, " ")) : "—"}</td>
+                            <td className="p-2.5 text-muted-foreground">{u.country_name || "—"} / {u.branch_name || "—"}</td>
                             <td className="p-2.5 text-center font-mono text-emerald-600 font-semibold">{u.records_created}</td>
                             <td className="p-2.5 text-center font-mono text-blue-600 font-semibold">{u.records_edited}</td>
                             <td className="p-2.5 text-center font-mono text-rose-600 font-semibold">{u.records_deleted}</td>
                             <td className="p-2.5 text-right">
-                              <Badge className="bg-emerald-600 text-white text-[10px]">Active</Badge>
+                              <Badge className="bg-emerald-600 text-white text-[10px]">{tt("common.active", "Active")}</Badge>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td colSpan={7} className="p-6 text-center text-muted-foreground">
-                            No user activity recorded.
+                            {tt("eaud.no_user_activity", "No user activity recorded.")}
                           </td>
                         </tr>
                       )}

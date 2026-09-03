@@ -17,6 +17,7 @@ import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api/client";
@@ -129,6 +130,7 @@ export function RoznamchaReportView({
   // see CLAUDE.md multilingual-architecture reconciliation rule.
   const activeLang = useActiveLanguage();
   const effectiveLang = activeLang !== "en" ? activeLang : lang;
+  const th = (s: string) => translateHeader(effectiveLang, s);
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
@@ -366,19 +368,19 @@ export function RoznamchaReportView({
     if (!selectedHeader) return [];
 
     const rowsForPrint: { label: string; value: string }[] = [
-      { label: "Voucher Type", value: selectedHeader.type },
-      { label: "Date", value: selectedHeader.entry_date },
-      { label: "Country", value: entryCountryName(selectedHeader) },
-      { label: "Branch", value: entryBranchName(selectedHeader) },
-      { label: "Voucher No", value: selectedHeader.voucher_no },
-      { label: "Journal No", value: selectedHeader.journal_no },
-      { label: "Narration", value: selectedHeader.narration ?? "" },
-      { label: "Status", value: selectedHeader.status ?? "" }
+      { label: th("Voucher Type"), value: selectedHeader.type },
+      { label: th("Date"), value: selectedHeader.entry_date },
+      { label: th("Country"), value: entryCountryName(selectedHeader) },
+      { label: th("Branch"), value: entryBranchName(selectedHeader) },
+      { label: th("Voucher No"), value: selectedHeader.voucher_no },
+      { label: th("Journal No"), value: selectedHeader.journal_no },
+      { label: th("Narration"), value: selectedHeader.narration ?? "" },
+      { label: th("Status"), value: selectedHeader.status ?? "" }
     ];
 
     selectedLines.forEach((line, index) => {
       rowsForPrint.push({
-        label: `Line ${index + 1}`,
+        label: `${th("Line")} ${index + 1}`,
         value: [
           line.payment_entry_type,
           line.ledgers ? `${line.ledgers.code} - ${line.ledgers.name}` : "",
@@ -405,20 +407,19 @@ export function RoznamchaReportView({
       const firstLine = (selectedLines[0] || {}) as any;
       openRoznamchaVoucherPrintReport({
         data: {
-          receiptNo: selectedHeader.voucher_no || "CE-1001",
+          receiptNo: selectedHeader.voucher_no || "-",
           date: selectedHeader.entry_date || new Date().toISOString(),
-          accountNo: firstLine.account_number || firstLine.account_id || "1010-CASH",
-          accountName: firstLine.accounts?.name || firstLine.ledgers?.name || selectedHeader.voucher_no || "Roznamcha Cash Account",
-          paidBy: firstLine.accounts?.name || firstLine.ledgers?.name || selectedHeader.voucher_no || "Cash Settlement",
+          accountNo: firstLine.account_number || firstLine.account_id || "-",
+          accountName: firstLine.accounts?.name || firstLine.ledgers?.name || selectedHeader.voucher_no || "-",
+          paidBy: firstLine.accounts?.name || firstLine.ledgers?.name || selectedHeader.voucher_no || "-",
           amount: Math.max(totalDr, totalCr, 0),
-          currency: firstLine.currency || "AED",
-          narration: firstLine.description || selectedHeader.narration || "Roznamcha transaction entry",
+          currency: firstLine.currency || "",
+          narration: firstLine.description || selectedHeader.narration || "",
           type: totalDr > 0 ? "payment" : "receipt"
         },
         companyInfo: {
-          name: "DIGITAL DOCK ERP",
-          branch: entryCountryName(selectedHeader) || "MAIN BRANCH",
-          printedBy: "SUPER ADMIN"
+          branch: entryBranchName(selectedHeader) || entryCountryName(selectedHeader) || "",
+          printedBy: ""
         },
         lang
       });
@@ -426,7 +427,7 @@ export function RoznamchaReportView({
     }
 
     openA4ReportWindow({
-      title: "Roznamcha Journal",
+      title: th("Roznamcha Journal"),
       subtitle: `${selectedHeader.voucher_no} · ${selectedHeader.entry_date} · ${entryCountryName(selectedHeader)}`,
       rows: buildSelectedRows(mode),
       autoPrint,
@@ -456,15 +457,15 @@ export function RoznamchaReportView({
     <div className="space-y-4">
       <ReportPageHeader
         title={pageTitle}
-        subtitle={`${t(lang, "roz.report_subtitle")} · Compact accounting report`}
+        subtitle={`${t(lang, "roz.report_subtitle")} · ${th("Compact accounting report")}`}
         actions={
           <>
             <span className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
-              Generated Date: <b className="text-foreground">{new Date().toLocaleString()}</b>
+              {th("Generated Date")}: <b className="text-foreground">{new Date().toLocaleString()}</b>
             </span>
             <Button type="button" variant="outline" onClick={() => setFiltersOpen((v) => !v)}>
               <Search className="h-4 w-4" aria-hidden />
-              <span className="ms-2">{filtersOpen ? "Hide Filters" : "Search / Filters"}</span>
+              <span className="ms-2">{filtersOpen ? th("Hide Filters") : th("Search / Filters")}</span>
             </Button>
             <Button type="button" variant="outline" onClick={() => openSelectedReport(false, "journal")} disabled={!selectedHeader}>
               <Printer className="h-4 w-4" aria-hidden />
@@ -472,18 +473,18 @@ export function RoznamchaReportView({
             </Button>
 
             <JournalPrintButton
-              title="Roznamcha General Journal Report"
-              subtitle="Complete Daily Cash & Transaction Register"
+              title={th("Roznamcha General Journal Report")}
+              subtitle={th("Complete Daily Cash & Transaction Register")}
               columns={[
-                { key: "voucher_no", label: "Voucher No", align: "center" },
-                { key: "entry_date", label: "Date", align: "center", format: "date" },
-                { key: "countryName", label: "Country", align: "left" },
-                { key: "branchName", label: "Branch", align: "left" },
-                { key: "roznamcha_type", label: "Category", align: "left" },
-                { key: "currency_code", label: "Cur", align: "center" },
-                { key: "debit", label: "Debit", align: "right", format: "currency" },
-                { key: "credit", label: "Credit", align: "right", format: "currency" },
-                { key: "remarks", label: "Description / Narration", align: "left" }
+                { key: "voucher_no", label: th("Voucher No"), align: "center" },
+                { key: "entry_date", label: th("Date"), align: "center", format: "date" },
+                { key: "countryName", label: th("Country"), align: "left" },
+                { key: "branchName", label: th("Branch"), align: "left" },
+                { key: "roznamcha_type", label: th("Category"), align: "left" },
+                { key: "currency_code", label: th("Cur"), align: "center" },
+                { key: "debit", label: th("Debit"), align: "right", format: "currency" },
+                { key: "credit", label: th("Credit"), align: "right", format: "currency" },
+                { key: "remarks", label: th("Description / Narration"), align: "left" }
               ]}
               rows={filteredEntries.map(e => ({
                 ...e,
@@ -510,35 +511,35 @@ export function RoznamchaReportView({
                 <div className="absolute right-0 top-full z-20 mt-2 w-60 overflow-hidden rounded-xl border bg-background shadow-xl">
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => openSelectedReport(true, "journal")}>
                     <Printer className="h-4 w-4 text-muted-foreground" />
-                    Print
+                    {th("Print")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => openSelectedReport(false, "journal")}>
                     <DownloadActionIcon className="h-4 w-4 text-muted-foreground" />
-                    PDF Export
+                    {th("PDF Export")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={exportCsv}>
                     <DownloadActionIcon className="h-4 w-4 text-muted-foreground" />
-                    Excel Export
+                    {th("Excel Export")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => openSelectedReport(false, "voucher")}>
                     <Eye className="h-4 w-4 text-muted-foreground" />
-                    View Voucher
+                    {th("View Voucher")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={openSelectedLedger}>
                     <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    Open Ledger
+                    {th("Open Ledger")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => openSelectedReport(true, "journal")}>
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    View Journal
+                    {th("View Journal")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={openSelectedEntry}>
                     <Link2 className="h-4 w-4 text-muted-foreground" />
-                    Open Roznamcha Entry
+                    {th("Open Roznamcha Entry")}
                   </button>
                   <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted" onClick={openSelectedAccount}>
                     <Search className="h-4 w-4 text-muted-foreground" />
-                    View Account
+                    {th("View Account")}
                   </button>
                 </div>
               ) : null}
@@ -629,7 +630,7 @@ export function RoznamchaReportView({
                   {loading ? (
                     <tr>
                       <td colSpan={7} className="p-4 text-center text-sm text-muted-foreground">
-                        Loading...
+                        {th("Loading...")}
                       </td>
                     </tr>
                   ) : filteredEntries.length ? (
