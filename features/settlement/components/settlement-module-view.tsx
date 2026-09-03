@@ -8,6 +8,7 @@ import {
 import type { SettlementTransaction, SettlementLink } from "../types/settlement";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { DataEmptyState } from "@/components/ui/data-empty-state";
@@ -39,20 +40,22 @@ export function SettlementModuleView({
   const [linkMsg, setLinkMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const lang = useActiveLanguage();
+  const th = (s: string) => translateHeader(lang, s);
   const scope = useErpScope();
 
   const money = (v: number, ccy?: string) =>
     `${ccy ? ccy + " " : ""}${Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const reportColumns: GenericReportColumn[] = useMemo(() => ([
-    { key: (r: any) => r.source_reference_no || r.id?.slice(0, 8), label: "Date / Serial" },
-    { key: (r: any) => r.source_date ? new Date(r.source_date).toLocaleDateString("en-GB") : "", label: "Date" },
-    { key: (r: any) => [r.party_name, r.narration].filter(Boolean).join(" — "), label: "Party & Narration" },
-    { key: (r: any) => String(r.direction || "").toUpperCase(), label: "Dir", align: "center" },
-    { key: (r: any) => money(r.local_amount, r.local_currency), label: "Total", align: "right" },
-    { key: (r: any) => money(r.remaining_local, r.local_currency), label: "Remaining", align: "right" },
-    { key: (r: any) => String(r.settlement_status || "").replace(/_/g, " "), label: "Status", align: "center" },
-  ]), []);
+    { key: (r: any) => r.source_reference_no || r.id?.slice(0, 8), label: th("Date / Serial") },
+    { key: (r: any) => r.source_date ? new Date(r.source_date).toLocaleDateString("en-GB") : "", label: th("Date") },
+    { key: (r: any) => [r.party_name, r.narration].filter(Boolean).join(" — "), label: th("Party & Narration") },
+    { key: (r: any) => String(r.direction || "").toUpperCase(), label: th("Dir"), align: "center" },
+    { key: (r: any) => money(r.local_amount, r.local_currency), label: th("Total"), align: "right" },
+    { key: (r: any) => money(r.remaining_local, r.local_currency), label: th("Remaining"), align: "right" },
+    { key: (r: any) => String(r.settlement_status || "").replace(/_/g, " "), label: th("Status"), align: "center" },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ]), [lang]);
 
   function printReport() {
     const rows = transactions as unknown as Record<string, unknown>[];
@@ -73,15 +76,15 @@ export function SettlementModuleView({
       branchName: scope.branchDisplayName,
       printedBy: scope.userName,
       filters: [
-        { label: "Status", value: statusFilter === "all" ? "All" : statusFilter.replace(/_/g, " ") },
-        ...(searchTerm ? [{ label: "Search", value: searchTerm }] : []),
-        { label: "Records", value: String(transactions.length) },
+        { label: th("Status"), value: statusFilter === "all" ? th("All") : statusFilter.replace(/_/g, " ") },
+        ...(searchTerm ? [{ label: th("Search"), value: searchTerm }] : []),
+        { label: th("Records"), value: String(transactions.length) },
       ],
       summary: {
-        "Total CR": money(totalCr),
-        "Total DR": money(totalDr),
-        "Total Remaining": money(totalRemaining),
-        "Records": String(transactions.length),
+        [th("Total CR")]: money(totalCr),
+        [th("Total DR")]: money(totalDr),
+        [th("Total Remaining")]: money(totalRemaining),
+        [th("Records")]: String(transactions.length),
       },
     });
   }
@@ -158,14 +161,14 @@ export function SettlementModuleView({
 
       const data = await res.json();
       if (res.ok) {
-        setLinkMsg({ text: "Settlement link matched successfully!", type: "success" });
+        setLinkMsg({ text: th("Settlement link matched successfully!"), type: "success" });
         loadData();
         handleSelectTxn(selectedTxn);
       } else {
-        setLinkMsg({ text: data.error || "Failed to create link", type: "error" });
+        setLinkMsg({ text: data.error || th("Failed to create link"), type: "error" });
       }
     } catch (e) {
-      setLinkMsg({ text: "Network error during settlement linking", type: "error" });
+      setLinkMsg({ text: th("Network error during settlement linking"), type: "error" });
     } finally {
       setLinking(false);
     }
@@ -179,7 +182,7 @@ export function SettlementModuleView({
         method: "DELETE"
       });
       if (res.ok) {
-        setLinkMsg({ text: "Link successfully removed and balances reversed", type: "success" });
+        setLinkMsg({ text: th("Link successfully removed and balances reversed"), type: "success" });
         loadData();
         if (selectedTxn) handleSelectTxn(selectedTxn);
       }
@@ -201,7 +204,7 @@ export function SettlementModuleView({
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search ref, party, account..."
+              placeholder={th("Search ref, party, account...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadData()}
@@ -217,11 +220,11 @@ export function SettlementModuleView({
                 : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
             }`}
           >
-            <option value="all">All Statuses</option>
-            <option value="unsettled">Unsettled Only</option>
-            <option value="partially_settled">Partially Settled</option>
-            <option value="settled">Settled</option>
-            <option value="needs_review">Needs Review</option>
+            <option value="all">{th("All Statuses")}</option>
+            <option value="unsettled">{th("Unsettled Only")}</option>
+            <option value="partially_settled">{th("Partially Settled")}</option>
+            <option value="settled">{th("Settled")}</option>
+            <option value="needs_review">{th("Needs Review")}</option>
           </select>
           {(statusFilter !== "all" || searchTerm) && (
             <button
@@ -235,7 +238,7 @@ export function SettlementModuleView({
             onClick={printReport}
             className="inline-flex items-center gap-1.5 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 text-xs font-semibold text-blue-600 disabled:opacity-40"
           >
-            <Printer className="h-4 w-4" /> Print Report
+            <Printer className="h-4 w-4" /> {th("Print Report")}
           </button>
           <button
             onClick={loadData}
@@ -254,13 +257,13 @@ export function SettlementModuleView({
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="py-3 px-3">Date / Serial</th>
-                  <th className="py-3 px-3">Party & Narration</th>
-                  <th className="py-3 px-2 text-center">Dir</th>
-                  <th className="py-3 px-3 text-right">Total</th>
-                  <th className="py-3 px-3 text-right">Remaining</th>
-                  <th className="py-3 px-2 text-center">Status</th>
-                  <th className="py-3 px-2 text-center">Action</th>
+                  <th className="py-3 px-3">{th("Date / Serial")}</th>
+                  <th className="py-3 px-3">{th("Party & Narration")}</th>
+                  <th className="py-3 px-2 text-center">{th("Dir")}</th>
+                  <th className="py-3 px-3 text-right">{th("Total")}</th>
+                  <th className="py-3 px-3 text-right">{th("Remaining")}</th>
+                  <th className="py-3 px-2 text-center">{th("Status")}</th>
+                  <th className="py-3 px-2 text-center">{th("Action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -268,15 +271,15 @@ export function SettlementModuleView({
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-400">
                       <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-slate-300" />
-                      Loading records...
+                      {th("Loading records...")}
                     </td>
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
                     <td colSpan={7}>
                       <DataEmptyState
-                        title="No matching records found"
-                        hint={statusFilter !== "all" || searchTerm ? "No records match the selected filters. Adjust the status or search and try again." : "Settlement transactions appear here once entries are posted."}
+                        title={th("No matching records found")}
+                        hint={statusFilter !== "all" || searchTerm ? th("No records match the selected filters. Adjust the status or search and try again.") : th("Settlement transactions appear here once entries are posted.")}
                       />
                     </td>
                   </tr>
@@ -351,7 +354,7 @@ export function SettlementModuleView({
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-5">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Selected Entry</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{th("Selected Entry")}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                     selectedTxn.direction === "cr" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
                   }`}>
@@ -361,21 +364,21 @@ export function SettlementModuleView({
                 <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1">
                   {selectedTxn.source_reference_no || selectedTxn.source_id.substring(0, 8)}
                 </h3>
-                <p className="text-xs text-slate-500">{selectedTxn.party_name || "No party specified"}</p>
+                <p className="text-xs text-slate-500">{selectedTxn.party_name || th("No party specified")}</p>
               </div>
 
               {/* Balances card */}
               <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Total Amount:</span>
+                  <span className="text-slate-500">{th("Total Amount")}:</span>
                   <span className="font-semibold">{selectedTxn.local_currency} {Number(selectedTxn.local_amount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Historical USD:</span>
+                  <span className="text-slate-500">{th("Historical USD")}:</span>
                   <span className="font-semibold">${Number(selectedTxn.original_usd_amount).toLocaleString()} (@ {selectedTxn.original_usd_rate})</span>
                 </div>
                 <div className="flex justify-between pt-1 border-t border-slate-200 dark:border-slate-700">
-                  <span className="text-slate-700 dark:text-slate-300 font-bold">Remaining to Settle:</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-bold">{th("Remaining to Settle")}:</span>
                   <span className="font-bold text-blue-600">{selectedTxn.local_currency} {Number(selectedTxn.remaining_local).toLocaleString()}</span>
                 </div>
               </div>
@@ -383,10 +386,10 @@ export function SettlementModuleView({
               {/* Active settlement links */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                  Active Settlement Links ({activeLinks.length})
+                  {th("Active Settlement Links")} ({activeLinks.length})
                 </h4>
                 {activeLinks.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No links attached yet.</p>
+                  <p className="text-xs text-slate-400 italic">{th("No links attached yet.")}</p>
                 ) : (
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {activeLinks.map((link) => (
@@ -395,7 +398,7 @@ export function SettlementModuleView({
                         className="p-2 rounded border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
                       >
                         <div>
-                          <div className="font-semibold">{link.dr_reference_no || "DR Link"}</div>
+                          <div className="font-semibold">{link.dr_reference_no || th("DR Link")}</div>
                           <div className="text-[10px] text-slate-400">
                             {link.linked_local_amount.toLocaleString()} ({link.fx_direction.toUpperCase()} FX: ${link.fx_difference_usd})
                           </div>
@@ -403,7 +406,7 @@ export function SettlementModuleView({
                         <button
                           onClick={() => handleUnlink(link.id)}
                           className="p-1 rounded hover:bg-rose-50 text-rose-600"
-                          title="Unlink"
+                          title={th("Unlink")}
                         >
                           <Unlink className="h-3.5 w-3.5" />
                         </button>
@@ -417,28 +420,28 @@ export function SettlementModuleView({
               {selectedTxn.direction === "cr" && selectedTxn.remaining_local > 0 && (
                 <form onSubmit={handleCreateLink} className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Match Against Debit (DR)
+                    {th("Match Against Debit (DR)")}
                   </h4>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 uppercase">Target DR Transaction</label>
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase">{th("Target DR Transaction")}</label>
                     <select
                       value={targetDrId}
                       onChange={(e) => setTargetDrId(e.target.value)}
                       required
                       className="mt-1 w-full text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Select an open DR record...</option>
+                      <option value="">{th("Select an open DR record...")}</option>
                       {matchingCandidates.map((cand) => (
                         <option key={cand.id} value={cand.id}>
-                          {cand.source_reference_no || cand.source_id.substring(0, 8)} — {cand.party_name || "No party"} ({cand.local_currency} {Number(cand.remaining_local).toLocaleString()})
+                          {cand.source_reference_no || cand.source_id.substring(0, 8)} — {cand.party_name || th("No party")} ({cand.local_currency} {Number(cand.remaining_local).toLocaleString()})
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 uppercase">Link Amount ({selectedTxn.local_currency})</label>
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase">{th("Link Amount")} ({selectedTxn.local_currency})</label>
                     <input
                       type="number"
                       step="any"
@@ -451,10 +454,10 @@ export function SettlementModuleView({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 uppercase">Settlement Remarks</label>
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase">{th("Settlement Remarks")}</label>
                     <input
                       type="text"
-                      placeholder="Optional notes..."
+                      placeholder={th("Optional notes...")}
                       value={linkRemarks}
                       onChange={(e) => setLinkRemarks(e.target.value)}
                       className="mt-1 w-full text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 focus:ring-2 focus:ring-blue-500"
@@ -475,7 +478,7 @@ export function SettlementModuleView({
                     className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 transition disabled:opacity-50"
                   >
                     <Link2 className="h-3.5 w-3.5" />
-                    {linking ? "Processing..." : "Create Settlement Link"}
+                    {linking ? th("Processing...") : th("Create Settlement Link")}
                   </button>
                 </form>
               )}
@@ -484,8 +487,8 @@ export function SettlementModuleView({
             <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
               <DataEmptyState
                 icon={Link2}
-                title="Transaction Linkage Details"
-                hint="Select a transaction on the left to view its linkage details, matching candidates, and FX analysis."
+                title={th("Transaction Linkage Details")}
+                hint={th("Select a transaction on the left to view its linkage details, matching candidates, and FX analysis.")}
               />
             </div>
           )}

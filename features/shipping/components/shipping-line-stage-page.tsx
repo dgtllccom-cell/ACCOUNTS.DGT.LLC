@@ -113,11 +113,11 @@ export function ShippingLineStagePage({
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
       const res = await fetch(`/api/erp/shipping/bl-records?${params.toString()}`);
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? "Unable to load shipment records");
+      if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? tt("slstage.err_load_records", "Unable to load shipment records"));
       setRecords(json.data?.records || []);
     } catch (err: any) {
       console.error(err);
-      setMessage(err.message || "Failed to load records");
+      setMessage(err.message || tt("slstage.err_load_records", "Unable to load shipment records"));
     } finally {
       setLoading(false);
     }
@@ -199,10 +199,10 @@ export function ShippingLineStagePage({
 
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json?.error?.message ?? "Failed to update tracking details");
+        throw new Error(json?.error?.message ?? tt("slstage.err_update_tracking", "Failed to update tracking details"));
       }
 
-      setMessage("✅ Tracking details updated successfully!");
+      setMessage("✅ " + tt("slstage.tracking_updated_ok", "Tracking details updated successfully!"));
       
       // Reload list and update selected record state
       const updatedRecord = json.data?.record;
@@ -241,7 +241,19 @@ export function ShippingLineStagePage({
 
   // Export CSV helper
   function exportCsv() {
-    const headers = ["B/L Number", "Shipping Line", "Vessel Name", "Voyage No", "Container No", "Loading Port", "Discharge Port", "ETA", "ETD", "Status", "Carrier Remarks"];
+    const headers = [
+      tt("slstage.col_bl_number", "B/L Number"),
+      tt("slstage.shipping_line", "Shipping Line"),
+      tt("slstage.col_vessel_name", "Vessel Name"),
+      tt("slstage.col_voyage_no", "Voyage No"),
+      tt("slstage.col_container_no", "Container No"),
+      tt("slstage.col_loading_port", "Loading Port"),
+      tt("slstage.col_discharge_port", "Discharge Port"),
+      tt("slstage.col_eta", "ETA"),
+      tt("slstage.col_etd", "ETD"),
+      tt("slstage.col_status", "Status"),
+      tt("slstage.col_carrier_remarks", "Carrier Remarks"),
+    ];
     const rows = records.map((r) => [
       r.bl_number,
       r.shipping_line_name,
@@ -270,26 +282,26 @@ export function ShippingLineStagePage({
   function printReport() {
     void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
       openGenericErpReport({
-        title: "Shipment Tracking Report",
+        title: tt("slstage.report_title", "Shipment Tracking Report"),
         lang,
         orientation: "landscape",
         columns: [
-          { key: "bl_number", label: "B/L Number" },
-          { key: "shipping_line_name", label: "Shipping Line" },
-          { key: "vessel_name", label: "Vessel Name" },
-          { key: "voyage_number", label: "Voyage No" },
-          { key: "container_number", label: "Container No" },
-          { key: "loading_port", label: "Loading Port" },
-          { key: "discharge_port", label: "Discharge Port" },
-          { key: "eta", label: "ETA", format: "date" },
-          { key: "etd", label: "ETD", format: "date" },
-          { key: "shipment_status", label: "Status", format: "status" },
-          { key: (r: Record<string, unknown>) => (r as any).report_payload?.carrierRemarks ?? "-", label: "Carrier Remarks" },
+          { key: "bl_number", label: tt("slstage.col_bl_number", "B/L Number") },
+          { key: "shipping_line_name", label: tt("slstage.shipping_line", "Shipping Line") },
+          { key: "vessel_name", label: tt("slstage.col_vessel_name", "Vessel Name") },
+          { key: "voyage_number", label: tt("slstage.col_voyage_no", "Voyage No") },
+          { key: "container_number", label: tt("slstage.col_container_no", "Container No") },
+          { key: "loading_port", label: tt("slstage.col_loading_port", "Loading Port") },
+          { key: "discharge_port", label: tt("slstage.col_discharge_port", "Discharge Port") },
+          { key: "eta", label: tt("slstage.col_eta", "ETA"), format: "date" },
+          { key: "etd", label: tt("slstage.col_etd", "ETD"), format: "date" },
+          { key: "shipment_status", label: tt("slstage.col_status", "Status"), format: "status" },
+          { key: (r: Record<string, unknown>) => (r as any).report_payload?.carrierRemarks ?? "-", label: tt("slstage.col_carrier_remarks", "Carrier Remarks") },
         ],
         rows: records as unknown as Record<string, unknown>[],
         filters: [
-          ...(query ? [{ label: "Search", value: query }] : []),
-          { label: "Records", value: String(records.length) },
+          ...(query ? [{ label: tt("slstage.search", "Search"), value: query }] : []),
+          { label: tt("slstage.records", "Records"), value: String(records.length) },
         ],
       });
     });
@@ -319,7 +331,7 @@ export function ShippingLineStagePage({
               onKeyDown={(e) => {
                 if (e.key === "Enter") void loadRecords(query);
               }}
-              placeholder="Search B/L, vessel, container..."
+              placeholder={tt("slstage.search_bl_vessel", "Search B/L, vessel, container...")}
               className="w-full bg-card/80 border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-foreground placeholder:text-muted-foreground shadow-sm transition-all"
             />
           </div>
@@ -430,7 +442,7 @@ export function ShippingLineStagePage({
                     type="text"
                     value={searchBlQuery}
                     onChange={(e) => setSearchBlQuery(e.target.value)}
-                    placeholder="Search B/L number, shipping line, or vessel..."
+                    placeholder={tt("slstage.search_bl_full", "Search B/L number, shipping line, or vessel...")}
                     className="pl-9 pr-8 text-xs bg-background rounded-xl border-border/80 text-foreground placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
                   />
                   {searchBlQuery && (
@@ -438,7 +450,7 @@ export function ShippingLineStagePage({
                       type="button"
                       onClick={() => setSearchBlQuery("")}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs p-1"
-                      title="Clear search"
+                      title={tt("slstage.clear_search", "Clear search")}
                     >
                       ✕
                     </button>
@@ -450,13 +462,13 @@ export function ShippingLineStagePage({
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tt("slstage.available_registry", "Available Registry")}</span>
                   <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
-                    {filteredRecords.length} {filteredRecords.length === records.length ? "records" : `of ${records.length} matches`}
+                    {filteredRecords.length} {filteredRecords.length === records.length ? tt("slstage.records", "records") : `${tt("slstage.of", "of")} ${records.length} ${tt("slstage.matches", "matches")}`}
                   </span>
                 </div>
                 <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
                   {filteredRecords.length === 0 ? (
                     <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-xl bg-muted/20">
-                      No matching B/L records found.
+                      {tt("slstage.no_bl_records", "No matching B/L records found.")}
                     </div>
                   ) : (
                     filteredRecords.map((r) => {
@@ -532,12 +544,12 @@ export function ShippingLineStagePage({
                   {/* Section 1: Carrier & Document */}
                   <div className="space-y-3">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
-                      1. Carrier & Identification
+                      1. {tt("slstage.carrier_identification", "Carrier & Identification")}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <ShippingLinePicker
-                          label="Shipping Line"
+                          label={tt("slstage.shipping_line", "Shipping Line")}
                           value={shippingLineId}
                           onValueChange={async (id) => {
                             setShippingLineId(id);
@@ -553,7 +565,7 @@ export function ShippingLineStagePage({
                       </div>
                       <div>
                         <ClearingAgentPicker
-                          label="Clearing Agent"
+                          label={tt("slstage.clearing_agent", "Clearing Agent")}
                           value={clearingAgentId}
                           onValueChange={setClearingAgentId}
                         />
@@ -572,7 +584,7 @@ export function ShippingLineStagePage({
                   {/* Section 2: Vessel & Container */}
                   <div className="space-y-3">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
-                      2. Vessel & Equipment Details
+                      2. {tt("slstage.sec_vessel_equipment", "Vessel & Equipment Details")}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
@@ -580,7 +592,7 @@ export function ShippingLineStagePage({
                         <Input
                           value={vesselName}
                           onChange={(e) => setVesselName(e.target.value)}
-                          placeholder="e.g. MSC DUBAI"
+                          placeholder={tt("slstage.ph_vessel_eg", "e.g. MSC DUBAI")}
                           className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
                         />
                       </div>
@@ -589,7 +601,7 @@ export function ShippingLineStagePage({
                         <Input
                           value={voyageNumber}
                           onChange={(e) => setVoyageNumber(e.target.value)}
-                          placeholder="e.g. V-7890"
+                          placeholder={tt("slstage.ph_voyage_eg", "e.g. V-7890")}
                           className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
                         />
                       </div>
@@ -598,7 +610,7 @@ export function ShippingLineStagePage({
                         <Input
                           value={containerNumber}
                           onChange={(e) => setContainerNumber(e.target.value)}
-                          placeholder="e.g. MSCO-4455"
+                          placeholder={tt("slstage.ph_container_eg", "e.g. MSCO-4455")}
                           className="bg-background border-border/80 text-foreground mt-1.5 h-10 font-mono rounded-xl focus:border-cyan-500 text-xs"
                         />
                       </div>
@@ -608,28 +620,28 @@ export function ShippingLineStagePage({
                   {/* Section 3: Ports & Dates */}
                   <div className="space-y-3">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
-                      3. Route & Schedule Matrix
+                      3. {tt("slstage.sec_route_schedule", "Route & Schedule Matrix")}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Loading Port (POL)
+                          <MapPin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> {tt("slstage.loading_port_pol", "Loading Port (POL)")}
                         </Label>
                         <Input
                           value={loadingPort}
                           onChange={(e) => setLoadingPort(e.target.value)}
-                          placeholder="e.g. Karachi Port (PK)"
+                          placeholder={tt("slstage.ph_pol_eg", "e.g. Karachi Port (PK)")}
                           className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
                         />
                       </div>
                       <div>
                         <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> Discharge Port (POD)
+                          <MapPin className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> {tt("slstage.discharge_port_pod", "Discharge Port (POD)")}
                         </Label>
                         <Input
                           value={dischargePort}
                           onChange={(e) => setDischargePort(e.target.value)}
-                          placeholder="e.g. Jebel Ali Port (AE)"
+                          placeholder={tt("slstage.ph_pod_eg", "e.g. Jebel Ali Port (AE)")}
                           className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
                         />
                       </div>
@@ -668,7 +680,7 @@ export function ShippingLineStagePage({
                           className="w-full bg-background border border-border/80 rounded-xl px-3 py-2.5 mt-1.5 h-10 text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 font-semibold"
                         >
                           {shipmentStatuses.map((st) => (
-                            <option key={st.value} value={st.value}>{st.label}</option>
+                            <option key={st.value} value={st.value}>{tt(`slstage.status_${st.value}`, st.label)}</option>
                           ))}
                         </select>
                       </div>
@@ -682,7 +694,7 @@ export function ShippingLineStagePage({
                       rows={3}
                       value={remarks}
                       onChange={(e) => setRemarks(e.target.value)}
-                      placeholder="Enter carrier remarks, transshipment details, container loading notes..."
+                      placeholder={tt("slstage.carrier_remarks_ph", "Enter carrier remarks, transshipment details, container loading notes...")}
                       className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground text-xs placeholder:text-muted-foreground mt-1 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
                     />
                   </div>
@@ -693,7 +705,7 @@ export function ShippingLineStagePage({
                       disabled={saving}
                       className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold px-8 h-11 rounded-xl shadow-md transition-all hover:shadow-lg"
                     >
-                      {saving ? "Saving Tracking Details..." : "Update Tracking Matrix"}
+                      {saving ? tt("slstage.saving_tracking", "Saving Tracking Details...") : tt("slstage.update_tracking_matrix", "Update Tracking Matrix")}
                     </Button>
                   </div>
                 </form>
@@ -758,7 +770,7 @@ export function ShippingLineStagePage({
                         <td className="px-5 py-3.5 text-muted-foreground">{r.eta ?? "-"}</td>
                         <td className="px-5 py-3.5">
                           <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold border", statusObj?.color)}>
-                            {statusObj?.label ?? r.shipment_status}
+                            {statusObj ? tt(`slstage.status_${statusObj.value}`, statusObj.label) : r.shipment_status}
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-[11px] text-muted-foreground max-w-xs truncate" title={r.report_payload?.carrierRemarks || ""}>

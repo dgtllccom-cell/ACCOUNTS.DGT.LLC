@@ -927,6 +927,50 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "slstage.carrier_identification"
+  | "slstage.carrier_remarks_ph"
+  | "slstage.clear_search"
+  | "slstage.clearing_agent"
+  | "slstage.col_bl_number"
+  | "slstage.col_carrier_remarks"
+  | "slstage.col_container_no"
+  | "slstage.col_discharge_port"
+  | "slstage.col_eta"
+  | "slstage.col_etd"
+  | "slstage.col_loading_port"
+  | "slstage.col_status"
+  | "slstage.col_vessel_name"
+  | "slstage.col_voyage_no"
+  | "slstage.discharge_port_pod"
+  | "slstage.err_load_records"
+  | "slstage.err_update_tracking"
+  | "slstage.loading_port_pol"
+  | "slstage.matches"
+  | "slstage.no_bl_records"
+  | "slstage.of"
+  | "slstage.ph_container_eg"
+  | "slstage.ph_pod_eg"
+  | "slstage.ph_pol_eg"
+  | "slstage.ph_vessel_eg"
+  | "slstage.ph_voyage_eg"
+  | "slstage.records"
+  | "slstage.report_title"
+  | "slstage.saving_tracking"
+  | "slstage.search"
+  | "slstage.search_bl_full"
+  | "slstage.search_bl_vessel"
+  | "slstage.sec_route_schedule"
+  | "slstage.sec_vessel_equipment"
+  | "slstage.shipping_line"
+  | "slstage.status_arrived"
+  | "slstage.status_booked"
+  | "slstage.status_cancelled"
+  | "slstage.status_cleared"
+  | "slstage.status_delivered"
+  | "slstage.status_draft"
+  | "slstage.status_in_transit"
+  | "slstage.tracking_updated_ok"
+  | "slstage.update_tracking_matrix"
   | "nav.super_admin_roznamcha"
   | "nav.country_roznamcha"
   | "nav.branch_roznamcha"
@@ -16977,6 +17021,94 @@ const en: Dict = {
   "mgmt.err_add_country": "Failed to add country",
 
   "mgmt.country_added": "Country added to master data.",
+
+  "slstage.carrier_identification": "Carrier & Identification",
+
+  "slstage.carrier_remarks_ph": "Enter carrier remarks, transshipment details, container loading notes...",
+
+  "slstage.clear_search": "Clear search",
+
+  "slstage.clearing_agent": "Clearing Agent",
+
+  "slstage.col_bl_number": "B/L Number",
+
+  "slstage.col_carrier_remarks": "Carrier Remarks",
+
+  "slstage.col_container_no": "Container No",
+
+  "slstage.col_discharge_port": "Discharge Port",
+
+  "slstage.col_eta": "ETA",
+
+  "slstage.col_etd": "ETD",
+
+  "slstage.col_loading_port": "Loading Port",
+
+  "slstage.col_status": "Status",
+
+  "slstage.col_vessel_name": "Vessel Name",
+
+  "slstage.col_voyage_no": "Voyage No",
+
+  "slstage.discharge_port_pod": "Discharge Port (POD)",
+
+  "slstage.err_load_records": "Unable to load shipment records",
+
+  "slstage.err_update_tracking": "Failed to update tracking details",
+
+  "slstage.loading_port_pol": "Loading Port (POL)",
+
+  "slstage.matches": "matches",
+
+  "slstage.no_bl_records": "No matching B/L records found.",
+
+  "slstage.of": "of",
+
+  "slstage.ph_container_eg": "e.g. MSCO-4455",
+
+  "slstage.ph_pod_eg": "e.g. Jebel Ali Port (AE)",
+
+  "slstage.ph_pol_eg": "e.g. Karachi Port (PK)",
+
+  "slstage.ph_vessel_eg": "e.g. MSC DUBAI",
+
+  "slstage.ph_voyage_eg": "e.g. V-7890",
+
+  "slstage.records": "records",
+
+  "slstage.report_title": "Shipment Tracking Report",
+
+  "slstage.saving_tracking": "Saving Tracking Details...",
+
+  "slstage.search": "Search",
+
+  "slstage.search_bl_full": "Search B/L number, shipping line, or vessel...",
+
+  "slstage.search_bl_vessel": "Search B/L, vessel, container...",
+
+  "slstage.sec_route_schedule": "Route & Schedule Matrix",
+
+  "slstage.sec_vessel_equipment": "Vessel & Equipment Details",
+
+  "slstage.shipping_line": "Shipping Line",
+
+  "slstage.status_arrived": "Arrived",
+
+  "slstage.status_booked": "Booked",
+
+  "slstage.status_cancelled": "Cancelled",
+
+  "slstage.status_cleared": "Cleared",
+
+  "slstage.status_delivered": "Delivered",
+
+  "slstage.status_draft": "Draft",
+
+  "slstage.status_in_transit": "In Transit",
+
+  "slstage.tracking_updated_ok": "Tracking details updated successfully!",
+
+  "slstage.update_tracking_matrix": "Update Tracking Matrix",
 };
 
 const ur: Dict = {
@@ -28932,6 +29064,94 @@ const ur: Dict = {
   "mgmt.err_add_country": "ملک شامل کرنے میں ناکامی",
 
   "mgmt.country_added": "ملک ماسٹر ڈیٹا میں شامل ہو گیا۔",
+
+  "slstage.carrier_identification": "کیریئر اور شناخت",
+
+  "slstage.carrier_remarks_ph": "کیریئر ریمارکس، ٹرانس شپمنٹ تفصیلات، کنٹینر لوڈنگ نوٹس درج کریں...",
+
+  "slstage.clear_search": "تلاش صاف کریں",
+
+  "slstage.clearing_agent": "کلیئرنگ ایجنٹ",
+
+  "slstage.col_bl_number": "بی/ایل نمبر",
+
+  "slstage.col_carrier_remarks": "کیریئر ریمارکس",
+
+  "slstage.col_container_no": "کنٹینر نمبر",
+
+  "slstage.col_discharge_port": "ڈسچارج پورٹ",
+
+  "slstage.col_eta": "متوقع آمد",
+
+  "slstage.col_etd": "متوقع روانگی",
+
+  "slstage.col_loading_port": "لوڈنگ پورٹ",
+
+  "slstage.col_status": "اسٹیٹس",
+
+  "slstage.col_vessel_name": "بحری جہاز کا نام",
+
+  "slstage.col_voyage_no": "سفر نمبر",
+
+  "slstage.discharge_port_pod": "ڈسچارج پورٹ (POD)",
+
+  "slstage.err_load_records": "شپمنٹ ریکارڈز لوڈ نہیں ہو سکے",
+
+  "slstage.err_update_tracking": "ٹریکنگ تفصیلات اپ ڈیٹ نہیں ہو سکیں",
+
+  "slstage.loading_port_pol": "لوڈنگ پورٹ (POL)",
+
+  "slstage.matches": "میچز",
+
+  "slstage.no_bl_records": "کوئی مماثل بی/ایل ریکارڈ نہیں ملا۔",
+
+  "slstage.of": "از",
+
+  "slstage.ph_container_eg": "مثلاً MSCO-4455",
+
+  "slstage.ph_pod_eg": "مثلاً جبل علی پورٹ (AE)",
+
+  "slstage.ph_pol_eg": "مثلاً کراچی پورٹ (PK)",
+
+  "slstage.ph_vessel_eg": "مثلاً MSC DUBAI",
+
+  "slstage.ph_voyage_eg": "مثلاً V-7890",
+
+  "slstage.records": "ریکارڈز",
+
+  "slstage.report_title": "شپمنٹ ٹریکنگ رپورٹ",
+
+  "slstage.saving_tracking": "ٹریکنگ تفصیلات محفوظ ہو رہی ہیں...",
+
+  "slstage.search": "تلاش",
+
+  "slstage.search_bl_full": "بی/ایل نمبر، شپنگ لائن، یا بحری جہاز تلاش کریں...",
+
+  "slstage.search_bl_vessel": "بی/ایل، بحری جہاز، کنٹینر تلاش کریں...",
+
+  "slstage.sec_route_schedule": "روٹ اور شیڈول میٹرکس",
+
+  "slstage.sec_vessel_equipment": "بحری جہاز اور آلات کی تفصیلات",
+
+  "slstage.shipping_line": "شپنگ لائن",
+
+  "slstage.status_arrived": "پہنچ گیا",
+
+  "slstage.status_booked": "بک ہو گیا",
+
+  "slstage.status_cancelled": "منسوخ",
+
+  "slstage.status_cleared": "کلیئر ہو گیا",
+
+  "slstage.status_delivered": "ڈیلیور ہو گیا",
+
+  "slstage.status_draft": "مسودہ",
+
+  "slstage.status_in_transit": "راستے میں",
+
+  "slstage.tracking_updated_ok": "ٹریکنگ تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں!",
+
+  "slstage.update_tracking_matrix": "ٹریکنگ میٹرکس اپ ڈیٹ کریں",
 };
 
 const ar: Dict = {
@@ -40889,6 +41109,94 @@ const ar: Dict = {
   "mgmt.err_add_country": "فشل إضافة الدولة",
 
   "mgmt.country_added": "تمت إضافة الدولة إلى البيانات الرئيسية.",
+
+  "slstage.carrier_identification": "الناقل والتعريف",
+
+  "slstage.carrier_remarks_ph": "أدخل ملاحظات الناقل وتفاصيل إعادة الشحن وملاحظات تحميل الحاويات...",
+
+  "slstage.clear_search": "مسح البحث",
+
+  "slstage.clearing_agent": "وكيل التخليص",
+
+  "slstage.col_bl_number": "رقم بوليصة الشحن",
+
+  "slstage.col_carrier_remarks": "ملاحظات الناقل",
+
+  "slstage.col_container_no": "رقم الحاوية",
+
+  "slstage.col_discharge_port": "ميناء التفريغ",
+
+  "slstage.col_eta": "الوصول المتوقع",
+
+  "slstage.col_etd": "المغادرة المتوقعة",
+
+  "slstage.col_loading_port": "ميناء التحميل",
+
+  "slstage.col_status": "الحالة",
+
+  "slstage.col_vessel_name": "اسم السفينة",
+
+  "slstage.col_voyage_no": "رقم الرحلة",
+
+  "slstage.discharge_port_pod": "ميناء التفريغ (POD)",
+
+  "slstage.err_load_records": "تعذر تحميل سجلات الشحن",
+
+  "slstage.err_update_tracking": "فشل تحديث تفاصيل التتبع",
+
+  "slstage.loading_port_pol": "ميناء التحميل (POL)",
+
+  "slstage.matches": "مطابقات",
+
+  "slstage.no_bl_records": "لم يتم العثور على سجلات بوليصة شحن مطابقة.",
+
+  "slstage.of": "من",
+
+  "slstage.ph_container_eg": "مثال: MSCO-4455",
+
+  "slstage.ph_pod_eg": "مثال: ميناء جبل علي (AE)",
+
+  "slstage.ph_pol_eg": "مثال: ميناء كراتشي (PK)",
+
+  "slstage.ph_vessel_eg": "مثال: MSC DUBAI",
+
+  "slstage.ph_voyage_eg": "مثال: V-7890",
+
+  "slstage.records": "سجلات",
+
+  "slstage.report_title": "تقرير تتبع الشحنة",
+
+  "slstage.saving_tracking": "جارٍ حفظ تفاصيل التتبع...",
+
+  "slstage.search": "بحث",
+
+  "slstage.search_bl_full": "ابحث برقم بوليصة الشحن أو خط الشحن أو السفينة...",
+
+  "slstage.search_bl_vessel": "ابحث في بوليصة الشحن والسفينة والحاوية...",
+
+  "slstage.sec_route_schedule": "مصفوفة المسار والجدول",
+
+  "slstage.sec_vessel_equipment": "تفاصيل السفينة والمعدات",
+
+  "slstage.shipping_line": "خط الشحن",
+
+  "slstage.status_arrived": "وصل",
+
+  "slstage.status_booked": "محجوز",
+
+  "slstage.status_cancelled": "ملغى",
+
+  "slstage.status_cleared": "تم التخليص",
+
+  "slstage.status_delivered": "تم التسليم",
+
+  "slstage.status_draft": "مسودة",
+
+  "slstage.status_in_transit": "قيد النقل",
+
+  "slstage.tracking_updated_ok": "تم تحديث تفاصيل التتبع بنجاح!",
+
+  "slstage.update_tracking_matrix": "تحديث مصفوفة التتبع",
 };
 
 const fa: Dict = {
@@ -52845,6 +53153,94 @@ const fa: Dict = {
   "mgmt.err_add_country": "افزودن کشور ناموفق بود",
 
   "mgmt.country_added": "کشور به داده‌های اصلی افزوده شد.",
+
+  "slstage.carrier_identification": "حامل و شناسه",
+
+  "slstage.carrier_remarks_ph": "ملاحظات حامل، جزئیات ترابری مجدد و یادداشت‌های بارگیری کانتینر را وارد کنید...",
+
+  "slstage.clear_search": "پاک کردن جستجو",
+
+  "slstage.clearing_agent": "نماینده ترخیص",
+
+  "slstage.col_bl_number": "شماره بارنامه",
+
+  "slstage.col_carrier_remarks": "ملاحظات حامل",
+
+  "slstage.col_container_no": "شماره کانتینر",
+
+  "slstage.col_discharge_port": "بندر تخلیه",
+
+  "slstage.col_eta": "زمان تخمینی ورود",
+
+  "slstage.col_etd": "زمان تخمینی حرکت",
+
+  "slstage.col_loading_port": "بندر بارگیری",
+
+  "slstage.col_status": "وضعیت",
+
+  "slstage.col_vessel_name": "نام کشتی",
+
+  "slstage.col_voyage_no": "شماره سفر",
+
+  "slstage.discharge_port_pod": "بندر تخلیه (POD)",
+
+  "slstage.err_load_records": "بارگذاری سوابق حمل ممکن نشد",
+
+  "slstage.err_update_tracking": "به‌روزرسانی جزئیات ردیابی ناموفق بود",
+
+  "slstage.loading_port_pol": "بندر بارگیری (POL)",
+
+  "slstage.matches": "منطبق",
+
+  "slstage.no_bl_records": "هیچ سابقه بارنامه منطبقی یافت نشد.",
+
+  "slstage.of": "از",
+
+  "slstage.ph_container_eg": "مثال: MSCO-4455",
+
+  "slstage.ph_pod_eg": "مثال: بندر جبل علی (AE)",
+
+  "slstage.ph_pol_eg": "مثال: بندر کراچی (PK)",
+
+  "slstage.ph_vessel_eg": "مثال: MSC DUBAI",
+
+  "slstage.ph_voyage_eg": "مثال: V-7890",
+
+  "slstage.records": "سوابق",
+
+  "slstage.report_title": "گزارش ردیابی محموله",
+
+  "slstage.saving_tracking": "در حال ذخیره جزئیات ردیابی...",
+
+  "slstage.search": "جستجو",
+
+  "slstage.search_bl_full": "شماره بارنامه، خط کشتیرانی یا کشتی را جستجو کنید...",
+
+  "slstage.search_bl_vessel": "بارنامه، کشتی، کانتینر را جستجو کنید...",
+
+  "slstage.sec_route_schedule": "ماتریس مسیر و زمان‌بندی",
+
+  "slstage.sec_vessel_equipment": "جزئیات کشتی و تجهیزات",
+
+  "slstage.shipping_line": "خط کشتیرانی",
+
+  "slstage.status_arrived": "رسید",
+
+  "slstage.status_booked": "رزرو شد",
+
+  "slstage.status_cancelled": "لغو شد",
+
+  "slstage.status_cleared": "ترخیص شد",
+
+  "slstage.status_delivered": "تحویل شد",
+
+  "slstage.status_draft": "پیش‌نویس",
+
+  "slstage.status_in_transit": "در حال حمل",
+
+  "slstage.tracking_updated_ok": "جزئیات ردیابی با موفقیت به‌روزرسانی شد!",
+
+  "slstage.update_tracking_matrix": "به‌روزرسانی ماتریس ردیابی",
 };
 
 const ps: Dict = {
@@ -64807,6 +65203,94 @@ const ps: Dict = {
   "mgmt.err_add_country": "د هېواد اضافه کول ناکام شو",
 
   "mgmt.country_added": "هېواد اصلي معلوماتو ته اضافه شو.",
+
+  "slstage.carrier_identification": "لیږدونکی او پېژندنه",
+
+  "slstage.carrier_remarks_ph": "د لیږدونکي یادښتونه، د بیا لیږد جزئیات، د کنټینر بار اخیستلو یادښتونه دننه کړئ...",
+
+  "slstage.clear_search": "لټون پاک کړئ",
+
+  "slstage.clearing_agent": "د پاکولو استازی",
+
+  "slstage.col_bl_number": "د بار نمبر",
+
+  "slstage.col_carrier_remarks": "د لیږدونکي یادښتونه",
+
+  "slstage.col_container_no": "د کنټینر شمېره",
+
+  "slstage.col_discharge_port": "د تخلیې بندر",
+
+  "slstage.col_eta": "اټکل شوی رارسیدل",
+
+  "slstage.col_etd": "اټکل شوی وتل",
+
+  "slstage.col_loading_port": "د بار اخیستلو بندر",
+
+  "slstage.col_status": "حالت",
+
+  "slstage.col_vessel_name": "د بېړۍ نوم",
+
+  "slstage.col_voyage_no": "د سفر شمېره",
+
+  "slstage.discharge_port_pod": "د تخلیې بندر (POD)",
+
+  "slstage.err_load_records": "د بار ریکارډونه نه شول پورته",
+
+  "slstage.err_update_tracking": "د تعقیب جزئیات تازه نه شول",
+
+  "slstage.loading_port_pol": "د بار اخیستلو بندر (POL)",
+
+  "slstage.matches": "سمون",
+
+  "slstage.no_bl_records": "هیڅ ورته د بار ریکارډ ونه موندل شو.",
+
+  "slstage.of": "له",
+
+  "slstage.ph_container_eg": "لکه MSCO-4455",
+
+  "slstage.ph_pod_eg": "لکه د جبل علي بندر (AE)",
+
+  "slstage.ph_pol_eg": "لکه د کراچۍ بندر (PK)",
+
+  "slstage.ph_vessel_eg": "لکه MSC DUBAI",
+
+  "slstage.ph_voyage_eg": "لکه V-7890",
+
+  "slstage.records": "ریکارډونه",
+
+  "slstage.report_title": "د بار د تعقیب راپور",
+
+  "slstage.saving_tracking": "د تعقیب جزئیات خوندي کیږي...",
+
+  "slstage.search": "لټون",
+
+  "slstage.search_bl_full": "د بار شمېره، د بار کرښه، یا بېړۍ ولټوئ...",
+
+  "slstage.search_bl_vessel": "د بار، بېړۍ، کنټینر ولټوئ...",
+
+  "slstage.sec_route_schedule": "د لارې او مهال ویش جدول",
+
+  "slstage.sec_vessel_equipment": "د بېړۍ او تجهیزاتو جزئیات",
+
+  "slstage.shipping_line": "د بار کرښه",
+
+  "slstage.status_arrived": "ورسید",
+
+  "slstage.status_booked": "بک شو",
+
+  "slstage.status_cancelled": "لغوه شو",
+
+  "slstage.status_cleared": "پاک شو",
+
+  "slstage.status_delivered": "وسپارل شو",
+
+  "slstage.status_draft": "مسوده",
+
+  "slstage.status_in_transit": "په لاره کې",
+
+  "slstage.tracking_updated_ok": "د تعقیب جزئیات په بریالیتوب سره تازه شول!",
+
+  "slstage.update_tracking_matrix": "د تعقیب جدول تازه کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
