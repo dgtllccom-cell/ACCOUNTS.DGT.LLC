@@ -371,7 +371,7 @@ export default function SuperAdminInvestmentsPage() {
               <div className="space-y-1.5">
                 <Label>{t("REF NO.")}</Label>
                 <Input
-                  placeholder="Doc / Bank Ref #"
+                  placeholder={t("Doc / Bank Ref #")}
                   value={referenceNo}
                   onChange={(e) => setReferenceNo(e.target.value)}
                 />
@@ -380,7 +380,7 @@ export default function SuperAdminInvestmentsPage() {
               <div className="space-y-1.5">
                 <Label>{t("DESCRIPTION / PARTICULARS")}</Label>
                 <Input
-                  placeholder="Notes, resolution details..."
+                  placeholder={t("Notes, resolution details...")}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -482,7 +482,7 @@ export default function SuperAdminInvestmentsPage() {
                 {recentEntries.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-6 text-center text-muted-foreground">
-                      No capital movements recorded yet.
+                      {t("No capital movements recorded yet.")}
                     </td>
                   </tr>
                 ) : (

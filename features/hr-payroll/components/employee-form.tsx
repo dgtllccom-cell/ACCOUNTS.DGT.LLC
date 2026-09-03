@@ -927,7 +927,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   </span>
                   {activeStep >= 2 && (
                     <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
-                      Configured
+                      {t(lang, "hr.step_configured", "Configured")}
                     </span>
                   )}
                 </div>
@@ -1005,7 +1005,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   </span>
                   {activeStep >= 4 && (
                     <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
-                      Calculated
+                      {t(lang, "hr.step_calculated", "Calculated")}
                     </span>
                   )}
                 </div>

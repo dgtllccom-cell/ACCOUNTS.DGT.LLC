@@ -607,7 +607,7 @@ export function DailyExchangeRateManager() {
                   {th("SUPER ADMIN LIVE EXCHANGE RATES TABLE")}
                 </h3>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Audited intra-day exchange rates recorded by users and branch terminals worldwide.
+                  {th("Audited intra-day exchange rates recorded by users and branch terminals worldwide.")}
                 </p>
               </div>
               <span className="text-[10px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
@@ -652,7 +652,7 @@ export function DailyExchangeRateManager() {
               <div>
                 <Input
                   type="date"
-                  placeholder="Date From"
+                  placeholder={th("Date From")}
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
                   className="h-8 text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 rounded-lg shadow-xs"

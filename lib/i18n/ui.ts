@@ -927,6 +927,14 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "hr.step_configured"
+  | "hr.step_calculated"
+  | "aump.manage_country"
+  | "urw2.kyc_sync_note"
+  | "urw2.select_all"
+  | "urw2.deselect_all"
+  | "pdfui.eip_for"
+  | "pdfui.eip_thank_you_generated"
   | "wai.toggle_contact_panel"
   | "wai.send_enter"
   | "spin.target_record"
@@ -17862,6 +17870,30 @@ const en: Dict = {
 
 
 
+
+
+  "hr.step_configured": "Configured",
+
+
+  "hr.step_calculated": "Calculated",
+
+
+  "aump.manage_country": "Manage Country",
+
+
+  "urw2.kyc_sync_note": "KYC details are synchronized with the Employee Master Record and stored securely.",
+
+
+  "urw2.select_all": "Select All",
+
+
+  "urw2.deselect_all": "Deselect All",
+
+
+  "pdfui.eip_for": "For",
+
+
+  "pdfui.eip_thank_you_generated": "Thank you for your business! This is a computer generated document.",
   "wai.toggle_contact_panel": "Toggle contact panel",
 
 
@@ -31625,6 +31657,30 @@ const ur: Dict = {
 
 
 
+
+
+  "hr.step_configured": "ترتیب دیا گیا",
+
+
+  "hr.step_calculated": "شمار کیا گیا",
+
+
+  "aump.manage_country": "ملک کا نظم کریں",
+
+
+  "urw2.kyc_sync_note": "KYC تفصیلات ملازم ماسٹر ریکارڈ کے ساتھ ہم آہنگ ہیں اور محفوظ طریقے سے ذخیرہ کی جاتی ہیں۔",
+
+
+  "urw2.select_all": "سب منتخب کریں",
+
+
+  "urw2.deselect_all": "سب کا انتخاب ہٹائیں",
+
+
+  "pdfui.eip_for": "برائے",
+
+
+  "pdfui.eip_thank_you_generated": "آپ کے کاروبار کا شکریہ! یہ کمپیوٹر سے تیار کردہ دستاویز ہے۔",
   "wai.toggle_contact_panel": "رابطہ پینل ٹوگل کریں",
 
 
@@ -45390,6 +45446,30 @@ const ar: Dict = {
 
 
 
+
+
+  "hr.step_configured": "تم التكوين",
+
+
+  "hr.step_calculated": "تم الحساب",
+
+
+  "aump.manage_country": "إدارة الدولة",
+
+
+  "urw2.kyc_sync_note": "تتم مزامنة تفاصيل اعرف عميلك مع سجل الموظف الرئيسي وتُخزَّن بأمان.",
+
+
+  "urw2.select_all": "تحديد الكل",
+
+
+  "urw2.deselect_all": "إلغاء تحديد الكل",
+
+
+  "pdfui.eip_for": "لصالح",
+
+
+  "pdfui.eip_thank_you_generated": "شكرًا لتعاملكم معنا! هذا مستند مُنشأ بواسطة الحاسوب.",
   "wai.toggle_contact_panel": "تبديل لوحة جهة الاتصال",
 
 
@@ -59154,6 +59234,30 @@ const fa: Dict = {
 
 
 
+
+
+  "hr.step_configured": "پیکربندی شد",
+
+
+  "hr.step_calculated": "محاسبه شد",
+
+
+  "aump.manage_country": "مدیریت کشور",
+
+
+  "urw2.kyc_sync_note": "جزئیات KYC با رکورد اصلی کارمند همگام‌سازی و به‌صورت امن ذخیره می‌شود.",
+
+
+  "urw2.select_all": "انتخاب همه",
+
+
+  "urw2.deselect_all": "لغو انتخاب همه",
+
+
+  "pdfui.eip_for": "برای",
+
+
+  "pdfui.eip_thank_you_generated": "از همکاری شما سپاسگزاریم! این سند توسط رایانه تولید شده است.",
   "wai.toggle_contact_panel": "تغییر وضعیت پنل مخاطب",
 
 
@@ -72924,6 +73028,30 @@ const ps: Dict = {
 
 
 
+
+
+  "hr.step_configured": "تنظیم شو",
+
+
+  "hr.step_calculated": "محاسبه شو",
+
+
+  "aump.manage_country": "هېواد اداره کړئ",
+
+
+  "urw2.kyc_sync_note": "د KYC جزئیات د کارمند اصلي ریکارډ سره همغږي دي او په خوندي ډول ساتل کیږي.",
+
+
+  "urw2.select_all": "ټول وټاکئ",
+
+
+  "urw2.deselect_all": "د ټولو انتخاب لغوه کړئ",
+
+
+  "pdfui.eip_for": "لپاره",
+
+
+  "pdfui.eip_thank_you_generated": "ستاسو د سوداګرۍ مننه! دا د کمپیوټر لخوا جوړ شوی سند دی.",
   "wai.toggle_contact_panel": "د اړیکې پینل بدل کړئ",
 
 

@@ -627,7 +627,7 @@ export function AdminUserManagementPanel() {
                   onChange={(e) => setSelectedCountryFilter(e.target.value)}
                   className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
                 >
-                  <option value="all">All Countries</option>
+                  <option value="all">{tt("common.all_countries","All Countries")}</option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.name}>
                       {c.name}
@@ -724,7 +724,7 @@ export function AdminUserManagementPanel() {
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       <Link href="/dashboard/country">
                         <Button size="sm" variant="ghost" className="h-8 px-2 text-xs text-slate-300 hover:text-white hover:bg-slate-700">
-                          Manage Country
+                          {tt("aump.manage_country", "Manage Country")}
                         </Button>
                       </Link>
                     </div>

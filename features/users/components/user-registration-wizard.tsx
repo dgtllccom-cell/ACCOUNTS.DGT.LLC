@@ -1376,7 +1376,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <div className="space-y-3">
                   <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-center gap-2">
                     <Info className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>KYC details are synchronized with the Employee Master Record and stored securely.</span>
+                    <span>{centralT(activeLang, "urw2.kyc_sync_note" as never, "KYC details are synchronized with the Employee Master Record and stored securely.")}</span>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -1473,14 +1473,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           onClick={() => handleToggleCategory(selectedPermissionCategory, true)}
                           className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white hover:bg-emerald-500 shadow-xs"
                         >
-                          Select All
+                          {centralT(activeLang, "urw2.select_all" as never, "Select All")}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleToggleCategory(selectedPermissionCategory, false)}
                           className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300"
                         >
-                          Deselect All
+                          {centralT(activeLang, "urw2.deselect_all" as never, "Deselect All")}
                         </button>
                       </div>
                     </div>

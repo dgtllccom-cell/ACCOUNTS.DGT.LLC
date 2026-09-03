@@ -199,9 +199,12 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
           <div className="p-1 text-center text-[8px] italic text-slate-500 border-b border-slate-300">
             {t(lang, "pdfui.eip_certified_particulars_true_msg", "Certified that the particulars given above are true and correct.")}
           </div>
-          <div className="p-2 text-center font-bold">
-            For DAMAAN GROUP
-          </div>
+          {(bill.city_branches?.company_name || bill.companies?.name || bill.city_branches?.name) && (
+            <div className="p-2 text-center font-bold">
+              {t(lang, "pdfui.eip_for", "For")}{" "}
+              {bill.city_branches?.company_name || bill.companies?.name || bill.city_branches?.name}
+            </div>
+          )}
           <div className="mt-auto p-2 text-center text-[10px] font-bold border-t border-slate-300">
             {t(lang, "pdfui.eip_authorised_signatory", "Authorised Signatory")}
           </div>
@@ -209,7 +212,7 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       </div>
       
       <div className="text-center mt-2 text-[10px] text-slate-500 italic">
-        Thank you for your business! This is a computer generated document.
+        {t(lang, "pdfui.eip_thank_you_generated", "Thank you for your business! This is a computer generated document.")}
       </div>
     </div>
   );

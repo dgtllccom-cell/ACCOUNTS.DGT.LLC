@@ -1944,7 +1944,7 @@ function SuperAdminRoznamchaReportViewContent({
                       setFiltersOpen(false);
                     }}
                   >
-                    Reset All
+                    {th("Reset All")}
                   </Button>
                 </div>
               </div>
@@ -2251,7 +2251,7 @@ function SuperAdminRoznamchaReportViewContent({
                   )) : (
                     <tr>
                       <td colSpan={columns.length} className="border border-slate-200 px-3 py-8 text-center text-sm font-semibold text-slate-400 dark:border-slate-800">
-                        No entries found matching filters.
+                        {th("No entries found matching filters.")}
                       </td>
                     </tr>
                   )}
