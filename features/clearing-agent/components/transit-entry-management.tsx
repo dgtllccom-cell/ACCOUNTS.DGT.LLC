@@ -741,7 +741,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       value={formData.goods_name}
                       onChange={(e) => handleInputChange("goods_name", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="LED TV 42 Inch"
+                      placeholder={tt("transit.ph_goods_name","e.g. goods description")}
                     />
                   </div>
 
@@ -831,7 +831,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       value={formData.created_by}
                       onChange={(e) => handleInputChange("created_by", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="Ali Khan"
+                      placeholder={tt("transit.ph_person","Full name")}
                     />
                   </div>
 
@@ -842,7 +842,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       value={formData.delivered_to}
                       onChange={(e) => handleInputChange("delivered_to", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="Ahmed Shah"
+                      placeholder={tt("transit.ph_person","Full name")}
                     />
                   </div>
                 </div>
@@ -861,7 +861,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       value={formData.export_company}
                       onChange={(e) => handleInputChange("export_company", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="ABC Exporters Ltd."
+                      placeholder={tt("transit.ph_company","Company name")}
                     />
                   </div>
 
@@ -872,7 +872,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       value={formData.import_company}
                       onChange={(e) => handleInputChange("import_company", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="XYZ Importers Pvt. Ltd."
+                      placeholder={tt("transit.ph_company","Company name")}
                     />
                   </div>
 

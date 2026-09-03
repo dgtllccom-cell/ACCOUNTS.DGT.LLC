@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "transit.ph_goods_name"
+  | "transit.ph_person"
+  | "transit.ph_company"
   | "trm.title"
   | "trm.subtitle"
   | "trm.add_key"
@@ -17744,6 +17747,15 @@ const en: Dict = {
 
 
 
+
+
+  "transit.ph_goods_name": "e.g. goods description",
+
+
+  "transit.ph_person": "Full name",
+
+
+  "transit.ph_company": "Company name",
   "trm.title": "Local Translation Management",
 
 
@@ -31219,6 +31231,15 @@ const ur: Dict = {
 
 
 
+
+
+  "transit.ph_goods_name": "مثلاً سامان کی تفصیل",
+
+
+  "transit.ph_person": "پورا نام",
+
+
+  "transit.ph_company": "کمپنی کا نام",
   "trm.title": "لوکل ترجمہ کا انتظام",
 
 
@@ -44696,6 +44717,15 @@ const ar: Dict = {
 
 
 
+
+
+  "transit.ph_goods_name": "مثال: وصف البضائع",
+
+
+  "transit.ph_person": "الاسم الكامل",
+
+
+  "transit.ph_company": "اسم الشركة",
   "trm.title": "إدارة الترجمة المحلية",
 
 
@@ -58172,6 +58202,15 @@ const fa: Dict = {
 
 
 
+
+
+  "transit.ph_goods_name": "مثلاً شرح کالا",
+
+
+  "transit.ph_person": "نام کامل",
+
+
+  "transit.ph_company": "نام شرکت",
   "trm.title": "مدیریت ترجمه محلی",
 
 
@@ -71654,6 +71693,15 @@ const ps: Dict = {
 
 
 
+
+
+  "transit.ph_goods_name": "لکه د توکو تشریح",
+
+
+  "transit.ph_person": "بشپړ نوم",
+
+
+  "transit.ph_company": "د شرکت نوم",
   "trm.title": "د ځایی ژباړې مدیریت",
 
 
