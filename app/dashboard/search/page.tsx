@@ -521,7 +521,7 @@ export default function SearchPage() {
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50" title="WhatsApp Share" onClick={() => handleWhatsApp(c.mobile || "", `Hello ${c.customer_name}, please check your customer card code: CUST-${c.id.slice(0,6).toUpperCase()}.`)}>
                             <MessageSquare className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-indigo-600 hover:bg-indigo-50" title="Email Profile" onClick={() => handleEmail(c.email || "", "Damaan Group Customer Card", `Customer Profile details for ${c.customer_name}.\nNTN: ${parsed.companyTaxNo || "-"}`)}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-indigo-600 hover:bg-indigo-50" title={th("Email Profile")} onClick={() => handleEmail(c.email || "", th("Customer Profile") + " — " + c.customer_name, `Customer Profile details for ${c.customer_name}.\nNTN: ${parsed.companyTaxNo || "-"}`)}>
                             <Mail className="h-4 w-4" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-600 hover:bg-amber-50" title="Print Profile" onClick={() => handlePrint(`Customer Card: ${c.customer_name}`, { Name: c.customer_name, Phone: c.mobile, Email: c.email, NTN: parsed.companyTaxNo, "Manual Ref": parsed.manualReference })}>

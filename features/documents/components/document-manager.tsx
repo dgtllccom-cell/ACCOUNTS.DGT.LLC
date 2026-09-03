@@ -53,6 +53,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import {
   buildDocumentDestinationLabel,
   buildDocumentFileName,
@@ -246,6 +247,8 @@ export function DocumentManager() {
     },
     [lang]
   );
+  // Central-dictionary fallback for short labels/headers not in the local block.
+  const th = useCallback((s: string): string => translateHeader(lang, s), [lang]);
 
   // ── Session Context ──
   const [sessionCtx, setSessionCtx] = useState<{
@@ -862,14 +865,14 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
-                Document Management
+                {th("Document Management")}
               </h1>
               <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
                 {filteredDocuments.length} {t("active_docs", "Active")}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">Hardware Scanner & Cloud Storage</p>
+            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">{th("Hardware Scanner & Cloud Storage")}</p>
           </div>
         </div>
 
@@ -925,14 +928,14 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             {isDateMenuOpen && (
               <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Quick Presets</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Quick Presets")}</span>
                   <div className="grid grid-cols-2 gap-1 mt-1.5">
                     {[
-                      { key: "all", label: "All Dates" },
-                      { key: "today", label: "Today" },
-                      { key: "yesterday", label: "Yesterday" },
-                      { key: "this_month", label: "This Month" },
-                      { key: "last_30_days", label: "Last 30 Days" }
+                      { key: "all", label: th("All Dates") },
+                      { key: "today", label: th("Today") },
+                      { key: "yesterday", label: th("Yesterday") },
+                      { key: "this_month", label: th("This Month") },
+                      { key: "last_30_days", label: th("Last 30 Days") }
                     ].map((item) => (
                       <button
                         key={item.key}
@@ -956,10 +959,10 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Date to Date (Custom)</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Date to Date (Custom)")}</span>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500">From Date</label>
+                      <label className="text-[10px] font-bold text-slate-500">{th("From Date")}</label>
                       <input
                         type="date"
                         value={customDateFrom}
@@ -968,7 +971,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500">To Date</label>
+                      <label className="text-[10px] font-bold text-slate-500">{th("To Date")}</label>
                       <input
                         type="date"
                         value={customDateTo}
@@ -1070,7 +1073,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                   </div>
                   <div>
                     <p className="font-bold text-xs">{t("start_scan", "Start Direct Scan")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">Hardware TWAIN Scanner</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("Hardware TWAIN Scanner")}</p>
                   </div>
                 </button>
 
@@ -1107,7 +1110,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                   </div>
                   <div>
                     <p className="font-bold text-xs">{t("new_folder", "New Custom Folder")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">Create repository folder</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("Create repository folder")}</p>
                   </div>
                 </button>
               </div>
@@ -1443,7 +1446,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             </div>
             <div className="flex justify-between text-purple-600 font-bold">
               <span>{t("direct_scan_bridge", "Scanner Bridge")}:</span>
-              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">TWAIN Ready</span>
+              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">{th("TWAIN Ready")}</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
               <span>{t("cloud_bucket", "Cloud Bucket")}:</span>
@@ -2006,13 +2009,13 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
                     <tr>
-                      <th className="p-2.5">Title / File</th>
-                      <th className="p-2.5">Country & Branch</th>
-                      <th className="p-2.5">Module & Type</th>
-                      <th className="p-2.5">Party / Company</th>
-                      <th className="p-2.5">Size</th>
-                      <th className="p-2.5">Date</th>
-                      <th className="p-2.5 text-right">Actions</th>
+                      <th className="p-2.5">{th("Title / File")}</th>
+                      <th className="p-2.5">{th("Country & Branch")}</th>
+                      <th className="p-2.5">{th("Module & Type")}</th>
+                      <th className="p-2.5">{th("Party / Company")}</th>
+                      <th className="p-2.5">{th("Size")}</th>
+                      <th className="p-2.5">{th("Date")}</th>
+                      <th className="p-2.5 text-right">{th("Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -2102,7 +2105,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                 <option value="Canon imageFORMULA DR-C225 II">Canon imageFORMULA DR-C225 II (Fast Feeder)</option>
                 <option value="Epson WorkForce DS-530 II">Epson WorkForce DS-530 II (Duplex)</option>
                 <option value="HP ScanJet Pro 3000 s4">HP ScanJet Pro 3000 s4</option>
-                <option value="Direct WebCamera Document Capture">Direct WebCam / Mobile Camera</option>
+                <option value="Direct WebCamera Document Capture">{th("Direct WebCam / Mobile Camera")}</option>
               </select>
             </div>
 
@@ -2127,17 +2130,17 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                   onChange={(e) => setScannerColor(e.target.value)}
                   className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
                 >
-                  <option value="color">24-Bit Color</option>
-                  <option value="grayscale">Grayscale</option>
-                  <option value="bw">Black & White (Text)</option>
+                  <option value="color">{th("24-Bit Color")}</option>
+                  <option value="grayscale">{th("Grayscale")}</option>
+                  <option value="bw">{th("Black & White (Text)")}</option>
                 </select>
               </div>
             </div>
 
             <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Destination Filing Path</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{th("Destination Filing Path")}</span>
               <div className="text-[11px] font-mono text-slate-700 truncate">
-                {activeCountry?.name || "Super Admin Storage"} › {activeMainBranch?.name || "All Branches"} › {selectedModule}
+                {activeCountry?.name || th("Super Admin Storage")} › {activeMainBranch?.name || th("All Branches")} › {selectedModule}
               </div>
             </div>
 
@@ -2316,19 +2319,19 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             <div className="space-y-3.5 py-2 text-xs">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200 dark:border-slate-800 text-[11px]">
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Module</span>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Module")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{previewDoc.module_type}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Type</span>
-                  <span className="font-bold text-purple-600">{previewDoc.document_type || "Document"}</span>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Type")}</span>
+                  <span className="font-bold text-purple-600">{previewDoc.document_type || th("Document")}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Size</span>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Size")}</span>
                   <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{formatBytes(previewDoc.file_size)}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Scanned At</span>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Scanned At")}</span>
                   <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
                     {new Date(previewDoc.scanned_at || previewDoc.created_at).toLocaleDateString()}
                   </span>
