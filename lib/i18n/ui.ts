@@ -927,6 +927,22 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dash.live_financial_summary"
+  | "dash.live_financial_summary_sub"
+  | "dash.ledger_debit"
+  | "dash.ledger_credit"
+  | "dash.purchase_total"
+  | "dash.sales_total"
+  | "dash.sales_orders"
+  | "dash.database_coverage"
+  | "dash.database_coverage_sub"
+  | "dash.cov_account_master"
+  | "dash.cov_ledger"
+  | "dash.cov_roznamcha"
+  | "dash.cov_purchase"
+  | "dash.cov_sales"
+  | "dash.cov_shipping"
+  | "dash.no_roznamcha_yet"
   | "login.org_erp"
   | "login.choose_path"
   | "login.choose_path_sub"
@@ -17777,6 +17793,54 @@ const en: Dict = {
 
 
 
+
+
+  "dash.live_financial_summary": "Live Financial Summary",
+
+
+  "dash.live_financial_summary_sub": "Calculated from ledger balances and order tables.",
+
+
+  "dash.ledger_debit": "Ledger Debit",
+
+
+  "dash.ledger_credit": "Ledger Credit",
+
+
+  "dash.purchase_total": "Purchase Total",
+
+
+  "dash.sales_total": "Sales Total",
+
+
+  "dash.sales_orders": "Sales Orders",
+
+
+  "dash.database_coverage": "Database Coverage",
+
+
+  "dash.database_coverage_sub": "Core module tables verified by schema migrations.",
+
+
+  "dash.cov_account_master": "Account Master",
+
+
+  "dash.cov_ledger": "Ledger",
+
+
+  "dash.cov_roznamcha": "Roznamcha",
+
+
+  "dash.cov_purchase": "Purchase",
+
+
+  "dash.cov_sales": "Sales",
+
+
+  "dash.cov_shipping": "Shipping",
+
+
+  "dash.no_roznamcha_yet": "No Roznamcha entries found yet.",
   "login.org_erp": "Business Group ERP",
 
 
@@ -31339,6 +31403,54 @@ const ur: Dict = {
 
 
 
+
+
+  "dash.live_financial_summary": "لائیو مالیاتی خلاصہ",
+
+
+  "dash.live_financial_summary_sub": "لیجر بیلنس اور آرڈر ٹیبلز سے شمار کیا گیا۔",
+
+
+  "dash.ledger_debit": "لیجر ڈیبٹ",
+
+
+  "dash.ledger_credit": "لیجر کریڈٹ",
+
+
+  "dash.purchase_total": "خریداری کل",
+
+
+  "dash.sales_total": "فروخت کل",
+
+
+  "dash.sales_orders": "سیلز آرڈرز",
+
+
+  "dash.database_coverage": "ڈیٹابیس کوریج",
+
+
+  "dash.database_coverage_sub": "اسکیما مائیگریشنز سے تصدیق شدہ بنیادی ماڈیول ٹیبلز۔",
+
+
+  "dash.cov_account_master": "اکاؤنٹ ماسٹر",
+
+
+  "dash.cov_ledger": "لیجر",
+
+
+  "dash.cov_roznamcha": "روزنامچہ",
+
+
+  "dash.cov_purchase": "خریداری",
+
+
+  "dash.cov_sales": "فروخت",
+
+
+  "dash.cov_shipping": "شپنگ",
+
+
+  "dash.no_roznamcha_yet": "ابھی تک کوئی روزنامچہ اندراج نہیں ملا۔",
   "login.org_erp": "بزنس گروپ ERP",
 
 
@@ -44903,6 +45015,54 @@ const ar: Dict = {
 
 
 
+
+
+  "dash.live_financial_summary": "الملخص المالي المباشر",
+
+
+  "dash.live_financial_summary_sub": "محسوب من أرصدة دفتر الأستاذ وجداول الطلبات.",
+
+
+  "dash.ledger_debit": "مدين دفتر الأستاذ",
+
+
+  "dash.ledger_credit": "دائن دفتر الأستاذ",
+
+
+  "dash.purchase_total": "إجمالي المشتريات",
+
+
+  "dash.sales_total": "إجمالي المبيعات",
+
+
+  "dash.sales_orders": "أوامر المبيعات",
+
+
+  "dash.database_coverage": "تغطية قاعدة البيانات",
+
+
+  "dash.database_coverage_sub": "جداول الوحدات الأساسية المتحقق منها عبر ترحيلات المخطط.",
+
+
+  "dash.cov_account_master": "السجل الرئيسي للحسابات",
+
+
+  "dash.cov_ledger": "دفتر الأستاذ",
+
+
+  "dash.cov_roznamcha": "الروزنامة",
+
+
+  "dash.cov_purchase": "المشتريات",
+
+
+  "dash.cov_sales": "المبيعات",
+
+
+  "dash.cov_shipping": "الشحن",
+
+
+  "dash.no_roznamcha_yet": "لم يتم العثور على أي إدخالات روزنامة بعد.",
   "login.org_erp": "نظام ERP لمجموعة الأعمال",
 
 
@@ -58466,6 +58626,54 @@ const fa: Dict = {
 
 
 
+
+
+  "dash.live_financial_summary": "خلاصه مالی زنده",
+
+
+  "dash.live_financial_summary_sub": "محاسبه‌شده از مانده‌های دفتر کل و جداول سفارش.",
+
+
+  "dash.ledger_debit": "بدهکار دفتر کل",
+
+
+  "dash.ledger_credit": "بستانکار دفتر کل",
+
+
+  "dash.purchase_total": "مجموع خرید",
+
+
+  "dash.sales_total": "مجموع فروش",
+
+
+  "dash.sales_orders": "سفارش‌های فروش",
+
+
+  "dash.database_coverage": "پوشش پایگاه داده",
+
+
+  "dash.database_coverage_sub": "جداول ماژول اصلی تأییدشده توسط مهاجرت‌های اسکیما.",
+
+
+  "dash.cov_account_master": "اصلی حساب",
+
+
+  "dash.cov_ledger": "دفتر کل",
+
+
+  "dash.cov_roznamcha": "روزنامچه",
+
+
+  "dash.cov_purchase": "خرید",
+
+
+  "dash.cov_sales": "فروش",
+
+
+  "dash.cov_shipping": "حمل و نقل",
+
+
+  "dash.no_roznamcha_yet": "هنوز هیچ ورودی روزنامچه یافت نشد.",
   "login.org_erp": "ERP گروه تجاری",
 
 
@@ -72035,6 +72243,54 @@ const ps: Dict = {
 
 
 
+
+
+  "dash.live_financial_summary": "ژوندی مالي لنډیز",
+
+
+  "dash.live_financial_summary_sub": "د لیجر بیلانسونو او د امر جدولونو څخه محاسبه شوی.",
+
+
+  "dash.ledger_debit": "د لیجر ډیبټ",
+
+
+  "dash.ledger_credit": "د لیجر کریډټ",
+
+
+  "dash.purchase_total": "د پیرود ټول",
+
+
+  "dash.sales_total": "د پلور ټول",
+
+
+  "dash.sales_orders": "د پلور امرونه",
+
+
+  "dash.database_coverage": "د ډیټابیس پوښښ",
+
+
+  "dash.database_coverage_sub": "د اصلي ماډیول جدولونه د سکیما مهاجرتونو لخوا تصدیق شوي.",
+
+
+  "dash.cov_account_master": "د حساب ماسټر",
+
+
+  "dash.cov_ledger": "لیجر",
+
+
+  "dash.cov_roznamcha": "روزنامچه",
+
+
+  "dash.cov_purchase": "پیرود",
+
+
+  "dash.cov_sales": "پلور",
+
+
+  "dash.cov_shipping": "بار وړل",
+
+
+  "dash.no_roznamcha_yet": "تر اوسه هیڅ د روزنامچه ننوتنه ونه موندل شوه.",
   "login.org_erp": "د سوداګریزې ډلې ERP",
 
 

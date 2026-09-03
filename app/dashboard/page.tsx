@@ -285,36 +285,36 @@ export default async function DashboardPage() {
       <section className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Live Financial Summary</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Calculated from ledger balances and order tables.</p>
+            <CardTitle>{t(lang, "dash.live_financial_summary", "Live Financial Summary")}</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">{t(lang, "dash.live_financial_summary_sub", "Calculated from ledger balances and order tables.")}</p>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <SummaryBox label="Ledger Debit" value={money(data.ledgerDebit)} />
-              <SummaryBox label="Ledger Credit" value={money(data.ledgerCredit)} />
-              <SummaryBox label="Ledger Balance" value={money(data.ledgerBalance)} />
-              <SummaryBox label="Purchase Total" value={money(data.purchaseTotal)} />
-              <SummaryBox label="Sales Total" value={money(data.salesTotal)} />
-              <SummaryBox label="Sales Orders" value={String(data.counts.sales)} />
+              <SummaryBox label={t(lang, "dash.ledger_debit", "Ledger Debit")} value={money(data.ledgerDebit)} />
+              <SummaryBox label={t(lang, "dash.ledger_credit", "Ledger Credit")} value={money(data.ledgerCredit)} />
+              <SummaryBox label={t(lang, "dash.ledger_balance", "Ledger Balance")} value={money(data.ledgerBalance)} />
+              <SummaryBox label={t(lang, "dash.purchase_total", "Purchase Total")} value={money(data.purchaseTotal)} />
+              <SummaryBox label={t(lang, "dash.sales_total", "Sales Total")} value={money(data.salesTotal)} />
+              <SummaryBox label={t(lang, "dash.sales_orders", "Sales Orders")} value={String(data.counts.sales)} />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Database Coverage</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Core module tables verified by migration 0028.</p>
+            <CardTitle>{t(lang, "dash.database_coverage", "Database Coverage")}</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">{t(lang, "dash.database_coverage_sub", "Core module tables verified by schema migrations.")}</p>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {[
-              ["Account Master", data.counts.accounts],
-              ["Ledger", data.counts.ledgers],
-              ["Roznamcha", data.counts.roznamcha],
-              ["Purchase", data.counts.purchases],
-              ["Sales", data.counts.sales],
-              ["Shipping", data.counts.shipping]
+              [t(lang, "dash.cov_account_master", "Account Master"), data.counts.accounts],
+              [t(lang, "dash.cov_ledger", "Ledger"), data.counts.ledgers],
+              [t(lang, "dash.cov_roznamcha", "Roznamcha"), data.counts.roznamcha],
+              [t(lang, "dash.cov_purchase", "Purchase"), data.counts.purchases],
+              [t(lang, "dash.cov_sales", "Sales"), data.counts.sales],
+              [t(lang, "dash.cov_shipping", "Shipping"), data.counts.shipping]
             ].map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between rounded-md border px-3 py-2">
+              <div key={String(label)} className="flex items-center justify-between rounded-md border px-3 py-2">
                 <span className="font-medium">{label}</span>
                 <span className="font-mono text-xs">{value}</span>
               </div>
@@ -353,7 +353,7 @@ export default async function DashboardPage() {
                   ) : (
                     <tr>
                       <td className="py-6 text-center text-muted-foreground" colSpan={5}>
-                        No Roznamcha entries found yet.
+                        {t(lang, "dash.no_roznamcha_yet", "No Roznamcha entries found yet.")}
                       </td>
                     </tr>
                   )}
