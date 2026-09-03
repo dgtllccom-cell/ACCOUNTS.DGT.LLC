@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   Dialog,
   DialogContent,
@@ -33,24 +35,26 @@ type TranslationItem = {
 };
 
 const MODULE_OPTIONS = [
-  { label: "All Modules", value: "" },
-  { label: "System & UI Dictionary", value: "system_dictionary" },
-  { label: "Roznamcha & Cash Entry", value: "roznamcha_entries" },
-  { label: "Expenses Bills & Remarks", value: "expenses" },
-  { label: "Purchases & Transfers", value: "purchases" },
-  { label: "Sales & Invoices", value: "sales" },
-  { label: "Accounts & Ledgers", value: "enterprise_accounts" },
-  { label: "Goods & Products", value: "goods" },
-  { label: "Countries & Locations", value: "countries" },
-  { label: "Branches", value: "city_branches" },
-  { label: "Customers & Clients", value: "customers" },
-  { label: "Suppliers & Vendors", value: "suppliers" },
-  { label: "Payment Methods", value: "payment_methods" },
-  { label: "Tax Codes", value: "tax_codes" },
-  { label: "Companies", value: "companies" }
+  { en: "All Modules", key: "trm.mod_all", value: "" },
+  { en: "System & UI Dictionary", key: "trm.mod_system", value: "system_dictionary" },
+  { en: "Roznamcha & Cash Entry", key: "trm.mod_roznamcha", value: "roznamcha_entries" },
+  { en: "Expenses Bills & Remarks", key: "trm.mod_expenses", value: "expenses" },
+  { en: "Purchases & Transfers", key: "trm.mod_purchases", value: "purchases" },
+  { en: "Sales & Invoices", key: "trm.mod_sales", value: "sales" },
+  { en: "Accounts & Ledgers", key: "trm.mod_accounts", value: "enterprise_accounts" },
+  { en: "Goods & Products", key: "trm.mod_goods", value: "goods" },
+  { en: "Countries & Locations", key: "trm.mod_countries", value: "countries" },
+  { en: "Branches", key: "trm.mod_branches", value: "city_branches" },
+  { en: "Customers & Clients", key: "trm.mod_customers", value: "customers" },
+  { en: "Suppliers & Vendors", key: "trm.mod_suppliers", value: "suppliers" },
+  { en: "Payment Methods", key: "trm.mod_payment_methods", value: "payment_methods" },
+  { en: "Tax Codes", key: "trm.mod_tax_codes", value: "tax_codes" },
+  { en: "Companies", key: "trm.mod_companies", value: "companies" }
 ];
 
 export default function TranslationsManagementPage() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [translations, setTranslations] = useState<TranslationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,10 +94,10 @@ export default function TranslationsManagementPage() {
       if (payload.ok && payload.data?.translations) {
         setTranslations(payload.data.translations);
       } else {
-        setErrorMsg(payload.error?.message || "Failed to load local translations");
+        setErrorMsg(payload.error?.message || tt("trm.err_load","Failed to load local translations"));
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Network error loading translations");
+      setErrorMsg(err.message || tt("trm.err_network","Network error loading translations"));
     } finally {
       setLoading(false);
     }
@@ -136,7 +140,7 @@ export default function TranslationsManagementPage() {
     setSuccessMsg(null);
 
     if (!activeItem.originalText.trim()) {
-      setErrorMsg("Original text is required");
+      setErrorMsg(tt("trm.err_original_required","Original text is required"));
       return;
     }
 
@@ -164,14 +168,14 @@ export default function TranslationsManagementPage() {
 
         const data = await res.json();
         if (data.ok) {
-          setSuccessMsg("Local translation saved successfully");
+          setSuccessMsg(tt("trm.saved_ok","Local translation saved successfully"));
           setEditModalOpen(false);
           fetchTranslations();
         } else {
-          setErrorMsg(data.error?.message || "Failed to save translation");
+          setErrorMsg(data.error?.message || tt("trm.err_save","Failed to save translation"));
         }
       } catch (err: any) {
-        setErrorMsg(err.message || "Failed to save translation");
+        setErrorMsg(err.message || tt("trm.err_save","Failed to save translation"));
       }
     });
   };
@@ -233,10 +237,10 @@ export default function TranslationsManagementPage() {
               setErrorMsg(resData.error?.message || "Import failed");
             }
           } else {
-            setErrorMsg("Invalid format: Expected a JSON array of translations");
+            setErrorMsg(tt("trm.err_invalid_json","Invalid format: Expected a JSON array of translations"));
           }
         } catch (err: any) {
-          setErrorMsg("JSON parse error: " + err.message);
+          setErrorMsg(tt("trm.err_json_parse","JSON parse error: ") + err.message);
         }
       };
     }
@@ -249,25 +253,25 @@ export default function TranslationsManagementPage() {
         <div>
           <div className="flex items-center gap-2">
             <Globe2 className="h-6 w-6 text-primary" aria-hidden />
-            <h1 className="text-2xl font-bold tracking-tight">Local Translation Management</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{tt("trm.title", "Local Translation Management")}</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage 5-language dictionary translations (English, Urdu, Pashto, Farsi, Arabic) running completely offline on server & database. No external AI APIs used.
+            {tt("trm.subtitle", "Manage 5-language dictionary translations (English, Urdu, Pashto, Farsi, Arabic) running completely offline on server & database. No external AI APIs used.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={handleOpenAddModal} className="flex items-center gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700">
-            <Plus className="h-4 w-4" /> Add Translation Key
+            <Plus className="h-4 w-4" /> {tt("trm.add_key","Add Translation Key")}
           </Button>
           <Button variant="outline" onClick={handleExportJson} className="flex items-center gap-2">
-            <Download className="h-4 w-4" /> Export JSON
+            <Download className="h-4 w-4" /> {tt("trm.export_json","Export JSON")}
           </Button>
           <Button variant="outline" onClick={handleExportCsv} className="flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Export CSV
+            <FileText className="h-4 w-4" /> {tt("trm.export_csv","Export CSV")}
           </Button>
           <label className="cursor-pointer">
             <div className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium border rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-              <Upload className="h-4 w-4" /> Import JSON
+              <Upload className="h-4 w-4" /> {tt("trm.import_json","Import JSON")}
             </div>
             <input type="file" accept=".json" onChange={handleImportJsonFile} className="hidden" />
           </label>
@@ -295,7 +299,7 @@ export default function TranslationsManagementPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search translation key, English, Urdu, Pashto, Farsi or Arabic text..."
+              placeholder={tt("trm.search_ph","Search translation key, English, Urdu, Pashto, Farsi or Arabic text...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -312,7 +316,7 @@ export default function TranslationsManagementPage() {
               >
                 {MODULE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {tt(opt.key, opt.en)}
                   </option>
                 ))}
               </select>
@@ -357,13 +361,13 @@ export default function TranslationsManagementPage() {
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Loading local translations from database...
+                    {tt("trm.loading","Loading local translations from database...")}
                   </td>
                 </tr>
               ) : translations.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                    No translations found matching your search. Click "Add Translation Key" to add one.
+                    {tt("trm.empty", "No translations found matching your search. Use \"Add Translation Key\" to add one.")}
                   </td>
                 </tr>
               ) : (
@@ -411,15 +415,15 @@ export default function TranslationsManagementPage() {
         <DialogContent className="sm:max-w-2xl">
           <form onSubmit={handleSaveTranslation} className="space-y-4">
             <DialogHeader>
-              <DialogTitle>{activeItem.id ? "Edit Translation Key" : "Add New Translation Key"}</DialogTitle>
+              <DialogTitle>{activeItem.id ? tt("trm.edit_key","Edit Translation Key") : tt("trm.add_new_key","Add New Translation Key")}</DialogTitle>
               <DialogDescription>
-                Save translations directly to the ERP database dictionary. All translations run 100% offline.
+                {tt("trm.dialog_desc","Save translations directly to the ERP database dictionary. All translations run 100% offline.")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="erp-form-grid">
               <div>
-                <Label htmlFor="moduleName">Module / Table</Label>
+                <Label htmlFor="moduleName">{tt("trm.module_table","Module / Table")}</Label>
                 <select
                   id="moduleName"
                   value={activeItem.recordTable}
@@ -428,17 +432,17 @@ export default function TranslationsManagementPage() {
                 >
                   {MODULE_OPTIONS.filter((m) => m.value).map((opt) => (
                     <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {tt(opt.key, opt.en)}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <Label htmlFor="translationKey">Translation Key / ID</Label>
+                <Label htmlFor="translationKey">{tt("trm.key_id","Translation Key / ID")}</Label>
                 <Input
                   id="translationKey"
-                  placeholder="e.g. nav.dashboard or custom_key"
+                  placeholder={tt("trm.key_ph","e.g. nav.dashboard or custom_key")}
                   value={activeItem.recordId}
                   onChange={(e) => setActiveItem({ ...activeItem, recordId: e.target.value })}
                   className="mt-1.5"
@@ -446,10 +450,10 @@ export default function TranslationsManagementPage() {
               </div>
 
               <div className="erp-form-full">
-                <Label htmlFor="originalText">Original Text (Master Value)</Label>
+                <Label htmlFor="originalText">{tt("trm.original_master","Original Text (Master Value)")}</Label>
                 <Input
                   id="originalText"
-                  placeholder="Enter original term or phrase"
+                  placeholder={tt("trm.original_ph","Enter original term or phrase")}
                   value={activeItem.originalText}
                   onChange={(e) => setActiveItem({ ...activeItem, originalText: e.target.value })}
                   className="mt-1.5"
@@ -458,7 +462,7 @@ export default function TranslationsManagementPage() {
               </div>
 
               <div>
-                <Label htmlFor="englishText">English Translation (en)</Label>
+                <Label htmlFor="englishText">{tt("trm.lbl_en","English Translation (en)")}</Label>
                 <Input
                   id="englishText"
                   value={activeItem.englishText}
@@ -468,7 +472,7 @@ export default function TranslationsManagementPage() {
               </div>
 
               <div>
-                <Label htmlFor="urduText">Urdu Translation (ur)</Label>
+                <Label htmlFor="urduText">{tt("trm.lbl_ur","Urdu Translation (ur)")}</Label>
                 <Input
                   id="urduText"
                   value={activeItem.urduText}
@@ -479,7 +483,7 @@ export default function TranslationsManagementPage() {
               </div>
 
               <div>
-                <Label htmlFor="pashtoText">Pashto Translation (ps)</Label>
+                <Label htmlFor="pashtoText">{tt("trm.lbl_ps","Pashto Translation (ps)")}</Label>
                 <Input
                   id="pashtoText"
                   value={activeItem.pashtoText}
@@ -490,7 +494,7 @@ export default function TranslationsManagementPage() {
               </div>
 
               <div>
-                <Label htmlFor="persianText">Farsi / Persian Translation (fa)</Label>
+                <Label htmlFor="persianText">{tt("trm.lbl_fa","Farsi / Persian Translation (fa)")}</Label>
                 <Input
                   id="persianText"
                   value={activeItem.persianText}
@@ -501,7 +505,7 @@ export default function TranslationsManagementPage() {
               </div>
 
               <div>
-                <Label htmlFor="arabicText">Arabic Translation (ar)</Label>
+                <Label htmlFor="arabicText">{tt("trm.lbl_ar","Arabic Translation (ar)")}</Label>
                 <Input
                   id="arabicText"
                   value={activeItem.arabicText}
@@ -514,10 +518,10 @@ export default function TranslationsManagementPage() {
 
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)}>
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : "Save Translation"}
+                {isPending ? tt("trm.saving","Saving...") : tt("trm.save","Save Translation")}
               </Button>
             </DialogFooter>
           </form>

@@ -927,6 +927,52 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "trm.title"
+  | "trm.subtitle"
+  | "trm.add_key"
+  | "trm.export_json"
+  | "trm.export_csv"
+  | "trm.import_json"
+  | "trm.search_ph"
+  | "trm.loading"
+  | "trm.empty"
+  | "trm.original_ph"
+  | "trm.key_ph"
+  | "trm.err_original_required"
+  | "trm.saved_ok"
+  | "trm.err_invalid_json"
+  | "trm.err_json_parse"
+  | "trm.edit_key"
+  | "trm.add_new_key"
+  | "trm.dialog_desc"
+  | "trm.module_table"
+  | "trm.key_id"
+  | "trm.original_master"
+  | "trm.lbl_en"
+  | "trm.lbl_ur"
+  | "trm.lbl_ps"
+  | "trm.lbl_fa"
+  | "trm.lbl_ar"
+  | "trm.saving"
+  | "trm.save"
+  | "trm.err_load"
+  | "trm.err_network"
+  | "trm.err_save"
+  | "trm.mod_all"
+  | "trm.mod_system"
+  | "trm.mod_roznamcha"
+  | "trm.mod_expenses"
+  | "trm.mod_purchases"
+  | "trm.mod_sales"
+  | "trm.mod_accounts"
+  | "trm.mod_goods"
+  | "trm.mod_countries"
+  | "trm.mod_branches"
+  | "trm.mod_customers"
+  | "trm.mod_suppliers"
+  | "trm.mod_payment_methods"
+  | "trm.mod_tax_codes"
+  | "trm.mod_companies"
   | "wa.err_connect"
   | "wa.connect_title"
   | "wa.connect_hint"
@@ -17696,6 +17742,144 @@ const en: Dict = {
 
 
 
+
+
+  "trm.title": "Local Translation Management",
+
+
+  "trm.subtitle": "Manage 5-language dictionary translations (English, Urdu, Pashto, Farsi, Arabic) running completely offline on server & database. No external AI APIs used.",
+
+
+  "trm.add_key": "Add Translation Key",
+
+
+  "trm.export_json": "Export JSON",
+
+
+  "trm.export_csv": "Export CSV",
+
+
+  "trm.import_json": "Import JSON",
+
+
+  "trm.search_ph": "Search translation key, English, Urdu, Pashto, Farsi or Arabic text...",
+
+
+  "trm.loading": "Loading local translations from database...",
+
+
+  "trm.empty": "No translations found matching your search. Use \"Add Translation Key\" to add one.",
+
+
+  "trm.original_ph": "Enter original term or phrase",
+
+
+  "trm.key_ph": "e.g. nav.dashboard or custom_key",
+
+
+  "trm.err_original_required": "Original text is required",
+
+
+  "trm.saved_ok": "Local translation saved successfully",
+
+
+  "trm.err_invalid_json": "Invalid format: Expected a JSON array of translations",
+
+
+  "trm.err_json_parse": "JSON parse error: ",
+
+
+  "trm.edit_key": "Edit Translation Key",
+
+
+  "trm.add_new_key": "Add New Translation Key",
+
+
+  "trm.dialog_desc": "Save translations directly to the ERP database dictionary. All translations run 100% offline.",
+
+
+  "trm.module_table": "Module / Table",
+
+
+  "trm.key_id": "Translation Key / ID",
+
+
+  "trm.original_master": "Original Text (Master Value)",
+
+
+  "trm.lbl_en": "English Translation (en)",
+
+
+  "trm.lbl_ur": "Urdu Translation (ur)",
+
+
+  "trm.lbl_ps": "Pashto Translation (ps)",
+
+
+  "trm.lbl_fa": "Farsi / Persian Translation (fa)",
+
+
+  "trm.lbl_ar": "Arabic Translation (ar)",
+
+
+  "trm.saving": "Saving...",
+
+
+  "trm.save": "Save Translation",
+
+
+  "trm.err_load": "Failed to load local translations",
+
+
+  "trm.err_network": "Network error loading translations",
+
+
+  "trm.err_save": "Failed to save translation",
+
+
+  "trm.mod_all": "All Modules",
+
+
+  "trm.mod_system": "System & UI Dictionary",
+
+
+  "trm.mod_roznamcha": "Roznamcha & Cash Entry",
+
+
+  "trm.mod_expenses": "Expenses Bills & Remarks",
+
+
+  "trm.mod_purchases": "Purchases & Transfers",
+
+
+  "trm.mod_sales": "Sales & Invoices",
+
+
+  "trm.mod_accounts": "Accounts & Ledgers",
+
+
+  "trm.mod_goods": "Goods & Products",
+
+
+  "trm.mod_countries": "Countries & Locations",
+
+
+  "trm.mod_branches": "Branches",
+
+
+  "trm.mod_customers": "Customers & Clients",
+
+
+  "trm.mod_suppliers": "Suppliers & Vendors",
+
+
+  "trm.mod_payment_methods": "Payment Methods",
+
+
+  "trm.mod_tax_codes": "Tax Codes",
+
+
+  "trm.mod_companies": "Companies",
   "wa.err_connect": "Failed to connect account",
 
 
@@ -31033,6 +31217,144 @@ const ur: Dict = {
 
 
 
+
+
+  "trm.title": "لوکل ترجمہ کا انتظام",
+
+
+  "trm.subtitle": "5 زبانوں کی ڈکشنری ترجمے (انگریزی، اردو، پشتو، فارسی، عربی) کا انتظام کریں جو سرور اور ڈیٹابیس پر مکمل آف لائن چلتے ہیں۔ کوئی بیرونی AI API استعمال نہیں ہوتا۔",
+
+
+  "trm.add_key": "ترجمہ کلید شامل کریں",
+
+
+  "trm.export_json": "JSON ایکسپورٹ کریں",
+
+
+  "trm.export_csv": "CSV ایکسپورٹ کریں",
+
+
+  "trm.import_json": "JSON امپورٹ کریں",
+
+
+  "trm.search_ph": "ترجمہ کلید، انگریزی، اردو، پشتو، فارسی یا عربی متن تلاش کریں...",
+
+
+  "trm.loading": "ڈیٹابیس سے لوکل ترجمے لوڈ ہو رہے ہیں...",
+
+
+  "trm.empty": "آپ کی تلاش سے مماثل کوئی ترجمہ نہیں ملا۔ ایک شامل کرنے کے لیے \"ترجمہ کلید شامل کریں\" استعمال کریں۔",
+
+
+  "trm.original_ph": "اصل اصطلاح یا جملہ درج کریں",
+
+
+  "trm.key_ph": "مثلاً nav.dashboard یا custom_key",
+
+
+  "trm.err_original_required": "اصل متن درکار ہے",
+
+
+  "trm.saved_ok": "لوکل ترجمہ کامیابی سے محفوظ ہو گیا",
+
+
+  "trm.err_invalid_json": "غلط فارمیٹ: ترجموں کی JSON صف متوقع تھی",
+
+
+  "trm.err_json_parse": "JSON پارس کی خرابی: ",
+
+
+  "trm.edit_key": "ترجمہ کلید میں ترمیم کریں",
+
+
+  "trm.add_new_key": "نیا ترجمہ کلید شامل کریں",
+
+
+  "trm.dialog_desc": "ترجمے براہ راست ERP ڈیٹابیس ڈکشنری میں محفوظ کریں۔ تمام ترجمے 100% آف لائن چلتے ہیں۔",
+
+
+  "trm.module_table": "ماڈیول / ٹیبل",
+
+
+  "trm.key_id": "ترجمہ کلید / ID",
+
+
+  "trm.original_master": "اصل متن (ماسٹر ویلیو)",
+
+
+  "trm.lbl_en": "انگریزی ترجمہ (en)",
+
+
+  "trm.lbl_ur": "اردو ترجمہ (ur)",
+
+
+  "trm.lbl_ps": "پشتو ترجمہ (ps)",
+
+
+  "trm.lbl_fa": "فارسی ترجمہ (fa)",
+
+
+  "trm.lbl_ar": "عربی ترجمہ (ar)",
+
+
+  "trm.saving": "محفوظ ہو رہا ہے...",
+
+
+  "trm.save": "ترجمہ محفوظ کریں",
+
+
+  "trm.err_load": "لوکل ترجمے لوڈ کرنے میں ناکام",
+
+
+  "trm.err_network": "ترجمے لوڈ کرتے وقت نیٹ ورک کی خرابی",
+
+
+  "trm.err_save": "ترجمہ محفوظ کرنے میں ناکام",
+
+
+  "trm.mod_all": "تمام ماڈیولز",
+
+
+  "trm.mod_system": "سسٹم اور UI ڈکشنری",
+
+
+  "trm.mod_roznamcha": "روزنامچہ اور کیش انٹری",
+
+
+  "trm.mod_expenses": "اخراجات بلز اور تبصرے",
+
+
+  "trm.mod_purchases": "خریداری اور منتقلی",
+
+
+  "trm.mod_sales": "فروخت اور انوائسز",
+
+
+  "trm.mod_accounts": "اکاؤنٹس اور لیجرز",
+
+
+  "trm.mod_goods": "سامان اور مصنوعات",
+
+
+  "trm.mod_countries": "ممالک اور مقامات",
+
+
+  "trm.mod_branches": "برانچز",
+
+
+  "trm.mod_customers": "کسٹمرز اور کلائنٹس",
+
+
+  "trm.mod_suppliers": "سپلائرز اور وینڈرز",
+
+
+  "trm.mod_payment_methods": "ادائیگی کے طریقے",
+
+
+  "trm.mod_tax_codes": "ٹیکس کوڈز",
+
+
+  "trm.mod_companies": "کمپنیاں",
   "wa.err_connect": "اکاؤنٹ منسلک کرنے میں ناکام",
 
 
@@ -44372,6 +44694,144 @@ const ar: Dict = {
 
 
 
+
+
+  "trm.title": "إدارة الترجمة المحلية",
+
+
+  "trm.subtitle": "إدارة ترجمات القاموس بخمس لغات (الإنجليزية، الأردية، البشتو، الفارسية، العربية) تعمل بالكامل دون اتصال على الخادم وقاعدة البيانات. لا تُستخدم أي واجهات ذكاء اصطناعي خارجية.",
+
+
+  "trm.add_key": "إضافة مفتاح ترجمة",
+
+
+  "trm.export_json": "تصدير JSON",
+
+
+  "trm.export_csv": "تصدير CSV",
+
+
+  "trm.import_json": "استيراد JSON",
+
+
+  "trm.search_ph": "ابحث في مفتاح الترجمة أو النص الإنجليزي أو الأردي أو البشتو أو الفارسي أو العربي...",
+
+
+  "trm.loading": "جارٍ تحميل الترجمات المحلية من قاعدة البيانات...",
+
+
+  "trm.empty": "لم يتم العثور على ترجمات مطابقة لبحثك. استخدم \"إضافة مفتاح ترجمة\" لإضافة واحدة.",
+
+
+  "trm.original_ph": "أدخل المصطلح أو العبارة الأصلية",
+
+
+  "trm.key_ph": "مثال: nav.dashboard أو custom_key",
+
+
+  "trm.err_original_required": "النص الأصلي مطلوب",
+
+
+  "trm.saved_ok": "تم حفظ الترجمة المحلية بنجاح",
+
+
+  "trm.err_invalid_json": "تنسيق غير صالح: متوقع مصفوفة JSON من الترجمات",
+
+
+  "trm.err_json_parse": "خطأ في تحليل JSON: ",
+
+
+  "trm.edit_key": "تعديل مفتاح الترجمة",
+
+
+  "trm.add_new_key": "إضافة مفتاح ترجمة جديد",
+
+
+  "trm.dialog_desc": "احفظ الترجمات مباشرة في قاموس قاعدة بيانات ERP. جميع الترجمات تعمل دون اتصال 100%.",
+
+
+  "trm.module_table": "الوحدة / الجدول",
+
+
+  "trm.key_id": "مفتاح الترجمة / المعرّف",
+
+
+  "trm.original_master": "النص الأصلي (القيمة الرئيسية)",
+
+
+  "trm.lbl_en": "الترجمة الإنجليزية (en)",
+
+
+  "trm.lbl_ur": "الترجمة الأردية (ur)",
+
+
+  "trm.lbl_ps": "الترجمة البشتوية (ps)",
+
+
+  "trm.lbl_fa": "الترجمة الفارسية (fa)",
+
+
+  "trm.lbl_ar": "الترجمة العربية (ar)",
+
+
+  "trm.saving": "جارٍ الحفظ...",
+
+
+  "trm.save": "حفظ الترجمة",
+
+
+  "trm.err_load": "فشل تحميل الترجمات المحلية",
+
+
+  "trm.err_network": "خطأ في الشبكة أثناء تحميل الترجمات",
+
+
+  "trm.err_save": "فشل حفظ الترجمة",
+
+
+  "trm.mod_all": "جميع الوحدات",
+
+
+  "trm.mod_system": "قاموس النظام وواجهة المستخدم",
+
+
+  "trm.mod_roznamcha": "الروزنامة وإدخال النقد",
+
+
+  "trm.mod_expenses": "فواتير المصروفات والملاحظات",
+
+
+  "trm.mod_purchases": "المشتريات والتحويلات",
+
+
+  "trm.mod_sales": "المبيعات والفواتير",
+
+
+  "trm.mod_accounts": "الحسابات ودفاتر الأستاذ",
+
+
+  "trm.mod_goods": "السلع والمنتجات",
+
+
+  "trm.mod_countries": "الدول والمواقع",
+
+
+  "trm.mod_branches": "الفروع",
+
+
+  "trm.mod_customers": "العملاء والزبائن",
+
+
+  "trm.mod_suppliers": "الموردون والبائعون",
+
+
+  "trm.mod_payment_methods": "طرق الدفع",
+
+
+  "trm.mod_tax_codes": "الرموز الضريبية",
+
+
+  "trm.mod_companies": "الشركات",
   "wa.err_connect": "فشل ربط الحساب",
 
 
@@ -57710,6 +58170,144 @@ const fa: Dict = {
 
 
 
+
+
+  "trm.title": "مدیریت ترجمه محلی",
+
+
+  "trm.subtitle": "مدیریت ترجمه‌های فرهنگ لغت ۵ زبانه (انگلیسی، اردو، پشتو، فارسی، عربی) که کاملاً آفلاین روی سرور و پایگاه داده اجرا می‌شوند. هیچ API هوش مصنوعی خارجی استفاده نمی‌شود.",
+
+
+  "trm.add_key": "افزودن کلید ترجمه",
+
+
+  "trm.export_json": "خروجی JSON",
+
+
+  "trm.export_csv": "خروجی CSV",
+
+
+  "trm.import_json": "ورودی JSON",
+
+
+  "trm.search_ph": "جستجوی کلید ترجمه، متن انگلیسی، اردو، پشتو، فارسی یا عربی...",
+
+
+  "trm.loading": "در حال بارگذاری ترجمه‌های محلی از پایگاه داده...",
+
+
+  "trm.empty": "هیچ ترجمه‌ای مطابق با جستجوی شما یافت نشد. برای افزودن یکی از \"افزودن کلید ترجمه\" استفاده کنید.",
+
+
+  "trm.original_ph": "اصطلاح یا عبارت اصلی را وارد کنید",
+
+
+  "trm.key_ph": "مثلاً nav.dashboard یا custom_key",
+
+
+  "trm.err_original_required": "متن اصلی الزامی است",
+
+
+  "trm.saved_ok": "ترجمه محلی با موفقیت ذخیره شد",
+
+
+  "trm.err_invalid_json": "قالب نامعتبر: انتظار می‌رفت آرایه JSON از ترجمه‌ها",
+
+
+  "trm.err_json_parse": "خطای تجزیه JSON: ",
+
+
+  "trm.edit_key": "ویرایش کلید ترجمه",
+
+
+  "trm.add_new_key": "افزودن کلید ترجمه جدید",
+
+
+  "trm.dialog_desc": "ترجمه‌ها را مستقیماً در فرهنگ لغت پایگاه داده ERP ذخیره کنید. همه ترجمه‌ها ۱۰۰٪ آفلاین اجرا می‌شوند.",
+
+
+  "trm.module_table": "ماژول / جدول",
+
+
+  "trm.key_id": "کلید ترجمه / شناسه",
+
+
+  "trm.original_master": "متن اصلی (مقدار اصلی)",
+
+
+  "trm.lbl_en": "ترجمه انگلیسی (en)",
+
+
+  "trm.lbl_ur": "ترجمه اردو (ur)",
+
+
+  "trm.lbl_ps": "ترجمه پشتو (ps)",
+
+
+  "trm.lbl_fa": "ترجمه فارسی (fa)",
+
+
+  "trm.lbl_ar": "ترجمه عربی (ar)",
+
+
+  "trm.saving": "در حال ذخیره...",
+
+
+  "trm.save": "ذخیره ترجمه",
+
+
+  "trm.err_load": "بارگذاری ترجمه‌های محلی ناموفق بود",
+
+
+  "trm.err_network": "خطای شبکه هنگام بارگذاری ترجمه‌ها",
+
+
+  "trm.err_save": "ذخیره ترجمه ناموفق بود",
+
+
+  "trm.mod_all": "همه ماژول‌ها",
+
+
+  "trm.mod_system": "فرهنگ لغت سیستم و رابط کاربری",
+
+
+  "trm.mod_roznamcha": "روزنامچه و ثبت نقدی",
+
+
+  "trm.mod_expenses": "صورتحساب‌های هزینه و یادداشت‌ها",
+
+
+  "trm.mod_purchases": "خریدها و انتقالات",
+
+
+  "trm.mod_sales": "فروش‌ها و فاکتورها",
+
+
+  "trm.mod_accounts": "حساب‌ها و دفاتر کل",
+
+
+  "trm.mod_goods": "کالاها و محصولات",
+
+
+  "trm.mod_countries": "کشورها و مکان‌ها",
+
+
+  "trm.mod_branches": "شعبه‌ها",
+
+
+  "trm.mod_customers": "مشتریان و کارفرمایان",
+
+
+  "trm.mod_suppliers": "تأمین‌کنندگان و فروشندگان",
+
+
+  "trm.mod_payment_methods": "روش‌های پرداخت",
+
+
+  "trm.mod_tax_codes": "کدهای مالیاتی",
+
+
+  "trm.mod_companies": "شرکت‌ها",
   "wa.err_connect": "اتصال حساب ناموفق بود",
 
 
@@ -71054,6 +71652,144 @@ const ps: Dict = {
 
 
 
+
+
+  "trm.title": "د ځایی ژباړې مدیریت",
+
+
+  "trm.subtitle": "د ۵ ژبو د قاموس ژباړې (انګلیسي، اردو، پښتو، فارسي، عربي) اداره کړئ چې په سرور او ډیټابیس کې په بشپړه توګه آفلاین چلیږي. هیڅ بهرنی AI API نه کارول کیږي.",
+
+
+  "trm.add_key": "د ژباړې کیلي اضافه کړئ",
+
+
+  "trm.export_json": "JSON صادرول",
+
+
+  "trm.export_csv": "CSV صادرول",
+
+
+  "trm.import_json": "JSON واردول",
+
+
+  "trm.search_ph": "د ژباړې کیلي، انګلیسي، اردو، پښتو، فارسي یا عربي متن ولټوئ...",
+
+
+  "trm.loading": "د ډیټابیس څخه د ځایی ژباړو بارول...",
+
+
+  "trm.empty": "ستاسو د لټون سره سمون لرونکې ژباړه ونه موندل شوه. د یوې اضافه کولو لپاره \"د ژباړې کیلي اضافه کړئ\" وکاروئ.",
+
+
+  "trm.original_ph": "اصلي اصطلاح یا جمله ولیکئ",
+
+
+  "trm.key_ph": "لکه nav.dashboard یا custom_key",
+
+
+  "trm.err_original_required": "اصلي متن اړین دی",
+
+
+  "trm.saved_ok": "ځایی ژباړه په بریالیتوب سره خوندي شوه",
+
+
+  "trm.err_invalid_json": "ناسم بڼه: د ژباړو د JSON لړۍ تمه کیده",
+
+
+  "trm.err_json_parse": "د JSON د تجزیې تېروتنه: ",
+
+
+  "trm.edit_key": "د ژباړې کیلي سمون",
+
+
+  "trm.add_new_key": "نوی د ژباړې کیلي اضافه کړئ",
+
+
+  "trm.dialog_desc": "ژباړې مستقیماً د ERP ډیټابیس قاموس ته خوندي کړئ. ټولې ژباړې ۱۰۰٪ آفلاین چلیږي.",
+
+
+  "trm.module_table": "ماډیول / جدول",
+
+
+  "trm.key_id": "د ژباړې کیلي / ID",
+
+
+  "trm.original_master": "اصلي متن (ماسټر ارزښت)",
+
+
+  "trm.lbl_en": "انګلیسي ژباړه (en)",
+
+
+  "trm.lbl_ur": "اردو ژباړه (ur)",
+
+
+  "trm.lbl_ps": "پښتو ژباړه (ps)",
+
+
+  "trm.lbl_fa": "فارسي ژباړه (fa)",
+
+
+  "trm.lbl_ar": "عربي ژباړه (ar)",
+
+
+  "trm.saving": "خوندي کیږي...",
+
+
+  "trm.save": "ژباړه خوندي کړئ",
+
+
+  "trm.err_load": "د ځایی ژباړو بارول ناکام شول",
+
+
+  "trm.err_network": "د ژباړو د بارولو پرمهال د شبکې تېروتنه",
+
+
+  "trm.err_save": "د ژباړې خوندي کول ناکام شول",
+
+
+  "trm.mod_all": "ټول ماډیولونه",
+
+
+  "trm.mod_system": "د سیسټم او UI قاموس",
+
+
+  "trm.mod_roznamcha": "روزنامچه او د نغدو ننوتنه",
+
+
+  "trm.mod_expenses": "د لګښتونو بیلونه او یادښتونه",
+
+
+  "trm.mod_purchases": "پیرودونه او لېږدونه",
+
+
+  "trm.mod_sales": "پلورونه او بیلونه",
+
+
+  "trm.mod_accounts": "حسابونه او لیجرونه",
+
+
+  "trm.mod_goods": "توکي او محصولات",
+
+
+  "trm.mod_countries": "هیوادونه او موقعیتونه",
+
+
+  "trm.mod_branches": "څانګې",
+
+
+  "trm.mod_customers": "پیرودونکي او مراجعین",
+
+
+  "trm.mod_suppliers": "عرضه کوونکي او پلورونکي",
+
+
+  "trm.mod_payment_methods": "د تادیې طریقې",
+
+
+  "trm.mod_tax_codes": "مالیاتي کوډونه",
+
+
+  "trm.mod_companies": "شرکتونه",
   "wa.err_connect": "د حساب نښلول ناکام شول",
 
 
