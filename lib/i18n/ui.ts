@@ -927,6 +927,62 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "nav.bcp_reports"
+  | "bexp.rpt_bill_wise_expense"
+  | "bexp.rpt_bill_wise_final_cost"
+  | "bexp.rpt_purchase_cost"
+  | "bexp.rpt_sales_and_profit"
+  | "bexp.rpt_expense_type"
+  | "bexp.rpt_country_wise"
+  | "bexp.rpt_branch_wise"
+  | "bexp.rpt_party_wise"
+  | "bexp.rpt_container_shipment_cost"
+  | "bexp.rpt_currency_wise_expense"
+  | "bexp.rpt_outstanding_unpaid_expense"
+  | "bexp.rpt_profit_loss_by_bill"
+  | "bexp.rc_billno"
+  | "bexp.rc_source"
+  | "bexp.rc_date"
+  | "bexp.rc_party"
+  | "bexp.rc_branch"
+  | "bexp.rc_group"
+  | "bexp.rc_bills"
+  | "bexp.rc_lines"
+  | "bexp.rc_qty"
+  | "bexp.rc_original"
+  | "bexp.rc_original_bill"
+  | "bexp.rc_posted_expenses"
+  | "bexp.rc_unposted_expenses"
+  | "bexp.rc_unposted"
+  | "bexp.rc_landed"
+  | "bexp.rc_revenue"
+  | "bexp.rc_cost_of_sold"
+  | "bexp.rc_profit"
+  | "bexp.rc_total"
+  | "bexp.rc_functional"
+  | "bexp.rc_currency"
+  | "bexp.rc_expense_type"
+  | "bexp.rc_details"
+  | "bexp.rc_grand"
+  | "bexp.rc_posting"
+  | "bexp.rc_suite"
+  | "bexp.rc_report"
+  | "bexp.rc_period"
+  | "bexp.rc_all_dates"
+  | "bexp.rc_all"
+  | "bexp.rc_rows"
+  | "bexp.rc_title"
+  | "bexp.rc_run"
+  | "bexp.rc_print"
+  | "bexp.rc_filters"
+  | "bexp.rc_from"
+  | "bexp.rc_to"
+  | "bexp.rc_party_ph"
+  | "bexp.rc_bill_status"
+  | "bexp.rc_apply"
+  | "bexp.rc_no_rows"
+  | "bexp.rc_total_row"
+  | "bexp.rc_footnote"
   | "bexp.open_drilldown"
   | "bexp.dd_title"
   | "bexp.dd_report_title"
@@ -18008,6 +18064,174 @@ const en: Dict = {
 
 
 
+
+
+  "nav.bcp_reports": "Reports",
+
+
+  "bexp.rpt_bill_wise_expense": "Bill-wise Expense",
+
+
+  "bexp.rpt_bill_wise_final_cost": "Bill-wise Final Cost",
+
+
+  "bexp.rpt_purchase_cost": "Purchase Cost",
+
+
+  "bexp.rpt_sales_and_profit": "Sales & Profit",
+
+
+  "bexp.rpt_expense_type": "Expense Type",
+
+
+  "bexp.rpt_country_wise": "Country-wise",
+
+
+  "bexp.rpt_branch_wise": "Branch-wise",
+
+
+  "bexp.rpt_party_wise": "Party-wise",
+
+
+  "bexp.rpt_container_shipment_cost": "Container / Shipment Cost",
+
+
+  "bexp.rpt_currency_wise_expense": "Currency-wise Expense",
+
+
+  "bexp.rpt_outstanding_unpaid_expense": "Outstanding / Unpaid Expense",
+
+
+  "bexp.rpt_profit_loss_by_bill": "Profit / Loss by Bill",
+
+
+  "bexp.rc_billno": "Bill No.",
+
+
+  "bexp.rc_source": "Source",
+
+
+  "bexp.rc_date": "Date",
+
+
+  "bexp.rc_party": "Party",
+
+
+  "bexp.rc_branch": "Branch",
+
+
+  "bexp.rc_group": "Group",
+
+
+  "bexp.rc_bills": "Bills",
+
+
+  "bexp.rc_lines": "Lines",
+
+
+  "bexp.rc_qty": "Qty",
+
+
+  "bexp.rc_original": "Original",
+
+
+  "bexp.rc_original_bill": "Original Bill",
+
+
+  "bexp.rc_posted_expenses": "Posted Expenses",
+
+
+  "bexp.rc_unposted_expenses": "Unposted Expenses",
+
+
+  "bexp.rc_unposted": "Unposted",
+
+
+  "bexp.rc_landed": "Landed Cost",
+
+
+  "bexp.rc_revenue": "Revenue",
+
+
+  "bexp.rc_cost_of_sold": "Cost of Sold",
+
+
+  "bexp.rc_profit": "Profit / Loss",
+
+
+  "bexp.rc_total": "Total",
+
+
+  "bexp.rc_functional": "Functional",
+
+
+  "bexp.rc_currency": "Currency",
+
+
+  "bexp.rc_expense_type": "Expense Type",
+
+
+  "bexp.rc_details": "Details",
+
+
+  "bexp.rc_grand": "Grand (Functional)",
+
+
+  "bexp.rc_posting": "Posting",
+
+
+  "bexp.rc_suite": "Bill Cost, Expenses & Profit — Report Suite",
+
+
+  "bexp.rc_report": "Report",
+
+
+  "bexp.rc_period": "Period",
+
+
+  "bexp.rc_all_dates": "All dates",
+
+
+  "bexp.rc_all": "All",
+
+
+  "bexp.rc_rows": "rows",
+
+
+  "bexp.rc_title": "Bill Cost, Expenses & Profit — Reports",
+
+
+  "bexp.rc_run": "Run",
+
+
+  "bexp.rc_print": "Print / PDF",
+
+
+  "bexp.rc_filters": "Filters",
+
+
+  "bexp.rc_from": "From",
+
+
+  "bexp.rc_to": "To",
+
+
+  "bexp.rc_party_ph": "name contains…",
+
+
+  "bexp.rc_bill_status": "Bill Status",
+
+
+  "bexp.rc_apply": "Apply",
+
+
+  "bexp.rc_no_rows": "No data for the selected filters.",
+
+
+  "bexp.rc_total_row": "Total",
+
+
+  "bexp.rc_footnote": "All functional-currency figures are read as posted — no exchange rate is recomputed.",
   "bexp.open_drilldown": "Cost & Profit drill-down",
 
 
@@ -32179,6 +32403,174 @@ const ur: Dict = {
 
 
 
+
+
+  "nav.bcp_reports": "رپورٹس",
+
+
+  "bexp.rpt_bill_wise_expense": "بل کے حساب سے اخراج",
+
+
+  "bexp.rpt_bill_wise_final_cost": "بل کے حساب سے حتمی لاگت",
+
+
+  "bexp.rpt_purchase_cost": "خرید کی لاگت",
+
+
+  "bexp.rpt_sales_and_profit": "فروخت اور منافع",
+
+
+  "bexp.rpt_expense_type": "اخراج کی قسم",
+
+
+  "bexp.rpt_country_wise": "ملک کے حساب سے",
+
+
+  "bexp.rpt_branch_wise": "برانچ کے حساب سے",
+
+
+  "bexp.rpt_party_wise": "پارٹی کے حساب سے",
+
+
+  "bexp.rpt_container_shipment_cost": "کنٹینر / شپمنٹ لاگت",
+
+
+  "bexp.rpt_currency_wise_expense": "کرنسی کے حساب سے اخراج",
+
+
+  "bexp.rpt_outstanding_unpaid_expense": "واجب الادا / غیر ادا شدہ اخراج",
+
+
+  "bexp.rpt_profit_loss_by_bill": "بل کے حساب سے نفع / نقصان",
+
+
+  "bexp.rc_billno": "بل نمبر",
+
+
+  "bexp.rc_source": "ماخذ",
+
+
+  "bexp.rc_date": "تاریخ",
+
+
+  "bexp.rc_party": "پارٹی",
+
+
+  "bexp.rc_branch": "برانچ",
+
+
+  "bexp.rc_group": "گروپ",
+
+
+  "bexp.rc_bills": "بل",
+
+
+  "bexp.rc_lines": "لائنیں",
+
+
+  "bexp.rc_qty": "مقدار",
+
+
+  "bexp.rc_original": "اصل",
+
+
+  "bexp.rc_original_bill": "اصل بل",
+
+
+  "bexp.rc_posted_expenses": "پوسٹ شدہ اخراجات",
+
+
+  "bexp.rc_unposted_expenses": "غیر پوسٹ شدہ اخراجات",
+
+
+  "bexp.rc_unposted": "غیر پوسٹ شدہ",
+
+
+  "bexp.rc_landed": "لینڈڈ لاگت",
+
+
+  "bexp.rc_revenue": "آمدنی",
+
+
+  "bexp.rc_cost_of_sold": "فروخت شدہ کی لاگت",
+
+
+  "bexp.rc_profit": "نفع / نقصان",
+
+
+  "bexp.rc_total": "کل",
+
+
+  "bexp.rc_functional": "فنکشنل",
+
+
+  "bexp.rc_currency": "کرنسی",
+
+
+  "bexp.rc_expense_type": "اخراج کی قسم",
+
+
+  "bexp.rc_details": "تفصیل",
+
+
+  "bexp.rc_grand": "کل (فنکشنل)",
+
+
+  "bexp.rc_posting": "پوسٹنگ",
+
+
+  "bexp.rc_suite": "بل لاگت، اخراجات اور منافع — رپورٹ سویٹ",
+
+
+  "bexp.rc_report": "رپورٹ",
+
+
+  "bexp.rc_period": "مدت",
+
+
+  "bexp.rc_all_dates": "تمام تواریخ",
+
+
+  "bexp.rc_all": "تمام",
+
+
+  "bexp.rc_rows": "قطاریں",
+
+
+  "bexp.rc_title": "بل لاگت، اخراجات اور منافع — رپورٹس",
+
+
+  "bexp.rc_run": "چلائیں",
+
+
+  "bexp.rc_print": "پرنٹ / PDF",
+
+
+  "bexp.rc_filters": "فلٹرز",
+
+
+  "bexp.rc_from": "سے",
+
+
+  "bexp.rc_to": "تک",
+
+
+  "bexp.rc_party_ph": "نام میں شامل…",
+
+
+  "bexp.rc_bill_status": "بل اسٹیٹس",
+
+
+  "bexp.rc_apply": "لاگو کریں",
+
+
+  "bexp.rc_no_rows": "منتخب فلٹرز کے لیے کوئی ڈیٹا نہیں۔",
+
+
+  "bexp.rc_total_row": "کل",
+
+
+  "bexp.rc_footnote": "تمام فنکشنل کرنسی اعداد پوسٹ شدہ کے طور پر پڑھے جاتے ہیں — کوئی ایکسچینج ریٹ دوبارہ شمار نہیں ہوتا۔",
   "bexp.open_drilldown": "لاگت اور منافع کی تفصیل",
 
 
@@ -46352,6 +46744,174 @@ const ar: Dict = {
 
 
 
+
+
+  "nav.bcp_reports": "التقارير",
+
+
+  "bexp.rpt_bill_wise_expense": "المصروفات حسب الفاتورة",
+
+
+  "bexp.rpt_bill_wise_final_cost": "التكلفة النهائية حسب الفاتورة",
+
+
+  "bexp.rpt_purchase_cost": "تكلفة الشراء",
+
+
+  "bexp.rpt_sales_and_profit": "المبيعات والربح",
+
+
+  "bexp.rpt_expense_type": "نوع المصروف",
+
+
+  "bexp.rpt_country_wise": "حسب الدولة",
+
+
+  "bexp.rpt_branch_wise": "حسب الفرع",
+
+
+  "bexp.rpt_party_wise": "حسب الطرف",
+
+
+  "bexp.rpt_container_shipment_cost": "تكلفة الحاوية / الشحنة",
+
+
+  "bexp.rpt_currency_wise_expense": "المصروفات حسب العملة",
+
+
+  "bexp.rpt_outstanding_unpaid_expense": "المصروفات المستحقة / غير المدفوعة",
+
+
+  "bexp.rpt_profit_loss_by_bill": "الربح / الخسارة حسب الفاتورة",
+
+
+  "bexp.rc_billno": "رقم الفاتورة",
+
+
+  "bexp.rc_source": "المصدر",
+
+
+  "bexp.rc_date": "التاريخ",
+
+
+  "bexp.rc_party": "الطرف",
+
+
+  "bexp.rc_branch": "الفرع",
+
+
+  "bexp.rc_group": "المجموعة",
+
+
+  "bexp.rc_bills": "الفواتير",
+
+
+  "bexp.rc_lines": "البنود",
+
+
+  "bexp.rc_qty": "الكمية",
+
+
+  "bexp.rc_original": "الأصلي",
+
+
+  "bexp.rc_original_bill": "الفاتورة الأصلية",
+
+
+  "bexp.rc_posted_expenses": "المصروفات المرحّلة",
+
+
+  "bexp.rc_unposted_expenses": "المصروفات غير المرحّلة",
+
+
+  "bexp.rc_unposted": "غير مُرحّل",
+
+
+  "bexp.rc_landed": "التكلفة الواصلة",
+
+
+  "bexp.rc_revenue": "الإيراد",
+
+
+  "bexp.rc_cost_of_sold": "تكلفة المباع",
+
+
+  "bexp.rc_profit": "الربح / الخسارة",
+
+
+  "bexp.rc_total": "الإجمالي",
+
+
+  "bexp.rc_functional": "بالعملة الوظيفية",
+
+
+  "bexp.rc_currency": "العملة",
+
+
+  "bexp.rc_expense_type": "نوع المصروف",
+
+
+  "bexp.rc_details": "التفاصيل",
+
+
+  "bexp.rc_grand": "الإجمالي (بالعملة الوظيفية)",
+
+
+  "bexp.rc_posting": "الترحيل",
+
+
+  "bexp.rc_suite": "تكلفة الفاتورة والمصروفات والربح — حزمة التقارير",
+
+
+  "bexp.rc_report": "التقرير",
+
+
+  "bexp.rc_period": "الفترة",
+
+
+  "bexp.rc_all_dates": "كل التواريخ",
+
+
+  "bexp.rc_all": "الكل",
+
+
+  "bexp.rc_rows": "صفوف",
+
+
+  "bexp.rc_title": "تكلفة الفاتورة والمصروفات والربح — التقارير",
+
+
+  "bexp.rc_run": "تشغيل",
+
+
+  "bexp.rc_print": "طباعة / PDF",
+
+
+  "bexp.rc_filters": "عوامل التصفية",
+
+
+  "bexp.rc_from": "من",
+
+
+  "bexp.rc_to": "إلى",
+
+
+  "bexp.rc_party_ph": "يحتوي الاسم على…",
+
+
+  "bexp.rc_bill_status": "حالة الفاتورة",
+
+
+  "bexp.rc_apply": "تطبيق",
+
+
+  "bexp.rc_no_rows": "لا توجد بيانات لعوامل التصفية المحددة.",
+
+
+  "bexp.rc_total_row": "الإجمالي",
+
+
+  "bexp.rc_footnote": "تُقرأ جميع أرقام العملة الوظيفية كما هي مُرحّلة — لا يُعاد احتساب سعر الصرف.",
   "bexp.open_drilldown": "تفاصيل التكلفة والربح",
 
 
@@ -60524,6 +61084,174 @@ const fa: Dict = {
 
 
 
+
+
+  "nav.bcp_reports": "گزارش‌ها",
+
+
+  "bexp.rpt_bill_wise_expense": "هزینه به تفکیک فاکتور",
+
+
+  "bexp.rpt_bill_wise_final_cost": "هزینه نهایی به تفکیک فاکتور",
+
+
+  "bexp.rpt_purchase_cost": "هزینه خرید",
+
+
+  "bexp.rpt_sales_and_profit": "فروش و سود",
+
+
+  "bexp.rpt_expense_type": "نوع هزینه",
+
+
+  "bexp.rpt_country_wise": "به تفکیک کشور",
+
+
+  "bexp.rpt_branch_wise": "به تفکیک شعبه",
+
+
+  "bexp.rpt_party_wise": "به تفکیک طرف",
+
+
+  "bexp.rpt_container_shipment_cost": "هزینه کانتینر / محموله",
+
+
+  "bexp.rpt_currency_wise_expense": "هزینه به تفکیک ارز",
+
+
+  "bexp.rpt_outstanding_unpaid_expense": "هزینه معوق / پرداخت‌نشده",
+
+
+  "bexp.rpt_profit_loss_by_bill": "سود / زیان به تفکیک فاکتور",
+
+
+  "bexp.rc_billno": "شماره فاکتور",
+
+
+  "bexp.rc_source": "منبع",
+
+
+  "bexp.rc_date": "تاریخ",
+
+
+  "bexp.rc_party": "طرف",
+
+
+  "bexp.rc_branch": "شعبه",
+
+
+  "bexp.rc_group": "گروه",
+
+
+  "bexp.rc_bills": "فاکتورها",
+
+
+  "bexp.rc_lines": "ردیف‌ها",
+
+
+  "bexp.rc_qty": "مقدار",
+
+
+  "bexp.rc_original": "اصلی",
+
+
+  "bexp.rc_original_bill": "فاکتور اصلی",
+
+
+  "bexp.rc_posted_expenses": "مخارج ثبت‌شده",
+
+
+  "bexp.rc_unposted_expenses": "مخارج ثبت‌نشده",
+
+
+  "bexp.rc_unposted": "ثبت‌نشده",
+
+
+  "bexp.rc_landed": "هزینه تمام‌شده",
+
+
+  "bexp.rc_revenue": "درآمد",
+
+
+  "bexp.rc_cost_of_sold": "هزینه فروخته‌شده",
+
+
+  "bexp.rc_profit": "سود / زیان",
+
+
+  "bexp.rc_total": "کل",
+
+
+  "bexp.rc_functional": "عملیاتی",
+
+
+  "bexp.rc_currency": "ارز",
+
+
+  "bexp.rc_expense_type": "نوع هزینه",
+
+
+  "bexp.rc_details": "جزئیات",
+
+
+  "bexp.rc_grand": "کل (عملیاتی)",
+
+
+  "bexp.rc_posting": "ثبت",
+
+
+  "bexp.rc_suite": "هزینه فاکتور، مخارج و سود — مجموعه گزارش",
+
+
+  "bexp.rc_report": "گزارش",
+
+
+  "bexp.rc_period": "دوره",
+
+
+  "bexp.rc_all_dates": "همه تاریخ‌ها",
+
+
+  "bexp.rc_all": "همه",
+
+
+  "bexp.rc_rows": "ردیف",
+
+
+  "bexp.rc_title": "هزینه فاکتور، مخارج و سود — گزارش‌ها",
+
+
+  "bexp.rc_run": "اجرا",
+
+
+  "bexp.rc_print": "چاپ / PDF",
+
+
+  "bexp.rc_filters": "فیلترها",
+
+
+  "bexp.rc_from": "از",
+
+
+  "bexp.rc_to": "تا",
+
+
+  "bexp.rc_party_ph": "نام شامل…",
+
+
+  "bexp.rc_bill_status": "وضعیت فاکتور",
+
+
+  "bexp.rc_apply": "اعمال",
+
+
+  "bexp.rc_no_rows": "برای فیلترهای انتخاب‌شده داده‌ای نیست.",
+
+
+  "bexp.rc_total_row": "کل",
+
+
+  "bexp.rc_footnote": "همه ارقام ارز عملیاتی همان‌طور که ثبت شده خوانده می‌شوند — نرخ ارز دوباره محاسبه نمی‌شود.",
   "bexp.open_drilldown": "جزئیات هزینه و سود",
 
 
@@ -74702,6 +75430,174 @@ const ps: Dict = {
 
 
 
+
+
+  "nav.bcp_reports": "راپورونه",
+
+
+  "bexp.rpt_bill_wise_expense": "د بل له مخې لګښت",
+
+
+  "bexp.rpt_bill_wise_final_cost": "د بل له مخې وروستی لګښت",
+
+
+  "bexp.rpt_purchase_cost": "د پیرود لګښت",
+
+
+  "bexp.rpt_sales_and_profit": "پلور او ګټه",
+
+
+  "bexp.rpt_expense_type": "د لګښت ډول",
+
+
+  "bexp.rpt_country_wise": "د هېواد له مخې",
+
+
+  "bexp.rpt_branch_wise": "د څانګې له مخې",
+
+
+  "bexp.rpt_party_wise": "د اړخ له مخې",
+
+
+  "bexp.rpt_container_shipment_cost": "د کانټینر / بار لګښت",
+
+
+  "bexp.rpt_currency_wise_expense": "د اسعارو له مخې لګښت",
+
+
+  "bexp.rpt_outstanding_unpaid_expense": "پاتې / نه ورکړل شوی لګښت",
+
+
+  "bexp.rpt_profit_loss_by_bill": "د بل له مخې ګټه / زیان",
+
+
+  "bexp.rc_billno": "د بل شمیره",
+
+
+  "bexp.rc_source": "سرچینه",
+
+
+  "bexp.rc_date": "نیټه",
+
+
+  "bexp.rc_party": "اړخ",
+
+
+  "bexp.rc_branch": "څانګه",
+
+
+  "bexp.rc_group": "ډله",
+
+
+  "bexp.rc_bills": "بلونه",
+
+
+  "bexp.rc_lines": "کرښې",
+
+
+  "bexp.rc_qty": "مقدار",
+
+
+  "bexp.rc_original": "اصلي",
+
+
+  "bexp.rc_original_bill": "اصلي بل",
+
+
+  "bexp.rc_posted_expenses": "پوسټ شوي لګښتونه",
+
+
+  "bexp.rc_unposted_expenses": "نه پوسټ شوي لګښتونه",
+
+
+  "bexp.rc_unposted": "نه پوسټ شوی",
+
+
+  "bexp.rc_landed": "وروستی لګښت",
+
+
+  "bexp.rc_revenue": "عاید",
+
+
+  "bexp.rc_cost_of_sold": "د پلورل شوي لګښت",
+
+
+  "bexp.rc_profit": "ګټه / زیان",
+
+
+  "bexp.rc_total": "ټول",
+
+
+  "bexp.rc_functional": "فعال اسعارو",
+
+
+  "bexp.rc_currency": "اسعارو",
+
+
+  "bexp.rc_expense_type": "د لګښت ډول",
+
+
+  "bexp.rc_details": "تفصیلات",
+
+
+  "bexp.rc_grand": "ټول (فعال اسعارو)",
+
+
+  "bexp.rc_posting": "پوسټ",
+
+
+  "bexp.rc_suite": "د بل لګښت، لګښتونه او ګټه — د راپورونو ټولګه",
+
+
+  "bexp.rc_report": "راپور",
+
+
+  "bexp.rc_period": "موده",
+
+
+  "bexp.rc_all_dates": "ټولې نیټې",
+
+
+  "bexp.rc_all": "ټول",
+
+
+  "bexp.rc_rows": "کرښې",
+
+
+  "bexp.rc_title": "د بل لګښت، لګښتونه او ګټه — راپورونه",
+
+
+  "bexp.rc_run": "چلول",
+
+
+  "bexp.rc_print": "چاپ / PDF",
+
+
+  "bexp.rc_filters": "فلټرونه",
+
+
+  "bexp.rc_from": "له",
+
+
+  "bexp.rc_to": "تر",
+
+
+  "bexp.rc_party_ph": "نوم لري…",
+
+
+  "bexp.rc_bill_status": "د بل حالت",
+
+
+  "bexp.rc_apply": "پلي کول",
+
+
+  "bexp.rc_no_rows": "د ټاکل شویو فلټرونو لپاره کوم معلومات نشته.",
+
+
+  "bexp.rc_total_row": "ټول",
+
+
+  "bexp.rc_footnote": "د فعال اسعارو ټول ارقام لکه څنګه چې پوسټ شوي لوستل کیږي — د تبادلې نرخ بیا نه محاسبه کیږي.",
   "bexp.open_drilldown": "د لګښت او ګټې تفصیل",
 
 

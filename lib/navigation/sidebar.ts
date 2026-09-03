@@ -551,6 +551,12 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.bcp_expenses",
         iconKey: "coins",
         href: "/dashboard/bill-cost-profit/expenses" as Route
+      },
+      {
+        key: "bcp-reports",
+        labelKey: "nav.bcp_reports",
+        iconKey: "bar-chart-3",
+        href: "/dashboard/bill-cost-profit/reports" as Route
       }
     ]
   },
