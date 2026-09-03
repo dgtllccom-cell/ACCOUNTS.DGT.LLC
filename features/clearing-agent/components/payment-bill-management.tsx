@@ -275,7 +275,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.bill_ref_no", "Bill Reference No")}</label>
               <input
                 type="text"
-                placeholder="Auto-generated (or custom)"
+                placeholder={tt("clbill.bill_ref_ph", "Auto-generated (or custom)")}
                 value={form.bill_no}
                 onChange={(e) => setForm({ ...form, bill_no: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
@@ -474,7 +474,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.remarks", "Remarks / Notes")}</label>
             <textarea
               rows={2}
-              placeholder="Additional billing details, agent notes or reference details..."
+              placeholder={tt("clbill.remarks_ph", "Additional billing details, agent notes or reference details...")}
               value={form.remarks}
               onChange={(e) => setForm({ ...form, remarks: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"

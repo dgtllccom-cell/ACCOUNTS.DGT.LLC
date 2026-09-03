@@ -1541,9 +1541,9 @@ export function ExpensesBillEntryForm({
               onChange={e => setNewTaxForm({...newTaxForm, countryName: e.target.value})}
             >
               <option value="">{tt("exp.select_placeholder", "Select...")}...</option>
-              <option value="United Arab Emirates">United Arab Emirates</option>
-              <option value="Pakistan">Pakistan</option>
-              <option value="Afghanistan">Afghanistan</option>
+              {countries.map((c: any) => (
+                <option key={c.id ?? c.name} value={c.name}>{c.name}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-1.5">

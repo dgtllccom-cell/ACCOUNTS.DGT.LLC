@@ -927,6 +927,14 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "ema.display_name"
+  | "ema.display_name_ph"
+  | "ema.smtp_config"
+  | "ema.ssl_tls"
+  | "ema.pwd_encrypt_notice"
+  | "ema.new_password"
+  | "clbill.bill_ref_ph"
+  | "clbill.remarks_ph"
   | "inv.search_ph"
   | "inv.transfer"
   | "inv.default_no_variation"
@@ -17591,6 +17599,22 @@ const en: Dict = {
 
 
 
+
+  "ema.display_name": "Display Name",
+
+  "ema.display_name_ph": "e.g. Company / Department name",
+
+  "ema.smtp_config": "SMTP Configuration",
+
+  "ema.ssl_tls": "SSL/TLS Secure Connection",
+
+  "ema.pwd_encrypt_notice": "Password will be encrypted with AES-256-CBC before saving. It will never be displayed again.",
+
+  "ema.new_password": "New Password / App Password",
+
+  "clbill.bill_ref_ph": "Auto-generated (or custom)",
+
+  "clbill.remarks_ph": "Additional billing details, agent notes or reference details...",
   "inv.search_ph": "Search goods, CHS, warehouse...",
 
   "inv.transfer": "Transfer",
@@ -30726,6 +30750,22 @@ const ur: Dict = {
 
 
 
+
+  "ema.display_name": "ظاہر ہونے والا نام",
+
+  "ema.display_name_ph": "مثلاً کمپنی / شعبہ کا نام",
+
+  "ema.smtp_config": "SMTP کنفیگریشن",
+
+  "ema.ssl_tls": "SSL/TLS محفوظ کنکشن",
+
+  "ema.pwd_encrypt_notice": "پاسورڈ محفوظ کرنے سے پہلے AES-256-CBC سے خفیہ کیا جائے گا۔ یہ دوبارہ کبھی ظاہر نہیں ہوگا۔",
+
+  "ema.new_password": "نیا پاسورڈ / ایپ پاسورڈ",
+
+  "clbill.bill_ref_ph": "خودکار طور پر تیار (یا حسب ضرورت)",
+
+  "clbill.remarks_ph": "اضافی بلنگ تفصیلات، ایجنٹ نوٹس یا حوالہ تفصیلات...",
   "inv.search_ph": "اشیاء، CHS، گودام تلاش کریں...",
 
   "inv.transfer": "منتقلی",
@@ -43863,6 +43903,22 @@ const ar: Dict = {
 
 
 
+
+  "ema.display_name": "الاسم المعروض",
+
+  "ema.display_name_ph": "مثال: اسم الشركة / القسم",
+
+  "ema.smtp_config": "إعداد SMTP",
+
+  "ema.ssl_tls": "اتصال آمن SSL/TLS",
+
+  "ema.pwd_encrypt_notice": "سيتم تشفير كلمة المرور باستخدام AES-256-CBC قبل الحفظ. ولن يتم عرضها مرة أخرى أبدًا.",
+
+  "ema.new_password": "كلمة مرور جديدة / كلمة مرور التطبيق",
+
+  "clbill.bill_ref_ph": "تم إنشاؤه تلقائيًا (أو مخصص)",
+
+  "clbill.remarks_ph": "تفاصيل فوترة إضافية، ملاحظات الوكيل أو تفاصيل مرجعية...",
   "inv.search_ph": "ابحث عن السلع، CHS، المستودع...",
 
   "inv.transfer": "تحويل",
@@ -56999,6 +57055,22 @@ const fa: Dict = {
 
 
 
+
+  "ema.display_name": "نام نمایشی",
+
+  "ema.display_name_ph": "مثلاً نام شرکت / بخش",
+
+  "ema.smtp_config": "پیکربندی SMTP",
+
+  "ema.ssl_tls": "اتصال امن SSL/TLS",
+
+  "ema.pwd_encrypt_notice": "گذرواژه پیش از ذخیره با AES-256-CBC رمزگذاری می‌شود. دیگر هرگز نمایش داده نخواهد شد.",
+
+  "ema.new_password": "گذرواژه جدید / گذرواژه برنامه",
+
+  "clbill.bill_ref_ph": "تولید خودکار (یا سفارشی)",
+
+  "clbill.remarks_ph": "جزئیات صورتحساب اضافی، یادداشت‌های نماینده یا جزئیات مرجع...",
   "inv.search_ph": "جستجوی کالا، CHS، انبار...",
 
   "inv.transfer": "انتقال",
@@ -70141,6 +70213,22 @@ const ps: Dict = {
 
 
 
+
+  "ema.display_name": "ښکاره نوم",
+
+  "ema.display_name_ph": "لکه د شرکت / څانګې نوم",
+
+  "ema.smtp_config": "د SMTP تنظیم",
+
+  "ema.ssl_tls": "د SSL/TLS خوندي اتصال",
+
+  "ema.pwd_encrypt_notice": "پاسورډ به د خوندي کولو دمخه د AES-256-CBC په واسطه کوډ شي. بیا به هیڅکله ونه ښودل شي.",
+
+  "ema.new_password": "نوی پاسورډ / د اپ پاسورډ",
+
+  "clbill.bill_ref_ph": "په اتوماتيک ډول جوړ شوی (یا دودیز)",
+
+  "clbill.remarks_ph": "اضافي د بیلنګ جزئیات، د اجنټ یادښتونه یا د حوالې جزئیات...",
   "inv.search_ph": "توکي، CHS، ګدام ولټوئ...",
 
   "inv.transfer": "لېږد",

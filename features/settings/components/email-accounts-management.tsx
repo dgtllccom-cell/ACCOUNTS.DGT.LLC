@@ -524,8 +524,8 @@ export function EmailAccountsManagement() {
                 <Input value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="dgtllc@dgt.llc" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Display Name *</Label>
-                <Input value={formDisplayName} onChange={(e) => setFormDisplayName(e.target.value)} placeholder="Asmat & Brothers" />
+                <Label className="text-xs font-semibold">{tt("ema.display_name", "Display Name")} *</Label>
+                <Input value={formDisplayName} onChange={(e) => setFormDisplayName(e.target.value)} placeholder={tt("ema.display_name_ph", "e.g. Company / Department name")} />
               </div>
             </div>
 
@@ -578,7 +578,7 @@ export function EmailAccountsManagement() {
             <div className="rounded-lg border bg-muted/10 p-4 space-y-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
                 <Server className="h-3.5 w-3.5 text-primary" />
-                SMTP Configuration
+                {tt("ema.smtp_config", "SMTP Configuration")}
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
@@ -623,7 +623,7 @@ export function EmailAccountsManagement() {
                     onChange={(e) => setFormSmtpSecure(e.target.checked)}
                     className="rounded border-input"
                   />
-                  SSL/TLS Secure Connection
+                  {tt("ema.ssl_tls", "SSL/TLS Secure Connection")}
                 </label>
                 <label className="flex items-center gap-2 text-xs cursor-pointer">
                   <input
@@ -663,10 +663,10 @@ export function EmailAccountsManagement() {
           <div className="space-y-4">
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300">
               <Shield className="mr-1.5 inline h-3.5 w-3.5" />
-              Password will be encrypted with AES-256-CBC before saving. It will never be displayed again.
+              {tt("ema.pwd_encrypt_notice", "Password will be encrypted with AES-256-CBC before saving. It will never be displayed again.")}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">New Password / App Password</Label>
+              <Label className="text-xs font-semibold">{tt("ema.new_password", "New Password / App Password")}</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
