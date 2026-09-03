@@ -198,7 +198,7 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
   // DR/CR via /api/erp/bill-expenses/[id]/lines/[lineId]/post. The AI never posts.
   bill_expense_line: {
     invoice_number: "reference",
-    document_date: "reference",
+    customs_reference: "reference",
     currency: "currency",
     exchange_rate: "exchangeRate",
     grand_total: "amount",
