@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bgr.enterprise_wide"
+  | "bgr.currencies"
+  | "bgr.main_branch"
   | "inv.subtitle"
   | "dash.live_financial_summary"
   | "dash.live_financial_summary_sub"
@@ -17798,6 +17801,15 @@ const en: Dict = {
 
 
 
+
+
+  "bgr.enterprise_wide": "Enterprise-wide",
+
+
+  "bgr.currencies": "Currencies",
+
+
+  "bgr.main_branch": "Main Branch",
   "inv.subtitle": "Track stock balances, record Stock In/Out movements, and monitor warehouse inventory across all branches.",
   "dash.live_financial_summary": "Live Financial Summary",
 
@@ -31411,6 +31423,15 @@ const ur: Dict = {
 
 
 
+
+
+  "bgr.enterprise_wide": "پورے انٹرپرائز میں",
+
+
+  "bgr.currencies": "کرنسیاں",
+
+
+  "bgr.main_branch": "مین برانچ",
   "inv.subtitle": "اسٹاک بیلنس ٹریک کریں، اسٹاک اِن/آؤٹ حرکات ریکارڈ کریں، اور تمام برانچوں میں گودام انوینٹری کی نگرانی کریں۔",
   "dash.live_financial_summary": "لائیو مالیاتی خلاصہ",
 
@@ -45026,6 +45047,15 @@ const ar: Dict = {
 
 
 
+
+
+  "bgr.enterprise_wide": "على مستوى المؤسسة",
+
+
+  "bgr.currencies": "العملات",
+
+
+  "bgr.main_branch": "الفرع الرئيسي",
   "inv.subtitle": "تتبع أرصدة المخزون، وسجّل حركات إدخال/إخراج المخزون، وراقب مخزون المستودعات عبر جميع الفروع.",
   "dash.live_financial_summary": "الملخص المالي المباشر",
 
@@ -58640,6 +58670,15 @@ const fa: Dict = {
 
 
 
+
+
+  "bgr.enterprise_wide": "در سطح سازمان",
+
+
+  "bgr.currencies": "ارزها",
+
+
+  "bgr.main_branch": "شعبه اصلی",
   "inv.subtitle": "مانده‌های موجودی را ردیابی کنید، حرکات ورود/خروج موجودی را ثبت کنید و موجودی انبار را در همه شعب نظارت کنید.",
   "dash.live_financial_summary": "خلاصه مالی زنده",
 
@@ -72260,6 +72299,15 @@ const ps: Dict = {
 
 
 
+
+
+  "bgr.enterprise_wide": "د ټول تصدۍ په کچه",
+
+
+  "bgr.currencies": "اسعارو",
+
+
+  "bgr.main_branch": "اصلي څانګه",
   "inv.subtitle": "د سټاک بیلانسونه تعقیب کړئ، د سټاک د ننوتلو/وتلو حرکتونه ثبت کړئ، او په ټولو څانګو کې د ګدام انوینټري وڅارئ.",
   "dash.live_financial_summary": "ژوندی مالي لنډیز",
 

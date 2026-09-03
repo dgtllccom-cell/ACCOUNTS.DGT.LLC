@@ -1501,52 +1501,22 @@ export function BranchGeneralReportView({
                     );
                   })
                 ) : (
+                  // No dedicated Super Admin branch row in the dataset — show the real
+                  // enterprise-wide totals (same source as the KPI cards) instead of a
+                  // fabricated "SA-001 / 95+ users / 4 Country" placeholder.
                   <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
-                    <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">SA-001</td>
-                    <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">Super Admin</td>
-                    <td className="p-2.5 border-r border-slate-200">Global Group</td>
-                    <td className="p-2.5 border-r border-slate-200 font-medium">Mr. Admin</td>
-                    <td className="p-2.5 border-r border-slate-200">4 Country</td>
-                    <td className="p-2.5 border-r border-slate-200 font-semibold">USD</td>
-                    <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-500">SA-1000</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums">4</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums">12</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums">95+</td>
-                    <td className="p-2.5 border-r border-slate-200">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <div className="relative popup-trigger">
-                          <button
-                            onClick={() => setActiveContactPopup(activeContactPopup?.id === "static-sa" && activeContactPopup.type === "phone" ? null : { id: "static-sa", type: "phone" })}
-                            className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                          >
-                            <PhoneCall className="h-2.5 w-2.5" />
-                          </button>
-                          {activeContactPopup?.id === "static-sa" && activeContactPopup.type === "phone" && (
-                            <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                              +971-50-1112222
-                            </div>
-                          )}
-                        </div>
-                        <div className="relative popup-trigger">
-                          <button
-                            onClick={() => setActiveContactPopup(activeContactPopup?.id === "static-sa" && activeContactPopup.type === "email" ? null : { id: "static-sa", type: "email" })}
-                            className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                          >
-                            <Mail className="h-2.5 w-2.5" />
-                          </button>
-                          {activeContactPopup?.id === "static-sa" && activeContactPopup.type === "email" && (
-                            <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                              superadmin@globalgroup.com
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-2.5">
-                      <button className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all">
-                        Edit
-                      </button>
-                    </td>
+                    <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{tt("bgr.enterprise_wide", "Enterprise-wide")}</td>
+                    <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{t(lang, "role.super_admin", "Super Admin")}</td>
+                    <td className="p-2.5 border-r border-slate-200">—</td>
+                    <td className="p-2.5 border-r border-slate-200 font-medium">—</td>
+                    <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalCountries} {tt("bgr.filter_country", "Country")}</td>
+                    <td className="p-2.5 border-r border-slate-200 font-semibold">{visibleSummary.totalCurrencies > 1 ? `${visibleSummary.totalCurrencies} ${tt("bgr.currencies", "Currencies")}` : "USD"}</td>
+                    <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-500 tabular-nums">{visibleSummary.totalMainAccounts}</td>
+                    <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalMainBranches}</td>
+                    <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalCityBranches}</td>
+                    <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{visibleSummary.totalUsers}</td>
+                    <td className="p-2.5 border-r border-slate-200">—</td>
+                    <td className="p-2.5">—</td>
                   </tr>
                 )}
               </tbody>
@@ -1634,16 +1604,16 @@ export function BranchGeneralReportView({
                               )}
                             </div>
                           </td>
-                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">SA-001</td>
-                          <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{mainBranch?.code || "-"}</td>
+                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">{country.code || "—"}</td>
+                          <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{mainBranch?.code || "—"}</td>
                           <td className="p-2 border-r border-slate-200 text-left font-semibold text-slate-800">
-                            {mainBranch?.name || `${country.name} Main Branch`}
+                            {mainBranch?.name || `${country.name} ${tt("bgr.main_branch", "Main Branch")}`}
                           </td>
-                          <td className="p-2 border-r border-slate-200 font-medium">{mainBranch?.companyName || "Global Group"}</td>
-                          <td className="p-2 border-r border-slate-200">{mainBranch?.ownerName || "-"}</td>
-                          <td className="p-2 border-r border-slate-200 font-bold text-slate-800">{country.currency}</td>
-                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">{mainBranch?.accountCode || "-"}</td>
-                          <td className="p-2 border-r border-slate-200 tabular-nums font-semibold">{country.totalCityBranches}</td>
+                          <td className="p-2 border-r border-slate-200 font-medium">{mainBranch?.companyName || "—"}</td>
+                          <td className="p-2 border-r border-slate-200">{mainBranch?.ownerName || "—"}</td>
+                          <td className="p-2 border-r border-slate-200 font-bold text-slate-800">{country.currency || mainBranch?.localCurrency || "—"}</td>
+                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">{mainBranch?.accountCode || "—"}</td>
+                          <td className="p-2 border-r border-slate-200 tabular-nums font-semibold">{country.totalCityBranches ?? 0}</td>
                           <td className="p-2 border-r border-slate-200 tabular-nums font-semibold">
                             <UserCountButton
                               count={countryUsers.length}
