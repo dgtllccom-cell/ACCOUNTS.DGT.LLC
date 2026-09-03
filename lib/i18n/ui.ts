@@ -927,6 +927,7 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "ble.clear_all_confirm"
   | "tl.route_unavailable"
   | "dintake.em_subtitle"
   | "dintake.em_cancel_footer"
@@ -17810,6 +17811,9 @@ const en: Dict = {
 
 
 
+
+
+  "ble.clear_all_confirm": "Clear all entered B/L data on this form? This cannot be undone.",
   "tl.route_unavailable": "Route not available",
   "dintake.em_subtitle": "Choose how you want to start. Both paths end in the same form, validation and approval.",
 
@@ -31441,6 +31445,9 @@ const ur: Dict = {
 
 
 
+
+
+  "ble.clear_all_confirm": "اس فارم پر درج تمام B/L ڈیٹا صاف کریں؟ یہ واپس نہیں ہو سکتا۔",
   "tl.route_unavailable": "راستہ دستیاب نہیں",
   "dintake.em_subtitle": "منتخب کریں کہ آپ کیسے شروع کرنا چاہتے ہیں۔ دونوں راستے ایک ہی فارم، توثیق اور منظوری پر ختم ہوتے ہیں۔",
 
@@ -45074,6 +45081,9 @@ const ar: Dict = {
 
 
 
+
+
+  "ble.clear_all_confirm": "مسح جميع بيانات بوليصة الشحن المُدخلة في هذا النموذج؟ لا يمكن التراجع عن ذلك.",
   "tl.route_unavailable": "المسار غير متاح",
   "dintake.em_subtitle": "اختر كيف تريد البدء. كلا المسارين ينتهيان بنفس النموذج والتحقق والموافقة.",
 
@@ -58706,6 +58716,9 @@ const fa: Dict = {
 
 
 
+
+
+  "ble.clear_all_confirm": "همه داده‌های بارنامه واردشده در این فرم پاک شود؟ این عمل قابل بازگشت نیست.",
   "tl.route_unavailable": "مسیر در دسترس نیست",
   "dintake.em_subtitle": "انتخاب کنید که چگونه می‌خواهید شروع کنید. هر دو مسیر به همان فرم، اعتبارسنجی و تأیید ختم می‌شوند.",
 
@@ -72344,6 +72357,9 @@ const ps: Dict = {
 
 
 
+
+
+  "ble.clear_all_confirm": "په دې فورم کې ټول داخل شوي B/L معلومات پاک کړئ؟ دا بیرته نشي کیدی.",
   "tl.route_unavailable": "لار شتون نلري",
   "dintake.em_subtitle": "غوره کړئ چې څنګه غواړئ پیل وکړئ. دواړه لارې په ورته فورم، تصدیق او تصویب پای ته رسیږي.",
 

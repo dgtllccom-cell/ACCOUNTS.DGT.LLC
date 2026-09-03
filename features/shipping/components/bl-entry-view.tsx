@@ -91,14 +91,14 @@ const emptyForm = {
   cityBranchId: "",
   ledgerId: "",
   shippingLineId: "",
-  shippingLineName: "DGT Logistics",
+  shippingLineName: "",
   clearingAgentId: "",
-  blNumber: "BL-671867",
+  blNumber: "",
   containerNumber: "",
   vesselName: "",
   voyageNumber: "",
-  loadingPort: "Karachi Port",
-  dischargePort: "Jebel Ali Port",
+  loadingPort: "",
+  dischargePort: "",
   eta: todayIso(),
   etd: todayIso(),
   shipmentStatus: "draft",
@@ -110,7 +110,7 @@ const emptyForm = {
   currencyCode: "USD",
   supplierCustomer: "",
   deliveryStatus: "Pending",
-  customerAccountNo: "CUST-1001",
+  customerAccountNo: "",
   shippingType: "By Sea",
   shipmentType: "Import",
   importer: "",
@@ -706,7 +706,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                     </div>
                   ) : null}
                   <Field label={_("ble.lbl_remarks", "Remarks")} value={form.carrierRemarks} onChange={(v) => updateField("carrierRemarks", v)} />
-                  <Button type="button" className="h-9 w-full bg-cyan-600 text-white hover:bg-cyan-500" onClick={saveRecord} disabled={saving || !canGenerateBl}>
+                  <Button type="button" size="lg" className="h-11 w-full bg-cyan-600 text-sm font-bold text-white shadow-md shadow-cyan-600/25 hover:bg-cyan-500 disabled:opacity-50 disabled:shadow-none" onClick={saveRecord} disabled={saving || !canGenerateBl}>
                     <Save className="mr-2 h-4 w-4" /> {saving ? _("ble.btn_generating", "Generating...") : _("ble.btn_generate_bl", "Generate Bill of Lading")}
                   </Button>
                 </div>
@@ -765,7 +765,18 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                   <span className="text-xs font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{_("ble.goods_loading_report", "Goods Loading Report")}</span>
                   <span className="ml-2 rounded border px-2 py-1 text-[9px] font-black text-muted-foreground">{_("ble.live_inventory", "Live Inventory")}</span>
                 </div>
-                <Button type="button" size="sm" className="h-7 bg-rose-600 text-[10px] text-white">{_("ble.btn_clear_all", "Clear All Data")}</Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 border-rose-300 text-[10px] text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                  onClick={() => {
+                    if (!confirm(_("ble.clear_all_confirm", "Clear all entered B/L data on this form? This cannot be undone."))) return;
+                    setForm((current) => ({ ...emptyForm, countryId: current.countryId, countryBranchId: current.countryBranchId, cityBranchId: current.cityBranchId, currencyCode: current.currencyCode }));
+                  }}
+                >
+                  {_("ble.btn_clear_all", "Clear All Data")}
+                </Button>
               </div>
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-xs">
