@@ -144,6 +144,55 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Real masters (no hard-coded demo lists)
+  const [superAgents, setSuperAgents] = useState<Array<{ id: string; code?: string; name: string }>>([]);
+  const [countryOptions, setCountryOptions] = useState<Array<{ id: string; code?: string; name: string }>>([]);
+  const [branchOptions, setBranchOptions] = useState<Array<{ id: string; code?: string; name: string }>>([]);
+
+  useEffect(() => {
+    const pick = (j: any, keys: string[]): any[] => {
+      if (!j) return [];
+      if (Array.isArray(j)) return j;
+      if (Array.isArray(j.data)) return j.data;
+      if (j.data && typeof j.data === "object") for (const k of keys) if (Array.isArray(j.data[k])) return j.data[k];
+      for (const k of keys) if (Array.isArray(j[k])) return j[k];
+      return [];
+    };
+    (async () => {
+      try {
+        const [agRes, coRes, brRes] = await Promise.all([
+          fetch("/api/erp/clearing-agents?limit=250"),
+          fetch("/api/erp/locations/countries"),
+          fetch("/api/erp/locations/branches/city?scope=all")
+        ]);
+        const [agJson, coJson, brJson] = await Promise.all([agRes.json(), coRes.json(), brRes.json()]);
+        setSuperAgents(
+          pick(agJson, ["clearingAgents", "agents", "data"]).map((a: any) => ({
+            id: String(a.id ?? a.agentId ?? a.code ?? a.name),
+            code: a.code ?? a.agentCode ?? undefined,
+            name: a.name ?? a.agentName ?? a.displayName ?? String(a.id ?? "")
+          }))
+        );
+        setCountryOptions(
+          pick(coJson, ["countries", "data"]).map((c: any) => ({
+            id: String(c.id ?? c.countryId ?? c.iso2 ?? c.code ?? c.name),
+            code: c.iso2 ?? c.code ?? undefined,
+            name: c.name ?? c.countryName ?? String(c.id ?? "")
+          }))
+        );
+        setBranchOptions(
+          pick(brJson, ["cityBranches", "branches", "data"]).map((b: any) => ({
+            id: String(b.id ?? b.branchId ?? b.code ?? b.name),
+            code: b.code ?? b.branchCode ?? undefined,
+            name: b.name ?? b.city_name ?? b.branchName ?? b.displayName ?? String(b.id ?? "")
+          }))
+        );
+      } catch (err) {
+        console.error("Failed to load transit-entry masters:", err);
+      }
+    })();
+  }, []);
+
   // Auto calculate total amount
   const calculatedTotal = useMemo(() => {
     const qty = parseFloat(String(formData.quantity).replace(/,/g, "")) || 0;
@@ -516,9 +565,16 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       onChange={(e) => handleInputChange("super_agent", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="SA-0001">SA-0001</option>
-                      <option value="SA-0002">SA-0002 - Global Logistics</option>
-                      <option value="SA-0003">SA-0003 - Apex Transit</option>
+                      <option value="">{tt("transit.select_super_agent", "Select Super Agent…")}</option>
+                      {formData.super_agent &&
+                        !superAgents.some((a) => (a.code ?? a.id) === formData.super_agent) && (
+                          <option value={formData.super_agent}>{formData.super_agent}</option>
+                        )}
+                      {superAgents.map((a) => (
+                        <option key={a.id} value={a.code ?? a.id}>
+                          {a.code ? `${a.code} - ${a.name}` : a.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -529,10 +585,19 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       onChange={(e) => handleInputChange("country", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="PK - Pakistan">PK - Pakistan</option>
-                      <option value="AF - Afghanistan">AF - Afghanistan</option>
-                      <option value="AE - UAE">AE - UAE</option>
-                      <option value="IR - Iran">IR - Iran</option>
+                      <option value="">{tt("transit.select_country", "Select Country…")}</option>
+                      {formData.country &&
+                        !countryOptions.some(
+                          (c) => (c.code ? `${c.code} - ${c.name}` : c.name) === formData.country
+                        ) && <option value={formData.country}>{formData.country}</option>}
+                      {countryOptions.map((c) => {
+                        const v = c.code ? `${c.code} - ${c.name}` : c.name;
+                        return (
+                          <option key={c.id} value={v}>
+                            {v}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
@@ -543,10 +608,19 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       onChange={(e) => handleInputChange("branch", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="CHM - Chaman">CHM - Chaman</option>
-                      <option value="TKM - Torkham">TKM - Torkham</option>
-                      <option value="KHI - Karachi Port">KHI - Karachi Port</option>
-                      <option value="QTA - Quetta">QTA - Quetta</option>
+                      <option value="">{tt("transit.select_branch", "Select Branch…")}</option>
+                      {formData.branch &&
+                        !branchOptions.some(
+                          (b) => (b.code ? `${b.code} - ${b.name}` : b.name) === formData.branch
+                        ) && <option value={formData.branch}>{formData.branch}</option>}
+                      {branchOptions.map((b) => {
+                        const v = b.code ? `${b.code} - ${b.name}` : b.name;
+                        return (
+                          <option key={b.id} value={v}>
+                            {v}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 

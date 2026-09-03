@@ -853,7 +853,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             size="sm"
             onClick={() => router.push("/dashboard" as Route)}
             className="h-8.5 px-2.5 rounded-xl border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 text-xs font-bold gap-1 shadow-xs"
-            title="Back to Dashboard"
+            title={th("Back to Dashboard")}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Back</span>
@@ -1001,7 +1001,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                       }}
                       className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs"
                     >
-                      Apply Range
+                      {th("Apply Range")}
                     </button>
                   </div>
                 </div>
@@ -1199,7 +1199,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              title="Grid View"
+              title={th("Grid View")}
               className={cn(
                 "h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
                 viewMode === "grid"
@@ -1212,7 +1212,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             <button
               type="button"
               onClick={() => setViewMode("table")}
-              title="Table View"
+              title={th("Table View")}
               className={cn(
                 "h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
                 viewMode === "table"
@@ -2052,7 +2052,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                           <button
                             onClick={() => handleDownloadDoc(doc)}
                             className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
-                            title="Download"
+                            title={t("download", "Download")}
                           >
                             <Download className="h-3.5 w-3.5 inline" />
                           </button>

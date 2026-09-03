@@ -664,13 +664,9 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   onChange={(e) => setBankName(e.target.value)}
                 >
                   <option value="all">{tt("bankroz.all_banks", "All Banks")}</option>
-                  <option value="Habib Bank Limited">Habib Bank Limited (HBL)</option>
-                  <option value="National Bank of Pakistan">National Bank of Pakistan (NBP)</option>
-                  <option value="Bank Alfalah Limited">Bank Alfalah Limited (BAFL)</option>
-                  <option value="MCB Bank Limited">MCB Bank Limited (MCB)</option>
-                  <option value="United Bank Limited">United Bank Limited (UBL)</option>
-                  <option value="Bank of Punjab">Bank of Punjab (BOP)</option>
-                  <option value="Meezan Bank">Meezan Bank</option>
+                  {bankName !== "all" && !bankList.some((b) => b.bank_name === bankName) && (
+                    <option value={bankName}>{bankName}</option>
+                  )}
                   {bankList.map((b) => (
                     <option key={b.id} value={b.bank_name}>
                       {b.bank_name} ({b.short_name})
@@ -681,7 +677,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* Cheque # */}
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Cheque #</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.cheque_hash", "Cheque #")}</Label>
                 <Input
                   className="h-8 text-xs bg-background"
                   value={chequeNo}

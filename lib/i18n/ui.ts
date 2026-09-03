@@ -927,6 +927,17 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "hr.cat_accountant"
+  | "hr.cat_branch_admin"
+  | "hr.cat_cashier"
+  | "hr.cat_driver"
+  | "hr.cat_cook"
+  | "hr.cat_cleaner"
+  | "hr.cat_security"
+  | "hr.cat_worker"
+  | "transit.select_super_agent"
+  | "transit.select_country"
+  | "transit.select_branch"
   | "setmenu.hub_desc"
   | "setmenu.search_modules_ph"
   | "setmenu.active_setup_modules"
@@ -17555,6 +17566,28 @@ const en: Dict = {
 
 
 
+
+
+  "hr.cat_accountant": "Accountant",
+
+  "hr.cat_branch_admin": "Branch Administrator",
+
+  "hr.cat_cashier": "Cashier",
+
+  "hr.cat_driver": "Driver",
+
+  "hr.cat_cook": "Cook",
+
+  "hr.cat_cleaner": "Cleaner",
+
+  "hr.cat_security": "Security",
+
+  "hr.cat_worker": "Worker",
+  "transit.select_super_agent": "Select Super Agent…",
+
+  "transit.select_country": "Select Country…",
+
+  "transit.select_branch": "Select Branch…",
   "setmenu.hub_desc": "Enterprise configuration hub for branch, company, account, and permission workflows.",
 
   "setmenu.search_modules_ph": "Search settings modules, parameters...",
@@ -30626,6 +30659,28 @@ const ur: Dict = {
 
 
 
+
+
+  "hr.cat_accountant": "اکاؤنٹنٹ",
+
+  "hr.cat_branch_admin": "برانچ ایڈمنسٹریٹر",
+
+  "hr.cat_cashier": "کیشیئر",
+
+  "hr.cat_driver": "ڈرائیور",
+
+  "hr.cat_cook": "باورچی",
+
+  "hr.cat_cleaner": "صفائی کرنے والا",
+
+  "hr.cat_security": "سیکیورٹی",
+
+  "hr.cat_worker": "ورکر",
+  "transit.select_super_agent": "سپر ایجنٹ منتخب کریں…",
+
+  "transit.select_country": "ملک منتخب کریں…",
+
+  "transit.select_branch": "برانچ منتخب کریں…",
   "setmenu.hub_desc": "برانچ، کمپنی، اکاؤنٹ اور اجازت ورک فلوز کے لیے انٹرپرائز کنفیگریشن حب۔",
 
   "setmenu.search_modules_ph": "ترتیبات ماڈیول، پیرامیٹرز تلاش کریں...",
@@ -43699,6 +43754,28 @@ const ar: Dict = {
 
 
 
+
+
+  "hr.cat_accountant": "محاسب",
+
+  "hr.cat_branch_admin": "مدير الفرع",
+
+  "hr.cat_cashier": "أمين الصندوق",
+
+  "hr.cat_driver": "سائق",
+
+  "hr.cat_cook": "طاهٍ",
+
+  "hr.cat_cleaner": "عامل نظافة",
+
+  "hr.cat_security": "أمن",
+
+  "hr.cat_worker": "عامل",
+  "transit.select_super_agent": "اختر الوكيل الرئيسي…",
+
+  "transit.select_country": "اختر الدولة…",
+
+  "transit.select_branch": "اختر الفرع…",
   "setmenu.hub_desc": "مركز إعداد المؤسسة لسير عمل الفروع والشركات والحسابات والأذونات.",
 
   "setmenu.search_modules_ph": "ابحث في وحدات الإعدادات والمعلمات...",
@@ -56771,6 +56848,28 @@ const fa: Dict = {
 
 
 
+
+
+  "hr.cat_accountant": "حسابدار",
+
+  "hr.cat_branch_admin": "مدیر شعبه",
+
+  "hr.cat_cashier": "صندوقدار",
+
+  "hr.cat_driver": "راننده",
+
+  "hr.cat_cook": "آشپز",
+
+  "hr.cat_cleaner": "نظافتچی",
+
+  "hr.cat_security": "نگهبان",
+
+  "hr.cat_worker": "کارگر",
+  "transit.select_super_agent": "انتخاب نماینده ارشد…",
+
+  "transit.select_country": "انتخاب کشور…",
+
+  "transit.select_branch": "انتخاب شعبه…",
   "setmenu.hub_desc": "مرکز پیکربندی سازمانی برای گردش کار شعبه، شرکت، حساب و مجوز.",
 
   "setmenu.search_modules_ph": "جستجوی ماژول‌های تنظیمات، پارامترها...",
@@ -69849,6 +69948,28 @@ const ps: Dict = {
 
 
 
+
+
+  "hr.cat_accountant": "محاسب",
+
+  "hr.cat_branch_admin": "د څانګې مدیر",
+
+  "hr.cat_cashier": "خزانه‌دار",
+
+  "hr.cat_driver": "موټر چلوونکی",
+
+  "hr.cat_cook": "پخلانجی",
+
+  "hr.cat_cleaner": "پاکوونکی",
+
+  "hr.cat_security": "امنیت",
+
+  "hr.cat_worker": "کارګر",
+  "transit.select_super_agent": "لوی اجنټ وټاکئ…",
+
+  "transit.select_country": "هېواد وټاکئ…",
+
+  "transit.select_branch": "څانګه وټاکئ…",
   "setmenu.hub_desc": "د څانګې، شرکت، حساب او د اجازو د کار د بهیر لپاره د تصدۍ د تنظیم مرکز.",
 
   "setmenu.search_modules_ph": "د تنظیماتو ماډیولونه، پیرامیټرونه ولټوئ...",

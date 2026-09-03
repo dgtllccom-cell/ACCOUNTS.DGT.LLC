@@ -271,14 +271,14 @@ export function EmployeeManagementView() {
               >
                 <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
                 <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
-                <option value="Accountant">Accountant</option>
-                <option value="Branch Administrator">Branch Administrator</option>
-                <option value="Cashier">Cashier</option>
-                <option value="Driver">Driver</option>
-                <option value="Cook">Cook</option>
-                <option value="Cleaner">Cleaner</option>
-                <option value="Security">Security</option>
-                <option value="Worker">Worker</option>
+                <option value="Accountant">{t(lang, "hr.cat_accountant", "Accountant")}</option>
+                <option value="Branch Administrator">{t(lang, "hr.cat_branch_admin", "Branch Administrator")}</option>
+                <option value="Cashier">{t(lang, "hr.cat_cashier", "Cashier")}</option>
+                <option value="Driver">{t(lang, "hr.cat_driver", "Driver")}</option>
+                <option value="Cook">{t(lang, "hr.cat_cook", "Cook")}</option>
+                <option value="Cleaner">{t(lang, "hr.cat_cleaner", "Cleaner")}</option>
+                <option value="Security">{t(lang, "hr.cat_security", "Security")}</option>
+                <option value="Worker">{t(lang, "hr.cat_worker", "Worker")}</option>
                 <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
                 <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
                 <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
