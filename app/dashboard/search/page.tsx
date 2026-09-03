@@ -32,6 +32,7 @@ import { listCountries, type LocationCountry, listCities, type LocationCity } fr
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type CustomerResult = {
   id: string;
@@ -72,6 +73,7 @@ type RoznamchaResult = {
 export default function SearchPage() {
   const router = useRouter();
   const lang = useActiveLanguage();
+  const th = (s: string) => translateHeader(lang, s);
   const [activeTab, setActiveTab] = useState<"all" | "customers" | "transactions">("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -252,20 +254,20 @@ export default function SearchPage() {
           <span className="text-xs font-bold text-teal-600 uppercase tracking-widest block mb-1">Unified Search Center</span>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 flex items-center gap-2">
             <Search className="h-7 w-7 text-teal-600" />
-            Global ERP Search Engine
+            {th("Global ERP Search Engine")}
           </h1>
           <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">
-            Instantly search and filter customers, payments, vouchers, and transactions across countries and branches.
+            {th("Instantly search and filter customers, payments, vouchers, and transactions across countries and branches")}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="text-xs font-semibold gap-1.5 h-9" onClick={() => setShowFilters(!showFilters)}>
             <SlidersHorizontal className="h-4 w-4" />
-            {showFilters ? "Hide Filters" : "Advanced Filters"}
+            {showFilters ? th("Hide Filters") : th("Advanced Filters")}
           </Button>
           <Button variant="ghost" className="text-xs font-semibold gap-1 h-9 text-slate-500 hover:text-slate-900" onClick={resetFilters}>
             <RefreshCw className="h-3.5 w-3.5" />
-            Reset
+            {th("Reset")}
           </Button>
         </div>
       </section>
@@ -277,7 +279,7 @@ export default function SearchPage() {
             <Search className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400" />
             <Input
               type="text"
-              placeholder="Search by name, serial no., voucher no., NTN, reference, mobile..."
+              placeholder={th("Search by name, serial no., voucher no., NTN, reference, mobile") + "..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -288,7 +290,7 @@ export default function SearchPage() {
               onClick={handleSearch}
               disabled={loading}
             >
-              {loading ? "Searching..." : "Search"}
+              {loading ? th("Searching") + "..." : th("Search")}
             </Button>
           </div>
         </div>
@@ -298,14 +300,14 @@ export default function SearchPage() {
           <div className="bg-white border rounded-xl p-3 shadow-sm flex items-center gap-3 dark:bg-slate-900/40 dark:border-slate-800">
             <Building2 className="h-8 w-8 text-teal-600/30" />
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-black block">Customers</span>
+              <span className="text-[10px] text-slate-400 uppercase font-black block">{th("Customers")}</span>
               <strong className="text-lg text-slate-900 dark:text-slate-100">{filteredCustomers.length}</strong>
             </div>
           </div>
           <div className="bg-white border rounded-xl p-3 shadow-sm flex items-center gap-3 dark:bg-slate-900/40 dark:border-slate-800">
             <FileText className="h-8 w-8 text-blue-600/30" />
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-black block">Transactions</span>
+              <span className="text-[10px] text-slate-400 uppercase font-black block">{th("Transactions")}</span>
               <strong className="text-lg text-slate-900 dark:text-slate-100">{filteredTransactions.length}</strong>
             </div>
           </div>
@@ -318,18 +320,18 @@ export default function SearchPage() {
           <CardHeader className="bg-slate-50/50 py-3.5 border-b dark:bg-slate-900/25 dark:border-slate-850">
             <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-              Search & Filter Criteria
+              {th("Search & Filter Criteria")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">Country Scope</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("Country Scope")}</Label>
               <select
                 value={countryId}
                 onChange={(e) => setCountryId(e.target.value)}
                 className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
               >
-                <option value="">All Countries</option>
+                <option value="">{th("All Countries")}</option>
                 {countries.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -337,13 +339,13 @@ export default function SearchPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">Currency</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("Currency")}</Label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
               >
-                <option value="">All Currencies</option>
+                <option value="">{th("All Currencies")}</option>
                 <option value="USD">USD - US Dollar</option>
                 <option value="PKR">PKR - Pakistan Rupee</option>
                 <option value="AED">AED - UAE Dirham</option>
@@ -352,39 +354,39 @@ export default function SearchPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">Approval Status</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("Approval Status")}</Label>
               <select
                 value={approvalStatus}
                 onChange={(e) => setApprovalStatus(e.target.value)}
                 className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
               >
-                <option value="">All Statuses</option>
-                <option value="posted">Posted</option>
-                <option value="draft">Draft</option>
-                <option value="approved">Approved</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="">{th("All Statuses")}</option>
+                <option value="posted">{th("Posted")}</option>
+                <option value="draft">{th("Draft")}</option>
+                <option value="approved">{th("Approved")}</option>
+                <option value="cancelled">{th("Cancelled")}</option>
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">Transaction Scope</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("Transaction Scope")}</Label>
               <select
                 value={transactionType}
                 onChange={(e) => setTransactionType(e.target.value)}
                 className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
               >
-                <option value="">All Scopes</option>
-                <option value="super_admin">Super Admin</option>
-                <option value="country">Country Branch</option>
-                <option value="branch">City Branch</option>
+                <option value="">{th("All Scopes")}</option>
+                <option value="super_admin">{th("Super Admin")}</option>
+                <option value="country">{th("Country Branch")}</option>
+                <option value="branch">{th("City Branch")}</option>
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">User / Counterparty Name</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("User / Counterparty Name")}</Label>
               <Input
                 type="text"
-                placeholder="User name filter"
+                placeholder={th("User name filter")}
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 className="h-9 text-xs bg-white text-slate-900 border-slate-200"
@@ -392,7 +394,7 @@ export default function SearchPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">Start Date</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("Start Date")}</Label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -402,7 +404,7 @@ export default function SearchPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">End Date</Label>
+              <Label className="text-xs font-bold text-slate-600">{th("End Date")}</Label>
               <Input
                 type="date"
                 value={dateTo}
@@ -413,7 +415,7 @@ export default function SearchPage() {
 
             <div className="flex items-end">
               <Button className="w-full text-xs font-bold h-9 bg-slate-950 text-white" onClick={handleSearch} disabled={loading}>
-                Apply Search Filters
+                {th("Apply Search Filters")}
               </Button>
             </div>
           </CardContent>
@@ -424,9 +426,9 @@ export default function SearchPage() {
       <div className="border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div className="flex gap-4">
           {[
-            { id: "all", label: "All Results", count: filteredCustomers.length + filteredTransactions.length },
-            { id: "customers", label: "Customers Profiles", count: filteredCustomers.length },
-            { id: "transactions", label: "Transactions & Serials", count: filteredTransactions.length }
+            { id: "all", label: th("All Results"), count: filteredCustomers.length + filteredTransactions.length },
+            { id: "customers", label: th("Customers Profiles"), count: filteredCustomers.length },
+            { id: "transactions", label: th("Transactions & Serials"), count: filteredTransactions.length }
           ].map(tab => (
             <button
               key={tab.id}
