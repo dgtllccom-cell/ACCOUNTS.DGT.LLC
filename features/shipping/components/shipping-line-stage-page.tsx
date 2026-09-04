@@ -350,7 +350,7 @@ export function ShippingLineStagePage({
                 variant="outline"
                 className="border-border/80 bg-card hover:bg-muted text-foreground h-9 rounded-xl shadow-sm"
               >
-                <Printer className="h-4 w-4 mr-2 text-muted-foreground" /> Print
+                <Printer className="h-4 w-4 mr-2 text-muted-foreground" /> {tt("common.print", "Print")}
               </Button>
               <Button
                 onClick={exportCsv}
@@ -358,7 +358,7 @@ export function ShippingLineStagePage({
                 variant="outline"
                 className="border-border/80 bg-card hover:bg-muted text-foreground h-9 rounded-xl shadow-sm"
               >
-                <Download className="h-4 w-4 mr-2 text-muted-foreground" /> Export
+                <Download className="h-4 w-4 mr-2 text-muted-foreground" /> {tt("common.export", "Export")}
               </Button>
             </>
           )}
@@ -428,7 +428,7 @@ export function ShippingLineStagePage({
           <Card className="bg-card text-card-foreground border-border/60 shadow-sm rounded-2xl overflow-hidden">
             <CardHeader className="border-b border-border/60 bg-muted/30 px-5 py-4">
               <CardTitle className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
-                <Ship className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Select Shipment B/L
+                <Ship className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> {tt("sls.select_shipment_bl", "Select Shipment B/L")}
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">{tt("slstage.choose_bl", "Choose a Bill of Lading record to edit tracking matrix.")}</CardDescription>
             </CardHeader>
@@ -515,10 +515,10 @@ export function ShippingLineStagePage({
             <CardHeader className="border-b border-border/60 bg-muted/30 px-6 py-4 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
-                  <Edit3 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Shipment Details & Tracking Matrix
+                  <Edit3 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> {tt("sls.details_tracking_matrix", "Shipment Details & Tracking Matrix")}
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                  Update logistics parameters, port schedules, vessel details and carrier notes.
+                  {tt("sls.details_tracking_desc", "Update logistics parameters, port schedules, vessel details and carrier notes.")}
                 </CardDescription>
               </div>
               {selectedRecord && (
@@ -650,7 +650,7 @@ export function ShippingLineStagePage({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                       <div>
                         <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> ETD Date
+                          <Calendar className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> {tt("sls.etd_date", "ETD Date")}
                         </Label>
                         <Input
                           type="date"
@@ -661,7 +661,7 @@ export function ShippingLineStagePage({
                       </div>
                       <div>
                         <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> ETA Date
+                          <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> {tt("sls.eta_date", "ETA Date")}
                         </Label>
                         <Input
                           type="date"
@@ -672,7 +672,7 @@ export function ShippingLineStagePage({
                       </div>
                       <div>
                         <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                          <Anchor className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Shipment Status
+                          <Anchor className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> {tt("sls.shipment_status", "Shipment Status")}
                         </Label>
                         <select
                           value={shipmentStatus}

@@ -927,6 +927,12 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "sls.select_shipment_bl"
+  | "sls.details_tracking_matrix"
+  | "sls.details_tracking_desc"
+  | "sls.etd_date"
+  | "sls.eta_date"
+  | "sls.shipment_status"
   | "mac.title"
   | "mac.subtitle"
   | "mac.settings_title"
@@ -18669,6 +18675,18 @@ const en: Dict = {
 
 
 
+
+  "sls.select_shipment_bl": "Select Shipment B/L",
+
+  "sls.details_tracking_matrix": "Shipment Details & Tracking Matrix",
+
+  "sls.details_tracking_desc": "Update logistics parameters, port schedules, vessel details and carrier notes.",
+
+  "sls.etd_date": "ETD Date",
+
+  "sls.eta_date": "ETA Date",
+
+  "sls.shipment_status": "Shipment Status",
   "mac.title": "AI Mobile – Return WhatsApp Reply",
 
   "mac.subtitle": "Digital Dock ERP Live Extension",
@@ -34332,6 +34350,18 @@ const ur: Dict = {
 
 
 
+
+  "sls.select_shipment_bl": "شپمنٹ B/L منتخب کریں",
+
+  "sls.details_tracking_matrix": "شپمنٹ تفصیلات و ٹریکنگ میٹرکس",
+
+  "sls.details_tracking_desc": "لاجسٹک پیرامیٹرز، پورٹ شیڈولز، جہاز کی تفصیلات اور کیریئر نوٹس اپ ڈیٹ کریں۔",
+
+  "sls.etd_date": "ETD تاریخ",
+
+  "sls.eta_date": "ETA تاریخ",
+
+  "sls.shipment_status": "شپمنٹ اسٹیٹس",
   "mac.title": "AI موبائل – واپسی واٹس ایپ جواب",
 
   "mac.subtitle": "ڈیجیٹل ڈاک ERP لائیو ایکسٹینشن",
@@ -49997,6 +50027,18 @@ const ar: Dict = {
 
 
 
+
+  "sls.select_shipment_bl": "اختر بوليصة الشحن B/L",
+
+  "sls.details_tracking_matrix": "تفاصيل الشحنة ومصفوفة التتبع",
+
+  "sls.details_tracking_desc": "تحديث معايير الخدمات اللوجستية وجداول الموانئ وتفاصيل السفينة وملاحظات الناقل.",
+
+  "sls.etd_date": "تاريخ ETD",
+
+  "sls.eta_date": "تاريخ ETA",
+
+  "sls.shipment_status": "حالة الشحنة",
   "mac.title": "الجوال بالذكاء الاصطناعي – رد واتساب الإرجاع",
 
   "mac.subtitle": "امتداد Digital Dock ERP المباشر",
@@ -65661,6 +65703,18 @@ const fa: Dict = {
 
 
 
+
+  "sls.select_shipment_bl": "انتخاب بارنامه حمل B/L",
+
+  "sls.details_tracking_matrix": "جزئیات محموله و ماتریس ردیابی",
+
+  "sls.details_tracking_desc": "پارامترهای لجستیک، برنامه‌های بندر، جزئیات کشتی و یادداشت‌های حامل را به‌روزرسانی کنید.",
+
+  "sls.etd_date": "تاریخ ETD",
+
+  "sls.eta_date": "تاریخ ETA",
+
+  "sls.shipment_status": "وضعیت محموله",
   "mac.title": "موبایل هوش مصنوعی – پاسخ واتساپ بازگشتی",
 
   "mac.subtitle": "افزونه زنده Digital Dock ERP",
@@ -81331,6 +81385,18 @@ const ps: Dict = {
 
 
 
+
+  "sls.select_shipment_bl": "د لېږد B/L وټاکئ",
+
+  "sls.details_tracking_matrix": "د لېږد تفصیلات او د تعقیب ماتریس",
+
+  "sls.details_tracking_desc": "د لوژستیک پارامترونه، د بندر مهالویشتونه، د بېړۍ تفصیلات، او د لېږونکي یادښتونه تازه کړئ.",
+
+  "sls.etd_date": "ETD نېټه",
+
+  "sls.eta_date": "ETA نېټه",
+
+  "sls.shipment_status": "د لېږد حالت",
   "mac.title": "AI موبایل – د بېرته واتساپ ځواب",
 
   "mac.subtitle": "د Digital Dock ERP ژوندی توسیع",
