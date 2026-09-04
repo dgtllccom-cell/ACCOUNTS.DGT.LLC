@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
@@ -1784,81 +1785,24 @@ function SuperAdminRoznamchaReportViewContent({
 
   const filtersContent = (
         <div className="flex flex-wrap items-center gap-1.5 ml-2 border-l pl-2 border-slate-200 dark:border-slate-800">
-          {/* 1. Date Range Dropdown Popover */}
-          <div className="relative" ref={(el) => { dateRef.current = el; }}>
-            <button
-              type="button"
-              onClick={() => setDateOpen(!dateOpen)}
-              className="h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-sm flex items-center gap-1 hover:bg-slate-50 outline-none"
-            >
-              <span>Date: {appliedFilters.fromDate} to {appliedFilters.toDate}</span>
-            </button>
-            {dateOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-3 space-y-3 text-left">
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    ["today", "Today"],
-                    ["yesterday", "Yesterday"],
-                    ["last7", "Last 7 Days"],
-                    ["last30", "Last 30 Days"],
-                    ["month", "This Month"],
-                    ["year", "This Year"]
-                  ].map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-bold text-slate-700 hover:border-blue-300 hover:bg-blue-50"
-                      onClick={() => setDraftFilters((cur) => ({ ...cur, ...quickPeriodRange(value as QuickPeriod) }))}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("From Date")}</Label>
-                  <Input
-                    type="date"
-                    className="h-8 text-xs rounded-lg border-slate-200"
-                    value={draftFilters.fromDate}
-                    onChange={(e) => setDraftFilters((cur) => ({ ...cur, fromDate: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("To Date")}</Label>
-                  <Input
-                    type="date"
-                    className="h-8 text-xs rounded-lg border-slate-200"
-                    value={draftFilters.toDate}
-                    onChange={(e) => setDraftFilters((cur) => ({ ...cur, toDate: e.target.value }))}
-                  />
-                </div>
-                <div className="flex gap-2 pt-2 border-t border-slate-100">
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-7 text-[11px] bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex-1"
-                    onClick={() => {
-                      applyFilters();
-                      setDateOpen(false);
-                    }}
-                  >
-                    Apply
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-[11px] font-bold rounded-lg flex-1 border-slate-200 text-slate-700 bg-white hover:bg-slate-50"
-                    onClick={() => {
-                      resetFilters();
-                      setDateOpen(false);
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </div>
-              </div>
-            )}
+          {/* 1. Universal date-range picker */}
+          <div className="w-56">
+            <ErpDatePicker
+              mode="range"
+              lang={effectiveLang}
+              size="sm"
+              value={{ from: appliedFilters.fromDate || null, to: appliedFilters.toDate || null }}
+              onApply={(v) => {
+                const next = {
+                  ...draftFilters,
+                  fromDate: v.from ?? monthStartIso(),
+                  toDate: v.to ?? todayIso(),
+                };
+                setDraftFilters(next);
+                setAppliedFilters(next);
+                void loadReport(next);
+              }}
+            />
           </div>
 
           <div className="relative" ref={(el) => { filtersRef.current = el; }}>

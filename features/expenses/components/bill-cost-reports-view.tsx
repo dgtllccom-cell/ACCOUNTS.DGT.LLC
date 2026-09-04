@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { formatErpRange } from "@/lib/datetime/erp-date";
 
 const REPORT_KEYS = [
   "bill_wise_expense",
@@ -162,7 +164,7 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
       currency: data.functionalCurrency,
       filters: [
         { label: s.t("rc_report", "Report"), value: reportLabel(report) },
-        { label: s.t("rc_period", "Period"), value: from || to ? `${from || "…"} → ${to || "…"}` : s.t("rc_all_dates", "All dates") },
+        { label: s.t("rc_period", "Period"), value: from || to ? formatErpRange({ from: from || null, to: to || null }, s.lang) : s.t("rc_all_dates", "All dates") },
         { label: s.t("rc_source", "Source"), value: moduleLabel(moduleF) },
         { label: s.t("rc_party", "Party"), value: party.trim() || s.t("rc_all", "All") },
         { label: s.t("rc_rows", "Rows"), value: String(data.rowCount) }
@@ -217,14 +219,19 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs text-slate-500">
-            {s.t("rc_from", "From")}
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={selectCls} />
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-slate-500">
-            {s.t("rc_to", "To")}
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={selectCls} />
-          </label>
+          <div className="min-w-[15rem]">
+            <ErpDatePicker
+              mode="range"
+              lang={langProp}
+              label={s.t("rc_period", "Period")}
+              value={{ from: from || null, to: to || null }}
+              onApply={(v) => {
+                setFrom(v.from ?? "");
+                setTo(v.to ?? "");
+              }}
+              size="sm"
+            />
+          </div>
           <label className="flex flex-col gap-1 text-xs text-slate-500">
             {s.t("rc_source", "Source")}
             <select value={moduleF} onChange={(e) => setModuleF(e.target.value as any)} className={selectCls}>

@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Calendar, Download, Loader2, MoreVertical, Printer, RefreshCcw, Search, ChevronRight, Globe } from "lucide-react";
+import { ChevronDown, Download, Loader2, MoreVertical, Printer, RefreshCcw, Search, ChevronRight, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -298,7 +299,6 @@ export function LedgerReportView({
   const [branchFilter, setBranchFilter] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
-  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [datePreset, setDatePreset] = useState<"today" | "yesterday" | "this_week" | "this_month" | "custom">(
     initialFromDate || initialToDate ? "custom" : "this_month"
@@ -902,73 +902,19 @@ export function LedgerReportView({
               />
             </div>
 
-            {/* 6. Date Range dropdown popover */}
-            <div className="relative w-full md:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-                className="h-10 w-full md:w-auto text-xs gap-2 font-semibold text-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs"
-              >
-                <Calendar className="h-4 w-4 text-slate-500" />
-                {fromDate} → {toDate}
-              </Button>
-              {dateDropdownOpen ? (
-                <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl space-y-3">
-                  <div className="space-y-1">
-                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "bankroz.from_date", "From Date")}</span>
-                    <Input
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => {
-                        setDatePreset("custom");
-                        setFromDate(e.target.value);
-                      }}
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "bankroz.to_date", "To Date")}</span>
-                    <Input
-                      type="date"
-                      value={toDate}
-                      onChange={(e) => {
-                        setDatePreset("custom");
-                        setToDate(e.target.value);
-                      }}
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      onClick={() => {
-                        setDatePreset("this_month");
-                        setFromDate(monthStartIso());
-                        setToDate(todayIso());
-                        setDateDropdownOpen(false);
-                        void loadReport(ledgerId, accountSearch);
-                      }}
-                    >
-                      {t(lang, "common.reset", "Reset")}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="h-8 px-3 text-xs font-bold bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 shadow-sm"
-                      onClick={() => {
-                        setDateDropdownOpen(false);
-                        void loadReport(ledgerId, accountSearch);
-                      }}
-                    >
-                      {t(lang, "god.apply", "Apply")}
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
+            {/* 6. Universal date-range picker */}
+            <div className="w-full md:w-[17rem]">
+              <ErpDatePicker
+                mode="range"
+                lang={lang}
+                value={{ from: fromDate || null, to: toDate || null }}
+                onApply={(v) => {
+                  setDatePreset("custom");
+                  setFromDate(v.from ?? monthStartIso());
+                  setToDate(v.to ?? todayIso());
+                  void loadReport(ledgerId, accountSearch);
+                }}
+              />
             </div>
 
             {/* 7. Search Input field for queries */}

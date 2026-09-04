@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Th } from "@/components/ui/translated-th";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
@@ -482,17 +483,18 @@ export default function JournalReport({
                   </button>
                 </div>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "purchase.lgr_date_from", "Date From")}</label>
-                      <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                        className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-400">{translateHeader(lang, "Date To")}</label>
-                      <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                        className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
-                    </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "datepick.date_range", "Date Range")}</label>
+                    <ErpDatePicker
+                      mode="range"
+                      lang={lang}
+                      size="sm"
+                      value={{ from: dateFrom || null, to: dateTo || null }}
+                      onApply={(v) => {
+                        setDateFrom(v.from ?? "");
+                        setDateTo(v.to ?? "");
+                      }}
+                    />
                   </div>
 
                   <div className="flex flex-col gap-1">

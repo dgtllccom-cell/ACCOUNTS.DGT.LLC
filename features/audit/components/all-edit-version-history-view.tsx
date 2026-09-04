@@ -31,6 +31,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -556,23 +557,16 @@ export function AllEditVersionHistoryView() {
         {/* Dates and Search Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-500">{t(lang, "audit.filter_from_date", "From Date")}:</span>
-              <Input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="h-8.5 w-36 text-xs bg-slate-50/50 dark:bg-slate-800"
-              />
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-500">{t(lang, "audit.filter_to_date", "To Date")}:</span>
-              <Input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="h-8.5 w-36 text-xs bg-slate-50/50 dark:bg-slate-800"
+            <div className="w-full sm:w-64">
+              <ErpDatePicker
+                mode="range"
+                lang={lang}
+                size="sm"
+                value={{ from: fromDate || null, to: toDate || null }}
+                onApply={(v) => {
+                  setFromDate(v.from ?? "");
+                  setToDate(v.to ?? "");
+                }}
               />
             </div>
 

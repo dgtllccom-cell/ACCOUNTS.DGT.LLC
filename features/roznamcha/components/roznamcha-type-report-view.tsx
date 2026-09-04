@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -819,13 +820,18 @@ export function RoznamchaTypeReportView({
         <Card className="border-slate-200/80 shadow-xs animate-in fade-in slide-in-from-top-2">
           <CardContent className="p-3.5 space-y-3">
             <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
-              <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.from_date", "From Date")}</Label>
-                <Input className="h-8 text-xs" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.to_date", "To Date")}</Label>
-                <Input className="h-8 text-xs" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              <div className="space-y-1 md:col-span-2">
+                <Label className="text-[10px] text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
+                <ErpDatePicker
+                  mode="range"
+                  lang={activeLang}
+                  size="sm"
+                  value={{ from: fromDate || null, to: toDate || null }}
+                  onApply={(v) => {
+                    setFromDate(v.from ?? monthStartIso());
+                    setToDate(v.to ?? todayIso());
+                  }}
+                />
               </div>
               {entryCategory === "all" ? (
                 <div className="space-y-1">

@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -552,14 +553,19 @@ export function RoznamchaReportView({
       {filtersOpen ? (
         <Card className="border-slate-200/80 shadow-sm xl:col-span-2">
           <CardContent className="p-4">
-            <div className="grid gap-3 xl:grid-cols-[150px_150px_220px_220px_260px_minmax(240px,1fr)_auto] xl:items-end">
+            <div className="grid gap-3 xl:grid-cols-[minmax(240px,1fr)_220px_220px_260px_minmax(240px,1fr)_auto] xl:items-end">
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">{t(lang, "ledger.from_date")}</Label>
-                <Input className="h-9 text-xs" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">{t(lang, "ledger.to_date")}</Label>
-                <Input className="h-9 text-xs" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                <Label className="text-[11px] text-muted-foreground">{t(lang, "datepick.date_range", "Date Range")}</Label>
+                <ErpDatePicker
+                  mode="range"
+                  lang={effectiveLang}
+                  size="sm"
+                  value={{ from: fromDate || null, to: toDate || null }}
+                  onApply={(v) => {
+                    setFromDate(v.from ?? monthStartIso());
+                    setToDate(v.to ?? todayIso());
+                  }}
+                />
               </div>
               <SearchSelect
                 label={t(lang, "roz.country")}

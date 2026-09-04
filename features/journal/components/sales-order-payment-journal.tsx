@@ -76,6 +76,7 @@ import { Th } from "@/components/ui/translated-th";
 import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
 import { t as tGlobal } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-grid";
@@ -4224,23 +4225,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
             <MiniFilter label="Branch" value={branchFilter} options={branchOptions as string[]} onChange={(v) => { setBranchFilter(v); setPageIndex(0); }} />
             <MiniFilter label="Currency" value={currencyFilter} options={currencyOptions as string[]} onChange={(v) => { setCurrencyFilter(v); setPageIndex(0); }} />
             
-            <div className="flex flex-col gap-1">
-              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{translateHeader(currentLanguage, "Start Date")}</span>
-              <input
-                type="date"
-                value={startDateFilter}
-                onChange={(e) => { setStartDateFilter(e.target.value); setPageIndex(0); }}
-                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none focus:border-primary"
-              />
-            </div>
-            
-            <div className="flex flex-col gap-1">
-              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{translateHeader(currentLanguage, "End Date")}</span>
-              <input
-                type="date"
-                value={endDateFilter}
-                onChange={(e) => { setEndDateFilter(e.target.value); setPageIndex(0); }}
-                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none focus:border-primary"
+            <div className="flex flex-col gap-1 min-w-[15rem]">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{tGlobal(currentLanguage, "datepick.date_range", "Date Range")}</span>
+              <ErpDatePicker
+                mode="range"
+                lang={currentLanguage}
+                size="sm"
+                value={{ from: startDateFilter || null, to: endDateFilter || null }}
+                onApply={(v) => {
+                  setStartDateFilter(v.from ?? "");
+                  setEndDateFilter(v.to ?? "");
+                  setPageIndex(0);
+                }}
               />
             </div>
           </div>

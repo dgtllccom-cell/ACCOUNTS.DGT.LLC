@@ -33,6 +33,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Th } from "@/components/ui/translated-th";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 type JournalScope = "country" | "city" | "construction";
 
@@ -614,8 +615,21 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
           {scope === "construction" ? <Select label={_("ajr.project", "Project")} value={project} options={options.projects} onChange={setProject} /> : null}
           {scope === "construction" ? <Select label={_("ajr.site", "Site")} value={site} options={options.sites} onChange={setSite} /> : null}
           {scope === "construction" ? <Select label={_("ajr.contractor", "Contractor")} value={contractor} options={options.contractors} onChange={setContractor} /> : null}
-          <DateInput label={_("ajr.from_date", "From Date")} value={fromDate} onChange={setFromDate} />
-          <DateInput label={_("ajr.to_date", "To Date")} value={toDate} onChange={setToDate} />
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">
+              {_("datepick.date_range", "Date Range")}
+            </span>
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              value={{ from: fromDate || null, to: toDate || null }}
+              onApply={(v) => {
+                setFromDate(v.from ?? "");
+                setToDate(v.to ?? "");
+              }}
+            />
+          </label>
         </div>
       ) : null}
 
@@ -999,18 +1013,6 @@ function Select({ label, value, options, onChange }: { label: string; value: str
         <option value="">{t(lang, "common.all", "All")}</option>
         {options.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
-    </label>
-  );
-}
-
-function DateInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">{label}</span>
-      <div className="relative">
-        <input type="date" value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-bold text-foreground outline-none transition-all focus:border-primary" />
-        <CalendarDays className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-      </div>
     </label>
   );
 }
