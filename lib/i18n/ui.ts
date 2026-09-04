@@ -927,6 +927,38 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "datepick.date"
+  | "datepick.date_range"
+  | "datepick.select_date"
+  | "datepick.select_range"
+  | "datepick.start_date"
+  | "datepick.end_date"
+  | "datepick.selected"
+  | "datepick.clear"
+  | "datepick.reset"
+  | "datepick.apply"
+  | "datepick.update"
+  | "datepick.cancel"
+  | "datepick.done"
+  | "datepick.today"
+  | "datepick.yesterday"
+  | "datepick.last_7_days"
+  | "datepick.last_30_days"
+  | "datepick.this_week"
+  | "datepick.last_week"
+  | "datepick.this_month"
+  | "datepick.last_month"
+  | "datepick.this_quarter"
+  | "datepick.this_year"
+  | "datepick.last_year"
+  | "datepick.all_time"
+  | "datepick.quick_ranges"
+  | "datepick.prev_month"
+  | "datepick.next_month"
+  | "datepick.err_end_before_start"
+  | "datepick.err_out_of_range"
+  | "datepick.err_required"
+  | "datepick.no_date"
   | "sms_reply.scope_global"
   | "sms_reply.scope_country"
   | "sms_reply.scope_branch"
@@ -18134,6 +18166,102 @@ const en: Dict = {
 
 
 
+
+
+  "datepick.date": "Date",
+
+
+  "datepick.date_range": "Date Range",
+
+
+  "datepick.select_date": "Select date",
+
+
+  "datepick.select_range": "Select date range",
+
+
+  "datepick.start_date": "Start Date",
+
+
+  "datepick.end_date": "End Date",
+
+
+  "datepick.selected": "Selected",
+
+
+  "datepick.clear": "Clear",
+
+
+  "datepick.reset": "Reset",
+
+
+  "datepick.apply": "Apply",
+
+
+  "datepick.update": "Update",
+
+
+  "datepick.cancel": "Cancel",
+
+
+  "datepick.done": "Done",
+
+
+  "datepick.today": "Today",
+
+
+  "datepick.yesterday": "Yesterday",
+
+
+  "datepick.last_7_days": "Last 7 Days",
+
+
+  "datepick.last_30_days": "Last 30 Days",
+
+
+  "datepick.this_week": "This Week",
+
+
+  "datepick.last_week": "Last Week",
+
+
+  "datepick.this_month": "This Month",
+
+
+  "datepick.last_month": "Last Month",
+
+
+  "datepick.this_quarter": "This Quarter",
+
+
+  "datepick.this_year": "This Year",
+
+
+  "datepick.last_year": "Last Year",
+
+
+  "datepick.all_time": "All Time",
+
+
+  "datepick.quick_ranges": "Quick Ranges",
+
+
+  "datepick.prev_month": "Previous month",
+
+
+  "datepick.next_month": "Next month",
+
+
+  "datepick.err_end_before_start": "End date cannot be before the start date.",
+
+
+  "datepick.err_out_of_range": "That date is outside the allowed range.",
+
+
+  "datepick.err_required": "Please select a date.",
+
+
+  "datepick.no_date": "No date selected",
   "sms_reply.scope_global": "Global Scope",
 
 
@@ -32653,6 +32781,102 @@ const ur: Dict = {
 
 
 
+
+
+  "datepick.date": "تاریخ",
+
+
+  "datepick.date_range": "تاریخ کی حد",
+
+
+  "datepick.select_date": "تاریخ منتخب کریں",
+
+
+  "datepick.select_range": "تاریخ کی حد منتخب کریں",
+
+
+  "datepick.start_date": "آغاز تاریخ",
+
+
+  "datepick.end_date": "اختتام تاریخ",
+
+
+  "datepick.selected": "منتخب شدہ",
+
+
+  "datepick.clear": "صاف کریں",
+
+
+  "datepick.reset": "ری سیٹ",
+
+
+  "datepick.apply": "لاگو کریں",
+
+
+  "datepick.update": "اپ ڈیٹ",
+
+
+  "datepick.cancel": "منسوخ کریں",
+
+
+  "datepick.done": "مکمل",
+
+
+  "datepick.today": "آج",
+
+
+  "datepick.yesterday": "کل",
+
+
+  "datepick.last_7_days": "پچھلے 7 دن",
+
+
+  "datepick.last_30_days": "پچھلے 30 دن",
+
+
+  "datepick.this_week": "اس ہفتے",
+
+
+  "datepick.last_week": "پچھلے ہفتے",
+
+
+  "datepick.this_month": "اس مہینے",
+
+
+  "datepick.last_month": "پچھلے مہینے",
+
+
+  "datepick.this_quarter": "اس سہ ماہی",
+
+
+  "datepick.this_year": "اس سال",
+
+
+  "datepick.last_year": "پچھلے سال",
+
+
+  "datepick.all_time": "تمام وقت",
+
+
+  "datepick.quick_ranges": "فوری حدیں",
+
+
+  "datepick.prev_month": "پچھلا مہینہ",
+
+
+  "datepick.next_month": "اگلا مہینہ",
+
+
+  "datepick.err_end_before_start": "اختتام تاریخ آغاز تاریخ سے پہلے نہیں ہو سکتی۔",
+
+
+  "datepick.err_out_of_range": "یہ تاریخ اجازت شدہ حد سے باہر ہے۔",
+
+
+  "datepick.err_required": "براہ کرم ایک تاریخ منتخب کریں۔",
+
+
+  "datepick.no_date": "کوئی تاریخ منتخب نہیں",
   "sms_reply.scope_global": "عالمی دائرہ کار",
 
 
@@ -47174,6 +47398,102 @@ const ar: Dict = {
 
 
 
+
+
+  "datepick.date": "التاريخ",
+
+
+  "datepick.date_range": "النطاق الزمني",
+
+
+  "datepick.select_date": "اختر التاريخ",
+
+
+  "datepick.select_range": "اختر النطاق الزمني",
+
+
+  "datepick.start_date": "تاريخ البدء",
+
+
+  "datepick.end_date": "تاريخ الانتهاء",
+
+
+  "datepick.selected": "المحدد",
+
+
+  "datepick.clear": "مسح",
+
+
+  "datepick.reset": "إعادة تعيين",
+
+
+  "datepick.apply": "تطبيق",
+
+
+  "datepick.update": "تحديث",
+
+
+  "datepick.cancel": "إلغاء",
+
+
+  "datepick.done": "تم",
+
+
+  "datepick.today": "اليوم",
+
+
+  "datepick.yesterday": "أمس",
+
+
+  "datepick.last_7_days": "آخر 7 أيام",
+
+
+  "datepick.last_30_days": "آخر 30 يومًا",
+
+
+  "datepick.this_week": "هذا الأسبوع",
+
+
+  "datepick.last_week": "الأسبوع الماضي",
+
+
+  "datepick.this_month": "هذا الشهر",
+
+
+  "datepick.last_month": "الشهر الماضي",
+
+
+  "datepick.this_quarter": "هذا الربع",
+
+
+  "datepick.this_year": "هذه السنة",
+
+
+  "datepick.last_year": "السنة الماضية",
+
+
+  "datepick.all_time": "كل الأوقات",
+
+
+  "datepick.quick_ranges": "نطاقات سريعة",
+
+
+  "datepick.prev_month": "الشهر السابق",
+
+
+  "datepick.next_month": "الشهر التالي",
+
+
+  "datepick.err_end_before_start": "لا يمكن أن يكون تاريخ الانتهاء قبل تاريخ البدء.",
+
+
+  "datepick.err_out_of_range": "هذا التاريخ خارج النطاق المسموح به.",
+
+
+  "datepick.err_required": "الرجاء اختيار تاريخ.",
+
+
+  "datepick.no_date": "لم يتم تحديد تاريخ",
   "sms_reply.scope_global": "النطاق العالمي",
 
 
@@ -61694,6 +62014,102 @@ const fa: Dict = {
 
 
 
+
+
+  "datepick.date": "تاریخ",
+
+
+  "datepick.date_range": "بازه تاریخ",
+
+
+  "datepick.select_date": "تاریخ را انتخاب کنید",
+
+
+  "datepick.select_range": "بازه تاریخ را انتخاب کنید",
+
+
+  "datepick.start_date": "تاریخ شروع",
+
+
+  "datepick.end_date": "تاریخ پایان",
+
+
+  "datepick.selected": "انتخاب‌شده",
+
+
+  "datepick.clear": "پاک کردن",
+
+
+  "datepick.reset": "بازنشانی",
+
+
+  "datepick.apply": "اعمال",
+
+
+  "datepick.update": "به‌روزرسانی",
+
+
+  "datepick.cancel": "لغو",
+
+
+  "datepick.done": "انجام شد",
+
+
+  "datepick.today": "امروز",
+
+
+  "datepick.yesterday": "دیروز",
+
+
+  "datepick.last_7_days": "۷ روز گذشته",
+
+
+  "datepick.last_30_days": "۳۰ روز گذشته",
+
+
+  "datepick.this_week": "این هفته",
+
+
+  "datepick.last_week": "هفته گذشته",
+
+
+  "datepick.this_month": "این ماه",
+
+
+  "datepick.last_month": "ماه گذشته",
+
+
+  "datepick.this_quarter": "این سه‌ماهه",
+
+
+  "datepick.this_year": "امسال",
+
+
+  "datepick.last_year": "سال گذشته",
+
+
+  "datepick.all_time": "همه‌ زمان‌ها",
+
+
+  "datepick.quick_ranges": "بازه‌های سریع",
+
+
+  "datepick.prev_month": "ماه قبل",
+
+
+  "datepick.next_month": "ماه بعد",
+
+
+  "datepick.err_end_before_start": "تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
+
+
+  "datepick.err_out_of_range": "این تاریخ خارج از بازه مجاز است.",
+
+
+  "datepick.err_required": "لطفاً یک تاریخ انتخاب کنید.",
+
+
+  "datepick.no_date": "تاریخی انتخاب نشده",
   "sms_reply.scope_global": "محدوده جهانی",
 
 
@@ -76220,6 +76636,102 @@ const ps: Dict = {
 
 
 
+
+
+  "datepick.date": "نېټه",
+
+
+  "datepick.date_range": "د نیټې حد",
+
+
+  "datepick.select_date": "نېټه وټاکئ",
+
+
+  "datepick.select_range": "د نیټې حد وټاکئ",
+
+
+  "datepick.start_date": "د پیل نېټه",
+
+
+  "datepick.end_date": "د پای نېټه",
+
+
+  "datepick.selected": "ټاکل شوی",
+
+
+  "datepick.clear": "پاکول",
+
+
+  "datepick.reset": "بیا تنظیم",
+
+
+  "datepick.apply": "پلي کول",
+
+
+  "datepick.update": "تازه کول",
+
+
+  "datepick.cancel": "لغوه کول",
+
+
+  "datepick.done": "بشپړ شو",
+
+
+  "datepick.today": "نن",
+
+
+  "datepick.yesterday": "پرون",
+
+
+  "datepick.last_7_days": "تېرې ۷ ورځې",
+
+
+  "datepick.last_30_days": "تېرې ۳۰ ورځې",
+
+
+  "datepick.this_week": "دا اونۍ",
+
+
+  "datepick.last_week": "تېره اونۍ",
+
+
+  "datepick.this_month": "دا میاشت",
+
+
+  "datepick.last_month": "تېره میاشت",
+
+
+  "datepick.this_quarter": "دا ربع",
+
+
+  "datepick.this_year": "سږکال",
+
+
+  "datepick.last_year": "تېر کال",
+
+
+  "datepick.all_time": "ټول وخت",
+
+
+  "datepick.quick_ranges": "چټک حدونه",
+
+
+  "datepick.prev_month": "تېره میاشت",
+
+
+  "datepick.next_month": "راتلونکې میاشت",
+
+
+  "datepick.err_end_before_start": "د پای نېټه د پیل له نېټې مخکې نشي کیدی.",
+
+
+  "datepick.err_out_of_range": "دا نېټه د اجازې له حد څخه بهر ده.",
+
+
+  "datepick.err_required": "مهرباني وکړئ یوه نېټه وټاکئ.",
+
+
+  "datepick.no_date": "کومه نېټه نه ده ټاکل شوې",
   "sms_reply.scope_global": "نړیواله ساحه",
 
 
