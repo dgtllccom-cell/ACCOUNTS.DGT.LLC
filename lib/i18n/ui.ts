@@ -927,6 +927,7 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "pjt.receipt_verify_qr"
   | "godv.erp_360_links"
   | "godv.per_page"
   | "godv.son_of"
@@ -18649,6 +18650,8 @@ const en: Dict = {
 
 
 
+
+  "pjt.receipt_verify_qr": "VERIFY",
   "godv.erp_360_links": "360° ERP Links",
 
   "godv.per_page": "/ page",
@@ -34278,6 +34281,8 @@ const ur: Dict = {
 
 
 
+
+  "pjt.receipt_verify_qr": "تصدیق",
   "godv.erp_360_links": "360° ای آر پی لنکس",
 
   "godv.per_page": "/ صفحہ",
@@ -49909,6 +49914,8 @@ const ar: Dict = {
 
 
 
+
+  "pjt.receipt_verify_qr": "تحقق",
   "godv.erp_360_links": "روابط ERP 360°",
 
   "godv.per_page": "/ صفحة",
@@ -65539,6 +65546,8 @@ const fa: Dict = {
 
 
 
+
+  "pjt.receipt_verify_qr": "تأیید",
   "godv.erp_360_links": "پیوندهای 360° ERP",
 
   "godv.per_page": "/ صفحه",
@@ -81175,6 +81184,8 @@ const ps: Dict = {
 
 
 
+
+  "pjt.receipt_verify_qr": "تایید",
   "godv.erp_360_links": "360° د ERP لینکونه",
 
   "godv.per_page": "/ پاڼه",

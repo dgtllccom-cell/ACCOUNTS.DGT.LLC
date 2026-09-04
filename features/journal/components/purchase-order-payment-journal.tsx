@@ -302,7 +302,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
         </div>
 
         <div class="sys-gen">
-          <div class="qr-placeholder">VERIFY<br/>QR</div>
+          <div class="qr-placeholder">${rt("receipt_verify_qr")}<br/>QR</div>
           ${rt("receipt_system_generated_document")}<br/>
           UUID: ${payment.id || "N/A"} | ${rt("receipt_exchange_rate_applied")}: ${paymentExRate.toFixed(4)}
         </div>
