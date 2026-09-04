@@ -927,6 +927,8 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "drdv.restore_success"
+  | "crm.dr_cr_hint"
   | "roz.receive"
   | "roz.pay"
   | "roz.exchange_rate_required"
@@ -18617,6 +18619,10 @@ const en: Dict = {
 
 
 
+
+  "drdv.restore_success": "Record successfully restored!",
+
+  "crm.dr_cr_hint": "DR = Debit (Receivable) , CR = Credit (Payable)",
   "roz.receive": "Receive",
 
   "roz.pay": "Pay",
@@ -34195,6 +34201,10 @@ const ur: Dict = {
 
 
 
+
+  "drdv.restore_success": "ریکارڈ کامیابی سے بحال ہو گیا ہے۔",
+
+  "crm.dr_cr_hint": "DR = بنام (وصولی) ، CR = جمع (ادائیگی)",
   "roz.receive": "وصول",
 
   "roz.pay": "ادائیگی",
@@ -49775,6 +49785,10 @@ const ar: Dict = {
 
 
 
+
+  "drdv.restore_success": "تمت استعادة السجل بنجاح!",
+
+  "crm.dr_cr_hint": "DR = مدين (مستحق) ، CR = دائن (مستحق الدفع)",
   "roz.receive": "استلام",
 
   "roz.pay": "دفع",
@@ -65354,6 +65368,10 @@ const fa: Dict = {
 
 
 
+
+  "drdv.restore_success": "رکورد با موفقیت بازیابی شد!",
+
+  "crm.dr_cr_hint": "DR = بدهکار (قابل‌وصول) ، CR = بستانکار (قابل‌پرداخت)",
   "roz.receive": "دریافت",
 
   "roz.pay": "پرداخت",
@@ -80939,6 +80957,10 @@ const ps: Dict = {
 
 
 
+
+  "drdv.restore_success": "ریکارډ په بریالیتوب سره بیرته راوستل شو!",
+
+  "crm.dr_cr_hint": "DR = پور اخیستونکی (ترلاسه کیدونکی) ، CR = پور ورکوونکی (وړ تادیه)",
   "roz.receive": "ترلاسه کول",
 
   "roz.pay": "تادیه",

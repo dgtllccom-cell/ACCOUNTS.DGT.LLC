@@ -90,7 +90,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
       });
       const resData = await res.json();
       if (resData.success) {
-        setRestoreMessage(lang === "ur" ? "ریکارڈ کامیابی سے بحال ہو گیا ہے۔" : "Record successfully restored!");
+        setRestoreMessage(t(lang, "drdv.restore_success", "Record successfully restored!"));
         fetchDetail();
       } else {
         setRestoreMessage(resData.error || "Failed to restore record");

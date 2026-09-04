@@ -100,7 +100,7 @@ export function SmartCrmControlCenter() {
     // Monday = 0, Sunday = 6
     const startOffset = (firstDay + 6) % 7;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const monthName = validDate.toLocaleString(lang === "ur" ? "ur-PK" : "en-US", { month: "long", year: "numeric" });
+    const monthName = validDate.toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { month: "long", year: "numeric", calendar: "gregory", numberingSystem: "latn" });
     
     return { year, month, selectedDay, startOffset, daysInMonth, monthName };
   }, [targetDate, lang]);
@@ -1383,7 +1383,7 @@ export function SmartCrmControlCenter() {
                   ))}
                   <p className="flex gap-1.5 pt-0.5 font-bold text-slate-700 dark:text-slate-300">
                     <span className="text-slate-400">•</span>
-                    <span>{lang === "ur" ? "DR = بنام ، CR = جمع" : "DR = Debit (Receivable) , CR = Credit (Payable)"}</span>
+                    <span>{t(lang, "crm.dr_cr_hint", "DR = Debit (Receivable) , CR = Credit (Payable)")}</span>
                   </p>
                 </div>
               </div>
