@@ -857,7 +857,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             title={th("Back to Dashboard")}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Back</span>
+            <span className="hidden sm:inline">{th("Back")}</span>
           </Button>
 
           <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900 shrink-0 shadow-xs">
@@ -979,7 +979,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                       }}
                       className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold"
                     >
-                      Clear
+                      {th("Clear")}
                     </button>
                     <button
                       type="button"
@@ -1080,7 +1080,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                   </div>
                   <div>
                     <p className="font-bold text-xs">{isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">PDF, DOC, Images, XLS</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("PDF, DOC, Images, XLS")}</p>
                   </div>
                 </button>
 
@@ -1119,7 +1119,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
               }}
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
             >
-              <span>{scopeRole === "super_admin" ? "👑 Super Admin" : scopeRole === "country_admin" ? "🌍 Country Admin" : "🏢 Branch User"}</span>
+              <span>{scopeRole === "super_admin" ? `👑 ${th("Super Admin")}` : scopeRole === "country_admin" ? `🌍 ${th("Country Admin")}` : `🏢 ${th("Branch User")}`}</span>
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </button>
 
@@ -1137,7 +1137,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                     scopeRole === "super_admin" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
                   )}
                 >
-                  <span className="flex items-center gap-1.5">👑 Super Admin Storage</span>
+                  <span className="flex items-center gap-1.5">👑 {th("Super Admin Storage")}</span>
                   {scopeRole === "super_admin" && <Check className="h-3.5 w-3.5" />}
                 </button>
                 <button
@@ -1151,7 +1151,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                     scopeRole === "country_admin" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
                   )}
                 >
-                  <span className="flex items-center gap-1.5">🌍 Country Admin Scope</span>
+                  <span className="flex items-center gap-1.5">🌍 {th("Country Admin Scope")}</span>
                   {scopeRole === "country_admin" && <Check className="h-3.5 w-3.5" />}
                 </button>
                 <button
@@ -1165,7 +1165,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                     scopeRole === "branch_user" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
                   )}
                 >
-                  <span className="flex items-center gap-1.5">🏢 Branch User Scope</span>
+                  <span className="flex items-center gap-1.5">🏢 {th("Branch User Scope")}</span>
                   {scopeRole === "branch_user" && <Check className="h-3.5 w-3.5" />}
                 </button>
               </div>
@@ -1312,7 +1312,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                 className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
               >
                 <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
-                <optgroup label="ERP Modules">
+                <optgroup label={th("ERP Modules")}>
                   {DEFAULT_MODULE_FOLDERS.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -1320,7 +1320,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                   ))}
                 </optgroup>
                 {customFolders.length > 0 && (
-                  <optgroup label="Custom Folders">
+                  <optgroup label={th("Custom Folders")}>
                     {customFolders.map((cf) => (
                       <option key={cf.id} value={cf.name}>
                         ⭐ {cf.name}
@@ -1542,7 +1542,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             >
               <span className="flex items-center gap-1.5 truncate">
                 <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                👑 Super Admin Storage (All)
+                👑 {th("Super Admin Storage")} ({th("All")})
               </span>
               <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
                 {documents.length}
@@ -1740,7 +1740,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                   !selectedCountryId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
                 )}
               >
-                👑 Super Admin
+                👑 {th("Super Admin")}
               </button>
 
               {/* 2. Country Link */}
@@ -2033,7 +2033,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                           <button
                             onClick={() => setPreviewDoc(doc)}
                             className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                            title="View"
+                            title={th("View")}
                           >
                             <Eye className="h-3.5 w-3.5 inline" />
                           </button>
@@ -2185,7 +2185,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                 type="text"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="e.g. Audit 2026, Personal Dossier, Customs Vouchers..."
+                placeholder={th("e.g. Audit 2026, Personal Dossier, Customs Vouchers...")}
                 className="h-9 rounded-xl text-xs"
               />
             </div>
