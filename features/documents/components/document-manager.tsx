@@ -54,6 +54,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import {
   buildDocumentDestinationLabel,
   buildDocumentFileName,
@@ -959,27 +960,14 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Date to Date (Custom)")}</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500">{th("From Date")}</label>
-                      <input
-                        type="date"
-                        value={customDateFrom}
-                        onChange={(e) => setCustomDateFrom(e.target.value)}
-                        className="w-full h-8 px-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500">{th("To Date")}</label>
-                      <input
-                        type="date"
-                        value={customDateTo}
-                        onChange={(e) => setCustomDateTo(e.target.value)}
-                        className="w-full h-8 px-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200"
-                      />
-                    </div>
-                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Date Range")}</span>
+                  <ErpDatePicker
+                    mode="range"
+                    lang={lang}
+                    size="sm"
+                    value={{ from: customDateFrom || null, to: customDateTo || null }}
+                    onApply={(v) => { setCustomDateFrom(v.from ?? ""); setCustomDateTo(v.to ?? ""); }}
+                  />
                   <div className="flex items-center justify-between pt-1">
                     <button
                       type="button"

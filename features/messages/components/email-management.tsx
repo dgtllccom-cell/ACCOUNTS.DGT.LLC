@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 type EmailFolder = "inbox" | "sent" | "draft" | "trash" | "spam" | "attachments" | "notifications" | "dashboard";
 type EmailChannel = "email" | "whatsapp" | "internal" | "notifications";
@@ -722,15 +723,15 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   disabled={loading}
                 />
 
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">{tt("email_mgmt.from_date", "From Date")}</Label>
-                    <Input type="date" className="h-9 text-xs" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">{tt("email_mgmt.to_date", "To Date")}</Label>
-                    <Input type="date" className="h-9 text-xs" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">{t(lang, "datepick.date_range", "Date Range")}</Label>
+                  <ErpDatePicker
+                    mode="range"
+                    lang={lang}
+                    size="sm"
+                    value={{ from: fromDate || null, to: toDate || null }}
+                    onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
+                  />
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-1">

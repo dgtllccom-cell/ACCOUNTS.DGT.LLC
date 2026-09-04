@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
@@ -197,7 +198,6 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
-  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
 
@@ -607,55 +607,19 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               }}
             />
           </div>
-          <div className="relative w-full md:w-auto">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-              className="h-10 w-full md:w-auto text-xs gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              {fromDate} → {toDate}
-            </Button>
-            {dateDropdownOpen ? (
-              <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl space-y-3">
-                <div className="space-y-1">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{t(activeLang, "bankroz.from_date", "From Date")}</span>
-                  <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="h-9 text-xs" />
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{t(activeLang, "bankroz.to_date", "To Date")}</span>
-                  <Input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="h-9 text-xs" />
-                </div>
-                <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 font-semibold text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    onClick={() => {
-                      setFromDate(monthStartIso());
-                      setToDate(todayIso());
-                      setDateDropdownOpen(false);
-                      if (ledgerId) void loadAccountById(ledgerId);
-                    }}
-                  >
-                    {t(activeLang, "common.reset", "Reset")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="flex-1 font-bold bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 shadow-sm"
-                    onClick={() => {
-                      setDateDropdownOpen(false);
-                      if (ledgerId) void loadAccountById(ledgerId);
-                    }}
-                  >
-                    {t(activeLang, "god.apply", "Apply")}
-                  </Button>
-                </div>
-              </div>
-            ) : null}
+          <div className="w-full md:w-[17rem]">
+            <ErpDatePicker
+              mode="range"
+              lang={activeLang}
+              size="sm"
+              applyLabel="update"
+              value={{ from: fromDate || null, to: toDate || null }}
+              onApply={(v) => {
+                setFromDate(v.from ?? monthStartIso());
+                setToDate(v.to ?? todayIso());
+                if (ledgerId) void loadAccountById(ledgerId);
+              }}
+            />
           </div>
           <Button 
             type="button" 

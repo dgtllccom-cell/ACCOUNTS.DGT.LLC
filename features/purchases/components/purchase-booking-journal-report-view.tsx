@@ -55,6 +55,7 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
@@ -947,8 +948,16 @@ function DailyFilterRow({
   const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <>
-      <DarkInput label={tt("from_date", "From Date")} type="date" value={filters.fromDate} onChange={(value) => setFilters((previous: any) => ({ ...previous, fromDate: value }))} />
-      <DarkInput label={tt("to_date", "To Date")} type="date" value={filters.toDate} onChange={(value) => setFilters((previous: any) => ({ ...previous, toDate: value }))} />
+      <div className="min-w-[15rem]">
+        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">{t(lang, "datepick.date_range", "Date Range")}</span>
+        <ErpDatePicker
+          mode="range"
+          lang={lang}
+          size="sm"
+          value={{ from: filters.fromDate || null, to: filters.toDate || null }}
+          onApply={(v) => setFilters((previous: any) => ({ ...previous, fromDate: v.from ?? "", toDate: v.to ?? "" }))}
+        />
+      </div>
       <DarkSelect label={tt("supplier", "Supplier")} value={filters.financialSupplier} options={suppliers} placeholder={tt("all_suppliers", "All Suppliers")} onChange={(value) => setFilters((previous: any) => ({ ...previous, financialSupplier: value }))} />
       <DarkSelect label={tt("currency", "Currency")} value={filters.financialCurrency} options={currencies} placeholder={tt("all", "All")} onChange={(value) => setFilters((previous: any) => ({ ...previous, financialCurrency: value }))} />
     </>

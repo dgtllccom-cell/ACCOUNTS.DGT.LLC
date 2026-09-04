@@ -25,6 +25,7 @@ const getFlag = (countryName: string) => {
 };
 import { apiDelete, apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
@@ -1221,154 +1222,20 @@ export function AccountGeneralReportView({
         <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} /> {tr("RESET")}
       </Button>
 
-      {/* Interactive Date Picker Dropdown */}
-      <div className="relative" ref={datePickerRef}>
-        <Button
-          type="button"
+      {/* Universal date-range picker */}
+      <div className="w-[15rem]">
+        <ErpDatePicker
+          mode="range"
+          lang={lang}
           size="sm"
-          variant="outline"
-          onClick={() => setDatePickerOpen(!datePickerOpen)}
-          className={cn(
-            "h-9 rounded-xl border font-bold text-xs shadow-sm flex items-center gap-2 cursor-pointer transition-all",
-            fromDate || toDate
-              ? "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:border-blue-700 dark:text-blue-300"
-              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
-          )}
-        >
-          <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-          <span>
-            {fromDate && toDate
-              ? `${fromDate} → ${toDate}`
-              : fromDate
-              ? `From: ${fromDate}`
-              : toDate
-              ? `Until: ${toDate}`
-              : `${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`}
-          </span>
-          <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
-
-        {datePickerOpen && (
-          <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl z-[99999] dark:border-slate-800 dark:bg-slate-950 animate-in fade-in zoom-in-95 duration-100">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-3">
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{t(lang, "acct.agrv_filter_by_date", "Filter by Date")}</span>
-              <button type="button" onClick={() => setDatePickerOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-1.5 mb-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setFromDate("");
-                  setToDate("");
-                  setDraftFromDate("");
-                  setDraftToDate("");
-                  setDatePickerOpen(false);
-                }}
-                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
-              >
-                {t(lang, "god.all_dates", "All Dates")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const today = new Date().toISOString().slice(0, 10);
-                  setFromDate(today);
-                  setToDate(today);
-                  setDraftFromDate(today);
-                  setDraftToDate(today);
-                  setDatePickerOpen(false);
-                }}
-                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
-              >
-                {t(lang, "god.today", "Today")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = new Date();
-                  const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
-                  const today = d.toISOString().slice(0, 10);
-                  setFromDate(firstDay);
-                  setToDate(today);
-                  setDraftFromDate(firstDay);
-                  setDraftToDate(today);
-                  setDatePickerOpen(false);
-                }}
-                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
-              >
-                {t(lang, "god.this_month", "This Month")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = new Date();
-                  const firstDay = new Date(d.getFullYear(), 0, 1).toISOString().slice(0, 10);
-                  const today = d.toISOString().slice(0, 10);
-                  setFromDate(firstDay);
-                  setToDate(today);
-                  setDraftFromDate(firstDay);
-                  setDraftToDate(today);
-                  setDatePickerOpen(false);
-                }}
-                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
-              >
-                {t(lang, "dashboard.this_year", "This Year")}
-              </button>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-500 mb-1">{t(lang, "bankroz.from_date", "From Date")}</label>
-                <input
-                  type="date"
-                  value={draftFromDate}
-                  onChange={(e) => setDraftFromDate(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-500 mb-1">{t(lang, "bankroz.to_date", "To Date")}</label>
-                <input
-                  type="date"
-                  value={draftToDate}
-                  onChange={(e) => setDraftToDate(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => {
-                  setFromDate("");
-                  setToDate("");
-                  setDraftFromDate("");
-                  setDraftToDate("");
-                  setDatePickerOpen(false);
-                }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-              >
-                {t(lang, "money_exchange.clear_button", "Clear")}
-              </button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setFromDate(draftFromDate);
-                  setToDate(draftToDate);
-                  setDatePickerOpen(false);
-                }}
-                className="h-7 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 cursor-pointer"
-              >
-                {t(lang, "acct.agrv_apply_date", "Apply Date")}
-              </Button>
-            </div>
-          </div>
-        )}
+          value={{ from: fromDate || null, to: toDate || null }}
+          onApply={(v) => {
+            setFromDate(v.from ?? "");
+            setToDate(v.to ?? "");
+            setDraftFromDate(v.from ?? "");
+            setDraftToDate(v.to ?? "");
+          }}
+        />
       </div>
 
       <Button
