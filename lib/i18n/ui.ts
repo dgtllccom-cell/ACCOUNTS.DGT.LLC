@@ -927,6 +927,11 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "goodstest.title"
+  | "goodstest.country"
+  | "goodstest.select_country"
+  | "goodstest.local_currency"
+  | "goodstest.session"
   | "wam.multi_branch_official_whatsapp"
   | "wam.select_branch_line_desc"
   | "wam.enter_branch_whatsapp_number"
@@ -18801,6 +18806,16 @@ const en: Dict = {
 
 
 
+
+  "goodstest.title": "Goods Entry Test",
+
+  "goodstest.country": "Country",
+
+  "goodstest.select_country": "Select country",
+
+  "goodstest.local_currency": "Local Currency",
+
+  "goodstest.session": "Session",
   "wam.multi_branch_official_whatsapp": "Multi-Branch Official Meta WhatsApp",
 
   "wam.select_branch_line_desc": "Select your branch line below. The system automatically connects directly to the server's verified Meta Cloud API pipeline.",
@@ -34696,6 +34711,16 @@ const ur: Dict = {
 
 
 
+
+  "goodstest.title": "گڈز اندراج ٹیسٹ",
+
+  "goodstest.country": "ملک",
+
+  "goodstest.select_country": "ملک منتخب کریں",
+
+  "goodstest.local_currency": "مقامی کرنسی",
+
+  "goodstest.session": "سیشن",
   "wam.multi_branch_official_whatsapp": "ملٹی برانچ آفیشل میٹا واٹس ایپ",
 
   "wam.select_branch_line_desc": "نیچے اپنی برانچ لائن منتخب کریں۔ سسٹم خودکار طور پر سرور کے تصدیق شدہ Meta Cloud API پائپ لائن سے براہ راست جڑ جاتا ہے۔",
@@ -50593,6 +50618,16 @@ const ar: Dict = {
 
 
 
+
+  "goodstest.title": "اختبار إدخال البضائع",
+
+  "goodstest.country": "الدولة",
+
+  "goodstest.select_country": "اختر الدولة",
+
+  "goodstest.local_currency": "العملة المحلية",
+
+  "goodstest.session": "الجلسة",
   "wam.multi_branch_official_whatsapp": "واتساب Meta الرسمي متعدد الفروع",
 
   "wam.select_branch_line_desc": "اختر خط فرعك أدناه. يتصل النظام تلقائيًا مباشرة بخط أنابيب Meta Cloud API الموثّق الخاص بالخادم.",
@@ -66489,6 +66524,16 @@ const fa: Dict = {
 
 
 
+
+  "goodstest.title": "آزمایش ثبت کالا",
+
+  "goodstest.country": "کشور",
+
+  "goodstest.select_country": "انتخاب کشور",
+
+  "goodstest.local_currency": "ارز محلی",
+
+  "goodstest.session": "نشست",
   "wam.multi_branch_official_whatsapp": "واتساپ رسمی Meta چند شعبه‌ای",
 
   "wam.select_branch_line_desc": "خط شعبه خود را در زیر انتخاب کنید. سیستم به‌طور خودکار مستقیماً به خط لوله تأییدشده Meta Cloud API سرور متصل می‌شود.",
@@ -82391,6 +82436,16 @@ const ps: Dict = {
 
 
 
+
+  "goodstest.title": "د توکو ننوتنه ازموینه",
+
+  "goodstest.country": "هېواد",
+
+  "goodstest.select_country": "هېواد وټاکئ",
+
+  "goodstest.local_currency": "ځايي اسعار",
+
+  "goodstest.session": "ناسته",
   "wam.multi_branch_official_whatsapp": "د څو څانګو رسمي Meta واتساپ",
 
   "wam.select_branch_line_desc": "خپله د څانګې کرښه لاندې وټاکئ. سیسټم اتومات مستقیم د سرور تایید شوي Meta Cloud API پایپ لاین سره نښلي.",

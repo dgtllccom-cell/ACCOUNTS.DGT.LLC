@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { GoodsEntryCard, type GoodsEntryValue } from "@/features/inventory/components/GoodsEntryCard";
 import { listCountries } from "@/features/locations/location-api";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 const DEFAULT: GoodsEntryValue = {
   countryId: "",
@@ -27,6 +29,8 @@ const DEFAULT: GoodsEntryValue = {
 };
 
 export default function GoodsEntryTestClient({ session }: { session: any }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, ("goodstest." + key) as never, fallback);
   const [countries, setCountries] = useState<Array<{ id: string; name: string; currency_code: string }>>([]);
   const [value, setValue] = useState<GoodsEntryValue>({ ...DEFAULT });
 
@@ -48,16 +52,16 @@ export default function GoodsEntryTestClient({ session }: { session: any }) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-card p-4">
-        <div className="text-sm font-semibold">Goods Entry Test</div>
+        <div className="text-sm font-semibold">{tt("title", "Goods Entry Test")}</div>
         <div className="mt-2 grid gap-2 md:grid-cols-3">
           <label className="grid gap-1">
-            <span className="text-xs text-muted-foreground">Country</span>
+            <span className="text-xs text-muted-foreground">{tt("country", "Country")}</span>
             <select
               value={value.countryId}
               onChange={(e) => setValue((v) => ({ ...v, countryId: e.target.value, goodsId: "" }))}
               className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
             >
-              <option value="">Select country</option>
+              <option value="">{tt("select_country", "Select country")}</option>
               {countries.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -66,11 +70,11 @@ export default function GoodsEntryTestClient({ session }: { session: any }) {
             </select>
           </label>
           <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-            <div className="text-[11px] text-muted-foreground">Local Currency</div>
+            <div className="text-[11px] text-muted-foreground">{tt("local_currency", "Local Currency")}</div>
             <div className="font-semibold">{country?.currency_code ?? "—"}</div>
           </div>
           <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-            <div className="text-[11px] text-muted-foreground">Session</div>
+            <div className="text-[11px] text-muted-foreground">{tt("session", "Session")}</div>
             <div className="font-semibold">{session?.email ?? "-"}</div>
           </div>
         </div>
