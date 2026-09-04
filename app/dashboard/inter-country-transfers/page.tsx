@@ -408,7 +408,7 @@ export default function InterCountryTransfersPage() {
                       onChange={(e) => setSourceBankCashLedgerId(e.target.value)}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                     >
-                      <option value="">-- Select Source Ledger --</option>
+                      <option value="">-- {t("Select Source Ledger")} --</option>
                       {ledgers
                         .filter((l) => !sourceCountryId || l.country_id === sourceCountryId)
                         .map((l) => (
@@ -426,7 +426,7 @@ export default function InterCountryTransfersPage() {
                       onChange={(e) => setSourcePartyLedgerId(e.target.value)}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                     >
-                      <option value="">-- Select Party Ledger --</option>
+                      <option value="">-- {t("Select Party Ledger")} --</option>
                       {ledgers
                         .filter((l) => !sourceCountryId || l.country_id === sourceCountryId)
                         .map((l) => (
@@ -473,7 +473,7 @@ export default function InterCountryTransfersPage() {
                       onChange={(e) => setDestBankCashLedgerId(e.target.value)}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                     >
-                      <option value="">-- Select Destination Ledger --</option>
+                      <option value="">-- {t("Select Destination Ledger")} --</option>
                       {ledgers
                         .filter((l) => !destCountryId || l.country_id === destCountryId)
                         .map((l) => (
@@ -491,7 +491,7 @@ export default function InterCountryTransfersPage() {
                       onChange={(e) => setDestPartyLedgerId(e.target.value)}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                     >
-                      <option value="">-- Select Destination Party --</option>
+                      <option value="">-- {t("Select Destination Party")} --</option>
                       {ledgers
                         .filter((l) => !destCountryId || l.country_id === destCountryId)
                         .map((l) => (
@@ -704,13 +704,13 @@ export default function InterCountryTransfersPage() {
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label>Destination Debit Ledger *</Label>
+                <Label>{t("Destination Debit Ledger")} *</Label>
                 <select
                   value={acceptDebitLedgerId}
                   onChange={(e) => setAcceptDebitLedgerId(e.target.value)}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="">-- Select Debit Ledger --</option>
+                  <option value="">-- {t("Select Debit Ledger")} --</option>
                   {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name} ({l.currency})
@@ -720,13 +720,13 @@ export default function InterCountryTransfersPage() {
               </div>
 
               <div className="space-y-1">
-                <Label>Destination Credit Ledger *</Label>
+                <Label>{t("Destination Credit Ledger")} *</Label>
                 <select
                   value={acceptCreditLedgerId}
                   onChange={(e) => setAcceptCreditLedgerId(e.target.value)}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="">-- Select Credit Ledger --</option>
+                  <option value="">-- {t("Select Credit Ledger")} --</option>
                   {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name} ({l.currency})
@@ -756,7 +756,7 @@ export default function InterCountryTransfersPage() {
               <XCircle className="h-5 w-5" /> Reject Transfer {selectedTransfer.transfer_no}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Please enter the reason for rejecting this transfer:
+              {t("Please enter the reason for rejecting this transfer:")}
             </p>
 
             <div className="space-y-2">
@@ -786,10 +786,10 @@ export default function InterCountryTransfersPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-background rounded-lg p-6 max-w-md w-full border border-border shadow-xl space-y-4">
             <h3 className="text-lg font-bold flex items-center gap-2 text-primary">
-              <Edit className="h-5 w-5" /> Edit Destination Accounts
+              <Edit className="h-5 w-5" /> {t("Edit Destination Accounts")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Modify the assigned receiving ledger before accepting:
+              {t("Modify the assigned receiving ledger before accepting:")}
             </p>
 
             <div className="space-y-3">
@@ -816,7 +816,7 @@ export default function InterCountryTransfersPage() {
                   onChange={(e) => setEditPartyLedgerId(e.target.value)}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="">-- Select Party Ledger --</option>
+                  <option value="">-- {t("Select Party Ledger")} --</option>
                   {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name} ({l.currency})
