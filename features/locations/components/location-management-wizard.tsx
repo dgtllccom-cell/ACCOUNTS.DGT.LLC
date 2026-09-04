@@ -1831,7 +1831,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <div className="space-y-1.5">
                   <Label>{tt("loc.country_name_label", "Country Name")} *</Label>
                   <Input
-                    placeholder="e.g. Pakistan"
+                    placeholder={tt("loc.country_name_ph", "e.g. Pakistan")}
                     value={formCountry.name}
                     onChange={(e) => setFormCountry((prev) => ({ ...prev, name: e.target.value }))}
                   />
@@ -1839,7 +1839,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <div className="space-y-1.5">
                   <Label>{tt("loc.country_code_label", "Country Code (ISO2)")} *</Label>
                   <Input
-                    placeholder="e.g. PK"
+                    placeholder={tt("loc.country_code_ph", "e.g. PK")}
                     maxLength={2}
                     value={formCountry.iso2}
                     onChange={(e) => setFormCountry((prev) => ({ ...prev, iso2: e.target.value.toUpperCase() }))}
@@ -1878,7 +1878,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <div className="space-y-1.5">
                   <Label>{tt("loc.state_name_label", "State / Province Name")} *</Label>
                   <Input
-                    placeholder="e.g. Balochistan"
+                    placeholder={tt("loc.state_name_ph", "e.g. Balochistan")}
                     value={formState.name}
                     onChange={(e) => setFormState((prev) => ({ ...prev, name: e.target.value }))}
                   />
@@ -1888,7 +1888,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   <div className="flex items-center gap-1">
                     <span className="rounded-md border bg-muted px-3 py-2 font-mono text-xs font-bold">{modalStateCodePrefix || "XX-"}</span>
                     <Input
-                      placeholder="e.g. BA"
+                      placeholder={tt("loc.state_code_ph", "e.g. BA")}
                       value={formState.codeSuffix}
                       onChange={(e) => setFormState((prev) => ({ ...prev, codeSuffix: e.target.value.toUpperCase() }))}
                     />
@@ -1940,7 +1940,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <div className="space-y-1.5">
                   <Label>{tt("loc.city_name_label", "City Name")} *</Label>
                   <Input
-                    placeholder="e.g. Quetta"
+                    placeholder={tt("loc.city_name_ph", "e.g. Quetta")}
                     value={formCity.name}
                     onChange={(e) => setFormCity((prev) => ({ ...prev, name: e.target.value }))}
                   />
@@ -1950,7 +1950,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   <div className="flex items-center gap-1">
                     <span className="rounded-md border bg-muted px-3 py-2 font-mono text-xs font-bold">{modalDistrictCodePrefix || "XX-XX-"}</span>
                     <Input
-                      placeholder="e.g. QUE"
+                      placeholder={tt("loc.city_code_ph", "e.g. QUE")}
                       value={formCity.codeSuffix}
                       onChange={(e) => setFormCity((prev) => ({ ...prev, codeSuffix: e.target.value.toUpperCase() }))}
                     />
@@ -2013,7 +2013,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <div className="space-y-1.5">
                   <Label>{tt("loc.dist_name_label", "District / Tehsil Name")} *</Label>
                   <Input
-                    placeholder="e.g. Quetta District"
+                    placeholder={tt("loc.dist_name_ph", "e.g. Quetta District")}
                     value={formTehsil.name}
                     onChange={(e) => setFormTehsil((prev) => ({ ...prev, name: e.target.value }))}
                   />
@@ -2024,7 +2024,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     <div className="flex items-center gap-1">
                       <span className="rounded-md border bg-muted px-2 py-2 font-mono text-[11px] font-bold">{modalTehsilCodePrefix || "XX-XX-XX-"}</span>
                       <Input
-                        placeholder="e.g. QD"
+                        placeholder={tt("loc.code_suffix_ph", "e.g. QD")}
                         value={formTehsil.codeSuffix}
                         onChange={(e) => setFormTehsil((prev) => ({ ...prev, codeSuffix: e.target.value.toUpperCase() }))}
                       />

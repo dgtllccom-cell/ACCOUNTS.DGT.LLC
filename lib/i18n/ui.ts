@@ -927,6 +927,14 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "loc.country_name_ph"
+  | "loc.country_code_ph"
+  | "loc.state_name_ph"
+  | "loc.state_code_ph"
+  | "loc.city_name_ph"
+  | "loc.city_code_ph"
+  | "loc.dist_name_ph"
+  | "loc.code_suffix_ph"
   | "pjt.receipt_verify_qr"
   | "godv.erp_360_links"
   | "godv.per_page"
@@ -18651,6 +18659,22 @@ const en: Dict = {
 
 
 
+
+  "loc.country_name_ph": "e.g. Pakistan",
+
+  "loc.country_code_ph": "e.g. PK",
+
+  "loc.state_name_ph": "e.g. Balochistan",
+
+  "loc.state_code_ph": "e.g. BA",
+
+  "loc.city_name_ph": "e.g. Quetta",
+
+  "loc.city_code_ph": "e.g. QUE",
+
+  "loc.dist_name_ph": "e.g. Quetta District",
+
+  "loc.code_suffix_ph": "e.g. QD",
   "pjt.receipt_verify_qr": "VERIFY",
   "godv.erp_360_links": "360° ERP Links",
 
@@ -34282,6 +34306,22 @@ const ur: Dict = {
 
 
 
+
+  "loc.country_name_ph": "مثلاً پاکستان",
+
+  "loc.country_code_ph": "مثلاً PK",
+
+  "loc.state_name_ph": "مثلاً بلوچستان",
+
+  "loc.state_code_ph": "مثلاً BA",
+
+  "loc.city_name_ph": "مثلاً کوئٹہ",
+
+  "loc.city_code_ph": "مثلاً QUE",
+
+  "loc.dist_name_ph": "مثلاً کوئٹہ ڈسٹرکٹ",
+
+  "loc.code_suffix_ph": "مثلاً QD",
   "pjt.receipt_verify_qr": "تصدیق",
   "godv.erp_360_links": "360° ای آر پی لنکس",
 
@@ -49915,6 +49955,22 @@ const ar: Dict = {
 
 
 
+
+  "loc.country_name_ph": "مثال: باكستان",
+
+  "loc.country_code_ph": "مثال: PK",
+
+  "loc.state_name_ph": "مثال: بلوشستان",
+
+  "loc.state_code_ph": "مثال: BA",
+
+  "loc.city_name_ph": "مثال: كويتا",
+
+  "loc.city_code_ph": "مثال: QUE",
+
+  "loc.dist_name_ph": "مثال: مقاطعة كويتا",
+
+  "loc.code_suffix_ph": "مثال: QD",
   "pjt.receipt_verify_qr": "تحقق",
   "godv.erp_360_links": "روابط ERP 360°",
 
@@ -65547,6 +65603,22 @@ const fa: Dict = {
 
 
 
+
+  "loc.country_name_ph": "مثال: پاکستان",
+
+  "loc.country_code_ph": "مثال: PK",
+
+  "loc.state_name_ph": "مثال: بلوچستان",
+
+  "loc.state_code_ph": "مثال: BA",
+
+  "loc.city_name_ph": "مثال: کویته",
+
+  "loc.city_code_ph": "مثال: QUE",
+
+  "loc.dist_name_ph": "مثال: ولسوالی کویته",
+
+  "loc.code_suffix_ph": "مثال: QD",
   "pjt.receipt_verify_qr": "تأیید",
   "godv.erp_360_links": "پیوندهای 360° ERP",
 
@@ -81185,6 +81257,22 @@ const ps: Dict = {
 
 
 
+
+  "loc.country_name_ph": "بېلګه: پاکستان",
+
+  "loc.country_code_ph": "بېلګه: PK",
+
+  "loc.state_name_ph": "بېلګه: بلوچستان",
+
+  "loc.state_code_ph": "بېلګه: BA",
+
+  "loc.city_name_ph": "بېلګه: کویټه",
+
+  "loc.city_code_ph": "بېلګه: QUE",
+
+  "loc.dist_name_ph": "بېلګه: د کویټې ولسوالۍ",
+
+  "loc.code_suffix_ph": "بېلګه: QD",
   "pjt.receipt_verify_qr": "تایید",
   "godv.erp_360_links": "360° د ERP لینکونه",
 
