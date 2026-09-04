@@ -149,7 +149,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
   if (!data || !data.deletedRecord) {
     return (
       <div className="mx-auto w-full max-w-[1720px] p-12 text-center text-slate-500">
-        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Record Not Found</h2>
+        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">{th("Record Not Found")}</h2>
         <Button onClick={() => router.push("/dashboard/audit/deleted-records")} className="mt-4">
           {t(lang, "audit.back_to_deleted", "Back to Deleted Records")}
         </Button>
@@ -377,12 +377,12 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
                         <span className="font-bold text-slate-900 dark:text-white text-[11.5px]">
-                          {isCreated ? `Original Created v1.0` : isDel ? `Deleted v${event.version_number || i + 1}.0` : `Edited v${event.version_number || i + 1}.0`}
+                          {isCreated ? `${th("Original Created")} v1.0` : isDel ? `${th("Deleted")} v${event.version_number || i + 1}.0` : `${th("Edited")} v${event.version_number || i + 1}.0`}
                         </span>
                         <span className={`px-1.5 py-0.2 rounded text-[9px] font-black ${
                           isDel ? "bg-rose-100 text-rose-700" : isCreated ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                         }`}>
-                          {isDel ? "Deleted" : isCreated ? "Created" : "Edited"}
+                          {isDel ? th("Deleted") : isCreated ? th("Created") : th("Edited")}
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -415,47 +415,47 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
           <div className="space-y-2.5 text-xs">
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Bill No.</span>
+              <span className="font-bold text-slate-500">{th("Bill No.")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-white">{billNo}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Party</span>
+              <span className="font-bold text-slate-500">{th("Party")}</span>
               <span className="font-bold text-slate-900 dark:text-white">{partyName}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Purchase Amount</span>
+              <span className="font-bold text-slate-500">{th("Purchase Amount")}</span>
               <span className="font-mono font-black text-slate-900 dark:text-white">{Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Currency</span>
+              <span className="font-bold text-slate-500">{th("Currency")}</span>
               <span className="font-bold text-slate-900 dark:text-white">{currency}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Exchange Rate</span>
+              <span className="font-bold text-slate-500">{th("Exchange Rate")}</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{exchangeRate}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Quantity</span>
+              <span className="font-bold text-slate-500">{th("Quantity")}</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{quantity}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Debit Account</span>
+              <span className="font-bold text-slate-500">{th("Debit Account")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">{debitAccount}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-500">Credit Account</span>
+              <span className="font-bold text-slate-500">{th("Credit Account")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">{creditAccount}</span>
             </div>
 
             <div className="py-1">
-              <span className="block font-bold text-slate-500 mb-0.5">Narration</span>
+              <span className="block font-bold text-slate-500 mb-0.5">{th("Narration")}</span>
               <p className="text-slate-700 dark:text-slate-300 italic text-[11px] bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 {narration}
               </p>
@@ -474,60 +474,60 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
           <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Deletion Reason</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Deletion Reason")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{rec.reason || "Duplicate Entry"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Date & Time</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Date & Time")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px]">
                 {new Date(rec.deleted_at || rec.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
               </span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Deleted By</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Deleted By")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{rec.user_name || "—"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">IP Address</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("IP Address")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300">{rec.ip_address || "192.168.10.25"}</span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Username</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Username")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300">@{rec.user_id || "superadmin"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Device</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Device")}</span>
               <span className="text-slate-700 dark:text-slate-300 text-[10.5px]">{rec.device_session || "Windows 11 / Chrome 127"}</span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">User ID</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("User ID")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300">USR-0001</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Session ID</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Session ID")}</span>
               <span className="font-mono text-slate-500 text-[10px] truncate max-w-[120px]" title={rec.session_id}>
                 {rec.session_id || "SID-9f3c2e7b5e1d"}
               </span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Role</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Role")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">{rec.user_role || "—"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Approval Reference</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Approval Reference")}</span>
               <span className="font-mono font-bold text-blue-600 text-[10.5px]">{rec.approval_reference || "APP-8286-3344"}</span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Country</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Country")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">{rec.country_name || "Pakistan"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">Branch</span>
+              <span className="block text-[10px] font-bold text-slate-400">{th("Branch")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">{rec.branch_name || "Pakistan Main Branch"}</span>
             </div>
           </div>
@@ -598,7 +598,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         isDel ? "bg-rose-100 text-rose-700" : isCreated ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                       }`}>
-                        {isDel ? "Deleted" : isCreated ? "Created" : "Edited"}
+                        {isDel ? th("Deleted") : isCreated ? th("Created") : th("Edited")}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 font-mono text-slate-700 dark:text-slate-300">
@@ -611,10 +611,10 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
                       {v.user_role || "Admin"}
                     </td>
                     <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                      {isCreated ? "Initial purchase bill created" : isDel ? (v.reason || "Deleted due to duplication") : `Updated ${diffs.length || 3} fields`}
+                      {isCreated ? th("Initial record created") : isDel ? (v.reason || th("Deleted")) : `${th("Updated")} ${diffs.length || 3} ${th("fields")}`}
                     </td>
                     <td className="py-2.5 px-3 text-center font-bold font-mono">
-                      {isCreated ? "9 fields" : isDel ? "—" : `${diffs.length || 2} fields`}
+                      {isCreated ? `9 ${th("fields")}` : isDel ? "—" : `${diffs.length || 2} ${th("fields")}`}
                     </td>
                     <td className="py-2.5 px-3.5 text-center">
                       {!isCreated && !isDel ? (
