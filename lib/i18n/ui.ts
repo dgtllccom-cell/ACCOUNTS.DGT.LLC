@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dtr.total"
+  | "dtr.active"
+  | "dtr.inactive"
+  | "dtr.delete_document_type"
+  | "dtr.code_ph"
+  | "dtr.name_ph"
+  | "dtr.description_ph"
   | "vcm.version_action"
   | "vcm.edited_at"
   | "vcm.edited_by"
@@ -18720,6 +18727,20 @@ const en: Dict = {
 
 
 
+
+  "dtr.total": "TOTAL",
+
+  "dtr.active": "ACTIVE",
+
+  "dtr.inactive": "INACTIVE",
+
+  "dtr.delete_document_type": "Delete Document Type",
+
+  "dtr.code_ph": "e.g. DOC-BOL / DOC-INV / DOC-BL",
+
+  "dtr.name_ph": "e.g. Bill of Lading (B/L) / Commercial Invoice",
+
+  "dtr.description_ph": "Optional description / document guidelines...",
   "vcm.version_action": "Version Action",
 
   "vcm.edited_at": "Edited At",
@@ -34475,6 +34496,20 @@ const ur: Dict = {
 
 
 
+
+  "dtr.total": "کل",
+
+  "dtr.active": "فعال",
+
+  "dtr.inactive": "غیر فعال",
+
+  "dtr.delete_document_type": "دستاویز کی قسم حذف کریں",
+
+  "dtr.code_ph": "مثلاً DOC-BOL / DOC-INV / DOC-BL",
+
+  "dtr.name_ph": "مثلاً بل آف لیڈنگ (B/L) / کمرشل انوائس",
+
+  "dtr.description_ph": "اختیاری تفصیل / دستاویز رہنما اصول...",
   "vcm.version_action": "ورژن ایکشن",
 
   "vcm.edited_at": "ترمیم بوقت",
@@ -50232,6 +50267,20 @@ const ar: Dict = {
 
 
 
+
+  "dtr.total": "الإجمالي",
+
+  "dtr.active": "نشط",
+
+  "dtr.inactive": "غير نشط",
+
+  "dtr.delete_document_type": "حذف نوع المستند",
+
+  "dtr.code_ph": "مثال: DOC-BOL / DOC-INV / DOC-BL",
+
+  "dtr.name_ph": "مثال: بوليصة الشحن (B/L) / فاتورة تجارية",
+
+  "dtr.description_ph": "وصف اختياري / إرشادات المستند...",
   "vcm.version_action": "إجراء الإصدار",
 
   "vcm.edited_at": "تم التعديل في",
@@ -65988,6 +66037,20 @@ const fa: Dict = {
 
 
 
+
+  "dtr.total": "مجموع",
+
+  "dtr.active": "فعال",
+
+  "dtr.inactive": "غیرفعال",
+
+  "dtr.delete_document_type": "حذف نوع سند",
+
+  "dtr.code_ph": "مثال: DOC-BOL / DOC-INV / DOC-BL",
+
+  "dtr.name_ph": "مثال: بارنامه (B/L) / فاکتور تجاری",
+
+  "dtr.description_ph": "توضیح اختیاری / راهنمای سند...",
   "vcm.version_action": "اقدام نسخه",
 
   "vcm.edited_at": "ویرایش‌شده در",
@@ -81750,6 +81813,20 @@ const ps: Dict = {
 
 
 
+
+  "dtr.total": "ټول",
+
+  "dtr.active": "فعال",
+
+  "dtr.inactive": "غیرفعال",
+
+  "dtr.delete_document_type": "د سند ډول حذف کول",
+
+  "dtr.code_ph": "بېلګه: DOC-BOL / DOC-INV / DOC-BL",
+
+  "dtr.name_ph": "بېلګه: د بار لیک (B/L) / سوداګریز انوائس",
+
+  "dtr.description_ph": "اختیاري توضیح / د سند لارښوونې...",
   "vcm.version_action": "د نسخې کړنه",
 
   "vcm.edited_at": "سمول شوی په",

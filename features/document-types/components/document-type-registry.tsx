@@ -123,15 +123,15 @@ export function DocumentTypeRegistry() {
 
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">TOTAL</div>
+            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{tt("dtr.total", "TOTAL")}</div>
             <div className="text-2xl font-bold text-blue-950 dark:text-blue-200 mt-1">{summary.total}</div>
           </div>
           <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">ACTIVE</div>
+            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{tt("dtr.active", "ACTIVE")}</div>
             <div className="text-2xl font-bold text-emerald-950 dark:text-emerald-200 mt-1">{summary.active}</div>
           </div>
           <div className="bg-rose-50/70 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">INACTIVE</div>
+            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{tt("dtr.inactive", "INACTIVE")}</div>
             <div className="text-2xl font-bold text-rose-950 dark:text-rose-200 mt-1">{summary.inactive}</div>
           </div>
         </div>
@@ -171,7 +171,7 @@ export function DocumentTypeRegistry() {
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <button onClick={() => handleDelete(type.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title="Delete Document Type">
+                        <button onClick={() => handleDelete(type.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title={tt("dtr.delete_document_type", "Delete Document Type")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -201,7 +201,7 @@ export function DocumentTypeRegistry() {
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("doctype.type_code", "Type Code")} *</label>
               <Input
-                placeholder="e.g. DOC-BOL / DOC-INV / DOC-BL"
+                placeholder={tt("dtr.code_ph", "e.g. DOC-BOL / DOC-INV / DOC-BL")}
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 required
@@ -211,7 +211,7 @@ export function DocumentTypeRegistry() {
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("doctype.type_name", "Document Type Name")} *</label>
               <Input
-                placeholder="e.g. Bill of Lading (B/L) / Commercial Invoice"
+                placeholder={tt("dtr.name_ph", "e.g. Bill of Lading (B/L) / Commercial Invoice")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -221,7 +221,7 @@ export function DocumentTypeRegistry() {
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("common.description", "Description")}</label>
               <Input
-                placeholder="Optional description / document guidelines..."
+                placeholder={tt("dtr.description_ph", "Optional description / document guidelines...")}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
