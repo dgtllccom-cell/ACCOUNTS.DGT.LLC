@@ -204,7 +204,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "nav.dashboard")}</h1>
           <p className="text-sm text-muted-foreground">
-            Live ERP overview from production tables: accounts, ledgers, roznamcha, purchases, sales, and shipping.
+            {t(lang, "dash.overview_subtitle", "Live ERP overview from production tables: accounts, ledgers, roznamcha, purchases, sales, and shipping.")}
           </p>
         </div>
 
@@ -215,7 +215,7 @@ export default async function DashboardPage() {
             </Link>
           </Button>
           <Button asChild>
-            <Link href="/dashboard/accounts/setup">New Account</Link>
+            <Link href="/dashboard/accounts/setup">{t(lang, "dash.new_account_link", "New Account")}</Link>
           </Button>
         </div>
       </section>
@@ -223,7 +223,7 @@ export default async function DashboardPage() {
       {!data.databaseReady ? (
         <Card className="border-amber-200 bg-amber-50 text-amber-900">
           <CardContent className="p-4 text-sm font-semibold">
-            Database summary could not load: {data.error}
+            {t(lang, "dash.db_summary_failed", "Database summary could not load:")} {data.error}
           </CardContent>
         </Card>
       ) : null}
@@ -235,10 +235,10 @@ export default async function DashboardPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-primary" />
-                Experimental Setup: Test Accounts
+                {t(lang, "dash.experimental_setup_title", "Experimental Setup: Test Accounts")}
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Use these credentials to quickly log in and test multi-country behaviors.
+                {t(lang, "dash.experimental_setup_sub", "Use these credentials to quickly log in and test multi-country behaviors.")}
               </p>
             </CardHeader>
             <CardContent>
@@ -269,17 +269,17 @@ export default async function DashboardPage() {
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Countries" value={String(data.counts.countries)} icon={Database} />
+        <StatCard label={t(lang, "dash.countries_label", "Countries")} value={String(data.counts.countries)} icon={Database} />
         <StatCard label={t(lang, "dash.total_branches")} value={String(data.counts.branches)} icon={GitBranch} />
         <StatCard label={t(lang, "dash.total_users")} value={String(data.counts.users)} icon={Users} />
-        <StatCard label="Account Master" value={String(data.counts.accounts)} icon={Banknote} />
+        <StatCard label={t(lang, "dash.cov_account_master", "Account Master")} value={String(data.counts.accounts)} icon={Banknote} />
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Ledgers" value={String(data.counts.ledgers)} icon={ReceiptText} />
-        <StatCard label="Roznamcha Entries" value={String(data.counts.roznamcha)} icon={ShieldCheck} />
-        <StatCard label="Purchase Orders" value={String(data.counts.purchases)} icon={ShoppingCart} />
-        <StatCard label="Shipping Records" value={String(data.counts.shipping)} icon={Ship} />
+        <StatCard label={t(lang, "dash.ledgers_label", "Ledgers")} value={String(data.counts.ledgers)} icon={ReceiptText} />
+        <StatCard label={t(lang, "dash.roznamcha_entries_label", "Roznamcha Entries")} value={String(data.counts.roznamcha)} icon={ShieldCheck} />
+        <StatCard label={t(lang, "dash.purchase_orders_label", "Purchase Orders")} value={String(data.counts.purchases)} icon={ShoppingCart} />
+        <StatCard label={t(lang, "dash.shipping_records_label", "Shipping Records")} value={String(data.counts.shipping)} icon={Ship} />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
@@ -325,7 +325,7 @@ export default async function DashboardPage() {
         <Card className="xl:col-span-3">
           <CardHeader>
             <CardTitle>{t(lang, "dash.recent_transactions")}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Latest live Roznamcha entries from database.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t(lang, "dash.recent_roznamcha_sub", "Latest live Roznamcha entries from database.")}</p>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -373,15 +373,15 @@ export default async function DashboardPage() {
                 <BarChart className="h-8 w-8" />
               </div>
               <div>
-                <h3 className="text-xl font-bold tracking-tight text-foreground">Enterprise Reporting Hub</h3>
+                <h3 className="text-xl font-bold tracking-tight text-foreground">{t(lang, "dash.reporting_hub_title", "Enterprise Reporting Hub")}</h3>
                 <p className="mt-1 text-sm text-muted-foreground max-w-xl">
-                  Access comprehensive Audit Trail Logs, Approval Workflows, Financial Analytics, and custom general reports all in one place.
+                  {t(lang, "dash.reporting_hub_sub", "Access comprehensive Audit Trail Logs, Approval Workflows, Financial Analytics, and custom general reports all in one place.")}
                 </p>
               </div>
             </div>
             <Button asChild size="lg" className="shrink-0 shadow-lg shadow-primary/20 w-full sm:w-auto">
               <Link href="/dashboard/reports">
-                Open Reports Hub <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+                {t(lang, "dash.open_reports_hub", "Open Reports Hub")} <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
               </Link>
             </Button>
           </CardContent>

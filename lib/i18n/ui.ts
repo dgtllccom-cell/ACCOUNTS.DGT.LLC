@@ -927,6 +927,20 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dash.overview_subtitle"
+  | "dash.new_account_link"
+  | "dash.db_summary_failed"
+  | "dash.experimental_setup_title"
+  | "dash.experimental_setup_sub"
+  | "dash.countries_label"
+  | "dash.ledgers_label"
+  | "dash.roznamcha_entries_label"
+  | "dash.purchase_orders_label"
+  | "dash.shipping_records_label"
+  | "dash.recent_roznamcha_sub"
+  | "dash.reporting_hub_title"
+  | "dash.reporting_hub_sub"
+  | "dash.open_reports_hub"
   | "purchase.super_admin_control"
   | "purchase.draft_badge"
   | "purchase.save_short"
@@ -18346,6 +18360,34 @@ const en: Dict = {
 
 
 
+
+  "dash.overview_subtitle": "Live ERP overview from production tables: accounts, ledgers, roznamcha, purchases, sales, and shipping.",
+
+  "dash.new_account_link": "New Account",
+
+  "dash.db_summary_failed": "Database summary could not load:",
+
+  "dash.experimental_setup_title": "Experimental Setup: Test Accounts",
+
+  "dash.experimental_setup_sub": "Use these credentials to quickly log in and test multi-country behaviors.",
+
+  "dash.countries_label": "Countries",
+
+  "dash.ledgers_label": "Ledgers",
+
+  "dash.roznamcha_entries_label": "Roznamcha Entries",
+
+  "dash.purchase_orders_label": "Purchase Orders",
+
+  "dash.shipping_records_label": "Shipping Records",
+
+  "dash.recent_roznamcha_sub": "Latest live Roznamcha entries from database.",
+
+  "dash.reporting_hub_title": "Enterprise Reporting Hub",
+
+  "dash.reporting_hub_sub": "Access comprehensive Audit Trail Logs, Approval Workflows, Financial Analytics, and custom general reports all in one place.",
+
+  "dash.open_reports_hub": "Open Reports Hub",
   "purchase.super_admin_control": "SUPER ADMIN CONTROL",
 
 
@@ -33416,6 +33458,34 @@ const ur: Dict = {
 
 
 
+
+  "dash.overview_subtitle": "پروڈکشن ٹیبلز سے لائیو ERP جائزہ: اکاؤنٹس، لیجرز، روزنامچہ، خریداری، فروخت، اور شپنگ۔",
+
+  "dash.new_account_link": "نیا اکاؤنٹ",
+
+  "dash.db_summary_failed": "ڈیٹا بیس خلاصہ لوڈ نہیں ہو سکا:",
+
+  "dash.experimental_setup_title": "تجرباتی سیٹ اپ: ٹیسٹ اکاؤنٹس",
+
+  "dash.experimental_setup_sub": "ان اسناد کو تیزی سے لاگ ان کرنے اور ملٹی کنٹری رویوں کی جانچ کے لیے استعمال کریں۔",
+
+  "dash.countries_label": "ممالک",
+
+  "dash.ledgers_label": "لیجرز",
+
+  "dash.roznamcha_entries_label": "روزنامچہ اندراجات",
+
+  "dash.purchase_orders_label": "پرچیز آرڈرز",
+
+  "dash.shipping_records_label": "شپنگ ریکارڈز",
+
+  "dash.recent_roznamcha_sub": "ڈیٹا بیس سے تازہ ترین لائیو روزنامچہ اندراجات۔",
+
+  "dash.reporting_hub_title": "انٹرپرائز رپورٹنگ ہب",
+
+  "dash.reporting_hub_sub": "جامع آڈٹ ٹریل لاگز، منظوری ورک فلوز، مالیاتی تجزیات، اور کسٹم جنرل رپورٹس تک ایک جگہ رسائی حاصل کریں۔",
+
+  "dash.open_reports_hub": "رپورٹس ہب کھولیں",
   "purchase.super_admin_control": "سپر ایڈمن کنٹرول",
 
 
@@ -48488,6 +48558,34 @@ const ar: Dict = {
 
 
 
+
+  "dash.overview_subtitle": "نظرة عامة حية على ERP من جداول الإنتاج: الحسابات ودفاتر الأستاذ والروزنامة والمشتريات والمبيعات والشحن.",
+
+  "dash.new_account_link": "حساب جديد",
+
+  "dash.db_summary_failed": "تعذر تحميل ملخص قاعدة البيانات:",
+
+  "dash.experimental_setup_title": "الإعداد التجريبي: حسابات الاختبار",
+
+  "dash.experimental_setup_sub": "استخدم بيانات الاعتماد هذه لتسجيل الدخول بسرعة واختبار سلوكيات متعددة الدول.",
+
+  "dash.countries_label": "الدول",
+
+  "dash.ledgers_label": "دفاتر الأستاذ",
+
+  "dash.roznamcha_entries_label": "إدخالات الروزنامة",
+
+  "dash.purchase_orders_label": "أوامر الشراء",
+
+  "dash.shipping_records_label": "سجلات الشحن",
+
+  "dash.recent_roznamcha_sub": "أحدث إدخالات الروزنامة الحية من قاعدة البيانات.",
+
+  "dash.reporting_hub_title": "مركز تقارير المؤسسة",
+
+  "dash.reporting_hub_sub": "الوصول إلى سجلات مسار التدقيق الشاملة وسير عمل الموافقات والتحليلات المالية والتقارير العامة المخصصة في مكان واحد.",
+
+  "dash.open_reports_hub": "فتح مركز التقارير",
   "purchase.super_admin_control": "تحكم المسؤول الأعلى",
 
 
@@ -63559,6 +63657,34 @@ const fa: Dict = {
 
 
 
+
+  "dash.overview_subtitle": "نمای زنده ERP از جداول تولید: حساب‌ها، دفاتر، روزنامچه، خریدها، فروش‌ها و حمل‌ونقل.",
+
+  "dash.new_account_link": "حساب جدید",
+
+  "dash.db_summary_failed": "امکان بارگذاری خلاصه پایگاه داده وجود نداشت:",
+
+  "dash.experimental_setup_title": "راه‌اندازی آزمایشی: حساب‌های آزمون",
+
+  "dash.experimental_setup_sub": "از این اطلاعات کاربری برای ورود سریع و آزمایش رفتارهای چندکشوری استفاده کنید.",
+
+  "dash.countries_label": "کشورها",
+
+  "dash.ledgers_label": "دفاتر",
+
+  "dash.roznamcha_entries_label": "ورودی‌های روزنامچه",
+
+  "dash.purchase_orders_label": "سفارش‌های خرید",
+
+  "dash.shipping_records_label": "سوابق حمل‌ونقل",
+
+  "dash.recent_roznamcha_sub": "آخرین ورودی‌های زنده روزنامچه از پایگاه داده.",
+
+  "dash.reporting_hub_title": "مرکز گزارش‌دهی سازمانی",
+
+  "dash.reporting_hub_sub": "به گزارش‌های کامل ممیزی، گردش‌کارهای تأیید، تحلیل‌های مالی و گزارش‌های عمومی سفارشی در یک مکان دسترسی داشته باشید.",
+
+  "dash.open_reports_hub": "باز کردن مرکز گزارش‌ها",
   "purchase.super_admin_control": "کنترل مدیر ارشد",
 
 
@@ -78636,6 +78762,34 @@ const ps: Dict = {
 
 
 
+
+  "dash.overview_subtitle": "د تولید جدولونو څخه ژوندی ERP کتنه: حسابونه، لیجرونه، روزنامچه، پیرودونه، پلورنې، او لېږد.",
+
+  "dash.new_account_link": "نوی حساب",
+
+  "dash.db_summary_failed": "د ډیټابیس لنډیز نشو لوډ کیدی:",
+
+  "dash.experimental_setup_title": "تجربوي تنظیم: ازموینې حسابونه",
+
+  "dash.experimental_setup_sub": "دا اسناد وکاروئ ترڅو ژر ننوځئ او د څو هېوادونو چلند وازمویئ.",
+
+  "dash.countries_label": "هېوادونه",
+
+  "dash.ledgers_label": "لیجرونه",
+
+  "dash.roznamcha_entries_label": "روزنامچه ننوتنې",
+
+  "dash.purchase_orders_label": "د پیرود امرونه",
+
+  "dash.shipping_records_label": "د لېږد ریکارډونه",
+
+  "dash.recent_roznamcha_sub": "د ډیټابیس څخه وروستي ژوندي روزنامچه ننوتنې.",
+
+  "dash.reporting_hub_title": "د سازمان راپور ورکولو مرکز",
+
+  "dash.reporting_hub_sub": "بشپړ د پلټنې لاګونه، د منظورۍ کاري بهیرونه، مالي تحلیلونه، او دودیز عمومي راپورونو ته په یو ځای کې لاسرسی ولرئ.",
+
+  "dash.open_reports_hub": "د راپورونو مرکز خلاصول",
   "purchase.super_admin_control": "د سوپر مدیر کنټرول",
 
 
