@@ -927,6 +927,23 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "upd.owner_badge"
+  | "upd.master_intel_report"
+  | "upd.title"
+  | "upd.subtitle"
+  | "upd.refresh"
+  | "upd.export_csv"
+  | "upd.print_report"
+  | "upd.search_ph"
+  | "upd.all_count"
+  | "upd.company_owners"
+  | "upd.employees"
+  | "upd.bank_holders"
+  | "upd.loading_directory"
+  | "upd.no_records"
+  | "upd.dossier_360"
+  | "upd.total_parties"
+  | "upd.click_hint"
   | "party360.master_identity_contact"
   | "party360.registered_companies"
   | "party360.new_sister_company"
@@ -18582,6 +18599,40 @@ const en: Dict = {
 
 
 
+
+
+  "upd.owner_badge": "Owner",
+  "upd.master_intel_report": "Master Unified Intelligence Report",
+
+  "upd.title": "Master Entities & 360° Parties Universal Directory",
+
+  "upd.subtitle": "Centralized unified cross-module directory linking persons to companies, employment, and bank accounts",
+
+  "upd.refresh": "Refresh",
+
+  "upd.export_csv": "Export CSV",
+
+  "upd.print_report": "Print Report",
+
+  "upd.search_ph": "Search by name, father name, code, city, company, or employee code...",
+
+  "upd.all_count": "All ({n})",
+
+  "upd.company_owners": "Company Owners",
+
+  "upd.employees": "Employees",
+
+  "upd.bank_holders": "Bank Holders",
+
+  "upd.loading_directory": "Loading directory...",
+
+  "upd.no_records": "No records found matching criteria.",
+
+  "upd.dossier_360": "360°",
+
+  "upd.total_parties": "Total Parties: {n}",
+
+  "upd.click_hint": "💡 Click (+) on any row to open the complete 360° dossier.",
   "party360.master_identity_contact": "📍 Master Identity & Contact Details",
 
   "party360.registered_companies": "🏢 Registered Sister & Owned Companies ({n})",
@@ -34098,6 +34149,40 @@ const ur: Dict = {
 
 
 
+
+
+  "upd.owner_badge": "مالک",
+  "upd.master_intel_report": "مرکزی ڈیٹا بیس رپورٹ",
+
+  "upd.title": "ماسٹر ہستیاں و 360° پارٹیز جنرل ڈائریکٹری رپورٹ",
+
+  "upd.subtitle": "ایک ہی شخص کے تمام نظاموں (کمپنی، ملازم، بینک، کسٹمر) میں منسلک تمام ریکارڈز کی باہم مربوط ڈائریکٹری",
+
+  "upd.refresh": "تازہ کریں",
+
+  "upd.export_csv": "ایکسپورٹ CSV",
+
+  "upd.print_report": "پرنٹ رپورٹ",
+
+  "upd.search_ph": "نام، ولدیت، کسٹمر کوڈ، شہر، کمپنی یا ملازم کوڈ سے تلاش کریں...",
+
+  "upd.all_count": "تمام ہستیاں ({n})",
+
+  "upd.company_owners": "کمپنی مالکان",
+
+  "upd.employees": "ملازمین",
+
+  "upd.bank_holders": "بینک ہولڈرز",
+
+  "upd.loading_directory": "جنرل ڈائریکٹری لوڈ ہو رہی ہے...",
+
+  "upd.no_records": "کوئی ریکارڈ نہیں ملا۔",
+
+  "upd.dossier_360": "تفصیل",
+
+  "upd.total_parties": "کل ہستیاں: {n}",
+
+  "upd.click_hint": "💡 کسی بھی نام کی تفصیلی 360° رپورٹ کھولنے کے لیے (+) دبائیں۔",
   "party360.master_identity_contact": "📍 مرکزی شناختی و رابطے کی تفصیلات",
 
   "party360.registered_companies": "🏢 رجسٹرڈ کمپنیاں ({n})",
@@ -49616,6 +49701,40 @@ const ar: Dict = {
 
 
 
+
+
+  "upd.owner_badge": "المالك",
+  "upd.master_intel_report": "تقرير الاستخبارات الموحد الرئيسي",
+
+  "upd.title": "دليل شامل للكيانات الرئيسية والأطراف 360°",
+
+  "upd.subtitle": "دليل مركزي موحد عبر الوحدات يربط الأشخاص بالشركات والتوظيف والحسابات المصرفية",
+
+  "upd.refresh": "تحديث",
+
+  "upd.export_csv": "تصدير CSV",
+
+  "upd.print_report": "طباعة التقرير",
+
+  "upd.search_ph": "ابحث بالاسم أو اسم الأب أو الرمز أو المدينة أو الشركة أو رمز الموظف...",
+
+  "upd.all_count": "الكل ({n})",
+
+  "upd.company_owners": "مالكو الشركات",
+
+  "upd.employees": "الموظفون",
+
+  "upd.bank_holders": "أصحاب الحسابات المصرفية",
+
+  "upd.loading_directory": "جارٍ تحميل الدليل...",
+
+  "upd.no_records": "لم يتم العثور على سجلات مطابقة للمعايير.",
+
+  "upd.dossier_360": "360 درجة",
+
+  "upd.total_parties": "إجمالي الأطراف: {n}",
+
+  "upd.click_hint": "💡 انقر على (+) في أي صف لفتح الملف الكامل 360°.",
   "party360.master_identity_contact": "📍 الهوية الرئيسية وتفاصيل الاتصال",
 
   "party360.registered_companies": "🏢 الشركات الشقيقة والمملوكة المسجلة ({n})",
@@ -65133,6 +65252,40 @@ const fa: Dict = {
 
 
 
+
+
+  "upd.owner_badge": "مالک",
+  "upd.master_intel_report": "گزارش هوشمند یکپارچه اصلی",
+
+  "upd.title": "فهرست جامع نهادهای اصلی و طرف‌های 360 درجه",
+
+  "upd.subtitle": "فهرست مرکزی یکپارچه بین‌ماژولی که اشخاص را به شرکت‌ها، استخدام و حساب‌های بانکی مرتبط می‌کند",
+
+  "upd.refresh": "تازه‌سازی",
+
+  "upd.export_csv": "خروجی CSV",
+
+  "upd.print_report": "چاپ گزارش",
+
+  "upd.search_ph": "جستجو با نام، نام پدر، کد، شهر، شرکت یا کد کارمند...",
+
+  "upd.all_count": "همه ({n})",
+
+  "upd.company_owners": "مالکان شرکت",
+
+  "upd.employees": "کارمندان",
+
+  "upd.bank_holders": "دارندگان حساب بانکی",
+
+  "upd.loading_directory": "در حال بارگذاری فهرست...",
+
+  "upd.no_records": "رکوردی مطابق با معیارها یافت نشد.",
+
+  "upd.dossier_360": "360 درجه",
+
+  "upd.total_parties": "مجموع طرف‌ها: {n}",
+
+  "upd.click_hint": "💡 روی (+) هر ردیف کلیک کنید تا پرونده کامل 360 درجه باز شود.",
   "party360.master_identity_contact": "📍 هویت اصلی و جزئیات تماس",
 
   "party360.registered_companies": "🏢 شرکت‌های خواهر و مالکیتی ثبت‌شده ({n})",
@@ -80656,6 +80809,40 @@ const ps: Dict = {
 
 
 
+
+
+  "upd.owner_badge": "مالک",
+  "upd.master_intel_report": "اصلي یوځای شوی معلوماتي راپور",
+
+  "upd.title": "د اصلي ادارو او 360° اړخونو نړیوال لارښود",
+
+  "upd.subtitle": "مرکزي یوځای شوی د ماډیولونو ترمنځ لارښود چې اشخاص د شرکتونو، دندې، او بانکي حسابونو سره تړي",
+
+  "upd.refresh": "تازه کول",
+
+  "upd.export_csv": "CSV صادرول",
+
+  "upd.print_report": "راپور چاپ کول",
+
+  "upd.search_ph": "د نوم، د پلار نوم، کوډ، ښار، شرکت، یا د کارمند کوډ له مخې ولټوئ...",
+
+  "upd.all_count": "ټول ({n})",
+
+  "upd.company_owners": "د شرکت مالکان",
+
+  "upd.employees": "کارمندان",
+
+  "upd.bank_holders": "د بانک حساب لرونکي",
+
+  "upd.loading_directory": "لارښود بارول کیږي...",
+
+  "upd.no_records": "د معیارونو سره سم هیڅ ریکارډ ونه موندل شو.",
+
+  "upd.dossier_360": "360 درجې",
+
+  "upd.total_parties": "ټول اړخونه: {n}",
+
+  "upd.click_hint": "💡 د بشپړ 360° پاڼې د خلاصولو لپاره په هر قطار کې (+) کلیک وکړئ.",
   "party360.master_identity_contact": "📍 اصلي پیژندنه او د اړیکې تفصیلات",
 
   "party360.registered_companies": "🏢 ثبت شوي خور او ملکیتي شرکتونه ({n})",

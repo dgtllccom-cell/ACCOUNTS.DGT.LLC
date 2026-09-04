@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Party360Modal } from "./party-360-modal";
@@ -157,13 +158,13 @@ export function UniversalPartyDirectoryReport({
           </div>
           <div>
             <span className="text-[11px] font-black uppercase tracking-wider text-indigo-400">
-              {lang === "ur" ? "مرکزی ڈیٹا بیس رپورٹ" : "Master Unified Intelligence Report"}
+              {t(lang, "upd.master_intel_report", "Master Unified Intelligence Report")}
             </span>
             <h1 className="text-xl font-black tracking-tight text-white">
-              {lang === "ur" ? "ماسٹر ہستیاں و 360° پارٹیز جنرل ڈائریکٹری رپورٹ" : "Master Entities & 360° Parties Universal Directory"}
+              {t(lang, "upd.title", "Master Entities & 360° Parties Universal Directory")}
             </h1>
             <p className="text-xs text-slate-300">
-              {lang === "ur" ? "ایک ہی شخص کے تمام نظاموں (کمپنی، ملازم، بینک، کسٹمر) میں منسلک تمام ریکارڈز کی باہم مربوط ڈائریکٹری" : "Centralized unified cross-module directory linking persons to companies, employment, and bank accounts"}
+              {t(lang, "upd.subtitle", "Centralized unified cross-module directory linking persons to companies, employment, and bank accounts")}
             </p>
           </div>
         </div>
@@ -177,7 +178,7 @@ export function UniversalPartyDirectoryReport({
             className="h-9 gap-1.5 bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-xl text-xs font-bold"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            {lang === "ur" ? "تازہ کریں" : "Refresh"}
+            {t(lang, "upd.refresh", "Refresh")}
           </Button>
 
           <Button
@@ -188,7 +189,7 @@ export function UniversalPartyDirectoryReport({
             className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none rounded-xl text-xs font-bold shadow-xs"
           >
             <Download className="h-3.5 w-3.5" />
-            {lang === "ur" ? "ایکسپورٹ CSV" : "Export CSV"}
+            {t(lang, "upd.export_csv", "Export CSV")}
           </Button>
 
           <Button
@@ -199,7 +200,7 @@ export function UniversalPartyDirectoryReport({
             className="h-9 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-xl text-xs font-bold shadow-xs"
           >
             <Printer className="h-3.5 w-3.5" />
-            {lang === "ur" ? "پرنٹ رپورٹ" : "Print Report"}
+            {t(lang, "upd.print_report", "Print Report")}
           </Button>
 
           {onClose && (
@@ -223,7 +224,7 @@ export function UniversalPartyDirectoryReport({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={lang === "ur" ? "نام، ولدیت، کسٹمر کوڈ، شہر، کمپنی یا ملازم کوڈ سے تلاش کریں..." : "Search by name, father name, code, city, company, or employee code..."}
+            placeholder={t(lang, "upd.search_ph", "Search by name, father name, code, city, company, or employee code...")}
             className="pr-9 h-10 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border-slate-200"
           />
         </div>
@@ -237,7 +238,7 @@ export function UniversalPartyDirectoryReport({
               affiliationFilter === "all" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            {lang === "ur" ? `تمام ہستیاں (${parties.length})` : `All (${parties.length})`}
+            {t(lang, "upd.all_count", "All ({n})").replace("{n}", String(parties.length))}
           </button>
           <button
             type="button"
@@ -247,7 +248,7 @@ export function UniversalPartyDirectoryReport({
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
-            {lang === "ur" ? "کمپنی مالکان" : "Company Owners"}
+            {t(lang, "upd.company_owners", "Company Owners")}
           </button>
           <button
             type="button"
@@ -257,7 +258,7 @@ export function UniversalPartyDirectoryReport({
             }`}
           >
             <Briefcase className="h-3.5 w-3.5" />
-            {lang === "ur" ? "ملازمین" : "Employees"}
+            {t(lang, "upd.employees", "Employees")}
           </button>
           <button
             type="button"
@@ -267,7 +268,7 @@ export function UniversalPartyDirectoryReport({
             }`}
           >
             <Landmark className="h-3.5 w-3.5" />
-            {lang === "ur" ? "بینک ہولڈرز" : "Bank Holders"}
+            {t(lang, "upd.bank_holders", "Bank Holders")}
           </button>
         </div>
       </div>
@@ -295,13 +296,13 @@ export function UniversalPartyDirectoryReport({
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-slate-400">
                     <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-r-transparent mb-2" />
-                    <p className="font-bold">{lang === "ur" ? "جنرل ڈائریکٹری لوڈ ہو رہی ہے..." : "Loading directory..."}</p>
+                    <p className="font-bold">{t(lang, "upd.loading_directory", "Loading directory...")}</p>
                   </td>
                 </tr>
               ) : filteredParties.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-slate-400 font-semibold">
-                    {lang === "ur" ? "کوئی ریکارڈ نہیں ملا۔" : "No records found matching criteria."}
+                    {t(lang, "upd.no_records", "No records found matching criteria.")}
                   </td>
                 </tr>
               ) : (
@@ -327,7 +328,7 @@ export function UniversalPartyDirectoryReport({
                           <span>{urduName}</span>
                           {party.partyType === "Owner" && (
                             <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[10px] font-bold">
-                              👑 Owner
+                              👑 {t(lang, "upd.owner_badge", "Owner")}
                             </span>
                           )}
                         </div>
@@ -390,7 +391,7 @@ export function UniversalPartyDirectoryReport({
                           className="h-7 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold shadow-xs gap-1 cursor-pointer"
                         >
                           <Plus className="h-3.5 w-3.5" />
-                          <span>{lang === "ur" ? "تفصیل" : "360°"}</span>
+                          <span>{t(lang, "upd.dossier_360", "360°")}</span>
                         </Button>
                       </td>
                     </tr>
@@ -404,10 +405,10 @@ export function UniversalPartyDirectoryReport({
         {/* Footer summary */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/40 flex items-center justify-between text-xs text-slate-500 font-bold">
           <span>
-            {lang === "ur" ? `کل ہستیاں: ${filteredParties.length}` : `Total Parties: ${filteredParties.length}`}
+            {t(lang, "upd.total_parties", "Total Parties: {n}").replace("{n}", String(filteredParties.length))}
           </span>
           <span className="text-indigo-600 dark:text-indigo-400">
-            {lang === "ur" ? "💡 کسی بھی نام کی تفصیلی 360° رپورٹ کھولنے کے لیے (+) دبائیں۔" : "💡 Click (+) on any row to open the complete 360° dossier."}
+            {t(lang, "upd.click_hint", "💡 Click (+) on any row to open the complete 360° dossier.")}
           </span>
         </div>
       </div>
