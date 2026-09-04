@@ -1303,7 +1303,7 @@ export function BranchGeneralReportView({
       {expandedUserScope === "all-users" ? (
         <BranchUsersPanel
           title={tt("bgr.all_erp_users","All ERP Users")}
-          hierarchy={["Super Admin", "All Countries", "All Branches", "All Users"]}
+          hierarchy={[tt("bgr.super_admin", "Super Admin"), tt("bgr.all_countries", "All Countries"), tt("bgr.all_branches", "All Branches"), tt("bgr.all_users", "All Users")]}
           users={data?.summary?.users ?? []}
           onClose={() => setExpandedUserScope(null)}
         />
@@ -1439,7 +1439,7 @@ export function BranchGeneralReportView({
                             count={users.length || data?.summary?.totalActiveUsers || 0}
                             expanded={expandedUserScope === scopeId}
                             onClick={() => toggleUserScope(scopeId)}
-                            title="Show all ERP users under Super Admin"
+                            title={tt("bgr.show_all_erp_users_super_admin", "Show all ERP users under Super Admin")}
                           />
                         </td>
                         <td className="p-2.5 border-r border-slate-200">
@@ -1489,8 +1489,8 @@ export function BranchGeneralReportView({
                         <tr className="border-b bg-indigo-50/20">
                           <td colSpan={12} className="p-3">
                             <BranchUsersPanel
-                              title="Super Admin User Directory"
-                              hierarchy={["Super Admin", "All Countries", "All Branches", "Users"]}
+                              title={tt("bgr.super_admin_user_directory", "Super Admin User Directory")}
+                              hierarchy={[tt("bgr.super_admin", "Super Admin"), tt("bgr.all_countries", "All Countries"), tt("bgr.all_branches", "All Branches"), tt("bgr.users", "Users")]}
                               users={users}
                               onClose={() => setExpandedUserScope(null)}
                             />
@@ -1591,7 +1591,7 @@ export function BranchGeneralReportView({
                               </div>
                               {activeProductPopup === country.id && (
                                 <div className="absolute top-6 left-0 z-50 bg-white border border-slate-200 rounded-lg p-2.5 shadow-xl popup-content min-w-[150px] text-left">
-                                  <div className="text-[10px] font-bold text-slate-950 border-b pb-1 mb-1">Branch Services</div>
+                                  <div className="text-[10px] font-bold text-slate-950 border-b pb-1 mb-1">{tt("bgr.branch_services", "Branch Services")}</div>
                                   <ul className="space-y-1 font-semibold text-[9px] text-slate-600">
                                     {tags.map((tag) => (
                                       <li key={tag} className="flex items-center gap-1">
@@ -1674,7 +1674,7 @@ export function BranchGeneralReportView({
                                 type="button"
                                 onClick={() => setBranchDetailModal({ country, branch: mainBranch || { id: country.id, name: `${country.name} Main Branch`, code: country.code, localCurrency: country.currency, status: country.status, isMain: true, cityBranches: [] } })}
                                 className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[9px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                title="View Country Main Branch & City Branches"
+                                title={tt("bgr.view_country_main_city_branches", "View Country Main Branch & City Branches")}
                               >
                                 <Eye className="h-3 w-3" />
                                 {tt("bgr.view", "View")}

@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bgr.all_users"
+  | "bgr.show_all_erp_users_super_admin"
+  | "bgr.super_admin_user_directory"
+  | "bgr.super_admin"
+  | "bgr.all_countries"
+  | "bgr.all_branches"
+  | "bgr.users"
+  | "bgr.branch_services"
+  | "bgr.view_country_main_city_branches"
   | "ster.loading_report"
   | "ster.go_back_arrow"
   | "ster.enterprise_erp"
@@ -18736,6 +18745,24 @@ const en: Dict = {
 
 
 
+
+
+  "bgr.all_users": "All Users",
+  "bgr.show_all_erp_users_super_admin": "Show all ERP users under Super Admin",
+
+  "bgr.super_admin_user_directory": "Super Admin User Directory",
+
+  "bgr.super_admin": "Super Admin",
+
+  "bgr.all_countries": "All Countries",
+
+  "bgr.all_branches": "All Branches",
+
+  "bgr.users": "Users",
+
+  "bgr.branch_services": "Branch Services",
+
+  "bgr.view_country_main_city_branches": "View Country Main Branch & City Branches",
   "ster.loading_report": "Loading ERP Transaction Report…",
 
   "ster.go_back_arrow": "← Go Back",
@@ -34519,6 +34546,24 @@ const ur: Dict = {
 
 
 
+
+
+  "bgr.all_users": "تمام صارفین",
+  "bgr.show_all_erp_users_super_admin": "سپر ایڈمن کے تحت تمام ERP صارفین دکھائیں",
+
+  "bgr.super_admin_user_directory": "سپر ایڈمن یوزر ڈائریکٹری",
+
+  "bgr.super_admin": "سپر ایڈمن",
+
+  "bgr.all_countries": "تمام ممالک",
+
+  "bgr.all_branches": "تمام برانچز",
+
+  "bgr.users": "صارفین",
+
+  "bgr.branch_services": "برانچ سروسز",
+
+  "bgr.view_country_main_city_branches": "کنٹری مین برانچ و سٹی برانچز دیکھیں",
   "ster.loading_report": "ERP لین دین رپورٹ لوڈ ہو رہی ہے…",
 
   "ster.go_back_arrow": "← واپس جائیں",
@@ -50304,6 +50349,24 @@ const ar: Dict = {
 
 
 
+
+
+  "bgr.all_users": "جميع المستخدمين",
+  "bgr.show_all_erp_users_super_admin": "إظهار جميع مستخدمي ERP تحت المسؤول الأعلى",
+
+  "bgr.super_admin_user_directory": "دليل مستخدمي المسؤول الأعلى",
+
+  "bgr.super_admin": "المسؤول الأعلى",
+
+  "bgr.all_countries": "جميع الدول",
+
+  "bgr.all_branches": "جميع الفروع",
+
+  "bgr.users": "المستخدمون",
+
+  "bgr.branch_services": "خدمات الفرع",
+
+  "bgr.view_country_main_city_branches": "عرض الفرع الرئيسي للدولة وفروع المدن",
   "ster.loading_report": "جارٍ تحميل تقرير معاملة ERP…",
 
   "ster.go_back_arrow": "← رجوع",
@@ -66088,6 +66151,24 @@ const fa: Dict = {
 
 
 
+
+
+  "bgr.all_users": "همه کاربران",
+  "bgr.show_all_erp_users_super_admin": "نمایش همه کاربران ERP تحت مدیر ارشد",
+
+  "bgr.super_admin_user_directory": "فهرست کاربران مدیر ارشد",
+
+  "bgr.super_admin": "مدیر ارشد",
+
+  "bgr.all_countries": "همه کشورها",
+
+  "bgr.all_branches": "همه شعبه‌ها",
+
+  "bgr.users": "کاربران",
+
+  "bgr.branch_services": "خدمات شعبه",
+
+  "bgr.view_country_main_city_branches": "مشاهده شعبه اصلی کشور و شعبه‌های شهر",
   "ster.loading_report": "در حال بارگذاری گزارش تراکنش ERP…",
 
   "ster.go_back_arrow": "← بازگشت",
@@ -81878,6 +81959,24 @@ const ps: Dict = {
 
 
 
+
+
+  "bgr.all_users": "ټول کاروونکي",
+  "bgr.show_all_erp_users_super_admin": "د سوپر مدیر لاندې ټول د ERP کاروونکي وښایاست",
+
+  "bgr.super_admin_user_directory": "د سوپر مدیر کارن لارښود",
+
+  "bgr.super_admin": "سوپر مدیر",
+
+  "bgr.all_countries": "ټول هېوادونه",
+
+  "bgr.all_branches": "ټولې څانګې",
+
+  "bgr.users": "کاروونکي",
+
+  "bgr.branch_services": "د څانګې خدمات",
+
+  "bgr.view_country_main_city_branches": "د هېواد اصلي څانګه او د ښار څانګې وګورئ",
   "ster.loading_report": "د ERP د معاملې راپور بارول کیږي…",
 
   "ster.go_back_arrow": "← بېرته لاړ شئ",
