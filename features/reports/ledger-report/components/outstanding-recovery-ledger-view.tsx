@@ -59,7 +59,7 @@ type Tab = "all" | "receivable" | "payable" | "overdue";
 const fmt = (n: number) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 function formatDateSlash(dateStr?: string | null) {
-  if (!dateStr) return "08/05/2026";
+  if (!dateStr) return "—";
   try {
     const parts = dateStr.split("-");
     if (parts.length === 3) {
@@ -284,15 +284,14 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
     const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
     const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
-    const accNo = x.code.replace(/^[^\d]+/, '') || String(1001 + idx);
-    const contractNo = `CN-2026-000${idx + 1}`;
-    const lastDate = x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026";
+    const accNo = x.code.replace(/^[^\d]+/, '') || "—";
+    const lastDate = formatDateSlash(x.lastMovementDate);
     return {
       sr: String(idx + 1),
-      startDate: "01/01/2026",
+      startDate: "—",
       code: x.code,
       accountNo: accNo,
-      contractNo: contractNo,
+      contractNo: "—",
       name: x.name,
       accountType: accType,
       status: isOverdue ? "overdue" : "active",
@@ -300,7 +299,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
       debit: debitVal,
       currency: x.currency || "AED",
       lastMovementDate: lastDate,
-      daysOutstanding: x.daysOutstanding ?? 7,
+      daysOutstanding: x.daysOutstanding ?? null,
       type: x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "-",
       balance: Math.abs(x.outstanding),
     };
@@ -316,15 +315,15 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         srNo: idx + 1,
         accountName: r.name,
         accountCode: r.code,
-        accountType: (r as any).accountType || (r as any).accountKind || "Customer",
+        accountType: (r as any).accountType || (r as any).accountKind || "—",
         branchAndCountry,
         currency: r.currency || "AED",
         debit: r.outstanding > 0 ? r.outstanding : 0,
         credit: r.outstanding < 0 ? Math.abs(r.outstanding) : 0,
         outstandingAmount: r.outstanding,
-        agingStatus: isOverdue ? `Overdue (>${overdueDays}D)` : `0–${overdueDays}D (${r.daysOutstanding ?? 7}D)`,
-        daysOutstanding: r.daysOutstanding ?? 7,
-        lastTransactionDate: r.lastMovementDate || "2026-08-05",
+        agingStatus: isOverdue ? `Overdue (>${overdueDays}D)` : `0–${overdueDays}D (${r.daysOutstanding != null ? r.daysOutstanding : "—"}D)`,
+        daysOutstanding: r.daysOutstanding ?? undefined,
+        lastTransactionDate: r.lastMovementDate || "—",
         recoveryStatus: recStatus
       };
     });
@@ -407,15 +406,14 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
         const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
         const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
-        const accNo = x.code.replace(/^[^\d]+/, '') || String(1001 + idx);
-        const contractNo = `CN-2026-000${idx + 1}`;
-        const lastDate = x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026";
+        const accNo = x.code.replace(/^[^\d]+/, '') || "—";
+        const lastDate = formatDateSlash(x.lastMovementDate);
         return [
           String(srNo),
-          "01/01/2026",
+          "—",
           x.code,
           accNo,
-          contractNo,
+          "—",
           x.name,
           accType,
           isOverdue ? "Overdue" : "Active",
@@ -423,7 +421,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           fmt(debitVal),
           x.currency || "AED",
           lastDate,
-          String(x.daysOutstanding ?? 7),
+          x.daysOutstanding != null ? String(x.daysOutstanding) : "—",
           x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "-",
           fmt(Math.abs(x.outstanding)),
         ];
@@ -912,8 +910,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
                   const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
                   const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
-                  const accNo = x.code.replace(/^[^\d]+/, '') || String(1001 + idx);
-                  const contractNo = `CN-2026-000${idx + 1}`;
+                  const accNo = x.code.replace(/^[^\d]+/, '') || "—";
+                  const contractNo = "—";
 
                   return (
                     <tr
@@ -926,7 +924,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       <td className="px-3 py-3 text-center font-bold text-slate-600 dark:text-slate-400">{srNo}</td>
                       <td className="px-3 py-3 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
                         <div className="inline-flex items-center gap-1">
-                          <span>01/01/2026</span>
+                          <span>—</span>
                           <Calendar className="h-3 w-3 text-slate-400" />
                         </div>
                       </td>
@@ -970,12 +968,12 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       </td>
                       <td className="px-3 py-3 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
                         <div className="inline-flex items-center gap-1">
-                          <span>{x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026"}</span>
+                          <span>{formatDateSlash(x.lastMovementDate)}</span>
                           <Calendar className="h-3 w-3 text-slate-400" />
                         </div>
                       </td>
                       <td className={cn("px-3 py-3 text-right font-mono text-xs font-bold", isOverdue ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300")}>
-                        {x.daysOutstanding ?? 7}
+                        {x.daysOutstanding ?? "—"}
                       </td>
                       <td className="px-3 py-3 text-center font-mono text-xs font-bold">
                         {x.outstanding > 0 ? (
@@ -1031,9 +1029,9 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
                 className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
               >
-                <option value={10}>10 per page</option>
-                <option value={25}>25 per page</option>
-                <option value={50}>50 per page</option>
+                <option value={10}>10 {tr("per page")}</option>
+                <option value={25}>25 {tr("per page")}</option>
+                <option value={50}>50 {tr("per page")}</option>
               </select>
             </div>
             <div className="flex items-center gap-1">
