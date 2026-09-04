@@ -19,6 +19,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
@@ -118,6 +119,7 @@ function MasterSelectPopover({
   placeholder = ""
 }: MasterSelectPopoverProps) {
   const msLang = useActiveLanguage();
+  const th = (x: string) => translateHeader(msLang, x);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -241,6 +243,7 @@ export function LocalPurchaseView({
 }: LocalPurchaseViewProps) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const th = (x: string) => translateHeader(lang, x);
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -1385,7 +1388,7 @@ export function LocalPurchaseView({
           <div className="space-y-1 text-[9px]">
             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_booking_date", "Booking Date:")}</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{new Date().toISOString().slice(0, 10)}</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_fiscal_year", "Fiscal Year:")}</span> <span className="font-bold text-slate-800 font-mono">{activeBranch?.fiscalYear || activeBranch?.fiscal_year || ""}</span></div>
-            <div className="flex justify-between items-center"><span className="text-slate-400">{t(lang, "lp.f_status", "Status:")}</span> <span className="bg-amber-100 text-amber-800 font-bold px-1 py-0.2 rounded text-[7px] uppercase">DRAFT</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-400">{t(lang, "lp.f_status", "Status:")}</span> <span className="bg-amber-100 text-amber-800 font-bold px-1 py-0.2 rounded text-[7px] uppercase">{th("DRAFT")}</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_serial", "Serial:")}</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{serialNo}</span></div>
           </div>
         </div>
@@ -1801,7 +1804,7 @@ export function LocalPurchaseView({
                         <input
                           value={lotNo}
                           onChange={e => setLotNo(e.target.value)}
-                          placeholder="e.g. Lot-100"
+                          placeholder={th("e.g. Lot-100")}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono font-bold text-slate-800 outline-none"
                         />
                       </div>
@@ -1828,13 +1831,13 @@ export function LocalPurchaseView({
                             <input
                               value={brand}
                               onChange={e => setBrand(e.target.value)}
-                              placeholder="e.g. Brand Name"
+                              placeholder={th("e.g. Brand Name")}
                               className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none"
                             />
                             {selectedGood && (
                               <button type="button" onClick={() => setIsAddingBrandModal(true)}
                                 className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
-                                <Plus className="h-3 w-3" /> Add Brand
+                                <Plus className="h-3 w-3" /> {th("Add Brand")}
                               </button>
                             )}
                           </div>
@@ -1860,13 +1863,13 @@ export function LocalPurchaseView({
                             <input
                               value={size}
                               onChange={e => setSize(e.target.value)}
-                              placeholder="e.g. Size / Spec"
+                              placeholder={th("e.g. Size / Spec")}
                               className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none"
                             />
                             {selectedGood && (
                               <button type="button" onClick={() => setIsAddingSizeModal(true)}
                                 className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
-                                <Plus className="h-3 w-3" /> Add Size
+                                <Plus className="h-3 w-3" /> {th("Add Size")}
                               </button>
                             )}
                           </div>
@@ -1920,7 +1923,7 @@ export function LocalPurchaseView({
                           step="any"
                           value={emptyKgs}
                           onChange={e => setEmptyKgs(e.target.value)}
-                          placeholder="e.g. 1 KG"
+                          placeholder={th("e.g. 1 KG")}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono font-bold text-red-600 outline-none"
                         />
                       </div>
@@ -2056,7 +2059,7 @@ export function LocalPurchaseView({
                       onClick={() => setCurrentStep(1)}
                       className="w-1/3 h-9 rounded-xl text-xs font-bold"
                     >
-                      <ArrowLeft className="h-3.5 w-3.5" /> Back
+                      <ArrowLeft className="h-3.5 w-3.5" /> {th("Back")}
                     </Button>
                     <Button
                       type="button"
@@ -2349,7 +2352,7 @@ export function LocalPurchaseView({
                   <div className="flex gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}
                       className="w-1/2 h-9 rounded-xl text-xs font-bold">
-                      <ArrowLeft className="h-3.5 w-3.5" /> Back
+                      <ArrowLeft className="h-3.5 w-3.5" /> {th("Back")}
                     </Button>
                     <Button type="button" onClick={() => setCurrentStep(4)}
                       className="w-1/2 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
@@ -2467,7 +2470,7 @@ export function LocalPurchaseView({
             <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
               <CardHeader className="bg-white text-slate-900 p-3.5 flex flex-row items-center justify-between border-b border-slate-200">
                 <CardTitle className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
-                  <Package className="h-4 w-4 text-emerald-600" /> ADDED GOODS ITEMS TABLE
+                  <Package className="h-4 w-4 text-emerald-600" /> {th("ADDED GOODS ITEMS TABLE")}
                 </CardTitle>
                 <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
                   {draftItems.length > 0 ? `${draftItems.length} Item(s)` : "Active Item"}
@@ -2620,7 +2623,7 @@ export function LocalPurchaseView({
                   {/* Weight Summary Header */}
                   <div className="border-b border-slate-200 pb-2">
                     <p className="text-[9px] font-extrabold text-blue-700 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                      <Scale className="h-3 w-3 text-blue-600" /> Live Weight Summary Report
+                      <Scale className="h-3 w-3 text-blue-600" /> {th("Live Weight Summary Report")}
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-[10px]">
                       <div>
@@ -2656,7 +2659,7 @@ export function LocalPurchaseView({
                   {/* Payment Condition Summary */}
                   <div className="border-b border-slate-200 pb-2">
                     <p className="text-[9px] font-extrabold text-amber-700 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                      <CreditCard className="h-3 w-3 text-amber-600" /> Payment Condition Summary
+                      <CreditCard className="h-3 w-3 text-amber-600" /> {th("Payment Condition Summary")}
                     </p>
                     <div className="grid grid-cols-2 gap-3 text-[10px]">
                       <div>
@@ -2696,7 +2699,7 @@ export function LocalPurchaseView({
                   {/* Shipment & Logistics */}
                   <div className="border-b border-slate-200 pb-2">
                     <p className="text-[9px] font-extrabold text-purple-700 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                      <Truck className="h-3 w-3 text-purple-600" /> Transit & Logistics Details
+                      <Truck className="h-3 w-3 text-purple-600" /> {th("Transit & Logistics Details")}
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-[10px]">
                       <div>
@@ -2721,7 +2724,7 @@ export function LocalPurchaseView({
                   {/* Financial Summary */}
                   <div className="flex justify-between items-center text-sm font-black border-t border-slate-200 pt-2">
                     <span className="text-emerald-700 uppercase text-xs tracking-wider flex items-center gap-1">
-                      <Coins className="h-3.5 w-3.5" /> Total Bill Payable
+                      <Coins className="h-3.5 w-3.5" /> {th("Total Bill Payable")}
                     </span>
                     <span className="font-mono text-base font-black text-emerald-700">
                       {purchaseCurrency} {combinedBillCost?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -2911,7 +2914,7 @@ export function LocalPurchaseView({
                                       }}
                                       className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition"
                                     >
-                                      <Eye className="h-3.5 w-3.5 text-blue-600" /> View Voucher
+                                      <Eye className="h-3.5 w-3.5 text-blue-600" /> {th("View Voucher")}
                                     </button>
 
                                     <button
@@ -2923,7 +2926,7 @@ export function LocalPurchaseView({
                                       }}
                                       className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition"
                                     >
-                                      <Printer className="h-3.5 w-3.5 text-purple-600" /> Print / Export PDF
+                                      <Printer className="h-3.5 w-3.5 text-purple-600" /> {th("Print / Export PDF")}
                                     </button>
 
                                     {rowStatus !== "draft" && (
@@ -2948,7 +2951,7 @@ export function LocalPurchaseView({
                                         }}
                                         className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition"
                                       >
-                                        <Edit3 className="h-3.5 w-3.5 text-emerald-600" /> Edit Draft
+                                        <Edit3 className="h-3.5 w-3.5 text-emerald-600" /> {th("Edit Draft")}
                                       </button>
                                     )}
 
@@ -2974,7 +2977,7 @@ export function LocalPurchaseView({
                                         }}
                                         className="w-full px-3 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition"
                                       >
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" /> Accept Bill
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" /> {th("Accept Bill")}
                                       </button>
                                     )}
 
@@ -2983,7 +2986,7 @@ export function LocalPurchaseView({
                                         type="button"
                                         onClick={async () => {
                                           setActiveActionMenuId(null);
-                                          if (!confirm("Transfer & Post this bill? Journal, Roznamcha, and Ledger entries will be created.")) return;
+                                          if (!confirm(th("Transfer & Post this bill? Journal, Roznamcha, and Ledger entries will be created."))) return;
                                           try {
                                             const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
                                               method: "POST",
@@ -3000,7 +3003,7 @@ export function LocalPurchaseView({
                                         }}
                                         className="w-full px-3 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition"
                                       >
-                                        <Send className="h-3.5 w-3.5 text-emerald-600" /> Transfer & Post
+                                        <Send className="h-3.5 w-3.5 text-emerald-600" /> {th("Transfer & Post")}
                                       </button>
                                     )}
 
@@ -3021,7 +3024,7 @@ export function LocalPurchaseView({
                                         }}
                                         className="w-full px-3 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100"
                                       >
-                                        <Trash2 className="h-3.5 w-3.5 text-red-600" /> Delete Draft
+                                        <Trash2 className="h-3.5 w-3.5 text-red-600" /> {th("Delete Draft")}
                                       </button>
                                     )}
                                   </div>
@@ -3166,7 +3169,7 @@ export function LocalPurchaseView({
                   autoFocus
                   value={newGoodsNameInput}
                   onChange={e => setNewGoodsNameInput(e.target.value)}
-                  placeholder="e.g. CASHEW NUTS"
+                  placeholder={th("e.g. CASHEW NUTS")}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-blue-500"
                 />
               </div>
@@ -3176,7 +3179,7 @@ export function LocalPurchaseView({
                 <input
                   value={newChsCodeInput}
                   onChange={e => setNewChsCodeInput(e.target.value)}
-                  placeholder="e.g. CHS-9812"
+                  placeholder={th("e.g. CHS-9812")}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-mono outline-none focus:border-blue-500"
                 />
               </div>
@@ -3209,7 +3212,7 @@ export function LocalPurchaseView({
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <Pencil className="h-4 w-4 text-blue-600" /> EDIT GOODS MASTER
+                <Pencil className="h-4 w-4 text-blue-600" /> {th("EDIT GOODS MASTER")}
               </h3>
               <button onClick={() => { setIsEditingGoodsModal(false); setEditGoodsTarget(null); }} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
@@ -3265,7 +3268,7 @@ export function LocalPurchaseView({
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <Tag className="h-4 w-4 text-blue-600" /> ADD BRAND VARIATION
+                <Tag className="h-4 w-4 text-blue-600" /> {th("ADD BRAND VARIATION")}
               </h3>
               <button onClick={() => setIsAddingBrandModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
@@ -3280,7 +3283,7 @@ export function LocalPurchaseView({
                   autoFocus
                   value={newBrandInput}
                   onChange={e => setNewBrandInput(e.target.value)}
-                  placeholder="e.g. AL-KHAIR"
+                  placeholder={th("e.g. AL-KHAIR")}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-semibold outline-none"
                 />
               </div>
@@ -3313,7 +3316,7 @@ export function LocalPurchaseView({
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <Layers className="h-4 w-4 text-blue-600" /> ADD SIZE VARIATION
+                <Layers className="h-4 w-4 text-blue-600" /> {th("ADD SIZE VARIATION")}
               </h3>
               <button onClick={() => setIsAddingSizeModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
@@ -3328,7 +3331,7 @@ export function LocalPurchaseView({
                   autoFocus
                   value={newSizeInput}
                   onChange={e => setNewSizeInput(e.target.value)}
-                  placeholder="e.g. 50KG STANDARD"
+                  placeholder={th("e.g. 50KG STANDARD")}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-semibold outline-none"
                 />
               </div>
@@ -3386,21 +3389,21 @@ export function LocalPurchaseView({
                     }}
                     className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 shadow-sm"
                   >
-                    <Send className="h-3.5 w-3.5" /> Transfer & Post to GL
+                    <Send className="h-3.5 w-3.5" /> {th("Transfer & Post to GL")}
                   </Button>
                 )}
                 <Button
                   onClick={() => printDomFragmentViaModal("printable-modal-voucher", "Voucher")}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
                 >
-                  <Printer className="h-3.5 w-3.5" /> Print
+                  <Printer className="h-3.5 w-3.5" /> {th("Print")}
                 </Button>
                 <button
                   type="button"
                   onClick={() => setSelectedRowForVoucher(null)}
                   className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
                 >
-                  Close
+                  {th("Close")}
                 </button>
               </div>
             </div>
@@ -3445,7 +3448,7 @@ export function LocalPurchaseView({
                     <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">LOGO</div>
+                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">{th("LOGO")}</div>
                           <div className="space-y-1">
                             <h2 className="text-xl font-black uppercase tracking-[0.18em]">{t(lang, "lp.tax_invoice", "Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
@@ -3581,7 +3584,7 @@ export function LocalPurchaseView({
                   <div className="space-y-4">
               <div className="flex justify-between items-start border-b-2 border-slate-800 pb-3">
                 <div>
-                  <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">LOCAL PURCHASE BILL VOUCHER</h2>
+                  <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">{th("LOCAL PURCHASE BILL VOUCHER")}</h2>
                   <p className="text-[10px] text-slate-500 font-bold uppercase">
                     {selectedRowForVoucher.branchName || "Global System Branch"}
                   </p>
