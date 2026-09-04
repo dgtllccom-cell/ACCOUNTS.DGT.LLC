@@ -927,6 +927,104 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cif.company_name_en_ph"
+  | "cif.business_trading_name_ph"
+  | "cif.currency_aed"
+  | "cif.currency_pkr"
+  | "cif.currency_afn"
+  | "cif.currency_inr"
+  | "cif.four_level_auto_allocated"
+  | "cif.msg_required_fields"
+  | "cif.msg_updated"
+  | "cif.msg_registered"
+  | "cif.msg_ready_sister"
+  | "cif.title"
+  | "cif.mode_owner_portfolio"
+  | "cif.mode_branch_operative"
+  | "cif.step_company_info"
+  | "cif.step_owner_branch"
+  | "cif.step_address_contact"
+  | "cif.step_review_save"
+  | "cif.select_owner_person"
+  | "cif.search_owner_ph"
+  | "cif.company_manager"
+  | "cif.search_manager_ph"
+  | "cif.add_new_sister"
+  | "cif.country_req"
+  | "cif.select_country_ph"
+  | "cif.main_branch_req"
+  | "cif.select_main_branch_ph"
+  | "cif.city_branch"
+  | "cif.all_city_branches_ph"
+  | "cif.branch_mode_active"
+  | "cif.selected_owner_details"
+  | "cif.active"
+  | "cif.selected_owner_investor"
+  | "cif.son_of"
+  | "cif.customer_code"
+  | "cif.employee_code"
+  | "cif.mobile_whatsapp"
+  | "cif.email"
+  | "cif.country_city"
+  | "cif.selected_manager_details"
+  | "cif.authorized"
+  | "cif.manager_code"
+  | "cif.mobile"
+  | "cif.company_name"
+  | "cif.structure"
+  | "cif.status"
+  | "cif.no_sister_companies"
+  | "cif.linked_bank_accounts"
+  | "cif.selected_branch_details"
+  | "cif.operative_branch"
+  | "cif.erp_wide_role"
+  | "cif.branch_operative_companies"
+  | "cif.company_col"
+  | "cif.no_operative_companies"
+  | "cif.companies_stat"
+  | "cif.banks_stat"
+  | "cif.employees_stat"
+  | "cif.serials_stat"
+  | "cif.new_sister_registration"
+  | "cif.new_branch_operative_registration"
+  | "cif.register_under_owner"
+  | "cif.establish_branch_company"
+  | "cif.step_x_of_4"
+  | "cif.step1_hint"
+  | "cif.company_name_en"
+  | "cif.company_name_local"
+  | "cif.legal_structure_req"
+  | "cif.base_currency"
+  | "cif.license_tax_ids"
+  | "cif.add_registration_id"
+  | "cif.add_another_registration"
+  | "cif.delete"
+  | "cif.linked_owner_confirmation"
+  | "cif.linked_branch_confirmation"
+  | "cif.ownership_personal"
+  | "cif.status_authorized_branch"
+  | "cif.company_manager_confirmation"
+  | "cif.manager_code_mobile"
+  | "cif.business_trading_name"
+  | "cif.nature_of_business"
+  | "cif.mobile_phone_req"
+  | "cif.full_street_address"
+  | "cif.address_ph"
+  | "cif.preview_360_pdf"
+  | "cif.ready_to_register"
+  | "cif.owner_stakeholder"
+  | "cif.branch_colon"
+  | "cif.company_manager_colon"
+  | "cif.phone_colon"
+  | "cif.email_colon"
+  | "cif.serials_colon"
+  | "cif.sister_companies_colon"
+  | "cif.companies_on_record"
+  | "cif.registered_licenses"
+  | "cif.back"
+  | "cif.next_step"
+  | "cif.saving"
+  | "cif.save_finalize"
   | "audit.per_page_25"
   | "audit.per_page_50"
   | "audit.per_page_100"
@@ -18435,6 +18533,202 @@ const en: Dict = {
 
 
 
+
+
+  "cif.company_name_en_ph": "e.g. Trading Company LLC",
+
+  "cif.business_trading_name_ph": "e.g. Trading Company",
+
+  "cif.currency_aed": "UAE Dirham",
+
+  "cif.currency_pkr": "Pakistani Rupee",
+
+  "cif.currency_afn": "Afghan Afghani",
+
+  "cif.currency_inr": "Indian Rupee",
+
+  "cif.four_level_auto_allocated": "4-Level Auto Allocated",
+  "cif.msg_required_fields": "Please complete required fields.",
+
+  "cif.msg_updated": "Company updated successfully.",
+
+  "cif.msg_registered": "New company registered successfully.",
+
+  "cif.msg_ready_sister": "Ready to enter new sister company for same owner.",
+
+  "cif.title": "Company Registration & Corporate Setup",
+
+  "cif.mode_owner_portfolio": "Owner / Sister Companies",
+
+  "cif.mode_branch_operative": "Branch Operative Company",
+
+  "cif.step_company_info": "Company Info",
+
+  "cif.step_owner_branch": "Owner / Branch",
+
+  "cif.step_address_contact": "Address & Contact",
+
+  "cif.step_review_save": "Review & Save",
+
+  "cif.select_owner_person": "Select Owner / Person *",
+
+  "cif.search_owner_ph": "Search owner name or customer code...",
+
+  "cif.company_manager": "Company Manager",
+
+  "cif.search_manager_ph": "Search manager name...",
+
+  "cif.add_new_sister": "+ Add New Sister Company",
+
+  "cif.country_req": "Country *",
+
+  "cif.select_country_ph": "Select Country...",
+
+  "cif.main_branch_req": "Main Branch *",
+
+  "cif.select_main_branch_ph": "Select Main Branch...",
+
+  "cif.city_branch": "City Branch",
+
+  "cif.all_city_branches_ph": "All City Branches...",
+
+  "cif.branch_mode_active": "Branch Operative Mode Active",
+
+  "cif.selected_owner_details": "Selected Owner Details",
+
+  "cif.active": "Active",
+
+  "cif.selected_owner_investor": "Selected Owner / Investor",
+
+  "cif.son_of": "S/O:",
+
+  "cif.customer_code": "Customer Code",
+
+  "cif.employee_code": "Employee Code",
+
+  "cif.mobile_whatsapp": "Mobile / WhatsApp",
+
+  "cif.email": "Email",
+
+  "cif.country_city": "Country / City",
+
+  "cif.selected_manager_details": "Selected Company Manager Details",
+
+  "cif.authorized": "Authorized",
+
+  "cif.manager_code": "Manager Code",
+
+  "cif.mobile": "Mobile",
+
+  "cif.company_name": "Company Name",
+
+  "cif.structure": "Structure",
+
+  "cif.status": "Status",
+
+  "cif.no_sister_companies": "No existing sister companies found under this owner.",
+
+  "cif.linked_bank_accounts": "Linked Bank Accounts ({n})",
+
+  "cif.selected_branch_details": "Selected Branch Details",
+
+  "cif.operative_branch": "Operative Branch",
+
+  "cif.erp_wide_role": "✨ ERP-Wide Operative Role:",
+
+  "cif.branch_operative_companies": "Branch Operative Companies ({n})",
+
+  "cif.company_col": "Company",
+
+  "cif.no_operative_companies": "No operative companies registered yet.",
+
+  "cif.companies_stat": "Companies",
+
+  "cif.banks_stat": "Banks",
+
+  "cif.employees_stat": "Employees",
+
+  "cif.serials_stat": "Serials",
+
+  "cif.new_sister_registration": "New Sister Company Registration",
+
+  "cif.new_branch_operative_registration": "New Branch Operative Company Registration",
+
+  "cif.register_under_owner": "Register a new company under the selected owner",
+
+  "cif.establish_branch_company": "Establish an official operative company for this branch",
+
+  "cif.step_x_of_4": "Step {n} of 4",
+
+  "cif.step1_hint": "Please enter company name, corporate structure, and all applicable license/tax numbers.",
+
+  "cif.company_name_en": "Company Name (English) *",
+
+  "cif.company_name_local": "Company Name (Urdu / Localized)",
+
+  "cif.legal_structure_req": "Legal Structure *",
+
+  "cif.base_currency": "Base Currency",
+
+  "cif.license_tax_ids": "License, Tax & Registration IDs *",
+
+  "cif.add_registration_id": "+ Add Registration ID",
+
+  "cif.add_another_registration": "Add another registration",
+
+  "cif.delete": "Delete",
+
+  "cif.linked_owner_confirmation": "Linked Owner Confirmation:",
+
+  "cif.linked_branch_confirmation": "Linked Branch Confirmation:",
+
+  "cif.ownership_personal": "Ownership: 100% Personal Holding / Sister Entity",
+
+  "cif.status_authorized_branch": "Status: Authorized for Branch Invoicing, POs & Vouchers",
+
+  "cif.company_manager_confirmation": "Company Manager Confirmation:",
+
+  "cif.manager_code_mobile": "Code: {code} • Mobile: {mobile}",
+
+  "cif.business_trading_name": "Business / Trading Name",
+
+  "cif.nature_of_business": "Nature of Business",
+
+  "cif.mobile_phone_req": "Mobile / Phone *",
+
+  "cif.full_street_address": "Full Street / Building Address",
+
+  "cif.address_ph": "e.g. Shop 14, Al Ras, Deira, Dubai",
+
+  "cif.preview_360_pdf": "Preview 360° PDF",
+
+  "cif.ready_to_register": "Ready to Register",
+
+  "cif.owner_stakeholder": "Owner / Stakeholder:",
+
+  "cif.branch_colon": "Branch:",
+
+  "cif.company_manager_colon": "Company Manager:",
+
+  "cif.phone_colon": "Phone:",
+
+  "cif.email_colon": "Email:",
+
+  "cif.serials_colon": "Serials:",
+
+  "cif.sister_companies_colon": "Sister Companies:",
+
+  "cif.companies_on_record": "Companies on Record",
+
+  "cif.registered_licenses": "Registered Licenses & Regulatory Identifiers:",
+
+  "cif.back": "Back",
+
+  "cif.next_step": "Next Step",
+
+  "cif.saving": "Saving...",
+
+  "cif.save_finalize": "Save & Finalize Company",
   "audit.per_page_25": "25 per page",
 
   "audit.per_page_50": "50 per page",
@@ -33667,6 +33961,202 @@ const ur: Dict = {
 
 
 
+
+
+  "cif.company_name_en_ph": "مثلاً ٹریڈنگ کمپنی LLC",
+
+  "cif.business_trading_name_ph": "مثلاً ٹریڈنگ کمپنی",
+
+  "cif.currency_aed": "متحدہ عرب امارات درہم",
+
+  "cif.currency_pkr": "پاکستانی روپیہ",
+
+  "cif.currency_afn": "افغان افغانی",
+
+  "cif.currency_inr": "بھارتی روپیہ",
+
+  "cif.four_level_auto_allocated": "4-سطحی خودکار مختص",
+  "cif.msg_required_fields": "برائے مہربانی لازمی فیلڈز مکمل کریں۔",
+
+  "cif.msg_updated": "کمپنی کے کوائف کامیابی سے اپ ڈیٹ ہو گئے۔",
+
+  "cif.msg_registered": "نئی کمپنی کامیابی سے رجسٹر ہو گئی۔",
+
+  "cif.msg_ready_sister": "اسی مالک کے لیے نئی سسٹر کمپنی کا فارم تیار ہے۔",
+
+  "cif.title": "کمپنی رجسٹریشن و کارپوریٹ سیٹ اپ",
+
+  "cif.mode_owner_portfolio": "شخص / مالک سسٹر کمپنیاں (Owner Portfolio)",
+
+  "cif.mode_branch_operative": "برانچ آپریشنل کمپنی (Branch Operative)",
+
+  "cif.step_company_info": "کمپنی معلومات",
+
+  "cif.step_owner_branch": "مالک / برانچ",
+
+  "cif.step_address_contact": "پتہ و رابطے",
+
+  "cif.step_review_save": "جائزہ و محفوظ",
+
+  "cif.select_owner_person": "مالک / شخص کا انتخاب کریں (Select Owner / Person) *",
+
+  "cif.search_owner_ph": "مالک کا نام یا کسٹمر کوڈ درج کریں...",
+
+  "cif.company_manager": "کمپنی منیجر (Company Manager)",
+
+  "cif.search_manager_ph": "منیجر کا نام تلاش کریں...",
+
+  "cif.add_new_sister": "+ نئی سسٹر کمپنی بنائیں (+ New Sister Company)",
+
+  "cif.country_req": "ملک کا انتخاب کریں (Country) *",
+
+  "cif.select_country_ph": "ملک منتخب کریں...",
+
+  "cif.main_branch_req": "مین برانچ (Main Branch) *",
+
+  "cif.select_main_branch_ph": "مین برانچ منتخب کریں...",
+
+  "cif.city_branch": "سٹی برانچ (City Branch)",
+
+  "cif.all_city_branches_ph": "تمام سٹی برانچز...",
+
+  "cif.branch_mode_active": "برانچ آپریشنل کمپنی موڈ فعال",
+
+  "cif.selected_owner_details": "منتخب مالک / شخص کی تفصیلات",
+
+  "cif.active": "فعال",
+
+  "cif.selected_owner_investor": "منتخب مالک",
+
+  "cif.son_of": "ولدیت:",
+
+  "cif.customer_code": "کسٹمر کوڈ",
+
+  "cif.employee_code": "ایمپلائی کوڈ",
+
+  "cif.mobile_whatsapp": "موبائل / واٹس ایپ",
+
+  "cif.email": "ای میل",
+
+  "cif.country_city": "ملک / شہر",
+
+  "cif.selected_manager_details": "کمپنی منیجر کے کوائف (Manager Details)",
+
+  "cif.authorized": "مجاز ایڈمن",
+
+  "cif.manager_code": "منیجر کوڈ",
+
+  "cif.mobile": "رابطہ نمبر",
+
+  "cif.company_name": "کمپنی کا نام",
+
+  "cif.structure": "ساخت",
+
+  "cif.status": "حالت",
+
+  "cif.no_sister_companies": "اس شخص کے نام ابھی کوئی سسٹر کمپنی رجسٹرڈ نہیں ہے۔",
+
+  "cif.linked_bank_accounts": "منسلک بینک اکاؤنٹس ({n})",
+
+  "cif.selected_branch_details": "منتخب برانچ کے کوائف",
+
+  "cif.operative_branch": "آپریشنل برانچ",
+
+  "cif.erp_wide_role": "✨ پورے ERP میں اس برانچ کا آپریشنل کردار:",
+
+  "cif.branch_operative_companies": "اس برانچ کی موجودہ کمپنیاں ({n})",
+
+  "cif.company_col": "کمپنی کا نام",
+
+  "cif.no_operative_companies": "اس برانچ میں ابھی کوئی آپریشنل کمپنی نہیں ہے۔",
+
+  "cif.companies_stat": "کل کمپنیاں",
+
+  "cif.banks_stat": "بینک اکاؤنٹس",
+
+  "cif.employees_stat": "کل ملازمین",
+
+  "cif.serials_stat": "سیریل سسٹم",
+
+  "cif.new_sister_registration": "نئی سسٹر کمپنی رجسٹریشن",
+
+  "cif.new_branch_operative_registration": "نئی برانچ آپریشنل کمپنی رجسٹریشن",
+
+  "cif.register_under_owner": "منتخب مالک کے نام پر نئی سسٹر کمپنی رجسٹر کریں",
+
+  "cif.establish_branch_company": "منتخب برانچ کے لیے آپریشنل کمپنی قائم کریں",
+
+  "cif.step_x_of_4": "مرحلہ {n} از 4",
+
+  "cif.step1_hint": "برائے کرم کمپنی کا نام، قانونی ساخت اور تمام لائسنس/ٹیکس رجسٹریشن نمبرز درج کریں۔",
+
+  "cif.company_name_en": "کمپنی کا نام (انگریزی) *",
+
+  "cif.company_name_local": "کمپنی کا نام (اردو / مقامی نام)",
+
+  "cif.legal_structure_req": "قانونی ساخت *",
+
+  "cif.base_currency": "بنیادی کرنسی (Base Currency)",
+
+  "cif.license_tax_ids": "لائسنس و رجسٹریشن نمبرز (License & Registration IDs) *",
+
+  "cif.add_registration_id": "+ مزید نمبر شامل کریں",
+
+  "cif.add_another_registration": "ایک اور نمبر شامل کریں",
+
+  "cif.delete": "حذف کریں",
+
+  "cif.linked_owner_confirmation": "منسلک مالک کی تصدیق (Owner):",
+
+  "cif.linked_branch_confirmation": "منسلک برانچ کی تصدیق (Branch):",
+
+  "cif.ownership_personal": "ملکیت: 100% پرسنل ہولڈنگ / سسٹر کمپنی",
+
+  "cif.status_authorized_branch": "حیثیت: پورے ERP میں برانچ انوائسز اور واؤچرز کے لیے مجاز",
+
+  "cif.company_manager_confirmation": "کمپنی منیجر (Manager):",
+
+  "cif.manager_code_mobile": "کوڈ: {code} • موبائل: {mobile}",
+
+  "cif.business_trading_name": "کاروباری نام (Trading Name)",
+
+  "cif.nature_of_business": "کاروبار کی نوعیت",
+
+  "cif.mobile_phone_req": "موبائل / فون *",
+
+  "cif.full_street_address": "مکمل گلی / عمارت کا پتہ",
+
+  "cif.address_ph": "مثلاً: شاپ نمبر 14، دیرہ، دبئی، متحدہ عرب امارات",
+
+  "cif.preview_360_pdf": "مکمل 360° پی ڈی ایف رپورٹ",
+
+  "cif.ready_to_register": "تیار برائے رجسٹریشن",
+
+  "cif.owner_stakeholder": "مالک / شخص:",
+
+  "cif.branch_colon": "برانچ:",
+
+  "cif.company_manager_colon": "کمپنی منیجر:",
+
+  "cif.phone_colon": "فون نمبر:",
+
+  "cif.email_colon": "ای میل:",
+
+  "cif.serials_colon": "سیریل ایلوکیشن:",
+
+  "cif.sister_companies_colon": "سسٹر کمپنیاں:",
+
+  "cif.companies_on_record": "کمپنیاں موجود",
+
+  "cif.registered_licenses": "رجسٹرڈ لائسنسز و شناختی نمبرز:",
+
+  "cif.back": "پیچھے",
+
+  "cif.next_step": "اگلا مرحلہ",
+
+  "cif.saving": "محفوظ ہو رہا ہے...",
+
+  "cif.save_finalize": "کمپنی محفوظ کریں (Save Company)",
   "audit.per_page_25": "25 فی صفحہ",
 
   "audit.per_page_50": "50 فی صفحہ",
@@ -48901,6 +49391,202 @@ const ar: Dict = {
 
 
 
+
+
+  "cif.company_name_en_ph": "مثال: شركة تجارية ذ.م.م",
+
+  "cif.business_trading_name_ph": "مثال: شركة تجارية",
+
+  "cif.currency_aed": "درهم إماراتي",
+
+  "cif.currency_pkr": "روبية باكستانية",
+
+  "cif.currency_afn": "أفغاني أفغاني",
+
+  "cif.currency_inr": "روبية هندية",
+
+  "cif.four_level_auto_allocated": "مخصص تلقائيًا على 4 مستويات",
+  "cif.msg_required_fields": "يرجى إكمال الحقول المطلوبة.",
+
+  "cif.msg_updated": "تم تحديث بيانات الشركة بنجاح.",
+
+  "cif.msg_registered": "تم تسجيل الشركة الجديدة بنجاح.",
+
+  "cif.msg_ready_sister": "جاهز لإدخال شركة شقيقة جديدة لنفس المالك.",
+
+  "cif.title": "تسجيل الشركة والإعداد المؤسسي",
+
+  "cif.mode_owner_portfolio": "المالك / الشركات الشقيقة",
+
+  "cif.mode_branch_operative": "الشركة التشغيلية للفرع",
+
+  "cif.step_company_info": "معلومات الشركة",
+
+  "cif.step_owner_branch": "المالك / الفرع",
+
+  "cif.step_address_contact": "العنوان والاتصال",
+
+  "cif.step_review_save": "مراجعة وحفظ",
+
+  "cif.select_owner_person": "اختر المالك / الشخص *",
+
+  "cif.search_owner_ph": "ابحث عن اسم المالك أو رمز العميل...",
+
+  "cif.company_manager": "مدير الشركة",
+
+  "cif.search_manager_ph": "ابحث عن اسم المدير...",
+
+  "cif.add_new_sister": "+ إضافة شركة شقيقة جديدة",
+
+  "cif.country_req": "الدولة *",
+
+  "cif.select_country_ph": "اختر الدولة...",
+
+  "cif.main_branch_req": "الفرع الرئيسي *",
+
+  "cif.select_main_branch_ph": "اختر الفرع الرئيسي...",
+
+  "cif.city_branch": "فرع المدينة",
+
+  "cif.all_city_branches_ph": "جميع فروع المدن...",
+
+  "cif.branch_mode_active": "وضع التشغيل عبر الفرع نشط",
+
+  "cif.selected_owner_details": "تفاصيل المالك المحدد",
+
+  "cif.active": "نشط",
+
+  "cif.selected_owner_investor": "المالك / المستثمر المحدد",
+
+  "cif.son_of": "ابن:",
+
+  "cif.customer_code": "رمز العميل",
+
+  "cif.employee_code": "رمز الموظف",
+
+  "cif.mobile_whatsapp": "الجوال / واتساب",
+
+  "cif.email": "البريد الإلكتروني",
+
+  "cif.country_city": "الدولة / المدينة",
+
+  "cif.selected_manager_details": "تفاصيل مدير الشركة المحدد",
+
+  "cif.authorized": "مخوّل",
+
+  "cif.manager_code": "رمز المدير",
+
+  "cif.mobile": "الجوال",
+
+  "cif.company_name": "اسم الشركة",
+
+  "cif.structure": "الهيكل",
+
+  "cif.status": "الحالة",
+
+  "cif.no_sister_companies": "لا توجد شركات شقيقة مسجلة تحت هذا المالك.",
+
+  "cif.linked_bank_accounts": "الحسابات المصرفية المرتبطة ({n})",
+
+  "cif.selected_branch_details": "تفاصيل الفرع المحدد",
+
+  "cif.operative_branch": "الفرع التشغيلي",
+
+  "cif.erp_wide_role": "✨ الدور التشغيلي على مستوى ERP:",
+
+  "cif.branch_operative_companies": "الشركات التشغيلية للفرع ({n})",
+
+  "cif.company_col": "الشركة",
+
+  "cif.no_operative_companies": "لم يتم تسجيل أي شركة تشغيلية بعد.",
+
+  "cif.companies_stat": "الشركات",
+
+  "cif.banks_stat": "البنوك",
+
+  "cif.employees_stat": "الموظفون",
+
+  "cif.serials_stat": "التسلسلات",
+
+  "cif.new_sister_registration": "تسجيل شركة شقيقة جديدة",
+
+  "cif.new_branch_operative_registration": "تسجيل شركة تشغيلية جديدة للفرع",
+
+  "cif.register_under_owner": "سجّل شركة جديدة تحت المالك المحدد",
+
+  "cif.establish_branch_company": "أسس شركة تشغيلية رسمية لهذا الفرع",
+
+  "cif.step_x_of_4": "الخطوة {n} من 4",
+
+  "cif.step1_hint": "يرجى إدخال اسم الشركة والهيكل المؤسسي وجميع أرقام التراخيص/الضرائب المطبقة.",
+
+  "cif.company_name_en": "اسم الشركة (بالإنجليزية) *",
+
+  "cif.company_name_local": "اسم الشركة (محلي)",
+
+  "cif.legal_structure_req": "الهيكل القانوني *",
+
+  "cif.base_currency": "العملة الأساسية",
+
+  "cif.license_tax_ids": "معرفات الترخيص والضريبة والتسجيل *",
+
+  "cif.add_registration_id": "+ إضافة معرف تسجيل",
+
+  "cif.add_another_registration": "إضافة تسجيل آخر",
+
+  "cif.delete": "حذف",
+
+  "cif.linked_owner_confirmation": "تأكيد المالك المرتبط:",
+
+  "cif.linked_branch_confirmation": "تأكيد الفرع المرتبط:",
+
+  "cif.ownership_personal": "الملكية: 100% حيازة شخصية / كيان شقيق",
+
+  "cif.status_authorized_branch": "الحالة: مخوّل لفواتير الفرع وأوامر الشراء والسندات",
+
+  "cif.company_manager_confirmation": "تأكيد مدير الشركة:",
+
+  "cif.manager_code_mobile": "الرمز: {code} • الجوال: {mobile}",
+
+  "cif.business_trading_name": "الاسم التجاري",
+
+  "cif.nature_of_business": "طبيعة العمل",
+
+  "cif.mobile_phone_req": "الجوال / الهاتف *",
+
+  "cif.full_street_address": "عنوان الشارع / المبنى الكامل",
+
+  "cif.address_ph": "مثال: محل 14، الرأس، ديرة، دبي",
+
+  "cif.preview_360_pdf": "معاينة PDF 360°",
+
+  "cif.ready_to_register": "جاهز للتسجيل",
+
+  "cif.owner_stakeholder": "المالك / صاحب المصلحة:",
+
+  "cif.branch_colon": "الفرع:",
+
+  "cif.company_manager_colon": "مدير الشركة:",
+
+  "cif.phone_colon": "الهاتف:",
+
+  "cif.email_colon": "البريد الإلكتروني:",
+
+  "cif.serials_colon": "التسلسلات:",
+
+  "cif.sister_companies_colon": "الشركات الشقيقة:",
+
+  "cif.companies_on_record": "الشركات المسجلة",
+
+  "cif.registered_licenses": "التراخيص المسجلة والمعرفات التنظيمية:",
+
+  "cif.back": "رجوع",
+
+  "cif.next_step": "الخطوة التالية",
+
+  "cif.saving": "جارٍ الحفظ...",
+
+  "cif.save_finalize": "حفظ وإنهاء الشركة",
   "audit.per_page_25": "25 لكل صفحة",
 
   "audit.per_page_50": "50 لكل صفحة",
@@ -64134,6 +64820,202 @@ const fa: Dict = {
 
 
 
+
+
+  "cif.company_name_en_ph": "مثال: شرکت تجاری با مسئولیت محدود",
+
+  "cif.business_trading_name_ph": "مثال: شرکت تجاری",
+
+  "cif.currency_aed": "درهم امارات",
+
+  "cif.currency_pkr": "روپیه پاکستان",
+
+  "cif.currency_afn": "افغانی افغانستان",
+
+  "cif.currency_inr": "روپیه هند",
+
+  "cif.four_level_auto_allocated": "تخصیص خودکار 4 سطحی",
+  "cif.msg_required_fields": "لطفاً فیلدهای الزامی را تکمیل کنید.",
+
+  "cif.msg_updated": "اطلاعات شرکت با موفقیت به‌روزرسانی شد.",
+
+  "cif.msg_registered": "شرکت جدید با موفقیت ثبت شد.",
+
+  "cif.msg_ready_sister": "آماده برای ثبت شرکت خواهر جدید برای همان مالک.",
+
+  "cif.title": "ثبت شرکت و راه‌اندازی سازمانی",
+
+  "cif.mode_owner_portfolio": "مالک / شرکت‌های خواهر",
+
+  "cif.mode_branch_operative": "شرکت عملیاتی شعبه",
+
+  "cif.step_company_info": "اطلاعات شرکت",
+
+  "cif.step_owner_branch": "مالک / شعبه",
+
+  "cif.step_address_contact": "آدرس و تماس",
+
+  "cif.step_review_save": "بازبینی و ذخیره",
+
+  "cif.select_owner_person": "انتخاب مالک / شخص *",
+
+  "cif.search_owner_ph": "جستجوی نام مالک یا کد مشتری...",
+
+  "cif.company_manager": "مدیر شرکت",
+
+  "cif.search_manager_ph": "جستجوی نام مدیر...",
+
+  "cif.add_new_sister": "+ افزودن شرکت خواهر جدید",
+
+  "cif.country_req": "کشور *",
+
+  "cif.select_country_ph": "انتخاب کشور...",
+
+  "cif.main_branch_req": "شعبه اصلی *",
+
+  "cif.select_main_branch_ph": "انتخاب شعبه اصلی...",
+
+  "cif.city_branch": "شعبه شهر",
+
+  "cif.all_city_branches_ph": "همه شعبه‌های شهر...",
+
+  "cif.branch_mode_active": "حالت عملیاتی شعبه فعال است",
+
+  "cif.selected_owner_details": "جزئیات مالک انتخاب‌شده",
+
+  "cif.active": "فعال",
+
+  "cif.selected_owner_investor": "مالک / سرمایه‌گذار انتخاب‌شده",
+
+  "cif.son_of": "فرزند:",
+
+  "cif.customer_code": "کد مشتری",
+
+  "cif.employee_code": "کد کارمند",
+
+  "cif.mobile_whatsapp": "موبایل / واتساپ",
+
+  "cif.email": "ایمیل",
+
+  "cif.country_city": "کشور / شهر",
+
+  "cif.selected_manager_details": "جزئیات مدیر شرکت انتخاب‌شده",
+
+  "cif.authorized": "مجاز",
+
+  "cif.manager_code": "کد مدیر",
+
+  "cif.mobile": "موبایل",
+
+  "cif.company_name": "نام شرکت",
+
+  "cif.structure": "ساختار",
+
+  "cif.status": "وضعیت",
+
+  "cif.no_sister_companies": "شرکت خواهری تحت این مالک ثبت نشده است.",
+
+  "cif.linked_bank_accounts": "حساب‌های بانکی مرتبط ({n})",
+
+  "cif.selected_branch_details": "جزئیات شعبه انتخاب‌شده",
+
+  "cif.operative_branch": "شعبه عملیاتی",
+
+  "cif.erp_wide_role": "✨ نقش عملیاتی در سراسر ERP:",
+
+  "cif.branch_operative_companies": "شرکت‌های عملیاتی شعبه ({n})",
+
+  "cif.company_col": "شرکت",
+
+  "cif.no_operative_companies": "هنوز شرکت عملیاتی ثبت نشده است.",
+
+  "cif.companies_stat": "شرکت‌ها",
+
+  "cif.banks_stat": "بانک‌ها",
+
+  "cif.employees_stat": "کارمندان",
+
+  "cif.serials_stat": "سریال‌ها",
+
+  "cif.new_sister_registration": "ثبت شرکت خواهر جدید",
+
+  "cif.new_branch_operative_registration": "ثبت شرکت عملیاتی جدید شعبه",
+
+  "cif.register_under_owner": "ثبت شرکت جدید تحت مالک انتخاب‌شده",
+
+  "cif.establish_branch_company": "ایجاد یک شرکت عملیاتی رسمی برای این شعبه",
+
+  "cif.step_x_of_4": "مرحله {n} از 4",
+
+  "cif.step1_hint": "لطفاً نام شرکت، ساختار سازمانی و تمام شماره‌های مجوز/مالیات مربوطه را وارد کنید.",
+
+  "cif.company_name_en": "نام شرکت (انگلیسی) *",
+
+  "cif.company_name_local": "نام شرکت (محلی)",
+
+  "cif.legal_structure_req": "ساختار حقوقی *",
+
+  "cif.base_currency": "ارز پایه",
+
+  "cif.license_tax_ids": "شناسه‌های مجوز، مالیات و ثبت *",
+
+  "cif.add_registration_id": "+ افزودن شناسه ثبت",
+
+  "cif.add_another_registration": "افزودن ثبت دیگر",
+
+  "cif.delete": "حذف",
+
+  "cif.linked_owner_confirmation": "تأیید مالک مرتبط:",
+
+  "cif.linked_branch_confirmation": "تأیید شعبه مرتبط:",
+
+  "cif.ownership_personal": "مالکیت: 100% نگهداری شخصی / نهاد خواهر",
+
+  "cif.status_authorized_branch": "وضعیت: مجاز برای صورتحساب شعبه، سفارش خرید و سند",
+
+  "cif.company_manager_confirmation": "تأیید مدیر شرکت:",
+
+  "cif.manager_code_mobile": "کد: {code} • موبایل: {mobile}",
+
+  "cif.business_trading_name": "نام تجاری",
+
+  "cif.nature_of_business": "نوع کسب‌وکار",
+
+  "cif.mobile_phone_req": "موبایل / تلفن *",
+
+  "cif.full_street_address": "آدرس کامل خیابان / ساختمان",
+
+  "cif.address_ph": "مثال: مغازه 14، الراس، دیره، دبی",
+
+  "cif.preview_360_pdf": "پیش‌نمایش PDF 360 درجه",
+
+  "cif.ready_to_register": "آماده برای ثبت",
+
+  "cif.owner_stakeholder": "مالک / ذی‌نفع:",
+
+  "cif.branch_colon": "شعبه:",
+
+  "cif.company_manager_colon": "مدیر شرکت:",
+
+  "cif.phone_colon": "تلفن:",
+
+  "cif.email_colon": "ایمیل:",
+
+  "cif.serials_colon": "سریال‌ها:",
+
+  "cif.sister_companies_colon": "شرکت‌های خواهر:",
+
+  "cif.companies_on_record": "شرکت‌های ثبت‌شده",
+
+  "cif.registered_licenses": "مجوزها و شناسه‌های نظارتی ثبت‌شده:",
+
+  "cif.back": "بازگشت",
+
+  "cif.next_step": "مرحله بعد",
+
+  "cif.saving": "در حال ذخیره...",
+
+  "cif.save_finalize": "ذخیره و نهایی‌سازی شرکت",
   "audit.per_page_25": "25 در هر صفحه",
 
   "audit.per_page_50": "50 در هر صفحه",
@@ -79373,6 +80255,202 @@ const ps: Dict = {
 
 
 
+
+
+  "cif.company_name_en_ph": "بېلګه: د سوداګرۍ شرکت LLC",
+
+  "cif.business_trading_name_ph": "بېلګه: سوداګریز شرکت",
+
+  "cif.currency_aed": "د متحده عربي امارتونو درهم",
+
+  "cif.currency_pkr": "پاکستاني کلدار",
+
+  "cif.currency_afn": "افغان افغانۍ",
+
+  "cif.currency_inr": "هندي کلدار",
+
+  "cif.four_level_auto_allocated": "4-کچن اتومات ځانګړی شوی",
+  "cif.msg_required_fields": "مهرباني وکړئ اړین ساحې بشپړې کړئ.",
+
+  "cif.msg_updated": "د شرکت معلومات په بریالیتوب سره تازه شول.",
+
+  "cif.msg_registered": "نوی شرکت په بریالیتوب سره راجستر شو.",
+
+  "cif.msg_ready_sister": "د ورته مالک لپاره د نوي خور شرکت د ننوتلو لپاره چمتو دی.",
+
+  "cif.title": "د شرکت راجستریشن او سازماني تنظیم",
+
+  "cif.mode_owner_portfolio": "مالک / د خور شرکتونه",
+
+  "cif.mode_branch_operative": "د څانګې عملیاتي شرکت",
+
+  "cif.step_company_info": "د شرکت معلومات",
+
+  "cif.step_owner_branch": "مالک / څانګه",
+
+  "cif.step_address_contact": "پته او اړیکه",
+
+  "cif.step_review_save": "بیاکتنه او خوندي کول",
+
+  "cif.select_owner_person": "مالک / شخص وټاکئ *",
+
+  "cif.search_owner_ph": "د مالک نوم یا د پیرودونکي کوډ ولټوئ...",
+
+  "cif.company_manager": "د شرکت مدیر",
+
+  "cif.search_manager_ph": "د مدیر نوم ولټوئ...",
+
+  "cif.add_new_sister": "+ نوی خور شرکت اضافه کړئ",
+
+  "cif.country_req": "هېواد *",
+
+  "cif.select_country_ph": "هېواد وټاکئ...",
+
+  "cif.main_branch_req": "اصلي څانګه *",
+
+  "cif.select_main_branch_ph": "اصلي څانګه وټاکئ...",
+
+  "cif.city_branch": "د ښار څانګه",
+
+  "cif.all_city_branches_ph": "ټولې د ښار څانګې...",
+
+  "cif.branch_mode_active": "د څانګې عملیاتي حالت فعال دی",
+
+  "cif.selected_owner_details": "د ټاکل شوي مالک تفصیلات",
+
+  "cif.active": "فعال",
+
+  "cif.selected_owner_investor": "ټاکل شوی مالک / پانګه اچوونکی",
+
+  "cif.son_of": "زوی:",
+
+  "cif.customer_code": "د پیرودونکي کوډ",
+
+  "cif.employee_code": "د کارمند کوډ",
+
+  "cif.mobile_whatsapp": "موبایل / واتساپ",
+
+  "cif.email": "بریښنالیک",
+
+  "cif.country_city": "هېواد / ښار",
+
+  "cif.selected_manager_details": "د ټاکل شوي د شرکت مدیر تفصیلات",
+
+  "cif.authorized": "واک لرونکی",
+
+  "cif.manager_code": "د مدیر کوډ",
+
+  "cif.mobile": "موبایل",
+
+  "cif.company_name": "د شرکت نوم",
+
+  "cif.structure": "جوړښت",
+
+  "cif.status": "حالت",
+
+  "cif.no_sister_companies": "د دې مالک لاندې هیڅ خور شرکت نه دی راجستر شوی.",
+
+  "cif.linked_bank_accounts": "تړلي بانکي حسابونه ({n})",
+
+  "cif.selected_branch_details": "د ټاکل شوې څانګې تفصیلات",
+
+  "cif.operative_branch": "عملیاتي څانګه",
+
+  "cif.erp_wide_role": "✨ د ERP په کچه عملیاتي رول:",
+
+  "cif.branch_operative_companies": "د څانګې عملیاتي شرکتونه ({n})",
+
+  "cif.company_col": "شرکت",
+
+  "cif.no_operative_companies": "تر اوسه هیڅ عملیاتي شرکت نه دی راجستر شوی.",
+
+  "cif.companies_stat": "شرکتونه",
+
+  "cif.banks_stat": "بانکونه",
+
+  "cif.employees_stat": "کارمندان",
+
+  "cif.serials_stat": "سیریلونه",
+
+  "cif.new_sister_registration": "د نوي خور شرکت راجستریشن",
+
+  "cif.new_branch_operative_registration": "د نوي څانګې عملیاتي شرکت راجستریشن",
+
+  "cif.register_under_owner": "د ټاکل شوي مالک لاندې نوی شرکت راجستر کړئ",
+
+  "cif.establish_branch_company": "د دې څانګې لپاره رسمي عملیاتي شرکت جوړ کړئ",
+
+  "cif.step_x_of_4": "مرحله {n} د 4 څخه",
+
+  "cif.step1_hint": "مهرباني وکړئ د شرکت نوم، سازماني جوړښت، او ټول اړوند جواز/مالیې شمېرې دننه کړئ.",
+
+  "cif.company_name_en": "د شرکت نوم (انګلیسي) *",
+
+  "cif.company_name_local": "د شرکت نوم (ځايي)",
+
+  "cif.legal_structure_req": "حقوقي جوړښت *",
+
+  "cif.base_currency": "بنسټیز اسعار",
+
+  "cif.license_tax_ids": "د جواز، مالیې او راجستریشن پیژندنې *",
+
+  "cif.add_registration_id": "+ د راجستریشن پیژندنه اضافه کړئ",
+
+  "cif.add_another_registration": "بل راجستریشن اضافه کړئ",
+
+  "cif.delete": "حذف کول",
+
+  "cif.linked_owner_confirmation": "د تړلي مالک تایید:",
+
+  "cif.linked_branch_confirmation": "د تړلې څانګې تایید:",
+
+  "cif.ownership_personal": "ملکیت: 100٪ شخصي ساتنه / خور اداره",
+
+  "cif.status_authorized_branch": "حالت: د څانګې انوائس، د پیرود امرونو، او واوچرونو لپاره واک لرونکی",
+
+  "cif.company_manager_confirmation": "د شرکت د مدیر تایید:",
+
+  "cif.manager_code_mobile": "کوډ: {code} • موبایل: {mobile}",
+
+  "cif.business_trading_name": "سوداګریز نوم",
+
+  "cif.nature_of_business": "د سوداګرۍ ماهیت",
+
+  "cif.mobile_phone_req": "موبایل / تلیفون *",
+
+  "cif.full_street_address": "د سړک / ودانۍ بشپړه پته",
+
+  "cif.address_ph": "بېلګه: پلورنځی 14، الراس، دیره، دبۍ",
+
+  "cif.preview_360_pdf": "د 360° PDF مخکتنه",
+
+  "cif.ready_to_register": "د راجستر کولو لپاره چمتو",
+
+  "cif.owner_stakeholder": "مالک / ګټه لرونکی:",
+
+  "cif.branch_colon": "څانګه:",
+
+  "cif.company_manager_colon": "د شرکت مدیر:",
+
+  "cif.phone_colon": "تلیفون:",
+
+  "cif.email_colon": "بریښنالیک:",
+
+  "cif.serials_colon": "سیریلونه:",
+
+  "cif.sister_companies_colon": "د خور شرکتونه:",
+
+  "cif.companies_on_record": "ثبت شوي شرکتونه",
+
+  "cif.registered_licenses": "ثبت شوي جوازونه او تنظیمي پیژندنې:",
+
+  "cif.back": "بېرته",
+
+  "cif.next_step": "بله مرحله",
+
+  "cif.saving": "خوندي کیږي...",
+
+  "cif.save_finalize": "شرکت خوندي او نهايي کړئ",
   "audit.per_page_25": "25 هر پاڼه کې",
 
   "audit.per_page_50": "50 هر پاڼه کې",

@@ -467,7 +467,7 @@ export function CompanyIncorporationForm({
   async function handleSubmit(event?: React.FormEvent) {
     event?.preventDefault();
     if (!ready) {
-      setMessage(lang === "ur" ? "برائے مہربانی لازمی فیلڈز مکمل کریں۔" : "Please complete required fields.");
+      setMessage(t(lang, "cif.msg_required_fields", "Please complete required fields."));
       return;
     }
 
@@ -509,11 +509,11 @@ export function CompanyIncorporationForm({
       let savedCompanyId = effectiveCompanyId;
       if (effectiveCompanyId) {
         await apiPatch(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}`, payload);
-        setMessage(lang === "ur" ? "کمپنی کے کوائف کامیابی سے اپ ڈیٹ ہو گئے۔" : "Company updated successfully.");
+        setMessage(t(lang, "cif.msg_updated", "Company updated successfully."));
       } else {
         const res = await apiPost<{ companyId: string }>("/api/erp/companies", payload);
         savedCompanyId = res.companyId ?? (res as any).data?.companyId ?? (res as any)?.id;
-        setMessage(lang === "ur" ? "نئی کمپنی کامیابی سے رجسٹر ہو گئی۔" : "New company registered successfully.");
+        setMessage(t(lang, "cif.msg_registered", "New company registered successfully."));
       }
 
       // Record that the AI reviewed-draft was used to create/update this record
@@ -552,7 +552,7 @@ export function CompanyIncorporationForm({
       { type: "VAT/TRN", value: "" }
     ]);
     setCurrentStep(1);
-    setMessage(lang === "ur" ? "اسی مالک کے لیے نئی سسٹر کمپنی کا فارم تیار ہے۔" : "Ready to enter new sister company for same owner.");
+    setMessage(t(lang, "cif.msg_ready_sister", "Ready to enter new sister company for same owner."));
   }
 
   const selectedCountry = countriesList.find((c) => c.id === selectedCountryId);
@@ -581,7 +581,7 @@ export function CompanyIncorporationForm({
           </div>
           <div>
             <h1 className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              {lang === "ur" ? "کمپنی رجسٹریشن و کارپوریٹ سیٹ اپ" : "Company Registration & Corporate Setup"}
+              {t(lang, "cif.title", "Company Registration & Corporate Setup")}
             </h1>
             <p className="text-xs text-slate-500 font-medium">
               {lang === "ur" 
@@ -603,7 +603,7 @@ export function CompanyIncorporationForm({
             }`}
           >
             <User className="h-4 w-4" />
-            <span>{lang === "ur" ? "شخص / مالک سسٹر کمپنیاں (Owner Portfolio)" : "Owner / Sister Companies"}</span>
+            <span>{t(lang, "cif.mode_owner_portfolio", "Owner / Sister Companies")}</span>
           </button>
 
           <button
@@ -616,17 +616,17 @@ export function CompanyIncorporationForm({
             }`}
           >
             <Compass className="h-4 w-4" />
-            <span>{lang === "ur" ? "برانچ آپریشنل کمپنی (Branch Operative)" : "Branch Operative Company"}</span>
+            <span>{t(lang, "cif.mode_branch_operative", "Branch Operative Company")}</span>
           </button>
         </div>
 
         {/* Horizontal Step Tracker */}
         <div className="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
           {[
-            { id: 1, label: lang === "ur" ? "کمپنی معلومات" : "Company Info" },
-            { id: 2, label: lang === "ur" ? "مالک / برانچ" : "Owner / Branch" },
-            { id: 3, label: lang === "ur" ? "پتہ و رابطے" : "Address & Contact" },
-            { id: 4, label: lang === "ur" ? "جائزہ و محفوظ" : "Review & Save" }
+            { id: 1, label: t(lang, "cif.step_company_info", "Company Info") },
+            { id: 2, label: t(lang, "cif.step_owner_branch", "Owner / Branch") },
+            { id: 3, label: t(lang, "cif.step_address_contact", "Address & Contact") },
+            { id: 4, label: t(lang, "cif.step_review_save", "Review & Save") }
           ].map((s) => {
             const active = currentStep === s.id;
             const done = currentStep > s.id;
@@ -663,7 +663,7 @@ export function CompanyIncorporationForm({
             size="icon"
             onClick={handleClose}
             className="h-9 w-9 rounded-full border-slate-200"
-            title="Close"
+            title={t(lang, "common.close", "Close")}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -676,17 +676,17 @@ export function CompanyIncorporationForm({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1 max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-3">
               <PersonPicker
-                label={lang === "ur" ? "مالک / شخص کا انتخاب کریں (Select Owner / Person) *" : "Select Owner / Person *"}
+                label={t(lang, "cif.select_owner_person", "Select Owner / Person *")}
                 value={ownerPersonId}
                 onValueChange={(id) => setOwnerPersonId(id)}
-                placeholder={lang === "ur" ? "مالک کا نام یا کسٹمر کوڈ درج کریں..." : "Search owner name or customer code..."}
+                placeholder={t(lang, "cif.search_owner_ph", "Search owner name or customer code...")}
                 lang={lang}
               />
               <PersonPicker
-                label={lang === "ur" ? "کمپنی منیجر (Company Manager)" : "Company Manager"}
+                label={t(lang, "cif.company_manager", "Company Manager")}
                 value={managerPersonId}
                 onValueChange={(id) => setManagerPersonId(id)}
-                placeholder={lang === "ur" ? "منیجر کا نام تلاش کریں..." : "Search manager name..."}
+                placeholder={t(lang, "cif.search_manager_ph", "Search manager name...")}
                 lang={lang}
               />
             </div>
@@ -698,7 +698,7 @@ export function CompanyIncorporationForm({
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-4 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
-                <span>{lang === "ur" ? "+ نئی سسٹر کمپنی بنائیں (+ New Sister Company)" : "+ Add New Sister Company"}</span>
+                <span>{t(lang, "cif.add_new_sister", "+ Add New Sister Company")}</span>
               </Button>
             </div>
           </div>
@@ -707,14 +707,14 @@ export function CompanyIncorporationForm({
             <div className="flex-1 max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {lang === "ur" ? "ملک کا انتخاب کریں (Country) *" : "Country *"}
+                  {t(lang, "cif.country_req", "Country *")}
                 </Label>
                 <select
                   value={selectedCountryId}
                   onChange={(e) => setSelectedCountryId(e.target.value)}
                   className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
                 >
-                  <option value="">{lang === "ur" ? "ملک منتخب کریں..." : "Select Country..."}</option>
+                  <option value="">{t(lang, "cif.select_country_ph", "Select Country...")}</option>
                   {countriesList.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -723,14 +723,14 @@ export function CompanyIncorporationForm({
 
               <div>
                 <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {lang === "ur" ? "مین برانچ (Main Branch) *" : "Main Branch *"}
+                  {t(lang, "cif.main_branch_req", "Main Branch *")}
                 </Label>
                 <select
                   value={selectedCountryBranchId}
                   onChange={(e) => setSelectedCountryBranchId(e.target.value)}
                   className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
                 >
-                  <option value="">{lang === "ur" ? "مین برانچ منتخب کریں..." : "Select Main Branch..."}</option>
+                  <option value="">{t(lang, "cif.select_main_branch_ph", "Select Main Branch...")}</option>
                   {branchesList.map((b) => (
                     <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
                   ))}
@@ -739,14 +739,14 @@ export function CompanyIncorporationForm({
 
               <div>
                 <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {lang === "ur" ? "سٹی برانچ (City Branch)" : "City Branch"}
+                  {t(lang, "cif.city_branch", "City Branch")}
                 </Label>
                 <select
                   value={selectedCityBranchId}
                   onChange={(e) => setSelectedCityBranchId(e.target.value)}
                   className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
                 >
-                  <option value="">{lang === "ur" ? "تمام سٹی برانچز..." : "All City Branches..."}</option>
+                  <option value="">{t(lang, "cif.all_city_branches_ph", "All City Branches...")}</option>
                   {cityBranchesList.map((b) => (
                     <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
                   ))}
@@ -757,7 +757,7 @@ export function CompanyIncorporationForm({
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 text-xs font-bold">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                {lang === "ur" ? "برانچ آپریشنل کمپنی موڈ فعال" : "Branch Operative Mode Active"}
+                {t(lang, "cif.branch_mode_active", "Branch Operative Mode Active")}
               </span>
             </div>
           </div>
@@ -781,12 +781,12 @@ export function CompanyIncorporationForm({
                         <User className="h-4 w-4" />
                       </span>
                       <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "منتخب مالک / شخص کی تفصیلات" : "Selected Owner Details"}
+                        {t(lang, "cif.selected_owner_details", "Selected Owner Details")}
                       </CardTitle>
                     </div>
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {lang === "ur" ? "فعال Active" : "Active"}
+                      {t(lang, "cif.active", "Active")}
                     </span>
                   </div>
                 </CardHeader>
@@ -799,11 +799,11 @@ export function CompanyIncorporationForm({
                     </div>
                     <div>
                       <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                        {ownerName || (lang === "ur" ? "منتخب مالک" : "Selected Owner / Investor")}
+                        {ownerName || (t(lang, "cif.selected_owner_investor", "Selected Owner / Investor"))}
                       </h2>
                       {ownerProfile?.fatherName && ownerProfile.fatherName !== "—" && !ownerProfile.fatherName.includes("عبداللہ") && (
                         <p className="text-xs text-slate-500 font-medium">
-                          {lang === "ur" ? "ولدیت:" : "S/O:"} {ownerProfile.fatherName}
+                          {t(lang, "cif.son_of", "S/O:")} {ownerProfile.fatherName}
                         </p>
                       )}
                     </div>
@@ -813,7 +813,7 @@ export function CompanyIncorporationForm({
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {lang === "ur" ? "کسٹمر کوڈ" : "Customer Code"}
+                        {t(lang, "cif.customer_code", "Customer Code")}
                       </span>
                       <span className="font-bold text-slate-900 dark:text-white font-mono">
                         {ownerProfile?.customerCode || (ownerPersonId ? `PER-${ownerPersonId.slice(0, 8).toUpperCase()}` : "—")}
@@ -822,7 +822,7 @@ export function CompanyIncorporationForm({
 
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {lang === "ur" ? "ایمپلائی کوڈ" : "Employee Code"}
+                        {t(lang, "cif.employee_code", "Employee Code")}
                       </span>
                       <span className="font-bold text-slate-900 dark:text-white font-mono">
                         {ownerProfile?.employeeCode || "EMP-0010"}
@@ -831,7 +831,7 @@ export function CompanyIncorporationForm({
 
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {lang === "ur" ? "موبائل / واٹس ایپ" : "Mobile / WhatsApp"}
+                        {t(lang, "cif.mobile_whatsapp", "Mobile / WhatsApp")}
                       </span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" dir="ltr">
                         {phone || ownerProfile?.mobile || "—"}
@@ -840,7 +840,7 @@ export function CompanyIncorporationForm({
 
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 sm:col-span-2">
                       <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {lang === "ur" ? "ای میل" : "Email"}
+                        {t(lang, "cif.email", "Email")}
                       </span>
                       <span className="font-bold text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate block" dir="ltr">
                         {email || ownerProfile?.email || "owner@company.dgt.llc"}
@@ -849,7 +849,7 @@ export function CompanyIncorporationForm({
 
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {lang === "ur" ? "ملک / شہر" : "Country / City"}
+                        {t(lang, "cif.country_city", "Country / City")}
                       </span>
                       <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
                         {ownerProfile?.locationStr || "UAE / Dubai / Deira"}
@@ -869,11 +869,11 @@ export function CompanyIncorporationForm({
                           <Users className="h-3.5 w-3.5" />
                         </span>
                         <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                          {lang === "ur" ? "کمپنی منیجر کے کوائف (Manager Details)" : "Selected Company Manager Details"}
+                          {t(lang, "cif.selected_manager_details", "Selected Company Manager Details")}
                         </CardTitle>
                       </div>
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-                        {lang === "ur" ? "مجاز ایڈمن" : "Authorized"}
+                        {t(lang, "cif.authorized", "Authorized")}
                       </span>
                     </div>
                   </CardHeader>
@@ -888,22 +888,22 @@ export function CompanyIncorporationForm({
                         </h3>
                         {managerProfile?.fatherName && managerProfile.fatherName !== "—" && (
                           <p className="text-[11px] text-slate-500 font-medium">
-                            {lang === "ur" ? "ولدیت:" : "S/O:"} {managerProfile.fatherName}
+                            {t(lang, "cif.son_of", "S/O:")} {managerProfile.fatherName}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[9px] font-bold text-slate-400 block">{lang === "ur" ? "منیجر کوڈ" : "Manager Code"}</span>
+                        <span className="text-[9px] font-bold text-slate-400 block">{t(lang, "cif.manager_code", "Manager Code")}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{managerProfile?.customerCode || managerProfile?.employeeCode || "MGR-001"}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[9px] font-bold text-slate-400 block">{lang === "ur" ? "رابطہ نمبر" : "Mobile"}</span>
+                        <span className="text-[9px] font-bold text-slate-400 block">{t(lang, "cif.mobile", "Mobile")}</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">{managerProfile?.mobile || "—"}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 col-span-2">
-                        <span className="text-[9px] font-bold text-slate-400 block">{lang === "ur" ? "ای میل" : "Email"}</span>
+                        <span className="text-[9px] font-bold text-slate-400 block">{t(lang, "cif.email", "Email")}</span>
                         <span className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate block" dir="ltr">{managerProfile?.email || "manager@company.dgt.llc"}</span>
                       </div>
                     </div>
@@ -934,16 +934,16 @@ export function CompanyIncorporationForm({
                       <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase sticky top-0 bg-white dark:bg-slate-900">
                         <tr>
                           <th className="px-3 py-2">#</th>
-                          <th className="px-3 py-2">{lang === "ur" ? "کمپنی کا نام" : "Company Name"}</th>
-                          <th className="px-3 py-2">{lang === "ur" ? "ساخت" : "Structure"}</th>
-                          <th className="px-3 py-2 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
+                          <th className="px-3 py-2">{t(lang, "cif.company_name", "Company Name")}</th>
+                          <th className="px-3 py-2">{t(lang, "cif.structure", "Structure")}</th>
+                          <th className="px-3 py-2 text-center">{t(lang, "cif.status", "Status")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {existingCompaniesForOwner.length === 0 ? (
                           <tr>
                             <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
-                              {lang === "ur" ? "اس شخص کے نام ابھی کوئی سسٹر کمپنی رجسٹرڈ نہیں ہے۔" : "No existing sister companies found under this owner."}
+                              {t(lang, "cif.no_sister_companies", "No existing sister companies found under this owner.")}
                             </td>
                           </tr>
                         ) : (
@@ -954,7 +954,7 @@ export function CompanyIncorporationForm({
                               <td className="px-3 py-2 font-mono text-[10px] text-slate-500">{c.business_type || "LLC"}</td>
                               <td className="px-3 py-2 text-center">
                                 <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                  {lang === "ur" ? "فعال" : "Active"}
+                                  {t(lang, "cif.active", "Active")}
                                 </span>
                               </td>
                             </tr>
@@ -984,7 +984,7 @@ export function CompanyIncorporationForm({
                     <div className="flex items-center gap-2">
                       <Landmark className="h-4 w-4 text-emerald-600" />
                       <CardTitle className="text-xs font-black uppercase text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? `منسلک بینک اکاؤنٹس (${ownerBanks.length})` : `Linked Bank Accounts (${ownerBanks.length})`}
+                        {t(lang, "cif.linked_bank_accounts", "Linked Bank Accounts ({n})").replace("{n}", String(ownerBanks.length))}
                       </CardTitle>
                     </div>
                   </CardHeader>
@@ -1010,11 +1010,11 @@ export function CompanyIncorporationForm({
                         <Compass className="h-4 w-4" />
                       </span>
                       <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "منتخب برانچ کے کوائف" : "Selected Branch Details"}
+                        {t(lang, "cif.selected_branch_details", "Selected Branch Details")}
                       </CardTitle>
                     </div>
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {lang === "ur" ? "آپریشنل برانچ" : "Operative Branch"}
+                      {t(lang, "cif.operative_branch", "Operative Branch")}
                     </span>
                   </div>
                 </CardHeader>
@@ -1036,7 +1036,7 @@ export function CompanyIncorporationForm({
 
                   <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900/40 text-xs text-emerald-900 dark:text-emerald-200">
                     <p className="font-bold mb-1">
-                      {lang === "ur" ? "✨ پورے ERP میں اس برانچ کا آپریشنل کردار:" : "✨ ERP-Wide Operative Role:"}
+                      {t(lang, "cif.erp_wide_role", "✨ ERP-Wide Operative Role:")}
                     </p>
                     <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300">
                       {lang === "ur" 
@@ -1054,7 +1054,7 @@ export function CompanyIncorporationForm({
                     <div className="flex items-center gap-2">
                       <Building className="h-4 w-4 text-emerald-600" />
                       <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? `اس برانچ کی موجودہ کمپنیاں (${branchCompanies.length})` : `Branch Operative Companies (${branchCompanies.length})`}
+                        {t(lang, "cif.branch_operative_companies", "Branch Operative Companies ({n})").replace("{n}", String(branchCompanies.length))}
                       </CardTitle>
                     </div>
                   </div>
@@ -1065,16 +1065,16 @@ export function CompanyIncorporationForm({
                       <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b">
                         <tr>
                           <th className="px-3 py-2">#</th>
-                          <th className="px-3 py-2">{lang === "ur" ? "کمپنی کا نام" : "Company"}</th>
-                          <th className="px-3 py-2">{lang === "ur" ? "ساخت" : "Structure"}</th>
-                          <th className="px-3 py-2 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
+                          <th className="px-3 py-2">{t(lang, "cif.company_col", "Company")}</th>
+                          <th className="px-3 py-2">{t(lang, "cif.structure", "Structure")}</th>
+                          <th className="px-3 py-2 text-center">{t(lang, "cif.status", "Status")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {branchCompanies.length === 0 ? (
                           <tr>
                             <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
-                              {lang === "ur" ? "اس برانچ میں ابھی کوئی آپریشنل کمپنی نہیں ہے۔" : "No operative companies registered yet."}
+                              {t(lang, "cif.no_operative_companies", "No operative companies registered yet.")}
                             </td>
                           </tr>
                         ) : (
@@ -1085,7 +1085,7 @@ export function CompanyIncorporationForm({
                               <td className="px-3 py-2 font-mono text-[10px]">{c.business_type || "LLC"}</td>
                               <td className="px-3 py-2 text-center">
                                 <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
-                                  {lang === "ur" ? "فعال" : "Active"}
+                                  {t(lang, "cif.active", "Active")}
                                 </span>
                               </td>
                             </tr>
@@ -1106,25 +1106,25 @@ export function CompanyIncorporationForm({
               <span className="text-base font-black text-slate-900 dark:text-white block">
                 {registrationMode === "owner_portfolio" ? existingCompaniesForOwner.length : branchCompanies.length}
               </span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "کل کمپنیاں" : "Companies"}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.companies_stat", "Companies")}</span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
               <Landmark className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
               <span className="text-base font-black text-slate-900 dark:text-white block">{ownerBanks.length || 1}</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "بینک اکاؤنٹس" : "Banks"}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.banks_stat", "Banks")}</span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
               <User className="h-5 w-5 text-indigo-600 mx-auto mb-1" />
               <span className="text-base font-black text-slate-900 dark:text-white block">1</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "کل ملازمین" : "Employees"}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.employees_stat", "Employees")}</span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
               <ShieldCheck className="h-5 w-5 text-purple-600 mx-auto mb-1" />
               <span className="text-base font-black text-slate-900 dark:text-white block">4-Lvl</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "سیریل سسٹم" : "Serials"}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.serials_stat", "Serials")}</span>
             </div>
           </div>
         </div>
@@ -1137,17 +1137,17 @@ export function CompanyIncorporationForm({
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white">
                     {registrationMode === "owner_portfolio" 
-                      ? (lang === "ur" ? "نئی سسٹر کمپنی رجسٹریشن" : "New Sister Company Registration")
-                      : (lang === "ur" ? "نئی برانچ آپریشنل کمپنی رجسٹریشن" : "New Branch Operative Company Registration")}
+                      ? (t(lang, "cif.new_sister_registration", "New Sister Company Registration"))
+                      : (t(lang, "cif.new_branch_operative_registration", "New Branch Operative Company Registration"))}
                   </h2>
                   <p className="text-xs text-slate-500 font-medium">
                     {registrationMode === "owner_portfolio"
-                      ? (lang === "ur" ? "منتخب مالک کے نام پر نئی سسٹر کمپنی رجسٹر کریں" : "Register a new company under the selected owner")
-                      : (lang === "ur" ? "منتخب برانچ کے لیے آپریشنل کمپنی قائم کریں" : "Establish an official operative company for this branch")}
+                      ? (t(lang, "cif.register_under_owner", "Register a new company under the selected owner"))
+                      : (t(lang, "cif.establish_branch_company", "Establish an official operative company for this branch"))}
                   </p>
                 </div>
                 <div className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-900">
-                  {lang === "ur" ? `مرحلہ ${currentStep} از 4` : `Step ${currentStep} of 4`}
+                  {t(lang, "cif.step_x_of_4", "Step {n} of 4").replace("{n}", String(currentStep))}
                 </div>
               </div>
             </CardHeader>
@@ -1158,18 +1158,18 @@ export function CompanyIncorporationForm({
                 <div className="space-y-5 animate-in fade-in">
                   <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 text-xs font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
                     <span>ℹ️</span>
-                    <span>{lang === "ur" ? "برائے کرم کمپنی کا نام، قانونی ساخت اور تمام لائسنس/ٹیکس رجسٹریشن نمبرز درج کریں۔" : "Please enter company name, corporate structure, and all applicable license/tax numbers."}</span>
+                    <span>{t(lang, "cif.step1_hint", "Please enter company name, corporate structure, and all applicable license/tax numbers.")}</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "کمپنی کا نام (انگریزی) *" : "Company Name (English) *"}
+                        {t(lang, "cif.company_name_en", "Company Name (English) *")}
                       </Label>
                       <Input
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="e.g. DAMAAN IMPEX LLC"
+                        placeholder={t(lang, "cif.company_name_en_ph", "e.g. Trading Company LLC")}
                         className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
                         dir="ltr"
                       />
@@ -1177,7 +1177,7 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "کمپنی کا نام (اردو / مقامی نام)" : "Company Name (Urdu / Localized)"}
+                        {t(lang, "cif.company_name_local", "Company Name (Urdu / Localized)")}
                       </Label>
                       <Input
                         value={companyNameUrdu}
@@ -1189,7 +1189,7 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "قانونی ساخت *" : "Legal Structure *"}
+                        {t(lang, "cif.legal_structure_req", "Legal Structure *")}
                       </Label>
                       <select
                         value={legalStructure}
@@ -1206,7 +1206,7 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "بنیادی کرنسی (Base Currency)" : "Base Currency"}
+                        {t(lang, "cif.base_currency", "Base Currency")}
                       </Label>
                       <select
                         value={baseCurrency}
@@ -1214,10 +1214,10 @@ export function CompanyIncorporationForm({
                         className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-800 dark:text-slate-200"
                       >
                         <option value="USD">USD ($) - US Dollar</option>
-                        <option value="AED">AED (د.إ) - UAE Dirham</option>
-                        <option value="PKR">PKR (Rs) - Pakistani Rupee</option>
-                        <option value="AFN">AFN (؋) - Afghan Afghani</option>
-                        <option value="INR">INR (₹) - Indian Rupee</option>
+                        <option value="AED">AED (د.إ) - {t(lang, "cif.currency_aed", "UAE Dirham")}</option>
+                        <option value="PKR">PKR (Rs) - {t(lang, "cif.currency_pkr", "Pakistani Rupee")}</option>
+                        <option value="AFN">AFN (؋) - {t(lang, "cif.currency_afn", "Afghan Afghani")}</option>
+                        <option value="INR">INR (₹) - {t(lang, "cif.currency_inr", "Indian Rupee")}</option>
                       </select>
                     </div>
 
@@ -1226,7 +1226,7 @@ export function CompanyIncorporationForm({
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide flex items-center gap-2">
                           <FileText className="h-4 w-4 text-blue-600" />
-                          <span>{lang === "ur" ? "لائسنس و رجسٹریشن نمبرز (License & Registration IDs) *" : "License, Tax & Registration IDs *"}</span>
+                          <span>{t(lang, "cif.license_tax_ids", "License, Tax & Registration IDs *")}</span>
                         </Label>
                         <Button
                           type="button"
@@ -1236,7 +1236,7 @@ export function CompanyIncorporationForm({
                           className="h-8 px-3 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs"
                         >
                           <Plus className="h-3.5 w-3.5" />
-                          <span>{lang === "ur" ? "+ مزید نمبر شامل کریں" : "+ Add Registration ID"}</span>
+                          <span>{t(lang, "cif.add_registration_id", "+ Add Registration ID")}</span>
                         </Button>
                       </div>
 
@@ -1280,7 +1280,7 @@ export function CompanyIncorporationForm({
                                 size="icon"
                                 onClick={() => handleAddRegistration()}
                                 className="h-9 w-9 shrink-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-xl"
-                                title={lang === "ur" ? "ایک اور نمبر شامل کریں" : "Add another registration"}
+                                title={t(lang, "cif.add_another_registration", "Add another registration")}
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -1292,7 +1292,7 @@ export function CompanyIncorporationForm({
                                   size="icon"
                                   onClick={() => handleRemoveRegistration(idx)}
                                   className="h-9 w-9 shrink-0 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl"
-                                  title={lang === "ur" ? "حذف کریں" : "Delete"}
+                                  title={t(lang, "cif.delete", "Delete")}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -1313,8 +1313,8 @@ export function CompanyIncorporationForm({
                     <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-1.5">
                       <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 block">
                         {registrationMode === "owner_portfolio" 
-                          ? (lang === "ur" ? "منسلک مالک کی تصدیق (Owner):" : "Linked Owner Confirmation:")
-                          : (lang === "ur" ? "منسلک برانچ کی تصدیق (Branch):" : "Linked Branch Confirmation:")}
+                          ? (t(lang, "cif.linked_owner_confirmation", "Linked Owner Confirmation:"))
+                          : (t(lang, "cif.linked_branch_confirmation", "Linked Branch Confirmation:"))}
                       </span>
                       <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
                         {registrationMode === "owner_portfolio"
@@ -1323,21 +1323,21 @@ export function CompanyIncorporationForm({
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400">
                         {registrationMode === "owner_portfolio"
-                          ? (lang === "ur" ? "ملکیت: 100% پرسنل ہولڈنگ / سسٹر کمپنی" : "Ownership: 100% Personal Holding / Sister Entity")
-                          : (lang === "ur" ? "حیثیت: پورے ERP میں برانچ انوائسز اور واؤچرز کے لیے مجاز" : "Status: Authorized for Branch Invoicing, POs & Vouchers")}
+                          ? (t(lang, "cif.ownership_personal", "Ownership: 100% Personal Holding / Sister Entity"))
+                          : (t(lang, "cif.status_authorized_branch", "Status: Authorized for Branch Invoicing, POs & Vouchers"))}
                       </p>
                     </div>
 
                     {managerProfile && (
                       <div className="p-4 rounded-2xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/40 space-y-1.5">
                         <span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 block">
-                          {lang === "ur" ? "کمپنی منیجر (Manager):" : "Company Manager Confirmation:"}
+                          {t(lang, "cif.company_manager_confirmation", "Company Manager Confirmation:")}
                         </span>
                         <p className="text-sm font-black text-blue-950 dark:text-blue-100">
                           {managerProfile?.name || "Company Manager"}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {lang === "ur" ? `کوڈ: ${managerProfile?.customerCode || "MGR-001"} • موبائل: ${managerProfile?.mobile || "—"}` : `Code: ${managerProfile?.customerCode || "MGR-001"} • Mobile: ${managerProfile?.mobile || "—"}`}
+                          {t(lang, "cif.manager_code_mobile", "Code: {code} • Mobile: {mobile}").replace("{code}", String(managerProfile?.customerCode || "MGR-001")).replace("{mobile}", String(managerProfile?.mobile || "—"))}
                         </p>
                       </div>
                     )}
@@ -1345,16 +1345,16 @@ export function CompanyIncorporationForm({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "کاروباری نام (Trading Name)" : "Business / Trading Name"}</Label>
+                      <Label className="text-xs font-bold text-slate-700">{t(lang, "cif.business_trading_name", "Business / Trading Name")}</Label>
                       <Input
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
-                        placeholder="e.g. DAMAAN Trading"
+                        placeholder={t(lang, "cif.business_trading_name_ph", "e.g. Trading Company")}
                         className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "کاروبار کی نوعیت" : "Nature of Business"}</Label>
+                      <Label className="text-xs font-bold text-slate-700">{t(lang, "cif.nature_of_business", "Nature of Business")}</Label>
                       <select
                         value={natureOfBusiness}
                         onChange={(e) => setNatureOfBusiness(e.target.value)}
@@ -1377,7 +1377,7 @@ export function CompanyIncorporationForm({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "موبائل / فون *" : "Mobile / Phone *"}
+                        {t(lang, "cif.mobile_phone_req", "Mobile / Phone *")}
                       </Label>
                       <Input
                         value={phone}
@@ -1390,7 +1390,7 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "ای میل" : "Email"}
+                        {t(lang, "cif.email", "Email")}
                       </Label>
                       <Input
                         value={email}
@@ -1403,11 +1403,11 @@ export function CompanyIncorporationForm({
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "مکمل گلی / عمارت کا پتہ" : "Full Street / Building Address"}</Label>
+                    <Label className="text-xs font-bold text-slate-700">{t(lang, "cif.full_street_address", "Full Street / Building Address")}</Label>
                     <Input
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder={lang === "ur" ? "مثلاً: شاپ نمبر 14، دیرہ، دبئی، متحدہ عرب امارات" : "e.g. Shop 14, Al Ras, Deira, Dubai"}
+                      placeholder={t(lang, "cif.address_ph", "e.g. Shop 14, Al Ras, Deira, Dubai")}
                       className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-medium"
                     />
                   </div>
@@ -1481,10 +1481,10 @@ export function CompanyIncorporationForm({
                           className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 text-xs font-bold gap-1.5 h-8 rounded-lg cursor-pointer"
                         >
                           <Printer className="h-3.5 w-3.5" />
-                          <span>{lang === "ur" ? "مکمل 360° پی ڈی ایف رپورٹ" : "Preview 360° PDF"}</span>
+                          <span>{t(lang, "cif.preview_360_pdf", "Preview 360° PDF")}</span>
                         </Button>
                         <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                          {lang === "ur" ? "تیار برائے رجسٹریشن" : "Ready to Register"}
+                          {t(lang, "cif.ready_to_register", "Ready to Register")}
                         </span>
                       </div>
                     </div>
@@ -1492,7 +1492,7 @@ export function CompanyIncorporationForm({
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">
-                          {registrationMode === "owner_portfolio" ? (lang === "ur" ? "مالک / شخص:" : "Owner / Stakeholder:") : (lang === "ur" ? "برانچ:" : "Branch:")}
+                          {registrationMode === "owner_portfolio" ? (t(lang, "cif.owner_stakeholder", "Owner / Stakeholder:")) : (t(lang, "cif.branch_colon", "Branch:"))}
                         </span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                           {registrationMode === "owner_portfolio" 
@@ -1503,7 +1503,7 @@ export function CompanyIncorporationForm({
 
                       {managerProfile && (
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "کمپنی منیجر:" : "Company Manager:"}</span>
+                          <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.company_manager_colon", "Company Manager:")}</span>
                           <span className="font-bold text-indigo-600 dark:text-indigo-400">
                             {managerProfile?.name || "Manager"}
                           </span>
@@ -1511,30 +1511,30 @@ export function CompanyIncorporationForm({
                       )}
 
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "فون نمبر:" : "Phone:"}</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.phone_colon", "Phone:")}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{phone || "—"}</span>
                       </div>
 
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "ای میل:" : "Email:"}</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.email_colon", "Email:")}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{email || "—"}</span>
                       </div>
 
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سیریل ایلوکیشن:" : "Serials:"}</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">4-Level Auto Allocated</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.serials_colon", "Serials:")}</span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "cif.four_level_auto_allocated", "4-Level Auto Allocated")}</span>
                       </div>
 
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سسٹر کمپنیاں:" : "Sister Companies:"}</span>
-                        <span className="font-bold text-blue-600">{existingCompaniesForOwner.length} {lang === "ur" ? "کمپنیاں موجود" : "Companies on Record"}</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.sister_companies_colon", "Sister Companies:")}</span>
+                        <span className="font-bold text-blue-600">{existingCompaniesForOwner.length} {t(lang, "cif.companies_on_record", "Companies on Record")}</span>
                       </div>
                     </div>
 
                     {/* Registrations List Summary */}
                     <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
-                        {lang === "ur" ? "رجسٹرڈ لائسنسز و شناختی نمبرز:" : "Registered Licenses & Regulatory Identifiers:"}
+                        {t(lang, "cif.registered_licenses", "Registered Licenses & Regulatory Identifiers:")}
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {registrations.filter(r => r.value).map((reg, i) => (
@@ -1572,7 +1572,7 @@ export function CompanyIncorporationForm({
                       className="rounded-xl text-xs font-bold gap-1.5 h-10"
                     >
                       <ArrowLeft className="h-4 w-4" />
-                      <span>{lang === "ur" ? "پیچھے" : "Back"}</span>
+                      <span>{t(lang, "cif.back", "Back")}</span>
                     </Button>
                   )}
                 </div>
@@ -1584,7 +1584,7 @@ export function CompanyIncorporationForm({
                       onClick={() => setCurrentStep((prev) => Math.min(4, prev + 1) as any)}
                       className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 h-10 px-5 shadow-xs cursor-pointer"
                     >
-                      <span>{lang === "ur" ? "اگلا مرحلہ" : "Next Step"}</span>
+                      <span>{t(lang, "cif.next_step", "Next Step")}</span>
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   ) : (
@@ -1595,7 +1595,7 @@ export function CompanyIncorporationForm({
                       className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black gap-2 h-11 px-6 shadow-md cursor-pointer"
                     >
                       <Save className="h-4 w-4" />
-                      <span>{saving ? (lang === "ur" ? "محفوظ ہو رہا ہے..." : "Saving...") : (lang === "ur" ? "کمپنی محفوظ کریں (Save Company)" : "Save & Finalize Company")}</span>
+                      <span>{saving ? (t(lang, "cif.saving", "Saving...")) : (t(lang, "cif.save_finalize", "Save & Finalize Company"))}</span>
                     </Button>
                   )}
                 </div>
