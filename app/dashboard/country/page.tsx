@@ -132,8 +132,8 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
           ? sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 8;`.catch(() => [])
           : sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 8;`.catch(() => []),
         isAll
-          ? sql`SELECT product_specifications FROM goods_registry WHERE deleted_at IS NULL;`.catch(() => [])
-          : sql`SELECT product_specifications FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
+          ? sql`SELECT product_specifications FROM products WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT product_specifications FROM products WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
       ]);
       return { countryRes, mainBranchesRes, cityBranchesRes, usersRes, accountsRes, ledgersRes, purchaseRows, salesRows, recentRows, productsCountRes };
     });

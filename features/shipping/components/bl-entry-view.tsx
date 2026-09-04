@@ -102,8 +102,8 @@ const emptyForm = {
   eta: todayIso(),
   etd: todayIso(),
   shipmentStatus: "draft",
-  purchaseConfirmationStatus: "Confirmed",
-  loadingStatus: "Completed",
+  purchaseConfirmationStatus: "Pending",
+  loadingStatus: "Pending",
   accountNumber: "",
   debit: "0",
   credit: "0",
@@ -116,37 +116,37 @@ const emptyForm = {
   importer: "",
   exporter: "",
   notifyParty: "",
-  bookingNo: "BK-2026-001",
+  bookingNo: "",
   bookingCompanyType: "Shipping Line",
-  bookingCompanyName: "DGT Logistics",
+  bookingCompanyName: "",
   bookingDate: todayIso(),
   issueDate: todayIso(),
-  issueSerial: "ISS-671867",
+  issueSerial: "",
   blType: "New BL",
-  routeCountry: "PK / UAE",
-  loadingCountry: "Pakistan",
-  receivingCountry: "UAE",
+  routeCountry: "",
+  loadingCountry: "",
+  receivingCountry: "",
   loadDate: todayIso(),
   receiveDate: todayIso(),
-  goodsName: "PISTACHIOS KERNEL",
-  goodsSize: "Large",
-  goodsBrand: "Premium",
-  goodsOrigin: "IRAN",
-  hsCode: "0802.51",
-  allotName: "ALT-4421",
-  warehouse: "MAIN WH-A",
+  goodsName: "",
+  goodsSize: "",
+  goodsBrand: "",
+  goodsOrigin: "",
+  hsCode: "",
+  allotName: "",
+  warehouse: "",
   qtyName: "BAGS",
-  qtyNo: "100",
-  totalGrossWeight: "5000",
-  emptyPerBag: "0.25",
-  totalEmptyWeight: "25",
-  netWeight: "4975",
+  qtyNo: "",
+  totalGrossWeight: "",
+  emptyPerBag: "",
+  totalEmptyWeight: "",
+  netWeight: "",
   divideName: "Ton",
   divideNumber: "1000",
-  totalDivide: "4.975",
+  totalDivide: "",
   containerType: "Dry Container 20FT",
-  containerName: "MSC Container",
-  sealNumber: "SEAL-7788",
+  containerName: "",
+  sealNumber: "",
   dischargeVessel: "",
   dischargeDate: todayIso(),
   carrierRemarks: ""
@@ -760,10 +760,10 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                 <MiniLine label={_("ble.ml_date", "Date")} value={form.bookingDate} />
                 <MiniLine label={_("ble.ml_vessel", "Vessel")} value={form.vesselName} />
                 <MiniSection title={_("ble.ms_system_user", "System / User Report")} />
-                <MiniLine label={_("ble.ml_country_serial", "Country Serial")} value={selectedCountry?.iso2 ? `${selectedCountry.iso2}-202602-001` : "PK-202602-001"} />
-                <MiniLine label={_("ble.ml_branch_serial", "Branch Serial")} value={selectedCityBranch?.code ?? selectedMainBranch?.code ?? "KHI-202602-001"} />
-                <MiniLine label={_("ble.ml_team_user", "Team / User")} value={data?.session.fullName ?? "Admin User"} />
-                <MiniLine label={_("ble.ml_user_id", "User ID")} value={data?.session.roles?.[0] ?? "USR-001"} />
+                <MiniLine label={_("ble.ml_country_serial", "Country Serial")} value={"—"} />
+                <MiniLine label={_("ble.ml_branch_serial", "Branch Serial")} value={selectedCityBranch?.code ?? selectedMainBranch?.code ?? "—"} />
+                <MiniLine label={_("ble.ml_team_user", "Team / User")} value={data?.session.fullName ?? "—"} />
+                <MiniLine label={_("ble.ml_user_id", "User ID")} value={data?.session.roles?.[0] ?? "—"} />
                 <MiniSection title={_("ble.ms_vessel_discharge", "Vessel Discharge Report")} />
                 <MiniLine label={_("ble.ml_discharge_vessel_date", "Discharge Vessel / Date")} value={`${form.dischargeVessel} / ${form.dischargeDate}`} full />
               </div>
