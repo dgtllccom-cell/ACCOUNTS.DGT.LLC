@@ -386,7 +386,7 @@ export function PurchaseLoadingFormView() {
                                 window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
                               }}
                               className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 transition shadow-2xs"
-                              title="Transfer Remaining Balance to Journal"
+                              title={tt("plf.transfer_remaining_balance", "Transfer Remaining Balance to Journal")}
                             >
                               <Link2 className="h-3 w-3 text-emerald-600" />
                               {tt("plrf.transfer_remaining", "Transfer Remaining")}
@@ -559,7 +559,7 @@ export function PurchaseLoadingFormView() {
                       <input
                         value={loadForm.containerNumber}
                         onChange={e => setLoadForm(f => ({ ...f, containerNumber: e.target.value.toUpperCase() }))}
-                        placeholder="e.g. MSKU-1234567"
+                        placeholder={tt("plf.container_no_ph", "e.g. MSKU-1234567")}
                         className="w-full h-8 border border-slate-300 rounded px-2 text-xs font-mono font-bold outline-none focus:border-blue-500"
                       />
                     </div>
@@ -629,7 +629,7 @@ export function PurchaseLoadingFormView() {
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span>
-                          Stock Stage: <b className="text-slate-900">{stockLifecycle.lifecycleStage.replace(/-/g, " ").toUpperCase()}</b>
+                          {tt("plf.stock_stage", "Stock Stage:")} <b className="text-slate-900">{stockLifecycle.lifecycleStage.replace(/-/g, " ").toUpperCase()}</b>
                         </span>
                         <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${stockLifecycle.visualStatus === "black" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
                           {stockLifecycle.statusLabel}
@@ -725,7 +725,7 @@ export function PurchaseLoadingFormView() {
                 <Anchor className="h-4 w-4 text-blue-200" /> {tt("plrf.goods_container", "GOODS & CONTAINER REPORT")}
               </h2>
               <span className="bg-blue-800 text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                LIVE INVENTORY
+                {tt("plf.live_inventory", "LIVE INVENTORY")}
               </span>
             </div>
             

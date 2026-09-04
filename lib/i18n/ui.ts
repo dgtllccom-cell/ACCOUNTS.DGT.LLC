@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "plf.transfer_remaining_balance"
+  | "plf.container_no_ph"
+  | "plf.stock_stage"
+  | "plf.live_inventory"
   | "lptp.transfer_post_gl"
   | "lptp.print_voucher"
   | "lptp.logo_placeholder"
@@ -18832,6 +18836,14 @@ const en: Dict = {
 
 
 
+
+  "plf.transfer_remaining_balance": "Transfer Remaining Balance to Journal",
+
+  "plf.container_no_ph": "e.g. MSKU-1234567",
+
+  "plf.stock_stage": "Stock Stage:",
+
+  "plf.live_inventory": "LIVE INVENTORY",
   "lptp.transfer_post_gl": "Transfer & Post to GL",
 
   "lptp.print_voucher": "Print Voucher",
@@ -34775,6 +34787,14 @@ const ur: Dict = {
 
 
 
+
+  "plf.transfer_remaining_balance": "بقیہ بیلنس جرنل میں منتقل کریں",
+
+  "plf.container_no_ph": "مثلاً MSKU-1234567",
+
+  "plf.stock_stage": "اسٹاک مرحلہ:",
+
+  "plf.live_inventory": "لائیو انوینٹری",
   "lptp.transfer_post_gl": "GL میں ٹرانسفر و پوسٹ کریں",
 
   "lptp.print_voucher": "واؤچر پرنٹ کریں",
@@ -50720,6 +50740,14 @@ const ar: Dict = {
 
 
 
+
+  "plf.transfer_remaining_balance": "تحويل الرصيد المتبقي إلى اليومية",
+
+  "plf.container_no_ph": "مثال: MSKU-1234567",
+
+  "plf.stock_stage": "مرحلة المخزون:",
+
+  "plf.live_inventory": "المخزون المباشر",
   "lptp.transfer_post_gl": "تحويل وترحيل إلى دفتر الأستاذ العام",
 
   "lptp.print_voucher": "طباعة السند",
@@ -66664,6 +66692,14 @@ const fa: Dict = {
 
 
 
+
+  "plf.transfer_remaining_balance": "انتقال مانده باقی به ژورنال",
+
+  "plf.container_no_ph": "مثال: MSKU-1234567",
+
+  "plf.stock_stage": "مرحله موجودی:",
+
+  "plf.live_inventory": "موجودی زنده",
   "lptp.transfer_post_gl": "انتقال و ثبت در دفتر کل",
 
   "lptp.print_voucher": "چاپ سند",
@@ -82614,6 +82650,14 @@ const ps: Dict = {
 
 
 
+
+  "plf.transfer_remaining_balance": "پاتې بیلانس ژورنال ته لېږل",
+
+  "plf.container_no_ph": "بېلګه: MSKU-1234567",
+
+  "plf.stock_stage": "د سټاک مرحله:",
+
+  "plf.live_inventory": "ژوندی پانګه",
   "lptp.transfer_post_gl": "GL ته لېږل او پوسټ کول",
 
   "lptp.print_voucher": "واوچر چاپ کول",
