@@ -133,28 +133,28 @@ export function VersionComparisonModal({
         {/* ── VERSION META STRIP ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">Version Action</span>
+            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.version_action", "Version Action")}</span>
             <span className="font-bold text-slate-900 dark:text-white capitalize">
               {currentVer?.action_type || "EDIT"} (v{currentVer?.version_number || selectedVersionIdx + 1}.0)
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">Edited At</span>
+            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.edited_at", "Edited At")}</span>
             <span className="font-mono text-slate-800 dark:text-slate-200">
               {new Date(currentVer?.created_at || Date.now()).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">Edited By</span>
+            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.edited_by", "Edited By")}</span>
             <span className="font-bold text-slate-900 dark:text-white">
               {currentVer?.user_name || "Ali Hassan"} ({currentVer?.user_role || "Manager"})
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">Approval Ref</span>
+            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.approval_ref", "Approval Ref")}</span>
             <span className="font-mono font-bold text-blue-600">
               {currentVer?.approval_reference || "APP-8286-3344"}
             </span>
@@ -227,7 +227,7 @@ export function VersionComparisonModal({
         {/* ── SECURITY EVIDENCE FOOTER ── */}
         <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
           <div>
-            IP Address: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{currentVer?.ip_address || "192.168.10.25"}</span> | Device: <span className="font-bold text-slate-700 dark:text-slate-300">{currentVer?.device_session || "Windows 11 / Chrome 127"}</span>
+            {t(lang, "vcm.ip_address", "IP Address:")} <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{currentVer?.ip_address || "—"}</span> {t(lang, "vcm.device_pipe", "| Device:")} <span className="font-bold text-slate-700 dark:text-slate-300">{currentVer?.device_session || "—"}</span>
           </div>
           <div className="font-medium text-emerald-600 flex items-center gap-1">
             <ShieldCheck className="h-4 w-4" />
@@ -237,7 +237,7 @@ export function VersionComparisonModal({
 
         <DialogFooter className="border-t pt-3">
           <Button onClick={onClose} className="font-bold text-xs px-5">
-            Close
+            {t(lang, "common.close", "Close")}
           </Button>
         </DialogFooter>
       </DialogContent>

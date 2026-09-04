@@ -927,6 +927,12 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "vcm.version_action"
+  | "vcm.edited_at"
+  | "vcm.edited_by"
+  | "vcm.approval_ref"
+  | "vcm.ip_address"
+  | "vcm.device_pipe"
   | "acct.apv_customer_profile_dash"
   | "acct.apv_official_certificate_title"
   | "acct.apv_generated_on"
@@ -18713,6 +18719,18 @@ const en: Dict = {
 
 
 
+
+  "vcm.version_action": "Version Action",
+
+  "vcm.edited_at": "Edited At",
+
+  "vcm.edited_by": "Edited By",
+
+  "vcm.approval_ref": "Approval Ref",
+
+  "vcm.ip_address": "IP Address:",
+
+  "vcm.device_pipe": "| Device:",
   "acct.apv_customer_profile_dash": "Customer Profile –",
 
   "acct.apv_official_certificate_title": "OFFICIAL CUSTOMER PROFILE CERTIFICATE",
@@ -34456,6 +34474,18 @@ const ur: Dict = {
 
 
 
+
+  "vcm.version_action": "ورژن ایکشن",
+
+  "vcm.edited_at": "ترمیم بوقت",
+
+  "vcm.edited_by": "ترمیم کنندہ",
+
+  "vcm.approval_ref": "منظوری حوالہ",
+
+  "vcm.ip_address": "IP ایڈریس:",
+
+  "vcm.device_pipe": "| ڈیوائس:",
   "acct.apv_customer_profile_dash": "کسٹمر پروفائل –",
 
   "acct.apv_official_certificate_title": "سرکاری کسٹمر پروفائل سرٹیفکیٹ",
@@ -50201,6 +50231,18 @@ const ar: Dict = {
 
 
 
+
+  "vcm.version_action": "إجراء الإصدار",
+
+  "vcm.edited_at": "تم التعديل في",
+
+  "vcm.edited_by": "عدّله",
+
+  "vcm.approval_ref": "مرجع الموافقة",
+
+  "vcm.ip_address": "عنوان IP:",
+
+  "vcm.device_pipe": "| الجهاز:",
   "acct.apv_customer_profile_dash": "ملف العميل –",
 
   "acct.apv_official_certificate_title": "شهادة الملف الشخصي الرسمية للعميل",
@@ -65945,6 +65987,18 @@ const fa: Dict = {
 
 
 
+
+  "vcm.version_action": "اقدام نسخه",
+
+  "vcm.edited_at": "ویرایش‌شده در",
+
+  "vcm.edited_by": "ویرایش‌شده توسط",
+
+  "vcm.approval_ref": "مرجع تأیید",
+
+  "vcm.ip_address": "آدرس IP:",
+
+  "vcm.device_pipe": "| دستگاه:",
   "acct.apv_customer_profile_dash": "پروفایل مشتری –",
 
   "acct.apv_official_certificate_title": "گواهی رسمی پروفایل مشتری",
@@ -81695,6 +81749,18 @@ const ps: Dict = {
 
 
 
+
+  "vcm.version_action": "د نسخې کړنه",
+
+  "vcm.edited_at": "سمول شوی په",
+
+  "vcm.edited_by": "سمون کوونکی",
+
+  "vcm.approval_ref": "د منظورۍ حواله",
+
+  "vcm.ip_address": "IP پته:",
+
+  "vcm.device_pipe": "| وسیله:",
   "acct.apv_customer_profile_dash": "د پیرودونکي پروفایل –",
 
   "acct.apv_official_certificate_title": "رسمي د پیرودونکي پروفایل سند",
