@@ -52,12 +52,14 @@ import {
 } from "@/components/ui/dialog";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { cn } from "@/lib/utils";
 
 export function SmartCrmControlCenter() {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const th = (x: string) => translateHeader(lang, x);
   const router = useRouter();
 
   // Filters State
@@ -1016,7 +1018,7 @@ export function SmartCrmControlCenter() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] font-bold text-rose-600 block">Overdue {ov.overdueDays} Days</span>
+                        <span className="text-[10px] font-bold text-rose-600 block">{th("Overdue")} {ov.overdueDays} {th("Days")}</span>
                         <span className="text-[10px] font-mono text-slate-600 block">Amount: {ov.currency} {ov.amount.toLocaleString()}</span>
                       </div>
                     </div>
@@ -1193,10 +1195,10 @@ export function SmartCrmControlCenter() {
 
                 {/* Calendar Legend */}
                 <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span className="flex items-center gap-0.5 text-rose-600"><span className="h-1.5 w-1.5 rounded-full bg-rose-600"></span> Overdue</span>
-                  <span className="flex items-center gap-0.5 text-blue-600"><span className="h-1.5 w-1.5 rounded-full bg-blue-600"></span> Due Today</span>
-                  <span className="flex items-center gap-0.5 text-amber-600"><span className="h-1.5 w-1.5 rounded-full bg-amber-600"></span> Tomorrow</span>
-                  <span className="flex items-center gap-0.5 text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-600"></span> Upcoming</span>
+                  <span className="flex items-center gap-0.5 text-rose-600"><span className="h-1.5 w-1.5 rounded-full bg-rose-600"></span> {th("Overdue")}</span>
+                  <span className="flex items-center gap-0.5 text-blue-600"><span className="h-1.5 w-1.5 rounded-full bg-blue-600"></span> {th("Due Today")}</span>
+                  <span className="flex items-center gap-0.5 text-amber-600"><span className="h-1.5 w-1.5 rounded-full bg-amber-600"></span> {th("Tomorrow")}</span>
+                  <span className="flex items-center gap-0.5 text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-600"></span> {th("Upcoming")}</span>
                 </div>
               </div>
             </div>
@@ -1213,23 +1215,23 @@ export function SmartCrmControlCenter() {
               </h3>
               <div className="space-y-1.5 font-mono text-[11px]">
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-sans">Global Serial :</span>
+                  <span className="text-slate-400 font-sans">{th("Global Serial")} :</span>
                   <span className="font-bold text-slate-900 dark:text-white">{erpSerials.globalSerial}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-sans">Country Serial :</span>
+                  <span className="text-slate-400 font-sans">{th("Country Serial")} :</span>
                   <span className="font-bold text-blue-600">{erpSerials.countrySerial}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-sans">Branch Serial :</span>
+                  <span className="text-slate-400 font-sans">{th("Branch Serial")} :</span>
                   <span className="font-bold text-teal-600">{erpSerials.branchSerial}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-sans">Entry Serial :</span>
+                  <span className="text-slate-400 font-sans">{th("Entry Serial")} :</span>
                   <span className="font-bold text-slate-700 dark:text-slate-300">{erpSerials.entrySerial}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-sans">User :</span>
+                  <span className="text-slate-400 font-sans">{th("User")} :</span>
                   <span className="font-bold text-slate-900 dark:text-white">{erpSerials.userCode}</span>
                 </div>
               </div>
@@ -1247,8 +1249,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs shadow-xs">
                     <Sparkles className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">Real ERP</span>
-                  <span className="text-[8.5px] text-slate-400">Transaction</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("Real ERP")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Transaction")}</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
 
@@ -1257,8 +1259,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs shadow-xs">
                     <CalendarIcon className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">Due Date</span>
-                  <span className="text-[8.5px] text-slate-400">Engine</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("Due Date")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Engine")}</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
 
@@ -1267,8 +1269,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs shadow-xs">
                     <LayoutDashboard className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">CRM Action</span>
-                  <span className="text-[8.5px] text-slate-400">Center</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("CRM Action")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Center")}</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
 
@@ -1277,8 +1279,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs shadow-xs">
                     <Users className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">User</span>
-                  <span className="text-[8.5px] text-slate-400">Action</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("User")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Action")}</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
 
@@ -1287,8 +1289,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-xs">
                     <FileText className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">Record</span>
-                  <span className="text-[8.5px] text-slate-400">Update</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("Record")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Update")}</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
 
@@ -1297,8 +1299,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-black text-xs shadow-xs">
                     <Landmark className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">Ledger</span>
-                  <span className="text-[8.5px] text-slate-400">Update</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("Ledger")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Update")}</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
 
@@ -1307,8 +1309,8 @@ export function SmartCrmControlCenter() {
                   <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">Completed</span>
-                  <span className="text-[8.5px] text-slate-400">Audit Trail</span>
+                  <span className="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 mt-1">{th("Completed")}</span>
+                  <span className="text-[8.5px] text-slate-400">{th("Audit Trail")}</span>
                 </div>
               </div>
             </div>
@@ -1448,7 +1450,7 @@ export function SmartCrmControlCenter() {
 
             <div className="space-y-3 py-2 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Follow-Up Action Type</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">{th("Follow-Up Action Type")}</label>
                 <select
                   value={noteType}
                   onChange={(e) => setNoteType(e.target.value)}
@@ -1462,7 +1464,7 @@ export function SmartCrmControlCenter() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Follow-Up Notes / Outcome</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">{th("Follow-Up Notes / Outcome")}</label>
                 <textarea
                   rows={3}
                   value={noteText}
@@ -1474,7 +1476,7 @@ export function SmartCrmControlCenter() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Promise Date</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">{th("Promise Date")}</label>
                   <Input
                     type="date"
                     value={promiseDate}
@@ -1483,7 +1485,7 @@ export function SmartCrmControlCenter() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Promise Amount</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">{th("Promise Amount")}</label>
                   <Input
                     type="number"
                     value={promiseAmount}
@@ -1497,7 +1499,7 @@ export function SmartCrmControlCenter() {
 
             <DialogFooter className="border-t pt-3">
               <Button type="button" variant="outline" size="sm" onClick={() => setNoteModalOpen(false)}>
-                Cancel
+                {th("Cancel")}
               </Button>
               <Button
                 type="button"
