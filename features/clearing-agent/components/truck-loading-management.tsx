@@ -136,6 +136,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
   const activeLang = useActiveLanguage();
   const lang = activeLang !== "en" ? activeLang : langProp;
   const dir = getLanguageDirection(lang);
+  const th = (x: string) => translateHeader(lang, x);
   const [rows, setRows] = useState<Loading[]>([]);
   const [trucks, setTrucks] = useState<TruckOpt[]>([]);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
@@ -393,7 +394,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
       {/* Search Bar */}
       <div className="relative">
         <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search loading serial, truck number, driver name, goods..." className="w-full rounded-xl border border-slate-200 bg-white py-2.5 ps-9 pe-3 text-sm dark:border-slate-800 dark:bg-slate-950 shadow-sm" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={th("Search loading serial, truck number, driver name, goods...")} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 ps-9 pe-3 text-sm dark:border-slate-800 dark:bg-slate-950 shadow-sm" />
       </div>
 
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{formatError(error)}</div> : null}
@@ -430,8 +431,8 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{r.destination || "-"}</td>
                 <td className="px-4 py-3 text-end">
                   <div className="flex items-center justify-end gap-1.5">
-                    <button onClick={() => startEdit(r)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800" title="Edit Entry"><Pencil className="h-4 w-4" /></button>
-                    <button onClick={() => remove(r.id)} className="rounded-lg p-1.5 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40" title="Delete Entry"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => startEdit(r)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800" title={th("Edit Entry")}><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => remove(r.id)} className="rounded-lg p-1.5 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40" title={th("Delete Entry")}><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </td>
               </tr>
@@ -919,51 +920,51 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                   {/* Grid details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[11px] font-medium">
                     <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[9.5px] tracking-wider pt-1 border-b border-slate-100 dark:border-slate-800 pb-1">
-                      1. BL Basic / Board & Route Details
+                      {th("1. BL Basic / Board & Route Details")}
                     </div>
                     
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Mode:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Mode")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{form.blType || "New BL"}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Issue Date:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Issue Date")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{form.issueDate}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Issue Serial:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Issue Serial")}:</span>
                       <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{form.issueSerial}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">BL / Loading No:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("BL / Loading No")}:</span>
                       <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{form.blNo}</span>
                     </div>
 
                     <div className="col-span-full flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Full Route:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Full Route")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate">
                         {form.shippingType} | {form.routeCountry} | L: {form.loadCountry} / {form.loadPlace} → R: {form.receiveCountry} / {form.receivePlace}
                       </span>
                     </div>
 
                     <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[9.5px] tracking-wider pt-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-                      2. Booking & Carrier Details
+                      {th("2. Booking & Carrier Details")}
                     </div>
 
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Shipping / Category:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Shipping / Category")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 capitalize">{form.loading_type} / {form.shippingType}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Booking Company:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Booking Company")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{form.bookingCompanyName}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Truck / Vehicle No:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Truck / Vehicle No")}:</span>
                       <span className="font-mono font-black text-blue-600 dark:text-blue-400">{form.truck_number || "CONT-123456"}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">Seal Number:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Seal Number")}:</span>
                       <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.sealNumber || "SEAL-7788"}</span>
                     </div>
                   </div>
