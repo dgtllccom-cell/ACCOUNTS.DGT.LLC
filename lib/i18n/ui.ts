@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cpage.tabs_aria"
+  | "prr.rows"
+  | "prr.awaiting_data"
+  | "pv.logo_alt"
+  | "cmd.command_palette"
+  | "des.no_records_found"
+  | "dd.close_panel"
   | "roz.loading_roznamcha_report"
   | "roz.loading_all_report"
   | "roz.loading_bank_report"
@@ -19040,6 +19047,27 @@ const en: Dict = {
 
 
 
+
+
+  "cpage.tabs_aria": "Tabs",
+
+
+  "prr.rows": "rows",
+
+
+  "prr.awaiting_data": "Awaiting data",
+
+
+  "pv.logo_alt": "Logo",
+
+
+  "cmd.command_palette": "Command Palette",
+
+
+  "des.no_records_found": "No records found",
+
+
+  "dd.close_panel": "Close panel",
   "roz.loading_roznamcha_report": "Loading Roznamcha Report...",
 
 
@@ -35419,6 +35447,27 @@ const ur: Dict = {
 
 
 
+
+
+  "cpage.tabs_aria": "ٹیبز",
+
+
+  "prr.rows": "قطاریں",
+
+
+  "prr.awaiting_data": "ڈیٹا کا انتظار ہے",
+
+
+  "pv.logo_alt": "لوگو",
+
+
+  "cmd.command_palette": "کمانڈ پیلیٹ",
+
+
+  "des.no_records_found": "کوئی ریکارڈ نہیں ملا",
+
+
+  "dd.close_panel": "پینل بند کریں",
   "roz.loading_roznamcha_report": "روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
 
 
@@ -51800,6 +51849,27 @@ const ar: Dict = {
 
 
 
+
+
+  "cpage.tabs_aria": "علامات التبويب",
+
+
+  "prr.rows": "صفوف",
+
+
+  "prr.awaiting_data": "بانتظار البيانات",
+
+
+  "pv.logo_alt": "الشعار",
+
+
+  "cmd.command_palette": "لوحة الأوامر",
+
+
+  "des.no_records_found": "لم يتم العثور على سجلات",
+
+
+  "dd.close_panel": "إغلاق اللوحة",
   "roz.loading_roznamcha_report": "جارٍ تحميل تقرير دفتر اليومية...",
 
 
@@ -68180,6 +68250,27 @@ const fa: Dict = {
 
 
 
+
+
+  "cpage.tabs_aria": "برگه‌ها",
+
+
+  "prr.rows": "ردیف‌ها",
+
+
+  "prr.awaiting_data": "در انتظار داده",
+
+
+  "pv.logo_alt": "لوگو",
+
+
+  "cmd.command_palette": "پالت فرمان",
+
+
+  "des.no_records_found": "هیچ رکوردی یافت نشد",
+
+
+  "dd.close_panel": "بستن پنل",
   "roz.loading_roznamcha_report": "در حال بارگذاری گزارش روزنامچه...",
 
 
@@ -84566,6 +84657,27 @@ const ps: Dict = {
 
 
 
+
+
+  "cpage.tabs_aria": "ټبونه",
+
+
+  "prr.rows": "قطارونه",
+
+
+  "prr.awaiting_data": "د معلوماتو په تمه",
+
+
+  "pv.logo_alt": "لوګو",
+
+
+  "cmd.command_palette": "د امر پلیټ",
+
+
+  "des.no_records_found": "هیڅ ریکارډ ونه موندل شو",
+
+
+  "dd.close_panel": "پینل بندول",
   "roz.loading_roznamcha_report": "روزنامچه راپور پورته کیږي...",
 
 

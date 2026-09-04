@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 interface DetailDrawerProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ export function DetailDrawer({
   className
 }: DetailDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
+  const lang = useActiveLanguage();
 
   // Close on Escape key press
   useEffect(() => {
@@ -78,7 +81,7 @@ export function DetailDrawer({
               type="button"
               onClick={onClose}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors border border-transparent hover:border-border"
-              aria-label="Close panel"
+              aria-label={t(lang, "dd.close_panel", "Close panel")}
             >
               <X className="h-4 w-4" />
             </button>

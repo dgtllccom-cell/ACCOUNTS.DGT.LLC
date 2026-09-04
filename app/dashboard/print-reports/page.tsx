@@ -1398,12 +1398,12 @@ export default function PrintReportsHubPage() {
                     <div className="flex items-center justify-between text-[10px]">
                       <span className={`px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${card.badgeColor}`}>{card.format}</span>
                       <span className={`font-bold flex items-center gap-1 ${card.dataCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
-                        {card.dataCount > 0 ? <><CheckCircle2 className="h-3 w-3" /> {card.dataCount} rows</> : "Awaiting data"}
+                        {card.dataCount > 0 ? <><CheckCircle2 className="h-3 w-3" /> {card.dataCount} {t(lang, "prr.rows", "rows")}</> : t(lang, "prr.awaiting_data", "Awaiting data")}
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed font-normal">{card.description}</p>
                     <div className="text-[10px] font-bold text-slate-500">
-                      Country: <span className="text-slate-900 dark:text-white font-extrabold">{card.countryName}</span> • Branch: <span className="text-blue-600 font-mono font-bold">{card.branchCode}</span>
+                      {t(lang, "common.country", "Country")}: <span className="text-slate-900 dark:text-white font-extrabold">{card.countryName}</span> • {t(lang, "common.branch", "Branch")}: <span className="text-blue-600 font-mono font-bold">{card.branchCode}</span>
                     </div>
                   </CardContent>
                 </div>

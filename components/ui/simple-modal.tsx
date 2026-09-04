@@ -3,6 +3,8 @@
 import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function SimpleModal({
   title,
@@ -19,6 +21,7 @@ export function SimpleModal({
   isOpen?: boolean;
   maxWidth?: string;
 }) {
+  const lang = useActiveLanguage();
   const modal = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 overflow-y-auto print:static print:bg-transparent print:p-0 print:block backdrop-blur-xs">
       <div
@@ -37,7 +40,7 @@ export function SimpleModal({
             type="button"
             onClick={onClose}
             className="shrink-0 inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition"
-            aria-label="Close"
+            aria-label={t(lang, "common.close", "Close")}
           >
             <X className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
           </button>

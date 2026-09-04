@@ -257,7 +257,7 @@ export function ProfessionalReportViewer<T>({
                     {/* Header */}
                     <div className="flex justify-between items-start mb-4 border-b border-gray-300 pb-4">
                       <div className="flex items-center gap-3">
-                        <img src={headerLogo} alt="Logo" className="w-12 h-12 object-contain" />
+                        <img src={headerLogo} alt={t(lang, "pv.logo_alt", "Logo")} className="w-12 h-12 object-contain" />
                         <div>
                           <h2 className="text-xl font-bold uppercase tracking-wide text-gray-800">{headerName}</h2>
                           <p className="text-sm text-gray-500 uppercase font-semibold">{title}</p>

@@ -2,6 +2,8 @@
 
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 /**
  * Shared, accessible empty-state for data tables / panels. Use inside a
@@ -10,7 +12,7 @@ import { cn } from "@/lib/utils";
  * empty result never looks like a broken or still-loading view.
  */
 export function DataEmptyState({
-  title = "No records found",
+  title,
   hint,
   icon: Icon = Inbox,
   className,
@@ -22,6 +24,8 @@ export function DataEmptyState({
   className?: string;
   compact?: boolean;
 }) {
+  const lang = useActiveLanguage();
+  const resolvedTitle = title || t(lang, "des.no_records_found", "No records found");
   return (
     <div
       role="status"
@@ -34,7 +38,7 @@ export function DataEmptyState({
       <span className="grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
         <Icon className="h-5 w-5" aria-hidden />
       </span>
-      <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">{title}</p>
+      <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">{resolvedTitle}</p>
       {hint ? <p className="max-w-xs text-xs text-slate-400 dark:text-slate-500">{hint}</p> : null}
     </div>
   );

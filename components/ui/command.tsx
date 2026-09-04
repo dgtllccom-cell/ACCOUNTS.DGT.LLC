@@ -7,6 +7,8 @@ import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { useActiveLanguage } from "@/lib/i18n/use-active-language"
+import { t } from "@/lib/i18n/ui"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -28,10 +30,11 @@ interface CommandDialogProps extends DialogProps {
 }
 
 const CommandDialog = ({ children, className, ...props }: CommandDialogProps) => {
+  const lang = useActiveLanguage();
   return (
     <Dialog {...props}>
       <DialogContent className={cn("overflow-hidden p-0 shadow-2xl rounded-2xl max-w-3xl sm:max-w-4xl lg:max-w-5xl w-[94vw] border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl transition-all duration-200 top-[18%] sm:top-[22%] translate-y-0", className)}>
-        <DialogTitle className="sr-only">Command Palette</DialogTitle>
+        <DialogTitle className="sr-only">{t(lang, "cmd.command_palette", "Command Palette")}</DialogTitle>
         <Command className="[&_[cmdk-group-heading]]:px-3.5 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:font-black [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-1 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-14 [&_[cmdk-item]]:px-3.5 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4">
           {children}
         </Command>

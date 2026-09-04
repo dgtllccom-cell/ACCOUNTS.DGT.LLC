@@ -94,7 +94,7 @@ export function BarcodeScanButton({ onScan, className }: { onScan: (code: string
       </button>
       {open ? (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/90 p-4">
-          <button type="button" onClick={stop} className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white" aria-label="Close">
+          <button type="button" onClick={stop} className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white" aria-label={t(lang, "common.close", "Close")}>
             <X className="h-5 w-5" />
           </button>
           <video ref={videoRef} className="max-h-[70vh] w-full max-w-md rounded-xl" playsInline muted />

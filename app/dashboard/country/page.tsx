@@ -391,7 +391,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
 
       {/* Tabs list navigation */}
       <div className="border-b border-slate-200 dark:border-slate-800">
-        <nav className="flex space-x-6" aria-label="Tabs">
+        <nav className="flex space-x-6" aria-label={t(lang, "cpage.tabs_aria", "Tabs")}>
           <Link
             href={`/dashboard/country?countryId=${countryId}&tab=overview` as Route}
             className={`border-b-2 py-2 px-1 text-sm font-semibold transition duration-150 ${
