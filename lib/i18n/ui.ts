@@ -927,6 +927,16 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "pterv2.audit_log_line"
+  | "pterv2.audit_ref_lbl"
+  | "pterv2.booking_ref"
+  | "pterv2.double_entry_gl_matched"
+  | "pterv2.double_entry_verified"
+  | "pterv2.footer_notice2"
+  | "pterv2.st_accepted"
+  | "pterv2.st_posted"
+  | "pterv2.status_lbl"
+  | "pterv2.subtitle"
   | "plr.bill_summary"
   | "plr.container_breakdown_for"
   | "plr.current_entry_weight"
@@ -18286,6 +18296,36 @@ const en: Dict = {
 
 
 
+
+
+  "pterv2.audit_log_line": "Audit log",
+
+
+  "pterv2.audit_ref_lbl": "Audit Ref",
+
+
+  "pterv2.booking_ref": "Booking Ref",
+
+
+  "pterv2.double_entry_gl_matched": "Double-Entry GL Matched",
+
+
+  "pterv2.double_entry_verified": "Double-Entry Verified",
+
+
+  "pterv2.footer_notice2": "This is an official ERP transfer & settlement verification sheet. All double-entry postings have been validated.",
+
+
+  "pterv2.st_accepted": "ACCEPTED",
+
+
+  "pterv2.st_posted": "POSTED",
+
+
+  "pterv2.status_lbl": "Status",
+
+
+  "pterv2.subtitle": "Enterprise ERP — Import / Export Verification",
   "plr.bill_summary": "Bill Summary",
 
 
@@ -33219,6 +33259,36 @@ const ur: Dict = {
 
 
 
+
+
+  "pterv2.audit_log_line": "آڈٹ لاگ",
+
+
+  "pterv2.audit_ref_lbl": "آڈٹ حوالہ",
+
+
+  "pterv2.booking_ref": "بکنگ حوالہ",
+
+
+  "pterv2.double_entry_gl_matched": "ڈبل انٹری GL میچ",
+
+
+  "pterv2.double_entry_verified": "ڈبل انٹری تصدیق شدہ",
+
+
+  "pterv2.footer_notice2": "یہ ایک سرکاری ERP منتقلی و تصفیہ تصدیقی شیٹ ہے۔ تمام ڈبل انٹری پوسٹنگز کی توثیق ہو چکی ہے۔",
+
+
+  "pterv2.st_accepted": "قبول شدہ",
+
+
+  "pterv2.st_posted": "پوسٹ شدہ",
+
+
+  "pterv2.status_lbl": "اسٹیٹس",
+
+
+  "pterv2.subtitle": "انٹرپرائز ERP — درآمد / برآمد تصدیق",
   "plr.bill_summary": "بل کا خلاصہ",
 
 
@@ -48154,6 +48224,36 @@ const ar: Dict = {
 
 
 
+
+
+  "pterv2.audit_log_line": "سجل التدقيق",
+
+
+  "pterv2.audit_ref_lbl": "مرجع التدقيق",
+
+
+  "pterv2.booking_ref": "مرجع الحجز",
+
+
+  "pterv2.double_entry_gl_matched": "تطابق دفتر الأستاذ المزدوج",
+
+
+  "pterv2.double_entry_verified": "تم التحقق من القيد المزدوج",
+
+
+  "pterv2.footer_notice2": "هذه ورقة تحقق رسمية لتحويل وتسوية ERP. تم التحقق من جميع قيود القيد المزدوج.",
+
+
+  "pterv2.st_accepted": "مقبول",
+
+
+  "pterv2.st_posted": "مُرحَّل",
+
+
+  "pterv2.status_lbl": "الحالة",
+
+
+  "pterv2.subtitle": "ERP المؤسسي — التحقق من الاستيراد / التصدير",
   "plr.bill_summary": "ملخص الفاتورة",
 
 
@@ -63088,6 +63188,36 @@ const fa: Dict = {
 
 
 
+
+
+  "pterv2.audit_log_line": "گزارش حسابرسی",
+
+
+  "pterv2.audit_ref_lbl": "مرجع حسابرسی",
+
+
+  "pterv2.booking_ref": "مرجع رزرو",
+
+
+  "pterv2.double_entry_gl_matched": "تطبیق دفتر کل دوطرفه",
+
+
+  "pterv2.double_entry_verified": "ثبت دوطرفه تأیید شد",
+
+
+  "pterv2.footer_notice2": "این یک برگه رسمی تأیید انتقال و تسویه ERP است. همه ثبت‌های دوطرفه اعتبارسنجی شده‌اند.",
+
+
+  "pterv2.st_accepted": "پذیرفته‌شده",
+
+
+  "pterv2.st_posted": "ثبت‌شده",
+
+
+  "pterv2.status_lbl": "وضعیت",
+
+
+  "pterv2.subtitle": "ERP سازمانی — راستی‌آزمایی واردات / صادرات",
   "plr.bill_summary": "خلاصه صورتحساب",
 
 
@@ -78028,6 +78158,36 @@ const ps: Dict = {
 
 
 
+
+
+  "pterv2.audit_log_line": "د پلټنې ثبت",
+
+
+  "pterv2.audit_ref_lbl": "د پلټنې حواله",
+
+
+  "pterv2.booking_ref": "د بکنګ حواله",
+
+
+  "pterv2.double_entry_gl_matched": "دوه‌اړخیز GL سمون",
+
+
+  "pterv2.double_entry_verified": "دوه‌اړخیز ثبت تایید شو",
+
+
+  "pterv2.footer_notice2": "دا د ERP د لېږد او تصفیې رسمي تایید پاڼه ده. ټول دوه‌اړخیز ثبتونه تایید شوي دي.",
+
+
+  "pterv2.st_accepted": "منل شوی",
+
+
+  "pterv2.st_posted": "ثبت شوی",
+
+
+  "pterv2.status_lbl": "حالت",
+
+
+  "pterv2.subtitle": "د سازمان ERP — د واردات / صادرات تایید",
   "plr.bill_summary": "د بیل لنډیز",
 
 

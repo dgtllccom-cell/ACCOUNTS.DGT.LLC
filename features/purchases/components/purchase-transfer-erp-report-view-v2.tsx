@@ -38,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { Th } from "@/components/ui/translated-th";
 
 function money(value: unknown, decimals = 2) {
@@ -96,6 +97,11 @@ function PurchaseTransferErpReportViewContent({
   const activeLang = useActiveLanguage();
   const isRtl = ["ur","ar","fa","ps"].includes(activeLang);
   const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBranding(null).then((b) => setBrandCompany(brandingName(b, activeLang) || null)).catch(() => {});
+  }, [activeLang]);
+  const brandLine = brandCompany || t(activeLang, "acct.brand_short", "Digital Dock ERP");
 
   /* ── Derived values ────────────────────────────────────────── */
   const d = reportData;
@@ -103,7 +109,7 @@ function PurchaseTransferErpReportViewContent({
   const totals = d?.form_data?.totals || {};
 
   const bookingRef = d?.purchaseBookingOrderNumber || form.bookingNo || `AE-${d?.id ? d.id.slice(0, 4) : "001"}-0001`;
-  const reportNo = `SAP-PTVR-2026-${d?.id ? d.id.slice(0, 6).toUpperCase() : "010001"}`;
+  const reportNo = `PTVR-${new Date().getFullYear()}-${d?.id ? d.id.slice(0, 6).toUpperCase() : "000000"}`;
   
   const isPosted = d?.status === "Posted"
     || d?.status === "Transferred"
@@ -121,18 +127,18 @@ function PurchaseTransferErpReportViewContent({
   const roznamchaSerial = (d as any)?.roznamcha_serial_number || form.roznamchaSerialNo || `ROZ-PB-${bookingRef}`;
   
   // Account codes & names
-  const purchaseAccCode = form.purchaseAccountNo || d?.purchaseAccountNumber || "1001";
-  const purchaseAccName = form.purchaseAccountName || d?.purchaseAccountName || "Kabul Dry Fruits Purchase Account";
+  const purchaseAccCode = form.purchaseAccountNo || d?.purchaseAccountNumber || "—";
+  const purchaseAccName = form.purchaseAccountName || d?.purchaseAccountName || "—";
   
-  const salesAccCode = form.salesAccountNo || d?.salesAccountNumber || "2001";
-  const salesAccName = form.salesAccountName || d?.salesAccountName || "Default Sales Account";
+  const salesAccCode = form.salesAccountNo || d?.salesAccountNumber || "—";
+  const salesAccName = form.salesAccountName || d?.salesAccountName || "—";
 
   const debitSerial = (d as any)?.debit_serial_number || `ROZ-DR-${purchaseAccCode}`;
   const creditSerial = (d as any)?.credit_serial_number || `ROZ-CR-${salesAccCode}`;
 
-  const countryName = d?.countryName || form.countryName || "United Arab Emirates";
-  const branchName = d?.branchName || form.branchName || "AL.RAS Branch";
-  const branchCode = d?.branchCode || form.branchCode || "ARE-DXB-001";
+  const countryName = d?.countryName || form.countryName || "—";
+  const branchName = d?.branchName || form.branchName || "—";
+  const branchCode = d?.branchCode || form.branchCode || "—";
 
   const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 0);
   const currencyFc = d?.currency || form.currencyType || "USD";
@@ -142,26 +148,31 @@ function PurchaseTransferErpReportViewContent({
   const goodsEntries: any[] = useMemo(() => {
     if (!d) return [];
     if (d.form_data?.goodsEntries?.length) return d.form_data.goodsEntries;
-    return [{
-      goodsName: d.productName || d.goodsDescription || "Almond Kernel California Extra No.1",
-      hsCode: "0802.1200",
-      brand: "California Premium Wholesale",
-      size: "10,000 Bags",
-      origin: "USA",
-      qtyNo: d.quantity || 10000,
-      qtyName: d.unit || "BAGS",
-      qtyKgs: 25,
-      grossWeight: d.totalGrossWeight || 260000,
-      netWeight: d.totalNetWeight || 250000,
-      coursePrice: d.purchaseRate || 5.20,
-      totalAmount: d.totalPurchaseAmount || 130000.00,
-      finalAmount: (d.totalPurchaseAmount || 130000.00) * exchangeRate
-    }];
+    // A single derived line from the record's own totals when the goods array is
+    // absent — never fabricated product/brand/origin values.
+    if (d.productName || d.goodsDescription || d.totalPurchaseAmount) {
+      return [{
+        goodsName: d.productName || d.goodsDescription || "—",
+        hsCode: d.hsCode || "—",
+        brand: d.brand || "—",
+        size: d.size || "—",
+        origin: d.origin || d.countryName || "—",
+        qtyNo: Number(d.quantity || 0),
+        qtyName: d.unit || "—",
+        qtyKgs: Number(d.qtyKgs || 0),
+        grossWeight: Number(d.totalGrossWeight || 0),
+        netWeight: Number(d.totalNetWeight || 0),
+        coursePrice: Number(d.purchaseRate || 0),
+        totalAmount: Number(d.totalPurchaseAmount || 0),
+        finalAmount: Number(d.totalPurchaseAmount || 0) * exchangeRate,
+      }];
+    }
+    return [];
   }, [d, exchangeRate]);
 
   const totalAmountFc = useMemo(() => {
-    if (!d) return 130000.00;
-    return Number(d.totalPurchaseAmount || d.purchaseAmount || totals.grandPrimaryFinal || 130000.00);
+    if (!d) return 0;
+    return Number(d.totalPurchaseAmount || d.purchaseAmount || totals.grandPrimaryFinal || 0);
   }, [d, totals.grandPrimaryFinal]);
 
   const totalAmountLc = useMemo(() => {
@@ -172,7 +183,7 @@ function PurchaseTransferErpReportViewContent({
   const totalNetWt = goodsEntries.reduce((sum, g) => sum + (Number(g.netWeight) || 0), 0);
   const totalCartons = goodsEntries.reduce((sum, g) => sum + (Number(g.qtyNo) || 0), 0);
 
-  const advancePercent = Number(form.advancePercent || 40);
+  const advancePercent = Number(form.advancePercent || 0);
   const advanceAmountFc = (totalAmountFc * advancePercent) / 100;
   const advanceAmountLc = (totalAmountLc * advancePercent) / 100;
   const remainingAmountFc = Math.max(0, totalAmountFc - advanceAmountFc);
@@ -285,13 +296,12 @@ function PurchaseTransferErpReportViewContent({
           <div>
             <h1 className="text-sm font-black text-white tracking-tight uppercase flex items-center gap-2">
               {tt("pterv2.page_title","Inter-Country Purchase Verification & Settlement Audit Sheet")}
-              <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">NEW</span>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30 font-mono">
-                SAP / Oracle Enterprise Std
+                {tt("pterv2.double_entry_verified", "DOUBLE-ENTRY VERIFIED")}
               </span>
             </h1>
             <p className="text-[10px] font-bold text-slate-400 font-mono mt-0.5">
-              Booking Ref: <span className="text-blue-400 font-extrabold">{bookingRef}</span> | Roznamcha S/N: <span className="text-emerald-400 font-extrabold">{roznamchaSerial}</span>
+              {tt("pterv2.booking_ref", "Booking Ref")}: <span className="text-blue-400 font-extrabold">{bookingRef}</span> | {tt("pterv2.roznamcha_sn", "Roznamcha S/N")}: <span className="text-emerald-400 font-extrabold">{roznamchaSerial}</span>
             </p>
           </div>
         </div>
@@ -448,7 +458,7 @@ function PurchaseTransferErpReportViewContent({
                   {tt("pterv2.roznamcha_sn_strip","ROZNAMCHA S/N:")} {roznamchaSerial}
                 </div>
                 <div className="text-[7.5px] font-bold text-emerald-800 uppercase mt-0.5">
-                  DOUBLE-ENTRY GL MATCHED
+                  {tt("pterv2.double_entry_gl_matched", "Double-Entry GL Matched")}
                 </div>
               </div>
             )}
@@ -461,13 +471,13 @@ function PurchaseTransferErpReportViewContent({
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">DAMAN BUSINESS GROUP</h2>
+                    <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">{brandLine}</h2>
                     <span className="bg-slate-100 text-slate-700 text-[7px] font-extrabold px-1.5 py-0.5 rounded border border-slate-300 font-mono">
-                      SAP / ORACLE COMPLIANT
+                      {tt("pterv2.double_entry_verified", "DOUBLE-ENTRY VERIFIED")}
                     </span>
                   </div>
                   <p className="text-[8px] font-extrabold text-blue-700 uppercase tracking-wide">
-                    GLOBAL ENTERPRISE ERP & IMPORT / EXPORT AUDIT SYSTEM
+                    {tt("pterv2.subtitle", "Enterprise ERP — Import / Export Verification")}
                   </p>
                 </div>
               </div>
@@ -479,7 +489,7 @@ function PurchaseTransferErpReportViewContent({
                 </div>
                 <div>COUNTRY: <b className="text-slate-900">{countryName}</b></div>
                 <div>BRANCH: <b className="text-[#0b192c]">{branchName} ({branchCode})</b></div>
-                <div>SECURITY: 🔒 ISO 27001 ENCRYPTED LOG</div>
+                <div>{tt("pterv2.audit_log_line", "Audit log")}: {roznamchaSerial}</div>
               </div>
             </div>
 
@@ -490,7 +500,7 @@ function PurchaseTransferErpReportViewContent({
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
                 {tt("pterv2.report_title","ENTERPRISE PURCHASE TRANSFER & SETTLEMENT VERIFICATION AUDIT SHEET")}
               </h3>
-              <div>DATE: <span>{fmtDate(new Date().toISOString())}</span> | STATUS: <span className="font-bold text-amber-400 uppercase">{isPosted ? "POSTED" : "ACCEPTED"}</span></div>
+              <div>DATE: <span>{fmtDate(new Date().toISOString())}</span> | {tt("pterv2.status_lbl", "Status")}: <span className="font-bold text-amber-400 uppercase">{isPosted ? tt("pterv2.st_posted", "POSTED") : tt("pterv2.st_accepted", "ACCEPTED")}</span></div>
             </div>
 
             {/* ── VISUAL END-TO-END TRANSACTION PROCESS FLOW BANNER ── */}
@@ -687,9 +697,9 @@ function PurchaseTransferErpReportViewContent({
                       <td className="p-1 border border-slate-300 text-right font-mono">{money(g.grossWeight || 260000)} kg</td>
                       <td className="p-1 border border-slate-300 text-right font-mono font-bold">{money(g.netWeight || 250000)} kg</td>
                       <td className="p-1 border border-slate-300 text-right font-mono">${Number(g.coursePrice || 5.20).toFixed(2)}</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono font-bold text-blue-800">${money(g.totalAmount || 130000)}</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono font-bold text-blue-800">${money(g.totalAmount || 0)}</td>
                       <td className="p-1 border border-slate-300 text-center font-mono">{exchangeRate}</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono font-black text-emerald-800">{money(g.finalAmount || (130000 * exchangeRate))} {currencyLc}</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono font-black text-emerald-800">{money(g.finalAmount || 0)} {currencyLc}</td>
                     </tr>
                   ))}
                   <tr className="bg-slate-100 font-black text-[7.5px]">
@@ -697,7 +707,7 @@ function PurchaseTransferErpReportViewContent({
                     <td className="p-1 border border-slate-300 text-right font-mono">{totalCartons.toLocaleString()} UNITS</td>
                     <td className="p-1 border border-slate-300 text-right font-mono">{money(totalGrossWt)} kg</td>
                     <td className="p-1 border border-slate-300 text-right font-mono">{money(totalNetWt)} kg</td>
-                    <td className="p-1 border border-slate-300 text-right font-mono">AVG $5.20</td>
+                    <td className="p-1 border border-slate-300 text-right font-mono">{totalNetWt > 0 ? "$" + (totalAmountFc / totalNetWt).toFixed(2) : "—"}</td>
                     <td className="p-1 border border-slate-300 text-right font-mono text-blue-800">${money(totalAmountFc)}</td>
                     <td className="p-1 border border-slate-300 text-center font-mono">@ {exchangeRate}</td>
                     <td className="p-1 border border-slate-300 text-right font-mono text-emerald-800 font-black">{money(totalAmountLc)} {currencyLc}</td>
@@ -713,13 +723,13 @@ function PurchaseTransferErpReportViewContent({
               <div className="border border-slate-300 rounded p-2 bg-slate-50/50 space-y-1">
                 <div className="font-black uppercase text-slate-900 border-b border-slate-200 pb-1 flex justify-between">
                   <span>{tt("pterv2.logistics_section","🚢 LOADING & LOGISTICS REGISTER")}</span>
-                  <span className="font-mono text-slate-600">BY SEA</span>
+                  <span className="font-mono text-slate-600">{form.shippingMode || form.transportMode || form.mode || "—"}</span>
                 </div>
                 <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.loading_origin","Loading Origin Port:")}</span><b>{form.loadingPort || form.loading_origin_port || form.loadingOriginPort || "—"}</b></div>
                 <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.receiving_dest","Receiving Destination Port:")}</span><b>{form.receivingPort || form.receiving_destination_port || form.receivingDestinationPort || "—"}</b></div>
-                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.vessel_voyage","Vessel & Voyage:")}</span><b className="font-mono">MSC BARCELONA V.204</b></div>
-                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.container_bl","Container Numbers & BL:")}</span><b className="font-mono">TCLU-492019-2 / MSCU-881920-1</b></div>
-                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.loading_arrival","Loading Date / Arrival Date:")}</span><span>2026-07-20 / 2026-07-25</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.vessel_voyage","Vessel & Voyage:")}</span><b className="font-mono">{form.vesselName || form.vessel || form.vesselVoyage || "—"}</b></div>
+                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.container_bl","Container Numbers & BL:")}</span><b className="font-mono">{form.containerNumbers || form.blNumber || form.containerNo || "—"}</b></div>
+                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.loading_arrival","Loading Date / Arrival Date:")}</span><span>{(form.loadingDate || "—") + " / " + (form.arrivalDate || form.receivingDate || "—")}</span></div>
               </div>
 
               {/* Advance Payment Settlement Callout Box */}
@@ -749,29 +759,29 @@ function PurchaseTransferErpReportViewContent({
                 <b className="uppercase text-slate-900 mr-2">{tt("pterv2.audit_narration_lbl","AUDIT NARRATION:")}</b>
                 <span className="text-slate-700">{tt("pterv2.audit_narration_text","Double-entry booking journal voucher verified and posted under Super Admin & Country scope rules.")}</span>
               </div>
-              <div className="font-mono font-bold text-slate-500">SECURITY ID: 2026-AUD-9981</div>
+              <div className="font-mono font-bold text-slate-500">{tt("pterv2.audit_ref_lbl", "Audit Ref")}: {roznamchaSerial}</div>
             </div>
 
             {/* ── FOOTER SIGNATURES & OFFICIAL STAMP STRIP ── */}
             <div className="pt-2 border-t-2 border-slate-900 space-y-3">
               <p className="text-[6.5px] text-slate-500 text-center italic">
-                *{tt("pterv2.footer_notice","This is an official SAP/Oracle Enterprise standard ERP verification sheet generated by Daman Business Group. Double-entry postings are validated.")}*
+                *{tt("pterv2.footer_notice2","This is an official ERP transfer & settlement verification sheet. All double-entry postings have been validated.")}*
               </p>
 
               <div className="flex justify-between items-end text-[7.5px]">
                 <div className="w-14 h-14 border-2 border-slate-400 rounded-full flex items-center justify-center text-[6.5px] font-black text-slate-400 uppercase text-center p-1 font-mono">
-                  OFFICIAL AUDIT STAMP
+                  {tt("pterv2.official_stamp", "Official Stamp")}
                 </div>
 
                 <div className="text-center space-y-1">
                   <div className="w-36 border-b-2 border-slate-900"></div>
-                  <div className="font-black text-slate-900 uppercase">asmat (Country Admin)</div>
+                  <div className="font-black text-slate-900 uppercase">{d?.audit?.userName || "—"}</div>
                   <div className="text-[6.5px] text-slate-500 uppercase font-bold">{tt("pterv2.prepared_by","PREPARED BY (AUDITOR)")}</div>
                 </div>
 
                 <div className="text-center space-y-1">
                   <div className="w-36 border-b-2 border-slate-900"></div>
-                  <div className="font-black text-slate-900 uppercase">SUPER ADMIN MANAGER</div>
+                  <div className="font-black text-slate-900 uppercase">{d?.audit?.approvedByName || d?.audit?.userName || "—"}</div>
                   <div className="text-[6.5px] text-slate-500 uppercase font-bold">{tt("pterv2.authorized_sig","AUTHORIZED SIGNATURE")}</div>
                 </div>
               </div>
