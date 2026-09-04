@@ -65,6 +65,7 @@ import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report"
 import { Th } from "@/components/ui/translated-th";
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 type PurchaseReport = {
   [key: string]: any;
@@ -1513,6 +1514,12 @@ export function PurchaseBookingJournalReportView({
 
   const activeLang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
+  const tt = (k: string, f: string) => t(activeLang, ("pbjr." + k) as never, f);
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBranding(null).then((b) => setBrandCompany(brandingName(b, activeLang) || null)).catch(() => {});
+  }, [activeLang]);
+  const brandLine = brandCompany || t(activeLang, "acct.brand_short", "Digital Dock ERP");
   const trUi = useCallback((label: string) => {
     if (activeLang === "en") return label;
     // translateHeader() already returns the original label unchanged when no dictionary
@@ -3160,14 +3167,14 @@ export function PurchaseBookingJournalReportView({
                     onClick={() => selected && openReportWindow(selected, true)}
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-muted"
                   >
-                    <span>🖨️</span> Print A4 Report
+                    <span>🖨️</span> {tt("print_a4_report", "Print A4 Report")}
                   </button>
                   <button
                     type="button"
                     onClick={() => selected && openReportWindow(selected, false)}
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-muted"
                   >
-                    <span>👁️</span> PDF Preview
+                    <span>👁️</span> {tt("pdf_preview", "PDF Preview")}
                   </button>
                   <div className="h-px bg-border my-1" />
                   <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "tdoc.center_title", "Commercial Document Center")}</div>
@@ -3355,7 +3362,7 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <div>
                         <div className="text-sm font-black tracking-widest text-blue-900 uppercase leading-none">
-                          DEMI TRADING CO.
+                          {brandLine}
                         </div>
                         
                       </div>
@@ -3415,7 +3422,7 @@ export function PurchaseBookingJournalReportView({
                     {/* Booking Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>👤</span> Booking Information
+                        <span>👤</span> {tt("booking_information", "Booking Information")}
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3430,7 +3437,7 @@ export function PurchaseBookingJournalReportView({
                     {/* Supplier Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>🏢</span> Supplier Information
+                        <span>🏢</span> {tt("supplier_information", "Supplier Information")}
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3446,7 +3453,7 @@ export function PurchaseBookingJournalReportView({
                     {/* Buyer Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>👤</span> Buyer Information
+                        <span>👤</span> {tt("buyer_information", "Buyer Information")}
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3462,7 +3469,7 @@ export function PurchaseBookingJournalReportView({
                   {/* Goods Details section */}
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <div className="bg-[#0f2942] text-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider">
-                      📦 Goods Details
+                      📦 {tt("goods_details", "Goods Details")}
                     </div>
                     <table className="w-full text-[8px] text-left border-collapse">
                       <thead>
@@ -3540,7 +3547,7 @@ export function PurchaseBookingJournalReportView({
                   {/* Loading & Transit Information */}
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                      <span>🚢</span> Loading & Transit Information
+                      <span>🚢</span> {tt("loading_transit_information", "Loading & Transit Information")}
                     </div>
                     <table className="w-full text-[8px] font-semibold text-slate-600">
                       <tbody>
@@ -3577,7 +3584,7 @@ export function PurchaseBookingJournalReportView({
                     {/* Payment Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>💵</span> Payment Information
+                        <span>💵</span> {tt("payment_information", "Payment Information")}
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-650">
                         <tbody>
@@ -3603,7 +3610,7 @@ export function PurchaseBookingJournalReportView({
                     {/* Accounting Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>📊</span> Accounting Information
+                        <span>📊</span> {tt("accounting_information", "Accounting Information")}
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3667,7 +3674,7 @@ export function PurchaseBookingJournalReportView({
                   {selected.form_data?.form?.showRemarksOnA4 !== false && (
                     <div className="border border-slate-200 rounded overflow-hidden mt-2.5">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>📝</span> Remarks / Narration
+                        <span>📝</span> {tt("remarks_narration", "Remarks / Narration")}
                       </div>
                       <div className="p-2 bg-white text-[8px] font-semibold text-slate-800 italic leading-normal min-h-[30px] whitespace-pre-wrap break-words">
                         {remarksText}
@@ -3690,7 +3697,7 @@ export function PurchaseBookingJournalReportView({
                         <path d="M50 85 A35 35 0 0 1 15 50" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <path d="M85 50 A35 35 0 0 1 50 85" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <text x="50" y="42" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "").toUpperCase()}</text>
-                        <text x="50" y="52" textAnchor="middle" fontSize="6" fontWeight="bold" fill="currentColor">★ STAMP ★</text>
+                        <text x="50" y="52" textAnchor="middle" fontSize="6" fontWeight="bold" fill="currentColor">{`★ ${tt("stamp", "STAMP")} ★`}</text>
                         <text x="50" y="62" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "").toUpperCase()}</text>
                       </svg>
                     </div>
@@ -3707,7 +3714,7 @@ export function PurchaseBookingJournalReportView({
                   {/* Transfer Info */}
                   {selected.form_data?.form?.transferAudit && (
                     <div className="text-right text-[8px] font-bold text-blue-600 mt-2 border-t border-slate-200 pt-1.5">
-                      Transferred to Purchase Transfer Payment by <span className="uppercase">{selected.form_data.form.transferAudit.userName}</span> on {new Date(selected.form_data.form.transferAudit.transferDate).toLocaleDateString()}
+                      {tt("transferred_to_ptp_by", "Transferred to Purchase Transfer Payment by")} <span className="uppercase">{selected.form_data.form.transferAudit.userName}</span> on {new Date(selected.form_data.form.transferAudit.transferDate).toLocaleDateString()}
                     </div>
                   )}
 
