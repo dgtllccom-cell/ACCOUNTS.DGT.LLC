@@ -1449,9 +1449,9 @@ export function AccountGeneralReportView({
       {/* Scope Subtitle Bar */}
       <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 pt-1 pb-1">
         <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
-          <span>BRANCH SCOPE: <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL ADMIN" : "BRANCH"}</strong></span>
-          <span>SESSION ROLE: <strong className="text-emerald-600 dark:text-emerald-400">{session?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN"}</strong></span>
-          <span>TOTAL LEDGERS: <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
+          <span>{tr("BRANCH SCOPE:")} <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? tr("GLOBAL ADMIN") : tr("BRANCH")}</strong></span>
+          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{tr(session?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN")}</strong></span>
+          <span>{tr("TOTAL LEDGERS:")} <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
         </div>
         {selectedCountryForSummary && (
           <button
@@ -1519,7 +1519,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center mt-auto pt-1 border-t border-slate-100 dark:border-slate-800">
               <span>{tr("STATUS:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">
-                ACTIVE
+                {tr("ACTIVE")}
               </span>
             </div>
           </div>
@@ -1605,7 +1605,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("SYSTEM STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ALL CLEAR</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tr("ALL CLEAR")}</span>
             </div>
           </div>
         </div>
@@ -1719,11 +1719,11 @@ export function AccountGeneralReportView({
                       <span className="text-base">{getFlag(c.countryName)}</span>
                       <span className="hover:text-blue-600 transition">{c.countryName}</span>
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {c.totalAccounts} accounts
+                        {c.totalAccounts} {tr("accounts")}
                       </span>
                       {isSelected && (
                         <span className="rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[9px] font-black uppercase">
-                          FILTERED
+                          {tr("FILTERED")}
                         </span>
                       )}
                     </span>
@@ -1738,18 +1738,18 @@ export function AccountGeneralReportView({
                   <div className="mt-3 space-y-2 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
                     <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
                       <div className="rounded bg-rose-50 p-1.5 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
-                        DR: {fmtNumber(c.debitTotal)}
+                        {tr("DR:")} {fmtNumber(c.debitTotal)}
                       </div>
                       <div className="rounded bg-emerald-50 p-1.5 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
-                        CR: {fmtNumber(c.creditTotal)}
+                        {tr("CR:")} {fmtNumber(c.creditTotal)}
                       </div>
                       <div className="rounded bg-blue-50 p-1.5 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
-                        NET: {fmtNumber(c.netBalance)}
+                        {tr("NET:")} {fmtNumber(c.netBalance)}
                       </div>
                     </div>
 
                     <div className="space-y-1 pt-1">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Branches</div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tr("Branches")}</div>
                       {c.branches.map((b) => (
                         <div
                           key={b.branchCode}
