@@ -683,7 +683,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   <Label className="text-[11px] text-muted-foreground">{tt("common.search", "Search")}</Label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                    <Input className="h-9 pl-9 text-xs" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search subject, sender, branch, label..." />
+                    <Input className="h-9 pl-9 text-xs" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tt("email_mgmt.search_ph", "Search subject, sender, branch, label...")} />
                   </div>
                 </div>
 
@@ -1289,7 +1289,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   </div>
                   
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label={tt("email_mgmt.subject", "Subject")} value={composeSubject} onChange={setComposeSubject} placeholder="Email subject" />
+                    <Field label={tt("email_mgmt.subject", "Subject")} value={composeSubject} onChange={setComposeSubject} placeholder={tt("email_mgmt.email_subject_ph", "Email subject")} />
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold">{tt("email_mgmt.apply_template", "Apply Template")}</Label>
                       <select
@@ -1391,7 +1391,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   <div className="rounded-lg border bg-white p-6 shadow-sm dark:bg-slate-900 min-h-[300px] flex flex-col">
                     {emailConfig?.logoUrl && (
                       <div className="mb-6">
-                        <img src={emailConfig.logoUrl} alt="Logo" className="max-h-10 object-contain" />
+                        <img src={emailConfig.logoUrl} alt={tt("email_mgmt.logo_alt", "Logo")} className="max-h-10 object-contain" />
                       </div>
                     )}
                     

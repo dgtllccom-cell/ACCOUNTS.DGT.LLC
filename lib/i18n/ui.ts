@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "email_mgmt.search_ph"
+  | "email_mgmt.email_subject_ph"
+  | "email_mgmt.logo_alt"
   | "crm.total_records"
   | "crm.total_value"
   | "crm.total_settled_paid"
@@ -18821,6 +18824,12 @@ const en: Dict = {
 
 
 
+
+  "email_mgmt.search_ph": "Search subject, sender, branch, label...",
+
+  "email_mgmt.email_subject_ph": "Email subject",
+
+  "email_mgmt.logo_alt": "Logo",
   "crm.total_records": "Total Records",
 
   "crm.total_value": "Total Value",
@@ -34748,6 +34757,12 @@ const ur: Dict = {
 
 
 
+
+  "email_mgmt.search_ph": "موضوع، بھیجنے والا، برانچ، لیبل تلاش کریں...",
+
+  "email_mgmt.email_subject_ph": "ای میل موضوع",
+
+  "email_mgmt.logo_alt": "لوگو",
   "crm.total_records": "کل ریکارڈز",
 
   "crm.total_value": "کل قدر",
@@ -50677,6 +50692,12 @@ const ar: Dict = {
 
 
 
+
+  "email_mgmt.search_ph": "ابحث عن الموضوع، المرسل، الفرع، التصنيف...",
+
+  "email_mgmt.email_subject_ph": "موضوع البريد الإلكتروني",
+
+  "email_mgmt.logo_alt": "الشعار",
   "crm.total_records": "إجمالي السجلات",
 
   "crm.total_value": "إجمالي القيمة",
@@ -66605,6 +66626,12 @@ const fa: Dict = {
 
 
 
+
+  "email_mgmt.search_ph": "جستجوی موضوع، فرستنده، شعبه، برچسب...",
+
+  "email_mgmt.email_subject_ph": "موضوع ایمیل",
+
+  "email_mgmt.logo_alt": "لوگو",
   "crm.total_records": "مجموع رکوردها",
 
   "crm.total_value": "مجموع ارزش",
@@ -82539,6 +82566,12 @@ const ps: Dict = {
 
 
 
+
+  "email_mgmt.search_ph": "موضوع، لیږونکی، څانګه، لیبل ولټوئ...",
+
+  "email_mgmt.email_subject_ph": "بریښنالیک موضوع",
+
+  "email_mgmt.logo_alt": "لوګو",
   "crm.total_records": "ټول ریکارډونه",
 
   "crm.total_value": "ټول ارزښت",
