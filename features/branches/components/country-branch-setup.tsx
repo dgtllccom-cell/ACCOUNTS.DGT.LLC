@@ -1045,7 +1045,7 @@ function CountryBranchSetupContent() {
       </div>
 
       <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="overflow-x-auto -mx-1 px-1" aria-label="Country branch wizard sequence">
+        <div className="overflow-x-auto -mx-1 px-1" aria-label={t(lang, "cnbs.wizard_sequence_aria", "Country branch wizard sequence")}>
           <div className="flex gap-2 min-w-max">
           {[
             ["1", t(lang, "cnbs.step1_title"), t(lang, "cnbs.step1_desc")],
@@ -1180,7 +1180,7 @@ function CountryBranchSetupContent() {
                         <span className="text-2xl">🏢</span>
                         <div>
                           <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ برانچ" : lang === "ar" ? "فرع تجاري / أعمال" : lang === "ps" ? "تجارتي / بزنس څانګه" : lang === "fa" ? "شعبه تجاری و شرکتی" : "Business & Corporate Branch"}</div>
-                          <div className="text-[10px] text-slate-500">{lang === "ur" ? "عام تجارتی و مالیاتی امور" : "General commercial & trading operations"}</div>
+                          <div className="text-[10px] text-slate-500">{t(lang, "cbs.general_commercial_ops", "General commercial & trading operations")}</div>
                         </div>
                       </button>
                       <button
@@ -1195,7 +1195,7 @@ function CountryBranchSetupContent() {
                         <span className="text-2xl">🚢</span>
                         <div>
                           <div className="text-xs font-bold">{lang === "ur" ? "کسٹم کلیئرنگ ایجنٹ و شپنگ لائن" : lang === "ar" ? "فرع التخليص الجمركي وخط الشحن" : lang === "ps" ? "ګمرکي کلیرنګ ایجنټ او د کښتۍ لاین" : lang === "fa" ? "کارگزاری گمرک و خط کشتیرانی" : "Clearing Agent & Shipping Line"}</div>
-                          <div className="text-[10px] text-slate-500">{lang === "ur" ? "پورٹ، کسٹم کلیئرنگ و کنٹینرز" : "Ports, shipping lines & customs clearing"}</div>
+                          <div className="text-[10px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
                         </div>
                       </button>
                     </div>
@@ -1227,7 +1227,7 @@ function CountryBranchSetupContent() {
                       required
                       value={branchEmail}
                       onChange={(e) => setBranchEmail(e.target.value)}
-                      placeholder="e.g. dubai@dgtllc.com or khi@dgtllc.com"
+                      placeholder={t(lang, "cnbs.branch_email_ph", "e.g. dubai@dgtllc.com or khi@dgtllc.com")}
                       className="h-9 text-xs font-medium"
                     />
                     <p className="text-[11px] text-slate-500">
@@ -1343,7 +1343,7 @@ function CountryBranchSetupContent() {
 
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
-                      + Add Contact
+                      + {t(lang, "cnbs.add_contact", "Add Contact")}
                     </Button>
                   </div>
                 </div>
@@ -1361,7 +1361,7 @@ function CountryBranchSetupContent() {
                   onTemplateChange={setPermissionTemplate}
                   onSelectedChange={setPermissionGrants}
                   required
-                  note="Super Admin must grant the Country permissions explicitly before saving."
+                  note={t(lang, "cnbs.permission_note", "Super Admin must grant the Country permissions explicitly before saving.")}
                 />
               </section>
 
@@ -1378,7 +1378,7 @@ function CountryBranchSetupContent() {
                     }}
                     className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-40"
                   >
-                    ← Back
+                    {t(lang, "cnbs.back_arrow", "← Back")}
                   </Button>
                   <Button
                     type="reset"

@@ -6,19 +6,20 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
-const ROLE_I18N: Record<string, Record<string, string>> = {
-  "staff user": { ur: "اسٹاف یوزر", ar: "مستخدم موظف", ps: "د کارمندانو کارن", fa: "کاربر کارمند" },
-  "super_admin": { ur: "سپر ایڈمن", ar: "مشرف عام", ps: "سوپر اډمین", fa: "سوپر ادمین" },
-  "country_admin": { ur: "کنٹری ایڈمن", ar: "مشرف الدولة", ps: "د هیواد اډمین", fa: "ادمین کشور" },
-  "Global": { ur: "گلوبل", ar: "عام", ps: "نړیوال", fa: "سراسری" }
+const ROLE_KEY_MAP: Record<string, string> = {
+  "staff user": "role.staff_user",
+  "super_admin": "role.super_admin",
+  "country_admin": "role.country_admin",
+  "Global": "common.global"
 };
 
 function localizeRoleDesc(role: string, lang: string): string {
-  if (!role || lang === "en") return role;
-  const match = ROLE_I18N[role];
-  if (match && match[lang]) return match[lang];
-  return role;
+  if (!role) return role;
+  const key = ROLE_KEY_MAP[role];
+  if (!key) return role;
+  return t(lang as never, key as never, role);
 }
 
 type OwnerCustomerRow = {
@@ -81,9 +82,9 @@ export function BranchOwnerPicker({
   const [openCreate, setOpenCreate] = useState(false);
   const [ownerKindById, setOwnerKindById] = useState<Map<string, OwnerKind>>(new Map());
 
-  const defaultPlaceholder = lang === "ur" ? "مالک تلاش کریں" : lang === "ps" ? "مالک وپلټئ" : lang === "ar" ? "البحث عن المالك" : "Search owner";
-  const defaultCreateLabel = lang === "ur" ? "+ نیا مالک" : lang === "ps" ? "+ نوی مالک" : lang === "ar" ? "+ مالك جديد" : "New Owner";
-  const defaultOwnerLabel = lang === "ur" ? "مالک کا نام" : lang === "ps" ? "د مالک نوم" : lang === "ar" ? "اسم المالك" : "Owner Name";
+  const defaultPlaceholder = t(lang as never, "bop.search_owner" as never, "Search owner");
+  const defaultCreateLabel = t(lang as never, "bop.new_owner" as never, "New Owner");
+  const defaultOwnerLabel = t(lang as never, "bop.owner_name" as never, "Owner Name");
 
   async function loadList() {
     setLoading(true);
@@ -143,7 +144,7 @@ export function BranchOwnerPicker({
       <SearchSelect
         label={defaultOwnerLabel}
         value={value}
-        placeholder={placeholder ?? (loading ? (lang === "ur" ? "لوڈ ہو رہا ہے..." : "Loading...") : defaultPlaceholder)}
+        placeholder={placeholder ?? (loading ? t(lang as never, "common.loading" as never, "Loading...") : defaultPlaceholder)}
         disabled={disabled || loading}
         options={finalOptions}
         onValueChange={(id) => {
@@ -164,7 +165,7 @@ export function BranchOwnerPicker({
 
       {openCreate ? (
         <SimpleModal
-          title="New Owner — Customer Master"
+          title={t(lang as never, "bop.new_owner_modal_title" as never, "New Owner — Customer Master")}
           onClose={() => setOpenCreate(false)}
           className="w-[96vw] max-w-[1100px] h-[90vh] max-h-[90vh] rounded-2xl font-sans"
         >

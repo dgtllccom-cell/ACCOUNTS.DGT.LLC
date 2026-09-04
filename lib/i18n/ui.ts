@@ -927,6 +927,20 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bop.new_owner_modal_title"
+  | "cnbs.add_contact"
+  | "cnbs.permission_note"
+  | "cnbs.back_arrow"
+  | "cnbs.branch_email_ph"
+  | "cnbs.wizard_sequence_aria"
+  | "cbs.erp_system_label"
+  | "cbs.general_commercial_ops"
+  | "cbs.general_commercial_branch"
+  | "cbs.ports_shipping_customs"
+  | "bop.search_owner"
+  | "bop.new_owner"
+  | "bop.owner_name"
+  | "common.global"
   | "cprof.erp_360_short"
   | "cprof.send_resend_link"
   | "cprof.send_link"
@@ -18627,6 +18641,35 @@ const en: Dict = {
 
 
 
+
+
+  "bop.new_owner_modal_title": "New Owner — Customer Master",
+
+  "cnbs.add_contact": "Add Contact",
+
+  "cnbs.permission_note": "Super Admin must grant the Country permissions explicitly before saving.",
+
+  "cnbs.back_arrow": "← Back",
+
+  "cnbs.branch_email_ph": "e.g. dubai@dgtllc.com or khi@dgtllc.com",
+
+  "cnbs.wizard_sequence_aria": "Country branch wizard sequence",
+
+  "cbs.erp_system_label": "ERP System",
+
+  "cbs.general_commercial_ops": "General commercial & trading operations",
+
+  "cbs.general_commercial_branch": "General commercial & trading branch",
+
+  "cbs.ports_shipping_customs": "Ports, shipping lines & customs clearing",
+
+  "bop.search_owner": "Search owner",
+
+  "bop.new_owner": "New Owner",
+
+  "bop.owner_name": "Owner Name",
+
+  "common.global": "Global",
   "cprof.erp_360_short": "360° ERP",
   "cprof.send_resend_link": "Send / Re-send Form Link",
 
@@ -34219,6 +34262,35 @@ const ur: Dict = {
 
 
 
+
+
+  "bop.new_owner_modal_title": "نیا مالک — کسٹمر ماسٹر",
+
+  "cnbs.add_contact": "رابطہ شامل کریں",
+
+  "cnbs.permission_note": "سیو کرنے سے پہلے سپر ایڈمن کو کنٹری اجازتیں واضح طور پر دینا ضروری ہے۔",
+
+  "cnbs.back_arrow": "← پیچھے",
+
+  "cnbs.branch_email_ph": "مثلاً dubai@dgtllc.com یا khi@dgtllc.com",
+
+  "cnbs.wizard_sequence_aria": "کنٹری برانچ وزرڈ ترتیب",
+
+  "cbs.erp_system_label": "ای آر پی سسٹم",
+
+  "cbs.general_commercial_ops": "عام تجارتی و مالیاتی امور",
+
+  "cbs.general_commercial_branch": "عام تجارتی، دفتری و مالیاتی امور",
+
+  "cbs.ports_shipping_customs": "پورٹ، کسٹم کلیئرنگ و کنٹینرز",
+
+  "bop.search_owner": "مالک تلاش کریں",
+
+  "bop.new_owner": "نیا مالک",
+
+  "bop.owner_name": "مالک کا نام",
+
+  "common.global": "گلوبل",
   "cprof.erp_360_short": "360° ای آر پی",
   "cprof.send_resend_link": "کسٹمر کو نیا فارم لنک بھیجیں",
 
@@ -49813,6 +49885,35 @@ const ar: Dict = {
 
 
 
+
+
+  "bop.new_owner_modal_title": "مالك جديد — سجل العملاء الرئيسي",
+
+  "cnbs.add_contact": "إضافة جهة اتصال",
+
+  "cnbs.permission_note": "يجب أن يمنح المسؤول الأعلى صلاحيات الدولة صراحة قبل الحفظ.",
+
+  "cnbs.back_arrow": "← رجوع",
+
+  "cnbs.branch_email_ph": "مثال: dubai@dgtllc.com أو khi@dgtllc.com",
+
+  "cnbs.wizard_sequence_aria": "تسلسل معالج فرع الدولة",
+
+  "cbs.erp_system_label": "نظام ERP",
+
+  "cbs.general_commercial_ops": "العمليات التجارية العامة",
+
+  "cbs.general_commercial_branch": "فرع تجاري عام",
+
+  "cbs.ports_shipping_customs": "الموانئ وخطوط الشحن والتخليص الجمركي",
+
+  "bop.search_owner": "البحث عن المالك",
+
+  "bop.new_owner": "مالك جديد",
+
+  "bop.owner_name": "اسم المالك",
+
+  "common.global": "عام",
   "cprof.erp_360_short": "360° نظام إدارة الموارد",
   "cprof.send_resend_link": "إرسال / إعادة إرسال رابط النموذج",
 
@@ -65406,6 +65507,35 @@ const fa: Dict = {
 
 
 
+
+
+  "bop.new_owner_modal_title": "مالک جدید — ماسٹر مشتری",
+
+  "cnbs.add_contact": "افزودن مخاطب",
+
+  "cnbs.permission_note": "مدیر ارشد باید قبل از ذخیره، مجوزهای کشور را صراحتاً اعطا کند.",
+
+  "cnbs.back_arrow": "← بازگشت",
+
+  "cnbs.branch_email_ph": "مثال: dubai@dgtllc.com یا khi@dgtllc.com",
+
+  "cnbs.wizard_sequence_aria": "توالی ویزارد شعبه کشور",
+
+  "cbs.erp_system_label": "سیستم ERP",
+
+  "cbs.general_commercial_ops": "عملیات تجاری و بازرگانی عمومی",
+
+  "cbs.general_commercial_branch": "شعبه تجاری و بازرگانی عمومی",
+
+  "cbs.ports_shipping_customs": "بنادر، خطوط کشتیرانی و ترخیص گمرکی",
+
+  "bop.search_owner": "جستجوی مالک",
+
+  "bop.new_owner": "مالک جدید",
+
+  "bop.owner_name": "نام مالک",
+
+  "common.global": "سراسری",
   "cprof.erp_360_short": "360° سامانه ERP",
   "cprof.send_resend_link": "ارسال / ارسال مجدد لینک فرم",
 
@@ -81005,6 +81135,35 @@ const ps: Dict = {
 
 
 
+
+
+  "bop.new_owner_modal_title": "نوی مالک — د پیرودونکي ماسټر",
+
+  "cnbs.add_contact": "اړیکه اضافه کړئ",
+
+  "cnbs.permission_note": "سوپر مدیر باید د خوندي کولو دمخه د هېواد اجازې په څرګنده توګه ورکړي.",
+
+  "cnbs.back_arrow": "← بېرته",
+
+  "cnbs.branch_email_ph": "بېلګه: dubai@dgtllc.com یا khi@dgtllc.com",
+
+  "cnbs.wizard_sequence_aria": "د هېواد د څانګې د وزرډ ترتیب",
+
+  "cbs.erp_system_label": "ERP سیسټم",
+
+  "cbs.general_commercial_ops": "عمومي سوداګریز عملیات",
+
+  "cbs.general_commercial_branch": "عمومي سوداګریز څانګه",
+
+  "cbs.ports_shipping_customs": "بندرونه، د لېږد کرښې، او د ګمرک تخلیص",
+
+  "bop.search_owner": "مالک وپلټئ",
+
+  "bop.new_owner": "نوی مالک",
+
+  "bop.owner_name": "د مالک نوم",
+
+  "common.global": "نړیوال",
   "cprof.erp_360_short": "360° د ERP سیسټم",
   "cprof.send_resend_link": "د فورمې لینک لیږل / بیا لیږل",
 

@@ -1619,7 +1619,7 @@ function CityBranchSetupContent() {
                       <span className="text-2xl">🏢</span>
                       <div>
                         <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ سٹی برانچ" : lang === "ar" ? "فرع تجاري / أعمال" : lang === "ps" ? "تجارتي / بزنس څانګه" : lang === "fa" ? "شعبه تجاری و شرکتی" : "Business & Corporate Branch"}</div>
-                        <div className="text-[10px] text-slate-500">{lang === "ur" ? "عام تجارتی، دفتری و مالیاتی امور" : "General commercial & trading branch"}</div>
+                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.general_commercial_branch", "General commercial & trading branch")}</div>
                       </div>
                     </button>
                     <button
@@ -1634,7 +1634,7 @@ function CityBranchSetupContent() {
                       <span className="text-2xl">🚢</span>
                       <div>
                         <div className="text-xs font-bold">{lang === "ur" ? "کسٹم کلیئرنگ ایجنٹ و شپنگ لائن" : lang === "ar" ? "فرع التخليص الجمركي وخط الشحن" : lang === "ps" ? "ګمرکي کلیرنګ ایجنټ او د کښتۍ لاین" : lang === "fa" ? "کارگزاری گمرک و خط کشتیرانی" : "Clearing Agent & Shipping Line"}</div>
-                        <div className="text-[10px] text-slate-500">{lang === "ur" ? "پورٹ، کسٹم کلیئرنگ و کنٹینرز" : "Ports, shipping lines & customs clearing"}</div>
+                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
                       </div>
                     </button>
                   </div>
@@ -2130,7 +2130,7 @@ function CityBranchSetupContent() {
                         <span className="text-lg font-black">D</span>
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">DGT LLC · ERP System</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">DGT LLC · {t(lang, "cbs.erp_system_label", "ERP System")}</p>
                         <h1 className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">{t(lang, "cbs.step9_title")}</h1>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step9_subtitle")}</p>
                       </div>
@@ -2706,7 +2706,7 @@ function CityBranchSetupContent() {
             {/* Edit Mode Banner */}
             {editingCityBranchId && (
               <div className="border-t border-sky-100 bg-sky-50 px-4 py-3 dark:border-sky-900/40 dark:bg-sky-950/20">
-                <p className="text-[9px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">✏ Editing Existing Branch</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">✏ {t(lang, "cbs.editing_existing_branch", "Editing Existing Branch")}</p>
                 <p className="mt-0.5 text-[10px] text-sky-800 dark:text-sky-300">
                   {activeExistingCityBranch?.name} · {activeExistingCityBranch?.code}
                 </p>
