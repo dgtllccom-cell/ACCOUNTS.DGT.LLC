@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dsp.super_admin_settings_controls"
+  | "dsp.dashboard_system_module_manager"
+  | "dsp.custom_restriction_notice"
+  | "dsp.restriction_notice_ph"
   | "globalerr.reference_id"
   | "globalerr.diagnostic_notice"
   | "globalerr.exception_occurred"
@@ -18843,6 +18847,14 @@ const en: Dict = {
 
 
 
+
+  "dsp.super_admin_settings_controls": "Super Admin Settings & Controls",
+
+  "dsp.dashboard_system_module_manager": "Dashboard System & Module Manager",
+
+  "dsp.custom_restriction_notice": "Custom Restriction Notice / Alert Text",
+
+  "dsp.restriction_notice_ph": "e.g. Access to this form is restricted by Super Admin.",
   "globalerr.reference_id": "Reference ID:",
 
   "globalerr.diagnostic_notice": "Application Diagnostic Notice",
@@ -34804,6 +34816,14 @@ const ur: Dict = {
 
 
 
+
+  "dsp.super_admin_settings_controls": "سپر ایڈمن سیٹنگز و کنٹرولز",
+
+  "dsp.dashboard_system_module_manager": "ڈیش بورڈ سسٹم و ماڈیول مینیجر",
+
+  "dsp.custom_restriction_notice": "کسٹم پابندی نوٹس / الرٹ ٹیکسٹ",
+
+  "dsp.restriction_notice_ph": "مثلاً اس فارم تک رسائی سپر ایڈمن کی طرف سے محدود ہے۔",
   "globalerr.reference_id": "حوالہ آئی ڈی:",
 
   "globalerr.diagnostic_notice": "ایپلیکیشن تشخیصی نوٹس",
@@ -50767,6 +50787,14 @@ const ar: Dict = {
 
 
 
+
+  "dsp.super_admin_settings_controls": "إعدادات وضوابط المسؤول الأعلى",
+
+  "dsp.dashboard_system_module_manager": "نظام لوحة التحكم ومدير الوحدات",
+
+  "dsp.custom_restriction_notice": "إشعار تقييد مخصص / نص التنبيه",
+
+  "dsp.restriction_notice_ph": "مثال: الوصول إلى هذا النموذج مقيد من قبل المسؤول الأعلى.",
   "globalerr.reference_id": "معرف المرجع:",
 
   "globalerr.diagnostic_notice": "إشعار تشخيص التطبيق",
@@ -66729,6 +66757,14 @@ const fa: Dict = {
 
 
 
+
+  "dsp.super_admin_settings_controls": "تنظیمات و کنترل‌های مدیر ارشد",
+
+  "dsp.dashboard_system_module_manager": "سیستم داشبورد و مدیر ماژول",
+
+  "dsp.custom_restriction_notice": "اعلان محدودیت سفارشی / متن هشدار",
+
+  "dsp.restriction_notice_ph": "مثال: دسترسی به این فرم توسط مدیر ارشد محدود شده است.",
   "globalerr.reference_id": "شناسه مرجع:",
 
   "globalerr.diagnostic_notice": "اعلان تشخیصی برنامه",
@@ -82697,6 +82733,14 @@ const ps: Dict = {
 
 
 
+
+  "dsp.super_admin_settings_controls": "د سوپر مدیر تنظیمات او کنټرولونه",
+
+  "dsp.dashboard_system_module_manager": "د ډشبورډ سیسټم او ماډیول مدیر",
+
+  "dsp.custom_restriction_notice": "دودیز محدودیت خبرتیا / د خبرتیا متن",
+
+  "dsp.restriction_notice_ph": "بېلګه: دې فورمې ته لاسرسی د سوپر مدیر لخوا محدود دی.",
   "globalerr.reference_id": "د حواله پیژندنه:",
 
   "globalerr.diagnostic_notice": "د اپلیکیشن تشخیصي خبرتیا",

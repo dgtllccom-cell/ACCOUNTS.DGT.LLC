@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type TargetRoleKey = "super_admin" | "country_admin" | "branch_admin" | "agent_user";
 
@@ -84,6 +86,8 @@ const defaultModuleList = [
 ];
 
 export default function DashboardSettingsPage() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, ("dsp." + key) as never, fallback);
   const [selectedRole, setSelectedRole] = useState<TargetRoleKey>("country_admin");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -229,11 +233,11 @@ export default function DashboardSettingsPage() {
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-cyan-500 animate-pulse" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-              Super Admin Settings & Controls
+              {tt("super_admin_settings_controls", "Super Admin Settings & Controls")}
             </p>
           </div>
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1">
-            Dashboard System & Module Manager
+            {tt("dashboard_system_module_manager", "Dashboard System & Module Manager")}
           </h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-3xl">
             Control dashboard allotment, enable/disable specific screens and forms, and configure custom alert notices per role level.
@@ -370,12 +374,12 @@ export default function DashboardSettingsPage() {
                         {!isEnabled && (
                           <div className="pt-2 border-t border-border/40 space-y-1.5">
                             <Label className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                              <AlertCircle className="h-3 w-3" /> Custom Restriction Notice / Alert Text
+                              <AlertCircle className="h-3 w-3" /> {tt("custom_restriction_notice", "Custom Restriction Notice / Alert Text")}
                             </Label>
                             <Input
                               value={currentConfig.alertText || ""}
                               onChange={(e) => updateAlertText(selectedRole, mod.key, e.target.value)}
-                              placeholder="e.g. Access to this form is restricted by Super Admin."
+                              placeholder={tt("restriction_notice_ph", "e.g. Access to this form is restricted by Super Admin.")}
                               className="h-8 text-xs bg-background border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground"
                             />
                           </div>
