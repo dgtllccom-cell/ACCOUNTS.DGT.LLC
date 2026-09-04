@@ -1093,7 +1093,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     }}
                     className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   >
-                    <optgroup label={lang === "ur" ? "ملازمین کے زمرے" : lang === "ar" ? "فئات الموظفين" : "Employee Categories"}>
+                    <optgroup label={t(lang, "empf.employee_categories", "Employee Categories")}>
                       <option value="Manager">{catLabel("Manager")}</option>
                       <option value="Accountant">{catLabel("Accountant")}</option>
                       <option value="Branch Administrator">{catLabel("Branch Administrator")}</option>

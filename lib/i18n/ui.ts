@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "godv.erp_360_links"
+  | "godv.per_page"
+  | "godv.son_of"
+  | "empf.employee_categories"
   | "bop.new_owner_modal_title"
   | "cnbs.add_contact"
   | "cnbs.permission_note"
@@ -18643,6 +18647,14 @@ const en: Dict = {
 
 
 
+
+
+  "godv.erp_360_links": "360° ERP Links",
+
+  "godv.per_page": "/ page",
+  "godv.son_of": "S/O: ",
+
+  "empf.employee_categories": "Employee Categories",
   "bop.new_owner_modal_title": "New Owner — Customer Master",
 
   "cnbs.add_contact": "Add Contact",
@@ -34264,6 +34276,14 @@ const ur: Dict = {
 
 
 
+
+
+  "godv.erp_360_links": "360° ای آر پی لنکس",
+
+  "godv.per_page": "/ صفحہ",
+  "godv.son_of": "ولدیت: ",
+
+  "empf.employee_categories": "ملازمین کے زمرے",
   "bop.new_owner_modal_title": "نیا مالک — کسٹمر ماسٹر",
 
   "cnbs.add_contact": "رابطہ شامل کریں",
@@ -49887,6 +49907,14 @@ const ar: Dict = {
 
 
 
+
+
+  "godv.erp_360_links": "روابط ERP 360°",
+
+  "godv.per_page": "/ صفحة",
+  "godv.son_of": "اسم الأب: ",
+
+  "empf.employee_categories": "فئات الموظفين",
   "bop.new_owner_modal_title": "مالك جديد — سجل العملاء الرئيسي",
 
   "cnbs.add_contact": "إضافة جهة اتصال",
@@ -65509,6 +65537,14 @@ const fa: Dict = {
 
 
 
+
+
+  "godv.erp_360_links": "پیوندهای 360° ERP",
+
+  "godv.per_page": "/ صفحه",
+  "godv.son_of": "فرزند: ",
+
+  "empf.employee_categories": "دسته‌بندی کارمندان",
   "bop.new_owner_modal_title": "مالک جدید — ماسٹر مشتری",
 
   "cnbs.add_contact": "افزودن مخاطب",
@@ -81137,6 +81173,14 @@ const ps: Dict = {
 
 
 
+
+
+  "godv.erp_360_links": "360° د ERP لینکونه",
+
+  "godv.per_page": "/ پاڼه",
+  "godv.son_of": "زوی: ",
+
+  "empf.employee_categories": "د کارمندانو کټګورۍ",
   "bop.new_owner_modal_title": "نوی مالک — د پیرودونکي ماسټر",
 
   "cnbs.add_contact": "اړیکه اضافه کړئ",

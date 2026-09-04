@@ -1385,7 +1385,7 @@ export function GeneralOfficeDashboardView() {
                         )}
                         {(emp.person?.father_name || emp.person?.contact_person) && (
                           <div className="text-[10px] text-slate-500 font-normal mt-0.5">
-                            {lang === "ur" ? "ولدیت: " : lang === "ar" ? "اسم الأب: " : "S/O: "}
+                            {ct(lang as never, "godv.son_of" as never, "S/O: ")}
                             {localizeVisibleName(emp.person?.father_name || emp.person?.contact_person)}
                           </div>
                         )}
@@ -1537,7 +1537,7 @@ export function GeneralOfficeDashboardView() {
                                     className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-purple-600"
                                   >
                                     <Layers className="h-3.5 w-3.5" />
-                                    <span>360° ERP Links</span>
+                                    <span>{ct(lang as never, "godv.erp_360_links" as never, "360° ERP Links")}</span>
                                   </button>
                                 )}
                               </div>
@@ -1567,9 +1567,9 @@ export function GeneralOfficeDashboardView() {
               <button type="button" className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-500">»</button>
             </div>
             <select className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700">
-              <option>20 / page</option>
-              <option>50 / page</option>
-              <option>100 / page</option>
+              <option>20 {ct(lang as never, "godv.per_page" as never, "/ page")}</option>
+              <option>50 {ct(lang as never, "godv.per_page" as never, "/ page")}</option>
+              <option>100 {ct(lang as never, "godv.per_page" as never, "/ page")}</option>
             </select>
           </div>
         </div>

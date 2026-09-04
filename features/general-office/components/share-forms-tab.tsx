@@ -302,8 +302,8 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
   const formatDate = (iso: string | null) => {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString(
-      lang === "ar" ? "ar-SA" : lang === "ur" ? "ur-PK" : "en-GB",
-      { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+      `${lang}-u-ca-gregory-nu-latn`,
+      { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", calendar: "gregory", numberingSystem: "latn" }
     );
   };
 
