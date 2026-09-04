@@ -2701,8 +2701,8 @@ export function ExtFormClient({ token }: { token: string }) {
                     <div className="flex items-center justify-between pt-2">
                       <div>
                         <span className="text-[9px] text-slate-400 uppercase tracking-wider block">{t("generatedOn", lang)}</span>
-                        <span className="text-[10px] font-mono text-slate-700">
-                          {new Date().toLocaleDateString()}
+                        <span className="text-[10px] font-mono text-slate-700" suppressHydrationWarning>
+                          {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}
                         </span>
                       </div>
                       <div className="text-end">
