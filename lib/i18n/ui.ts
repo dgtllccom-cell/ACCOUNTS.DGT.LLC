@@ -927,6 +927,8 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bankroz.cheque_no_ph1"
+  | "bankroz.cheque_no_ph2"
   | "cpb.fully_completed_paid"
   | "cpb.total_credit_paid"
   | "cpb.total_debit_purchases"
@@ -18768,6 +18770,14 @@ const en: Dict = {
 
 
 
+
+  "bankroz.cheque_no_ph1": "e.g. CHK-000123",
+
+  "bankroz.cheque_no_ph2": "e.g. CHK-000140",
+
+
+
+
   "cpb.fully_completed_paid": "FULLY COMPLETED & PAID",
 
   "cpb.total_credit_paid": "Total Credit (Paid):",
@@ -34601,6 +34611,14 @@ const ur: Dict = {
 
 
 
+
+
+
+
+
+  "bankroz.cheque_no_ph1": "مثلاً CHK-000123",
+
+  "bankroz.cheque_no_ph2": "مثلاً CHK-000140",
 
 
 
@@ -50444,6 +50462,14 @@ const ar: Dict = {
 
 
 
+
+  "bankroz.cheque_no_ph1": "مثال: CHK-000123",
+
+  "bankroz.cheque_no_ph2": "مثال: CHK-000140",
+
+
+
+
   "cpb.fully_completed_paid": "مكتمل بالكامل ومدفوع",
 
   "cpb.total_credit_paid": "إجمالي الدائن (مدفوع):",
@@ -66278,6 +66304,14 @@ const fa: Dict = {
 
 
 
+
+
+
+
+
+  "bankroz.cheque_no_ph1": "مثال: CHK-000123",
+
+  "bankroz.cheque_no_ph2": "مثال: CHK-000140",
 
 
 
@@ -82122,6 +82156,14 @@ const ps: Dict = {
 
 
 
+
+
+
+
+
+  "bankroz.cheque_no_ph1": "بېلګه: CHK-000123",
+
+  "bankroz.cheque_no_ph2": "بېلګه: CHK-000140",
 
 
 

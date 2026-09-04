@@ -675,7 +675,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   className="h-8 text-xs bg-background"
                   value={chequeNo}
                   onChange={(e) => setChequeNo(e.target.value)}
-                  placeholder="e.g. CHK-000123"
+                  placeholder={tt("bankroz.cheque_no_ph1", "e.g. CHK-000123")}
                 />
               </div>
 
@@ -1098,30 +1098,30 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                 <Landmark className="h-4 w-4" />
               </div>
               <div>
-                <span className="text-slate-500">Opening Balance: </span>
-                <span className="text-slate-900 dark:text-slate-100 font-mono">{fmtNumber(summary.openingBalance)} PKR</span>
+                <span className="text-slate-500">{tt("bankroz.opening_balance", "Opening Balance")}: </span>
+                <span className="text-slate-900 dark:text-slate-100 font-mono">{fmtNumber(summary.openingBalance)}</span>
               </div>
             </div>
 
             <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
 
             <div>
-              <span className="text-slate-500">Total Debit: </span>
-              <span className="text-rose-600 font-mono">{fmtNumber(summary.totalDebit)} PKR</span>
+              <span className="text-slate-500">{tt("bankroz.total_debit", "Total Debit")}: </span>
+              <span className="text-rose-600 font-mono">{fmtNumber(summary.totalDebit)}</span>
             </div>
 
             <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
 
             <div>
-              <span className="text-slate-500">Total Credit: </span>
-              <span className="text-emerald-600 font-mono">{fmtNumber(summary.totalCredit)} PKR</span>
+              <span className="text-slate-500">{tt("bankroz.total_credit", "Total Credit")}: </span>
+              <span className="text-emerald-600 font-mono">{fmtNumber(summary.totalCredit)}</span>
             </div>
 
             <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
 
             <div>
-              <span className="text-slate-500">Closing Balance: </span>
-              <span className="text-purple-600 font-mono">{fmtNumber(summary.closingBalance)} PKR</span>
+              <span className="text-slate-500">{tt("bankroz.closing_balance", "Closing Balance")}: </span>
+              <span className="text-purple-600 font-mono">{fmtNumber(summary.closingBalance)}</span>
             </div>
           </div>
 
@@ -1458,7 +1458,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   className="h-8 text-xs font-mono"
                   value={newEntry.chequeNo}
                   onChange={(e) => setNewEntry((p) => ({ ...p, chequeNo: e.target.value }))}
-                  placeholder="e.g. CHK-000140"
+                  placeholder={tt("bankroz.cheque_no_ph2", "e.g. CHK-000140")}
                 />
               </div>
 
