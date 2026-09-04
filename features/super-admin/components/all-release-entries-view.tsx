@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 
@@ -351,11 +352,10 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("bankroz.from_date", "From Date")}</label>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs dark:border-slate-700 outline-none" />
+          <div className="min-w-[15rem]"><ErpDatePicker mode="range" lang={lang} size="sm" value={{ from: dateFrom || null, to: dateTo || null }} onApply={(v) => { setDateFrom(v.from ?? ""); setDateTo(v.to ?? ""); }} /></div>
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("bankroz.to_date", "To Date")}</label>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs dark:border-slate-700 outline-none" />
         </div>
         <div className="flex-1 min-w-[220px]">
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.search_all", "Search All Entries")}</label>

@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
@@ -268,8 +269,11 @@ export function ContractControlCenter({ lang: langProp }: { lang?: string }) {
               <option key={st} value={st}>{s.t(`status_${st.replace(/\s+/g, "_").toLowerCase()}`, st)}</option>
             ))}
           </select>
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />
+          <div className="min-w-[15rem]">
+            <ErpDatePicker mode="range" lang={s.lang} size="sm"
+              value={{ from: fromDate || null, to: toDate || null }}
+              onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }} />
+          </div>
         </div>
 
         {error ? (

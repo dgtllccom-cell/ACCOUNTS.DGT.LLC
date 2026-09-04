@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 import {
@@ -327,14 +328,10 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                   </div>
                   <form onSubmit={handleSearch} className="pt-3 flex flex-col gap-3.5">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "purchase.lgr_date_from", "Date From")}</label>
-                      <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "purchase.lgr_date_to", "Date To")}</label>
-                      <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
+                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "datepick.date_range", "Date Range")}</label>
+                      <ErpDatePicker mode="range" lang={lang} size="sm"
+                        value={{ from: dateFrom || null, to: dateTo || null }}
+                        onApply={(v) => { setDateFrom(v.from ?? ""); setDateTo(v.to ?? ""); }} />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "jr.jbsd_purchase_bill_no", "Purchase Bill No")}</label>
