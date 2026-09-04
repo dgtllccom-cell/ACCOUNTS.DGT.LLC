@@ -676,12 +676,12 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     >
                       <option value="">—</option>
-                      <option value="White">White / سفید</option>
-                      <option value="Black">Black / سیاہ</option>
-                      <option value="Blue">Blue / نیلا</option>
-                      <option value="Red">Red / سرخ</option>
-                      <option value="Yellow">Yellow / پیلا</option>
-                      <option value="Silver">Silver / سلور</option>
+                      <option value="White">{tt("truckw.color_white", "White")}</option>
+                      <option value="Black">{tt("truckw.color_black", "Black")}</option>
+                      <option value="Blue">{tt("truckw.color_blue", "Blue")}</option>
+                      <option value="Red">{tt("truckw.color_red", "Red")}</option>
+                      <option value="Yellow">{tt("truckw.color_yellow", "Yellow")}</option>
+                      <option value="Silver">{tt("truckw.color_silver", "Silver")}</option>
                     </select>
                   </div>
 
@@ -907,7 +907,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       type="text"
                       value={formData.transportCompany[activeLang] || ""}
                       onChange={(e) => handleAutoTranslateField("transportCompany", e.target.value)}
-                      placeholder="e.g. Damaan Goods Transport"
+                      placeholder={tt("truckw.transport_company_ph", "e.g. Goods Transport Company")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -997,7 +997,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       type="text"
                       value={formData.licenseNo}
                       onChange={(e) => setFormData({ ...formData, licenseNo: e.target.value })}
-                      placeholder="e.g. DL-9876543"
+                      placeholder={tt("truckw.license_no_ph", "e.g. DL-9876543")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -1091,7 +1091,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       type="text"
                       value={newContractNum}
                       onChange={(e) => setNewContractNum(e.target.value)}
-                      placeholder="e.g. CNT-2024-889"
+                      placeholder={tt("truckw.contract_no_ph", "e.g. CNT-2024-889")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>

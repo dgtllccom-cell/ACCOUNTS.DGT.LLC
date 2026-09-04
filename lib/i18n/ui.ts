@@ -927,6 +927,28 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "truckw.color_white"
+  | "truckw.color_black"
+  | "truckw.color_blue"
+  | "truckw.color_red"
+  | "truckw.color_yellow"
+  | "truckw.color_silver"
+  | "truckw.transport_company_ph"
+  | "truckw.license_no_ph"
+  | "truckw.contract_no_ph"
+  | "ema.activate"
+  | "ema.deactivate"
+  | "ema.country_label"
+  | "ema.branch_label"
+  | "ema.email_address"
+  | "ema.new_password_optional"
+  | "ema.password_required"
+  | "ema.scope_label"
+  | "ema.select_country_ph"
+  | "ema.select_branch_ph"
+  | "ema.smtp_host"
+  | "ema.smtp_port"
+  | "ema.username_label"
   | "uipreview.breadcrumb_ui_preview"
   | "uipreview.breadcrumb_auth_portal"
   | "uipreview.breadcrumb_mobile_login"
@@ -18392,6 +18414,50 @@ const en: Dict = {
 
 
 
+
+
+  "truckw.color_white": "White",
+
+  "truckw.color_black": "Black",
+
+  "truckw.color_blue": "Blue",
+
+  "truckw.color_red": "Red",
+
+  "truckw.color_yellow": "Yellow",
+
+  "truckw.color_silver": "Silver",
+
+  "truckw.transport_company_ph": "e.g. Goods Transport Company",
+
+  "truckw.license_no_ph": "e.g. DL-9876543",
+
+  "truckw.contract_no_ph": "e.g. CNT-2024-889",
+  "ema.activate": "Activate",
+
+  "ema.deactivate": "Deactivate",
+
+  "ema.country_label": "Country",
+
+  "ema.branch_label": "Branch",
+
+  "ema.email_address": "Email Address",
+
+  "ema.new_password_optional": "New Password (leave blank to keep)",
+
+  "ema.password_required": "Password *",
+
+  "ema.scope_label": "Scope",
+
+  "ema.select_country_ph": "-- Select Country --",
+
+  "ema.select_branch_ph": "-- Select Branch --",
+
+  "ema.smtp_host": "SMTP Host",
+
+  "ema.smtp_port": "SMTP Port",
+
+  "ema.username_label": "Username",
   "uipreview.breadcrumb_ui_preview": "UI Preview",
 
   "uipreview.breadcrumb_auth_portal": "Auth Portal",
@@ -33546,6 +33612,50 @@ const ur: Dict = {
 
 
 
+
+
+  "truckw.color_white": "سفید",
+
+  "truckw.color_black": "سیاہ",
+
+  "truckw.color_blue": "نیلا",
+
+  "truckw.color_red": "سرخ",
+
+  "truckw.color_yellow": "پیلا",
+
+  "truckw.color_silver": "سلور",
+
+  "truckw.transport_company_ph": "مثلاً گڈز ٹرانسپورٹ کمپنی",
+
+  "truckw.license_no_ph": "مثلاً DL-9876543",
+
+  "truckw.contract_no_ph": "مثلاً CNT-2024-889",
+  "ema.activate": "فعال کریں",
+
+  "ema.deactivate": "غیر فعال کریں",
+
+  "ema.country_label": "ملک",
+
+  "ema.branch_label": "برانچ",
+
+  "ema.email_address": "ای میل ایڈریس",
+
+  "ema.new_password_optional": "نیا پاس ورڈ (برقرار رکھنے کے لیے خالی چھوڑیں)",
+
+  "ema.password_required": "پاس ورڈ *",
+
+  "ema.scope_label": "دائرہ کار",
+
+  "ema.select_country_ph": "-- ملک منتخب کریں --",
+
+  "ema.select_branch_ph": "-- برانچ منتخب کریں --",
+
+  "ema.smtp_host": "SMTP ہوسٹ",
+
+  "ema.smtp_port": "SMTP پورٹ",
+
+  "ema.username_label": "یوزر نیم",
   "uipreview.breadcrumb_ui_preview": "یو آئی پیش نظارہ",
 
   "uipreview.breadcrumb_auth_portal": "آتھ پورٹل",
@@ -48702,6 +48812,50 @@ const ar: Dict = {
 
 
 
+
+
+  "truckw.color_white": "أبيض",
+
+  "truckw.color_black": "أسود",
+
+  "truckw.color_blue": "أزرق",
+
+  "truckw.color_red": "أحمر",
+
+  "truckw.color_yellow": "أصفر",
+
+  "truckw.color_silver": "فضي",
+
+  "truckw.transport_company_ph": "مثال: شركة نقل البضائع",
+
+  "truckw.license_no_ph": "مثال: DL-9876543",
+
+  "truckw.contract_no_ph": "مثال: CNT-2024-889",
+  "ema.activate": "تفعيل",
+
+  "ema.deactivate": "إلغاء التفعيل",
+
+  "ema.country_label": "الدولة",
+
+  "ema.branch_label": "الفرع",
+
+  "ema.email_address": "عنوان البريد الإلكتروني",
+
+  "ema.new_password_optional": "كلمة مرور جديدة (اتركها فارغة للاحتفاظ بالحالية)",
+
+  "ema.password_required": "كلمة المرور *",
+
+  "ema.scope_label": "النطاق",
+
+  "ema.select_country_ph": "-- اختر الدولة --",
+
+  "ema.select_branch_ph": "-- اختر الفرع --",
+
+  "ema.smtp_host": "مضيف SMTP",
+
+  "ema.smtp_port": "منفذ SMTP",
+
+  "ema.username_label": "اسم المستخدم",
   "uipreview.breadcrumb_ui_preview": "معاينة واجهة المستخدم",
 
   "uipreview.breadcrumb_auth_portal": "بوابة المصادقة",
@@ -63857,6 +64011,50 @@ const fa: Dict = {
 
 
 
+
+
+  "truckw.color_white": "سفید",
+
+  "truckw.color_black": "سیاه",
+
+  "truckw.color_blue": "آبی",
+
+  "truckw.color_red": "قرمز",
+
+  "truckw.color_yellow": "زرد",
+
+  "truckw.color_silver": "نقره‌ای",
+
+  "truckw.transport_company_ph": "مثال: شرکت حمل و نقل کالا",
+
+  "truckw.license_no_ph": "مثال: DL-9876543",
+
+  "truckw.contract_no_ph": "مثال: CNT-2024-889",
+  "ema.activate": "فعال‌سازی",
+
+  "ema.deactivate": "غیرفعال‌سازی",
+
+  "ema.country_label": "کشور",
+
+  "ema.branch_label": "شعبه",
+
+  "ema.email_address": "آدرس ایمیل",
+
+  "ema.new_password_optional": "رمز عبور جدید (برای حفظ فعلی، خالی بگذارید)",
+
+  "ema.password_required": "رمز عبور *",
+
+  "ema.scope_label": "محدوده",
+
+  "ema.select_country_ph": "-- انتخاب کشور --",
+
+  "ema.select_branch_ph": "-- انتخاب شعبه --",
+
+  "ema.smtp_host": "میزبان SMTP",
+
+  "ema.smtp_port": "پورت SMTP",
+
+  "ema.username_label": "نام کاربری",
   "uipreview.breadcrumb_ui_preview": "پیش‌نمایش رابط کاربری",
 
   "uipreview.breadcrumb_auth_portal": "درگاه احراز هویت",
@@ -79018,6 +79216,50 @@ const ps: Dict = {
 
 
 
+
+
+  "truckw.color_white": "سپین",
+
+  "truckw.color_black": "تور",
+
+  "truckw.color_blue": "نیلی",
+
+  "truckw.color_red": "سور",
+
+  "truckw.color_yellow": "ژېړ",
+
+  "truckw.color_silver": "سپینروپ",
+
+  "truckw.transport_company_ph": "بېلګه: د توکو لېږد شرکت",
+
+  "truckw.license_no_ph": "بېلګه: DL-9876543",
+
+  "truckw.contract_no_ph": "بېلګه: CNT-2024-889",
+  "ema.activate": "فعالول",
+
+  "ema.deactivate": "غیرفعالول",
+
+  "ema.country_label": "هېواد",
+
+  "ema.branch_label": "څانګه",
+
+  "ema.email_address": "بریښنالیک پته",
+
+  "ema.new_password_optional": "نوی پاسورډ (د ساتلو لپاره خالي پرېږدئ)",
+
+  "ema.password_required": "پاسورډ *",
+
+  "ema.scope_label": "ساحه",
+
+  "ema.select_country_ph": "-- هېواد وټاکئ --",
+
+  "ema.select_branch_ph": "-- څانګه وټاکئ --",
+
+  "ema.smtp_host": "SMTP کوربه",
+
+  "ema.smtp_port": "SMTP پورت",
+
+  "ema.username_label": "کارن نوم",
   "uipreview.breadcrumb_ui_preview": "د UI مخکتنه",
 
   "uipreview.breadcrumb_auth_portal": "د تصدیق دروازه",

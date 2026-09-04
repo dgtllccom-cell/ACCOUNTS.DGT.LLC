@@ -468,7 +468,7 @@ export function EmailAccountsManagement() {
                             <Key className="h-3.5 w-3.5" />
                           </button>
                           <button
-                            title={acc.isActive ? "Deactivate" : "Activate"}
+                            title={acc.isActive ? tt("ema.deactivate", "Deactivate") : tt("ema.activate", "Activate")}
                             onClick={() => handleToggleActive(acc)}
                             className={cn(
                               "inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
@@ -520,7 +520,7 @@ export function EmailAccountsManagement() {
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Email Address *</Label>
+                <Label className="text-xs font-semibold">{tt("ema.email_address", "Email Address")} *</Label>
                 <Input value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="dgtllc@dgt.llc" />
               </div>
               <div className="space-y-1.5">
@@ -531,27 +531,27 @@ export function EmailAccountsManagement() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Country *</Label>
+                <Label className="text-xs font-semibold">{tt("ema.country_label", "Country")} *</Label>
                 <select
                   value={formCountryId}
                   onChange={(e) => { setFormCountryId(e.target.value); setFormCityBranchId(""); }}
                   className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
                 >
-                  <option value="">-- Select Country --</option>
+                  <option value="">{tt("ema.select_country_ph", "-- Select Country --")}</option>
                   {data?.countries?.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Branch</Label>
+                <Label className="text-xs font-semibold">{tt("ema.branch_label", "Branch")}</Label>
                 <select
                   value={formCityBranchId}
                   onChange={(e) => setFormCityBranchId(e.target.value)}
                   className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
                   disabled={!formCountryId}
                 >
-                  <option value="">-- Select Branch --</option>
+                  <option value="">{tt("ema.select_branch_ph", "-- Select Branch --")}</option>
                   {data?.cityBranches
                     ?.filter((b) => b.country_id === formCountryId)
                     ?.map((b) => (
@@ -562,7 +562,7 @@ export function EmailAccountsManagement() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Scope</Label>
+              <Label className="text-xs font-semibold">{tt("ema.scope_label", "Scope")}</Label>
               <select
                 value={formScope}
                 onChange={(e) => setFormScope(e.target.value)}
@@ -582,21 +582,21 @@ export function EmailAccountsManagement() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">SMTP Host *</Label>
+                  <Label className="text-xs font-semibold">{tt("ema.smtp_host", "SMTP Host")} *</Label>
                   <Input value={formSmtpHost} onChange={(e) => setFormSmtpHost(e.target.value)} placeholder="mail.dgt.llc" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">SMTP Port *</Label>
+                  <Label className="text-xs font-semibold">{tt("ema.smtp_port", "SMTP Port")} *</Label>
                   <Input value={formSmtpPort} onChange={(e) => setFormSmtpPort(e.target.value)} placeholder="465" type="number" />
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Username *</Label>
+                  <Label className="text-xs font-semibold">{tt("ema.username_label", "Username")} *</Label>
                   <Input value={formSmtpUser} onChange={(e) => setFormSmtpUser(e.target.value)} placeholder="dgtllc@dgt.llc" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{editingAccount ? "New Password (leave blank to keep)" : "Password *"}</Label>
+                  <Label className="text-xs font-semibold">{editingAccount ? tt("ema.new_password_optional", "New Password (leave blank to keep)") : tt("ema.password_required", "Password *")}</Label>
                   <div className="relative">
                     <Input
                       type={formShowPass ? "text" : "password"}
@@ -632,7 +632,7 @@ export function EmailAccountsManagement() {
                     onChange={(e) => setFormIsActive(e.target.checked)}
                     className="rounded border-input"
                   />
-                  Active
+                  {tt("common.active", "Active")}
                 </label>
               </div>
             </div>
