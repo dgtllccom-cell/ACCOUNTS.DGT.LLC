@@ -676,12 +676,11 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     >
                       <option value="">—</option>
-                      <option value="White">{tt("truckw.color_white", "White")}</option>
-                      <option value="Black">{tt("truckw.color_black", "Black")}</option>
-                      <option value="Blue">{tt("truckw.color_blue", "Blue")}</option>
-                      <option value="Red">{tt("truckw.color_red", "Red")}</option>
-                      <option value="Yellow">{tt("truckw.color_yellow", "Yellow")}</option>
-                      <option value="Silver">{tt("truckw.color_silver", "Silver")}</option>
+                      {(optionsMap["color"] || []).map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {resolveActiveText(c as any, activeLang, c.name_en)}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
