@@ -927,6 +927,14 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "mac.title"
+  | "mac.subtitle"
+  | "mac.settings_title"
+  | "mac.connected_profile"
+  | "mac.role_scope"
+  | "mac.push_notifications"
+  | "mac.active_fcm_apns"
+  | "mac.five_lang_engine"
   | "loc.country_name_ph"
   | "loc.country_code_ph"
   | "loc.state_name_ph"
@@ -18660,6 +18668,22 @@ const en: Dict = {
 
 
 
+
+  "mac.title": "AI Mobile – Return WhatsApp Reply",
+
+  "mac.subtitle": "Digital Dock ERP Live Extension",
+
+  "mac.settings_title": "AI Mobile App Settings",
+
+  "mac.connected_profile": "Connected ERP Profile:",
+
+  "mac.role_scope": "Role & Scope:",
+
+  "mac.push_notifications": "Push Notifications:",
+
+  "mac.active_fcm_apns": "Active (FCM / APNs)",
+
+  "mac.five_lang_engine": "5-Language AI Engine:",
   "loc.country_name_ph": "e.g. Pakistan",
 
   "loc.country_code_ph": "e.g. PK",
@@ -34307,6 +34331,22 @@ const ur: Dict = {
 
 
 
+
+  "mac.title": "AI موبائل – واپسی واٹس ایپ جواب",
+
+  "mac.subtitle": "ڈیجیٹل ڈاک ERP لائیو ایکسٹینشن",
+
+  "mac.settings_title": "AI موبائل ایپ سیٹنگز",
+
+  "mac.connected_profile": "منسلک ERP پروفائل:",
+
+  "mac.role_scope": "کردار و دائرہ کار:",
+
+  "mac.push_notifications": "پش نوٹیفیکیشنز:",
+
+  "mac.active_fcm_apns": "فعال (FCM / APNs)",
+
+  "mac.five_lang_engine": "5-زبان AI انجن:",
   "loc.country_name_ph": "مثلاً پاکستان",
 
   "loc.country_code_ph": "مثلاً PK",
@@ -49956,6 +49996,22 @@ const ar: Dict = {
 
 
 
+
+  "mac.title": "الجوال بالذكاء الاصطناعي – رد واتساب الإرجاع",
+
+  "mac.subtitle": "امتداد Digital Dock ERP المباشر",
+
+  "mac.settings_title": "إعدادات تطبيق الجوال بالذكاء الاصطناعي",
+
+  "mac.connected_profile": "ملف تعريف ERP المتصل:",
+
+  "mac.role_scope": "الدور والنطاق:",
+
+  "mac.push_notifications": "الإشعارات الفورية:",
+
+  "mac.active_fcm_apns": "نشط (FCM / APNs)",
+
+  "mac.five_lang_engine": "محرك الذكاء الاصطناعي بـ5 لغات:",
   "loc.country_name_ph": "مثال: باكستان",
 
   "loc.country_code_ph": "مثال: PK",
@@ -65604,6 +65660,22 @@ const fa: Dict = {
 
 
 
+
+  "mac.title": "موبایل هوش مصنوعی – پاسخ واتساپ بازگشتی",
+
+  "mac.subtitle": "افزونه زنده Digital Dock ERP",
+
+  "mac.settings_title": "تنظیمات اپلیکیشن موبایل هوش مصنوعی",
+
+  "mac.connected_profile": "پروفایل متصل ERP:",
+
+  "mac.role_scope": "نقش و محدوده:",
+
+  "mac.push_notifications": "اعلان‌های فوری:",
+
+  "mac.active_fcm_apns": "فعال (FCM / APNs)",
+
+  "mac.five_lang_engine": "موتور هوش مصنوعی 5 زبانه:",
   "loc.country_name_ph": "مثال: پاکستان",
 
   "loc.country_code_ph": "مثال: PK",
@@ -81258,6 +81330,22 @@ const ps: Dict = {
 
 
 
+
+  "mac.title": "AI موبایل – د بېرته واتساپ ځواب",
+
+  "mac.subtitle": "د Digital Dock ERP ژوندی توسیع",
+
+  "mac.settings_title": "AI د موبایل اپلیکیشن تنظیمات",
+
+  "mac.connected_profile": "تړلی ERP پروفایل:",
+
+  "mac.role_scope": "رول او ساحه:",
+
+  "mac.push_notifications": "د پوش خبرتیاوې:",
+
+  "mac.active_fcm_apns": "فعال (FCM / APNs)",
+
+  "mac.five_lang_engine": "5-ژبني AI انجن:",
   "loc.country_name_ph": "بېلګه: پاکستان",
 
   "loc.country_code_ph": "بېلګه: PK",

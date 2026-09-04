@@ -64,10 +64,10 @@ export function MobileAppContainer({ lang }: Props) {
           </div>
           <div>
             <h1 className="text-xs font-black tracking-tight text-white leading-tight">
-              AI Mobile – Return WhatsApp Reply
+              {tt("mac.title", "AI Mobile – Return WhatsApp Reply")}
             </h1>
             <p className="text-[9px] text-emerald-300 font-mono">
-              Digital Dock ERP Live Extension
+              {tt("mac.subtitle", "Digital Dock ERP Live Extension")}
             </p>
           </div>
         </div>
@@ -94,12 +94,12 @@ export function MobileAppContainer({ lang }: Props) {
         {activeTab === "contacts" && <TemplateManagerView lang={lang} />}
         {activeTab === "settings" && (
           <div className="space-y-4 p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-xs">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white border-b pb-2">AI Mobile App Settings</h3>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white border-b pb-2">{tt("mac.settings_title", "AI Mobile App Settings")}</h3>
             <div className="space-y-2 text-slate-600 dark:text-slate-400">
-              <p>• Connected ERP Profile: <strong className="text-slate-900 dark:text-white">{syncData?.user.fullName}</strong></p>
-              <p>• Role & Scope: <strong className="text-emerald-600">{syncData?.scope.scopeLabel}</strong></p>
-              <p>• Push Notifications: <strong className="text-emerald-600">Active (FCM / APNs)</strong></p>
-              <p>• 5-Language AI Engine: <strong className="text-indigo-600">EN, UR, PS, FA, AR</strong></p>
+              <p>• {tt("mac.connected_profile", "Connected ERP Profile:")} <strong className="text-slate-900 dark:text-white">{syncData?.user.fullName}</strong></p>
+              <p>• {tt("mac.role_scope", "Role & Scope:")} <strong className="text-emerald-600">{syncData?.scope.scopeLabel}</strong></p>
+              <p>• {tt("mac.push_notifications", "Push Notifications:")} <strong className="text-emerald-600">{tt("mac.active_fcm_apns", "Active (FCM / APNs)")}</strong></p>
+              <p>• {tt("mac.five_lang_engine", "5-Language AI Engine:")} <strong className="text-indigo-600">EN, UR, PS, FA, AR</strong></p>
             </div>
           </div>
         )}
