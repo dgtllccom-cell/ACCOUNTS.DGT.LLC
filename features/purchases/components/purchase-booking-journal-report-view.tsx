@@ -2,7 +2,7 @@
 
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase-booking-print-report";
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BadgeDollarSign,
@@ -836,7 +836,7 @@ function ReportActionsMenu({ rows, onExport }: { rows: PurchaseReport[]; onExpor
           <MenuAction icon={<Eye />} label={tt("plate_view", "Plate View")} onClick={() => close()} />
           <MenuAction icon={<DownloadActionIcon />} label={tt("download", "Download")} onClick={() => { close(); onExport ? onExport() : exportCsv(rows, "purchase-booking-register.csv"); }} />
           <MenuAction icon={<FileSpreadsheet />} label={tt("export_excel", "Export Excel")} onClick={() => { close(); onExport ? onExport() : exportCsv(rows, "purchase-booking-register.csv"); }} />
-          <MenuAction icon={<DownloadActionIcon />} label={tt("export_pdf", "Export PDF")} onClick={() => { close(); printReport(); }} />
+          <MenuAction icon={<PdfActionIcon />} label={tt("export_pdf", "Export PDF")} onClick={() => { close(); printReport(); }} />
           <MenuAction icon={<Printer />} label={tt("print", "Print")} onClick={() => { close(); printReport(); }} />
           <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">{rows.length} {tt("rows_selected", "report rows selected")}</div>
         </>

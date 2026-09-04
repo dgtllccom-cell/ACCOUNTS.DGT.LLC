@@ -1,6 +1,6 @@
 "use client";
 
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Mail, MoreVertical, Printer, RefreshCcw, Save, Search, Ship, SquareArrowOutUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -523,7 +523,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
               <div className="absolute right-0 top-full z-20 mt-2 w-48 overflow-hidden rounded-lg border bg-popover py-1 text-popover-foreground shadow-2xl">
                 <MenuAction icon={<SquareArrowOutUpRight className="h-4 w-4" />} label={_("ble.menu_view_report", "View B/L Report")} onClick={() => setMenuOpen(false)} />
                 <MenuAction icon={<Printer className="h-4 w-4" />} label={_("ble.menu_print", "Print B/L")} onClick={printReport} />
-                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={_("ble.menu_pdf", "PDF Download")} onClick={printReport} />
+                <MenuAction icon={<PdfActionIcon className="h-4 w-4" />} label={_("ble.menu_pdf", "PDF Download")} onClick={printReport} />
                 <MenuAction icon={<Mail className="h-4 w-4" />} label={_("ble.menu_email", "Email B/L")} onClick={() => setMenuOpen(false)} />
                 <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={_("ble.menu_csv", "Export CSV")} onClick={exportCsv} />
                 <MenuAction

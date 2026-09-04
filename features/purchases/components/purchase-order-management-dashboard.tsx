@@ -1,6 +1,6 @@
 "use client";
 
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
@@ -662,7 +662,7 @@ function PurchaseReportActionsMenu({ lang, rows, onExport }: { lang: SupportedLa
           <ActionItem icon={<Eye />} label={tr("Plate View")} onClick={() => close()} />
           <ActionItem icon={<DownloadActionIcon />} label={tr("Download")} onClick={() => { close(); onExport(); }} />
           <ActionItem icon={<FileSpreadsheet />} label={tr("Export Excel")} onClick={() => { close(); onExport(); }} />
-          <ActionItem icon={<DownloadActionIcon />} label={tr("Export PDF")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
+          <ActionItem icon={<PdfActionIcon />} label={tr("Export PDF")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
           <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
           <div className="border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800">{rows.length} {tr("Records")}</div>
         </>
@@ -691,7 +691,7 @@ function PurchaseRowActionsMenu({ lang, onSelect, onEdit, onPrint, onExportPdf }
           <ActionItem icon={<FileText />} label={tr("Documents")} onClick={() => { close(); onSelect(); }} />
           <ActionItem icon={<ClipboardList />} label={tr("Timeline")} onClick={() => { close(); onSelect(); }} />
           <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); onPrint(); }} />
-          <ActionItem icon={<DownloadActionIcon />} label={tr("Export PDF")} onClick={() => { close(); onExportPdf(); }} />
+          <ActionItem icon={<PdfActionIcon />} label={tr("Export PDF")} onClick={() => { close(); onExportPdf(); }} />
           <ActionItem icon={<FileText />} label={tr("Proforma Invoice")} onClick={() => { close(); onExportPdf(); }} />
         </>
       )}

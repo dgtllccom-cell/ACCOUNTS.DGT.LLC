@@ -1,6 +1,6 @@
 "use client";
  
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { printStore } from "@/lib/store/print-store";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { createPortal } from "react-dom";
@@ -5861,7 +5861,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
         <MenuAction icon={<Eye />} label={translateHeader(currentLanguage, "Plate View")} onClick={() => handleReportAction(() => undefined)} />
         <MenuAction icon={<DownloadActionIcon />} label={translateHeader(currentLanguage, "Download")} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
         <MenuAction icon={<FileSpreadsheet />} label={translateHeader(currentLanguage, "Export Excel")} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<DownloadActionIcon />} label={translateHeader(currentLanguage, "Export PDF")} onClick={() => handleReportAction(() => {
+        <MenuAction icon={<PdfActionIcon />} label={translateHeader(currentLanguage, "Export PDF")} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
               title: translateHeader(currentLanguage, "Purchase Order Payment Journal"),
@@ -5972,7 +5972,7 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
             { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "Payment History"), color: "#7c3aed", fn: () => handleItem(onSelect) },
             { icon: <Banknote style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "Journal Entry"), color: "#059669", fn: () => handleItem(onSelect) },
             { icon: <Printer style={{ width: 14, height: 14 }} />, label: translateHeader(currentLanguage, "Print"), color: "#475569", fn: () => handleItem(onSelect) },
-            { icon: <DownloadActionIcon />, label: translateHeader(currentLanguage, "Export PDF"), color: "#dc2626", fn: () => handleItem(onSelect) },
+            { icon: <PdfActionIcon />, label: translateHeader(currentLanguage, "Export PDF"), color: "#dc2626", fn: () => handleItem(onSelect) },
           ].map(({ icon, label, color, fn }) => (
             <button
               key={label}

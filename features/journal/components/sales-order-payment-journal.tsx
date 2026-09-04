@@ -1,6 +1,6 @@
 "use client";
  
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { printStore } from "@/lib/store/print-store";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { createPortal } from "react-dom";
@@ -6525,7 +6525,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
         <MenuAction icon={<Eye />} label={t("plate_view", currentLanguage)} onClick={() => handleReportAction(() => undefined)} />
         <MenuAction icon={<DownloadActionIcon />} label={t("download", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
         <MenuAction icon={<FileSpreadsheet />} label={t("export_excel", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<DownloadActionIcon />} label={t("export_pdf", currentLanguage)} onClick={() => handleReportAction(() => {
+        <MenuAction icon={<PdfActionIcon />} label={t("export_pdf", currentLanguage)} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
               title: t("sales_order_payment_journal", currentLanguage),
@@ -6634,7 +6634,7 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
             { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: t("payment_history", currentLanguage), color: "#7c3aed", fn: () => handleItem(onSelect) },
             { icon: <Banknote style={{ width: 14, height: 14 }} />, label: t("journal_entry", currentLanguage), color: "#059669", fn: () => handleItem(onSelect) },
             { icon: <Printer style={{ width: 14, height: 14 }} />, label: t("print_btn", currentLanguage), color: "#475569", fn: () => handleItem(onSelect) },
-            { icon: <DownloadActionIcon />, label: t("export_pdf", currentLanguage), color: "#dc2626", fn: () => handleItem(onSelect) },
+            { icon: <PdfActionIcon />, label: t("export_pdf", currentLanguage), color: "#dc2626", fn: () => handleItem(onSelect) },
           ].map(({ icon, label, color, fn }) => (
             <button
               key={label}

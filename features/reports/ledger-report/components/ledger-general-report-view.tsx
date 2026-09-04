@@ -1,6 +1,6 @@
 "use client";
 
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -961,7 +961,7 @@ export function LedgerReportView({
               {menuOpen ? (
                 <div className="absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-xl border bg-background shadow-xl bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                   <MenuAction icon={<Printer className="h-4 w-4" />} label={t(effectiveLang, "ledger.print")} onClick={() => openPrint(true)} />
-                  <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={t(lang, "ledger.lgrv_pdf_export", "PDF Export")} onClick={() => openPrint(false)} />
+                  <MenuAction icon={<PdfActionIcon className="h-4 w-4" />} label={t(lang, "ledger.lgrv_pdf_export", "PDF Export")} onClick={() => openPrint(false)} />
                   <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={t(effectiveLang, "ledger.export_csv")} onClick={exportReportCsv} />
                   <MenuAction
                     icon={<Search className="h-4 w-4" />}

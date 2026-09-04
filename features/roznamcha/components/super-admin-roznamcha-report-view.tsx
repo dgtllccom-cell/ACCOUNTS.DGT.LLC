@@ -1,7 +1,7 @@
 "use client";
 
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { Fragment, useEffect, useMemo, useState, useRef, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, Download, Eye, FileText, Filter, Link2, Maximize2, MoreVertical, Printer, RefreshCcw, Search, Globe, Building2, ChevronDown } from "lucide-react";
@@ -2020,7 +2020,7 @@ function SuperAdminRoznamchaReportViewContent({
                 <MenuAction icon={<Maximize2 className="h-4 w-4" />} label="Full Screen" onClick={openFullScreen} />
                 <MenuAction icon={<RefreshCcw className={cn("h-4 w-4", refreshing ? "animate-spin" : "")} />} label={refreshing ? "Refreshing" : "Refresh"} onClick={() => void loadReport()} />
                 <MenuDivider />
-                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="Export PDF" onClick={() => openSelectedReport(false, "journal")} />
+                <MenuAction icon={<PdfActionIcon className="h-4 w-4" />} label="Export PDF" onClick={() => openSelectedReport(false, "journal")} />
                 <MenuAction icon={<Printer className="h-4 w-4" />} label="Print Report Preview" onClick={() => setPrintMode(true)} />
                 <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="Excel Export" onClick={exportCsv} />
                 <MenuDivider />
@@ -2462,7 +2462,7 @@ function BranchJournalGeneralStyleSummary({
           <Printer className="h-4 w-4" /> Print
         </Button>
         <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onPdf}>
-          <DownloadActionIcon className="h-4 w-4" /> PDF
+          <PdfActionIcon className="h-4 w-4" /> PDF
         </Button>
       </div>
 

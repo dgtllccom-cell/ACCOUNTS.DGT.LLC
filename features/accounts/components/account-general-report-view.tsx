@@ -1,6 +1,6 @@
 "use client";
 
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -474,7 +474,7 @@ function AccountRowActionsMenu({
           {item("Ledger", <FileText className="h-4 w-4" aria-hidden />, onOpenLedger)}
           {item("Journal", <Printer className="h-4 w-4" aria-hidden />, onViewJournal)}
           {item("Print", <Printer className="h-4 w-4" aria-hidden />, onPrint)}
-          {item("PDF", <DownloadActionIcon className="h-4 w-4" aria-hidden />, onPdf)}
+          {item("PDF", <PdfActionIcon className="h-4 w-4" aria-hidden />, onPdf)}
           {item("Excel", <FileSpreadsheet className="h-4 w-4" aria-hidden />, onExcel)}
           {onDelete
             ? item("Delete", <Trash2 className="h-4 w-4" aria-hidden />, onDelete, "danger")
