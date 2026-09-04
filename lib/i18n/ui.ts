@@ -927,6 +927,22 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "wtv.banner_eyebrow"
+  | "wtv.title"
+  | "wtv.subtitle"
+  | "wtv.download_video"
+  | "wtv.live_stream_title"
+  | "wtv.production_ready"
+  | "wtv.video_alt"
+  | "wtv.card1_title"
+  | "wtv.card1_p1"
+  | "wtv.card1_p2"
+  | "wtv.card2_title"
+  | "wtv.card2_p1"
+  | "wtv.card2_p2"
+  | "wtv.card3_title"
+  | "wtv.card3_p1"
+  | "wtv.card3_p2"
   | "sls.select_shipment_bl"
   | "sls.details_tracking_matrix"
   | "sls.details_tracking_desc"
@@ -18676,6 +18692,38 @@ const en: Dict = {
 
 
 
+
+  "wtv.banner_eyebrow": "Digital Dock ERP • System Walkthrough Video",
+
+  "wtv.title": "System Walkthrough & Operating Guide",
+
+  "wtv.subtitle": "Interactive recording of ERP workflows, navigation, multi-language switching, master setup, Roznamcha, sales, purchases, and accounting reports.",
+
+  "wtv.download_video": "Download Video File (18 MB)",
+
+  "wtv.live_stream_title": "Live System Walkthrough Stream",
+
+  "wtv.production_ready": "100% Production Ready",
+
+  "wtv.video_alt": "Digital Dock ERP Complete Interactive System Walkthrough Video",
+
+  "wtv.card1_title": "Multi-Language & RTL Engine",
+
+  "wtv.card1_p1": "Demonstrates 5-language switcher (English, Urdu 🇵🇰, Pashto 🇦🇫, Arabic 🇦🇪, Persian 🇮🇷).",
+
+  "wtv.card1_p2": "Technical fields (Email, User ID, Passwords, URLs) remain in English while all business modules adapt to locale & RTL.",
+
+  "wtv.card2_title": "Roznamcha & Multi-Currency",
+
+  "wtv.card2_p1": "Daily cash entries, bank vouchers, Money Exchange (Buy/Sell rate formulas), and expense bills.",
+
+  "wtv.card2_p2": "Automatic Debit/Credit balancing and double-entry ledger postings.",
+
+  "wtv.card3_title": "Logistics & Master Setup",
+
+  "wtv.card3_p1": "Purchase Booking, Truck Loading, Clearing Agent forms, Commercial Invoices, and BL trade documents.",
+
+  "wtv.card3_p2": "100% database-driven master forms (Companies, Customers, Banks, Warehouses, Products, Employees).",
   "sls.select_shipment_bl": "Select Shipment B/L",
 
   "sls.details_tracking_matrix": "Shipment Details & Tracking Matrix",
@@ -34351,6 +34399,38 @@ const ur: Dict = {
 
 
 
+
+  "wtv.banner_eyebrow": "ڈیجیٹل ڈاک ERP • سسٹم واک تھرو ویڈیو",
+
+  "wtv.title": "سسٹم واک تھرو و آپریٹنگ گائیڈ",
+
+  "wtv.subtitle": "ERP ورک فلوز، نیویگیشن، ملٹی لینگویج سوئچنگ، ماسٹر سیٹ اپ، روزنامچہ، سیلز، پرچیز، اور اکاؤنٹنگ رپورٹس کی انٹرایکٹو ریکارڈنگ۔",
+
+  "wtv.download_video": "ویڈیو فائل ڈاؤن لوڈ کریں (18 MB)",
+
+  "wtv.live_stream_title": "لائیو سسٹم واک تھرو سٹریم",
+
+  "wtv.production_ready": "100% پروڈکشن کے لیے تیار",
+
+  "wtv.video_alt": "ڈیجیٹل ڈاک ERP مکمل انٹرایکٹو سسٹم واک تھرو ویڈیو",
+
+  "wtv.card1_title": "ملٹی لینگویج و RTL انجن",
+
+  "wtv.card1_p1": "5-زبان سوئچر (انگریزی، اردو 🇵🇰، پشتو 🇦🇫، عربی 🇦🇪، فارسی 🇮🇷) دکھاتا ہے۔",
+
+  "wtv.card1_p2": "تکنیکی فیلڈز (ای میل، یوزر آئی ڈی، پاس ورڈز، URLs) انگریزی میں رہتے ہیں جبکہ تمام بزنس ماڈیولز مقامی زبان اور RTL کے مطابق ہوتے ہیں۔",
+
+  "wtv.card2_title": "روزنامچہ و ملٹی کرنسی",
+
+  "wtv.card2_p1": "روزانہ کیش اندراجات، بینک واؤچرز، منی ایکسچینج (خرید/فروخت ریٹ فارمولے)، اور اخراجات کے بل۔",
+
+  "wtv.card2_p2": "خودکار ڈیبٹ/کریڈٹ بیلنسنگ اور ڈبل انٹری لیجر پوسٹنگز۔",
+
+  "wtv.card3_title": "لاجسٹکس و ماسٹر سیٹ اپ",
+
+  "wtv.card3_p1": "پرچیز بکنگ، ٹرک لوڈنگ، کلیئرنگ ایجنٹ فارمز، کمرشل انوائسز، اور BL تجارتی دستاویزات۔",
+
+  "wtv.card3_p2": "100% ڈیٹا بیس پر مبنی ماسٹر فارمز (کمپنیاں، کسٹمرز، بینک، گودام، پروڈکٹس، ملازمین)۔",
   "sls.select_shipment_bl": "شپمنٹ B/L منتخب کریں",
 
   "sls.details_tracking_matrix": "شپمنٹ تفصیلات و ٹریکنگ میٹرکس",
@@ -50028,6 +50108,38 @@ const ar: Dict = {
 
 
 
+
+  "wtv.banner_eyebrow": "Digital Dock ERP • فيديو استعراض النظام",
+
+  "wtv.title": "استعراض النظام ودليل التشغيل",
+
+  "wtv.subtitle": "تسجيل تفاعلي لسير عمل ERP والتنقل وتبديل اللغات والإعداد الرئيسي والروزنامة والمبيعات والمشتريات وتقارير المحاسبة.",
+
+  "wtv.download_video": "تنزيل ملف الفيديو (18 ميجابايت)",
+
+  "wtv.live_stream_title": "بث مباشر لاستعراض النظام",
+
+  "wtv.production_ready": "جاهز للإنتاج بنسبة 100%",
+
+  "wtv.video_alt": "فيديو استعراض النظام التفاعلي الكامل لـ Digital Dock ERP",
+
+  "wtv.card1_title": "محرك متعدد اللغات و RTL",
+
+  "wtv.card1_p1": "يوضح مبدل 5 لغات (الإنجليزية، الأردية 🇵🇰، الباشتو 🇦🇫، العربية 🇦🇪، الفارسية 🇮🇷).",
+
+  "wtv.card1_p2": "تظل الحقول التقنية (البريد الإلكتروني ومعرف المستخدم وكلمات المرور وعناوين URL) بالإنجليزية بينما تتكيف جميع وحدات الأعمال مع اللغة المحلية و RTL.",
+
+  "wtv.card2_title": "الروزنامة والعملات المتعددة",
+
+  "wtv.card2_p1": "قيود نقدية يومية، سندات بنكية، صرافة (معادلات سعر الشراء/البيع)، وفواتير المصروفات.",
+
+  "wtv.card2_p2": "موازنة تلقائية للمدين/الدائن وترحيلات دفتر الأستاذ ذات القيد المزدوج.",
+
+  "wtv.card3_title": "الخدمات اللوجستية والإعداد الرئيسي",
+
+  "wtv.card3_p1": "حجز الشراء وتحميل الشاحنات ونماذج وكيل التخليص والفواتير التجارية ومستندات BL التجارية.",
+
+  "wtv.card3_p2": "نماذج رئيسية 100% مدفوعة بقاعدة البيانات (الشركات والعملاء والبنوك والمستودعات والمنتجات والموظفين).",
   "sls.select_shipment_bl": "اختر بوليصة الشحن B/L",
 
   "sls.details_tracking_matrix": "تفاصيل الشحنة ومصفوفة التتبع",
@@ -65704,6 +65816,38 @@ const fa: Dict = {
 
 
 
+
+  "wtv.banner_eyebrow": "Digital Dock ERP • ویدیوی راهنمای سیستم",
+
+  "wtv.title": "راهنمای سیستم و راهنمای عملیاتی",
+
+  "wtv.subtitle": "ضبط تعاملی گردش‌کارهای ERP، ناوبری، تعویض چندزبانه، راه‌اندازی اصلی، روزنامچه، فروش، خرید و گزارش‌های حسابداری.",
+
+  "wtv.download_video": "دانلود فایل ویدیو (18 مگابایت)",
+
+  "wtv.live_stream_title": "پخش زنده راهنمای سیستم",
+
+  "wtv.production_ready": "100% آماده تولید",
+
+  "wtv.video_alt": "ویدیوی کامل تعاملی راهنمای سیستم Digital Dock ERP",
+
+  "wtv.card1_title": "موتور چندزبانه و RTL",
+
+  "wtv.card1_p1": "سوئیچر 5 زبانه (انگلیسی، اردو 🇵🇰، پشتو 🇦🇫، عربی 🇦🇪، فارسی 🇮🇷) را نشان می‌دهد.",
+
+  "wtv.card1_p2": "فیلدهای فنی (ایمیل، شناسه کاربری، رمزهای عبور، URLها) به انگلیسی باقی می‌مانند در حالی که همه ماژول‌های تجاری با زبان محلی و RTL سازگار می‌شوند.",
+
+  "wtv.card2_title": "روزنامچه و چند ارزی",
+
+  "wtv.card2_p1": "ورودی‌های نقدی روزانه، فیش‌های بانکی، صرافی (فرمول‌های نرخ خرید/فروش) و صورتحساب هزینه‌ها.",
+
+  "wtv.card2_p2": "توازن خودکار بدهکار/بستانکار و ثبت‌های دفتر دوطرفه.",
+
+  "wtv.card3_title": "لجستیک و راه‌اندازی اصلی",
+
+  "wtv.card3_p1": "رزرو خرید، بارگیری کامیون، فرم‌های نماینده ترخیص، فاکتورهای تجاری و اسناد تجاری BL.",
+
+  "wtv.card3_p2": "فرم‌های اصلی 100% مبتنی بر پایگاه داده (شرکت‌ها، مشتریان، بانک‌ها، انبارها، محصولات، کارمندان).",
   "sls.select_shipment_bl": "انتخاب بارنامه حمل B/L",
 
   "sls.details_tracking_matrix": "جزئیات محموله و ماتریس ردیابی",
@@ -81386,6 +81530,38 @@ const ps: Dict = {
 
 
 
+
+  "wtv.banner_eyebrow": "Digital Dock ERP • د سیسټم د تشریح ویډیو",
+
+  "wtv.title": "د سیسټم تشریح او د چلولو لارښود",
+
+  "wtv.subtitle": "د ERP کاري بهیرونو، پرانګرن، د څو ژبو تبادلې، اصلي تنظیم، روزنامچه، پلورنې، پیرودونو، او د حساب راپورونو متقابل ثبت.",
+
+  "wtv.download_video": "د ویډیو دوتنه ډاونلوډ کړئ (18 MB)",
+
+  "wtv.live_stream_title": "د سیسټم ژوندی تشریح سټریم",
+
+  "wtv.production_ready": "100٪ د تولید لپاره چمتو",
+
+  "wtv.video_alt": "د Digital Dock ERP بشپړ متقابل سیسټم تشریح ویډیو",
+
+  "wtv.card1_title": "د څو ژبو او RTL انجن",
+
+  "wtv.card1_p1": "د 5-ژبو تبادله کوونکی (انګلیسي، اردو 🇵🇰، پښتو 🇦🇫، عربي 🇦🇪، فارسي 🇮🇷) ښیي.",
+
+  "wtv.card1_p2": "تخنیکي ساحې (بریښنالیک، د کارن پیژندنه، پاسورډونه، URLs) په انګلیسي پاتې کیږي پداسې حال کې چې ټول سوداګریز ماډیولونه ځايي ژبې او RTL ته عیاروي.",
+
+  "wtv.card2_title": "روزنامچه او څو اسعارې",
+
+  "wtv.card2_p1": "ورځني نغدي ننوتنې، بانکي واوچرونه، د پیسو تبادله (د پیرود/پلور نرخ فورمولې)، او د لګښت بلونه.",
+
+  "wtv.card2_p2": "اتومات ډیبیټ/کریډیټ بیلانس او د دوه اړخیزه ننوتنې لیجر ثبتونه.",
+
+  "wtv.card3_title": "لوژستیک او اصلي تنظیم",
+
+  "wtv.card3_p1": "د پیرود بکینګ، د موټر بارول، د تخلیص اجنټ فورمې، سوداګریز انوائسونه، او د BL سوداګریز اسناد.",
+
+  "wtv.card3_p2": "100٪ د ډیټابیس پر بنسټ ماسټر فورمې (شرکتونه، پیرودونکي، بانکونه، ګدامونه، محصولات، کارمندان).",
   "sls.select_shipment_bl": "د لېږد B/L وټاکئ",
 
   "sls.details_tracking_matrix": "د لېږد تفصیلات او د تعقیب ماتریس",
