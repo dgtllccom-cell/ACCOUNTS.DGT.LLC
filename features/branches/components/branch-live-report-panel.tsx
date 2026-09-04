@@ -128,8 +128,8 @@ export function BranchLiveReportPanel({
               </div>
               <div>
                 <h4 className="text-sm font-black text-slate-800 dark:text-slate-200 leading-tight">ACCOUNTS.DGT.LLC</h4>
-                <p className="text-[9px] font-semibold text-slate-400">Enterprise ERP / FMS</p>
-                <p className="text-[8px] font-medium text-slate-400/90 leading-tight">Multi-Country Branch Management</p>
+                <p className="text-[9px] font-semibold text-slate-400">{t(lang, "branch.enterprise_erp_fms", "Enterprise ERP / FMS")}</p>
+                <p className="text-[8px] font-medium text-slate-400/90 leading-tight">{t(lang, "branch.multi_country_branch_mgmt", "Multi-Country Branch Management")}</p>
               </div>
             </div>
 
@@ -508,9 +508,9 @@ export function BranchLiveReportPanel({
                 <circle cx="50" cy="45" r="35" fill="url(#goldGrad)" stroke="#f59e0b" strokeWidth="2.5" />
                 <circle cx="50" cy="45" r="30" fill="none" stroke="#d97706" strokeWidth="1" strokeDasharray="3,3" />
                 {/* Typography */}
-                <text x="50" y="38" fontFamily="'Inter', sans-serif" fontSize="7.5" fontWeight="900" textAnchor="middle" fill="#78350f" letterSpacing="0.2">VERIFIED</text>
-                <text x="50" y="46" fontFamily="'Inter', sans-serif" fontSize="5.5" fontWeight="800" textAnchor="middle" fill="#92400e">VERIFIED</text>
-                <text x="50" y="55" fontFamily="'Inter', sans-serif" fontSize="6.5" fontWeight="900" textAnchor="middle" fill="#78350f" letterSpacing="0.2">AUTHORIZED</text>
+                <text x="50" y="38" fontFamily="'Inter', sans-serif" fontSize="7.5" fontWeight="900" textAnchor="middle" fill="#78350f" letterSpacing="0.2">{t(lang, "branch.seal_verified", "VERIFIED")}</text>
+                <text x="50" y="46" fontFamily="'Inter', sans-serif" fontSize="5.5" fontWeight="800" textAnchor="middle" fill="#92400e">{t(lang, "branch.seal_verified", "VERIFIED")}</text>
+                <text x="50" y="55" fontFamily="'Inter', sans-serif" fontSize="6.5" fontWeight="900" textAnchor="middle" fill="#78350f" letterSpacing="0.2">{t(lang, "branch.seal_authorized", "AUTHORIZED")}</text>
                 
                 <defs>
                   <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">

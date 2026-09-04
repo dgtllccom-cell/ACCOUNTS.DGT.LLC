@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "branch.seal_verified"
+  | "branch.seal_authorized"
+  | "branch.enterprise_erp_fms"
+  | "branch.multi_country_branch_mgmt"
   | "aump.registered_operations"
   | "aump.with_unique_main_branch_codes"
   | "aump.city_branch_codes_scope"
@@ -18778,6 +18782,14 @@ const en: Dict = {
 
 
 
+
+  "branch.seal_verified": "VERIFIED",
+
+  "branch.seal_authorized": "AUTHORIZED",
+
+  "branch.enterprise_erp_fms": "Enterprise ERP / FMS",
+
+  "branch.multi_country_branch_mgmt": "Multi-Country Branch Management",
   "aump.registered_operations": "Registered Operations",
 
   "aump.with_unique_main_branch_codes": "With Unique Main Branch Codes",
@@ -34635,6 +34647,14 @@ const ur: Dict = {
 
 
 
+
+  "branch.seal_verified": "تصدیق شدہ",
+
+  "branch.seal_authorized": "مجاز",
+
+  "branch.enterprise_erp_fms": "انٹرپرائز ERP / FMS",
+
+  "branch.multi_country_branch_mgmt": "ملٹی کنٹری برانچ مینجمنٹ",
   "aump.registered_operations": "رجسٹرڈ آپریشنز",
 
   "aump.with_unique_main_branch_codes": "منفرد مین برانچ کوڈز کے ساتھ",
@@ -50494,6 +50514,14 @@ const ar: Dict = {
 
 
 
+
+  "branch.seal_verified": "موثّق",
+
+  "branch.seal_authorized": "مخوّل",
+
+  "branch.enterprise_erp_fms": "نظام ERP / FMS للمؤسسات",
+
+  "branch.multi_country_branch_mgmt": "إدارة الفروع متعددة الدول",
   "aump.registered_operations": "العمليات المسجلة",
 
   "aump.with_unique_main_branch_codes": "بأكواد فرع رئيسي فريدة",
@@ -66352,6 +66380,14 @@ const fa: Dict = {
 
 
 
+
+  "branch.seal_verified": "تأییدشده",
+
+  "branch.seal_authorized": "مجاز",
+
+  "branch.enterprise_erp_fms": "ERP / FMS سازمانی",
+
+  "branch.multi_country_branch_mgmt": "مدیریت شعبه چندکشوری",
   "aump.registered_operations": "عملیات ثبت‌شده",
 
   "aump.with_unique_main_branch_codes": "با کدهای منحصربه‌فرد شعبه اصلی",
@@ -82216,6 +82252,14 @@ const ps: Dict = {
 
 
 
+
+  "branch.seal_verified": "تایید شوی",
+
+  "branch.seal_authorized": "اجازه لرونکی",
+
+  "branch.enterprise_erp_fms": "د سازمان ERP / FMS",
+
+  "branch.multi_country_branch_mgmt": "د څو هېوادونو د څانګې مدیریت",
   "aump.registered_operations": "ثبت شوي عملیات",
 
   "aump.with_unique_main_branch_codes": "د ځانګړو اصلي څانګو کوډونو سره",
