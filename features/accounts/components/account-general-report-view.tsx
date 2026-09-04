@@ -1513,7 +1513,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("DATE & TIME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+                <span suppressHydrationWarning>{new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString(`${lang}-u-nu-latn`, { numberingSystem: "latn", hour: "2-digit", minute: "2-digit", hour12: true })}</span>
               </span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1 border-t border-slate-100 dark:border-slate-800">

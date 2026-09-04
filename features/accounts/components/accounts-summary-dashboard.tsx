@@ -221,7 +221,7 @@ export function AccountsSummaryDashboard() {
             <p className="text-[11px] text-white/60">{t(lang, "acct.asd_historical_current_records", "Historical + Current records —")} {filtered.length} {t(lang, "acct.asd_shown_word", "shown")}</p>
           </div>
           <span className="text-[10px] text-white/50">
-            {t(lang, "purchase.generated_label", "Generated:")} {new Date().toISOString().slice(0, 10)}
+            {t(lang, "purchase.generated_label", "Generated:")} <span suppressHydrationWarning>{new Date().toISOString().slice(0, 10)}</span>
           </span>
         </div>
 

@@ -582,7 +582,7 @@ export function AccountProfileView({
               OFFICIAL CUSTOMER PROFILE CERTIFICATE
             </h2>
             <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
-              <span>Generated On: <strong className="text-slate-800 dark:text-slate-200">{fmtDate(new Date().toISOString())}</strong></span>
+              <span>Generated On: <strong className="text-slate-800 dark:text-slate-200" suppressHydrationWarning>{fmtDate(new Date().toISOString())}</strong></span>
               <span className="text-slate-300 dark:text-slate-700">|</span>
               <span>Ref: <strong className="font-mono text-blue-600 dark:text-blue-400">{selectedRow.accountCode || "—"}</strong></span>
             </div>
@@ -701,7 +701,7 @@ export function AccountProfileView({
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</p>
                 <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
-                  {fmtDate(new Date().toISOString())}
+                  <span suppressHydrationWarning>{fmtDate(new Date().toISOString())}</span>
                 </p>
               </div>
             </div>

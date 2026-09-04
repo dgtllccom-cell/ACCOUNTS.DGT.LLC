@@ -293,8 +293,8 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
           <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "—"}</span>
         </div>
         <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
-          <div>DATE: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
-          <div>TIME: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
+          <div>{th("DATE")}: <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
+          <div>{th("TIME")}: <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
         </div>
       </div>
 

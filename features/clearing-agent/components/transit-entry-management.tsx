@@ -1190,7 +1190,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
 
             {/* Document Generation Footer */}
             <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-slate-500">
-              <p>{tt("transit.report_generated", "Report Generated On:")} {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <p suppressHydrationWarning>{tt("transit.report_generated", "Report Generated On:")} {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })} {new Date().toLocaleTimeString(`${lang}-u-nu-latn`, { numberingSystem: "latn", hour: '2-digit', minute: '2-digit' })}</p>
               <p className="font-semibold italic">{tt("transit.sys_generated", "This is a system generated report.")}</p>
             </div>
           </div>

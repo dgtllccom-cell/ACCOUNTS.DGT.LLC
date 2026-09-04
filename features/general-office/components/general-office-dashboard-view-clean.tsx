@@ -1701,7 +1701,7 @@ export function GeneralOfficeDashboardView() {
 
               <div className="rounded-xl border p-4 bg-muted/30">
                 <div className="flex items-center justify-between font-bold text-xs">
-                  <span>{tr("Current Payroll Month")}: {new Date().toLocaleString("en", { month: "long", year: "numeric" })}</span>
+                  <span suppressHydrationWarning>{tr("Current Payroll Month")}: {new Date().toLocaleString("en", { month: "long", year: "numeric" })}</span>
                   <span className="text-emerald-600 font-mono">{tr("Total Disbursed")}: {summaryStats.payrollLabel}</span>
                 </div>
               </div>

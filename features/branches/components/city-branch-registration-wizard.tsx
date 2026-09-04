@@ -746,7 +746,7 @@ function PdfPreview({
         </div>
         <div className="text-right text-xs font-bold">
           <div>{_("cbr.pdf_status", "Status: Draft")}</div>
-          <div>{_("cbr.pdf_generated", "Generated:")} {new Date().toLocaleString()}</div>
+          <div suppressHydrationWarning>{_("cbr.pdf_generated", "Generated:")} {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</div>
           <div>{_("cbr.pdf_currency", "Currency:")} {currency || "-"}</div>
         </div>
       </div>

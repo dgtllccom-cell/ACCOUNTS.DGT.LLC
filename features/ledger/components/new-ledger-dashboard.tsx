@@ -719,8 +719,8 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
 
             <InfoPanel title={t(activeLang, "ledger.session_details", "Session / Login Details")} accent="violet">
               <InfoRow label={t(activeLang, "ledger.session_branch", "Session Branch")} value={branchLabel(account)} strong />
-              <InfoRow label={t(activeLang, "ledger.nld_login_date", "Login Date")} value={new Date().toLocaleDateString()} />
-              <InfoRow label={t(activeLang, "ledger.nld_login_time", "Login Time")} value={new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} />
+              <InfoRow label={t(activeLang, "ledger.nld_login_date", "Login Date")} value={<span suppressHydrationWarning>{new Date().toLocaleDateString()}</span>} />
+              <InfoRow label={t(activeLang, "ledger.nld_login_time", "Login Time")} value={<span suppressHydrationWarning>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>} />
               <InfoRow label={t(activeLang, "purchase.user_name_label", "User Name")} value={safeText(session?.user?.fullName || (session as any)?.fullName || "—")} strong />
               <InfoRow label={t(activeLang, "purchase.f_user_id", "User ID")} value={safeText(session?.user?.id || (session as any)?.userId || (session?.user as any)?.user_id || "USR-SA-001")} />
               <InfoRow label={t(activeLang, "common.system", "System")} value="ERP / FMS" />
@@ -844,7 +844,7 @@ function InfoRow({
   danger
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   strong?: boolean;
   success?: boolean;
   danger?: boolean;

@@ -620,7 +620,7 @@ export default function JournalStockReportDashboard({
               <div className="flex justify-between items-center">
                 <span>{t(lang, "ledger.col_date", "DATE & TIME")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                  {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  <span suppressHydrationWarning>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
                 </span>
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">

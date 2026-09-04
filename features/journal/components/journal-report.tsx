@@ -585,7 +585,7 @@ export default function JournalReport({
                 <div className="flex justify-between items-center">
                   <span>{tr("DATE & TIME")}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                    {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                    <span suppressHydrationWarning>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
@@ -1058,14 +1058,14 @@ export default function JournalReport({
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       <div>
                         <p>{t(lang, "jr.jr_date_colon", "Date:")}</p>
-                        <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</p>
+                        <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5" suppressHydrationWarning>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <div>
                         <p>{t(lang, "jr.jr_time_colon", "Time:")}</p>
-                        <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5" suppressHydrationWarning>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
                   </div>
@@ -1694,14 +1694,14 @@ export default function JournalReport({
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <div>
                   <p>{t(lang, "jr.jr_date_colon", "Date:")}</p>
-                  <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</p>
+                  <p className="text-slate-900 font-extrabold text-[9px] mt-0.5" suppressHydrationWarning>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
                 <div>
                   <p>{t(lang, "jr.jr_time_colon", "Time:")}</p>
-                  <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="text-slate-900 font-extrabold text-[9px] mt-0.5" suppressHydrationWarning>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </div>
             </div>
