@@ -1075,7 +1075,7 @@ function SuperAdminRoznamchaSummary({
           </div>
           <div className="p-4 flex flex-col justify-center flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             <p className="leading-relaxed">
-              Click to {showAllCountries ? "hide" : "view"} detailed breakdown for <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span> scoped countries and their branches.
+              Click to {showAllCountries ? "hide" : "view"} detailed breakdown for <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span> {th("scoped countries and their branches.")}
             </p>
             <div className="mt-2 flex items-center gap-2">
               <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1908,7 +1908,7 @@ function SuperAdminRoznamchaReportViewContent({
               <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-3 space-y-3 text-left">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">PKR / 1 USD</Label>
+                    <Label className="text-[10px] text-slate-500 font-bold">{th("PKR / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -1918,7 +1918,7 @@ function SuperAdminRoznamchaReportViewContent({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">AED / 1 USD</Label>
+                    <Label className="text-[10px] text-slate-500 font-bold">{th("AED / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.0001"
@@ -1928,7 +1928,7 @@ function SuperAdminRoznamchaReportViewContent({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">AFN / 1 USD</Label>
+                    <Label className="text-[10px] text-slate-500 font-bold">{th("AFN / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -1938,7 +1938,7 @@ function SuperAdminRoznamchaReportViewContent({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">INR / 1 USD</Label>
+                    <Label className="text-[10px] text-slate-500 font-bold">{th("INR / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -1971,7 +1971,7 @@ function SuperAdminRoznamchaReportViewContent({
                       setExchangeOpen(false);
                     }}
                   >
-                    Apply
+                    {th("Apply")}
                   </Button>
                   <Button
                     type="button"
@@ -1983,7 +1983,7 @@ function SuperAdminRoznamchaReportViewContent({
                       setExchangeOpen(false);
                     }}
                   >
-                    Reset
+                    {th("Reset")}
                   </Button>
                 </div>
               </div>
@@ -2007,28 +2007,28 @@ function SuperAdminRoznamchaReportViewContent({
                 {onTypeFilterChange ? (
                   <>
                     {sessionInfo?.scopes?.isSuperAdmin && (
-                      <MenuAction icon={<Eye className="h-4 w-4" />} label="Super Admin View" active={effectiveTypeFilter === "super_admin"} onClick={() => changeReportScope("super_admin")} />
+                      <MenuAction icon={<Eye className="h-4 w-4" />} label={th("Super Admin View")} active={effectiveTypeFilter === "super_admin"} onClick={() => changeReportScope("super_admin")} />
                     )}
                     {(sessionInfo?.scopes?.isSuperAdmin || sessionInfo?.roles?.some(r => ["country_admin", "country_user", "main_branch_admin"].includes(r))) && (
-                      <MenuAction icon={<Eye className="h-4 w-4" />} label="Country Admin View" active={effectiveTypeFilter === "country"} onClick={() => changeReportScope("country")} />
+                      <MenuAction icon={<Eye className="h-4 w-4" />} label={th("Country Admin View")} active={effectiveTypeFilter === "country"} onClick={() => changeReportScope("country")} />
                     )}
-                    <MenuAction icon={<Eye className="h-4 w-4" />} label="City Admin View" active={effectiveTypeFilter === "branch"} onClick={() => changeReportScope("branch")} />
+                    <MenuAction icon={<Eye className="h-4 w-4" />} label={th("City Admin View")} active={effectiveTypeFilter === "branch"} onClick={() => changeReportScope("branch")} />
                     <MenuDivider />
                   </>
                 ) : null}
-                <MenuAction icon={<Maximize2 className="h-4 w-4" />} label="Expand View" onClick={expandView} />
-                <MenuAction icon={<Maximize2 className="h-4 w-4" />} label="Full Screen" onClick={openFullScreen} />
-                <MenuAction icon={<RefreshCcw className={cn("h-4 w-4", refreshing ? "animate-spin" : "")} />} label={refreshing ? "Refreshing" : "Refresh"} onClick={() => void loadReport()} />
+                <MenuAction icon={<Maximize2 className="h-4 w-4" />} label={th("Expand View")} onClick={expandView} />
+                <MenuAction icon={<Maximize2 className="h-4 w-4" />} label={th("Full Screen")} onClick={openFullScreen} />
+                <MenuAction icon={<RefreshCcw className={cn("h-4 w-4", refreshing ? "animate-spin" : "")} />} label={refreshing ? th("Refreshing") : th("Refresh")} onClick={() => void loadReport()} />
                 <MenuDivider />
-                <MenuAction icon={<PdfActionIcon className="h-4 w-4" />} label="Export PDF" onClick={() => openSelectedReport(false, "journal")} />
-                <MenuAction icon={<Printer className="h-4 w-4" />} label="Print Report Preview" onClick={() => setPrintMode(true)} />
-                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="Excel Export" onClick={exportCsv} />
+                <MenuAction icon={<PdfActionIcon className="h-4 w-4" />} label={th("Export PDF")} onClick={() => openSelectedReport(false, "journal")} />
+                <MenuAction icon={<Printer className="h-4 w-4" />} label={th("Print Report Preview")} onClick={() => setPrintMode(true)} />
+                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={th("Excel Export")} onClick={exportCsv} />
                 <MenuDivider />
-                <MenuAction icon={<Eye className="h-4 w-4" />} label="View Voucher" onClick={() => openSelectedReport(false, "voucher")} />
-                <MenuAction icon={<BookOpen className="h-4 w-4" />} label="Open Ledger" onClick={openSelectedLedger} />
-                <MenuAction icon={<FileText className="h-4 w-4" />} label="View Journal" onClick={() => openSelectedReport(true, "journal")} />
-                <MenuAction icon={<Link2 className="h-4 w-4" />} label="Open Roznamcha Entry" onClick={openSelectedEntry} />
-                <MenuAction icon={<Search className="h-4 w-4" />} label="View Account" onClick={openSelectedAccount} />
+                <MenuAction icon={<Eye className="h-4 w-4" />} label={th("View Voucher")} onClick={() => openSelectedReport(false, "voucher")} />
+                <MenuAction icon={<BookOpen className="h-4 w-4" />} label={th("Open Ledger")} onClick={openSelectedLedger} />
+                <MenuAction icon={<FileText className="h-4 w-4" />} label={th("View Journal")} onClick={() => openSelectedReport(true, "journal")} />
+                <MenuAction icon={<Link2 className="h-4 w-4" />} label={th("Open Roznamcha Entry")} onClick={openSelectedEntry} />
+                <MenuAction icon={<Search className="h-4 w-4" />} label={th("View Account")} onClick={openSelectedAccount} />
               </div>
             ) : null}
           </div>
@@ -2124,9 +2124,9 @@ function SuperAdminRoznamchaReportViewContent({
           { key: "createdBy", header: "User name", render: (r) => ((r.sourceEntry as any)?.createdBy ?? r.sourceEntry?.created_by) || "admin" },
           { key: "typeLabel", header: "Roznamcha Type\nRoznamcha Number *\nRoznamcha Category *", render: (r) => (
             <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold text-slate-800 dark:text-slate-200" title="Roznamcha Type">{r.typeLabel || "-"}</span>
-              <span className="font-semibold text-blue-700 dark:text-blue-400" title="Roznamcha Number">{r.sourceReferenceNo || r.voucherNo || "-"}</span>
-              <span className="text-slate-500 font-normal" title="Roznamcha Category">{r.sourceTransactionType || "-"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200" title={th("Roznamcha Type")}>{r.typeLabel || "-"}</span>
+              <span className="font-semibold text-blue-700 dark:text-blue-400" title={th("Roznamcha Number")}>{r.sourceReferenceNo || r.voucherNo || "-"}</span>
+              <span className="text-slate-500 font-normal" title={th("Roznamcha Category")}>{r.sourceTransactionType || "-"}</span>
             </div>
           ) },
           { key: "narration", header: "Remarks / Notes", render: (r) => <span title={r.narration} className="line-clamp-3 max-w-[250px] leading-tight">{r.narration}</span> },
@@ -2227,7 +2227,7 @@ function SuperAdminRoznamchaReportViewContent({
                 className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
                 onClick={() => setReceiptPrintMode(true)}
               >
-                <Printer className="h-3.5 w-3.5 mr-1" /> Print Receipt
+                <Printer className="h-3.5 w-3.5 mr-1" /> {th("Print Receipt")}
               </Button>
             )}
             <Button
@@ -2236,7 +2236,7 @@ function SuperAdminRoznamchaReportViewContent({
               size="sm"
               onClick={() => activeDrawerEntry && openSelectedReport(false, "voucher", activeDrawerEntry)}
             >
-              <Eye className="h-3.5 w-3.5 mr-1" /> PDF Preview
+              <Eye className="h-3.5 w-3.5 mr-1" /> {th("PDF Preview")}
             </Button>
             <Button
               type="button"
@@ -2299,11 +2299,11 @@ function SuperAdminRoznamchaReportViewContent({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
                     <tr>
-                      <th className="px-3 py-2">Type</th>
-                      <th className="px-3 py-2">Account Code & Name</th>
-                      <th className="px-3 py-2 text-right">Debit</th>
-                      <th className="px-3 py-2 text-right">Credit</th>
-                      <th className="px-3 py-2 text-right">USD Amount</th>
+                      <th className="px-3 py-2">{th("Type")}</th>
+                      <th className="px-3 py-2">{th("Account Code & Name")}</th>
+                      <th className="px-3 py-2 text-right">{th("Debit")}</th>
+                      <th className="px-3 py-2 text-right">{th("Credit")}</th>
+                      <th className="px-3 py-2 text-right">{th("USD Amount")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">
@@ -2339,13 +2339,13 @@ function SuperAdminRoznamchaReportViewContent({
 
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Debit Total</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Debit Total")}</span>
                 <div className="text-sm font-extrabold text-rose-600 mt-0.5">
                   {activeDrawerEntry.countryCurrency || "PKR"} {fmtNumber(activeDrawerEntry.debit)}
                 </div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Credit Total</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Credit Total")}</span>
                 <div className="text-sm font-extrabold text-emerald-600 mt-0.5">
                   {activeDrawerEntry.countryCurrency || "PKR"} {fmtNumber(activeDrawerEntry.credit)}
                 </div>
@@ -2456,10 +2456,10 @@ function BranchJournalGeneralStyleSummary({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onRefresh}>
-          <RefreshCcw className="h-4 w-4" /> Refresh
+          <RefreshCcw className="h-4 w-4" /> {th("Refresh")}
         </Button>
         <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onPrint}>
-          <Printer className="h-4 w-4" /> Print
+          <Printer className="h-4 w-4" /> {th("Print")}
         </Button>
         <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onPdf}>
           <PdfActionIcon className="h-4 w-4" /> PDF
@@ -2614,7 +2614,7 @@ function RoznamchaPrintPreview({
 
 export function SuperAdminRoznamchaReportView(props: any) {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Roznamcha Report...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{translateHeader("en", "Loading Roznamcha Report...")}</div>}>
       <SuperAdminRoznamchaReportViewContent {...props} />
     </Suspense>
   );
