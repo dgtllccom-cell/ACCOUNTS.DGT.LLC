@@ -517,7 +517,7 @@ export function AdminUserManagementPanel() {
             </div>
           </div>
           <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalCountries}</div>
-          <p className="mt-1 text-xs text-slate-500">Registered Operations</p>
+          <p className="mt-1 text-xs text-slate-500">{tt("aump.registered_operations", "Registered Operations")}</p>
         </div>
 
         <div className="rounded-xl border bg-card p-4 shadow-sm">
@@ -528,7 +528,7 @@ export function AdminUserManagementPanel() {
             </div>
           </div>
           <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalMainBranches}</div>
-          <p className="mt-1 text-xs text-slate-500">With Unique Main Branch Codes</p>
+          <p className="mt-1 text-xs text-slate-500">{tt("aump.with_unique_main_branch_codes", "With Unique Main Branch Codes")}</p>
         </div>
 
         <div className="rounded-xl border bg-card p-4 shadow-sm">
@@ -539,7 +539,7 @@ export function AdminUserManagementPanel() {
             </div>
           </div>
           <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalCityBranches}</div>
-          <p className="mt-1 text-xs text-slate-500">City Branch Codes & Scope</p>
+          <p className="mt-1 text-xs text-slate-500">{tt("aump.city_branch_codes_scope", "City Branch Codes & Scope")}</p>
         </div>
       </div>
 
@@ -676,8 +676,8 @@ export function AdminUserManagementPanel() {
           {countries.length === 0 ? (
             <div className="rounded-xl border bg-card p-12 text-center">
               <Globe2 className="mx-auto h-10 w-10 text-slate-400 mb-3" />
-              <h3 className="font-semibold text-slate-800 dark:text-slate-200">No Countries or Branches Created Yet</h3>
-              <p className="text-xs text-slate-500 mt-1">Start by adding a country and main branch to organize users.</p>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200">{tt("aump.no_countries_branches_yet", "No Countries or Branches Created Yet")}</h3>
+              <p className="text-xs text-slate-500 mt-1">{tt("aump.start_by_adding_country_branch", "Start by adding a country and main branch to organize users.")}</p>
               <Link href="/dashboard/country" className="inline-block mt-4">
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
@@ -808,7 +808,7 @@ export function AdminUserManagementPanel() {
                                 <Link href="/dashboard/city">
                                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
                                     <Plus className="h-3 w-3" />
-                                    <span>+ Add City Branch</span>
+                                    <span>+ {tt("aump.add_city_branch", "Add City Branch")}</span>
                                   </Button>
                                 </Link>
                               </div>

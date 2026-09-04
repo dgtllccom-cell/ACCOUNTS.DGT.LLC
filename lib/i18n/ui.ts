@@ -927,6 +927,12 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "aump.registered_operations"
+  | "aump.with_unique_main_branch_codes"
+  | "aump.city_branch_codes_scope"
+  | "aump.no_countries_branches_yet"
+  | "aump.start_by_adding_country_branch"
+  | "aump.add_city_branch"
   | "bankroz.cheque_no_ph1"
   | "bankroz.cheque_no_ph2"
   | "cpb.fully_completed_paid"
@@ -18771,6 +18777,18 @@ const en: Dict = {
 
 
 
+
+  "aump.registered_operations": "Registered Operations",
+
+  "aump.with_unique_main_branch_codes": "With Unique Main Branch Codes",
+
+  "aump.city_branch_codes_scope": "City Branch Codes & Scope",
+
+  "aump.no_countries_branches_yet": "No Countries or Branches Created Yet",
+
+  "aump.start_by_adding_country_branch": "Start by adding a country and main branch to organize users.",
+
+  "aump.add_city_branch": "Add City Branch",
   "bankroz.cheque_no_ph1": "e.g. CHK-000123",
 
   "bankroz.cheque_no_ph2": "e.g. CHK-000140",
@@ -34616,6 +34634,18 @@ const ur: Dict = {
 
 
 
+
+  "aump.registered_operations": "رجسٹرڈ آپریشنز",
+
+  "aump.with_unique_main_branch_codes": "منفرد مین برانچ کوڈز کے ساتھ",
+
+  "aump.city_branch_codes_scope": "سٹی برانچ کوڈز و دائرہ کار",
+
+  "aump.no_countries_branches_yet": "ابھی تک کوئی ملک یا برانچ نہیں بنائی گئی",
+
+  "aump.start_by_adding_country_branch": "صارفین کو منظم کرنے کے لیے ملک اور مین برانچ شامل کرکے شروع کریں۔",
+
+  "aump.add_city_branch": "سٹی برانچ شامل کریں",
   "bankroz.cheque_no_ph1": "مثلاً CHK-000123",
 
   "bankroz.cheque_no_ph2": "مثلاً CHK-000140",
@@ -50463,6 +50493,18 @@ const ar: Dict = {
 
 
 
+
+  "aump.registered_operations": "العمليات المسجلة",
+
+  "aump.with_unique_main_branch_codes": "بأكواد فرع رئيسي فريدة",
+
+  "aump.city_branch_codes_scope": "أكواد ونطاق فرع المدينة",
+
+  "aump.no_countries_branches_yet": "لم يتم إنشاء أي دولة أو فرع بعد",
+
+  "aump.start_by_adding_country_branch": "ابدأ بإضافة دولة وفرع رئيسي لتنظيم المستخدمين.",
+
+  "aump.add_city_branch": "إضافة فرع مدينة",
   "bankroz.cheque_no_ph1": "مثال: CHK-000123",
 
   "bankroz.cheque_no_ph2": "مثال: CHK-000140",
@@ -66309,6 +66351,18 @@ const fa: Dict = {
 
 
 
+
+  "aump.registered_operations": "عملیات ثبت‌شده",
+
+  "aump.with_unique_main_branch_codes": "با کدهای منحصربه‌فرد شعبه اصلی",
+
+  "aump.city_branch_codes_scope": "کدها و محدوده شعبه شهر",
+
+  "aump.no_countries_branches_yet": "هنوز هیچ کشور یا شعبه‌ای ایجاد نشده است",
+
+  "aump.start_by_adding_country_branch": "با افزودن یک کشور و شعبه اصلی برای سازماندهی کاربران شروع کنید.",
+
+  "aump.add_city_branch": "افزودن شعبه شهر",
   "bankroz.cheque_no_ph1": "مثال: CHK-000123",
 
   "bankroz.cheque_no_ph2": "مثال: CHK-000140",
@@ -82161,6 +82215,18 @@ const ps: Dict = {
 
 
 
+
+  "aump.registered_operations": "ثبت شوي عملیات",
+
+  "aump.with_unique_main_branch_codes": "د ځانګړو اصلي څانګو کوډونو سره",
+
+  "aump.city_branch_codes_scope": "د ښار د څانګې کوډونه او ساحه",
+
+  "aump.no_countries_branches_yet": "تر اوسه هیڅ هېواد یا څانګه نه ده جوړه شوې",
+
+  "aump.start_by_adding_country_branch": "د کاروونکو تنظیم کولو لپاره د هېواد او اصلي څانګې په اضافه کولو سره پیل وکړئ.",
+
+  "aump.add_city_branch": "د ښار څانګه اضافه کړئ",
   "bankroz.cheque_no_ph1": "بېلګه: CHK-000123",
 
   "bankroz.cheque_no_ph2": "بېلګه: CHK-000140",
