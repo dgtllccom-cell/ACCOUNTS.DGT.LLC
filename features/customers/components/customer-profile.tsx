@@ -342,10 +342,10 @@ export function CustomerProfile({
                 type="button"
                 onClick={() => setShowSendModal(true)}
                 className="h-8 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold gap-1 px-2.5 shadow-xs cursor-pointer"
-                title={lang === "ur" ? "کسٹمر کو نیا فارم لنک بھیجیں" : "Send / Re-send Form Link"}
+                title={t(lang, "cprof.send_resend_link", "Send / Re-send Form Link")}
               >
                 <Send className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{lang === "ur" ? "فارم لنک" : "Send Link"}</span>
+                <span className="hidden sm:inline">{t(lang, "cprof.send_link", "Send Link")}</span>
               </Button>
               <Button
                 type="button"
@@ -353,7 +353,7 @@ export function CustomerProfile({
                 className="h-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold gap-1 px-2.5 shadow-xs"
               >
                 <Link2 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">360° ERP</span>
+                <span className="hidden sm:inline">{t(lang, "cprof.erp_360_short", "360° ERP")}</span>
               </Button>
             </div>
           </div>
@@ -615,7 +615,7 @@ export function CustomerProfile({
               className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-md"
             >
               <PencilLine className="h-4 w-4" />
-              {lang === "ur" ? "ایڈٹ کریں (Edit Profile)" : "Edit Profile"}
+              {t(lang, "cprof.edit_profile", "Edit Profile")}
             </Button>
             <Button
               type="button"
@@ -633,7 +633,7 @@ export function CustomerProfile({
             className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md"
           >
             <Send className="h-4 w-4" />
-            <span className="hidden sm:inline">{lang === "ur" ? "کسٹمر کو بھیجیں" : "SEND TO CUSTOMER"}</span>
+            <span className="hidden sm:inline">{t(lang, "cprof.send_to_customer", "SEND TO CUSTOMER")}</span>
           </Button>
         </div>
 
@@ -726,7 +726,7 @@ export function CustomerProfile({
             type="button"
             onClick={() => setShowSendModal(true)}
             className="h-8 bg-teal-600 hover:bg-teal-500 text-white rounded-md text-xs font-bold gap-1.5 px-2.5 shadow-xs cursor-pointer"
-            title={lang === "ur" ? "کسٹمر کو نیا فارم لنک بھیجیں" : "Send / Re-send Form Link"}
+            title={t(lang, "cprof.send_resend_link", "Send / Re-send Form Link")}
           >
             <Send className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{lang === "ur" ? "فارم لنک بھیجیں" : lang === "ps" ? "فورم لینک واستوئ" : lang === "fa" ? "ارسال لینک فرم" : lang === "ar" ? "إرسال الرابط" : "Send Form Link"}</span>

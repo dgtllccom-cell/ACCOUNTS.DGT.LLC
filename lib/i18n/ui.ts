@@ -927,6 +927,11 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cprof.erp_360_short"
+  | "cprof.send_resend_link"
+  | "cprof.send_link"
+  | "cprof.edit_profile"
+  | "cprof.send_to_customer"
   | "drdv.restore_success"
   | "crm.dr_cr_hint"
   | "roz.receive"
@@ -18620,6 +18625,16 @@ const en: Dict = {
 
 
 
+
+
+  "cprof.erp_360_short": "360° ERP",
+  "cprof.send_resend_link": "Send / Re-send Form Link",
+
+  "cprof.send_link": "Send Link",
+
+  "cprof.edit_profile": "Edit Profile",
+
+  "cprof.send_to_customer": "SEND TO CUSTOMER",
   "drdv.restore_success": "Record successfully restored!",
 
   "crm.dr_cr_hint": "DR = Debit (Receivable) , CR = Credit (Payable)",
@@ -34202,6 +34217,16 @@ const ur: Dict = {
 
 
 
+
+
+  "cprof.erp_360_short": "360° ای آر پی",
+  "cprof.send_resend_link": "کسٹمر کو نیا فارم لنک بھیجیں",
+
+  "cprof.send_link": "فارم لنک",
+
+  "cprof.edit_profile": "ایڈٹ کریں (Edit Profile)",
+
+  "cprof.send_to_customer": "کسٹمر کو بھیجیں",
   "drdv.restore_success": "ریکارڈ کامیابی سے بحال ہو گیا ہے۔",
 
   "crm.dr_cr_hint": "DR = بنام (وصولی) ، CR = جمع (ادائیگی)",
@@ -49786,6 +49811,16 @@ const ar: Dict = {
 
 
 
+
+
+  "cprof.erp_360_short": "360° نظام إدارة الموارد",
+  "cprof.send_resend_link": "إرسال / إعادة إرسال رابط النموذج",
+
+  "cprof.send_link": "إرسال الرابط",
+
+  "cprof.edit_profile": "تعديل الملف الشخصي",
+
+  "cprof.send_to_customer": "إرسال للعميل",
   "drdv.restore_success": "تمت استعادة السجل بنجاح!",
 
   "crm.dr_cr_hint": "DR = مدين (مستحق) ، CR = دائن (مستحق الدفع)",
@@ -65369,6 +65404,16 @@ const fa: Dict = {
 
 
 
+
+
+  "cprof.erp_360_short": "360° سامانه ERP",
+  "cprof.send_resend_link": "ارسال / ارسال مجدد لینک فرم",
+
+  "cprof.send_link": "ارسال لینک",
+
+  "cprof.edit_profile": "ویرایش پروفایل",
+
+  "cprof.send_to_customer": "ارسال به مشتری",
   "drdv.restore_success": "رکورد با موفقیت بازیابی شد!",
 
   "crm.dr_cr_hint": "DR = بدهکار (قابل‌وصول) ، CR = بستانکار (قابل‌پرداخت)",
@@ -80958,6 +81003,16 @@ const ps: Dict = {
 
 
 
+
+
+  "cprof.erp_360_short": "360° د ERP سیسټم",
+  "cprof.send_resend_link": "د فورمې لینک لیږل / بیا لیږل",
+
+  "cprof.send_link": "لینک ولېږئ",
+
+  "cprof.edit_profile": "پروفایل سمول",
+
+  "cprof.send_to_customer": "پیرودونکي ته لیږل",
   "drdv.restore_success": "ریکارډ په بریالیتوب سره بیرته راوستل شو!",
 
   "crm.dr_cr_hint": "DR = پور اخیستونکی (ترلاسه کیدونکی) ، CR = پور ورکوونکی (وړ تادیه)",
