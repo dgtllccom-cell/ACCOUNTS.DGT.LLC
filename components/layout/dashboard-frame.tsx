@@ -43,6 +43,7 @@ import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
@@ -536,33 +537,18 @@ export function DashboardFrame({
 
                     {selectedDateFilter === "custom" && (
                       <div className="mt-2 pt-2 border-t border-border/80 px-2 pb-1">
-                        <div className="grid grid-cols-2 gap-2 text-[10px]">
-                          <div>
-                            <label className="text-muted-foreground font-bold block mb-1">{t(lang, "dashboard.from", "From")}</label>
-                            <input
-                              type="date"
-                              value={customDateFrom}
-                              onChange={(e) => setCustomDateFrom(e.target.value)}
-                              className="w-full rounded border border-border bg-background px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-primary"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-muted-foreground font-bold block mb-1">{t(lang, "dashboard.to", "To")}</label>
-                            <input
-                              type="date"
-                              value={customDateTo}
-                              onChange={(e) => setCustomDateTo(e.target.value)}
-                              className="w-full rounded border border-border bg-background px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-primary"
-                            />
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setDateMenuOpen(false)}
-                          className="mt-2 w-full rounded bg-primary text-primary-foreground py-1 text-xs font-bold hover:bg-primary/90 transition-colors"
-                        >
-                          {t(lang, "dashboard.apply_filter", "Apply Filter")}
-                        </button>
+                        <ErpDatePicker
+                          mode="range"
+                          lang={lang}
+                          size="sm"
+                          presets={false}
+                          value={{ from: customDateFrom || null, to: customDateTo || null }}
+                          onApply={(v) => {
+                            setCustomDateFrom(v.from ?? "");
+                            setCustomDateTo(v.to ?? "");
+                            setDateMenuOpen(false);
+                          }}
+                        />
                       </div>
                     )}
                   </div>
