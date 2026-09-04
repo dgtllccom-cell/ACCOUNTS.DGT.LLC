@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "wam.multi_branch_official_whatsapp"
+  | "wam.select_branch_line_desc"
+  | "wam.enter_branch_whatsapp_number"
+  | "wam.super_admin_paste_token"
+  | "wam.paste_token_ph"
+  | "wam.branch_line_prefix"
+  | "wam.branch_line_suffix"
   | "sow.new_short"
   | "sow.add_item_to_list"
   | "sow.back_to_previous"
@@ -18793,6 +18800,20 @@ const en: Dict = {
 
 
 
+
+  "wam.multi_branch_official_whatsapp": "Multi-Branch Official Meta WhatsApp",
+
+  "wam.select_branch_line_desc": "Select your branch line below. The system automatically connects directly to the server's verified Meta Cloud API pipeline.",
+
+  "wam.enter_branch_whatsapp_number": "Enter your branch WhatsApp phone number e.g. 00971544816664",
+
+  "wam.super_admin_paste_token": "Super Admin: Paste Your EAAG... Access Token Once to Activate:",
+
+  "wam.paste_token_ph": "Paste your EAAG... token here",
+
+  "wam.branch_line_prefix": "Your branch line (",
+
+  "wam.branch_line_suffix": ") is verified and linked. The ERP can now automatically process messages, AI auto-replies, payment reminders, and PDF reports.",
   "sow.new_short": "New",
 
   "sow.add_item_to_list": "Add Item to List",
@@ -34674,6 +34695,20 @@ const ur: Dict = {
 
 
 
+
+  "wam.multi_branch_official_whatsapp": "ملٹی برانچ آفیشل میٹا واٹس ایپ",
+
+  "wam.select_branch_line_desc": "نیچے اپنی برانچ لائن منتخب کریں۔ سسٹم خودکار طور پر سرور کے تصدیق شدہ Meta Cloud API پائپ لائن سے براہ راست جڑ جاتا ہے۔",
+
+  "wam.enter_branch_whatsapp_number": "اپنا برانچ واٹس ایپ فون نمبر درج کریں مثلاً 00971544816664",
+
+  "wam.super_admin_paste_token": "سپر ایڈمن: فعال کرنے کے لیے اپنا EAAG... ایکسیس ٹوکن ایک بار پیسٹ کریں:",
+
+  "wam.paste_token_ph": "اپنا EAAG... ٹوکن یہاں پیسٹ کریں",
+
+  "wam.branch_line_prefix": "آپ کی برانچ لائن (",
+
+  "wam.branch_line_suffix": ") تصدیق شدہ اور منسلک ہے۔ ERP اب خودکار طور پر پیغامات، AI خودکار جوابات، ادائیگی یاد دہانیاں، اور PDF رپورٹس پر کارروائی کر سکتا ہے۔",
   "sow.new_short": "نیا",
 
   "sow.add_item_to_list": "لسٹ میں آئٹم شامل کریں",
@@ -50557,6 +50592,20 @@ const ar: Dict = {
 
 
 
+
+  "wam.multi_branch_official_whatsapp": "واتساب Meta الرسمي متعدد الفروع",
+
+  "wam.select_branch_line_desc": "اختر خط فرعك أدناه. يتصل النظام تلقائيًا مباشرة بخط أنابيب Meta Cloud API الموثّق الخاص بالخادم.",
+
+  "wam.enter_branch_whatsapp_number": "أدخل رقم هاتف واتساب فرعك مثال: 00971544816664",
+
+  "wam.super_admin_paste_token": "المسؤول الأعلى: الصق رمز الوصول EAAG... الخاص بك مرة واحدة للتفعيل:",
+
+  "wam.paste_token_ph": "الصق رمز EAAG... الخاص بك هنا",
+
+  "wam.branch_line_prefix": "خط فرعك (",
+
+  "wam.branch_line_suffix": ") تم التحقق منه وربطه. يمكن الآن لنظام ERP معالجة الرسائل تلقائيًا والردود التلقائية بالذكاء الاصطناعي وتذكيرات الدفع وتقارير PDF.",
   "sow.new_short": "جديد",
 
   "sow.add_item_to_list": "إضافة عنصر إلى القائمة",
@@ -66439,6 +66488,20 @@ const fa: Dict = {
 
 
 
+
+  "wam.multi_branch_official_whatsapp": "واتساپ رسمی Meta چند شعبه‌ای",
+
+  "wam.select_branch_line_desc": "خط شعبه خود را در زیر انتخاب کنید. سیستم به‌طور خودکار مستقیماً به خط لوله تأییدشده Meta Cloud API سرور متصل می‌شود.",
+
+  "wam.enter_branch_whatsapp_number": "شماره تلفن واتساپ شعبه خود را وارد کنید مثال: 00971544816664",
+
+  "wam.super_admin_paste_token": "مدیر ارشد: توکن دسترسی EAAG... خود را یک بار برای فعال‌سازی جای‌گذاری کنید:",
+
+  "wam.paste_token_ph": "توکن EAAG... خود را اینجا جای‌گذاری کنید",
+
+  "wam.branch_line_prefix": "خط شعبه شما (",
+
+  "wam.branch_line_suffix": ") تأیید و متصل شده است. اکنون ERP می‌تواند به‌طور خودکار پیام‌ها، پاسخ‌های خودکار هوش مصنوعی، یادآوری‌های پرداخت و گزارش‌های PDF را پردازش کند.",
   "sow.new_short": "جدید",
 
   "sow.add_item_to_list": "افزودن مورد به فهرست",
@@ -82327,6 +82390,20 @@ const ps: Dict = {
 
 
 
+
+  "wam.multi_branch_official_whatsapp": "د څو څانګو رسمي Meta واتساپ",
+
+  "wam.select_branch_line_desc": "خپله د څانګې کرښه لاندې وټاکئ. سیسټم اتومات مستقیم د سرور تایید شوي Meta Cloud API پایپ لاین سره نښلي.",
+
+  "wam.enter_branch_whatsapp_number": "د خپلې څانګې د واتساپ د تلیفون شمېره دننه کړئ بېلګه: 00971544816664",
+
+  "wam.super_admin_paste_token": "سوپر مدیر: د فعالولو لپاره خپل EAAG... د لاسرسي ټوکن یو ځل پیسټ کړئ:",
+
+  "wam.paste_token_ph": "خپل EAAG... ټوکن دلته پیسټ کړئ",
+
+  "wam.branch_line_prefix": "ستاسو د څانګې کرښه (",
+
+  "wam.branch_line_suffix": ") تایید شوې او نښلول شوې ده. اوس ERP کولی شي په اتومات ډول پیغامونه، د AI اتومات ځوابونه، د تادیې یادونې، او د PDF راپورونه پروسس کړي.",
   "sow.new_short": "نوی",
 
   "sow.add_item_to_list": "لست ته توکی اضافه کړئ",

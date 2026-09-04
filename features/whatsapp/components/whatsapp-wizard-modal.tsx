@@ -261,10 +261,10 @@ export function WhatsAppWizardModal({
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
               <p className="font-black text-emerald-800 dark:text-emerald-200 flex items-center gap-2 text-sm">
                 <Globe2 className="h-4 w-4 text-emerald-600" />
-                Multi-Branch Official Meta WhatsApp
+                {tt("wam.multi_branch_official_whatsapp", "Multi-Branch Official Meta WhatsApp")}
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-[11.5px]">
-                Select your branch line below. The system automatically connects directly to the server&apos;s verified Meta Cloud API pipeline.
+                {tt("wam.select_branch_line_desc", "Select your branch line below. The system automatically connects directly to the server's verified Meta Cloud API pipeline.")}
               </p>
             </div>
 
@@ -304,7 +304,7 @@ export function WhatsAppWizardModal({
                 placeholder="00971544816664"
                 className="w-full font-mono font-bold p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              <p className="text-[10.5px] text-slate-400">Enter your branch WhatsApp phone number e.g. 00971544816664</p>
+              <p className="text-[10.5px] text-slate-400">{tt("wam.enter_branch_whatsapp_number", "Enter your branch WhatsApp phone number e.g. 00971544816664")}</p>
             </div>
 
             {verifyError && (
@@ -318,12 +318,12 @@ export function WhatsAppWizardModal({
                 {(typeof verifyError === "string" && (verifyError.includes("Malformed access token") || verifyError.includes("OFFICIAL_SYSTEM_USER_TOKEN") || verifyError.includes("Access token is required"))) && (
                   <div className="pt-2.5 border-t border-rose-500/20 space-y-2 font-sans">
                     <p className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">
-                      ⚙️ Super Admin: Paste Your EAAG... Access Token Once to Activate:
+                      ⚙️ {tt("wam.super_admin_paste_token", "Super Admin: Paste Your EAAG... Access Token Once to Activate:")}
                     </p>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="Paste your EAAG... token here"
+                        placeholder={tt("wam.paste_token_ph", "Paste your EAAG... token here")}
                         value={accessToken}
                         onChange={(e) => setAccessToken(e.target.value)}
                         className="flex-1 font-mono text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
@@ -369,7 +369,7 @@ export function WhatsAppWizardModal({
                 <CheckCircle2 className="h-5 w-5" /> {tt("wiz.connected_active", "Official Meta WhatsApp Line Connected & Active!")}
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-[11.5px]">
-                Your branch line (<strong className="text-emerald-600 font-bold">{phoneNumber}</strong>) is verified and linked. The ERP can now automatically process messages, AI auto-replies, payment reminders, and PDF reports.
+                {tt("wam.branch_line_prefix", "Your branch line (")}<strong className="text-emerald-600 font-bold">{phoneNumber}</strong>{tt("wam.branch_line_suffix", ") is verified and linked. The ERP can now automatically process messages, AI auto-replies, payment reminders, and PDF reports.")}
               </p>
             </div>
 
