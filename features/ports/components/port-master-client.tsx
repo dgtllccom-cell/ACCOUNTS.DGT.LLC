@@ -399,7 +399,7 @@ export function PortMasterClient({
                           size="sm"
                           onClick={() => handleOpenEdit(port)}
                           className="h-8 w-8 p-0"
-                          title="Edit"
+                          title={tt("common.edit", "Edit")}
                         >
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
@@ -439,7 +439,7 @@ export function PortMasterClient({
                 id="portName"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g. Karachi Port, Taftan Border, Heathrow Airport"
+                placeholder={tt("pmc.port_name_ph", "e.g. Karachi Port, Taftan Border, Heathrow Airport")}
                 autoFocus
               />
             </div>
@@ -485,7 +485,7 @@ export function PortMasterClient({
                   id="portCode"
                   value={formCode}
                   onChange={(e) => setFormCode(e.target.value)}
-                  placeholder="e.g. KHI, LHR, TFN"
+                  placeholder={tt("pmc.port_code_ph", "e.g. KHI, LHR, TFN")}
                 />
               </div>
             </div>

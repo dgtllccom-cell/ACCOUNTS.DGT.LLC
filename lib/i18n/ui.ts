@@ -927,6 +927,8 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "pmc.port_name_ph"
+  | "pmc.port_code_ph"
   | "email_mgmt.search_ph"
   | "email_mgmt.email_subject_ph"
   | "email_mgmt.logo_alt"
@@ -18825,6 +18827,10 @@ const en: Dict = {
 
 
 
+
+  "pmc.port_name_ph": "e.g. Karachi Port, Taftan Border, Heathrow Airport",
+
+  "pmc.port_code_ph": "e.g. KHI, LHR, TFN",
   "email_mgmt.search_ph": "Search subject, sender, branch, label...",
 
   "email_mgmt.email_subject_ph": "Email subject",
@@ -34758,6 +34764,10 @@ const ur: Dict = {
 
 
 
+
+  "pmc.port_name_ph": "مثلاً کراچی پورٹ، تفتان بارڈر، ہیتھرو ایئرپورٹ",
+
+  "pmc.port_code_ph": "مثلاً KHI, LHR, TFN",
   "email_mgmt.search_ph": "موضوع، بھیجنے والا، برانچ، لیبل تلاش کریں...",
 
   "email_mgmt.email_subject_ph": "ای میل موضوع",
@@ -50693,6 +50703,10 @@ const ar: Dict = {
 
 
 
+
+  "pmc.port_name_ph": "مثال: ميناء كراتشي، حدود تافتان، مطار هيثرو",
+
+  "pmc.port_code_ph": "مثال: KHI, LHR, TFN",
   "email_mgmt.search_ph": "ابحث عن الموضوع، المرسل، الفرع، التصنيف...",
 
   "email_mgmt.email_subject_ph": "موضوع البريد الإلكتروني",
@@ -66627,6 +66641,10 @@ const fa: Dict = {
 
 
 
+
+  "pmc.port_name_ph": "مثال: بندر کراچی، مرز تفتان، فرودگاه هیترو",
+
+  "pmc.port_code_ph": "مثال: KHI, LHR, TFN",
   "email_mgmt.search_ph": "جستجوی موضوع، فرستنده، شعبه، برچسب...",
 
   "email_mgmt.email_subject_ph": "موضوع ایمیل",
@@ -82567,6 +82585,10 @@ const ps: Dict = {
 
 
 
+
+  "pmc.port_name_ph": "بېلګه: د کراچۍ بندر، د تفتان پوله، د هیترو هوایي ډګر",
+
+  "pmc.port_code_ph": "بېلګه: KHI, LHR, TFN",
   "email_mgmt.search_ph": "موضوع، لیږونکی، څانګه، لیبل ولټوئ...",
 
   "email_mgmt.email_subject_ph": "بریښنالیک موضوع",
