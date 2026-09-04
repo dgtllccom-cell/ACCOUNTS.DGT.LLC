@@ -350,9 +350,9 @@ function PartyRolePanel({
       {/* 1. Customer / Person / Ledger Select */}
       <div>
         <SearchSelect
-          label={`${lang === "ur" ? "کسٹمر / لیجر نام" : "Customer / Person Name"} *`}
+          label={`${t(lang, "comv.customer_person_name", "Customer / Person Name")} *`}
           value={selection.customerId}
-          placeholder={disabled ? t(lang as never, "common.loading" as never, "Loading...") : `${lang === "ur" ? "کسٹمر نام یا کوڈ منتخب کریں" : "Select Customer Account"} — ${label}`}
+          placeholder={disabled ? t(lang as never, "common.loading" as never, "Loading...") : `${t(lang, "comv.select_customer_account", "Select Customer Account")} — ${label}`}
           options={customerOptions}
           onValueChange={(customerId) => {
             const customer = customers.find((item) => item.id === customerId);
@@ -388,9 +388,9 @@ function PartyRolePanel({
       {/* 2. Company / Business Direct Dropdown */}
       <div>
         <SearchSelect
-          label={lang === "ur" ? "کمپنی / کاروباری ادارہ" : "Company / Business Name"}
+          label={t(lang, "comv.company_business_name", "Company / Business Name")}
           value={selection.companyId}
-          placeholder={lang === "ur" ? "کمپنی منتخب کریں (اختیاری)..." : "Select Company (Optional)..."}
+          placeholder={t(lang, "comv.select_company_optional", "Select Company (Optional)...")}
           options={companyOptions}
           onValueChange={(companyId) => {
             const comp = companies.find((item) => item.id === companyId);
@@ -403,8 +403,8 @@ function PartyRolePanel({
             });
           }}
           disabled={disabled}
-          searchPlaceholder={lang === "ur" ? "کمپنی نام سے تلاش کریں..." : "Search company name..."}
-          emptyLabel={lang === "ur" ? "کوئی کمپنی نہیں ملی" : "No matching companies found"}
+          searchPlaceholder={t(lang, "comv.search_company_name_ph", "Search company name...")}
+          emptyLabel={t(lang, "comv.no_matching_companies", "No matching companies found")}
         />
       </div>
 
@@ -412,7 +412,7 @@ function PartyRolePanel({
       <div className="space-y-1.5">
         <label className="flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
           <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-          <span>{lang === "ur" ? "مکمل پتہ / ڈیلیوری ایڈریس" : "Address / Billing / Shipping"}</span>
+          <span>{t(lang, "comv.address_billing_shipping", "Address / Billing / Shipping")}</span>
         </label>
         <input
           type="text"
@@ -424,7 +424,7 @@ function PartyRolePanel({
               addressSource: "Direct input"
             })
           }
-          placeholder={lang === "ur" ? "پتہ درج کریں یا ماسٹر سے منتخب کریں..." : "Enter address or select from master..."}
+          placeholder={t(lang, "comv.enter_address_ph", "Enter address or select from master...")}
           className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         />
       </div>
@@ -433,18 +433,18 @@ function PartyRolePanel({
       {(selection.customerName || effectiveCompanyName || effectiveAddress) ? (
         <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 text-[11px] space-y-1 dark:border-slate-800 dark:bg-slate-800/50">
           <div className="flex justify-between">
-            <span className="text-slate-500 font-semibold">{lang === "ur" ? "نام:" : "Party:"}</span>
+            <span className="text-slate-500 font-semibold">{t(lang, "comv.party_colon", "Party:")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">{selection.customerName || "-"}</span>
           </div>
           {effectiveCompanyName ? (
             <div className="flex justify-between">
-              <span className="text-slate-500 font-semibold">{lang === "ur" ? "کمپنی:" : "Company:"}</span>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.company_colon", "Company:")}</span>
               <span className="font-bold text-blue-700 dark:text-blue-300">{effectiveCompanyName}</span>
             </div>
           ) : null}
           {effectiveAddress ? (
             <div className="flex justify-between text-slate-600 dark:text-slate-400 truncate">
-              <span className="text-slate-500 font-semibold">{lang === "ur" ? "پتہ:" : "Address:"}</span>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.address_colon", "Address:")}</span>
               <span className="truncate max-w-[240px]">{effectiveAddress}</span>
             </div>
           ) : null}
@@ -964,22 +964,22 @@ export function CustomerOrderManagementView() {
     {
       num: 1,
       title: lang === "ur" ? "آرڈر و سامان" : lang === "ar" ? "الطلب والبضائع" : lang === "fa" ? "سفارش و کالا" : lang === "ps" ? "فرمایش او توکي" : "Order & Goods",
-      desc: lang === "ur" ? "موومنٹ، ٹرانسپورٹ، گڈز ماسٹر" : "Movement, Mode & Goods"
+      desc: t(lang, "comv.movement_mode_goods", "Movement, Mode & Goods")
     },
     {
       num: 2,
       title: lang === "ur" ? "بنیادی پارٹیاں" : lang === "ar" ? "الأطراف الأساسية" : lang === "fa" ? "طرف‌های اصلی" : lang === "ps" ? "اصلي لوري" : "Core Parties",
-      desc: lang === "ur" ? "سپلائر / آرڈر پارٹی اور خریدار" : "Supplier & Buyer"
+      desc: t(lang, "comv.supplier_buyer", "Supplier & Buyer")
     },
     {
       num: 3,
       title: lang === "ur" ? "لاجسٹک پارٹیاں" : lang === "ar" ? "أطراف الشحن" : lang === "fa" ? "طرف‌های گمرکی" : lang === "ps" ? "د بار وړلو لوري" : "Shipping Parties",
-      desc: lang === "ur" ? "امپورٹر، ایکسپورٹر، نوٹیفائی" : "Importer, Exporter, Notify"
+      desc: t(lang, "comv.importer_exporter_notify", "Importer, Exporter, Notify")
     },
     {
       num: 4,
       title: lang === "ur" ? "روٹ، پورٹس و تواریخ" : lang === "ar" ? "المسار والموانئ" : lang === "fa" ? "مسیر، بنادر و تاریخ" : lang === "ps" ? "لارې او بندرونه" : "Logistics & Review",
-      desc: lang === "ur" ? "روٹ، پورٹس، کنٹینر اور ریویو" : "Ports, Route, Container, Review"
+      desc: t(lang, "comv.ports_route_container_review", "Ports, Route, Container, Review")
     }
   ];
 
@@ -994,7 +994,7 @@ export function CustomerOrderManagementView() {
                 {tt("header_entry", "Customer Order Entry")}
               </span>
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                {lang === "ur" ? "۴ مرحلہ وار وزرڈ" : "4-Step Progressive Wizard"}
+                {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
               </span>
               <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
                 {tt("header_next", "Next")}: {nextActionLabel}
@@ -1042,7 +1042,7 @@ export function CustomerOrderManagementView() {
           <div className="border-b border-slate-100 dark:border-slate-800 pb-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {lang === "ur" ? `مرحلہ ${currentStep} از ۴` : `Step ${currentStep} of 4`}
+                {t(lang, "comv.step_x_of_4", "Step {n} of 4").replace("{n}", String(currentStep))}
               </span>
               {editingOrderId ? (
                 <span className="rounded-full bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 text-[10px] font-bold">
@@ -1099,19 +1099,19 @@ export function CustomerOrderManagementView() {
               {/* 4 Serial Numbers Bar */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
                 <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">1. Super Admin</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">SA-001</div>
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">1. {tt("serial_super_admin", "Super Admin")}</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">{"—"}</div>
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">2. Country Serial</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">PK-001</div>
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">2. {tt("serial_country", "Country Serial")}</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">{"—"}</div>
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">3. Branch Serial</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">KHI-01</div>
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">3. {tt("serial_branch", "Branch Serial")}</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">{"—"}</div>
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">4. Order / Entry</div>
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">4. {tt("serial_order_entry", "Order / Entry")}</div>
                   <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || "CL-ORD-AUTO"}</div>
                 </div>
               </div>
@@ -1121,7 +1121,7 @@ export function CustomerOrderManagementView() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                     <Users className="h-3.5 w-3.5 text-blue-600" />
-                    <span>{lang === "ur" ? "کسٹمر / لیجر اکاؤنٹ *" : "Customer / Ledger Account *"}</span>
+                    <span>{t(lang, "comv.customer_ledger_account_req", "Customer / Ledger Account *")}</span>
                   </label>
                   {formData.customer_name ? (
                     <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
@@ -1130,10 +1130,10 @@ export function CustomerOrderManagementView() {
                   ) : null}
                 </div>
                 <SearchSelect
-                  label={lang === "ur" ? "کسٹمر اکاؤنٹ منتخب کریں" : "Select Customer Account"}
+                  label={t(lang, "comv.select_customer_account", "Select Customer Account")}
                   value={formData.customer_id}
                   options={customerOptions}
-                  placeholder={lang === "ur" ? "کسٹمر نام، اکاؤنٹ کوڈ یا موبائل سے تلاش کریں..." : "Search customer by name, code or mobile..."}
+                  placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
                   onValueChange={(cid) => {
                     const cust = customers.find((c) => c.id === cid);
                     if (cust) {
@@ -1154,8 +1154,8 @@ export function CustomerOrderManagementView() {
                     }
                   }}
                   disabled={loading}
-                  searchPlaceholder={lang === "ur" ? "کسٹمر نام یا کوڈ تلاش کریں..." : "Search customer name or code..."}
-                  emptyLabel={lang === "ur" ? "کوئی کسٹمر نہیں ملا" : "No customers found"}
+                  searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
+                  emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
                 />
               </div>
 
@@ -1163,12 +1163,12 @@ export function CustomerOrderManagementView() {
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2 dark:border-slate-800 dark:bg-slate-800/40">
                 <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Route className="h-3.5 w-3.5 text-blue-600" />
-                  <span>{lang === "ur" ? "روٹ کے ممالک (Route Countries) *" : "Route Countries (Origin & Destination) *"}</span>
+                  <span>{t(lang, "comv.route_countries_req", "Route Countries (Origin & Destination) *")}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      {lang === "ur" ? "روانگی ملک (Loading Country) *" : "1. Loading Country *"}
+                      {t(lang, "comv.loading_country_step", "1. Loading Country *")}
                     </label>
                     <select
                       value={formData.loading_country_id}
@@ -1184,7 +1184,7 @@ export function CustomerOrderManagementView() {
                       }}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                     >
-                      <option value="">{lang === "ur" ? "— روانگی ملک منتخب کریں —" : "— Select Loading Country —"}</option>
+                      <option value="">{t(lang, "comv.select_loading_country_ph", "— Select Loading Country —")}</option>
                       {countries.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
@@ -1192,7 +1192,7 @@ export function CustomerOrderManagementView() {
                   </div>
                   <div>
                     <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      {lang === "ur" ? "وصولی ملک (Receiving Country) *" : "2. Receiving Country *"}
+                      {t(lang, "comv.receiving_country_step", "2. Receiving Country *")}
                     </label>
                     <select
                       value={formData.receiving_country_id}
@@ -1208,7 +1208,7 @@ export function CustomerOrderManagementView() {
                       }}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                     >
-                      <option value="">{lang === "ur" ? "— وصولی ملک منتخب کریں —" : "— Select Receiving Country —"}</option>
+                      <option value="">{t(lang, "comv.select_receiving_country_ph", "— Select Receiving Country —")}</option>
                       {countries.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
@@ -1616,7 +1616,7 @@ export function CustomerOrderManagementView() {
                   className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
-                  {lang === "ur" ? "پچھلا" : "Previous"}
+                  {t(lang, "comv.previous", "Previous")}
                 </button>
               ) : editingOrderId ? (
                 <button
@@ -1639,7 +1639,7 @@ export function CustomerOrderManagementView() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
               >
                 {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                <span>{lang === "ur" ? "محفوظ کریں (Save Progress)" : "Save Progress"}</span>
+                <span>{t(lang, "comv.save_progress", "Save Progress")}</span>
               </button>
 
               {/* Next or Complete Button */}
@@ -1650,7 +1650,7 @@ export function CustomerOrderManagementView() {
                   disabled={saving}
                   className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
                 >
-                  <span>{lang === "ur" ? "اگلا مرحلہ" : "Next Step"}</span>
+                  <span>{t(lang, "comv.next_step", "Next Step")}</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               ) : (
@@ -1661,7 +1661,7 @@ export function CustomerOrderManagementView() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
                 >
                   {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  <span>{lang === "ur" ? "مکمل آرڈر محفوظ کریں" : "Complete & Save Order"}</span>
+                  <span>{t(lang, "comv.complete_save_order", "Complete & Save Order")}</span>
                 </button>
               )}
             </div>

@@ -927,6 +927,50 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "party360.master_identity_contact"
+  | "party360.registered_companies"
+  | "party360.new_sister_company"
+  | "party360.no_registered_companies"
+  | "party360.employee_staff_records"
+  | "party360.no_employee_profile"
+  | "party360.linked_bank_accounts"
+  | "party360.no_linked_banks"
+  | "party360.auto_unified_note"
+  | "party360.close"
+  | "com.serial_super_admin"
+  | "com.serial_country"
+  | "com.serial_branch"
+  | "com.serial_order_entry"
+  | "comv.customer_person_name"
+  | "comv.select_customer_account"
+  | "comv.company_business_name"
+  | "comv.select_company_optional"
+  | "comv.search_company_name_ph"
+  | "comv.no_matching_companies"
+  | "comv.address_billing_shipping"
+  | "comv.enter_address_ph"
+  | "comv.party_colon"
+  | "comv.company_colon"
+  | "comv.address_colon"
+  | "comv.movement_mode_goods"
+  | "comv.supplier_buyer"
+  | "comv.importer_exporter_notify"
+  | "comv.ports_route_container_review"
+  | "comv.four_step_wizard"
+  | "comv.step_x_of_4"
+  | "comv.customer_ledger_account_req"
+  | "comv.search_customer_full_ph"
+  | "comv.search_customer_ph"
+  | "comv.no_customers_found"
+  | "comv.route_countries_req"
+  | "comv.loading_country_step"
+  | "comv.select_loading_country_ph"
+  | "comv.receiving_country_step"
+  | "comv.select_receiving_country_ph"
+  | "comv.previous"
+  | "comv.save_progress"
+  | "comv.next_step"
+  | "comv.complete_save_order"
   | "cif.company_name_en_ph"
   | "cif.business_trading_name_ph"
   | "cif.currency_aed"
@@ -18535,6 +18579,94 @@ const en: Dict = {
 
 
 
+
+
+
+  "party360.master_identity_contact": "📍 Master Identity & Contact Details",
+
+  "party360.registered_companies": "🏢 Registered Sister & Owned Companies ({n})",
+
+  "party360.new_sister_company": "+ New Sister Company",
+
+  "party360.no_registered_companies": "No registered companies linked to this entity.",
+
+  "party360.employee_staff_records": "👔 Employee & Staff Records ({n})",
+
+  "party360.no_employee_profile": "No employee profile registered for this entity.",
+
+  "party360.linked_bank_accounts": "🏦 Linked Bank Accounts ({n})",
+
+  "party360.no_linked_banks": "No linked bank accounts found.",
+
+  "party360.auto_unified_note": "💡 All linkages automatically unified from Master Database.",
+
+  "party360.close": "Close",
+  "com.serial_super_admin": "Super Admin",
+
+  "com.serial_country": "Country Serial",
+
+  "com.serial_branch": "Branch Serial",
+
+  "com.serial_order_entry": "Order / Entry",
+  "comv.customer_person_name": "Customer / Person Name",
+
+  "comv.select_customer_account": "Select Customer Account",
+
+  "comv.company_business_name": "Company / Business Name",
+
+  "comv.select_company_optional": "Select Company (Optional)...",
+
+  "comv.search_company_name_ph": "Search company name...",
+
+  "comv.no_matching_companies": "No matching companies found",
+
+  "comv.address_billing_shipping": "Address / Billing / Shipping",
+
+  "comv.enter_address_ph": "Enter address or select from master...",
+
+  "comv.party_colon": "Party:",
+
+  "comv.company_colon": "Company:",
+
+  "comv.address_colon": "Address:",
+
+  "comv.movement_mode_goods": "Movement, Mode & Goods",
+
+  "comv.supplier_buyer": "Supplier & Buyer",
+
+  "comv.importer_exporter_notify": "Importer, Exporter, Notify",
+
+  "comv.ports_route_container_review": "Ports, Route, Container, Review",
+
+  "comv.four_step_wizard": "4-Step Progressive Wizard",
+
+  "comv.step_x_of_4": "Step {n} of 4",
+
+  "comv.customer_ledger_account_req": "Customer / Ledger Account *",
+
+  "comv.search_customer_full_ph": "Search customer by name, code or mobile...",
+
+  "comv.search_customer_ph": "Search customer name or code...",
+
+  "comv.no_customers_found": "No customers found",
+
+  "comv.route_countries_req": "Route Countries (Origin & Destination) *",
+
+  "comv.loading_country_step": "1. Loading Country *",
+
+  "comv.select_loading_country_ph": "— Select Loading Country —",
+
+  "comv.receiving_country_step": "2. Receiving Country *",
+
+  "comv.select_receiving_country_ph": "— Select Receiving Country —",
+
+  "comv.previous": "Previous",
+
+  "comv.save_progress": "Save Progress",
+
+  "comv.next_step": "Next Step",
+
+  "comv.complete_save_order": "Complete & Save Order",
   "cif.company_name_en_ph": "e.g. Trading Company LLC",
 
   "cif.business_trading_name_ph": "e.g. Trading Company",
@@ -33963,6 +34095,94 @@ const ur: Dict = {
 
 
 
+
+
+
+  "party360.master_identity_contact": "📍 مرکزی شناختی و رابطے کی تفصیلات",
+
+  "party360.registered_companies": "🏢 رجسٹرڈ کمپنیاں ({n})",
+
+  "party360.new_sister_company": "نئی سسٹر کمپنی بنائیں",
+
+  "party360.no_registered_companies": "اس فرد کے نام پر ابھی کوئی کمپنی رجسٹرڈ نہیں ہے۔",
+
+  "party360.employee_staff_records": "👔 ملازم و عملہ ریکارڈ ({n})",
+
+  "party360.no_employee_profile": "یہ فرد بطور ملازم رجسٹرڈ نہیں ہے۔",
+
+  "party360.linked_bank_accounts": "🏦 منسلک بینک اکاؤنٹس ({n})",
+
+  "party360.no_linked_banks": "کوئی منسلک بینک اکاؤنٹ نہیں ملا۔",
+
+  "party360.auto_unified_note": "💡 تمام ریکارڈز ڈیٹا بیس سے خودکار مربوط ہیں۔",
+
+  "party360.close": "بند کریں",
+  "com.serial_super_admin": "سپر ایڈمن",
+
+  "com.serial_country": "کنٹری سیریل",
+
+  "com.serial_branch": "برانچ سیریل",
+
+  "com.serial_order_entry": "آرڈر / اندراج",
+  "comv.customer_person_name": "کسٹمر / لیجر نام",
+
+  "comv.select_customer_account": "کسٹمر اکاؤنٹ منتخب کریں",
+
+  "comv.company_business_name": "کمپنی / کاروباری ادارہ",
+
+  "comv.select_company_optional": "کمپنی منتخب کریں (اختیاری)...",
+
+  "comv.search_company_name_ph": "کمپنی نام سے تلاش کریں...",
+
+  "comv.no_matching_companies": "کوئی کمپنی نہیں ملی",
+
+  "comv.address_billing_shipping": "مکمل پتہ / ڈیلیوری ایڈریس",
+
+  "comv.enter_address_ph": "پتہ درج کریں یا ماسٹر سے منتخب کریں...",
+
+  "comv.party_colon": "نام:",
+
+  "comv.company_colon": "کمپنی:",
+
+  "comv.address_colon": "پتہ:",
+
+  "comv.movement_mode_goods": "موومنٹ، ٹرانسپورٹ، گڈز ماسٹر",
+
+  "comv.supplier_buyer": "سپلائر / آرڈر پارٹی اور خریدار",
+
+  "comv.importer_exporter_notify": "امپورٹر، ایکسپورٹر، نوٹیفائی",
+
+  "comv.ports_route_container_review": "روٹ، پورٹس، کنٹینر اور ریویو",
+
+  "comv.four_step_wizard": "۴ مرحلہ وار وزرڈ",
+
+  "comv.step_x_of_4": "مرحلہ {n} از ۴",
+
+  "comv.customer_ledger_account_req": "کسٹمر / لیجر اکاؤنٹ *",
+
+  "comv.search_customer_full_ph": "کسٹمر نام، اکاؤنٹ کوڈ یا موبائل سے تلاش کریں...",
+
+  "comv.search_customer_ph": "کسٹمر نام یا کوڈ تلاش کریں...",
+
+  "comv.no_customers_found": "کوئی کسٹمر نہیں ملا",
+
+  "comv.route_countries_req": "روٹ کے ممالک (Route Countries) *",
+
+  "comv.loading_country_step": "روانگی ملک (Loading Country) *",
+
+  "comv.select_loading_country_ph": "— روانگی ملک منتخب کریں —",
+
+  "comv.receiving_country_step": "وصولی ملک (Receiving Country) *",
+
+  "comv.select_receiving_country_ph": "— وصولی ملک منتخب کریں —",
+
+  "comv.previous": "پچھلا",
+
+  "comv.save_progress": "محفوظ کریں (Save Progress)",
+
+  "comv.next_step": "اگلا مرحلہ",
+
+  "comv.complete_save_order": "مکمل آرڈر محفوظ کریں",
   "cif.company_name_en_ph": "مثلاً ٹریڈنگ کمپنی LLC",
 
   "cif.business_trading_name_ph": "مثلاً ٹریڈنگ کمپنی",
@@ -49393,6 +49613,94 @@ const ar: Dict = {
 
 
 
+
+
+
+  "party360.master_identity_contact": "📍 الهوية الرئيسية وتفاصيل الاتصال",
+
+  "party360.registered_companies": "🏢 الشركات الشقيقة والمملوكة المسجلة ({n})",
+
+  "party360.new_sister_company": "+ شركة شقيقة جديدة",
+
+  "party360.no_registered_companies": "لا توجد شركات مسجلة مرتبطة بهذا الكيان.",
+
+  "party360.employee_staff_records": "👔 سجلات الموظفين والعاملين ({n})",
+
+  "party360.no_employee_profile": "لا يوجد ملف موظف مسجل لهذا الكيان.",
+
+  "party360.linked_bank_accounts": "🏦 الحسابات المصرفية المرتبطة ({n})",
+
+  "party360.no_linked_banks": "لا توجد حسابات مصرفية مرتبطة.",
+
+  "party360.auto_unified_note": "💡 جميع الروابط موحدة تلقائيًا من قاعدة البيانات الرئيسية.",
+
+  "party360.close": "إغلاق",
+  "com.serial_super_admin": "المسؤول الأعلى",
+
+  "com.serial_country": "الرقم التسلسلي للدولة",
+
+  "com.serial_branch": "الرقم التسلسلي للفرع",
+
+  "com.serial_order_entry": "الطلب / الإدخال",
+  "comv.customer_person_name": "اسم العميل / الشخص",
+
+  "comv.select_customer_account": "اختر حساب العميل",
+
+  "comv.company_business_name": "اسم الشركة / العمل التجاري",
+
+  "comv.select_company_optional": "اختر الشركة (اختياري)...",
+
+  "comv.search_company_name_ph": "ابحث عن اسم الشركة...",
+
+  "comv.no_matching_companies": "لا توجد شركات مطابقة",
+
+  "comv.address_billing_shipping": "العنوان / الفوترة / الشحن",
+
+  "comv.enter_address_ph": "أدخل العنوان أو اختر من الرئيسي...",
+
+  "comv.party_colon": "الطرف:",
+
+  "comv.company_colon": "الشركة:",
+
+  "comv.address_colon": "العنوان:",
+
+  "comv.movement_mode_goods": "الحركة والوضع والبضائع",
+
+  "comv.supplier_buyer": "المورد والمشتري",
+
+  "comv.importer_exporter_notify": "المستورد، المصدّر، الإشعار",
+
+  "comv.ports_route_container_review": "الموانئ، المسار، الحاوية، المراجعة",
+
+  "comv.four_step_wizard": "معالج تدريجي من 4 خطوات",
+
+  "comv.step_x_of_4": "الخطوة {n} من 4",
+
+  "comv.customer_ledger_account_req": "حساب العميل / دفتر الأستاذ *",
+
+  "comv.search_customer_full_ph": "ابحث عن العميل بالاسم أو الرمز أو الجوال...",
+
+  "comv.search_customer_ph": "ابحث باسم العميل أو الرمز...",
+
+  "comv.no_customers_found": "لا يوجد عملاء",
+
+  "comv.route_countries_req": "دول المسار (المصدر والوجهة) *",
+
+  "comv.loading_country_step": "1. دولة التحميل *",
+
+  "comv.select_loading_country_ph": "— اختر دولة التحميل —",
+
+  "comv.receiving_country_step": "2. دولة الاستلام *",
+
+  "comv.select_receiving_country_ph": "— اختر دولة الاستلام —",
+
+  "comv.previous": "السابق",
+
+  "comv.save_progress": "حفظ التقدم",
+
+  "comv.next_step": "الخطوة التالية",
+
+  "comv.complete_save_order": "إكمال وحفظ الطلب",
   "cif.company_name_en_ph": "مثال: شركة تجارية ذ.م.م",
 
   "cif.business_trading_name_ph": "مثال: شركة تجارية",
@@ -64822,6 +65130,94 @@ const fa: Dict = {
 
 
 
+
+
+
+  "party360.master_identity_contact": "📍 هویت اصلی و جزئیات تماس",
+
+  "party360.registered_companies": "🏢 شرکت‌های خواهر و مالکیتی ثبت‌شده ({n})",
+
+  "party360.new_sister_company": "+ شرکت خواهر جدید",
+
+  "party360.no_registered_companies": "شرکت ثبت‌شده‌ای مرتبط با این نهاد وجود ندارد.",
+
+  "party360.employee_staff_records": "👔 سوابق کارمندان و کارکنان ({n})",
+
+  "party360.no_employee_profile": "پروفایل کارمندی برای این نهاد ثبت نشده است.",
+
+  "party360.linked_bank_accounts": "🏦 حساب‌های بانکی مرتبط ({n})",
+
+  "party360.no_linked_banks": "حساب بانکی مرتبطی یافت نشد.",
+
+  "party360.auto_unified_note": "💡 همه پیوندها به‌طور خودکار از پایگاه داده اصلی یکپارچه شده‌اند.",
+
+  "party360.close": "بستن",
+  "com.serial_super_admin": "مدیر ارشد",
+
+  "com.serial_country": "سریال کشور",
+
+  "com.serial_branch": "سریال شعبه",
+
+  "com.serial_order_entry": "سفارش / ثبت",
+  "comv.customer_person_name": "نام مشتری / شخص",
+
+  "comv.select_customer_account": "انتخاب حساب مشتری",
+
+  "comv.company_business_name": "نام شرکت / کسب‌وکار",
+
+  "comv.select_company_optional": "انتخاب شرکت (اختیاری)...",
+
+  "comv.search_company_name_ph": "جستجوی نام شرکت...",
+
+  "comv.no_matching_companies": "شرکت مطابقی یافت نشد",
+
+  "comv.address_billing_shipping": "آدرس / صورتحساب / حمل‌ونقل",
+
+  "comv.enter_address_ph": "آدرس را وارد کنید یا از فهرست اصلی انتخاب کنید...",
+
+  "comv.party_colon": "طرف:",
+
+  "comv.company_colon": "شرکت:",
+
+  "comv.address_colon": "آدرس:",
+
+  "comv.movement_mode_goods": "حرکت، حالت و کالا",
+
+  "comv.supplier_buyer": "تأمین‌کننده و خریدار",
+
+  "comv.importer_exporter_notify": "واردکننده، صادرکننده، اطلاع",
+
+  "comv.ports_route_container_review": "بنادر، مسیر، کانتینر، بازبینی",
+
+  "comv.four_step_wizard": "ویزارد تدریجی 4 مرحله‌ای",
+
+  "comv.step_x_of_4": "مرحله {n} از 4",
+
+  "comv.customer_ledger_account_req": "حساب مشتری / دفتر *",
+
+  "comv.search_customer_full_ph": "جستجوی مشتری با نام، کد یا موبایل...",
+
+  "comv.search_customer_ph": "جستجوی نام یا کد مشتری...",
+
+  "comv.no_customers_found": "مشتری یافت نشد",
+
+  "comv.route_countries_req": "کشورهای مسیر (مبدأ و مقصد) *",
+
+  "comv.loading_country_step": "1. کشور بارگیری *",
+
+  "comv.select_loading_country_ph": "— انتخاب کشور بارگیری —",
+
+  "comv.receiving_country_step": "2. کشور دریافت *",
+
+  "comv.select_receiving_country_ph": "— انتخاب کشور دریافت —",
+
+  "comv.previous": "قبلی",
+
+  "comv.save_progress": "ذخیره پیشرفت",
+
+  "comv.next_step": "مرحله بعد",
+
+  "comv.complete_save_order": "تکمیل و ذخیره سفارش",
   "cif.company_name_en_ph": "مثال: شرکت تجاری با مسئولیت محدود",
 
   "cif.business_trading_name_ph": "مثال: شرکت تجاری",
@@ -80257,6 +80653,94 @@ const ps: Dict = {
 
 
 
+
+
+
+  "party360.master_identity_contact": "📍 اصلي پیژندنه او د اړیکې تفصیلات",
+
+  "party360.registered_companies": "🏢 ثبت شوي خور او ملکیتي شرکتونه ({n})",
+
+  "party360.new_sister_company": "+ نوی خور شرکت",
+
+  "party360.no_registered_companies": "د دې ادارې سره تړلی هیڅ ثبت شوی شرکت نشته.",
+
+  "party360.employee_staff_records": "👔 د کارمندانو او کارکوونکو ریکارډونه ({n})",
+
+  "party360.no_employee_profile": "د دې ادارې لپاره هیڅ د کارمند پروفایل نه دی ثبت شوی.",
+
+  "party360.linked_bank_accounts": "🏦 تړلي بانکي حسابونه ({n})",
+
+  "party360.no_linked_banks": "هیڅ تړلی بانکي حساب ونه موندل شو.",
+
+  "party360.auto_unified_note": "💡 ټول تړاونه اتومات د ماسټر ډیټابیس څخه یوځای شوي.",
+
+  "party360.close": "تړل",
+  "com.serial_super_admin": "سوپر مدیر",
+
+  "com.serial_country": "د هېواد سیریل",
+
+  "com.serial_branch": "د څانګې سیریل",
+
+  "com.serial_order_entry": "امر / ننوتنه",
+  "comv.customer_person_name": "د پیرودونکي / شخص نوم",
+
+  "comv.select_customer_account": "د پیرودونکي حساب وټاکئ",
+
+  "comv.company_business_name": "د شرکت / سوداګرۍ نوم",
+
+  "comv.select_company_optional": "شرکت وټاکئ (اختیاري)...",
+
+  "comv.search_company_name_ph": "د شرکت نوم ولټوئ...",
+
+  "comv.no_matching_companies": "هیڅ مطابق شرکت ونه موندل شو",
+
+  "comv.address_billing_shipping": "پته / بلونه / لېږد",
+
+  "comv.enter_address_ph": "پته دننه کړئ یا د ماسټر څخه یې وټاکئ...",
+
+  "comv.party_colon": "اړخ:",
+
+  "comv.company_colon": "شرکت:",
+
+  "comv.address_colon": "پته:",
+
+  "comv.movement_mode_goods": "حرکت، حالت، او توکي",
+
+  "comv.supplier_buyer": "عرضه کوونکی او پیرودونکی",
+
+  "comv.importer_exporter_notify": "واردوونکی، صادروونکی، خبرتیا",
+
+  "comv.ports_route_container_review": "بندرونه، لاره، کانتینر، بیاکتنه",
+
+  "comv.four_step_wizard": "4-مرحلوی وزرډ",
+
+  "comv.step_x_of_4": "مرحله {n} د 4 څخه",
+
+  "comv.customer_ledger_account_req": "د پیرودونکي / لیجر حساب *",
+
+  "comv.search_customer_full_ph": "پیرودونکی د نوم، کوډ، یا موبایل له مخې ولټوئ...",
+
+  "comv.search_customer_ph": "د پیرودونکي نوم یا کوډ ولټوئ...",
+
+  "comv.no_customers_found": "هیڅ پیرودونکی ونه موندل شو",
+
+  "comv.route_countries_req": "د لارې هېوادونه (سرچینه او موخه) *",
+
+  "comv.loading_country_step": "1. د بارولو هېواد *",
+
+  "comv.select_loading_country_ph": "— د بارولو هېواد وټاکئ —",
+
+  "comv.receiving_country_step": "2. د ترلاسه کولو هېواد *",
+
+  "comv.select_receiving_country_ph": "— د ترلاسه کولو هېواد وټاکئ —",
+
+  "comv.previous": "مخکینی",
+
+  "comv.save_progress": "پرمختګ خوندي کړئ",
+
+  "comv.next_step": "بله مرحله",
+
+  "comv.complete_save_order": "امر بشپړ او خوندي کړئ",
   "cif.company_name_en_ph": "بېلګه: د سوداګرۍ شرکت LLC",
 
   "cif.business_trading_name_ph": "بېلګه: سوداګریز شرکت",

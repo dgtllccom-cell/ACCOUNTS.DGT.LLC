@@ -336,7 +336,7 @@ export function Party360Modal({
               {/* Personal Contact & Location Dossier Card */}
               <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 space-y-2.5">
                 <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {lang === "ur" ? "📍 مرکزی شناختی و رابطے کی تفصیلات" : "📍 Master Identity & Contact Details"}
+                  {t(lang, "party360.master_identity_contact", "📍 Master Identity & Contact Details")}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
@@ -363,7 +363,7 @@ export function Party360Modal({
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-indigo-600" />
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                        {lang === "ur" ? `🏢 رجسٹرڈ کمپنیاں (${summary.companies.length})` : `🏢 Registered Sister & Owned Companies (${summary.companies.length})`}
+                        {t(lang, "party360.registered_companies", "🏢 Registered Sister & Owned Companies ({n})").replace("{n}", String(summary.companies.length))}
                       </h3>
                     </div>
                     <button
@@ -375,7 +375,7 @@ export function Party360Modal({
                       className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      {lang === "ur" ? "نئی سسٹر کمپنی بنائیں" : "+ New Sister Company"}
+                      {t(lang, "party360.new_sister_company", "+ New Sister Company")}
                     </button>
                   </div>
 
@@ -414,7 +414,7 @@ export function Party360Modal({
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
-                      {lang === "ur" ? "اس فرد کے نام پر ابھی کوئی کمپنی رجسٹرڈ نہیں ہے۔" : "No registered companies linked to this entity."}
+                      {t(lang, "party360.no_registered_companies", "No registered companies linked to this entity.")}
                     </p>
                   )}
                 </div>
@@ -427,7 +427,7 @@ export function Party360Modal({
                     <div className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-emerald-600" />
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                        {lang === "ur" ? `👔 ملازم و عملہ ریکارڈ (${summary.employees.length})` : `👔 Employee & Staff Records (${summary.employees.length})`}
+                        {t(lang, "party360.employee_staff_records", "👔 Employee & Staff Records ({n})").replace("{n}", String(summary.employees.length))}
                       </h3>
                     </div>
                   </div>
@@ -477,7 +477,7 @@ export function Party360Modal({
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
-                      {lang === "ur" ? "یہ فرد بطور ملازم رجسٹرڈ نہیں ہے۔" : "No employee profile registered for this entity."}
+                      {t(lang, "party360.no_employee_profile", "No employee profile registered for this entity.")}
                     </p>
                   )}
                 </div>
@@ -490,7 +490,7 @@ export function Party360Modal({
                     <div className="flex items-center gap-2">
                       <Landmark className="h-4 w-4 text-amber-600" />
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                        {lang === "ur" ? `🏦 منسلک بینک اکاؤنٹس (${summary.banks.length})` : `🏦 Linked Bank Accounts (${summary.banks.length})`}
+                        {t(lang, "party360.linked_bank_accounts", "🏦 Linked Bank Accounts ({n})").replace("{n}", String(summary.banks.length))}
                       </h3>
                     </div>
                   </div>
@@ -523,7 +523,7 @@ export function Party360Modal({
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
-                      {lang === "ur" ? "کوئی منسلک بینک اکاؤنٹ نہیں ملا۔" : "No linked bank accounts found."}
+                      {t(lang, "party360.no_linked_banks", "No linked bank accounts found.")}
                     </p>
                   )}
                 </div>
@@ -664,14 +664,14 @@ export function Party360Modal({
         {/* Modal Footer */}
         <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-3.5 bg-slate-50/70 dark:bg-slate-950/50">
           <p className="text-[11px] text-slate-500 font-medium">
-            {lang === "ur" ? "💡 تمام ریکارڈز ڈیٹا بیس سے خودکار مربوط ہیں۔" : "💡 All linkages automatically unified from Master Database."}
+            {t(lang, "party360.auto_unified_note", "💡 All linkages automatically unified from Master Database.")}
           </p>
           <Button
             type="button"
             onClick={onClose}
             className="h-9 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
           >
-            {lang === "ur" ? "بند کریں" : "Close"}
+            {t(lang, "party360.close", "Close")}
           </Button>
         </div>
       </div>
