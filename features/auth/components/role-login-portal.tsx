@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
 import { LoginErrorBoundary } from "@/features/auth/components/login-error-boundary";
 import { LoginForm, type LoginTab } from "@/features/auth/components/login-form";
@@ -68,7 +69,7 @@ export function RoleLoginPortal({
             href={config.backHref || "/auth/login"}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
           >
-            Back to portal <ArrowRight className="h-3.5 w-3.5" />
+            {t(lang, "rlp.back_to_portal", "Back to portal")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>

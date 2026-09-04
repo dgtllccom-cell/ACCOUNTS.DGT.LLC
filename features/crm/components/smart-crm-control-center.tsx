@@ -1430,7 +1430,7 @@ export function SmartCrmControlCenter() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span>{t(lang, "crm.powered_by", "Powered by")} <strong>Digital Dock ERP</strong></span>
+          <span>{t(lang, "crm.powered_by", "Powered by")} <strong>{t(lang, "acct.brand_short", "Digital Dock ERP")}</strong></span>
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>{t(lang, "crm.live", "Live")}</span>

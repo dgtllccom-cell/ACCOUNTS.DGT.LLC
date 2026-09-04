@@ -22,6 +22,7 @@ const dictEn: Record<string, string> = {
   "whatsappShare": "Share via WhatsApp",
   "whatsappMsg": "Dear Customer, please fill your registration details using this secure link",
   "close": "Close",
+  "retry": "Retry",
 };
 
 function t(key: string, lang: string): string {
@@ -149,7 +150,7 @@ export function SendToCustomerModal({
               onClick={generateLink}
               className="mt-3 block text-xs border-rose-300 bg-white text-rose-700 hover:bg-rose-100"
             >
-              Retry
+              {t("retry", lang)}
             </Button>
           </div>
         ) : (

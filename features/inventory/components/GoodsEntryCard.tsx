@@ -303,7 +303,7 @@ export function GoodsEntryCard({
               className="h-9 rounded-lg"
               onClick={refreshGoods}
               disabled={!value.countryId || loadingGoods}
-              aria-label="Refresh goods"
+              aria-label={tt("gec.refresh_goods", "Refresh goods")}
             >
               <RefreshCw className={`h-4 w-4 ${loadingGoods ? "animate-spin" : ""}`} aria-hidden />
             </Button>

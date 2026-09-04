@@ -34,7 +34,7 @@ export function AuthPortalShell({
                 </div>
                 <div>
                   <div className="text-lg font-black tracking-[0.16em] text-[#06122d] dark:text-white sm:text-xl sm:tracking-[0.2em]">
-                    Digital Dock
+                    {tt("go.brand_wordmark", "Digital Dock")}
                   </div>
                   <div className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400 sm:text-[9px] sm:tracking-[0.34em]">
                     ERP

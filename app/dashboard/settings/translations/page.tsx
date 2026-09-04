@@ -335,7 +335,7 @@ export default function TranslationsManagementPage() {
             </button>
 
             <Button type="submit" variant="secondary" className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" /> Filter
+              <RefreshCw className="h-4 w-4" /> {tt("common.filter", "Filter")}
             </Button>
           </div>
         </form>
@@ -398,7 +398,7 @@ export default function TranslationsManagementPage() {
                       </td>
                       <td className="p-3 text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleOpenEditModal(item)}>
-                          Edit
+                          {tt("common.edit", "Edit")}
                         </Button>
                       </td>
                     </tr>

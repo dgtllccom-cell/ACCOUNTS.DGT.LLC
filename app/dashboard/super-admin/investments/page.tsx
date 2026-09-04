@@ -326,7 +326,7 @@ export default function SuperAdminInvestmentsPage() {
                   onChange={(e) => setCountryId(e.target.value)}
                   className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="">-- Global / All Countries --</option>
+                  <option value="">-- {t("GLOBAL / ALL COUNTRIES")} --</option>
                   {countries.map((c) => (
                     <option key={c.country_id} value={c.country_id}>
                       {c.country_name}
@@ -445,7 +445,7 @@ export default function SuperAdminInvestmentsPage() {
                             onClick={() => handleRecalculateCountry(c.country_id)}
                           >
                             <RefreshCw className="h-3 w-3 mr-1" />
-                            Recalc
+                            {t("RECALC")}
                           </Button>
                         </td>
                       </tr>

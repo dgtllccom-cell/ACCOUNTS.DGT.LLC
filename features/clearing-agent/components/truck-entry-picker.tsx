@@ -217,7 +217,7 @@ export function TruckEntryPicker({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-300">{s.t("truck_number", "Truck Number")} *</label>
-            <input disabled={disabled} value={value.truck_number} onChange={(e) => onChange({ ...value, truck_number: e.target.value })} placeholder="e.g. TKM-4821" className={fld} />
+            <input disabled={disabled} value={value.truck_number} onChange={(e) => onChange({ ...value, truck_number: e.target.value })} placeholder={s.t("truck_number_ph", "e.g. TKM-4821")} className={fld} />
           </div>
           <div>
             <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-300">{s.t("truck_driver", "Driver Name")}</label>

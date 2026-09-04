@@ -2275,7 +2275,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                       <div>
                         <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wider">
-                          Digital Dock ERP
+                          {centralT(lang as never, "acct.brand_short" as never, "Digital Dock ERP")}
                         </h4>
                         <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
                           {t("publicVerificationGateway", lang)}

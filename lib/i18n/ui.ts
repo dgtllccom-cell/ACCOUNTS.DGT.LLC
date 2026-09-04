@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "rlp.back_to_portal"
+  | "gec.refresh_goods"
+  | "data.search_ph"
+  | "tr.notes"
+  | "go.brand_wordmark"
+  | "com.truck_number_ph"
+  | "sendcust.retry"
   | "edt.no_records"
   | "edt.adjust_filters_hint"
   | "edt.loading_records"
@@ -18993,6 +19000,26 @@ const en: Dict = {
 
 
 
+
+
+  "rlp.back_to_portal": "Back to portal",
+
+
+
+
+  "data.search_ph": "Account no, name, manual code, PO, SO, serial...",
+
+
+  "tr.notes": "Notes",
+
+
+  "go.brand_wordmark": "Digital Dock",
+
+
+  "com.truck_number_ph": "e.g. TKM-4821",
+
+
+  "sendcust.retry": "Retry",
   "edt.no_records": "No records found matching current scope or filters.",
 
   "edt.adjust_filters_hint": "Adjust your filter options or add new entries to populate this table.",
@@ -35244,6 +35271,26 @@ const ur: Dict = {
 
 
 
+
+
+  "rlp.back_to_portal": "پورٹل پر واپس جائیں",
+
+
+
+
+  "data.search_ph": "اکاؤنٹ نمبر، نام، دستی کوڈ، پی او، ایس او، سیریل...",
+
+
+  "tr.notes": "نوٹس",
+
+
+  "go.brand_wordmark": "ڈیجیٹل ڈاک",
+
+
+  "com.truck_number_ph": "مثلاً TKM-4821",
+
+
+  "sendcust.retry": "دوبارہ کوشش کریں",
   "edt.no_records": "موجودہ دائرہ کار یا فلٹرز سے مطابقت رکھنے والا کوئی ریکارڈ نہیں ملا۔",
 
   "edt.adjust_filters_hint": "اپنے فلٹر آپشنز ایڈجسٹ کریں یا اس ٹیبل کو بھرنے کے لیے نئی اندراجات شامل کریں۔",
@@ -51497,6 +51544,26 @@ const ar: Dict = {
 
 
 
+
+
+  "rlp.back_to_portal": "العودة إلى البوابة",
+
+
+
+
+  "data.search_ph": "رقم الحساب، الاسم، الرمز اليدوي، أمر الشراء، أمر البيع، الرقم التسلسلي...",
+
+
+  "tr.notes": "ملاحظات",
+
+
+  "go.brand_wordmark": "ديجيتال دوك",
+
+
+  "com.truck_number_ph": "مثال: TKM-4821",
+
+
+  "sendcust.retry": "إعادة المحاولة",
   "edt.no_records": "لم يتم العثور على سجلات مطابقة للنطاق أو الفلاتر الحالية.",
 
   "edt.adjust_filters_hint": "اضبط خيارات التصفية أو أضف إدخالات جديدة لملء هذا الجدول.",
@@ -67749,6 +67816,26 @@ const fa: Dict = {
 
 
 
+
+
+  "rlp.back_to_portal": "بازگشت به درگاه",
+
+
+
+
+  "data.search_ph": "شماره حساب، نام، کد دستی، سفارش خرید، سفارش فروش، سریال...",
+
+
+  "tr.notes": "یادداشت‌ها",
+
+
+  "go.brand_wordmark": "دیجیتال داک",
+
+
+  "com.truck_number_ph": "مثلاً TKM-4821",
+
+
+  "sendcust.retry": "تلاش مجدد",
   "edt.no_records": "هیچ رکوردی مطابق با محدوده یا فیلترهای فعلی یافت نشد.",
 
   "edt.adjust_filters_hint": "گزینه‌های فیلتر خود را تنظیم کنید یا برای پر کردن این جدول ورودی‌های جدید اضافه کنید.",
@@ -84007,6 +84094,26 @@ const ps: Dict = {
 
 
 
+
+
+  "rlp.back_to_portal": "پورټل ته بېرته",
+
+
+
+
+  "data.search_ph": "د حساب شمېره، نوم، لاسي کوډ، PO، SO، سریال...",
+
+
+  "tr.notes": "یادښتونه",
+
+
+  "go.brand_wordmark": "ډیجیټل ډاک",
+
+
+  "com.truck_number_ph": "بېلګه: TKM-4821",
+
+
+  "sendcust.retry": "بیا هڅه",
   "edt.no_records": "د اوسني ساحې یا فلټرونو سره مطابق هیڅ ریکارډ ونه موندل شو.",
 
   "edt.adjust_filters_hint": "خپل د فلټر اختیارونه سمون یا دې جدول ډکولو لپاره نوي ننوتلونه زیات کړئ.",
