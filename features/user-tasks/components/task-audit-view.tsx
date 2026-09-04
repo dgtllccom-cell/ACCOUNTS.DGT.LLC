@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { ScrollText, RefreshCw, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
@@ -91,12 +92,17 @@ export function TaskAuditView({ lang: langProp }: { lang?: string }) {
         <Card className="shadow-sm">
           <CardContent className="flex flex-wrap items-end gap-3 p-3">
             <label className="text-xs">
-              <span className="mb-1 block font-semibold uppercase text-slate-500">From</span>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
-            </label>
-            <label className="text-xs">
-              <span className="mb-1 block font-semibold uppercase text-slate-500">To</span>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
+              <span className="mb-1 block font-semibold uppercase text-slate-500">{s.tGlobal("datepick.date_range", "Date Range")}</span>
+              <ErpDatePicker
+                mode="range"
+                lang={s.lang}
+                size="sm"
+                value={{ from: from || null, to: to || null }}
+                onApply={(v) => {
+                  setFrom(v.from ?? "");
+                  setTo(v.to ?? "");
+                }}
+              />
             </label>
             <Button size="sm" onClick={load} className="h-8 bg-slate-700 text-white hover:bg-slate-800">{s.t("refresh", "Refresh")}</Button>
           </CardContent>

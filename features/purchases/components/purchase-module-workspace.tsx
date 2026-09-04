@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
@@ -242,6 +243,8 @@ export function PurchaseModuleWorkspace({
   const [query, setQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -296,11 +299,17 @@ export function PurchaseModuleWorkspace({
     return stageRows.filter((row) => {
       if (countryFilter && country(row) !== countryFilter) return false;
       if (statusFilter && status(row) !== statusFilter) return false;
+      if (dateFrom || dateTo) {
+        const d = String(row.created_at ?? "").slice(0, 10);
+        if (!d) return false;
+        if (dateFrom && d < dateFrom) return false;
+        if (dateTo && d > dateTo) return false;
+      }
       if (!q) return true;
       return [poNumber(row), soNumber(row), supplier(row), product(row), branch(row), country(row), status(row)]
         .some((value) => String(value).toLowerCase().includes(q));
     });
-  }, [countryFilter, query, stageRows, statusFilter]);
+  }, [countryFilter, query, stageRows, statusFilter, dateFrom, dateTo]);
 
   const countryCards = useMemo(() => {
     const map = new Map<string, { country: string; totalOrders: number; currencies: Map<string, { currency: string; count: number; invoice: number; advance: number; remaining: number }> }>();
@@ -483,7 +492,16 @@ export function PurchaseModuleWorkspace({
               <option value="">{t(lang, "common.all_statuses", "All Statuses")}</option>
               {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
-            <input type="date" className="h-8 rounded-lg border bg-background px-2 text-xs" />
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              value={{ from: dateFrom || null, to: dateTo || null }}
+              onApply={(v) => {
+                setDateFrom(v.from ?? "");
+                setDateTo(v.to ?? "");
+              }}
+            />
           </div>
         ) : null}
       </section>

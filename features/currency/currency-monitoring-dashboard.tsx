@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BarChart3, RefreshCw, Save, Shield, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -267,9 +268,17 @@ export function CurrencyMonitoringDashboard() {
             <h1 className="text-2xl font-black tracking-tight">{tt("cur.title", "Currency Monitoring Dashboard")}</h1>
             <p className="text-sm text-muted-foreground">{tt("cur.subtitle", "Monitor local currency transactions and saved transaction-time USD equivalents across all countries.")}</p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-[150px_150px_auto]">
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 text-xs font-bold" />
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 text-xs font-bold" />
+          <div className="grid gap-2 sm:grid-cols-[auto_auto]">
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              value={{ from: from || null, to: to || null }}
+              onApply={(v) => {
+                setFrom(v.from ?? "");
+                setTo(v.to ?? "");
+              }}
+            />
             <Button className="h-9 gap-2 text-xs font-black" onClick={() => void load()} disabled={loading}>
               <RefreshCw className="h-4 w-4" aria-hidden />
               {loading ? tt("common.loading", "Loading") : tt("common.refresh", "Refresh")}
