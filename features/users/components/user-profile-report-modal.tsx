@@ -221,15 +221,15 @@ export function UserProfileReportModal({
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 border-b pb-2 border-slate-100 dark:border-slate-800 text-xs">
                 <Building2 className="h-4 w-4 text-blue-600" />
-                <span>1. Personal & Employment</span>
+                <span>{th("1. Personal & Employment")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Employee ID:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{user.employeeCode || "EMP-LINKED"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Designation:</span><span className="font-semibold">{user.designation || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Department:</span><span className="font-semibold">{user.department || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Job Status:</span><span>{user.jobStatus || "Active Permanent"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Employment:</span><span>{user.employmentType || "Full-Time"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Working Shift:</span><span>{user.workingShift || "Standard Day Shift"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Employee ID")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{user.employeeCode || "EMP-LINKED"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Designation")}:</span><span className="font-semibold">{user.designation || "-"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Department")}:</span><span className="font-semibold">{user.department || "-"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Job Status")}:</span><span>{user.jobStatus || "Active Permanent"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Employment")}:</span><span>{user.employmentType || "Full-Time"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Working Shift")}:</span><span>{user.workingShift || "Standard Day Shift"}</span></div>
               </div>
             </div>
 
@@ -237,15 +237,15 @@ export function UserProfileReportModal({
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 border-b pb-2 border-slate-100 dark:border-slate-800 text-xs">
                 <MapPin className="h-4 w-4 text-emerald-600" />
-                <span>2. Branch & Geographic Scope</span>
+                <span>{th("2. Branch & Geographic Scope")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Country Scope:</span><span className="font-bold text-slate-900 dark:text-slate-100">{user.countryName || "Global"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Main Branch:</span><span className="font-semibold">{user.mainBranchName || "Corporate Main"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">City Branch:</span><span className="font-semibold">{user.cityBranchName || "Central Office"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Branch Code:</span><span className="font-mono font-bold text-emerald-600">{user.cityBranchCode || user.mainBranchCode || "HQ-001"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Local Currency:</span><span className="font-mono font-bold">{user.localCurrency || "USD"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Scope Level:</span><span className="font-semibold text-blue-600">{rbacSummary.scopeDescription}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Country Scope")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{user.countryName || "Global"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Main Branch")}:</span><span className="font-semibold">{user.mainBranchName || "Corporate Main"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("City Branch")}:</span><span className="font-semibold">{user.cityBranchName || "Central Office"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Branch Code")}:</span><span className="font-mono font-bold text-emerald-600">{user.cityBranchCode || user.mainBranchCode || "HQ-001"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Local Currency")}:</span><span className="font-mono font-bold">{user.localCurrency || "USD"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Scope Level")}:</span><span className="font-semibold text-blue-600">{rbacSummary.scopeDescription}</span></div>
               </div>
             </div>
 
@@ -253,14 +253,14 @@ export function UserProfileReportModal({
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 border-b pb-2 border-slate-100 dark:border-slate-800 text-xs">
                 <Phone className="h-4 w-4 text-indigo-600" />
-                <span>3. Contact & Residential</span>
+                <span>{th("3. Contact & Residential")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Phone / Mobile:</span><span className="font-semibold">{user.phone || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Official Email:</span><span className="font-semibold">{user.email || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">City Location:</span><span>{user.cityBranchName || user.countryName || "-"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Phone / Mobile")}:</span><span className="font-semibold">{user.phone || "-"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Official Email")}:</span><span className="font-semibold">{user.email || "-"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("City Location")}:</span><span>{user.cityBranchName || user.countryName || "-"}</span></div>
                 <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block text-[10px]">Permanent Address:</span>
+                  <span className="text-slate-400 block text-[10px]">{th("Permanent Address")}:</span>
                   <span className="font-medium text-slate-800 dark:text-slate-200 block truncate" title={user.residentialAddress || ""}>
                     {user.residentialAddress || "Not Provided"}
                   </span>
@@ -272,19 +272,19 @@ export function UserProfileReportModal({
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 border-b pb-2 border-slate-100 dark:border-slate-800 text-xs">
                 <Lock className="h-4 w-4 text-purple-600" />
-                <span>4. Security & Credential Vault</span>
+                <span>{th("4. Security & Credential Vault")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Login Username:</span><span className="font-mono font-bold text-blue-600 dark:text-blue-400">{user.username || user.userCode}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("Login Username")}:</span><span className="font-mono font-bold text-blue-600 dark:text-blue-400">{user.username || user.userCode}</span></div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Vault Reference:</span>
+                  <span className="text-slate-400">{th("Vault Reference")}:</span>
                   <span className="font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-purple-600">
                     {user.passwordVaultRef || `VAULT-DGT-${user.userCode}`}
                   </span>
                 </div>
-                <div className="flex justify-between"><span className="text-slate-400">KYC Status:</span><span className="font-bold text-emerald-600">{user.kycStatus === "VERIFIED" ? "✅ Verified" : "⏳ Pending"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">CNIC / Passport:</span><span className="font-mono">{user.cnicPassportNo || "Verified"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">ID Expiry Date:</span><span>{user.idExpiryDate || "Permanent"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("KYC Status")}:</span><span className="font-bold text-emerald-600">{user.kycStatus === "VERIFIED" ? "✅ Verified" : "⏳ Pending"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("CNIC / Passport")}:</span><span className="font-mono">{user.cnicPassportNo || "Verified"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("ID Expiry Date")}:</span><span>{user.idExpiryDate || "Permanent"}</span></div>
               </div>
             </div>
 
@@ -299,7 +299,7 @@ export function UserProfileReportModal({
                   <span>{th("Detailed Form / Module Permission Matrix (Database RBAC)")}</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Granular functional authorizations for <strong>{rbacSummary.roleTitle}</strong> across all core ERP modules.
+                  {th("Granular functional authorizations for")} <strong>{rbacSummary.roleTitle}</strong> {th("across all core ERP modules.")}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export function UserProfileReportModal({
                   {moduleCapabilities.filter(m => m.canView || m.canCreate || m.canEdit).length} Authorized Modules
                 </span>
                 <span className="text-[11px] font-mono text-red-600 bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-md font-bold border border-red-200 dark:border-red-800">
-                  {moduleCapabilities.filter(m => !m.canView && !m.canCreate && !m.canEdit).length} Restricted
+                  {moduleCapabilities.filter(m => !m.canView && !m.canCreate && !m.canEdit).length} {th("Restricted")}
                 </span>
               </div>
             </div>
@@ -316,15 +316,15 @@ export function UserProfileReportModal({
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[10px]">
                   <tr>
-                    <th className="p-3">ERP Form / Module</th>
-                    <th className="p-3">Category</th>
-                    <th className="p-3 text-center">View</th>
-                    <th className="p-3 text-center">Create</th>
-                    <th className="p-3 text-center">Edit</th>
-                    <th className="p-3 text-center">Delete</th>
-                    <th className="p-3 text-center">Post / Approve</th>
-                    <th className="p-3 text-center">Print / Export</th>
-                    <th className="p-3">Status</th>
+                    <th className="p-3">{th("ERP Form / Module")}</th>
+                    <th className="p-3">{th("Category")}</th>
+                    <th className="p-3 text-center">{th("View")}</th>
+                    <th className="p-3 text-center">{th("Create")}</th>
+                    <th className="p-3 text-center">{th("Edit")}</th>
+                    <th className="p-3 text-center">{th("Delete")}</th>
+                    <th className="p-3 text-center">{th("Post / Approve")}</th>
+                    <th className="p-3 text-center">{th("Print / Export")}</th>
+                    <th className="p-3">{th("Status")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
@@ -364,7 +364,7 @@ export function UserProfileReportModal({
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800">
-                              Restricted
+                              {th("Restricted")}
                             </span>
                           )}
                         </td>
@@ -413,11 +413,11 @@ export function UserProfileReportModal({
           <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] gap-3">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-slate-400" />
-              <span>Created By: <strong className="text-slate-800 dark:text-slate-200">{user.createdBy || "System Administrator"}</strong> ({user.createdAt ? new Date(user.createdAt).toLocaleString() : "Active Record"})</span>
+              <span>{th("Created By")}: <strong className="text-slate-800 dark:text-slate-200">{user.createdBy || th("System Administrator")}</strong> ({user.createdAt ? new Date(user.createdAt).toLocaleString() : "Active Record"})</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-slate-400" />
-              <span>Last Modified: <strong className="text-slate-800 dark:text-slate-200">{user.lastUpdatedBy || "Admin Console"}</strong> ({user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "Synchronized"})</span>
+              <span>{th("Last Modified")}: <strong className="text-slate-800 dark:text-slate-200">{user.lastUpdatedBy || th("Admin Console")}</strong> ({user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "Synchronized"})</span>
             </div>
             <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
               <CheckCircle2 className="h-4 w-4" />
