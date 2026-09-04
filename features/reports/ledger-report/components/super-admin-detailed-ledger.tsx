@@ -32,6 +32,7 @@ import {
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { translateValue } from "@/lib/i18n/table-values";
 import { rtlLanguages } from "@/lib/i18n/languages";
 
@@ -455,24 +456,14 @@ export function SuperAdminDetailedLedgerView() {
             />
           </div>
 
-          {/* Date Pickers */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/60">
-            <Calendar className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{tr("From")}</span>
-            <Input
-              type="date"
-              className="h-7 w-[115px] border-0 bg-transparent p-0 text-xs font-semibold shadow-none focus-visible:ring-0 dark:text-slate-100"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-            />
-            <span className="border-l border-slate-200 pl-1.5 text-[11px] font-bold text-slate-500 dark:border-slate-700 dark:text-slate-400">
-              {tr("To")}
-            </span>
-            <Input
-              type="date"
-              className="h-7 w-[115px] border-0 bg-transparent p-0 text-xs font-semibold shadow-none focus-visible:ring-0 dark:text-slate-100"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+          {/* Date range (universal picker) */}
+          <div className="min-w-[15rem]">
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              value={{ from: fromDate || null, to: toDate || null }}
+              onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
             />
           </div>
 

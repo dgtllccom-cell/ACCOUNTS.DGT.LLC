@@ -49,6 +49,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 
 export type BankTransactionRow = {
@@ -568,22 +569,14 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-blue-200/80 bg-blue-50/20 shadow-sm dark:border-blue-900/40 dark:bg-blue-950/10">
           <CardContent className="p-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.from_date", "From Date")}</Label>
-                <Input
-                  className="h-8 text-xs bg-background"
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.to_date", "To Date")}</Label>
-                <Input
-                  className="h-8 text-xs bg-background"
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
+              <div className="space-y-1 sm:col-span-2">
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
+                <ErpDatePicker
+                  mode="range"
+                  lang={activeLang}
+                  size="sm"
+                  value={{ from: fromDate || null, to: toDate || null }}
+                  onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
                 />
               </div>
 
@@ -1496,21 +1489,27 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               <div className="space-y-1">
                 <Label className="font-semibold">{tt("bankroz.cheque_date", "Cheque Date")}</Label>
-                <Input
-                  className="h-8 text-xs"
-                  type="date"
-                  value={newEntry.chequeDate}
-                  onChange={(e) => setNewEntry((p) => ({ ...p, chequeDate: e.target.value }))}
+                <ErpDatePicker
+                  mode="single"
+                  lang={activeLang}
+                  size="sm"
+                  clearable={false}
+                  presets={false}
+                  value={{ from: newEntry.chequeDate || null }}
+                  onApply={(v) => setNewEntry((p) => ({ ...p, chequeDate: v.from ?? "" }))}
                 />
               </div>
 
               <div className="space-y-1">
                 <Label className="font-semibold">{tt("bankroz.due_payment_date", "Due / Payment Date")}</Label>
-                <Input
-                  className="h-8 text-xs"
-                  type="date"
-                  value={newEntry.dueDate}
-                  onChange={(e) => setNewEntry((p) => ({ ...p, dueDate: e.target.value }))}
+                <ErpDatePicker
+                  mode="single"
+                  lang={activeLang}
+                  size="sm"
+                  clearable={false}
+                  presets={false}
+                  value={{ from: newEntry.dueDate || null }}
+                  onApply={(v) => setNewEntry((p) => ({ ...p, dueDate: v.from ?? "" }))}
                 />
               </div>
 

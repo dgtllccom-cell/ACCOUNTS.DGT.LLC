@@ -7,6 +7,7 @@ import { Download, MoreVertical, Printer, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { ReportPageHeader } from "@/components/reports/report-page-header";
@@ -711,28 +712,18 @@ export function LedgerReportView({
                   disabled={loadingLedgers}
                 />
 
-                <div className="grid grid-cols-2 gap-2">
+                <div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">{t(lang, "ledger.from_date")}</Label>
-                    <Input
-                      className="h-9 text-xs"
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => {
+                    <Label className="text-[11px] text-muted-foreground">{t(lang, "datepick.date_range", "Date Range")}</Label>
+                    <ErpDatePicker
+                      mode="range"
+                      lang={lang}
+                      size="sm"
+                      value={{ from: fromDate || null, to: toDate || null }}
+                      onApply={(v) => {
                         setDatePreset("custom");
-                        setFromDate(e.target.value);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">{t(lang, "ledger.to_date")}</Label>
-                    <Input
-                      className="h-9 text-xs"
-                      type="date"
-                      value={toDate}
-                      onChange={(e) => {
-                        setDatePreset("custom");
-                        setToDate(e.target.value);
+                        setFromDate(v.from ?? "");
+                        setToDate(v.to ?? "");
                       }}
                     />
                   </div>

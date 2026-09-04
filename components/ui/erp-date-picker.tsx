@@ -169,6 +169,10 @@ export function ErpDatePicker(props: ErpDatePickerProps) {
     setError(null);
     if (mode === "single") {
       setDraft({ from: iso, to: iso });
+      // single date = one action; commit + close immediately (no separate Apply)
+      (props as SingleProps).onApply?.({ from: iso });
+      (props as SingleProps).onChange?.({ from: iso });
+      setOpen(false);
       return;
     }
     // range

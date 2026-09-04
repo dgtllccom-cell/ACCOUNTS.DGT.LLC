@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
@@ -1220,9 +1221,14 @@ function TopToolbar({
 
               <div>
                 <FieldLabel icon={Calendar} label={t(lang, "ujr.date_range", "Date Range")} />
-                <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
-                  <DateBox label={t(lang, "ujr.from_date", "From Date")} value={draftFromDate} onChange={setDraftFromDate} />
-                  <DateBox label={t(lang, "ujr.to_date", "To Date")} value={draftToDate} onChange={setDraftToDate} />
+                <div className="mt-1.5">
+                  <ErpDatePicker
+                    mode="range"
+                    lang={lang}
+                    size="sm"
+                    value={{ from: draftFromDate || null, to: draftToDate || null }}
+                    onApply={(v) => { setDraftFromDate(v.from ?? ""); setDraftToDate(v.to ?? ""); }}
+                  />
                 </div>
               </div>
 
