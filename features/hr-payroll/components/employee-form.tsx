@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 
 type EmployeeFormProps = {
@@ -186,6 +187,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const activeLang = useActiveLanguage();
   // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
   const lang = (langProp && langProp !== "en") ? langProp : activeLang;
+  const th = (s: string) => translateHeader(lang, s);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeStep, setActiveStep] = useState<number>(1);
@@ -785,7 +787,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
       ) : null}
 
       {/* Responsive horizontal progress stepper — numbered circles + connector */}
-      <nav aria-label="Progress" className="flex items-start">
+      <nav aria-label={th("Progress")} className="flex items-start">
         {stepsList.map((s, idx) => {
           const isActive = activeStep === s.number;
           const isDone = activeStep > s.number;
@@ -846,7 +848,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   <span className="inline-block h-3 w-3 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
                   <div>
                     <div className="text-[10px] font-black tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
-                      RECORD TYPE: EMPLOYEE
+                      {th("RECORD TYPE: EMPLOYEE")}
                     </div>
                     <div className="text-xs font-black text-slate-800 dark:text-slate-200">
                       {translateHr("Live Employee Master Report", lang)}
@@ -936,25 +938,25 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "rozrep.country", "Country")}:</span>
                     <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                      {selectedCountryObj?.name || <span className="text-slate-400 font-normal">Pending Selection</span>}
+                      {selectedCountryObj?.name || <span className="text-slate-400 font-normal">{th("Pending Selection")}</span>}
                     </div>
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>
                     <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {selectedMainBranchObj ? selectedMainBranchObj.name : <span className="text-slate-400 font-normal">Default Main</span>}
+                      {selectedMainBranchObj ? selectedMainBranchObj.name : <span className="text-slate-400 font-normal">{th("Default Main")}</span>}
                     </div>
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_city_branch", "City Branch")}:</span>
                     <div className="font-bold text-emerald-700 dark:text-emerald-400 truncate">
-                      {selectedCityBranchObj ? selectedCityBranchObj.name : <span className="text-slate-400 font-normal">All Branches</span>}
+                      {selectedCityBranchObj ? selectedCityBranchObj.name : <span className="text-slate-400 font-normal">{th("All Branches")}</span>}
                     </div>
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}:</span>
                     <div className="font-bold text-indigo-700 dark:text-indigo-400 truncate">
-                      {selectedManagerObj ? `${selectedManagerObj.person?.customer_name || selectedManagerObj.employee_code}` : <span className="text-slate-400 font-normal">Direct to Board</span>}
+                      {selectedManagerObj ? `${selectedManagerObj.person?.customer_name || selectedManagerObj.employee_code}` : <span className="text-slate-400 font-normal">{th("Direct to Board")}</span>}
                     </div>
                   </div>
                 </div>
@@ -973,7 +975,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   </span>
                   {activeStep >= 3 && (
                     <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded">
-                      Active
+                      {th("Active")}
                     </span>
                   )}
                 </div>
@@ -982,12 +984,12 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
                     <span className="text-slate-500 font-medium">Schedule:</span>
                     <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">
-                      {employmentType || "Full-time"} | {workingShift || "Day Shift"} | {dutyStartTime || "09:00"} – {dutyEndTime || "18:00"}
+                      {employmentType || th("Full-time")} | {workingShift || th("Day Shift")} | {dutyStartTime || "09:00"} – {dutyEndTime || "18:00"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="text-slate-400 font-medium">{translateHr("Joining", lang)}:</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100">{joiningDate || "Immediate"}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{joiningDate || th("Immediate")}</span>
                   </div>
                 </div>
               </div>
@@ -1022,11 +1024,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                         <strong className="text-slate-900 dark:text-slate-100">{Number(basicSalary || 0).toLocaleString()}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] font-medium">Allowances</span>
+                        <span className="text-slate-400 block text-[10px] font-medium">{th("Allowances")}</span>
                         <strong className="text-emerald-600">+{totalAllowances.toLocaleString()}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] font-medium">Net Payroll</span>
+                        <span className="text-slate-400 block text-[10px] font-medium">{th("Net Payroll")}</span>
                         <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">{netSalary.toLocaleString()} {salaryCurrency}</strong>
                       </div>
                     </div>
@@ -1034,10 +1036,10 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     {(salaryExpenseAccountId || employeePayableAccountId) && (
                       <div className="pt-1 text-[10px] text-slate-500 space-y-0.5">
                         {salaryExpenseAccountId && (
-                          <div className="truncate">GL Expense: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || "Mapped"}</span></div>
+                          <div className="truncate">{th("GL Expense")}: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || th("Mapped")}</span></div>
                         )}
                         {employeePayableAccountId && (
-                          <div className="truncate">GL Payable: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === employeePayableAccountId)?.name || "Mapped"}</span></div>
+                          <div className="truncate">{th("GL Payable")}: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === employeePayableAccountId)?.name || th("Mapped")}</span></div>
                         )}
                       </div>
                     )}
@@ -1129,7 +1131,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                         list="common-job-roles"
                         value={designation}
                         onChange={(e) => setDesignation(e.target.value)}
-                        placeholder="e.g. Manager, Accountant, Cook, Driver"
+                        placeholder={th("e.g. Manager, Accountant, Cook, Driver")}
                         className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
                       />
                       <datalist id="common-job-roles">
@@ -1155,7 +1157,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                         type="text"
                         value={department}
                         onChange={(e) => setDepartment(e.target.value)}
-                        placeholder="e.g. Finance, Operations, Logistics"
+                        placeholder={th("e.g. Finance, Operations, Logistics")}
                         className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -1163,7 +1165,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
                   {/* Quick Role Selection Chips */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Quick Roles:</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{th("Quick Roles")}:</span>
                     {[
                       { role: "Manager", dept: "Operations" },
                       { role: "Accountant", dept: "Finance" },
@@ -1528,7 +1530,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
               <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
-                Step 5: Employee Master Full Verification Report
+                {th("Step 5: Employee Master Full Verification Report")}
               </h3>
             </div>
             <div className="flex items-center gap-2.5">
@@ -1541,7 +1543,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 <span>{t(lang, "bankroz.print_pdf", "Print / PDF Report")}</span>
               </button>
               <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-xs">
-                ✓ Verified & Ready for Master Registration
+                {th("Verified & Ready for Master Registration")}
               </span>
             </div>
           </div>
@@ -1557,7 +1559,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 </div>
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                    RECORD TYPE: EMPLOYEE MASTER
+                    {th("RECORD TYPE: EMPLOYEE MASTER")}
                   </div>
                   <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">
                     {fullName || "Unnamed Employee"}
@@ -1594,15 +1596,15 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
                 <div className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
                   <UserCheck className="h-4 w-4" />
-                  <span>1. Identity & Contact Information</span>
+                  <span>{th("1. Identity & Contact Information")}</span>
                 </div>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-slate-500">Full Name:</span><span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "-"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Father's Name:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{selectedPersonObj?.father_name || "-"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Gender:</span><span className="font-semibold">{gender || selectedPersonObj?.gender || "Male"}</span></div>
-                  <div className="flex justify-between" dir="ltr"><span className="text-slate-500">Mobile Phone:</span><span className="font-mono font-bold text-emerald-600">{selectedPersonObj?.mobile || "-"}</span></div>
-                  <div className="flex justify-between" dir="ltr"><span className="text-slate-500">Email Address:</span><span className="font-medium text-blue-600 truncate">{selectedPersonObj?.email || "-"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Address / City:</span><span className="font-medium truncate text-slate-700 dark:text-slate-300">{selectedPersonObj?.address || selectedCityBranchObj?.name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Full Name")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Father's Name")}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{selectedPersonObj?.father_name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Gender")}:</span><span className="font-semibold">{gender || selectedPersonObj?.gender || th("Male")}</span></div>
+                  <div className="flex justify-between" dir="ltr"><span className="text-slate-500">{th("Mobile Phone")}:</span><span className="font-mono font-bold text-emerald-600">{selectedPersonObj?.mobile || "-"}</span></div>
+                  <div className="flex justify-between" dir="ltr"><span className="text-slate-500">{th("Email Address")}:</span><span className="font-medium text-blue-600 truncate">{selectedPersonObj?.email || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Address / City")}:</span><span className="font-medium truncate text-slate-700 dark:text-slate-300">{selectedPersonObj?.address || selectedCityBranchObj?.name || "-"}</span></div>
                 </div>
               </div>
 
@@ -1610,14 +1612,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
                 <div className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
                   <MapPin className="h-4 w-4" />
-                  <span>2. Organization, Branch & Hierarchy</span>
+                  <span>{th("2. Organization, Branch & Hierarchy")}</span>
                 </div>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-slate-500">Country:</span><span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountryObj?.name || "-"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Main Branch:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{selectedMainBranchObj?.name || "-"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">City Branch:</span><span className="font-bold text-emerald-600">{selectedCityBranchObj?.name || "All Branches"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Reporting Manager:</span><span className="font-bold text-indigo-600">{selectedManagerObj ? `${selectedManagerObj.person?.customer_name} (${selectedManagerObj.employee_code})` : "Direct to Executive Management"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Master Category:</span><span className="font-bold text-slate-900 dark:text-slate-100">{catLabel(category)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Country")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountryObj?.name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Main Branch")}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{selectedMainBranchObj?.name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("City Branch")}:</span><span className="font-bold text-emerald-600">{selectedCityBranchObj?.name || th("All Branches")}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Reporting Manager")}:</span><span className="font-bold text-indigo-600">{selectedManagerObj ? `${selectedManagerObj.person?.customer_name} (${selectedManagerObj.employee_code})` : th("Direct to Executive Management")}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Master Category")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{catLabel(category)}</span></div>
                 </div>
               </div>
 
@@ -1625,14 +1627,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
                 <div className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
                   <Clock className="h-4 w-4" />
-                  <span>3. Employment Type, Shift & Timelines</span>
+                  <span>{th("3. Employment Type, Shift & Timelines")}</span>
                 </div>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-slate-500">Joining Date:</span><span className="font-bold text-slate-900 dark:text-slate-100">{joiningDate || "Immediate"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Employment Type:</span><span className="font-semibold">{employmentType || "Full-time"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Working Shift:</span><span className="font-semibold">{workingShift || "Day Shift"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Duty Hours:</span><span className="font-bold text-blue-600">{dutyStartTime || "09:00"} – {dutyEndTime || "18:00"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Weekly Off Day:</span><span className="font-semibold">{weeklyOffDay || "Friday / Sunday"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Joining Date")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{joiningDate || th("Immediate")}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Employment Type")}:</span><span className="font-semibold">{employmentType || th("Full-time")}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Working Shift")}:</span><span className="font-semibold">{workingShift || th("Day Shift")}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Duty Hours")}:</span><span className="font-bold text-blue-600">{dutyStartTime || "09:00"} – {dutyEndTime || "18:00"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Weekly Off Day")}:</span><span className="font-semibold">{weeklyOffDay || th("Friday / Sunday")}</span></div>
                 </div>
               </div>
 
@@ -1640,25 +1642,25 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
                 <div className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
                   <BadgeDollarSign className="h-4 w-4" />
-                  <span>4. Compensation, Allowances & GL Mapping</span>
+                  <span>{th("4. Compensation, Allowances & GL Mapping")}</span>
                 </div>
                 {category === "Country Owner" || category === "Branch Owner" || category === "Company Owner" ? (
                   <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 font-bold">
-                    👑 Executive Owner / Partner Mode — Drawings & equity-based compensation.
+                    {th("Executive Owner / Partner Mode — Drawings & equity-based compensation.")}
                   </div>
                 ) : (
                   <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between"><span className="text-slate-500">Salary Basis:</span><span className="font-semibold">{salaryType || "Monthly"}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Basic Salary:</span><span className="font-bold text-slate-900 dark:text-slate-100">{Number(basicSalary || 0).toLocaleString()} {salaryCurrency}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Total Allowances:</span><span className="font-bold text-emerald-600">+{totalAllowances.toLocaleString()} {salaryCurrency}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Deductions:</span><span className="font-semibold text-rose-600">-{((Number(deduction) || 0) + (Number(taxDeduction) || 0)).toLocaleString()} {salaryCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">{th("Salary Basis")}:</span><span className="font-semibold">{salaryType || "Monthly"}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">{th("Basic Salary")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{Number(basicSalary || 0).toLocaleString()} {salaryCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">{th("Total Allowances")}:</span><span className="font-bold text-emerald-600">+{totalAllowances.toLocaleString()} {salaryCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">{th("Deductions")}:</span><span className="font-semibold text-rose-600">-{((Number(deduction) || 0) + (Number(taxDeduction) || 0)).toLocaleString()} {salaryCurrency}</span></div>
                     <div className="flex justify-between border-t border-slate-100 dark:border-slate-700 pt-1">
-                      <span className="font-extrabold text-slate-900 dark:text-slate-100">Net Monthly Payroll:</span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100">{th("Net Monthly Payroll")}:</span>
                       <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">{netSalary.toLocaleString()} {salaryCurrency}</span>
                     </div>
                     {salaryExpenseAccountId && (
                       <div className="text-[10px] text-slate-500 pt-0.5 truncate">
-                        GL Expense: <span className="font-mono">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || "Mapped"}</span>
+                        {th("GL Expense")}: <span className="font-mono">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || th("Mapped")}</span>
                       </div>
                     )}
                   </div>
