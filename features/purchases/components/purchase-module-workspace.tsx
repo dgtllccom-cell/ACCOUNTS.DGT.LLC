@@ -230,10 +230,14 @@ function exportCsv(rows: PurchaseOrderRow[], title: string) {
 
 export function PurchaseModuleWorkspace({
   title,
+  displayTitle,
   description,
   type = "purchase"
 }: {
+  /** Internal English key used for stage matching (titleToStageKey/stageMatches) -- never shown to the user. */
   title: string;
+  /** Translated label actually shown on screen and in the print title. Falls back to `title`. */
+  displayTitle?: string;
   description: string;
   type?: PurchaseModuleType;
 }) {
@@ -352,7 +356,7 @@ export function PurchaseModuleWorkspace({
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-3 px-2 py-2 sm:px-4">
       {titleSlot && createPortal(
         <div className="flex min-w-0 items-center gap-2">
-          <h1 className="truncate text-sm font-black text-foreground">{title}</h1>
+          <h1 className="truncate text-sm font-black text-foreground">{displayTitle || title}</h1>
           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
         </div>,
         titleSlot
@@ -372,7 +376,7 @@ export function PurchaseModuleWorkspace({
               <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> {t(lang, "purchase.pmw_reset_refresh", "Reset & Refresh")}
             </Button>
             <JournalPrintButton
-              title={title}
+              title={displayTitle || title}
               subtitle={description}
               columns={[
                 { key: "poNumber", label: t(lang, "purchase.pmw_col_po_number", "PO Number") },

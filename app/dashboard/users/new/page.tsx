@@ -1,9 +1,12 @@
 import { Suspense } from "react";
 import { UserRegistrationWizard } from "@/features/users/components/user-registration-wizard";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 
-export default function NewUserRegistrationPage() {
+export default async function NewUserRegistrationPage() {
+  const lang = await getRequestLanguage();
   return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading User Registration Form...</div>}>
+    <Suspense fallback={<div className="p-8 text-slate-400">{t(lang, "common.loading_user_reg_form", "Loading User Registration Form...")}</div>}>
       <UserRegistrationWizard />
     </Suspense>
   );

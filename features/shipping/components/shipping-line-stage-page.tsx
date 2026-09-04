@@ -82,6 +82,14 @@ export function ShippingLineStagePage({
   const lang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  // The two callers (shipment-details / shipment-report pages) pass raw English
+  // header copy; translate it here by stage so both screens render in all 5
+  // languages instead of the caller's hard-coded fallback.
+  const displayTitle = activeStage === "report" ? tt("slstage.title_report", "Shipment Report") : tt("slstage.title_shipment", "Shipment Details");
+  const displayEyebrow = activeStage === "report" ? tt("slstage.eyebrow_report", "Shipping Line / Shipment Report") : tt("slstage.eyebrow_shipment", "Shipping Line / Shipment Stage");
+  const displayDescription = activeStage === "report"
+    ? tt("slstage.desc_report", "Shipment report for B/L numbers, vessels, voyages, containers, goods, shipper, consignee and dates.")
+    : tt("slstage.desc_shipment", "Enter shipping line, vessel, voyage, container, port, ETA and ETD details for shipment tracking.");
   const [records, setRecords] = useState<ShippingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -315,10 +323,10 @@ export function ShippingLineStagePage({
         <div>
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">{eyebrow}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">{displayEyebrow}</p>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1.5">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{description}</p>
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1.5">{displayTitle}</h1>
+          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{displayDescription}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">

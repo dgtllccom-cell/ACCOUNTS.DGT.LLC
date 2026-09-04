@@ -1,16 +1,19 @@
 import { Suspense } from "react";
 import { PurchaseTransferErpReportView } from "@/features/purchases/components/purchase-transfer-erp-report-view-v2";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 
 export const metadata = { title: "Purchase — Purchase Order — View" };
 
 
-export default function PurchaseOrderViewPage() {
+export default async function PurchaseOrderViewPage() {
+  const lang = await getRequestLanguage();
   return (
     <Suspense fallback={
       <div className="flex h-screen items-center justify-center text-slate-500">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold">Loading ERP Transaction Report…</p>
+          <p className="text-sm font-semibold">{t(lang, "erpview.loading_transaction_report", "Loading ERP Transaction Report...")}</p>
         </div>
       </div>
     }>

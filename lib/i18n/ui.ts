@@ -927,6 +927,42 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "roz.loading_roznamcha_report"
+  | "roz.loading_all_report"
+  | "roz.loading_bank_report"
+  | "roz.loading_business_report"
+  | "roz.loading_cash_report"
+  | "roz.loading_invoice_report"
+  | "roz.loading_transfer_report"
+  | "pojp.loading_advance"
+  | "pojp.loading_advance_completed"
+  | "pojp.loading_charges"
+  | "pojp.loading_history"
+  | "pojp.loading_remaining"
+  | "sbjr.page_title"
+  | "sbjr.page_desc"
+  | "dph.purchases_title"
+  | "dph.purchases_desc"
+  | "dph.purchases_note"
+  | "erpview.loading_transaction_report"
+  | "common.loading_details"
+  | "common.loading_wizard"
+  | "common.loading_user_reg_form"
+  | "smw.sales_booking_confirm_title"
+  | "smw.sales_booking_confirm_desc"
+  | "sales.smw_journal_suffix"
+  | "pmw.booking_confirm_title"
+  | "pmw.booking_confirm_desc"
+  | "pmw.finalized_po_title"
+  | "pmw.finalized_po_desc"
+  | "pmw.po_tracking_title"
+  | "pmw.po_tracking_desc"
+  | "slstage.title_report"
+  | "slstage.title_shipment"
+  | "slstage.eyebrow_report"
+  | "slstage.eyebrow_shipment"
+  | "slstage.desc_report"
+  | "slstage.desc_shipment"
   | "rlp.back_to_portal"
   | "gec.refresh_goods"
   | "data.search_ph"
@@ -19002,6 +19038,114 @@ const en: Dict = {
 
 
 
+
+
+  "roz.loading_roznamcha_report": "Loading Roznamcha Report...",
+
+
+  "roz.loading_all_report": "Loading All Roznamcha Report...",
+
+
+  "roz.loading_bank_report": "Loading Bank Roznamcha Report...",
+
+
+  "roz.loading_business_report": "Loading Business Roznamcha Report...",
+
+
+  "roz.loading_cash_report": "Loading Cash Entry Report...",
+
+
+  "roz.loading_invoice_report": "Loading Invoice Roznamcha Report...",
+
+
+  "roz.loading_transfer_report": "Loading Transfer Roznamcha Report...",
+
+
+  "pojp.loading_advance": "Loading Purchase Advance Payment Journal...",
+
+
+  "pojp.loading_advance_completed": "Loading Advance Completed Journal...",
+
+
+  "pojp.loading_charges": "Loading Credit / Charges Payment Journal...",
+
+
+  "pojp.loading_history": "Loading Payment History Journal...",
+
+
+  "pojp.loading_remaining": "Loading Remaining Payment Journal...",
+
+
+  "sbjr.page_title": "Sales Booking Register",
+
+
+  "sbjr.page_desc": "Detailed logs, weight summaries, quantities, and transactional balances of all sales orders.",
+
+
+  "dph.purchases_title": "Purchases",
+
+
+  "dph.purchases_desc": "Purchase documents will be added after journal posting and account controls are connected.",
+
+
+  "dph.purchases_note": "Planned flow: draft purchase, validate goods and supplier account, generate balanced journal, post to ledger.",
+
+
+  "erpview.loading_transaction_report": "Loading ERP Transaction Report...",
+
+
+  "common.loading_details": "Loading details...",
+
+
+  "common.loading_wizard": "Loading Wizard...",
+
+
+  "common.loading_user_reg_form": "Loading User Registration Form...",
+
+
+  "smw.sales_booking_confirm_title": "Sales Booking Confirm",
+
+
+  "smw.sales_booking_confirm_desc": "Review booking-confirmed sales orders with invoice, account, goods, payment, and transfer status in the approved spreadsheet dashboard layout.",
+
+
+  "sales.smw_journal_suffix": "Journal",
+
+
+  "pmw.booking_confirm_title": "Booking Confirm",
+
+
+  "pmw.booking_confirm_desc": "Review booking-confirmed purchase orders with invoice, account, goods, payment, and transfer status in the approved spreadsheet dashboard layout.",
+
+
+  "pmw.finalized_po_title": "Finalized Purchase Orders",
+
+
+  "pmw.finalized_po_desc": "Closed purchase orders with final payment, shipping documents, arrival confirmation, and inventory entry status.",
+
+
+  "pmw.po_tracking_title": "Purchase Order Tracking",
+
+
+  "pmw.po_tracking_desc": "Track purchase order creation, journal posting, payments, loading, shipping documents, finalization, and stock entry from one workflow.",
+
+
+  "slstage.title_report": "Shipment Report",
+
+
+  "slstage.title_shipment": "Shipment Details",
+
+
+  "slstage.eyebrow_report": "Shipping Line / Shipment Report",
+
+
+  "slstage.eyebrow_shipment": "Shipping Line / Shipment Stage",
+
+
+  "slstage.desc_report": "Shipment report for B/L numbers, vessels, voyages, containers, goods, shipper, consignee and dates.",
+
+
+  "slstage.desc_shipment": "Enter shipping line, vessel, voyage, container, port, ETA and ETD details for shipment tracking.",
   "rlp.back_to_portal": "Back to portal",
 
 
@@ -35273,6 +35417,114 @@ const ur: Dict = {
 
 
 
+
+
+  "roz.loading_roznamcha_report": "روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "roz.loading_all_report": "تمام روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "roz.loading_bank_report": "بینک روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "roz.loading_business_report": "کاروباری روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "roz.loading_cash_report": "کیش انٹری رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "roz.loading_invoice_report": "انوائس روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "roz.loading_transfer_report": "ٹرانسفر روزنامچہ رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "pojp.loading_advance": "پرچیز ایڈوانس پیمنٹ جرنل لوڈ ہو رہا ہے...",
+
+
+  "pojp.loading_advance_completed": "ایڈوانس کمپلیٹڈ جرنل لوڈ ہو رہا ہے...",
+
+
+  "pojp.loading_charges": "کریڈٹ / چارجز پیمنٹ جرنل لوڈ ہو رہا ہے...",
+
+
+  "pojp.loading_history": "پیمنٹ ہسٹری جرنل لوڈ ہو رہا ہے...",
+
+
+  "pojp.loading_remaining": "بقایا پیمنٹ جرنل لوڈ ہو رہا ہے...",
+
+
+  "sbjr.page_title": "سیلز بکنگ رجسٹر",
+
+
+  "sbjr.page_desc": "تمام سیلز آرڈرز کے تفصیلی لاگز، وزن کے خلاصے، مقداریں، اور لین دین کے بیلنس۔",
+
+
+  "dph.purchases_title": "خریداری",
+
+
+  "dph.purchases_desc": "جرنل پوسٹنگ اور اکاؤنٹ کنٹرولز منسلک ہونے کے بعد خریداری دستاویزات شامل کی جائیں گی۔",
+
+
+  "dph.purchases_note": "منصوبہ بند فلو: مسودہ خریداری، سامان اور سپلائر اکاؤنٹ کی توثیق، متوازن جرنل تیار کرنا، لیجر میں پوسٹ کرنا۔",
+
+
+  "erpview.loading_transaction_report": "ای آر پی ٹرانزیکشن رپورٹ لوڈ ہو رہی ہے...",
+
+
+  "common.loading_details": "تفصیلات لوڈ ہو رہی ہیں...",
+
+
+  "common.loading_wizard": "ویزرڈ لوڈ ہو رہا ہے...",
+
+
+  "common.loading_user_reg_form": "یوزر رجسٹریشن فارم لوڈ ہو رہا ہے...",
+
+
+  "smw.sales_booking_confirm_title": "سیلز بکنگ کنفرم",
+
+
+  "smw.sales_booking_confirm_desc": "منظور شدہ اسپریڈ شیٹ ڈیش بورڈ لے آؤٹ میں انوائس، اکاؤنٹ، سامان، ادائیگی، اور منتقلی کی حیثیت کے ساتھ بکنگ کنفرم سیلز آرڈرز کا جائزہ لیں۔",
+
+
+  "sales.smw_journal_suffix": "جرنل",
+
+
+  "pmw.booking_confirm_title": "بکنگ کنفرم",
+
+
+  "pmw.booking_confirm_desc": "منظور شدہ اسپریڈ شیٹ ڈیش بورڈ لے آؤٹ میں انوائس، اکاؤنٹ، سامان، ادائیگی، اور منتقلی کی حیثیت کے ساتھ بکنگ کنفرم خریداری آرڈرز کا جائزہ لیں۔",
+
+
+  "pmw.finalized_po_title": "حتمی خریداری آرڈرز",
+
+
+  "pmw.finalized_po_desc": "حتمی ادائیگی، شپنگ دستاویزات، آمد کی تصدیق، اور انوینٹری اندراج کی حیثیت کے ساتھ بند خریداری آرڈرز۔",
+
+
+  "pmw.po_tracking_title": "خریداری آرڈر ٹریکنگ",
+
+
+  "pmw.po_tracking_desc": "ایک ہی ورک فلو سے خریداری آرڈر کی تخلیق، جرنل پوسٹنگ، ادائیگیاں، لوڈنگ، شپنگ دستاویزات، حتمی شکل، اور اسٹاک اندراج کو ٹریک کریں۔",
+
+
+  "slstage.title_report": "شپمنٹ رپورٹ",
+
+
+  "slstage.title_shipment": "شپمنٹ تفصیلات",
+
+
+  "slstage.eyebrow_report": "شپنگ لائن / شپمنٹ رپورٹ",
+
+
+  "slstage.eyebrow_shipment": "شپنگ لائن / شپمنٹ اسٹیج",
+
+
+  "slstage.desc_report": "بی/ایل نمبرز، بحری جہاز، سفر، کنٹینرز، سامان، شپر، کنسائنی اور تاریخوں کے لیے شپمنٹ رپورٹ۔",
+
+
+  "slstage.desc_shipment": "شپمنٹ ٹریکنگ کے لیے شپنگ لائن، بحری جہاز، سفر، کنٹینر، بندرگاہ، ای ٹی اے اور ای ٹی ڈی کی تفصیلات درج کریں۔",
   "rlp.back_to_portal": "پورٹل پر واپس جائیں",
 
 
@@ -51546,6 +51798,114 @@ const ar: Dict = {
 
 
 
+
+
+  "roz.loading_roznamcha_report": "جارٍ تحميل تقرير دفتر اليومية...",
+
+
+  "roz.loading_all_report": "جارٍ تحميل تقرير كل دفاتر اليومية...",
+
+
+  "roz.loading_bank_report": "جارٍ تحميل تقرير دفتر اليومية البنكي...",
+
+
+  "roz.loading_business_report": "جارٍ تحميل تقرير دفتر اليومية التجاري...",
+
+
+  "roz.loading_cash_report": "جارٍ تحميل تقرير القيد النقدي...",
+
+
+  "roz.loading_invoice_report": "جارٍ تحميل تقرير دفتر اليومية للفواتير...",
+
+
+  "roz.loading_transfer_report": "جارٍ تحميل تقرير دفتر اليومية للتحويلات...",
+
+
+  "pojp.loading_advance": "جارٍ تحميل سجل دفعة السلفة على المشتريات...",
+
+
+  "pojp.loading_advance_completed": "جارٍ تحميل سجل السلف المكتملة...",
+
+
+  "pojp.loading_charges": "جارٍ تحميل سجل دفعة الائتمان / الرسوم...",
+
+
+  "pojp.loading_history": "جارٍ تحميل سجل سجل تاريخ الدفعات...",
+
+
+  "pojp.loading_remaining": "جارٍ تحميل سجل الدفعات المتبقية...",
+
+
+  "sbjr.page_title": "سجل حجز المبيعات",
+
+
+  "sbjr.page_desc": "سجلات مفصلة وملخصات وزن وكميات وأرصدة معاملات لجميع أوامر البيع.",
+
+
+  "dph.purchases_title": "المشتريات",
+
+
+  "dph.purchases_desc": "ستُضاف مستندات الشراء بعد ربط ترحيل دفتر اليومية وضوابط الحسابات.",
+
+
+  "dph.purchases_note": "التدفق المخطط: مسودة الشراء، التحقق من البضائع وحساب المورد، إنشاء سجل متوازن، الترحيل إلى دفتر الأستاذ.",
+
+
+  "erpview.loading_transaction_report": "جارٍ تحميل تقرير معاملات نظام تخطيط الموارد...",
+
+
+  "common.loading_details": "جارٍ تحميل التفاصيل...",
+
+
+  "common.loading_wizard": "جارٍ تحميل المعالج...",
+
+
+  "common.loading_user_reg_form": "جارٍ تحميل نموذج تسجيل المستخدم...",
+
+
+  "smw.sales_booking_confirm_title": "تأكيد حجز المبيعات",
+
+
+  "smw.sales_booking_confirm_desc": "راجع أوامر البيع المؤكدة الحجز مع حالة الفاتورة والحساب والبضائع والدفع والتحويل في تخطيط لوحة الجدول المعتمد.",
+
+
+  "sales.smw_journal_suffix": "سجل اليومية",
+
+
+  "pmw.booking_confirm_title": "تأكيد الحجز",
+
+
+  "pmw.booking_confirm_desc": "راجع أوامر الشراء المؤكدة الحجز مع حالة الفاتورة والحساب والبضائع والدفع والتحويل في تخطيط لوحة الجدول المعتمد.",
+
+
+  "pmw.finalized_po_title": "أوامر الشراء النهائية",
+
+
+  "pmw.finalized_po_desc": "أوامر شراء مغلقة مع الدفعة النهائية ومستندات الشحن وتأكيد الوصول وحالة إدخال المخزون.",
+
+
+  "pmw.po_tracking_title": "تتبع أمر الشراء",
+
+
+  "pmw.po_tracking_desc": "تتبع إنشاء أمر الشراء وترحيل دفتر اليومية والدفعات والتحميل ومستندات الشحن والإنهاء وإدخال المخزون من سير عمل واحد.",
+
+
+  "slstage.title_report": "تقرير الشحنة",
+
+
+  "slstage.title_shipment": "تفاصيل الشحنة",
+
+
+  "slstage.eyebrow_report": "خط الشحن / تقرير الشحنة",
+
+
+  "slstage.eyebrow_shipment": "خط الشحن / مرحلة الشحنة",
+
+
+  "slstage.desc_report": "تقرير الشحنة لأرقام بوليصة الشحن والسفن والرحلات والحاويات والبضائع والشاحن والمرسل إليه والتواريخ.",
+
+
+  "slstage.desc_shipment": "أدخل تفاصيل خط الشحن والسفينة والرحلة والحاوية والميناء ووقت الوصول والمغادرة المتوقعين لتتبع الشحنة.",
   "rlp.back_to_portal": "العودة إلى البوابة",
 
 
@@ -67818,6 +68178,114 @@ const fa: Dict = {
 
 
 
+
+
+  "roz.loading_roznamcha_report": "در حال بارگذاری گزارش روزنامچه...",
+
+
+  "roz.loading_all_report": "در حال بارگذاری گزارش کل روزنامچه...",
+
+
+  "roz.loading_bank_report": "در حال بارگذاری گزارش روزنامچه بانکی...",
+
+
+  "roz.loading_business_report": "در حال بارگذاری گزارش روزنامچه تجاری...",
+
+
+  "roz.loading_cash_report": "در حال بارگذاری گزارش ورودی نقدی...",
+
+
+  "roz.loading_invoice_report": "در حال بارگذاری گزارش روزنامچه فاکتور...",
+
+
+  "roz.loading_transfer_report": "در حال بارگذاری گزارش روزنامچه انتقال...",
+
+
+  "pojp.loading_advance": "در حال بارگذاری دفتر پیش‌پرداخت خرید...",
+
+
+  "pojp.loading_advance_completed": "در حال بارگذاری دفتر پیش‌پرداخت‌های تکمیل‌شده...",
+
+
+  "pojp.loading_charges": "در حال بارگذاری دفتر پرداخت اعتبار / هزینه‌ها...",
+
+
+  "pojp.loading_history": "در حال بارگذاری دفتر تاریخچه پرداخت...",
+
+
+  "pojp.loading_remaining": "در حال بارگذاری دفتر پرداخت باقیمانده...",
+
+
+  "sbjr.page_title": "دفتر ثبت رزرو فروش",
+
+
+  "sbjr.page_desc": "گزارش‌های تفصیلی، خلاصه وزن، مقادیر و مانده تراکنش‌های همه سفارش‌های فروش.",
+
+
+  "dph.purchases_title": "خریدها",
+
+
+  "dph.purchases_desc": "اسناد خرید پس از اتصال ثبت دفتر روزنامه و کنترل‌های حساب اضافه خواهد شد.",
+
+
+  "dph.purchases_note": "روند برنامه‌ریزی‌شده: پیش‌نویس خرید، اعتبارسنجی کالا و حساب تأمین‌کننده، ایجاد دفتر روزنامه متوازن، ثبت در دفتر کل.",
+
+
+  "erpview.loading_transaction_report": "در حال بارگذاری گزارش تراکنش ای‌آرپی...",
+
+
+  "common.loading_details": "در حال بارگذاری جزئیات...",
+
+
+  "common.loading_wizard": "در حال بارگذاری ویزارد...",
+
+
+  "common.loading_user_reg_form": "در حال بارگذاری فرم ثبت‌نام کاربر...",
+
+
+  "smw.sales_booking_confirm_title": "تأیید رزرو فروش",
+
+
+  "smw.sales_booking_confirm_desc": "سفارش‌های فروش تأییدشده رزرو را با وضعیت فاکتور، حساب، کالا، پرداخت و انتقال در چیدمان داشبورد صفحه‌گسترده تأییدشده بررسی کنید.",
+
+
+  "sales.smw_journal_suffix": "دفتر روزنامه",
+
+
+  "pmw.booking_confirm_title": "تأیید رزرو",
+
+
+  "pmw.booking_confirm_desc": "سفارش‌های خرید تأییدشده رزرو را با وضعیت فاکتور، حساب، کالا، پرداخت و انتقال در چیدمان داشبورد صفحه‌گسترده تأییدشده بررسی کنید.",
+
+
+  "pmw.finalized_po_title": "سفارش‌های نهایی‌شده خرید",
+
+
+  "pmw.finalized_po_desc": "سفارش‌های خرید بسته‌شده با پرداخت نهایی، اسناد حمل، تأیید ورود و وضعیت ثبت موجودی.",
+
+
+  "pmw.po_tracking_title": "پیگیری سفارش خرید",
+
+
+  "pmw.po_tracking_desc": "ایجاد سفارش خرید، ثبت دفتر روزنامه، پرداخت‌ها، بارگیری، اسناد حمل، نهایی‌سازی و ورود موجودی را از یک گردش‌کار پیگیری کنید.",
+
+
+  "slstage.title_report": "گزارش محموله",
+
+
+  "slstage.title_shipment": "جزئیات محموله",
+
+
+  "slstage.eyebrow_report": "خط کشتیرانی / گزارش محموله",
+
+
+  "slstage.eyebrow_shipment": "خط کشتیرانی / مرحله محموله",
+
+
+  "slstage.desc_report": "گزارش محموله برای شماره‌های بارنامه، کشتی‌ها، سفرها، کانتینرها، کالا، فرستنده، گیرنده و تاریخ‌ها.",
+
+
+  "slstage.desc_shipment": "برای پیگیری محموله جزئیات خط کشتیرانی، کشتی، سفر، کانتینر، بندر، زمان تخمینی ورود و خروج را وارد کنید.",
   "rlp.back_to_portal": "بازگشت به درگاه",
 
 
@@ -84096,6 +84564,114 @@ const ps: Dict = {
 
 
 
+
+
+  "roz.loading_roznamcha_report": "روزنامچه راپور پورته کیږي...",
+
+
+  "roz.loading_all_report": "د ټول روزنامچې راپور پورته کیږي...",
+
+
+  "roz.loading_bank_report": "د بانک روزنامچې راپور پورته کیږي...",
+
+
+  "roz.loading_business_report": "د سوداګریزې روزنامچې راپور پورته کیږي...",
+
+
+  "roz.loading_cash_report": "د نغدو ننوتلو راپور پورته کیږي...",
+
+
+  "roz.loading_invoice_report": "د انوائس روزنامچې راپور پورته کیږي...",
+
+
+  "roz.loading_transfer_report": "د لېږد روزنامچې راپور پورته کیږي...",
+
+
+  "pojp.loading_advance": "د پیرودنې پیشکي تادیاتو جرنل پورته کیږي...",
+
+
+  "pojp.loading_advance_completed": "د بشپړ شویو پیشکیو جرنل پورته کیږي...",
+
+
+  "pojp.loading_charges": "د کریډیت / لګښتونو تادیاتو جرنل پورته کیږي...",
+
+
+  "pojp.loading_history": "د تادیاتو تاریخچې جرنل پورته کیږي...",
+
+
+  "pojp.loading_remaining": "د پاتې تادیاتو جرنل پورته کیږي...",
+
+
+  "sbjr.page_title": "د پلور بکینګ راجستر",
+
+
+  "sbjr.page_desc": "د پلور د ټولو امرونو تفصیلي لاګونه، د وزن لنډیزونه، مقدارونه، او د معاملو بیلانسونه.",
+
+
+  "dph.purchases_title": "پیرودنې",
+
+
+  "dph.purchases_desc": "د جرنل پوسټ کولو او حساب کنټرولونو له وصلیدو وروسته د پیرودنې اسناد به زیات شي.",
+
+
+  "dph.purchases_note": "پلان شوی بهیر: د پیرودنې مسوده، د توکو او عرضه کوونکي حساب تصدیق، متوازن جرنل جوړول، لېجر ته پوسټ کول.",
+
+
+  "erpview.loading_transaction_report": "د ERP معاملاتو راپور پورته کیږي...",
+
+
+  "common.loading_details": "جزئیات پورته کیږي...",
+
+
+  "common.loading_wizard": "ویزارډ پورته کیږي...",
+
+
+  "common.loading_user_reg_form": "د کارن راجسټریشن فورمه پورته کیږي...",
+
+
+  "smw.sales_booking_confirm_title": "د پلور بکینګ تصدیق",
+
+
+  "smw.sales_booking_confirm_desc": "د تصویب شوي سپریڈ شیټ ډشبورډ ترتیب کې د انوائس، حساب، توکو، تادیې، او لېږد حالت سره د بکینګ تصدیق شوي پلور امرونه بیاکتنه کړئ.",
+
+
+  "sales.smw_journal_suffix": "جرنل",
+
+
+  "pmw.booking_confirm_title": "بکینګ تصدیق",
+
+
+  "pmw.booking_confirm_desc": "د تصویب شوي سپریډ شیټ ډشبورډ ترتیب کې د انوائس، حساب، توکو، تادیې، او لېږد حالت سره د بکینګ تصدیق شوي پیرود امرونه بیاکتنه کړئ.",
+
+
+  "pmw.finalized_po_title": "پای ته رسېدلي د پیرودنې امرونه",
+
+
+  "pmw.finalized_po_desc": "تړل شوي د پیرودنې امرونه د وروستي تادیې، بارونې اسنادو، رسیدو تصدیق، او د زېرمې ننوتلو حالت سره.",
+
+
+  "pmw.po_tracking_title": "د پیرودنې امر تعقیب",
+
+
+  "pmw.po_tracking_desc": "د پیرودنې امر جوړونه، جرنل پوسټ کول، تادیات، بارول، بارونې اسناد، پای ته رسول، او د زېرمې ننوتل له یو کاري بهیر څخه تعقیب کړئ.",
+
+
+  "slstage.title_report": "د بار راپور",
+
+
+  "slstage.title_shipment": "د بار جزئیات",
+
+
+  "slstage.eyebrow_report": "د بار وړلو کرښه / د بار راپور",
+
+
+  "slstage.eyebrow_shipment": "د بار وړلو کرښه / د بار پړاو",
+
+
+  "slstage.desc_report": "د BL شمېرو، بېړیو، سفرونو، کانتینرونو، توکو، لیږونکي، اخیستونکي، او نېټو لپاره د بار راپور.",
+
+
+  "slstage.desc_shipment": "د بار د تعقیب لپاره د بار وړلو کرښې، بېړۍ، سفر، کانتینر، بندر، د رسېدو او تګ اټکل شوي وخت جزئیات دننه کړئ.",
   "rlp.back_to_portal": "پورټل ته بېرته",
 
 

@@ -185,10 +185,14 @@ function exportCsv(rows: SalesOrderRow[], title: string) {
 
 export function SalesModuleWorkspace({
   title,
+  displayTitle,
   description,
   type = "sales"
 }: {
+  /** Internal English key used for stage matching (stageMatches) -- never shown to the user. */
   title: string;
+  /** Translated label actually shown on screen and in the print title. Falls back to `title`. */
+  displayTitle?: string;
   description: string;
   type?: SalesModuleType;
 }) {
@@ -322,7 +326,7 @@ export function SalesModuleWorkspace({
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{title}</h1>
+                <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{displayTitle || title}</h1>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-emerald-400 border border-emerald-500/30">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
               </div>
               <p className="truncate text-xs sm:text-sm text-slate-300 font-medium mt-0.5">{description}</p>
@@ -330,7 +334,7 @@ export function SalesModuleWorkspace({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <JournalPrintButton
-              title={`${title} Journal`}
+              title={`${displayTitle || title} ${t(lang, "sales.smw_journal_suffix", "Journal")}`}
               fetchFullData={async () => rows as Record<string, unknown>[]}
               columns={[
                 { key: "sales_order_no", label: "SO Number" },
