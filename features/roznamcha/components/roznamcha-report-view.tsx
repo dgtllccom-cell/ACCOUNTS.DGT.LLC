@@ -506,7 +506,7 @@ export function RoznamchaReportView({
             <div id="roznamcha-actions-menu" className="relative">
               <Button type="button" variant="outline" onClick={() => setMenuOpen((v) => !v)}>
                 <MoreVertical className="h-4 w-4" aria-hidden />
-                <span className="ms-2">Actions</span>
+                <span className="ms-2">{th("Actions")}</span>
               </Button>
               {menuOpen ? (
                 <div className="absolute right-0 top-full z-20 mt-2 w-60 overflow-hidden rounded-xl border bg-background shadow-xl">
@@ -694,7 +694,7 @@ export function RoznamchaReportView({
               size="sm"
               onClick={() => openSelectedReport(false, "voucher")}
             >
-              <Eye className="h-3.5 w-3.5 mr-1" /> PDF Preview
+              <Eye className="h-3.5 w-3.5 mr-1" /> {th("PDF Preview")}
             </Button>
             <Button
               type="button"
@@ -721,12 +721,12 @@ export function RoznamchaReportView({
             </div>
 
             <div className="rounded-lg border p-4 bg-muted/20 space-y-1 dark:bg-slate-900/50 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Narration / Details</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{th("Narration / Details")}</span>
               <p className="text-xs text-foreground font-medium leading-relaxed">{selectedHeader.narration || "No narration provided."}</p>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Transaction Ledger Postings</h3>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{th("Transaction Ledger Postings")}</h3>
               <div className="overflow-x-auto rounded-lg border dark:border-slate-800">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
@@ -747,14 +747,14 @@ export function RoznamchaReportView({
                             {line.accounts ? `${line.accounts.code} - ${line.accounts.name}` : line.account_id}
                           </div>
                           {line.ledgers && (
-                            <div className="text-[10px] text-muted-foreground">Ledger: {line.ledgers.code} - {line.ledgers.name}</div>
+                            <div className="text-[10px] text-muted-foreground">{th("Ledger")}: {line.ledgers.code} - {line.ledgers.name}</div>
                           )}
                         </td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums text-rose-600">
-                          {line.debit ? `${selectedHeader.countries?.currency_code || "PKR"} ${fmtNumber(Number(line.debit))}` : "-"}
+                          {line.debit ? `${selectedHeader.countries?.currency_code || "—"} ${fmtNumber(Number(line.debit))}` : "-"}
                         </td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums text-emerald-600">
-                          {line.credit ? `${selectedHeader.countries?.currency_code || "PKR"} ${fmtNumber(Number(line.credit))}` : "-"}
+                          {line.credit ? `${selectedHeader.countries?.currency_code || "—"} ${fmtNumber(Number(line.credit))}` : "-"}
                         </td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums text-slate-500 dark:text-slate-400">
                           {line.usd_amount ? `$${fmtNumber(Number(line.usd_amount))}` : "-"}
@@ -769,12 +769,12 @@ export function RoznamchaReportView({
             {selectedTotals && (
               <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
                 <div>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Debit Total</span>
-                  <div className="text-sm font-extrabold text-rose-600 mt-0.5">{selectedHeader.countries?.currency_code || "PKR"} {fmtNumber(selectedTotals.debit)}</div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Debit Total")}</span>
+                  <div className="text-sm font-extrabold text-rose-600 mt-0.5">{selectedHeader.countries?.currency_code || "—"} {fmtNumber(selectedTotals.debit)}</div>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Credit Total</span>
-                  <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{selectedHeader.countries?.currency_code || "PKR"} {fmtNumber(selectedTotals.credit)}</div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Credit Total")}</span>
+                  <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{selectedHeader.countries?.currency_code || "—"} {fmtNumber(selectedTotals.credit)}</div>
                 </div>
               </div>
             )}
