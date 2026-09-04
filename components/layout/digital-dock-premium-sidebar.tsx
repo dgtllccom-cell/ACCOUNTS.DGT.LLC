@@ -452,7 +452,7 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[14px] font-extrabold tracking-tight text-slate-900">DIGITAL DOCK ERP</div>
-            <div className="truncate text-[10px] font-medium text-slate-500">Enterprise Management System</div>
+            <div className="truncate text-[10px] font-medium text-slate-500">{tr("Enterprise Management System")}</div>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#10B981]/8 to-transparent px-2.5 py-1.5">
@@ -508,10 +508,10 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-indigo-600 text-[12px] font-bold text-white shadow-md shadow-[#2563EB]/25">A</div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[12px] font-bold text-slate-800">ADMIN</div>
-              <div className="truncate text-[10px] text-slate-500">Super Admin · AL.RAS</div>
+              <div className="truncate text-[12px] font-bold text-slate-800">{tr("Admin")}</div>
+              <div className="truncate text-[10px] text-slate-500">{tr("Super Admin")}</div>
             </div>
-            <button className="relative rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Notifications">
+            <button className="relative rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" aria-label={tr("Notifications")}>
               <Bell className="h-3.5 w-3.5" />
               <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#EF4444]" />
             </button>
@@ -521,7 +521,7 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10B981] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#10B981]" />
             </span>
-            <span className="text-[10px] font-medium text-slate-500">All systems operational</span>
+            <span className="text-[10px] font-medium text-slate-500">{tr("All systems operational")}</span>
           </div>
         </div>
       </div>
@@ -536,16 +536,17 @@ export interface DigitalDockPremiumSidebarWithDrawerProps extends DigitalDockPre
 }
 
 export function DigitalDockPremiumSidebarWithDrawer({ open = false, onOpenChange = () => {}, ...sidebarProps }: DigitalDockPremiumSidebarWithDrawerProps) {
+  const tr = useTr();
   return (
     <>
-      <button onClick={() => onOpenChange(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100" aria-label="Open navigation">
+      <button onClick={() => onOpenChange(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100" aria-label={tr("Open navigation")}>
         <Menu className="h-4 w-4" />
       </button>
       {open && (
         <div className="fixed inset-0 z-50 xl:hidden">
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-in fade-in" onClick={() => onOpenChange(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-200">
-            <button onClick={() => onOpenChange(false)} className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Close navigation">
+            <button onClick={() => onOpenChange(false)} className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label={tr("Close navigation")}>
               <X className="h-4 w-4" />
             </button>
             <DigitalDockPremiumSidebar {...sidebarProps} />
