@@ -60,7 +60,7 @@ async function countRows(supabase: ReturnType<typeof createSupabaseAdminClient>,
   return count ?? 0;
 }
 
-async function loadDashboardData(): Promise<DashboardData> {
+async function loadDashboardData(lang: Awaited<ReturnType<typeof getRequestLanguage>>): Promise<DashboardData> {
   const emptyCounts: CountMap = {
     countries: 0,
     branches: 0,
@@ -149,7 +149,7 @@ async function loadDashboardData(): Promise<DashboardData> {
       ledgerBalance: 0,
       recentRoznamcha: [],
       databaseReady: false,
-      error: error instanceof Error ? error.message : "Database summary failed"
+      error: error instanceof Error ? error.message : t(lang, "dash.db_summary_failed_generic", "Database summary failed")
     };
   }
 }
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
   }
 
   const lang = await getRequestLanguage();
-  const data = await loadDashboardData();
+  const data = await loadDashboardData(lang);
 
   return (
     <div className="space-y-6">

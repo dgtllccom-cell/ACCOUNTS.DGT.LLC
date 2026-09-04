@@ -927,6 +927,7 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dash.db_summary_failed_generic"
   | "docmgr.size_limit"
   | "docmgr.upload_failed"
   | "docmgr.confirm_delete"
@@ -18379,6 +18380,8 @@ const en: Dict = {
 
 
 
+
+  "dash.db_summary_failed_generic": "Database summary failed",
   "docmgr.size_limit": "File size exceeds 20MB limit.",
 
   "docmgr.upload_failed": "Failed to upload document",
@@ -33511,6 +33514,8 @@ const ur: Dict = {
 
 
 
+
+  "dash.db_summary_failed_generic": "ڈیٹا بیس خلاصہ ناکام ہوا",
   "docmgr.size_limit": "فائل کا سائز 20MB کی حد سے تجاوز کرتا ہے۔",
 
   "docmgr.upload_failed": "دستاویز اپ لوڈ کرنے میں ناکامی",
@@ -48645,6 +48650,8 @@ const ar: Dict = {
 
 
 
+
+  "dash.db_summary_failed_generic": "فشل ملخص قاعدة البيانات",
   "docmgr.size_limit": "يتجاوز حجم الملف الحد الأقصى 20 ميجابايت.",
 
   "docmgr.upload_failed": "فشل تحميل المستند",
@@ -63778,6 +63785,8 @@ const fa: Dict = {
 
 
 
+
+  "dash.db_summary_failed_generic": "خلاصه پایگاه داده ناموفق بود",
   "docmgr.size_limit": "اندازه فایل از حد 20 مگابایت بیشتر است.",
 
   "docmgr.upload_failed": "بارگذاری سند ناموفق بود",
@@ -78917,6 +78926,8 @@ const ps: Dict = {
 
 
 
+
+  "dash.db_summary_failed_generic": "د ډیټابیس لنډیز ناکام شو",
   "docmgr.size_limit": "د دوتنې اندازه د 20MB حد څخه ډېره ده۔",
 
   "docmgr.upload_failed": "د سند اپلوډ ناکام شو",
