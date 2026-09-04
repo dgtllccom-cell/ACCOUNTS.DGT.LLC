@@ -5,6 +5,7 @@ import { Building2, ChevronDown, Landmark, Layers3, LockKeyhole, Users } from "l
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { isDemoAuthEnabled } from "@/lib/supabase/config";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type EntryStatus = "Ready" | "Next" | "Planned";
 
@@ -122,6 +123,8 @@ function StatusPill({ status }: { status: EntryStatus }) {
 export default async function NewEntryPage() {
   const cookieStore = await cookies();
   const isPreviewSession = isDemoAuthEnabled() && cookieStore.get("damaan_dashboard_preview")?.value === "1";
+  const lang = (cookieStore.get("erp_lang")?.value ?? "en") as never;
+  const th = (label: string) => translateHeader(lang, label);
 
   let sessionRoles: EnterpriseRole[] | null = null;
   let isSuperAdmin = false;
@@ -145,10 +148,10 @@ export default async function NewEntryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Workspace</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">New Entry</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{th("Workspace")}</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{th("New Entry")}</h1>
         <p className="text-sm text-muted-foreground">
-          Start new branch, account, document, purchase, sale, and ledger workflows from one place.
+          {th("Start new branch, account, document, purchase, sale, and ledger workflows from one place.")}
         </p>
       </div>
 
@@ -159,10 +162,10 @@ export default async function NewEntryPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" aria-hidden />
-                  <h2 className="font-semibold">Branch Entry</h2>
+                  <h2 className="font-semibold">{th("Branch Entry")}</h2>
                 </div>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Super Admin, Country, and City branch setup screens grouped under one dropdown.
+                  {th("Super Admin, Country, and City branch setup screens grouped under one dropdown.")}
                 </p>
               </div>
               <ChevronDown
@@ -178,15 +181,15 @@ export default async function NewEntryPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-slate-950">{item.title}</h3>
+                        <h3 className="font-semibold text-slate-950">{th(item.title)}</h3>
                         {!permitted ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
                             <LockKeyhole className="h-3.5 w-3.5" aria-hidden />
-                            Restricted
+                            {th("Restricted")}
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-500">{th(item.description)}</p>
                     </div>
                     <StatusPill status={item.status} />
                   </div>
@@ -222,9 +225,9 @@ export default async function NewEntryPage() {
           <div className="border-b px-5 py-4">
             <div className="flex items-center gap-2">
               <Landmark className="h-5 w-5 text-primary" aria-hidden />
-              <h2 className="font-semibold">Account</h2>
+              <h2 className="font-semibold">{th("Account")}</h2>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">Create branch-level accounts and khaata records.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{th("Create branch-level accounts and khaata records.")}</p>
           </div>
 
           <div className="grid gap-3 p-5">
@@ -236,8 +239,8 @@ export default async function NewEntryPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-semibold text-slate-950">{item.title}</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
+                    <h3 className="font-semibold text-slate-950">{th(item.title)}</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">{th(item.description)}</p>
                   </div>
                   <StatusPill status={item.status} />
                 </div>
@@ -252,10 +255,10 @@ export default async function NewEntryPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" aria-hidden />
-                  <h2 className="font-semibold">User Entry</h2>
+                  <h2 className="font-semibold">{th("User Entry")}</h2>
                 </div>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Create Super Admin, Country, Branch, Agent, and Staff users from one dropdown.
+                  {th("Create Super Admin, Country, Branch, Agent, and Staff users from one dropdown.")}
                 </p>
               </div>
               <ChevronDown
@@ -271,15 +274,15 @@ export default async function NewEntryPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-slate-950">{item.title}</h3>
+                        <h3 className="font-semibold text-slate-950">{th(item.title)}</h3>
                         {!permitted ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
                             <LockKeyhole className="h-3.5 w-3.5" aria-hidden />
-                            Restricted
+                            {th("Restricted")}
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-500">{th(item.description)}</p>
                     </div>
                     <StatusPill status={item.status} />
                   </div>
@@ -316,10 +319,11 @@ export default async function NewEntryPage() {
         <div className="flex items-start gap-3">
           <Layers3 className="mt-1 h-5 w-5 text-primary" aria-hidden />
           <div>
-            <h2 className="font-semibold">Branch hierarchy</h2>
+            <h2 className="font-semibold">{th("Branch hierarchy")}</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Super Admin Branch will sit at the top. Country Branch, Main Branch, and City Branch
-              screens will follow under this same New Entry structure.
+              {th(
+                "Super Admin Branch sits at the top. Country Branch, Main Branch, and City Branch screens follow under this same New Entry structure."
+              )}
             </p>
           </div>
         </div>
