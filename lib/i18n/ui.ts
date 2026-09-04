@@ -927,6 +927,20 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cl.col_name"
+  | "cl.col_company"
+  | "cl.col_source"
+  | "cl.col_status"
+  | "cl.col_assigned_to"
+  | "cl.col_country"
+  | "cl.col_state"
+  | "cl.col_city"
+  | "cl.col_phone"
+  | "cl.col_created_at"
+  | "cl.col_actions"
+  | "cl.universal_directory"
+  | "cl.dossier_360"
+  | "cl.per_page_suffix"
   | "datepick.date"
   | "datepick.date_range"
   | "datepick.select_date"
@@ -18168,6 +18182,48 @@ const en: Dict = {
 
 
 
+
+
+  "cl.col_name": "Name",
+
+
+  "cl.col_company": "Company",
+
+
+  "cl.col_source": "Source",
+
+
+  "cl.col_status": "Status",
+
+
+  "cl.col_assigned_to": "Assigned To",
+
+
+  "cl.col_country": "Country",
+
+
+  "cl.col_state": "State",
+
+
+  "cl.col_city": "City",
+
+
+  "cl.col_phone": "Phone",
+
+
+  "cl.col_created_at": "Created At",
+
+
+  "cl.col_actions": "Actions",
+
+
+  "cl.universal_directory": "360° Universal Directory",
+
+
+  "cl.dossier_360": "360° Dossier",
+
+
+  "cl.per_page_suffix": "per page",
   "datepick.date": "Date",
 
 
@@ -32783,6 +32839,48 @@ const ur: Dict = {
 
 
 
+
+
+  "cl.col_name": "نام",
+
+
+  "cl.col_company": "کمپنی",
+
+
+  "cl.col_source": "ذریعہ",
+
+
+  "cl.col_status": "اسٹیٹس",
+
+
+  "cl.col_assigned_to": "تفویض کردہ",
+
+
+  "cl.col_country": "ملک",
+
+
+  "cl.col_state": "صوبہ",
+
+
+  "cl.col_city": "شہر",
+
+
+  "cl.col_phone": "فون",
+
+
+  "cl.col_created_at": "تخلیق کی تاریخ",
+
+
+  "cl.col_actions": "اعمال",
+
+
+  "cl.universal_directory": "360° یونیورسل ڈائریکٹری",
+
+
+  "cl.dossier_360": "360° ڈوزیئر",
+
+
+  "cl.per_page_suffix": "فی صفحہ",
   "datepick.date": "تاریخ",
 
 
@@ -47400,6 +47498,48 @@ const ar: Dict = {
 
 
 
+
+
+  "cl.col_name": "الاسم",
+
+
+  "cl.col_company": "الشركة",
+
+
+  "cl.col_source": "المصدر",
+
+
+  "cl.col_status": "الحالة",
+
+
+  "cl.col_assigned_to": "معيّن إلى",
+
+
+  "cl.col_country": "الدولة",
+
+
+  "cl.col_state": "الولاية",
+
+
+  "cl.col_city": "المدينة",
+
+
+  "cl.col_phone": "الهاتف",
+
+
+  "cl.col_created_at": "تاريخ الإنشاء",
+
+
+  "cl.col_actions": "إجراءات",
+
+
+  "cl.universal_directory": "دليل 360° الشامل",
+
+
+  "cl.dossier_360": "ملف 360°",
+
+
+  "cl.per_page_suffix": "لكل صفحة",
   "datepick.date": "التاريخ",
 
 
@@ -62016,6 +62156,48 @@ const fa: Dict = {
 
 
 
+
+
+  "cl.col_name": "نام",
+
+
+  "cl.col_company": "شرکت",
+
+
+  "cl.col_source": "منبع",
+
+
+  "cl.col_status": "وضعیت",
+
+
+  "cl.col_assigned_to": "واگذار به",
+
+
+  "cl.col_country": "کشور",
+
+
+  "cl.col_state": "استان",
+
+
+  "cl.col_city": "شهر",
+
+
+  "cl.col_phone": "تلفن",
+
+
+  "cl.col_created_at": "تاریخ ایجاد",
+
+
+  "cl.col_actions": "عملیات",
+
+
+  "cl.universal_directory": "فهرست جامع ۳۶۰°",
+
+
+  "cl.dossier_360": "پرونده ۳۶۰°",
+
+
+  "cl.per_page_suffix": "در هر صفحه",
   "datepick.date": "تاریخ",
 
 
@@ -76638,6 +76820,48 @@ const ps: Dict = {
 
 
 
+
+
+  "cl.col_name": "نوم",
+
+
+  "cl.col_company": "شرکت",
+
+
+  "cl.col_source": "سرچینه",
+
+
+  "cl.col_status": "حالت",
+
+
+  "cl.col_assigned_to": "سپارل شوی",
+
+
+  "cl.col_country": "هېواد",
+
+
+  "cl.col_state": "ایالت",
+
+
+  "cl.col_city": "ښار",
+
+
+  "cl.col_phone": "تلیفون",
+
+
+  "cl.col_created_at": "د جوړېدو نېټه",
+
+
+  "cl.col_actions": "کړنې",
+
+
+  "cl.universal_directory": "۳۶۰° نړیوال لارښود",
+
+
+  "cl.dossier_360": "۳۶۰° دوسیه",
+
+
+  "cl.per_page_suffix": "په هر مخ",
   "datepick.date": "نېټه",
 
 

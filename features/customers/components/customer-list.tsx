@@ -513,7 +513,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
                   >
                     <Layers className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>360° Universal Directory</span>
+                    <span>{t(lang, "cl.universal_directory", "360° Universal Directory")}</span>
                   </button>
                   <button
                     type="button"
@@ -606,17 +606,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   />
                 </th>
                 <th className="px-3 py-3.5 w-12 text-slate-400">#</th>
-                <th className="px-4 py-3.5">Name</th>
-                <th className="px-4 py-3.5">Company</th>
-                <th className="px-4 py-3.5">Source</th>
-                <th className="px-4 py-3.5">Status</th>
-                <th className="px-4 py-3.5">Assigned To</th>
-                <th className="px-4 py-3.5">Country</th>
-                <th className="px-4 py-3.5">State</th>
-                <th className="px-4 py-3.5">City</th>
-                <th className="px-4 py-3.5">Phone</th>
-                <th className="px-4 py-3.5">Created At</th>
-                <th className="px-4 py-3.5 text-center">Actions</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_name", "Name")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_company", "Company")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_source", "Source")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_status", "Status")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_assigned_to", "Assigned To")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_country", "Country")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_state", "State")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_city", "City")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_phone", "Phone")}</th>
+                <th className="px-4 py-3.5">{t(lang, "cl.col_created_at", "Created At")}</th>
+                <th className="px-4 py-3.5 text-center">{t(lang, "cl.col_actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -828,7 +828,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                                   className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
                                 >
                                   <Layers className="h-3.5 w-3.5 text-indigo-600" />
-                                  <span>360° Dossier</span>
+                                  <span>{t(lang, "cl.dossier_360", "360° Dossier")}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -889,10 +889,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 aria-label={t(lang, "cl.aria_per_page", "Leads per page")}
                 className="h-7 px-2.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-6 shadow-2xs"
               >
-                <option value={10}>10 per page</option>
-                <option value={25}>25 per page</option>
-                <option value={50}>50 per page</option>
-                <option value={100}>100 per page</option>
+                <option value={10}>{`10 ${t(lang, "cl.per_page_suffix", "per page")}`}</option>
+                <option value={25}>{`25 ${t(lang, "cl.per_page_suffix", "per page")}`}</option>
+                <option value={50}>{`50 ${t(lang, "cl.per_page_suffix", "per page")}`}</option>
+                <option value={100}>{`100 ${t(lang, "cl.per_page_suffix", "per page")}`}</option>
               </select>
               <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 pointer-events-none" />
             </div>
