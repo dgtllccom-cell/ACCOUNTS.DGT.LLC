@@ -287,7 +287,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.order_no", "Order No / B/L Ref")}</label>
               <input
                 type="text"
-                placeholder="e.g. CL-ORD-2026-0001"
+                placeholder={tt("pbm.order_no_ph", "e.g. CL-ORD-2026-0001")}
                 value={form.order_no}
                 onChange={(e) => setForm({ ...form, order_no: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
@@ -298,7 +298,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.bl_no", "Bill of Lading (B/L) No")}</label>
               <input
                 type="text"
-                placeholder="e.g. BL-984712"
+                placeholder={tt("pbm.bl_no_ph", "e.g. BL-984712")}
                 value={form.bl_number}
                 onChange={(e) => setForm({ ...form, bl_number: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
@@ -309,7 +309,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.gd_no", "Customs GD Number")}</label>
               <input
                 type="text"
-                placeholder="e.g. KADP-HC-10492"
+                placeholder={tt("pbm.container_no_ph", "e.g. KADP-HC-10492")}
                 value={form.gd_number}
                 onChange={(e) => setForm({ ...form, gd_number: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
@@ -339,7 +339,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.port_station", "Port / Border Station")}</label>
               <input
                 type="text"
-                placeholder="e.g. Karachi Port / Torkham Border"
+                placeholder={tt("pbm.port_border_ph", "e.g. Karachi Port / Torkham Border")}
                 value={form.port_name}
                 onChange={(e) => setForm({ ...form, port_name: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"

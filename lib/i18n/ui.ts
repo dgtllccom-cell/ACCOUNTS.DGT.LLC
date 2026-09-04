@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "pbm.order_no_ph"
+  | "pbm.bl_no_ph"
+  | "pbm.container_no_ph"
+  | "pbm.port_border_ph"
   | "cbr.currency_ph"
   | "cbr.branch_name_ph"
   | "cbr.branch_code_ph"
@@ -18811,6 +18815,14 @@ const en: Dict = {
 
 
 
+
+  "pbm.order_no_ph": "e.g. CL-ORD-2026-0001",
+
+  "pbm.bl_no_ph": "e.g. BL-984712",
+
+  "pbm.container_no_ph": "e.g. KADP-HC-10492",
+
+  "pbm.port_border_ph": "e.g. Karachi Port / Torkham Border",
   "cbr.currency_ph": "PKR / AED / USD",
 
   "cbr.branch_name_ph": "e.g. Chaman City Branch",
@@ -34722,6 +34734,14 @@ const ur: Dict = {
 
 
 
+
+  "pbm.order_no_ph": "مثلاً CL-ORD-2026-0001",
+
+  "pbm.bl_no_ph": "مثلاً BL-984712",
+
+  "pbm.container_no_ph": "مثلاً KADP-HC-10492",
+
+  "pbm.port_border_ph": "مثلاً کراچی پورٹ / طورخم بارڈر",
   "cbr.currency_ph": "مثلاً PKR / AED / USD",
 
   "cbr.branch_name_ph": "مثلاً چمن سٹی برانچ",
@@ -50635,6 +50655,14 @@ const ar: Dict = {
 
 
 
+
+  "pbm.order_no_ph": "مثال: CL-ORD-2026-0001",
+
+  "pbm.bl_no_ph": "مثال: BL-984712",
+
+  "pbm.container_no_ph": "مثال: KADP-HC-10492",
+
+  "pbm.port_border_ph": "مثال: ميناء كراتشي / حدود طورخام",
   "cbr.currency_ph": "مثال: PKR / AED / USD",
 
   "cbr.branch_name_ph": "مثال: فرع مدينة تشامان",
@@ -66547,6 +66575,14 @@ const fa: Dict = {
 
 
 
+
+  "pbm.order_no_ph": "مثال: CL-ORD-2026-0001",
+
+  "pbm.bl_no_ph": "مثال: BL-984712",
+
+  "pbm.container_no_ph": "مثال: KADP-HC-10492",
+
+  "pbm.port_border_ph": "مثال: بندر کراچی / مرز تورخم",
   "cbr.currency_ph": "مثال: PKR / AED / USD",
 
   "cbr.branch_name_ph": "مثال: شعبه شهر چمن",
@@ -82465,6 +82501,14 @@ const ps: Dict = {
 
 
 
+
+  "pbm.order_no_ph": "بېلګه: CL-ORD-2026-0001",
+
+  "pbm.bl_no_ph": "بېلګه: BL-984712",
+
+  "pbm.container_no_ph": "بېلګه: KADP-HC-10492",
+
+  "pbm.port_border_ph": "بېلګه: د کراچۍ بندر / د تورخم پوله",
   "cbr.currency_ph": "بېلګه: PKR / AED / USD",
 
   "cbr.branch_name_ph": "بېلګه: د چمن ښار څانګه",
