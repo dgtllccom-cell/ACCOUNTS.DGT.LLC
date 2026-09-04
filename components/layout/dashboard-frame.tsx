@@ -38,6 +38,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sidebar";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { GlobalCalculator } from "@/components/layout/global-calculator";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
@@ -574,6 +575,8 @@ export function DashboardFrame({
                   </div>
                 )}
               </div>
+
+              <GlobalCalculator />
 
               <div className="relative" ref={notificationsRef}>
                 <button

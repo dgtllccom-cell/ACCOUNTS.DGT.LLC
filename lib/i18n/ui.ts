@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "calc.open"
+  | "calc.title"
+  | "calc.restore"
+  | "calc.minimize"
+  | "calc.close"
+  | "calc.clear"
+  | "calc.backspace"
+  | "calc.equals"
+  | "calc.toggle_sign"
   | "ble.vessel_name_ph"
   | "dintake.containers_ph"
   | "utask.related_ref_ph"
@@ -19073,6 +19082,33 @@ const en: Dict = {
 
 
 
+
+
+  "calc.open": "Calculator",
+
+
+  "calc.title": "Calculator",
+
+
+  "calc.restore": "Restore",
+
+
+  "calc.minimize": "Minimize",
+
+
+  "calc.close": "Close",
+
+
+  "calc.clear": "Clear",
+
+
+  "calc.backspace": "Backspace",
+
+
+  "calc.equals": "Equals",
+
+
+  "calc.toggle_sign": "Toggle sign",
   "ble.vessel_name_ph": "e.g. MSC ATHENS",
 
 
@@ -35541,6 +35577,33 @@ const ur: Dict = {
 
 
 
+
+
+  "calc.open": "کیلکولیٹر",
+
+
+  "calc.title": "کیلکولیٹر",
+
+
+  "calc.restore": "بحال کریں",
+
+
+  "calc.minimize": "چھوٹا کریں",
+
+
+  "calc.close": "بند کریں",
+
+
+  "calc.clear": "صاف کریں",
+
+
+  "calc.backspace": "بیک اسپیس",
+
+
+  "calc.equals": "برابر",
+
+
+  "calc.toggle_sign": "علامت تبدیل کریں",
   "ble.vessel_name_ph": "مثلاً MSC ATHENS",
 
 
@@ -52011,6 +52074,33 @@ const ar: Dict = {
 
 
 
+
+
+  "calc.open": "الآلة الحاسبة",
+
+
+  "calc.title": "الآلة الحاسبة",
+
+
+  "calc.restore": "استعادة",
+
+
+  "calc.minimize": "تصغير",
+
+
+  "calc.close": "إغلاق",
+
+
+  "calc.clear": "مسح",
+
+
+  "calc.backspace": "مسح للخلف",
+
+
+  "calc.equals": "يساوي",
+
+
+  "calc.toggle_sign": "تبديل الإشارة",
   "ble.vessel_name_ph": "مثال: MSC ATHENS",
 
 
@@ -68480,6 +68570,33 @@ const fa: Dict = {
 
 
 
+
+
+  "calc.open": "ماشین‌حساب",
+
+
+  "calc.title": "ماشین‌حساب",
+
+
+  "calc.restore": "بازیابی",
+
+
+  "calc.minimize": "کوچک کردن",
+
+
+  "calc.close": "بستن",
+
+
+  "calc.clear": "پاک کردن",
+
+
+  "calc.backspace": "بک‌اسپیس",
+
+
+  "calc.equals": "مساوی",
+
+
+  "calc.toggle_sign": "تغییر علامت",
   "ble.vessel_name_ph": "مثلاً MSC ATHENS",
 
 
@@ -84955,6 +85072,33 @@ const ps: Dict = {
 
 
 
+
+
+  "calc.open": "محاسبونکی",
+
+
+  "calc.title": "محاسبونکی",
+
+
+  "calc.restore": "بیرته راوستل",
+
+
+  "calc.minimize": "کوچنی کول",
+
+
+  "calc.close": "بندول",
+
+
+  "calc.clear": "پاکول",
+
+
+  "calc.backspace": "شاته ړنګول",
+
+
+  "calc.equals": "مساوي",
+
+
+  "calc.toggle_sign": "نښه بدلول",
   "ble.vessel_name_ph": "بېلګه: MSC ATHENS",
 
 
