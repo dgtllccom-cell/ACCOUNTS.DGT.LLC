@@ -499,14 +499,11 @@ export async function GET(request: NextRequest) {
               const usdAmount = amt * factor;
               return {
                 id: row.id,
-                date: row.roznamcha_entries?.entry_date || "2026-06-12",
+                date: row.roznamcha_entries?.entry_date || null,
                 amount: amt,
                 currency: row.currency,
                 amountUSD: usdAmount,
-                description: row.description || "Administrative Expense",
-                branch: "Islamabad Head Office",
-                company: "Damaan Trading Pakistan",
-                user: "Ahmad Shah"
+                description: row.description || null,
               };
             });
 
@@ -522,46 +519,64 @@ export async function GET(request: NextRequest) {
           count: data.length,
           totalExpenseUSD: totalUSD,
           avgExpenseUSD: totalUSD / (data.length || 1),
-          highSpendingBranch: "Dubai Corporate Center"
         };
         break;
       }
 
       case "financial-summaries": {
-        data = {
-          assets: [
-            { code: "1010", name: "Cash in Hand (Local Vault)", balance: 1450000, currency: "PKR" },
-            { code: "1020", name: "USD Bank Account Dubai", balance: 185000, currency: "USD" },
-            { code: "1200", name: "Receivables (Cargo Customers)", balance: 489000, currency: "PKR" }
-          ],
-          liabilities: [
-            { code: "2010", name: "Accounts Payable (Logistics Providers)", balance: 64000, currency: "USD" },
-            { code: "2200", name: "Customer Security Deposits", balance: 45000, currency: "AFN" }
-          ],
-          equity: [
-            { code: "3000", name: "Damaan Capital Fund", balance: 500000, currency: "USD" }
-          ],
-          revenue: [
-            { code: "4010", name: "Cargo Freight Commission Fees", balance: 75000, currency: "USD" },
-            { code: "4020", name: "Transit Customs Duty Refunds", balance: 1200000, currency: "PKR" }
-          ],
-          expense: [
-            { code: "5010", name: "Fuel & Power backup utilities", balance: 47000, currency: "PKR" },
-            { code: "5020", name: "Corporate Rent and Services", balance: 1500, currency: "USD" }
-          ]
-        };
+        // Real figures from purchase_orders / sales_orders / roznamcha_lines,
+        // clamped to the caller's report scope. No hard-coded chart of accounts.
+        const scopeCountry = parsed.countryId !== "all" ? parsed.countryId : null;
+        const [purchaseRes, salesRes, rozRes] = await Promise.allSettled([
+          (async () => {
+            let q = admin.from("purchase_orders").select("total_amount, remaining_amount").is("deleted_at", null);
+            if (scopeCountry) q = q.eq("country_id", scopeCountry);
+            return q;
+          })(),
+          (async () => {
+            let q = admin.from("sales_orders").select("total_amount").is("deleted_at", null);
+            if (scopeCountry) q = q.eq("country_id", scopeCountry);
+            return q;
+          })(),
+          (async () => {
+            let q = admin.from("roznamcha_entries").select("roznamcha_lines(debit, credit)").is("deleted_at", null);
+            if (scopeCountry) q = q.eq("country_id", scopeCountry);
+            return q;
+          })(),
+        ]);
 
-        const totalAssetsUSD = 1450000 * 0.0036 + 185000 + 489000 * 0.0036;
-        const totalLiabilitiesUSD = 64000 + 45000 * 0.014;
-        const totalRevenueUSD = 75000 + 1200000 * 0.0036;
-        const totalExpenseUSD = 47000 * 0.0036 + 1500;
+        const purchaseData = purchaseRes.status === "fulfilled" ? (purchaseRes.value as any).data ?? [] : [];
+        const salesData = salesRes.status === "fulfilled" ? (salesRes.value as any).data ?? [] : [];
+        const rozData = rozRes.status === "fulfilled" ? (rozRes.value as any).data ?? [] : [];
 
+        const totalPurchase = purchaseData.reduce((s: number, r: any) => s + Number(r.total_amount || 0), 0);
+        const totalRemaining = purchaseData.reduce((s: number, r: any) => s + Number(r.remaining_amount || 0), 0);
+        const totalSales = salesData.reduce((s: number, r: any) => s + Number(r.total_amount || 0), 0);
+        let totalDebit = 0;
+        let totalCredit = 0;
+        for (const entry of rozData) {
+          for (const line of (entry.roznamcha_lines ?? [])) {
+            totalDebit += Number(line.debit || 0);
+            totalCredit += Number(line.credit || 0);
+          }
+        }
+
+        data = [
+          { serial: "FS-01", metric: "Total Sales Revenue", amount: totalSales, type: "Income" },
+          { serial: "FS-02", metric: "Total Purchases & Direct Costs", amount: totalPurchase, type: "Expense" },
+          { serial: "FS-03", metric: "Gross / Net Operating Balance", amount: totalSales - totalPurchase, type: totalSales >= totalPurchase ? "Surplus" : "Deficit" },
+          { serial: "FS-04", metric: "Total Inward Cash / Debit Entries", amount: totalDebit, type: "Debit Flow" },
+          { serial: "FS-05", metric: "Total Outward Cash / Credit Entries", amount: totalCredit, type: "Credit Flow" },
+          { serial: "FS-06", metric: "Net Roznamcha Cash Position", amount: totalCredit - totalDebit, type: "Net Cash" },
+          { serial: "FS-07", metric: "Outstanding Supplier / Order Payables", amount: totalRemaining, type: "Liability" },
+        ];
         summary = {
-          totalAssetsUSD,
-          totalLiabilitiesUSD,
-          totalRevenueUSD,
-          totalExpenseUSD,
-          netIncomeUSD: totalRevenueUSD - totalExpenseUSD
+          totalPurchase,
+          totalSales,
+          totalRemaining,
+          totalDebit,
+          totalCredit,
+          netOperating: totalSales - totalPurchase,
         };
         break;
       }

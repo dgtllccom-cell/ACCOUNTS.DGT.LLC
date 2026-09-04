@@ -5,6 +5,7 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { ledgerReportService } from "@/lib/services/ledger-report-service";
+import { resolveBrandingCompanyName } from "@/lib/branding/server";
 import {
   buildProfessionalReportLayout,
   reportLayoutToHtml,
@@ -54,6 +55,14 @@ export async function GET(request: NextRequest) {
 
     const fromDate = query.fromDate ?? monthStartIso();
     const toDate = query.toDate ?? todayIso();
+
+    // Report entity = the requested (or session) scope's configured company
+    // branding — never a hard-coded name. Omitted from the report when unset.
+    const companyName = await resolveBrandingCompanyName({
+      countryId: query.countryId ?? session.countryIds?.[0] ?? null,
+      countryBranchId: query.countryBranchId ?? null,
+      cityBranchId: query.cityBranchId ?? null,
+    });
 
     // Get ledger data
     const ledgerRows = await ledgerReportService.listLedgers({
@@ -110,7 +119,7 @@ export async function GET(request: NextRequest) {
       session,
       {
         dateRange: { from: fromDate, to: toDate },
-        company: "DAMAAN Business Group",
+        ...(companyName ? { company: companyName } : {}),
       }
     );
 

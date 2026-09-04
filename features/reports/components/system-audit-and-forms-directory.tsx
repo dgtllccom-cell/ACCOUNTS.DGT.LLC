@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   FileText,
@@ -29,6 +29,8 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -435,7 +437,7 @@ export const ERP_FORMS_CATALOG: ErpFormItem[] = [
     category: "Administration & Settings",
     route: "/dashboard/settings/company",
     roles: ["Super Admin"],
-    description: "Configure corporate name (DAMAAN BUSINESS GROUP), owner identity (Asmat Abdullah), tax registration, and logos.",
+    description: "Configure the corporate name, owner identity, tax registration, and logos used across every report and document.",
     status: "Production Ready"
   },
   {
@@ -503,10 +505,19 @@ export const DEVELOPMENT_MILESTONES = [
   }
 ];
 
-export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: SupportedLanguage }) {
+export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang: SupportedLanguage = activeLang !== "en" ? activeLang : langProp;
   const dir = getLanguageDirection(lang);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  // Dynamic report entity — the configured company for this session's scope,
+  // never a hard-coded "DAMAAN BUSINESS GROUP".
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBranding(null).then((b) => setBrandCompany(brandingName(b, lang) || null)).catch(() => {});
+  }, [lang]);
+  const brandLine = brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP");
 
   const categories = ["All", "Dashboard", "New Entry", "Accounting & Roznamcha", "Trade & Purchase", "Shipping & Clearing", "Communication", "Administration & Settings"];
 
@@ -592,14 +603,14 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
               {t(lang, "safd.safd_official_system_audit_directory", "OFFICIAL SYSTEM AUDIT & DIRECTORY")}
             </span>
             <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30">
-              Active: August 17, 2026
+              {t(lang, "safd.generated_on", "Generated")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             {t(lang, "safd.safd_erp_master_forms_directory", "ERP Master Forms Directory & Project Progress Report")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            DAMAAN BUSINESS GROUP Complete ERP System Portfolio. Comprehensive inventory of all active modules, forms, routes, and development milestones from inception to date.
+            {brandLine} — {t(lang, "safd.portfolio_desc", "Complete ERP system portfolio. Comprehensive inventory of all active modules, forms, routes, and development milestones from inception to date.")}
           </p>
         </div>
 
@@ -620,17 +631,16 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
         {/* Document Header */}
         <div className="border-b border-border pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-12 w-12 object-contain" />
+            <img src="/icons/digital-dock-icon.svg" alt={brandLine} className="h-12 w-12 object-contain" />
             <div>
-              <h2 className="text-xl font-black text-foreground">DAMAAN BUSINESS GROUP</h2>
-              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Owner / Sponsor: Asmat Abdullah</p>
-              <p className="text-[11px] text-muted-foreground">{t(lang, "safd.safd_multi_country_branch_erp_desc", "Multi-Country Branch ERP, Commercial Trade, Customs Clearing & Financial Core")}</p>
+              <h2 className="text-xl font-black text-foreground">{brandLine}</h2>
+                            <p className="text-[11px] text-muted-foreground">{t(lang, "safd.safd_multi_country_branch_erp_desc", "Multi-Country Branch ERP, Commercial Trade, Customs Clearing & Financial Core")}</p>
             </div>
           </div>
 
           <div className="text-start sm:text-end text-xs space-y-0.5">
-            <p className="font-extrabold text-foreground">REPORT DATE: 17-AUGUST-2026</p>
-            <p className="text-muted-foreground font-mono text-[11px]">Total Registered Forms: {ERP_FORMS_CATALOG.length}</p>
+            <p className="font-extrabold text-foreground">{t(lang, "safd.report_date", "Report Date")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "long", year: "numeric" })}</p>
+            <p className="text-muted-foreground font-mono text-[11px]">{t(lang, "safd.total_registered_forms", "Total Registered Forms")}: {ERP_FORMS_CATALOG.length}</p>
             <p className="text-muted-foreground font-mono text-[11px]">{t(lang, "safd.safd_status_production_ready", "Status: Production Ready / Audited")}</p>
           </div>
         </div>
@@ -639,31 +649,31 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
         <div>
           <h3 className="text-sm font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            1. Executive System Statistics & Modules Breakdown
+            {t(lang, "safd.section_1_title", "1. Executive System Statistics & Modules Breakdown")}
           </h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
               <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_total_modules_forms", "Total Modules & Forms")}</span>
               <p className="text-2xl font-black text-foreground mt-1">{ERP_FORMS_CATALOG.length}</p>
-              <span className="text-[10px] font-semibold text-emerald-600">100% Operational</span>
+              <span className="text-[10px] font-semibold text-emerald-600">{t(lang, "safd.pct_operational", "100% Operational")}</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
               <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_system_categories", "System Categories")}</span>
-              <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">7 Core Sectors</p>
+              <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{t(lang, "safd.core_sectors", "7 Core Sectors")}</p>
               <span className="text-[10px] font-semibold text-muted-foreground">{t(lang, "safd.safd_full_erp_scope", "Full ERP Scope")}</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
               <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_database_migrations", "Database Migrations")}</span>
-              <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">119+ SQL Schemas</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">PostgreSQL & Supabase</span>
+              <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{t(lang, "safd.sql_schemas", "119+ SQL Schemas")}</p>
+              <span className="text-[10px] font-semibold text-muted-foreground">PostgreSQL &amp; Supabase</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
               <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_role_scopes", "Role Scopes")}</span>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">6 Hierarchy Levels</p>
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{t(lang, "safd.hierarchy_levels", "6 Hierarchy Levels")}</p>
               <span className="text-[10px] font-semibold text-muted-foreground">{t(lang, "safd.safd_super_to_cashier", "Super to Cashier")}</span>
             </div>
           </div>
@@ -673,7 +683,7 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
         <div>
           <h3 className="text-sm font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            2. Project Development Timeline & Milestones (From Start to Present)
+            {t(lang, "safd.section_2_title", "2. Project Development Timeline & Milestones (From Start to Present)")}
           </h3>
 
           <div className="space-y-3">
@@ -817,7 +827,7 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
             </div>
 
             <div>
-              <p className="font-black text-foreground mb-8">Asmat Abdullah</p>
+              <div className="h-10 mb-2" />
               <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
                 {t(lang, "safd.safd_approved_by_system_owner", "Approved By (System Owner)")}
               </div>
@@ -825,8 +835,8 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
           </div>
 
           <div className="mt-8 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between text-[10px] text-muted-foreground">
-            <p>© 2026 DAMAAN BUSINESS GROUP ERP System. All Rights Reserved.</p>
-            <p className="font-mono">Generated: 17-08-2026 14:00 | Document Version 3.4.0-PROD</p>
+            <p>© {new Date().getFullYear()} {brandLine} — {t(lang, "safd.rights_reserved", "All rights reserved.")}</p>
+            <p className="font-mono">{t(lang, "safd.generated_on", "Generated")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</p>
           </div>
         </div>
       </div>

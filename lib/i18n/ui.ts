@@ -927,6 +927,17 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "safd.generated_on"
+  | "safd.portfolio_desc"
+  | "safd.report_date"
+  | "safd.total_registered_forms"
+  | "safd.section_1_title"
+  | "safd.section_2_title"
+  | "safd.pct_operational"
+  | "safd.core_sectors"
+  | "safd.sql_schemas"
+  | "safd.hierarchy_levels"
+  | "safd.rights_reserved"
   | "cl.col_name"
   | "cl.col_company"
   | "cl.col_source"
@@ -18184,6 +18195,39 @@ const en: Dict = {
 
 
 
+
+
+  "safd.generated_on": "Generated",
+
+
+  "safd.portfolio_desc": "Complete ERP system portfolio. Comprehensive inventory of all active modules, forms, routes, and development milestones from inception to date.",
+
+
+  "safd.report_date": "Report Date",
+
+
+  "safd.total_registered_forms": "Total Registered Forms",
+
+
+  "safd.section_1_title": "1. Executive System Statistics & Modules Breakdown",
+
+
+  "safd.section_2_title": "2. Project Development Timeline & Milestones (From Start to Present)",
+
+
+  "safd.pct_operational": "100% Operational",
+
+
+  "safd.core_sectors": "7 Core Sectors",
+
+
+  "safd.sql_schemas": "119+ SQL Schemas",
+
+
+  "safd.hierarchy_levels": "6 Hierarchy Levels",
+
+
+  "safd.rights_reserved": "All rights reserved.",
   "cl.col_name": "Name",
 
 
@@ -32841,6 +32885,39 @@ const ur: Dict = {
 
 
 
+
+
+  "safd.generated_on": "تیار کردہ",
+
+
+  "safd.portfolio_desc": "مکمل ERP سسٹم پورٹ فولیو۔ تمام فعال ماڈیولز، فارمز، روٹس، اور آغاز سے آج تک کے ترقیاتی سنگ میلوں کی جامع فہرست۔",
+
+
+  "safd.report_date": "رپورٹ کی تاریخ",
+
+
+  "safd.total_registered_forms": "کل رجسٹرڈ فارمز",
+
+
+  "safd.section_1_title": "1۔ ایگزیکٹو سسٹم شماریات اور ماڈیولز کی تفصیل",
+
+
+  "safd.section_2_title": "2۔ منصوبے کی ترقیاتی ٹائم لائن اور سنگ میل (آغاز سے اب تک)",
+
+
+  "safd.pct_operational": "100% فعال",
+
+
+  "safd.core_sectors": "7 بنیادی شعبے",
+
+
+  "safd.sql_schemas": "119+ SQL اسکیمے",
+
+
+  "safd.hierarchy_levels": "6 درجہ بندی کی سطحیں",
+
+
+  "safd.rights_reserved": "جملہ حقوق محفوظ ہیں۔",
   "cl.col_name": "نام",
 
 
@@ -47500,6 +47577,39 @@ const ar: Dict = {
 
 
 
+
+
+  "safd.generated_on": "تم الإنشاء",
+
+
+  "safd.portfolio_desc": "محفظة نظام ERP الكاملة. جرد شامل لجميع الوحدات والنماذج والمسارات ومعالم التطوير من البداية حتى الآن.",
+
+
+  "safd.report_date": "تاريخ التقرير",
+
+
+  "safd.total_registered_forms": "إجمالي النماذج المسجلة",
+
+
+  "safd.section_1_title": "1. إحصائيات النظام التنفيذية وتفصيل الوحدات",
+
+
+  "safd.section_2_title": "2. الجدول الزمني لتطوير المشروع ومعالمه (من البداية حتى الآن)",
+
+
+  "safd.pct_operational": "تشغيلي بنسبة 100%",
+
+
+  "safd.core_sectors": "7 قطاعات أساسية",
+
+
+  "safd.sql_schemas": "أكثر من 119 مخطط SQL",
+
+
+  "safd.hierarchy_levels": "6 مستويات هرمية",
+
+
+  "safd.rights_reserved": "جميع الحقوق محفوظة.",
   "cl.col_name": "الاسم",
 
 
@@ -62158,6 +62268,39 @@ const fa: Dict = {
 
 
 
+
+
+  "safd.generated_on": "تولید شده",
+
+
+  "safd.portfolio_desc": "نمونه‌کار کامل سیستم ERP. فهرست جامع همه ماژول‌ها، فرم‌ها، مسیرها و نقاط عطف توسعه از ابتدا تا امروز.",
+
+
+  "safd.report_date": "تاریخ گزارش",
+
+
+  "safd.total_registered_forms": "مجموع فرم‌های ثبت‌شده",
+
+
+  "safd.section_1_title": "1. آمار اجرایی سیستم و تفکیک ماژول‌ها",
+
+
+  "safd.section_2_title": "2. جدول زمانی توسعه پروژه و نقاط عطف (از آغاز تا کنون)",
+
+
+  "safd.pct_operational": "۱۰۰٪ عملیاتی",
+
+
+  "safd.core_sectors": "۷ بخش اصلی",
+
+
+  "safd.sql_schemas": "بیش از ۱۱۹ شمای SQL",
+
+
+  "safd.hierarchy_levels": "۶ سطح سلسله‌مراتب",
+
+
+  "safd.rights_reserved": "کلیه حقوق محفوظ است.",
   "cl.col_name": "نام",
 
 
@@ -76822,6 +76965,39 @@ const ps: Dict = {
 
 
 
+
+
+  "safd.generated_on": "تولید شوی",
+
+
+  "safd.portfolio_desc": "د ERP سیسټم بشپړ پورټ فولیو. د ټولو فعالو ماډلونو، فورمو، لارو، او له پیل څخه تر نن پورې د پراختیا د بریالیتوبونو جامع لیست.",
+
+
+  "safd.report_date": "د راپور نېټه",
+
+
+  "safd.total_registered_forms": "ټول ثبت شوي فورمې",
+
+
+  "safd.section_1_title": "1. اجرایوي سیسټم احصایې او د ماډلونو ماتوالی",
+
+
+  "safd.section_2_title": "2. د پروژې د پراختیا مهال ویش او بریالیتوبونه (له پیل څخه تر اوسه)",
+
+
+  "safd.pct_operational": "۱۰۰٪ عملیاتي",
+
+
+  "safd.core_sectors": "۷ اصلي سکتورونه",
+
+
+  "safd.sql_schemas": "۱۱۹+ د SQL سکیمې",
+
+
+  "safd.hierarchy_levels": "۶ د لړۍ کچې",
+
+
+  "safd.rights_reserved": "ټول حقونه خوندي دي.",
   "cl.col_name": "نوم",
 
 

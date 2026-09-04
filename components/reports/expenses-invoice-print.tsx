@@ -12,6 +12,17 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
   const grandTotal = bill.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0;
   const currency = bill.city_branches?.countries?.currency_code || "";
 
+  // Dynamic branding from the bill's own company / branch — NEVER a hard-coded "Damaan".
+  const cb = bill.city_branches || {};
+  const brandName: string =
+    bill.company_name ||
+    bill.companies?.name ||
+    cb.company_name ||
+    cb.companies?.name ||
+    cb.branding_company_name ||
+    cb.name ||
+    t(lang, "acct.brand_short", "Digital Dock ERP");
+
   // Convert number to words (simple implementation for now)
   const numberToWords = (num: number) => {
     const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
@@ -46,15 +57,14 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       {/* Header */}
       <div className="border border-slate-800 p-4 pb-2 text-center relative flex justify-between items-center">
         <div className="text-left">
-          <h1 className="text-3xl font-black text-slate-800 tracking-tighter" style={{ fontFamily: "Impact, sans-serif" }}>DAMAAN GROUP ERP</h1>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tighter" style={{ fontFamily: "Impact, sans-serif" }}>{brandName}</h1>
           <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wide">{t(lang, "pdfui.eip_erp_general_ledger_tagline", "Enterprise Resource Planning & General Ledger")}</p>
         </div>
         <div className="text-right flex flex-col items-end">
-          {/* Mock Logo or Text Logo */}
           <div className="w-16 h-16 bg-slate-800 text-white flex items-center justify-center font-bold text-xl rounded-sm">
-            DG
+            {brandName.trim().slice(0, 2).toUpperCase() || "•"}
           </div>
-          <span className="font-bold text-xs mt-1">DAMAAN GROUP</span>
+          <span className="font-bold text-xs mt-1">{brandName}</span>
         </div>
       </div>
       

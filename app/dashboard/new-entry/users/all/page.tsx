@@ -40,6 +40,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { cn } from "@/lib/utils";
 
 interface UserDirectoryItem {
@@ -55,9 +56,10 @@ interface UserDirectoryItem {
   role: string;
   roleLabel: string;
   isActive: boolean;
+  permissions?: string[];
   permissionsCount?: number;
   passwordVaultRef: string;
-  passwordKey?: string;
+  passwordKey?: string | null;
   loginUrl: string;
   createdAt: string;
   updatedAt?: string;
@@ -140,6 +142,13 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
   // Real signed-in session context for the "Branch & User Details" block
   const [sess, setSess] = useState<any>(null);
+  // Dynamic document brand for the print slips — the session scope's configured
+  // company (country_company_profiles), never a hard-coded "DAMAAN"/"DGT".
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBranding(null).then((b) => setBrandCompany(brandingName(b, lang) || null)).catch(() => {});
+  }, [lang]);
+  const brandLine = brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP");
   useEffect(() => {
     fetch("/api/erp/auth/session")
       .then((r) => r.json())
@@ -182,10 +191,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
               : [];
         const mapped: UserDirectoryItem[] = rawList.map((u: any, idx: number) => {
           const userCode = u.userCode || `USR-${String(idx + 1).padStart(4, "0")}`;
-          const passwordKey = "Admin@123";
-          
-          let loginUrl = "/auth/login";
+          // Real password from the API (super admin only; null otherwise — the row
+          // renders a masked placeholder). NEVER a hard-coded "Admin@123".
+          const passwordKey = u.rawPassword || u.raw_password || null;
+
           const role = (u.role || "").toLowerCase();
+          let loginUrl = "/auth/login";
           if (role.includes("super_admin") || role.includes("superadmin")) {
             loginUrl = "/auth/login/admin";
           } else if (role.includes("country")) {
@@ -196,79 +207,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
             loginUrl = "/auth/login/city";
           }
 
-          // Format short, clean, professional enterprise login email
-          let email = (u.email || "").toLowerCase().trim();
-          const rawName = `${u.branchName || ""} ${u.cityName || ""} ${u.fullName || ""} ${u.userCode || ""}`.toLowerCase();
-          
-          if (role.includes("super_admin") || role.includes("superadmin")) {
-            email = "superadmin@dgt.llc";
-          } else if (rawName.includes("quetta") || rawName.includes("queeta")) {
-            email = "quetta@dgt.llc";
-          } else if (rawName.includes("chaman")) {
-            email = rawName.includes("01") || rawName.includes("agent") ? "chaman01@dgt.llc" : "chaman@dgt.llc";
-          } else if (rawName.includes("delhi")) {
-            email = "delhi@dgt.llc";
-          } else if (rawName.includes("mumbai")) {
-            email = "mumbai@dgt.llc";
-          } else if (rawName.includes("karachi")) {
-            email = "karachi@dgt.llc";
-          } else if (rawName.includes("lahore")) {
-            email = "lahore@dgt.llc";
-          } else if (rawName.includes("peshawar")) {
-            email = "peshawar@dgt.llc";
-          } else if (rawName.includes("gwadar")) {
-            email = "gwadar@dgt.llc";
-          } else if (rawName.includes("kabul")) {
-            email = "kabul@dgt.llc";
-          } else if (rawName.includes("kandahar")) {
-            email = "kandahar@dgt.llc";
-          } else if (rawName.includes("herat")) {
-            email = "herat@dgt.llc";
-          } else if (rawName.includes("jalalabad")) {
-            email = "jalalabad@dgt.llc";
-          } else if (rawName.includes("mazar") || rawName.includes("sharif")) {
-            email = "mazar@dgt.llc";
-          } else if (rawName.includes("deira")) {
-            email = "deira@dgt.llc";
-          } else if (rawName.includes("al ras") || rawName.includes("alras") || rawName.includes("ras")) {
-            email = "alras@dgt.llc";
-          } else if (rawName.includes("jebel") || rawName.includes("jafza")) {
-            email = "jebelali@dgt.llc";
-          } else if (rawName.includes("dubai")) {
-            email = "dubai@dgt.llc";
-          } else if (rawName.includes("abu dhabi") || rawName.includes("abudhabi")) {
-            email = "abudhabi@dgt.llc";
-          } else if (rawName.includes("sharjah")) {
-            email = "sharjah@dgt.llc";
-          } else if (rawName.includes("riyadh")) {
-            email = "riyadh@dgt.llc";
-          } else if (rawName.includes("jeddah")) {
-            email = "jeddah@dgt.llc";
-          } else if (rawName.includes("dammam")) {
-            email = "dammam@dgt.llc";
-          } else if (rawName.includes("yiwu")) {
-            email = "yiwu@dgt.llc";
-          } else if (rawName.includes("guangzhou")) {
-            email = "guangzhou@dgt.llc";
-          } else if (rawName.includes("shanghai")) {
-            email = "shanghai@dgt.llc";
-          } else if (rawName.includes("istanbul")) {
-            email = "istanbul@dgt.llc";
-          } else if (rawName.includes("mersin")) {
-            email = "mersin@dgt.llc";
-          } else if (rawName.includes("tehran")) {
-            email = "tehran@dgt.llc";
-          } else if (rawName.includes("bandar") || rawName.includes("abbas")) {
-            email = "bandarabbas@dgt.llc";
-          } else if (rawName.includes("chabahar")) {
-            email = "chabahar@dgt.llc";
-          } else if (!email || email.includes("@damaan.com") || email.startsWith("user") || !email.includes("@dgt.llc") || email.length > 25) {
-            const cleanShort = rawName
-              .replace(/\b(branch|port|clearing|agent|customs|city|office|main|headquarters|border)\b/gi, "")
-              .replace(/[^a-z0-9]/g, "")
-              .trim();
-            email = cleanShort.length >= 3 ? `${cleanShort}@dgt.llc` : `user${idx + 1}@dgt.llc`;
-          }
+          // Real sign-in identifier from the API — no city-name guessing / fabrication.
+          const email = (u.email || "").trim() || "—";
+          const permsArr: string[] = Array.isArray(u.permissions) ? u.permissions : [];
 
           return {
             userId: u.userId || u.id || `u-${idx}`,
@@ -282,21 +223,22 @@ export default function SuperAdminAllUsersDirectoryPage() {
             branchName: u.branchName || "—",
             role: u.role || "staff_user",
             roleLabel: u.roleLabel || u.role || "—",
-            isActive: u.isActive ?? true,
-            permissionsCount: Number(u.permissionsCount) || 0,
+            isActive: (u.isActive ?? (u.status ? u.status === "active" : true)),
+            permissions: permsArr,
+            permissionsCount: permsArr.length || Number(u.permissionsCount) || 0,
             passwordVaultRef: u.passwordVaultRef || `VAULT-DGT-${userCode}`,
             passwordKey,
             loginUrl,
-            createdAt: u.createdAt || new Date().toISOString(),
+            createdAt: u.createdAt || u.registrationDate || new Date().toISOString(),
             updatedAt: u.updatedAt
           };
         });
         setUsers(mapped);
       } else {
-        setError(json.error?.message || "Failed to load user directory");
+        setError(json.error?.message || th("Failed to load user directory"));
       }
     } catch (err: any) {
-      setError(err.message || "Network error loading users");
+      setError(err.message || th("Network error loading users"));
     } finally {
       setLoading(false);
     }
@@ -306,20 +248,41 @@ export default function SuperAdminAllUsersDirectoryPage() {
     void fetchUsers();
   }, [fetchUsers]);
 
-  // Initialize permissions when inspecting user
+  // Category → permission-catalog keys (the real strings persisted in user_permission_sets).
+  const CATEGORY_PERMISSION_KEYS: Record<string, string[]> = {
+    "Dashboards": ["dashboard.access"],
+    "New Entry": ["branch.new_entry", "accounts.manage", "customers.manage", "goods.manage"],
+    "Accounting & Roznamcha": ["roznamcha.manage", "ledger.view", "banks.manage"],
+    "Trade & Purchase": ["purchase.manage", "purchase.payments"],
+    "Shipping & Clearing": ["clearing.manage", "transit.manage"],
+    "Communication": ["communication.access"],
+    "Administration": ["settings.manage", "company.manage"],
+  };
+
+  // Initialize the permission grid from the user's REAL persisted permission set
+  // (falls back to role defaults on the server side; here we light up a form when
+  // its category has any granted key, or the user holds a wildcard).
   const openUserInspector = (user: UserDirectoryItem) => {
     setSelectedUser(user);
     setActiveModalTab("permissions");
-    
-    // Build initial permissions state (Admins have everything, others have default subset)
+
+    const held = new Set((user.permissions ?? []).map((p) => p.toLowerCase()));
+    const hasWildcard = held.has("*:*") || held.has("*") || user.role.includes("super_admin");
     const isAdm = user.role.includes("admin");
+    const categoryGranted = (category: string) => {
+      if (hasWildcard) return true;
+      const keys = CATEGORY_PERMISSION_KEYS[category] ?? [];
+      return keys.some((k) => held.has(k.toLowerCase())) || (isAdm && (category === "Dashboards" || category === "New Entry"));
+    };
+
     const initialPerms: Record<string, { allowed: boolean; read: boolean; write: boolean; delete: boolean }> = {};
     ALL_SYSTEM_FORMS.forEach((f) => {
+      const allowed = categoryGranted(f.category);
       initialPerms[f.id] = {
-        allowed: isAdm || f.category === "Dashboards" || f.category === "New Entry",
-        read: true,
-        write: isAdm,
-        delete: isAdm && user.role.includes("super_admin")
+        allowed,
+        read: allowed,
+        write: allowed && (hasWildcard || isAdm),
+        delete: allowed && (hasWildcard || user.role.includes("super_admin")),
       };
     });
     setUserPermissions(initialPerms);
@@ -360,7 +323,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
       allGranted[f.id] = { allowed: true, read: true, write: true, delete: true };
     });
     setUserPermissions(allGranted);
-    showToast("Granted FULL permissions to all ERP forms!");
+    showToast(th("Granted full permissions to all ERP forms"));
   };
 
   const handleRevokeAll = () => {
@@ -369,14 +332,44 @@ export default function SuperAdminAllUsersDirectoryPage() {
       allRevoked[f.id] = { allowed: false, read: false, write: false, delete: false };
     });
     setUserPermissions(allRevoked);
-    showToast("All form permissions restricted.");
+    showToast(th("All form permissions restricted"));
   };
 
-  const handleSaveUserPermissions = () => {
-    if (!selectedUser) return;
-    const allowedCount = Object.values(userPermissions).filter((p) => p.allowed).length;
-    showToast(`Permissions updated for ${selectedUser.fullName} (${allowedCount} forms enabled)!`);
-    setSelectedUser(null);
+  const [savingPerms, setSavingPerms] = useState(false);
+  const handleSaveUserPermissions = async () => {
+    if (!selectedUser || savingPerms) return;
+    setSavingPerms(true);
+    // Translate the granted form categories back to real permission-catalog keys
+    // and persist them through the same PATCH /api/erp/users the registration
+    // screen uses (server clamps to the caller's scope + writes the audit log).
+    const grantedCategories = new Set(
+      ALL_SYSTEM_FORMS.filter((f) => userPermissions[f.id]?.allowed).map((f) => f.category),
+    );
+    const permissionKeys = Array.from(
+      new Set(
+        Array.from(grantedCategories).flatMap((c) => CATEGORY_PERMISSION_KEYS[c] ?? []),
+      ),
+    );
+    try {
+      const res = await fetch("/api/erp/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedUser.userId, permissions: permissionKeys }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.ok === false) {
+        throw new Error(json?.error?.message || json?.error || `HTTP ${res.status}`);
+      }
+      showToast(
+        `${th("Permissions updated for")} ${selectedUser.fullName} — ${permissionKeys.length} ${th("permission groups")}`,
+      );
+      setSelectedUser(null);
+      void fetchUsers();
+    } catch (e: any) {
+      showToast(`${th("Could not save permissions")}: ${e?.message || e}`);
+    } finally {
+      setSavingPerms(false);
+    }
   };
 
   const togglePassword = (id: string) => {
@@ -505,19 +498,19 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div className="flex items-center gap-2">
               <span className="bg-indigo-600/15 text-indigo-700 dark:text-indigo-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border border-indigo-500/30 flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3" />
-                SUPER ADMIN CREDENTIAL REGISTER
+                {th("SUPER ADMIN CREDENTIAL REGISTER")}
               </span>
               <span className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-md border border-emerald-500/30 flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                LIVE ERP DATABASE
+                {th("LIVE ERP DATABASE")}
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2.5">
               <Users className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              S Admin / All Users Directory
+              {th("S Admin / All Users Directory")}
             </h1>
             <p className="text-xs text-muted-foreground font-medium">
-              Centralized register of all country & branch users, direct login URLs, access credentials, and granular form permission matrices.
+              {th("Centralized register of all country & branch users, direct login URLs, access credentials, and granular form permission matrices.")}
             </p>
           </div>
 
@@ -674,7 +667,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 font-mono">{th("Online")}</span>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
-                Click any user row to open their <strong>{th("Form Permissions Matrix")}</strong> or generate their official A4 Onboarding Handover Form.
+                {th("Click any user row to open their")} <strong>{th("Form Permissions Matrix")}</strong> {th("or generate their official A4 Onboarding Handover Form.")}
               </p>
             </div>
             <div className="flex items-center gap-2 pt-2">
@@ -684,7 +677,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 className="w-full h-8 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer"
               >
                 <Printer className="h-3 w-3 mr-1" />
-                Batch Handover Sheet
+                {th("Batch Handover Sheet")}
               </Button>
             </div>
           </div>
@@ -701,10 +694,10 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </span>
             <div>
               <h3 className="text-xs font-black uppercase text-foreground tracking-tight">
-                ERP Login Portals &amp; Direct Access Gateways
+                {th("ERP Login Portals & Direct Access Gateways")}
               </h3>
               <p className="text-[10px] text-muted-foreground font-medium">
-                Share these dedicated login links and official @dgt.llc credentials with respective country and branch teams.
+                {th("Share these dedicated login links with the respective country and branch teams.")}
               </p>
             </div>
           </div>
@@ -712,7 +705,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <Link href="/auth/login" target="_blank">
               <Button size="sm" className="h-7 px-3 text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs">
                 <ExternalLink className="h-3 w-3 mr-1" />
-                Universal Login Page
+                {th("Universal Login Page")}
               </Button>
             </Link>
           </div>
@@ -724,21 +717,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">
-                  Super Admin
+                  {th("Super Admin")}
                 </span>
                 <ShieldCheck className="h-4 w-4 text-red-600" />
               </div>
-              <h4 className="text-xs font-bold text-foreground mt-1.5">Admin Login Portal</h4>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">{th("Admin Login Portal")}</h4>
               <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/admin</p>
-              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">User:</span> <strong className="text-foreground">superadmin@dgt.llc</strong></div>
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
-              </div>
             </div>
             <div className="flex items-center gap-1.5 pt-1">
-              <a href="/auth/login/admin?email=superadmin@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+              <a href="/auth/login/admin" target="_blank" rel="noreferrer" className="flex-1">
                 <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:text-red-300">
-                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                  <ExternalLink className="h-3 w-3 mr-1" /> {th("Open Login")}
                 </Button>
               </a>
               <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/admin`, "portal-admin")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
@@ -752,21 +741,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
-                  Country Admin
+                  {th("Country Admin")}
                 </span>
                 <Globe className="h-4 w-4 text-indigo-600" />
               </div>
-              <h4 className="text-xs font-bold text-foreground mt-1.5">Country Login Portal</h4>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">{th("Country Login Portal")}</h4>
               <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/country</p>
-              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Format:</span> <strong className="text-foreground">pk.pakistan@dgt.llc</strong></div>
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
-              </div>
             </div>
             <div className="flex items-center gap-1.5 pt-1">
-              <a href="/auth/login/country?email=pk.pakistan@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+              <a href="/auth/login/country" target="_blank" rel="noreferrer" className="flex-1">
                 <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:text-indigo-300">
-                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                  <ExternalLink className="h-3 w-3 mr-1" /> {th("Open Login")}
                 </Button>
               </a>
               <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/country`, "portal-country")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
@@ -780,21 +765,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
-                  City Branch
+                  {th("City Branch")}
                 </span>
                 <Building2 className="h-4 w-4 text-blue-600" />
               </div>
-              <h4 className="text-xs font-bold text-foreground mt-1.5">City Branch Portal</h4>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">{th("City Branch Portal")}</h4>
               <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/city</p>
-              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Format:</span> <strong className="text-foreground">chaman.branch.b@dgt.llc</strong></div>
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
-              </div>
             </div>
             <div className="flex items-center gap-1.5 pt-1">
-              <a href="/auth/login/city?email=chaman.branch.b@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+              <a href="/auth/login/city" target="_blank" rel="noreferrer" className="flex-1">
                 <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-300">
-                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                  <ExternalLink className="h-3 w-3 mr-1" /> {th("Open Login")}
                 </Button>
               </a>
               <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/city`, "portal-city")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
@@ -808,21 +789,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300">
-                  Clearing Agent
+                  {th("Clearing Agent")}
                 </span>
                 <Layers className="h-4 w-4 text-amber-600" />
               </div>
-              <h4 className="text-xs font-bold text-foreground mt-1.5">Agent Login Portal</h4>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">{th("Agent Login Portal")}</h4>
               <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/clearing-agent</p>
-              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Format:</span> <strong className="text-foreground">pk.clearingagent@dgt.llc</strong></div>
-                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
-              </div>
             </div>
             <div className="flex items-center gap-1.5 pt-1">
-              <a href="/auth/login/clearing-agent?email=pk.clearingagent@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+              <a href="/auth/login/clearing-agent" target="_blank" rel="noreferrer" className="flex-1">
                 <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-300">
-                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                  <ExternalLink className="h-3 w-3 mr-1" /> {th("Open Login")}
                 </Button>
               </a>
               <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/clearing-agent`, "portal-agent")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
@@ -891,7 +868,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
               }}
               className="text-xs text-muted-foreground hover:text-foreground h-8 px-2 rounded-xl"
             >
-              Reset
+              {th("Reset")}
             </Button>
           )}
         </div>
@@ -904,11 +881,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
         <div className="hidden print:block p-6 border-b-2 border-slate-900 mb-4">
           <div className="flex items-center justify-between border-b pb-4 mb-4">
             <div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">DAMAAN BUSINESS GROUP • ERP SYSTEM</h1>
-              <p className="text-xs font-bold text-slate-600">CONFIDENTIAL • SUPER ADMIN USER CREDENTIAL & ACCESS DIRECTORY</p>
+              <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">{brandLine}</h1>
+              <p className="text-xs font-bold text-slate-600">{th("CONFIDENTIAL • SUPER ADMIN USER CREDENTIAL & ACCESS DIRECTORY")}</p>
             </div>
             <div className="text-right text-[10px] font-mono text-slate-500">
-              <div>Generated: {new Date().toLocaleString()}</div>
+              <div suppressHydrationWarning>{th("Generated")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</div>
               <div>{th("Scope: Global Enterprise Register")}</div>
             </div>
           </div>
@@ -944,13 +921,13 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <tr>
                   <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
-                    Loading user directory & access register from database...
+                    {th("Loading user directory & access register from database...")}
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-8 text-center text-muted-foreground">
-                    No users matching the selected filters.
+                    {th("No users matching the selected filters.")}
                   </td>
                 </tr>
               ) : (
@@ -1053,12 +1030,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
                           <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded text-[11px] tracking-wide border border-border">
-                            {isRevealed ? (u.passwordKey || "Admin@123") : "••••••••"}
+                            {isRevealed ? (u.passwordKey || th("Not set in vault")) : "••••••••"}
                           </span>
                           <button
                             type="button"
                             onClick={() => togglePassword(u.userId)}
-                            title={isRevealed ? "Hide Password Key" : "Reveal Password Key"}
+                            title={isRevealed ? th("Hide Password Key") : th("Reveal Password Key")}
                             className="text-muted-foreground hover:text-indigo-600 print:hidden cursor-pointer"
                           >
                             {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -1090,17 +1067,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <td className="p-3.5 text-center print:hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
                           <a
-                            href={`${u.loginUrl}?email=${encodeURIComponent(u.email)}`}
+                            href={u.loginUrl}
                             target="_blank"
                             rel="noreferrer"
-                            title={`Open Login Portal for ${u.fullName}`}
+                            title={`${th("Open Login Portal")} — ${u.fullName}`}
                           >
                             <Button
                               size="sm"
                               className="h-7 px-2.5 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs cursor-pointer"
                             >
                               <ExternalLink className="w-3 h-3 mr-1" />
-                              Login ↗
+                              {th("Login")} ↗
                             </Button>
                           </a>
                           <Button
@@ -1110,7 +1087,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             title={th("Inspect User Details & Forms Permission Matrix")}
                           >
                             <SlidersHorizontal className="w-3 h-3 mr-1" />
-                            Inspect
+                            {th("Inspect")}
                           </Button>
                           <Button
                             size="sm"
@@ -1120,7 +1097,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             className="h-7 px-2 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg cursor-pointer"
                           >
                             <Printer className="w-3 h-3 mr-1" />
-                            A4 Slip
+                            {th("A4 Slip")}
                           </Button>
                           <Link href={`/dashboard/new-entry/users/registration?userId=${u.userId}`}>
                             <Button
@@ -1128,7 +1105,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                               variant="outline"
                               className="h-7 px-2 text-[10px] font-semibold text-muted-foreground hover:bg-muted rounded-lg cursor-pointer"
                             >
-                              Edit
+                              {th("Edit")}
                             </Button>
                           </Link>
                         </div>
@@ -1192,7 +1169,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 )}
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Allowed Forms & Permission Matrix ({ALL_SYSTEM_FORMS.length} Forms)</span>
+                <span>{th("Allowed Forms & Permission Matrix")} ({ALL_SYSTEM_FORMS.length} {th("Forms")})</span>
               </button>
 
               <button
@@ -1220,7 +1197,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 )}
               >
                 <Printer className="h-3.5 w-3.5" />
-                <span>A4 Onboarding Slip</span>
+                <span>{th("A4 Onboarding Slip")}</span>
               </button>
             </div>
 
@@ -1235,11 +1212,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <h3 className="text-xs font-black uppercase text-foreground flex items-center gap-2">
                         <span>{th("Form Level Authorization & Permission Grants")}</span>
                         <span className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded">
-                          {Object.values(userPermissions).filter((p) => p.allowed).length} / {ALL_SYSTEM_FORMS.length} Allowed
+                          {Object.values(userPermissions).filter((p) => p.allowed).length} / {ALL_SYSTEM_FORMS.length} {th("Allowed")}
                         </span>
                       </h3>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Toggle access on/off for specific ERP forms, and adjust Read/Write/Delete privileges.
+                        {th("Toggle access on/off for specific ERP forms, and adjust Read/Write/Delete privileges.")}
                       </p>
                     </div>
 
@@ -1250,7 +1227,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         onClick={handleGrantAll}
                         className="h-8 text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl cursor-pointer"
                       >
-                        Grant All
+                        {th("Grant All")}
                       </Button>
                       <Button
                         size="sm"
@@ -1258,7 +1235,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         onClick={handleRevokeAll}
                         className="h-8 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl cursor-pointer"
                       >
-                        Restrict All
+                        {th("Restrict All")}
                       </Button>
                     </div>
                   </div>
@@ -1268,12 +1245,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     <table className="w-full text-xs text-left">
                       <thead className="bg-muted/70 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                         <tr>
-                          <th className="px-4 py-2.5">Form / Module</th>
-                          <th className="px-3 py-2.5">Category</th>
-                          <th className="px-3 py-2.5 text-center">Access Status</th>
-                          <th className="px-3 py-2.5 text-center">Read</th>
-                          <th className="px-3 py-2.5 text-center">Write</th>
-                          <th className="px-3 py-2.5 text-center">Delete</th>
+                          <th className="px-4 py-2.5">{th("Form / Module")}</th>
+                          <th className="px-3 py-2.5">{th("Category")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("Access Status")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("Read")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("Write")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("Delete")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -1282,12 +1259,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                           return (
                             <tr key={form.id} className={cn("hover:bg-muted/30 transition-colors", !p.allowed && "opacity-60 bg-muted/10")}>
                               <td className="px-4 py-2.5 font-bold text-foreground">
-                                <div>{form.name}</div>
+                                <div>{th(form.name)}</div>
                                 <div className="text-[10px] font-mono text-muted-foreground font-normal">{form.route}</div>
                               </td>
                               <td className="px-3 py-2.5">
                                 <span className="inline-block rounded px-2 py-0.5 text-[9px] font-extrabold bg-muted text-muted-foreground border border-border">
-                                  {form.category}
+                                  {th(form.category)}
                                 </span>
                               </td>
                               <td className="px-3 py-2.5 text-center">
@@ -1301,7 +1278,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                                       : "bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"
                                   )}
                                 >
-                                  {p.allowed ? "Allowed" : "Restricted"}
+                                  {p.allowed ? th("Allowed") : th("Restricted")}
                                 </button>
                               </td>
                               <td className="px-3 py-2.5 text-center">
@@ -1347,27 +1324,27 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     {/* User Identity Card */}
                     <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
                       <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <Users className="h-4 w-4" /> Identity & Role Assignment
+                        <Users className="h-4 w-4" /> {th("Identity & Role Assignment")}
                       </h4>
                       <div className="space-y-2 text-xs">
                         <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">User Code:</span>
+                          <span className="text-muted-foreground">{th("User Code")}:</span>
                           <span className="font-mono font-bold text-foreground">{selectedUser.userCode}</span>
                         </div>
                         <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">Full Name:</span>
+                          <span className="text-muted-foreground">{th("Full Name")}:</span>
                           <span className="font-bold text-foreground">{selectedUser.fullName}</span>
                         </div>
                         <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">Primary Role:</span>
+                          <span className="text-muted-foreground">{th("Primary Role")}:</span>
                           <span className="font-black text-indigo-600">{selectedUser.roleLabel}</span>
                         </div>
                         <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">Assigned Country:</span>
+                          <span className="text-muted-foreground">{th("Assigned Country")}:</span>
                           <span className="font-bold text-foreground">{selectedUser.countryName}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Assigned Branch:</span>
+                          <span className="text-muted-foreground">{th("Assigned Branch")}:</span>
                           <span className="font-bold text-foreground">{selectedUser.branchName}</span>
                         </div>
                       </div>
@@ -1376,25 +1353,25 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     {/* Security Vault & Password Card */}
                     <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
                       <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <KeyRound className="h-4 w-4" /> Credentials & Access Vault
+                        <KeyRound className="h-4 w-4" /> {th("Credentials & Access Vault")}
                       </h4>
                       <div className="space-y-2 text-xs">
                         <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">Vault Reference:</span>
+                          <span className="text-muted-foreground">{th("Vault Reference")}:</span>
                           <span className="font-mono font-bold text-foreground">{selectedUser.passwordVaultRef}</span>
                         </div>
                         <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">Login Email:</span>
+                          <span className="text-muted-foreground">{th("Login Email")}:</span>
                           <span className="font-mono font-bold text-foreground">{selectedUser.email}</span>
                         </div>
                         <div className="flex justify-between pb-1 border-b border-border items-center">
-                          <span className="text-muted-foreground">Access Password:</span>
+                          <span className="text-muted-foreground">{th("Access Password")}:</span>
                           <span className="font-mono font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
                             {selectedUser.passwordKey || "••••••••"}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Direct Login URL:</span>
+                          <span className="text-muted-foreground">{th("Direct Login URL")}:</span>
                           <span className="font-mono text-[10px] text-blue-600 truncate max-w-[180px]">{selectedUser.loginUrl}</span>
                         </div>
                       </div>
@@ -1409,38 +1386,38 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="bg-white text-slate-900 w-full max-w-xl p-6 rounded-2xl shadow-md border border-slate-200 font-sans space-y-4">
                     <div className="flex items-center justify-between border-b pb-3">
                       <div>
-                        <h4 className="text-sm font-black text-slate-900">DGT ENTERPRISE ERP SYSTEM</h4>
-                        <p className="text-[10px] font-bold text-indigo-700 uppercase">OFFICIAL EMPLOYEE ACCESS SLIP</p>
+                        <h4 className="text-sm font-black text-slate-900">{brandLine}</h4>
+                        <p className="text-[10px] font-bold text-indigo-700 uppercase">{th("OFFICIAL EMPLOYEE ACCESS SLIP")}</p>
                       </div>
                       <div className="text-right text-[9px] font-mono text-slate-500">
-                        Date: {new Date().toLocaleDateString("en-GB")}
+                        Date: <span suppressHydrationWarning>{new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">EMPLOYEE / OFFICER NAME</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">{th("EMPLOYEE / OFFICER NAME")}</span>
                         <span className="font-bold text-slate-900">{selectedUser.fullName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">USER CODE</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">{th("USER CODE")}</span>
                         <span className="font-mono font-bold text-slate-900">{selectedUser.userCode}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">ROLE & JURISDICTION</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">{th("ROLE & JURISDICTION")}</span>
                         <span className="font-bold text-indigo-700">{selectedUser.roleLabel}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">BRANCH LOCATION</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">{th("BRANCH LOCATION")}</span>
                         <span className="font-bold text-slate-900">{selectedUser.branchName}</span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-[10px] text-slate-500 font-bold block">LOGIN USERNAME / EMAIL</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">{th("LOGIN USERNAME / EMAIL")}</span>
                         <span className="font-mono font-bold text-slate-900 break-all bg-slate-50 p-1.5 rounded border border-slate-200 block">{selectedUser.email}</span>
                       </div>
                       <div className="col-span-2 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200">
-                        <span className="text-[10px] text-emerald-800 font-bold block">INITIAL ACCESS PASSWORD</span>
-                        <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || "Admin@123"}</span>
+                        <span className="text-[10px] text-emerald-800 font-bold block">{th("INITIAL ACCESS PASSWORD")}</span>
+                        <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || th("Not set in vault")}</span>
                       </div>
                     </div>
 
@@ -1455,7 +1432,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl cursor-pointer shadow-xs"
                   >
                     <Printer className="h-3.5 w-3.5 mr-1.5" />
-                    Open Official Print Preview
+                    {th("Open Official Print Preview")}
                   </Button>
                 </div>
               )}
@@ -1465,7 +1442,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             {/* Modal Footer */}
             <div className="border-t border-border bg-muted/20 px-6 py-3.5 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                All changes to permissions are logged in the ERP security audit ledger.
+                {th("All changes to permissions are logged in the ERP security audit ledger.")}
               </span>
               <div className="flex items-center gap-2">
                 <Button
@@ -1473,14 +1450,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   onClick={() => setSelectedUser(null)}
                   className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                 >
-                  Cancel
+                  {th("Cancel")}
                 </Button>
                 <Button
                   onClick={handleSaveUserPermissions}
-                  className="h-9 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                  disabled={savingPerms}
+                  className="h-9 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-60"
                 >
                   <Save className="h-3.5 w-3.5" />
-                  <span>{th("Save Permission Grants")}</span>
+                  <span>{savingPerms ? th("Saving") : th("Save Permission Grants")}</span>
                 </Button>
               </div>
             </div>
@@ -1506,14 +1484,14 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs h-8 px-4 rounded-xl cursor-pointer shadow-xs"
                 >
                   <Printer className="w-3.5 h-3.5 mr-1.5" />
-                  Print Now
+                  {th("Print Now")}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => { setShowBatchPrint(false); setPrintModalUser(null); }}
                   className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground rounded-xl cursor-pointer"
                 >
-                  Close
+                  {th("Close")}
                 </Button>
               </div>
             </div>
@@ -1527,49 +1505,49 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   {/* Header */}
                   <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
                     <div>
-                      <h2 className="text-xl font-black tracking-tight text-slate-900">DGT ENTERPRISE ERP SYSTEM</h2>
-                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">OFFICIAL USER ACCESS & CREDENTIAL HANDOVER SLIP</p>
+                      <h2 className="text-xl font-black tracking-tight text-slate-900">{brandLine}</h2>
+                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">{th("OFFICIAL USER ACCESS & CREDENTIAL HANDOVER SLIP")}</p>
                     </div>
                     <div className="text-right text-[10px] font-mono text-slate-500 space-y-0.5">
                       <div className="font-bold text-slate-800">REF: {printModalUser.userCode}</div>
-                      <div>DATE: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</div>
-                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">CONFIDENTIAL</span>
+                      <div suppressHydrationWarning>{th("DATE")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}</div>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">{th("CONFIDENTIAL")}</span>
                     </div>
                   </div>
 
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    This official credential slip authorizes the designated officer to access the DGT Enterprise ERP & FMS platform in accordance with the allocated role and branch jurisdiction.
+                    {th("This official credential slip authorizes the designated officer to access the DGT Enterprise ERP & FMS platform in accordance with the allocated role and branch jurisdiction.")}
                   </p>
 
                   {/* 2-Column Structured Card */}
                   <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                     <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-                      <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">OFFICER & SYSTEM IDENTITY</span>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE STATUS</span>
+                      <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">{th("OFFICER & SYSTEM IDENTITY")}</span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">{th("ACTIVE STATUS")}</span>
                     </div>
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">OFFICER / FULL NAME</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("OFFICER / FULL NAME")}</span>
                         <span className="font-bold text-slate-900 text-sm">{printModalUser.fullName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">SYSTEM USER CODE</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("SYSTEM USER CODE")}</span>
                         <span className="font-mono font-bold text-slate-900 text-sm">{printModalUser.userCode}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">SYSTEM ROLE / LEVEL</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("SYSTEM ROLE / LEVEL")}</span>
                         <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 inline-block mt-0.5">{printModalUser.roleLabel}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">ASSIGNED BRANCH JURISDICTION</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("ASSIGNED BRANCH JURISDICTION")}</span>
                         <span className="font-bold text-slate-900">{printModalUser.branchName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">COUNTRY JURISDICTION</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("COUNTRY JURISDICTION")}</span>
                         <span className="font-bold text-slate-800">{printModalUser.countryName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">DIRECT LOGIN URL</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("DIRECT LOGIN URL")}</span>
                         <span className="font-mono text-blue-700 font-bold break-all">{printModalUser.loginUrl}</span>
                       </div>
                     </div>
@@ -1579,16 +1557,16 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="bg-slate-50 border-2 border-indigo-200 rounded-xl p-4 space-y-3">
                     <div className="text-[11px] font-black text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
                       <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
-                      OFFICIAL LOGIN CREDENTIALS
+                      {th("OFFICIAL LOGIN CREDENTIALS")}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase block">LOGIN USERNAME / EMAIL</span>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">{th("LOGIN USERNAME / EMAIL")}</span>
                         <span className="font-mono font-black text-slate-900 text-sm bg-white px-2.5 py-1 rounded border border-slate-300 block break-all mt-1">{printModalUser.email}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase block">INITIAL ACCESS PASSWORD</span>
-                        <span className="font-mono font-black text-emerald-700 text-sm bg-white px-2.5 py-1 rounded border border-emerald-300 block mt-1">{printModalUser.passwordKey || "Admin@123"}</span>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">{th("INITIAL ACCESS PASSWORD")}</span>
+                        <span className="font-mono font-black text-emerald-700 text-sm bg-white px-2.5 py-1 rounded border border-emerald-300 block mt-1">{printModalUser.passwordKey || th("Not set in vault")}</span>
                       </div>
                     </div>
                   </div>
@@ -1597,7 +1575,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-3 text-[10.5px] text-amber-900 space-y-1">
                     <div className="font-bold flex items-center gap-1 text-[11px]">
                       <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                      SECURITY & COMPLIANCE NOTICE:
+                      {th("SECURITY & COMPLIANCE NOTICE:")}
                     </div>
                     <p>1. Keep your credentials confidential. Never share your password across email or chat.</p>
                     <p>2. You must change your temporary password upon first login to your personal password.</p>
@@ -1607,14 +1585,14 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   {/* Authorization & Signature Block */}
                   <div className="grid grid-cols-2 gap-8 pt-6 border-t-2 border-slate-900 text-xs">
                     <div className="space-y-4">
-                      <div className="font-bold text-slate-800 uppercase text-[11px]">Super Admin Authorization</div>
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Super Admin Authorization")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">Signature & Official Stamp</div>
+                      <div className="text-[10px] text-slate-500 font-medium">{th("Signature & Official Stamp")}</div>
                     </div>
                     <div className="space-y-4">
-                      <div className="font-bold text-slate-800 uppercase text-[11px]">Staff Member Acknowledgement</div>
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Staff Member Acknowledgement")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">Received By, Signature & Date</div>
+                      <div className="text-[10px] text-slate-500 font-medium">{th("Received By, Signature & Date")}</div>
                     </div>
                   </div>
                 </div>
@@ -1624,18 +1602,18 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   {/* Header */}
                   <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
                     <div>
-                      <h2 className="text-xl font-black tracking-tight text-slate-900">DGT ENTERPRISE ERP SYSTEM</h2>
-                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">OFFICIAL SYSTEM ACCESS & BATCH CREDENTIAL HANDOVER DIRECTORY</p>
+                      <h2 className="text-xl font-black tracking-tight text-slate-900">{brandLine}</h2>
+                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">{th("OFFICIAL SYSTEM ACCESS & BATCH CREDENTIAL HANDOVER DIRECTORY")}</p>
                     </div>
                     <div className="text-right text-[10px] font-mono text-slate-500 space-y-0.5">
                       <div className="font-bold text-slate-800">TOTAL USERS: {filteredUsers.length}</div>
-                      <div>DATE: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</div>
-                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">CONFIDENTIAL</span>
+                      <div suppressHydrationWarning>{th("DATE")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}</div>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">{th("CONFIDENTIAL")}</span>
                     </div>
                   </div>
 
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Official batch credential handover manifest for all active branch officers and system administrators.
+                    {th("Official batch credential handover manifest for all active branch officers and system administrators.")}
                   </p>
 
                   <div className="overflow-x-auto border border-slate-300 rounded-lg">
@@ -1643,12 +1621,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
                         <tr>
                           <th className="p-2 border-r border-slate-300 w-8 text-center">#</th>
-                          <th className="p-2 border-r border-slate-300">User Code</th>
-                          <th className="p-2 border-r border-slate-300">Full Name & Role</th>
-                          <th className="p-2 border-r border-slate-300">Assigned Branch</th>
-                          <th className="p-2 border-r border-slate-300">Login Username / Email</th>
-                          <th className="p-2 border-r border-slate-300">Password Key</th>
-                          <th className="p-2">Recipient Signature</th>
+                          <th className="p-2 border-r border-slate-300">{th("User Code")}</th>
+                          <th className="p-2 border-r border-slate-300">{th("Full Name & Role")}</th>
+                          <th className="p-2 border-r border-slate-300">{th("Assigned Branch")}</th>
+                          <th className="p-2 border-r border-slate-300">{th("Login Username / Email")}</th>
+                          <th className="p-2 border-r border-slate-300">{th("Password Key")}</th>
+                          <th className="p-2">{th("Recipient Signature")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
@@ -1666,7 +1644,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             </td>
                             <td className="p-2 font-mono font-bold text-slate-900 border-r border-slate-200 break-all">{u.email}</td>
                             <td className="p-2 font-mono font-bold text-emerald-700 border-r border-slate-200 whitespace-nowrap bg-emerald-50/40">
-                              {u.passwordKey || "Admin@123"}
+                              {u.passwordKey || th("Not set in vault")}
                             </td>
                             <td className="p-2 border-slate-200 min-w-[110px]">
                               <div className="border-b border-dashed border-slate-300 h-5"></div>
@@ -1680,14 +1658,14 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   {/* Authorization & Signature Block */}
                   <div className="grid grid-cols-2 gap-8 pt-6 border-t-2 border-slate-900 text-xs">
                     <div className="space-y-4">
-                      <div className="font-bold text-slate-800 uppercase text-[11px]">Super Admin Authorization</div>
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Super Admin Authorization")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">Signature & Official Stamp</div>
+                      <div className="text-[10px] text-slate-500 font-medium">{th("Signature & Official Stamp")}</div>
                     </div>
                     <div className="space-y-4">
-                      <div className="font-bold text-slate-800 uppercase text-[11px]">Internal Security Verification</div>
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Internal Security Verification")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">Audit Officer Signature & Date</div>
+                      <div className="text-[10px] text-slate-500 font-medium">{th("Audit Officer Signature & Date")}</div>
                     </div>
                   </div>
                 </div>

@@ -48,6 +48,7 @@ import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 export function DashboardFrame({
   children,
@@ -124,6 +125,25 @@ export function DashboardFrame({
 
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  // Dynamic entity branding for the sidebar header — resolved from the signed-in
+  // scope's country_company_profiles via the shared /api/erp/branding resolver.
+  // Never a hard-coded company name.
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  const [brandScopeLine, setBrandScopeLine] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchBranding(null)
+      .then((b) => {
+        if (!alive) return;
+        setBrandCompany(brandingName(b, lang) || null);
+        const scope = [b?.countryName].filter(Boolean).join(" · ");
+        setBrandScopeLine(scope || null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const [sidebarMenuVisibility, setSidebarMenuVisibility] = useState<SidebarMenuVisibilityMap | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -414,11 +434,11 @@ export function DashboardFrame({
             <div className="border-b border-border/80 px-5 py-4 flex items-center justify-between gap-2 bg-muted/20">
               <Link href="/dashboard" className="block flex-1 min-w-0" onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}>
                 <div className="flex items-center gap-3">
-                  <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-8 w-8 shrink-0 object-contain" />
+                  <img src="/icons/digital-dock-icon.svg" alt={brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP")} className="h-8 w-8 shrink-0 object-contain" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">DAMAAN BUSINESS GROUP</p>
+                    <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">{brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP")}</p>
                     <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                      {t(lang, "dashboard.owner", "Owner")}: Asmat Abdullah
+                      {brandScopeLine || userName || t(lang, "role.super_admin", "Super Admin")}
                     </p>
                   </div>
                 </div>
