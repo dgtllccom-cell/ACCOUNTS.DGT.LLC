@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ErpSession } from "@/lib/auth/session";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import {
@@ -205,20 +206,15 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
             <Filter className="h-3.5 w-3.5" />
             <span>{t(lang, "crm.filter_by_country", "Filter Scope:")}</span>
           </div>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="h-8 text-xs font-semibold px-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-            placeholder={t(lang, "crmr.from_date", "From Date")}
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="h-8 text-xs font-semibold px-2 border rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-            placeholder={t(lang, "crmr.to_date", "To Date")}
-          />
+          <div className="min-w-[15rem]">
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              value={{ from: startDate || null, to: endDate || null }}
+              onApply={(v) => { setStartDate(v.from ?? ""); setEndDate(v.to ?? ""); }}
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

@@ -8,6 +8,7 @@ import { Download, Printer, Filter, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RoznamchaEntryRow } from "@/features/roznamcha/roznamcha-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
@@ -282,13 +283,15 @@ export function ComprehensiveDailyReportView() {
     <div className="space-y-4">
       {/* Top Filter Bar */}
       <div className="flex flex-wrap items-end gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm print:hidden">
-        <div className="space-y-1">
+        <div className="space-y-1 min-w-[15rem]">
           <label className="text-[10px] font-black uppercase text-slate-500">{tr("Date Range")}</label>
-          <div className="flex items-center gap-1">
-            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="h-8 rounded-md border border-slate-200 text-xs px-2" />
-            <span className="text-slate-400">-</span>
-            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="h-8 rounded-md border border-slate-200 text-xs px-2" />
-          </div>
+          <ErpDatePicker
+            mode="range"
+            lang={lang}
+            size="sm"
+            value={{ from: fromDate || null, to: toDate || null }}
+            onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
+          />
         </div>
 
         <div className="space-y-1 w-40">

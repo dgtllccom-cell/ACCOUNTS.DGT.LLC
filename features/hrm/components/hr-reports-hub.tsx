@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, RefreshCw, ExternalLink } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
@@ -104,15 +105,21 @@ export function HrReportsHub({ lang }: { lang?: string }) {
             </select>
           </div>
           {def.needs.includes("dates") ? (
-            <>
-              <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("rpt_from", "From")}</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" /></div>
-              <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("rpt_to", "To")}</label><input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" /></div>
-            </>
+            <div className="min-w-[15rem]">
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.tGlobal("datepick.date_range", "Date Range")}</label>
+              <ErpDatePicker
+                mode="range"
+                lang={s.lang}
+                size="sm"
+                value={{ from: from || null, to: to || null }}
+                onApply={(v) => { setFrom(v.from ?? ""); setTo(v.to ?? ""); }}
+              />
+            </div>
           ) : null}
           {def.needs.includes("period") || report === "expiring_documents" ? (
             <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{report === "expiring_documents" ? s.t("rpt_until", "Until") : s.t("rpt_period", "Period (YYYY-MM)")}</label>
               {report === "expiring_documents"
-                ? <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />
+                ? <ErpDatePicker mode="single" lang={s.lang} size="sm" value={{ from: to || null }} onApply={(v) => setTo(v.from ?? "")} />
                 : <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />}
             </div>
           ) : null}

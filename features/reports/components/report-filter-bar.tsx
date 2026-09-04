@@ -1,6 +1,7 @@
 "use client";
 
 import { Globe2, Building2, Users, Calendar, RefreshCw, Filter, X, FolderKanban } from "lucide-react";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
@@ -277,31 +278,21 @@ export function ReportFilterBar({
           </select>
         </div>
 
-        {/* Date From */}
-        <div className="min-w-[150px] flex-1 space-y-1">
+        {/* Date range (universal picker) */}
+        <div className="min-w-[16rem] flex-[2] space-y-1">
           <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
             <Calendar className="h-3 w-3 text-orange-500" />
-            {_("report.filter_date_from")}
+            {t(lang, "datepick.date_range" as UiKey, "Date Range")}
           </label>
-          <input
-            type="date"
-            value={filters.fromDate}
-            onChange={(e) => onFilterChange("fromDate", e.target.value)}
-            className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
-          />
-        </div>
-
-        {/* Date To */}
-        <div className="min-w-[150px] flex-1 space-y-1">
-          <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
-            <Calendar className="h-3 w-3 text-rose-500" />
-            {_("report.filter_date_to")}
-          </label>
-          <input
-            type="date"
-            value={filters.toDate}
-            onChange={(e) => onFilterChange("toDate", e.target.value)}
-            className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+          <ErpDatePicker
+            mode="range"
+            lang={lang}
+            size="sm"
+            value={{ from: filters.fromDate || null, to: filters.toDate || null }}
+            onApply={(v) => {
+              onFilterChange("fromDate", v.from ?? "");
+              onFilterChange("toDate", v.to ?? "");
+            }}
           />
         </div>
 

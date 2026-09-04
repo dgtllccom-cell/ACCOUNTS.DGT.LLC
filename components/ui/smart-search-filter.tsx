@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as centralT } from "@/lib/i18n/ui";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 // ─── 5-Language Dictionary ───────────────────────────────────────────────────
@@ -641,39 +642,19 @@ export function SmartSearchFilter({
           />
         )}
 
-        {/* From Date */}
+        {/* Date range (universal picker) */}
         {!hideDateRange && (
-          <div className="w-full">
+          <div className="w-full sm:col-span-2">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-              {tx("lblFromDate", lang)}
+              {centralT(lang, "datepick.date_range", "Date Range")}
             </label>
-            <div className="relative">
-              <Calendar className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-              <input
-                type="date"
-                value={value.fromDate || ""}
-                onChange={(e) => onChange({ ...value, fromDate: e.target.value })}
-                className="w-full rounded-xl border border-slate-200/90 bg-white py-2 pe-3 ps-8 text-xs font-semibold text-slate-700 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 font-sans shadow-xs"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* To Date */}
-        {!hideDateRange && (
-          <div className="w-full">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-              {tx("lblToDate", lang)}
-            </label>
-            <div className="relative">
-              <Calendar className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-              <input
-                type="date"
-                value={value.toDate || ""}
-                onChange={(e) => onChange({ ...value, toDate: e.target.value })}
-                className="w-full rounded-xl border border-slate-200/90 bg-white py-2 pe-3 ps-8 text-xs font-semibold text-slate-700 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 font-sans shadow-xs"
-              />
-            </div>
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              value={{ from: value.fromDate || null, to: value.toDate || null }}
+              onApply={(v) => onChange({ ...value, fromDate: v.from ?? "", toDate: v.to ?? "" })}
+            />
           </div>
         )}
 
@@ -830,27 +811,17 @@ export function SmartSearchFilter({
               )}
 
               {!hideDateRange && (
-                <div className="grid grid-cols-2 gap-2">
+                <div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      {tx("lblFromDate", lang)}
+                      {centralT(lang, "datepick.date_range", "Date Range")}
                     </label>
-                    <input
-                      type="date"
-                      value={value.fromDate || ""}
-                      onChange={(e) => onChange({ ...value, fromDate: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      {tx("lblToDate", lang)}
-                    </label>
-                    <input
-                      type="date"
-                      value={value.toDate || ""}
-                      onChange={(e) => onChange({ ...value, toDate: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold"
+                    <ErpDatePicker
+                      mode="range"
+                      lang={lang}
+                      size="sm"
+                      value={{ from: value.fromDate || null, to: value.toDate || null }}
+                      onApply={(v) => onChange({ ...value, fromDate: v.from ?? "", toDate: v.to ?? "" })}
                     />
                   </div>
                 </div>

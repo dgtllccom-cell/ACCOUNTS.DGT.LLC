@@ -6,6 +6,7 @@ import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 const num = (v: unknown) => {
   const n = Number(v);
@@ -81,23 +82,17 @@ export function SettlementReportsView() {
               <option value="fx">{_("settr.opt_fx","FX Realization Breakdown")}</option>
             </select>
           </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase">{_("settr.from_date","From Date")}</label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase">{_("settr.to_date","To Date")}</label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5"
-            />
+          <div className="sm:col-span-2">
+            <label className="text-xs font-semibold text-slate-500 uppercase">{t(lang, "datepick.date_range", "Date Range")}</label>
+            <div className="mt-1">
+              <ErpDatePicker
+                mode="range"
+                lang={lang}
+                size="sm"
+                value={{ from: fromDate || null, to: toDate || null }}
+                onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
+              />
+            </div>
           </div>
           <div className="flex gap-2">
             <button

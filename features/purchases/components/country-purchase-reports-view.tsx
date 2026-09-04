@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileBarChart, Printer, RefreshCcw, Search } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { UniversalReportModal, type ReportColumn } from "@/components/ui/universal-report-modal";
 
@@ -154,9 +155,15 @@ export function CountryPurchaseReportsView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-950" />
-          <span className="text-xs text-slate-400">{tt("creports.to", "to")}</span>
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-950" />
+          <div className="min-w-[15rem]">
+            <ErpDatePicker
+              mode="range"
+              lang={activeLang}
+              size="sm"
+              value={{ from: fromDate || null, to: toDate || null }}
+              onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
+            />
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <input
