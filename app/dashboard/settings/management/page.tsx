@@ -206,7 +206,7 @@ export default function ManagementSettingsPage() {
                 <form onSubmit={handleAddCountry} className="space-y-4">
                   <div>
                     <Label className="text-xs font-semibold text-foreground">{t(lang, "mgmt.country_name", "Country Name")}</Label>
-                    <Input value={newCountryName} onChange={(e) => setNewCountryName(e.target.value)} placeholder="Pakistan, United Arab Emirates, Afghanistan" className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl text-xs" required />
+                    <Input value={newCountryName} onChange={(e) => setNewCountryName(e.target.value)} placeholder={t(lang, "mgmt.country_name_ph", "Pakistan, United Arab Emirates, Afghanistan")} className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl text-xs" required />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>

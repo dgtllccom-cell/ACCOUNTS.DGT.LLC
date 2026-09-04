@@ -272,8 +272,16 @@ export async function GET(request: NextRequest) {
           plr.transport_expense_currency, plr.transport_remarks, plr.received_quantity, plr.received_at,
           plr.received_by, plr.receiving_warehouse_id, plr.receiving_goods_id, plr.receiving_remarks,
           case when c.id is not null then jsonb_build_object('name', c.name, 'iso2', c.iso2) else null end as countries,
-          case when cb.id is not null then jsonb_build_object('name', cb.name, 'code', cb.code) else null end as country_branches,
-          case when cib.id is not null then jsonb_build_object('name', cib.name, 'code', cib.code, 'city_name', cib.city_name) else null end as city_branches,
+          case when cb.id is not null then jsonb_build_object(
+            'name', cb.name, 'code', cb.code,
+            'branding_company_name', cb.branding_company_name, 'branding_logo_url', cb.branding_logo_url,
+            'branding_address', cb.branding_address, 'branding_phone', cb.branding_phone, 'branding_email', cb.branding_email
+          ) else null end as country_branches,
+          case when cib.id is not null then jsonb_build_object(
+            'name', cib.name, 'code', cib.code, 'city_name', cib.city_name,
+            'branding_company_name', cib.branding_company_name, 'branding_logo_url', cib.branding_logo_url,
+            'branding_address', cib.branding_address, 'branding_phone', cib.branding_phone, 'branding_email', cib.branding_email
+          ) else null end as city_branches,
           case when po.id is not null then jsonb_build_object(
             'form_data', po.form_data, 'advance_paid', po.advance_paid, 'remaining_due', po.remaining_due,
             'order_total', po.order_total, 'dest_country_id', po.dest_country_id,

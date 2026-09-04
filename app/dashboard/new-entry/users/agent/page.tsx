@@ -1,4 +1,5 @@
 import { UserEntryForm } from "@/features/users/components/user-entry-form";
+import { NewEntryUserHeader } from "@/features/users/components/new-entry-user-header";
 
 export const metadata = { title: "New Entry — Users — Agent" };
 
@@ -6,16 +7,14 @@ export const metadata = { title: "New Entry — Users — Agent" };
 export default function AgentUserEntryPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">New Entry</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Agent User</h1>
-        <p className="text-sm text-muted-foreground">
-          Create agent users for shipping, clearing, trading, and customer workflows.
-        </p>
-      </div>
+      <NewEntryUserHeader
+        titleKey="neu.title_agent"
+        titleFallback="Agent User"
+        descKey="neu.desc_agent"
+        descFallback="Create agent users for shipping, clearing, trading, and customer workflows."
+      />
 
       <UserEntryForm kind="agent" />
     </div>
   );
 }
-

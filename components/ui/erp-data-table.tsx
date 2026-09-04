@@ -3,6 +3,8 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Loader2, Database } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 /**
  * Standard ERP Table Theme Tokens & Utility Classes
@@ -67,14 +69,15 @@ export function formatStatusBadge(status: string | undefined | null) {
 /**
  * Standard Table Empty State
  */
-export function EmptyTableState({ message = "No records found matching current scope or filters.", actionLabel, onAction }: { message?: string; actionLabel?: string; onAction?: () => void }) {
+export function EmptyTableState({ message, actionLabel, onAction }: { message?: string; actionLabel?: string; onAction?: () => void }) {
+  const lang = useActiveLanguage();
   return (
     <div className="flex flex-col items-center justify-center p-12 text-center">
       <div className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-3">
         <Database className="h-6 w-6" />
       </div>
-      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{message}</p>
-      <p className="text-xs text-slate-400 mt-1 max-w-sm">Adjust your filter options or add new entries to populate this table.</p>
+      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{message || t(lang, "edt.no_records", "No records found matching current scope or filters.")}</p>
+      <p className="text-xs text-slate-400 mt-1 max-w-sm">{t(lang, "edt.adjust_filters_hint", "Adjust your filter options or add new entries to populate this table.")}</p>
       {actionLabel && onAction && (
         <button
           type="button"
@@ -92,11 +95,12 @@ export function EmptyTableState({ message = "No records found matching current s
  * Standard Table Loading Skeleton
  */
 export function TableLoadingSkeleton({ rows = 5 }: { rows?: number; cols?: number }) {
+  const lang = useActiveLanguage();
   return (
     <div className="p-4 space-y-3 animate-pulse">
       <div className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-slate-400">
         <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-        <span>Loading live ERP records...</span>
+        <span>{t(lang, "edt.loading_records", "Loading live ERP records...")}</span>
       </div>
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="h-9 w-full rounded-md bg-slate-100 dark:bg-slate-800/60" />

@@ -220,8 +220,8 @@ export function TaskDetailModal({
                 <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-1 p-3">
                   <Field label={s.t("col_module", "Module")}>{s.t(`mod_${t.related_module}`, t.related_module.replace(/_/g, " "))}</Field>
                   {t.related_record_label && <Field label={s.t("f_record", "Related Record / Entry")}>{t.related_record_label}</Field>}
-                  {data?.relatedRecord?.ref_no && <Field label="Ref">{data.relatedRecord.ref_no}</Field>}
-                  {data?.relatedRecord?.ref_amount != null && <Field label="Amount">{Number(data.relatedRecord.ref_amount).toLocaleString()}</Field>}
+                  {data?.relatedRecord?.ref_no && <Field label={s.t("f_ref", "Ref")}>{data.relatedRecord.ref_no}</Field>}
+                  {data?.relatedRecord?.ref_amount != null && <Field label={s.t("f_amount", "Amount")}>{Number(data.relatedRecord.ref_amount).toLocaleString()}</Field>}
                   {t.related_route && (
                     <a href={t.related_route} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:underline">
                       {s.t("open", "Open")} <ArrowRight className="h-3 w-3" />
@@ -311,7 +311,7 @@ export function TaskDetailModal({
                     </span>
                     <button
                       onClick={() => removeAttachment(a.id)}
-                      aria-label="Delete"
+                      aria-label={s.tGlobal("common.delete", "Delete")}
                       className="shrink-0 rounded p-0.5 text-slate-300 hover:bg-rose-50 hover:text-rose-500"
                     >
                       <XCircle className="h-3.5 w-3.5" />

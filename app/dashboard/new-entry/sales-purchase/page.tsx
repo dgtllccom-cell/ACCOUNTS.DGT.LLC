@@ -1,18 +1,21 @@
+import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
+import { PlaceholderScreenNotice } from "@/components/layout/placeholder-screen-notice";
+
 export const metadata = { title: "New Entry — Sales Purchase" };
 
 export default function SalesPurchaseEntryPage() {
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Sales & Purchase</h1>
-        <p className="text-sm text-muted-foreground">
-          Sales orders, purchase orders, confirmations, and local market entries will live here.
-        </p>
-      </div>
-      <section className="rounded-lg border bg-card p-5 text-sm text-muted-foreground">
-        Placeholder screen (UI foundation). APIs and posting services will be connected next.
-      </section>
+      <DashboardPageHeader
+        titleKey="dph.sales_purchase_title"
+        titleFallback="Sales & Purchase"
+        descKey="dph.sales_purchase_desc"
+        descFallback="Sales orders, purchase orders, confirmations, and local market entries will live here."
+      />
+      <PlaceholderScreenNotice
+        noteKey="dph.sales_purchase_note"
+        noteFallback="APIs and posting services will be connected next."
+      />
     </div>
   );
 }
-

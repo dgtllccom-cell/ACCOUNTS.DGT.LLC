@@ -154,7 +154,7 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
                 <button
                   onClick={() => onEdit(account)}
                   className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                  title="Edit"
+                  title={tt("common.edit", "Edit")}
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                 </button>
@@ -162,7 +162,7 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
                   onClick={() => handleDelete(account.id)}
                   disabled={deletingId === account.id}
                   className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
-                  title="Disconnect"
+                  title={tt("wa.disconnect", "Disconnect")}
                 >
                   {deletingId === account.id
                     ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />

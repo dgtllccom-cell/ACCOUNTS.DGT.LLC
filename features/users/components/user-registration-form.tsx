@@ -486,19 +486,19 @@ export function UserRegistrationForm() {
                   />
 
                   <SearchSelect
-                    label="Country Main Branch"
+                    label={t(lang, "urf.country_main_branch", "Country Main Branch")}
                     value={countryBranchId}
                     disabled={!countryId || !requiresMainBranch}
-                    placeholder={countryId ? (requiresMainBranch ? "Select main branch" : "Not required") : "Select country first"}
+                    placeholder={countryId ? (requiresMainBranch ? t(lang, "urf.select_main_branch", "Select main branch") : t(lang, "urf.not_required", "Not required")) : t(lang, "urf.select_country_first", "Select country first")}
                     options={countryBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: b.local_currency }))}
                     onValueChange={(id) => setCountryBranchId(id)}
                   />
 
                   <SearchSelect
-                    label="City Branch"
+                    label={t(lang, "urf.city_branch", "City Branch")}
                     value={cityBranchId}
                     disabled={!countryId || !countryBranchId || !requiresCityBranch}
-                    placeholder={countryBranchId ? (requiresCityBranch ? "Select city branch" : "Not required") : "Select main branch first"}
+                    placeholder={countryBranchId ? (requiresCityBranch ? t(lang, "urf.select_city_branch", "Select city branch") : t(lang, "urf.not_required", "Not required")) : t(lang, "urf.select_main_branch_first", "Select main branch first")}
                     options={cityBranches.map((b) => ({
                       value: b.id,
                       label: `${b.city_name} - ${b.name} (${b.code})`,

@@ -324,7 +324,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Asmat Abdullah"
+                  placeholder={tt("uf.full_name_ph", "e.g. Asmat Abdullah")}
                   className="h-9 text-xs"
                   required
                 />
@@ -482,7 +482,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   User #{successResult.user?.user_code || "NEW"} Created Successfully!
                 </div>
                 <div className="font-mono text-[11px] text-slate-700">
-                  Login URL: <span className="font-bold">{successResult.user?.login_url || "/login"}</span>
+                  {tt("uf.login_url", "Login URL:")} <span className="font-bold">{successResult.user?.login_url || "/login"}</span>
                 </div>
               </div>
             )}

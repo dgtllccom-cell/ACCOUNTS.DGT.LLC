@@ -354,10 +354,10 @@ export function QuotationView({
             </section>
             <section className="avoid-break rounded-lg border border-slate-200 bg-white p-4">
               <div className="space-y-1.5 text-xs">
-                <Row label="Sub Total" value={fmt(totals.gross, meta.currency)} />
-                <Row label="Discount" value={`- ${fmt(totals.disc, meta.currency)}`} muted />
-                <Row label="Net" value={fmt(totals.net, meta.currency)} />
-                <Row label="VAT" value={fmt(totals.tax, meta.currency)} muted />
+                <Row label={t(lang, "sales.quot_sub_total", "Sub Total")} value={fmt(totals.gross, meta.currency)} />
+                <Row label={t(lang, "sales.quot_discount", "Discount")} value={`- ${fmt(totals.disc, meta.currency)}`} muted />
+                <Row label={t(lang, "sales.quot_net", "Net")} value={fmt(totals.net, meta.currency)} />
+                <Row label={t(lang, "sales.quot_vat", "VAT")} value={fmt(totals.tax, meta.currency)} muted />
                 <div className="my-2 border-t border-dashed border-slate-300" />
                 <div className="flex items-center justify-between rounded-md bg-slate-900 px-3 py-2 text-white">
                   <span className="text-[11px] font-medium uppercase tracking-wider">{t(lang, "report.builder_grand_total", "Grand Total")}</span>

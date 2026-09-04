@@ -89,6 +89,7 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
   
   const loadingSlipData = {
     companyName: (record as any).country_branches?.branding_company_name || (record as any).city_branches?.branding_company_name || "",
+    companyLogoUrl: (record as any).country_branches?.branding_logo_url || (record as any).city_branches?.branding_logo_url || null,
     companyAddress: (record as any).country_branches?.branding_address || (record as any).city_branches?.branding_address || "",
     companyPhone: (record as any).country_branches?.branding_phone || (record as any).city_branches?.branding_phone || "",
     companyEmail: (record as any).country_branches?.branding_email || (record as any).city_branches?.branding_email || "",

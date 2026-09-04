@@ -1051,7 +1051,7 @@ export function BranchGeneralReportView({
       {titleSlot && createPortal(
         <div className="min-w-[120px]">
           <div className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">
-            Super Admin
+            {tt("bgr.super_admin", "Super Admin")}
           </div>
           <h1 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none mt-0.5">
             {title}
@@ -1282,13 +1282,13 @@ export function BranchGeneralReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs mb-4">
           <div className="min-w-[180px]">
             <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
-              Super Admin
+              {tt("bgr.super_admin", "Super Admin")}
             </div>
             <h1 className="text-sm font-black tracking-tight text-slate-900 leading-none mt-0.5">
               {title}
             </h1>
             <div className="text-[9px] font-bold text-slate-500 mt-1">
-              {subtitle || "Super Admin - Countries - Main Branches - City Branches"}
+              {subtitle || tt("bgr.fallback_hierarchy", "Super Admin - Countries - Main Branches - City Branches")}
             </div>
           </div>
         </div>

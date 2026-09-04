@@ -1,18 +1,21 @@
+import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
+import { PlaceholderScreenNotice } from "@/components/layout/placeholder-screen-notice";
+
 export const metadata = { title: "New Entry — Shipping Line" };
 
 export default function ShippingLineEntryPage() {
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Shipping Line</h1>
-        <p className="text-sm text-muted-foreground">
-          Shipping line forms (BL, containers, vessels, freight, invoices) will be available here.
-        </p>
-      </div>
-      <section className="rounded-lg border bg-card p-5 text-sm text-muted-foreground">
-        Placeholder screen (UI foundation). Document templates and attachments will connect to Supabase Storage later.
-      </section>
+      <DashboardPageHeader
+        titleKey="dph.shipping_line_title"
+        titleFallback="Shipping Line"
+        descKey="dph.shipping_line_desc"
+        descFallback="Shipping line forms (BL, containers, vessels, freight, invoices) will be available here."
+      />
+      <PlaceholderScreenNotice
+        noteKey="dph.shipping_line_note"
+        noteFallback="Document templates and attachments will connect to Supabase Storage later."
+      />
     </div>
   );
 }
-

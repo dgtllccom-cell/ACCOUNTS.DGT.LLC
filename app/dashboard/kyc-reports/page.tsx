@@ -460,7 +460,7 @@ export default function KycReportsPage() {
                 {metrics.compliant} {tUI("compliant")}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground font-semibold -mt-0.5 hidden sm:block">Master Record Audit Center</p>
+            <p className="text-[10px] text-muted-foreground font-semibold -mt-0.5 hidden sm:block">{t(activeLang, "kyc.master_record_audit_center", "Master Record Audit Center")}</p>
           </div>
         </div>
 
@@ -710,7 +710,7 @@ export default function KycReportsPage() {
                       }}
                       className="text-[11px] text-muted-foreground hover:text-foreground font-semibold"
                     >
-                      Clear
+                      {t(activeLang, "common.clear", "Clear")}
                     </button>
                     <button
                       type="button"

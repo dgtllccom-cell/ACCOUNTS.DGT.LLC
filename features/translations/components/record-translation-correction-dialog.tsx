@@ -117,7 +117,7 @@ export function RecordTranslationCorrectionDialog({
       <Languages className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
       <span>{t(lang, "correction.trigger_button", "Correct translations")}</span>
     </Button>
-    {open && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Record translation corrections">
+    {open && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label={t(lang, "rtcd.aria_label", "Record translation corrections")}>
       <div className="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-950">
         <header className="flex items-center justify-between border-b p-4">
           <div><h2 className="font-black">{t(lang, "correction.dialog_title", "Five-language record corrections")}</h2><p className="text-xs text-slate-500">{t(lang, "correction.dialog_subtitle", "Original source text is preserved. Empty values remain pending.")}</p></div>

@@ -927,6 +927,59 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "edt.no_records"
+  | "edt.adjust_filters_hint"
+  | "edt.loading_records"
+  | "common.clear"
+  | "kyc.master_record_audit_center"
+  | "neu.new_entry"
+  | "neu.title_agent"
+  | "neu.desc_agent"
+  | "neu.title_staff"
+  | "neu.desc_staff"
+  | "neu.title_branch"
+  | "neu.desc_branch"
+  | "neu.title_country"
+  | "neu.desc_country"
+  | "neu.title_super_admin"
+  | "neu.desc_super_admin"
+  | "mgmt.country_name_ph"
+  | "bgr.super_admin"
+  | "bgr.fallback_hierarchy"
+  | "sales.quot_sub_total"
+  | "sales.quot_discount"
+  | "sales.quot_net"
+  | "sales.quot_vat"
+  | "rtcd.aria_label"
+  | "utask.f_ref"
+  | "utask.f_amount"
+  | "uf.full_name_ph"
+  | "uf.login_url"
+  | "urf.country_main_branch"
+  | "urf.city_branch"
+  | "urf.select_main_branch"
+  | "urf.not_required"
+  | "urf.select_country_first"
+  | "urf.select_city_branch"
+  | "urf.select_main_branch_first"
+  | "wa.disconnect"
+  | "pdfui.lsv_logo_placeholder"
+  | "pdfui.lsv_total"
+  | "dph.companies_title"
+  | "dph.companies_desc"
+  | "dph.clearing_agent_title"
+  | "dph.clearing_agent_desc"
+  | "dph.clearing_agent_note"
+  | "dph.placeholder_screen"
+  | "dph.sales_purchase_title"
+  | "dph.sales_purchase_desc"
+  | "dph.sales_purchase_note"
+  | "dph.shipping_line_title"
+  | "dph.shipping_line_desc"
+  | "dph.shipping_line_note"
+  | "dph.master_data"
+  | "dph.goods_master_title"
+  | "dph.goods_master_desc"
   | "apperr.reference_id"
   | "apperr.update_needed"
   | "apperr.diagnostic_error"
@@ -1100,7 +1153,6 @@ export type UiKey =
   | "bgr.all_users"
   | "bgr.show_all_erp_users_super_admin"
   | "bgr.super_admin_user_directory"
-  | "bgr.super_admin"
   | "bgr.all_countries"
   | "bgr.all_branches"
   | "bgr.users"
@@ -18940,6 +18992,112 @@ const en: Dict = {
 
 
 
+
+  "edt.no_records": "No records found matching current scope or filters.",
+
+  "edt.adjust_filters_hint": "Adjust your filter options or add new entries to populate this table.",
+
+  "edt.loading_records": "Loading live ERP records...",
+
+  "common.clear": "Clear",
+
+  "kyc.master_record_audit_center": "Master Record Audit Center",
+
+  "neu.new_entry": "New Entry",
+
+  "neu.title_agent": "Agent User",
+
+  "neu.desc_agent": "Create agent users for shipping, clearing, trading, and customer workflows.",
+
+  "neu.title_staff": "Staff User",
+
+  "neu.desc_staff": "Create staff users with limited access, aligned to branch scope and assigned tasks.",
+
+  "neu.title_branch": "Branch User",
+
+  "neu.desc_branch": "Create users scoped to a city branch (City Branch Admin / Accountant / Cashier / Staff / Auditor).",
+
+  "neu.title_country": "Country User",
+
+  "neu.desc_country": "Create users scoped to a single country (Country Admin / Main Branch Admin / Auditor).",
+
+  "neu.title_super_admin": "Super Admin User",
+
+  "neu.desc_super_admin": "Create global administrators with full platform access.",
+
+  "mgmt.country_name_ph": "Pakistan, United Arab Emirates, Afghanistan",
+
+  "bgr.super_admin": "Super Admin",
+
+  "bgr.fallback_hierarchy": "Super Admin - Countries - Main Branches - City Branches",
+
+  "sales.quot_sub_total": "Sub Total",
+
+  "sales.quot_discount": "Discount",
+
+  "sales.quot_net": "Net",
+
+  "sales.quot_vat": "VAT",
+
+  "rtcd.aria_label": "Record translation corrections",
+
+  "utask.f_ref": "Ref",
+
+  "utask.f_amount": "Amount",
+
+  "uf.full_name_ph": "e.g. Asmat Abdullah",
+
+  "uf.login_url": "Login URL:",
+
+  "urf.country_main_branch": "Country Main Branch",
+
+  "urf.city_branch": "City Branch",
+
+  "urf.select_main_branch": "Select main branch",
+
+  "urf.not_required": "Not required",
+
+  "urf.select_country_first": "Select country first",
+
+  "urf.select_city_branch": "Select city branch",
+
+  "urf.select_main_branch_first": "Select main branch first",
+
+  "wa.disconnect": "Disconnect",
+
+  "pdfui.lsv_logo_placeholder": "LOGO",
+
+  "pdfui.lsv_total": "TOTAL",
+
+  "dph.companies_title": "Companies and branches",
+
+  "dph.companies_desc": "Workspace entities, branch structure, and membership boundaries.",
+
+  "dph.clearing_agent_title": "Clearing Agent",
+
+  "dph.clearing_agent_desc": "Clearing agent forms (customs, duty, bills, documents) will be available here.",
+
+  "dph.clearing_agent_note": "Approval workflow and audit logs will attach when APIs are enabled.",
+
+  "dph.placeholder_screen": "Placeholder screen (UI foundation).",
+
+  "dph.sales_purchase_title": "Sales & Purchase",
+
+  "dph.sales_purchase_desc": "Sales orders, purchase orders, confirmations, and local market entries will live here.",
+
+  "dph.sales_purchase_note": "APIs and posting services will be connected next.",
+
+  "dph.shipping_line_title": "Shipping Line",
+
+  "dph.shipping_line_desc": "Shipping line forms (BL, containers, vessels, freight, invoices) will be available here.",
+
+  "dph.shipping_line_note": "Document templates and attachments will connect to Supabase Storage later.",
+
+  "dph.master_data": "Master Data",
+
+  "dph.goods_master_title": "Goods Master & Variations",
+
+  "dph.goods_master_desc": "Manage root Goods entries (Name, HS Code) and their associated Variations (Origin, Size, Brand).",
   "apperr.reference_id": "Reference ID:",
 
   "apperr.update_needed": "Application Update Needed",
@@ -19267,7 +19425,6 @@ const en: Dict = {
 
   "bgr.super_admin_user_directory": "Super Admin User Directory",
 
-  "bgr.super_admin": "Super Admin",
 
   "bgr.all_countries": "All Countries",
 
@@ -35086,6 +35243,112 @@ const ur: Dict = {
 
 
 
+
+  "edt.no_records": "موجودہ دائرہ کار یا فلٹرز سے مطابقت رکھنے والا کوئی ریکارڈ نہیں ملا۔",
+
+  "edt.adjust_filters_hint": "اپنے فلٹر آپشنز ایڈجسٹ کریں یا اس ٹیبل کو بھرنے کے لیے نئی اندراجات شامل کریں۔",
+
+  "edt.loading_records": "لائیو ای آر پی ریکارڈز لوڈ ہو رہے ہیں...",
+
+  "common.clear": "صاف کریں",
+
+  "kyc.master_record_audit_center": "ماسٹر ریکارڈ آڈٹ سینٹر",
+
+  "neu.new_entry": "نئی اندراج",
+
+  "neu.title_agent": "ایجنٹ صارف",
+
+  "neu.desc_agent": "شپنگ، کلیئرنگ، ٹریڈنگ، اور کسٹمر ورک فلوز کے لیے ایجنٹ صارفین بنائیں۔",
+
+  "neu.title_staff": "اسٹاف صارف",
+
+  "neu.desc_staff": "محدود رسائی کے ساتھ اسٹاف صارفین بنائیں، جو برانچ دائرہ کار اور تفویض شدہ کاموں سے ہم آہنگ ہوں۔",
+
+  "neu.title_branch": "برانچ صارف",
+
+  "neu.desc_branch": "سٹی برانچ کے دائرہ کار کے صارفین بنائیں (سٹی برانچ ایڈمن / اکاؤنٹنٹ / کیشیئر / اسٹاف / آڈیٹر)۔",
+
+  "neu.title_country": "ملکی صارف",
+
+  "neu.desc_country": "ایک ملک کے دائرہ کار کے صارفین بنائیں (کنٹری ایڈمن / مین برانچ ایڈمن / آڈیٹر)۔",
+
+  "neu.title_super_admin": "سپر ایڈمن صارف",
+
+  "neu.desc_super_admin": "مکمل پلیٹ فارم رسائی کے ساتھ عالمی منتظمین بنائیں۔",
+
+  "mgmt.country_name_ph": "پاکستان، متحدہ عرب امارات، افغانستان",
+
+  "bgr.super_admin": "سپر ایڈمن",
+
+  "bgr.fallback_hierarchy": "سپر ایڈمن - ممالک - مین برانچز - سٹی برانچز",
+
+  "sales.quot_sub_total": "ذیلی مجموعہ",
+
+  "sales.quot_discount": "رعایت",
+
+  "sales.quot_net": "خالص",
+
+  "sales.quot_vat": "ویٹ",
+
+  "rtcd.aria_label": "ریکارڈ ترجمہ کی اصلاحات",
+
+  "utask.f_ref": "حوالہ",
+
+  "utask.f_amount": "رقم",
+
+  "uf.full_name_ph": "مثلاً اسمت عبداللہ",
+
+  "uf.login_url": "لاگ اِن یو آر ایل:",
+
+  "urf.country_main_branch": "کنٹری مین برانچ",
+
+  "urf.city_branch": "سٹی برانچ",
+
+  "urf.select_main_branch": "مین برانچ منتخب کریں",
+
+  "urf.not_required": "درکار نہیں",
+
+  "urf.select_country_first": "پہلے ملک منتخب کریں",
+
+  "urf.select_city_branch": "سٹی برانچ منتخب کریں",
+
+  "urf.select_main_branch_first": "پہلے مین برانچ منتخب کریں",
+
+  "wa.disconnect": "منقطع کریں",
+
+  "pdfui.lsv_logo_placeholder": "لوگو",
+
+  "pdfui.lsv_total": "کل",
+
+  "dph.companies_title": "کمپنیاں اور برانچز",
+
+  "dph.companies_desc": "ورک اسپیس ادارے، برانچ ڈھانچہ، اور رکنیت کی حدود۔",
+
+  "dph.clearing_agent_title": "کلیئرنگ ایجنٹ",
+
+  "dph.clearing_agent_desc": "کلیئرنگ ایجنٹ فارمز (کسٹمز، ڈیوٹی، بلز، دستاویزات) یہاں دستیاب ہوں گے۔",
+
+  "dph.clearing_agent_note": "منظوری ورک فلو اور آڈٹ لاگز اے پی آئیز فعال ہونے پر منسلک ہوں گے۔",
+
+  "dph.placeholder_screen": "پلیس ہولڈر اسکرین (یو آئی بنیاد)۔",
+
+  "dph.sales_purchase_title": "سیلز اور خریداری",
+
+  "dph.sales_purchase_desc": "سیلز آرڈرز، خریداری آرڈرز، تصدیقات، اور مقامی مارکیٹ اندراجات یہاں رہیں گے۔",
+
+  "dph.sales_purchase_note": "اے پی آئیز اور پوسٹنگ سروسز اگلے مرحلے میں منسلک کی جائیں گی۔",
+
+  "dph.shipping_line_title": "شپنگ لائن",
+
+  "dph.shipping_line_desc": "شپنگ لائن فارمز (بی ایل، کنٹینرز، بحری جہاز، فریٹ، انوائسز) یہاں دستیاب ہوں گے۔",
+
+  "dph.shipping_line_note": "دستاویز کے سانچے اور اٹیچمنٹس بعد میں Supabase سٹوریج سے منسلک ہوں گے۔",
+
+  "dph.master_data": "ماسٹر ڈیٹا",
+
+  "dph.goods_master_title": "گڈز ماسٹر اور ویریئیشنز",
+
+  "dph.goods_master_desc": "روٹ گڈز اندراجات (نام، ایچ ایس کوڈ) اور ان کی متعلقہ ویریئیشنز (ماخذ، سائز، برانڈ) کا انتظام کریں۔",
   "apperr.reference_id": "حوالہ آئی ڈی:",
 
   "apperr.update_needed": "ایپلیکیشن اپ ڈیٹ درکار ہے",
@@ -35413,7 +35676,6 @@ const ur: Dict = {
 
   "bgr.super_admin_user_directory": "سپر ایڈمن یوزر ڈائریکٹری",
 
-  "bgr.super_admin": "سپر ایڈمن",
 
   "bgr.all_countries": "تمام ممالک",
 
@@ -51234,6 +51496,112 @@ const ar: Dict = {
 
 
 
+
+  "edt.no_records": "لم يتم العثور على سجلات مطابقة للنطاق أو الفلاتر الحالية.",
+
+  "edt.adjust_filters_hint": "اضبط خيارات التصفية أو أضف إدخالات جديدة لملء هذا الجدول.",
+
+  "edt.loading_records": "جارٍ تحميل سجلات ERP الحية...",
+
+  "common.clear": "مسح",
+
+  "kyc.master_record_audit_center": "مركز تدقيق السجل الرئيسي",
+
+  "neu.new_entry": "إدخال جديد",
+
+  "neu.title_agent": "مستخدم وكيل",
+
+  "neu.desc_agent": "أنشئ مستخدمين وكلاء لسير عمل الشحن والتخليص والتجارة والعملاء.",
+
+  "neu.title_staff": "مستخدم موظف",
+
+  "neu.desc_staff": "أنشئ مستخدمين موظفين بصلاحيات محدودة، متوافقة مع نطاق الفرع والمهام المسندة.",
+
+  "neu.title_branch": "مستخدم فرع",
+
+  "neu.desc_branch": "أنشئ مستخدمين ضمن نطاق فرع مدينة (مسؤول فرع المدينة / محاسب / أمين صندوق / موظف / مدقق).",
+
+  "neu.title_country": "مستخدم دولة",
+
+  "neu.desc_country": "أنشئ مستخدمين ضمن نطاق دولة واحدة (مسؤول الدولة / مسؤول الفرع الرئيسي / مدقق).",
+
+  "neu.title_super_admin": "مستخدم المدير العام",
+
+  "neu.desc_super_admin": "أنشئ مسؤولين عامين بصلاحية وصول كاملة إلى المنصة.",
+
+  "mgmt.country_name_ph": "باكستان، الإمارات العربية المتحدة، أفغانستان",
+
+  "bgr.super_admin": "المدير العام",
+
+  "bgr.fallback_hierarchy": "المدير العام - الدول - الفروع الرئيسية - فروع المدن",
+
+  "sales.quot_sub_total": "المجموع الفرعي",
+
+  "sales.quot_discount": "الخصم",
+
+  "sales.quot_net": "الصافي",
+
+  "sales.quot_vat": "ضريبة القيمة المضافة",
+
+  "rtcd.aria_label": "تصحيحات ترجمة السجل",
+
+  "utask.f_ref": "مرجع",
+
+  "utask.f_amount": "المبلغ",
+
+  "uf.full_name_ph": "مثال: أسمت عبدالله",
+
+  "uf.login_url": "رابط تسجيل الدخول:",
+
+  "urf.country_main_branch": "الفرع الرئيسي للدولة",
+
+  "urf.city_branch": "فرع المدينة",
+
+  "urf.select_main_branch": "اختر الفرع الرئيسي",
+
+  "urf.not_required": "غير مطلوب",
+
+  "urf.select_country_first": "اختر الدولة أولاً",
+
+  "urf.select_city_branch": "اختر فرع المدينة",
+
+  "urf.select_main_branch_first": "اختر الفرع الرئيسي أولاً",
+
+  "wa.disconnect": "قطع الاتصال",
+
+  "pdfui.lsv_logo_placeholder": "الشعار",
+
+  "pdfui.lsv_total": "الإجمالي",
+
+  "dph.companies_title": "الشركات والفروع",
+
+  "dph.companies_desc": "كيانات مساحة العمل، وهيكل الفروع، وحدود العضوية.",
+
+  "dph.clearing_agent_title": "وكيل التخليص",
+
+  "dph.clearing_agent_desc": "ستتوفر نماذج وكيل التخليص (الجمارك، الرسوم، الفواتير، المستندات) هنا.",
+
+  "dph.clearing_agent_note": "ستُرفق سير عمل الموافقة وسجلات التدقيق عند تفعيل واجهات البرمجة.",
+
+  "dph.placeholder_screen": "شاشة نائبة (أساس واجهة المستخدم).",
+
+  "dph.sales_purchase_title": "المبيعات والمشتريات",
+
+  "dph.sales_purchase_desc": "ستكون طلبات البيع وطلبات الشراء والتأكيدات وإدخالات السوق المحلي هنا.",
+
+  "dph.sales_purchase_note": "سيتم توصيل واجهات البرمجة وخدمات الترحيل لاحقًا.",
+
+  "dph.shipping_line_title": "خط الشحن",
+
+  "dph.shipping_line_desc": "ستتوفر نماذج خط الشحن (بوليصة الشحن، الحاويات، السفن، الشحن، الفواتير) هنا.",
+
+  "dph.shipping_line_note": "سيتم ربط قوالب المستندات والمرفقات بتخزين Supabase لاحقًا.",
+
+  "dph.master_data": "البيانات الرئيسية",
+
+  "dph.goods_master_title": "بيانات البضائع الرئيسية والاختلافات",
+
+  "dph.goods_master_desc": "أدر إدخالات البضائع الرئيسية (الاسم، رمز HS) واختلافاتها المرتبطة (المنشأ، الحجم، العلامة التجارية).",
   "apperr.reference_id": "معرّف المرجع:",
 
   "apperr.update_needed": "التطبيق بحاجة إلى تحديث",
@@ -51561,7 +51929,6 @@ const ar: Dict = {
 
   "bgr.super_admin_user_directory": "دليل مستخدمي المسؤول الأعلى",
 
-  "bgr.super_admin": "المسؤول الأعلى",
 
   "bgr.all_countries": "جميع الدول",
 
@@ -67381,6 +67748,112 @@ const fa: Dict = {
 
 
 
+
+  "edt.no_records": "هیچ رکوردی مطابق با محدوده یا فیلترهای فعلی یافت نشد.",
+
+  "edt.adjust_filters_hint": "گزینه‌های فیلتر خود را تنظیم کنید یا برای پر کردن این جدول ورودی‌های جدید اضافه کنید.",
+
+  "edt.loading_records": "در حال بارگذاری رکوردهای زنده ای‌آرپی...",
+
+  "common.clear": "پاک کردن",
+
+  "kyc.master_record_audit_center": "مرکز ممیزی رکورد اصلی",
+
+  "neu.new_entry": "ورودی جدید",
+
+  "neu.title_agent": "کاربر نماینده",
+
+  "neu.desc_agent": "کاربران نماینده را برای گردش‌کارهای حمل‌ونقل، ترخیص، تجارت و مشتری ایجاد کنید.",
+
+  "neu.title_staff": "کاربر کارمند",
+
+  "neu.desc_staff": "کاربران کارمند با دسترسی محدود، هم‌راستا با محدوده شعبه و وظایف محول‌شده ایجاد کنید.",
+
+  "neu.title_branch": "کاربر شعبه",
+
+  "neu.desc_branch": "کاربرانی در محدوده شعبه شهر ایجاد کنید (مدیر شعبه شهر / حسابدار / صندوق‌دار / کارمند / حسابرس).",
+
+  "neu.title_country": "کاربر کشور",
+
+  "neu.desc_country": "کاربرانی در محدوده یک کشور ایجاد کنید (مدیر کشور / مدیر شعبه اصلی / حسابرس).",
+
+  "neu.title_super_admin": "کاربر مدیر ارشد",
+
+  "neu.desc_super_admin": "مدیران سراسری با دسترسی کامل به پلتفرم ایجاد کنید.",
+
+  "mgmt.country_name_ph": "پاکستان، امارات متحده عربی، افغانستان",
+
+  "bgr.super_admin": "مدیر ارشد",
+
+  "bgr.fallback_hierarchy": "مدیر ارشد - کشورها - شعبات اصلی - شعبات شهری",
+
+  "sales.quot_sub_total": "جمع فرعی",
+
+  "sales.quot_discount": "تخفیف",
+
+  "sales.quot_net": "خالص",
+
+  "sales.quot_vat": "مالیات بر ارزش افزوده",
+
+  "rtcd.aria_label": "اصلاحات ترجمه رکورد",
+
+  "utask.f_ref": "مرجع",
+
+  "utask.f_amount": "مبلغ",
+
+  "uf.full_name_ph": "مثلاً اسمت عبدالله",
+
+  "uf.login_url": "آدرس ورود:",
+
+  "urf.country_main_branch": "شعبه اصلی کشور",
+
+  "urf.city_branch": "شعبه شهر",
+
+  "urf.select_main_branch": "شعبه اصلی را انتخاب کنید",
+
+  "urf.not_required": "لازم نیست",
+
+  "urf.select_country_first": "ابتدا کشور را انتخاب کنید",
+
+  "urf.select_city_branch": "شعبه شهر را انتخاب کنید",
+
+  "urf.select_main_branch_first": "ابتدا شعبه اصلی را انتخاب کنید",
+
+  "wa.disconnect": "قطع اتصال",
+
+  "pdfui.lsv_logo_placeholder": "لوگو",
+
+  "pdfui.lsv_total": "جمع کل",
+
+  "dph.companies_title": "شرکت‌ها و شعبات",
+
+  "dph.companies_desc": "نهادهای فضای کاری، ساختار شعبات و مرزهای عضویت.",
+
+  "dph.clearing_agent_title": "نماینده ترخیص",
+
+  "dph.clearing_agent_desc": "فرم‌های نماینده ترخیص (گمرک، عوارض، صورتحساب‌ها، اسناد) در اینجا در دسترس خواهد بود.",
+
+  "dph.clearing_agent_note": "گردش کار تأیید و گزارش‌های ممیزی هنگام فعال شدن APIها پیوست خواهد شد.",
+
+  "dph.placeholder_screen": "صفحه جایگزین (پایه رابط کاربری).",
+
+  "dph.sales_purchase_title": "فروش و خرید",
+
+  "dph.sales_purchase_desc": "سفارش‌های فروش، سفارش‌های خرید، تأییدیه‌ها و ورودی‌های بازار محلی در اینجا خواهند بود.",
+
+  "dph.sales_purchase_note": "APIها و خدمات ثبت به‌زودی متصل خواهند شد.",
+
+  "dph.shipping_line_title": "خط کشتیرانی",
+
+  "dph.shipping_line_desc": "فرم‌های خط کشتیرانی (بارنامه، کانتینرها، کشتی‌ها، کرایه حمل، صورتحساب‌ها) در اینجا در دسترس خواهد بود.",
+
+  "dph.shipping_line_note": "قالب‌های سند و پیوست‌ها بعداً به Supabase Storage متصل خواهند شد.",
+
+  "dph.master_data": "داده‌های اصلی",
+
+  "dph.goods_master_title": "کالای اصلی و تنوعات",
+
+  "dph.goods_master_desc": "ورودی‌های اصلی کالا (نام، کد HS) و تنوعات مرتبط آن‌ها (مبدأ، اندازه، برند) را مدیریت کنید.",
   "apperr.reference_id": "شناسه مرجع:",
 
   "apperr.update_needed": "برنامه نیاز به به‌روزرسانی دارد",
@@ -67708,7 +68181,6 @@ const fa: Dict = {
 
   "bgr.super_admin_user_directory": "فهرست کاربران مدیر ارشد",
 
-  "bgr.super_admin": "مدیر ارشد",
 
   "bgr.all_countries": "همه کشورها",
 
@@ -83534,6 +84006,112 @@ const ps: Dict = {
 
 
 
+
+  "edt.no_records": "د اوسني ساحې یا فلټرونو سره مطابق هیڅ ریکارډ ونه موندل شو.",
+
+  "edt.adjust_filters_hint": "خپل د فلټر اختیارونه سمون یا دې جدول ډکولو لپاره نوي ننوتلونه زیات کړئ.",
+
+  "edt.loading_records": "د ژوندي ERP ریکارډونو پورته کول...",
+
+  "common.clear": "پاکول",
+
+  "kyc.master_record_audit_center": "د ماسټر ریکارډ پلټنې مرکز",
+
+  "neu.new_entry": "نوی ننوتل",
+
+  "neu.title_agent": "استازی کارن",
+
+  "neu.desc_agent": "د بار وړلو، تخلیص، سوداګرۍ او پیرودونکو د کاري بهیرونو لپاره د استازي کارنان جوړ کړئ.",
+
+  "neu.title_staff": "کارمند کارن",
+
+  "neu.desc_staff": "محدود لاسرسي سره د کارمندانو کارنان جوړ کړئ، د څانګې ساحې او ټاکل شویو دندو سره سم.",
+
+  "neu.title_branch": "د څانګې کارن",
+
+  "neu.desc_branch": "د ښار د څانګې ساحې کارنان جوړ کړئ (د ښار د څانګې اډمین / محاسب / صندوقدار / کارمند / پلټونکی).",
+
+  "neu.title_country": "د هیواد کارن",
+
+  "neu.desc_country": "د یو هیواد په ساحه کې کارنان جوړ کړئ (د هیواد اډمین / اصلي څانګې اډمین / پلټونکی).",
+
+  "neu.title_super_admin": "د سوپر اډمین کارن",
+
+  "neu.desc_super_admin": "د پلیټ فارم بشپړ لاسرسي سره نړیوال مدیران جوړ کړئ.",
+
+  "mgmt.country_name_ph": "پاکستان، متحده عرب امارات، افغانستان",
+
+  "bgr.super_admin": "سوپر اډمین",
+
+  "bgr.fallback_hierarchy": "سوپر اډمین - هیوادونه - اصلي څانګې - د ښار څانګې",
+
+  "sales.quot_sub_total": "فرعي جمع",
+
+  "sales.quot_discount": "تخفیف",
+
+  "sales.quot_net": "خالص",
+
+  "sales.quot_vat": "د ارزښت اضافه مالیه",
+
+  "rtcd.aria_label": "د ریکارډ ژباړې سمونونه",
+
+  "utask.f_ref": "حواله",
+
+  "utask.f_amount": "مقدار",
+
+  "uf.full_name_ph": "بېلګه: اسمت عبدالله",
+
+  "uf.login_url": "د لاگ ان یو آر ایل:",
+
+  "urf.country_main_branch": "د هیواد اصلي څانګه",
+
+  "urf.city_branch": "د ښار څانګه",
+
+  "urf.select_main_branch": "اصلي څانګه وټاکئ",
+
+  "urf.not_required": "اړین نه دی",
+
+  "urf.select_country_first": "لومړی هیواد وټاکئ",
+
+  "urf.select_city_branch": "د ښار څانګه وټاکئ",
+
+  "urf.select_main_branch_first": "لومړی اصلي څانګه وټاکئ",
+
+  "wa.disconnect": "بندول",
+
+  "pdfui.lsv_logo_placeholder": "لوګو",
+
+  "pdfui.lsv_total": "ټول",
+
+  "dph.companies_title": "شرکتونه او څانګې",
+
+  "dph.companies_desc": "د کاري ساحې اډانه، د څانګې جوړښت، او د غړیتوب پولې.",
+
+  "dph.clearing_agent_title": "د تخلیص استازی",
+
+  "dph.clearing_agent_desc": "د تخلیص استازي فورمې (ګمرک، محصول، بیلونه، اسناد) به دلته شتون ولري.",
+
+  "dph.clearing_agent_note": "کله چې APIs فعال شي، د تصویب کاري بهیر او پلټنې لاګونه به ضمیمه شي.",
+
+  "dph.placeholder_screen": "ځای نیوونکی سکرین (د UI بنسټ).",
+
+  "dph.sales_purchase_title": "پلور او پیرود",
+
+  "dph.sales_purchase_desc": "د پلور امرونه، د پیرود امرونه، تصدیقونه، او سیمه ییز بازار ننوتلونه به دلته وي.",
+
+  "dph.sales_purchase_note": "APIs او د پوسټ کولو خدمات به راتلونکي کې وصل شي.",
+
+  "dph.shipping_line_title": "د بار وړلو کرښه",
+
+  "dph.shipping_line_desc": "د بار وړلو کرښې فورمې (BL، کانتینرونه، بېړۍ، بار، بیلونه) به دلته شتون ولري.",
+
+  "dph.shipping_line_note": "د سند ټیمپلیټونه او ضمیمې به وروسته د Supabase Storage سره وصل شي.",
+
+  "dph.master_data": "ماسټر ډیټا",
+
+  "dph.goods_master_title": "د توکو ماسټر او توپیرونه",
+
+  "dph.goods_master_desc": "د توکو اصلي ننوتلونه (نوم، HS کوډ) او د هغوی اړوند توپیرونه (سرچینه، اندازه، نښه) اداره کړئ.",
   "apperr.reference_id": "د حواله شمېره:",
 
   "apperr.update_needed": "غوښتنلیک اپډیټ ته اړتیا لري",
@@ -83861,7 +84439,6 @@ const ps: Dict = {
 
   "bgr.super_admin_user_directory": "د سوپر مدیر کارن لارښود",
 
-  "bgr.super_admin": "سوپر مدیر",
 
   "bgr.all_countries": "ټول هېوادونه",
 

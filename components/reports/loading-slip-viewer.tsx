@@ -13,6 +13,7 @@ export type LoadingSlipData = {
   companyPhone: string;
   companyEmail: string;
   companyWebsite: string;
+  companyLogoUrl?: string | null;
   
   // Invoice Info
   invoiceNo: string;
@@ -137,8 +138,12 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
           {/* Top Title */}
           <div className="flex justify-between items-start border-b-2 border-black p-4">
             <div className="flex gap-4">
-              <div className="w-16 h-16 bg-[#0b1f3c] text-white flex items-center justify-center font-bold rounded">
-                LOGO
+              <div className="w-16 h-16 bg-[#0b1f3c] text-white flex items-center justify-center font-bold rounded overflow-hidden">
+                {data.companyLogoUrl ? (
+                  <img src={data.companyLogoUrl} alt={data.companyName || t(lang, "acct.brand_short", "Digital Dock ERP")} className="h-full w-full object-contain" />
+                ) : (
+                  t(lang, "pdfui.lsv_logo_placeholder", "LOGO")
+                )}
               </div>
               <div>
                 <h1 className="text-xl font-black text-slate-900 uppercase">{data.companyName}</h1>
@@ -280,7 +285,7 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
             {/* Table Footer */}
             <tfoot className="border-t-2 border-black font-semibold text-sm">
               <tr className="bg-slate-50 text-center">
-                <td colSpan={4} className="border-r-2 border-black p-2 text-right">TOTAL</td>
+                <td colSpan={4} className="border-r-2 border-black p-2 text-right">{t(lang, "pdfui.lsv_total", "TOTAL")}</td>
                 <td className="border-r-2 border-black p-2">{data.totalQuantity}</td>
                 <td className="border-r-2 border-black p-2"></td>
                 <td className="border-r-2 border-black p-2">{data.totalNetWeight ? data.totalNetWeight.toLocaleString() : "-"}</td>

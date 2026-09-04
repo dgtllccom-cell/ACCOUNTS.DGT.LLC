@@ -1,4 +1,5 @@
 import { OrganizationFoundation } from "@/features/companies/components/organization-foundation";
+import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
 
 export const metadata = { title: "Companies & Branches" };
 
@@ -6,12 +7,12 @@ export const metadata = { title: "Companies & Branches" };
 export default function CompaniesPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Companies and branches</h1>
-        <p className="text-sm text-muted-foreground">
-          Workspace entities, branch structure, and membership boundaries.
-        </p>
-      </div>
+      <DashboardPageHeader
+        titleKey="dph.companies_title"
+        titleFallback="Companies and branches"
+        descKey="dph.companies_desc"
+        descFallback="Workspace entities, branch structure, and membership boundaries."
+      />
       <OrganizationFoundation />
     </div>
   );
