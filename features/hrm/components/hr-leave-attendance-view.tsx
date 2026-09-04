@@ -393,7 +393,7 @@ function PhaseForm({
                 <F label={s.t("corr_new_in", "New Check-In")}><input type="time" value={f.newCheckIn ?? ""} onChange={(e) => set("newCheckIn", e.target.value)} className={INP} /></F>
                 <F label={s.t("corr_new_out", "New Check-Out")}><input type="time" value={f.newCheckOut ?? ""} onChange={(e) => set("newCheckOut", e.target.value)} className={INP} /></F>
               </div>
-              <F label={s.t("corr_new_status", "New Status")}><input value={f.newStatus ?? ""} onChange={(e) => set("newStatus", e.target.value)} placeholder="Present / Absent / Late…" className={INP} /></F>
+              <F label={s.t("corr_new_status", "New Status")}><input value={f.newStatus ?? ""} onChange={(e) => set("newStatus", e.target.value)} placeholder={s.t("corr_new_status_ph", "Present / Absent / Late…")} className={INP} /></F>
               <F label={s.t("reason", "Reason")}><textarea value={f.reason ?? ""} onChange={(e) => set("reason", e.target.value)} rows={2} className={INP} /></F>
             </>
           )}

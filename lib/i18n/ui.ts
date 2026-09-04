@@ -927,6 +927,20 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "loginerr.diagnostic_notice"
+  | "loginerr.ref_id"
+  | "loginerr.temporary_exception"
+  | "loginerr.reload_session"
+  | "login.quick_pick"
+  | "common.auto"
+  | "acem.container_no_ph"
+  | "acem.port_border_ph"
+  | "common.call"
+  | "common.chat"
+  | "hrm.corr_new_status_ph"
+  | "jr.jsrd_back_to_summary"
+  | "jr.jsrd_scroll_hint"
+  | "ajr.erp_system"
   | "routeerr.try_again"
   | "routeerr.go_to_dashboard"
   | "routeerr.purchase_title"
@@ -18865,6 +18879,34 @@ const en: Dict = {
 
 
 
+
+  "loginerr.diagnostic_notice": "Login Component Diagnostic Notice",
+
+  "loginerr.ref_id": "Ref ID:",
+
+  "loginerr.temporary_exception": "A temporary client exception occurred during rendering. Details are provided below:",
+
+  "loginerr.reload_session": "RELOAD LOGIN SESSION",
+
+  "login.quick_pick": "Quick Pick:",
+
+  "common.auto": "Auto",
+
+  "acem.container_no_ph": "e.g. KADP-HC-89123",
+
+  "acem.port_border_ph": "e.g. Karachi Port Customs / Torkham Border",
+
+  "common.call": "Call",
+
+  "common.chat": "Chat",
+
+  "hrm.corr_new_status_ph": "Present / Absent / Late…",
+
+  "jr.jsrd_back_to_summary": "Back to Summary",
+
+  "jr.jsrd_scroll_hint": "Scroll horizontally to view all 17 currency and serial fields →",
+
+  "ajr.erp_system": "ERP System",
   "routeerr.try_again": "Try Again (Reload)",
 
   "routeerr.go_to_dashboard": "Go to Dashboard",
@@ -34865,6 +34907,34 @@ const ur: Dict = {
 
 
 
+
+  "loginerr.diagnostic_notice": "لاگ اِن جزو تشخیصی نوٹس",
+
+  "loginerr.ref_id": "حوالہ آئی ڈی:",
+
+  "loginerr.temporary_exception": "رینڈرنگ کے دوران ایک عارضی کلائنٹ استثنا پیش آیا۔ تفصیلات ذیل میں دی گئی ہیں:",
+
+  "loginerr.reload_session": "لاگ اِن سیشن دوبارہ لوڈ کریں",
+
+  "login.quick_pick": "فوری انتخاب:",
+
+  "common.auto": "خودکار",
+
+  "acem.container_no_ph": "مثلاً KADP-HC-89123",
+
+  "acem.port_border_ph": "مثلاً کراچی پورٹ کسٹمز / طورخم بارڈر",
+
+  "common.call": "کال کریں",
+
+  "common.chat": "چیٹ",
+
+  "hrm.corr_new_status_ph": "حاضر / غیر حاضر / تاخیر…",
+
+  "jr.jsrd_back_to_summary": "خلاصے پر واپس جائیں",
+
+  "jr.jsrd_scroll_hint": "تمام 17 کرنسی اور سیریل فیلڈز دیکھنے کے لیے افقی طور پر سکرول کریں →",
+
+  "ajr.erp_system": "ای آر پی سسٹم",
   "routeerr.try_again": "دوبارہ کوشش کریں (ری لوڈ)",
 
   "routeerr.go_to_dashboard": "ڈیش بورڈ پر جائیں",
@@ -50867,6 +50937,34 @@ const ar: Dict = {
 
 
 
+
+  "loginerr.diagnostic_notice": "إشعار تشخيصي لمكوّن تسجيل الدخول",
+
+  "loginerr.ref_id": "معرّف المرجع:",
+
+  "loginerr.temporary_exception": "حدث استثناء مؤقت لدى العميل أثناء العرض. التفاصيل أدناه:",
+
+  "loginerr.reload_session": "إعادة تحميل جلسة تسجيل الدخول",
+
+  "login.quick_pick": "اختيار سريع:",
+
+  "common.auto": "تلقائي",
+
+  "acem.container_no_ph": "مثال: KADP-HC-89123",
+
+  "acem.port_border_ph": "مثال: جمارك ميناء كراتشي / حدود طورخم",
+
+  "common.call": "اتصال",
+
+  "common.chat": "دردشة",
+
+  "hrm.corr_new_status_ph": "حاضر / غائب / متأخر…",
+
+  "jr.jsrd_back_to_summary": "العودة إلى الملخص",
+
+  "jr.jsrd_scroll_hint": "مرّر أفقيًا لعرض جميع حقول العملة والتسلسل الـ17 →",
+
+  "ajr.erp_system": "نظام تخطيط موارد المؤسسة",
   "routeerr.try_again": "أعد المحاولة (إعادة تحميل)",
 
   "routeerr.go_to_dashboard": "الذهاب إلى لوحة التحكم",
@@ -66868,6 +66966,34 @@ const fa: Dict = {
 
 
 
+
+  "loginerr.diagnostic_notice": "اعلامیه تشخیصی مؤلفه ورود",
+
+  "loginerr.ref_id": "شناسه مرجع:",
+
+  "loginerr.temporary_exception": "در حین رندر یک استثنای موقت سمت کلاینت رخ داد. جزئیات در زیر آمده است:",
+
+  "loginerr.reload_session": "بارگذاری مجدد نشست ورود",
+
+  "login.quick_pick": "انتخاب سریع:",
+
+  "common.auto": "خودکار",
+
+  "acem.container_no_ph": "مثلاً KADP-HC-89123",
+
+  "acem.port_border_ph": "مثلاً گمرک بندر کراچی / مرز تورخم",
+
+  "common.call": "تماس",
+
+  "common.chat": "چت",
+
+  "hrm.corr_new_status_ph": "حاضر / غایب / تأخیر…",
+
+  "jr.jsrd_back_to_summary": "بازگشت به خلاصه",
+
+  "jr.jsrd_scroll_hint": "برای مشاهده هر ۱۷ فیلد ارز و سریال به صورت افقی اسکرول کنید →",
+
+  "ajr.erp_system": "سیستم ای‌آرپی",
   "routeerr.try_again": "دوباره تلاش کنید (بارگذاری مجدد)",
 
   "routeerr.go_to_dashboard": "رفتن به داشبورد",
@@ -82875,6 +83001,34 @@ const ps: Dict = {
 
 
 
+
+  "loginerr.diagnostic_notice": "د لاگ ان برخې تشخيصي خبرتیا",
+
+  "loginerr.ref_id": "د حواله شمېره:",
+
+  "loginerr.temporary_exception": "د ښودنې پر مهال یو لنډمهاله د پيرودګلي استثنا رامنځته شوه. جزئیات لاندې دي:",
+
+  "loginerr.reload_session": "د لاگ ان دوره بیا پورته کړئ",
+
+  "login.quick_pick": "چټک ټاکنه:",
+
+  "common.auto": "اتومات",
+
+  "acem.container_no_ph": "بېلګه: KADP-HC-89123",
+
+  "acem.port_border_ph": "بېلګه: د کراچۍ بندر ګمرک / د ټورخم پوله",
+
+  "common.call": "زنګ",
+
+  "common.chat": "چت",
+
+  "hrm.corr_new_status_ph": "حاضر / غیرحاضر / ناوخته…",
+
+  "jr.jsrd_back_to_summary": "بېرته لنډيز ته",
+
+  "jr.jsrd_scroll_hint": "د ارزي او سریالي ۱۷ ډګرونو د لیدو لپاره افقي سکرول وکړئ →",
+
+  "ajr.erp_system": "د ای آر پي سیسټم",
   "routeerr.try_again": "بیا هڅه وکړئ (بیا بارول)",
 
   "routeerr.go_to_dashboard": "ډشبورډ ته لاړ شئ",

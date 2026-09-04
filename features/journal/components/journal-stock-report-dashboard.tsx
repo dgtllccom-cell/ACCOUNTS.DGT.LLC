@@ -915,7 +915,7 @@ export default function JournalStockReportDashboard({
                   onClick={() => setSelectedEntity(null)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors"
                 >
-                  â⬠ Back to Summary
+                  ← {t(lang, "jr.jsrd_back_to_summary", "Back to Summary")}
                 </button>
                 <div className="h-4 w-px bg-slate-700 hidden sm:block" />
                 <div className="flex items-center gap-2">
@@ -1023,7 +1023,7 @@ export default function JournalStockReportDashboard({
                     {t(lang, "jr.jsrd_bill_register_details", "Purchase Booking Bill Register Details")}
                   </h4>
                   <span className="text-[10px] font-bold text-slate-400">
-                    Scroll horizontally to view all 17 currency and serial fields →
+                    {t(lang, "jr.jsrd_scroll_hint", "Scroll horizontally to view all 17 currency and serial fields →")}
                   </span>
                 </div>
 

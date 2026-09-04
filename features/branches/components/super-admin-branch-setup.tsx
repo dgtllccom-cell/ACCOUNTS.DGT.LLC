@@ -176,6 +176,7 @@ function Modal({
   onClose: () => void;
   wide?: boolean;
 }) {
+  const lang = useActiveLanguage();
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4">
       <div
@@ -192,7 +193,7 @@ function Modal({
             onClick={onClose}
             className="rounded-lg px-2 py-1 text-sm font-semibold text-muted-foreground hover:bg-muted"
           >
-            Close
+            {t(lang, "common.close", "Close")}
           </button>
         </div>
         <div className="p-5">{children}</div>
@@ -981,7 +982,7 @@ function SuperAdminBranchSetupContent() {
 
                 <div className="space-y-2">
                   <Label>{tt("ulrp.branch_code", "Branch Code")}</Label>
-                  <Input value={branchCode} readOnly placeholder="Auto" className="bg-muted/50 font-mono font-semibold" />
+                  <Input value={branchCode} readOnly placeholder={tt("common.auto", "Auto")} className="bg-muted/50 font-mono font-semibold" />
                 </div>
               </div>
             </section>

@@ -31,6 +31,7 @@ import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Th } from "@/components/ui/translated-th";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
@@ -213,6 +214,10 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
   const urlCountry = searchParams?.get("country") || "";
 
   const todayStr = new Date().toISOString().slice(0, 10);
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  useEffect(() => {
+    fetchBranding(null).then((b) => setBrandCompany(brandingName(b, lang) || null)).catch(() => {});
+  }, [lang]);
   const [rows, setRows] = useState<JournalRow[]>([]);
   const [generatedAt, setGeneratedAt] = useState("");
   const [loading, setLoading] = useState(true);
@@ -576,11 +581,11 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-center justify-center text-blue-900 dark:text-blue-500">
             <div className="text-2xl font-black tracking-tighter flex items-center">
-              DHT
+              {brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP")}
               <div className="w-2 h-2 rounded-full bg-emerald-500 ml-1 mb-2.5"></div>
             </div>
             <div className="text-[8px] font-bold tracking-widest text-slate-500 uppercase -mt-1">
-              ERP System
+              {_("ajr.erp_system", "ERP System")}
             </div>
           </div>
         </div>

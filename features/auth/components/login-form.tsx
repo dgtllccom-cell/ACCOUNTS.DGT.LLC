@@ -544,7 +544,7 @@ export function LoginForm({
 
           {/* Quick Format Picker Badges */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Pick:</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tt("login.quick_pick", "Quick Pick:")}</span>
             {ACCESS_PROFILES[activeTab].quickExamples.map((ex) => (
               <button
                 key={ex}

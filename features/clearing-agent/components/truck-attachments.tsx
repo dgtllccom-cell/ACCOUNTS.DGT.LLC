@@ -106,8 +106,8 @@ export function TruckAttachments({ truckId, entityId, entityKey = "truck" }: { t
               <li key={d.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
                 <span className="flex min-w-0 items-center gap-2"><FileText className="h-4 w-4 shrink-0 text-slate-400" /><span className="truncate">{d.name}</span></span>
                 <span className="flex shrink-0 items-center gap-1">
-                  <a href={`/api/erp/documents/download?id=${d.id}`} target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800" title="Download"><Download className="h-4 w-4" /></a>
-                  <button onClick={() => remove(d.id)} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                  <a href={`/api/erp/documents/download?id=${d.id}`} target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800" title={tt("common.download", "Download")}><Download className="h-4 w-4" /></a>
+                  <button onClick={() => remove(d.id)} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" title={tt("common.delete", "Delete")}><Trash2 className="h-4 w-4" /></button>
                 </span>
               </li>
             ))}

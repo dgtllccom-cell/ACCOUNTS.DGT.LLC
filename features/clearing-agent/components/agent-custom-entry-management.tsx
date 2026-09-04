@@ -210,7 +210,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.gd_number", "Customs GD Number")} *</label>
               <input
                 type="text"
-                placeholder="e.g. KADP-HC-89123"
+                placeholder={tt("acem.container_no_ph", "e.g. KADP-HC-89123")}
                 value={form.customs_declaration_no}
                 onChange={(e) => setForm({ ...form, customs_declaration_no: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
@@ -235,7 +235,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.customs_station", "Customs Station / Office")} *</label>
               <input
                 type="text"
-                placeholder="e.g. Karachi Port Customs / Torkham Border"
+                placeholder={tt("acem.port_border_ph", "e.g. Karachi Port Customs / Torkham Border")}
                 value={form.customs_station}
                 onChange={(e) => setForm({ ...form, customs_station: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"

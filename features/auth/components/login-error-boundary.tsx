@@ -2,6 +2,19 @@
 
 import React, { Component, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { t } from "@/lib/i18n/ui";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+
+function readLang(): SupportedLanguage {
+  try {
+    if (typeof document === "undefined") return "en";
+    const raw = (localStorage.getItem("erp_lang") || document.documentElement.lang || "en").trim();
+    const base = raw.split("-")[0].toLowerCase();
+    return (["en", "ur", "ar", "fa", "ps"] as const).includes(base as any) ? (base as SupportedLanguage) : "en";
+  } catch {
+    return "en";
+  }
+}
 
 type Props = {
   children: ReactNode;
@@ -46,23 +59,25 @@ export class LoginErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const lang = readLang();
+      const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
       return (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 p-6 text-rose-900 dark:text-rose-200 shadow-xl space-y-4 max-w-lg mx-auto">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 p-6 text-rose-900 dark:text-rose-200 shadow-xl space-y-4 max-w-lg mx-auto" dir={isRtl ? "rtl" : "ltr"}>
           <div className="flex items-center gap-3">
             <AlertCircle className="h-6 w-6 text-rose-600 shrink-0" />
             <div>
               <h3 className="font-black text-sm uppercase tracking-wider text-rose-700 dark:text-rose-300">
-                Login Component Diagnostic Notice
+                {t(lang, "loginerr.diagnostic_notice", "Login Component Diagnostic Notice")}
               </h3>
-              <p className="text-[10px] font-mono text-rose-500">Ref ID: {this.state.refId}</p>
+              <p className="text-[10px] font-mono text-rose-500" dir="ltr">{t(lang, "loginerr.ref_id", "Ref ID:")} {this.state.refId}</p>
             </div>
           </div>
 
           <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
-            A temporary client exception occurred during rendering. Details are provided below:
+            {t(lang, "loginerr.temporary_exception", "A temporary client exception occurred during rendering. Details are provided below:")}
           </p>
 
-          <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-rose-200 dark:border-rose-900/60 font-mono text-[11px] text-rose-800 dark:text-rose-300 overflow-x-auto max-h-36">
+          <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-rose-200 dark:border-rose-900/60 font-mono text-[11px] text-rose-800 dark:text-rose-300 overflow-x-auto max-h-36" dir="ltr">
             <p className="font-bold">{this.state.error?.name}: {this.state.error?.message}</p>
             {this.state.error?.stack && (
               <pre className="mt-2 text-[10px] opacity-80 whitespace-pre-wrap">{this.state.error.stack}</pre>
@@ -73,7 +88,7 @@ export class LoginErrorBoundary extends Component<Props, State> {
             onClick={this.handleReload}
             className="w-full h-10 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md transition-all"
           >
-            <RefreshCw className="h-4 w-4" /> RELOAD LOGIN SESSION
+            <RefreshCw className="h-4 w-4" /> {t(lang, "loginerr.reload_session", "RELOAD LOGIN SESSION")}
           </button>
         </div>
       );

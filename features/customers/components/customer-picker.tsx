@@ -236,7 +236,7 @@ export function CustomerPicker({
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="font-mono font-bold text-slate-800 dark:text-white text-xs" dir="ltr">{viewCustomer.mobile || "—"}</span>
                           {viewCustomer.mobile && (
-                            <a href={`tel:${viewCustomer.mobile.replace(/[^0-9+]/g, "")}`} className="text-[10px] text-blue-600 hover:underline font-bold">Call</a>
+                            <a href={`tel:${viewCustomer.mobile.replace(/[^0-9+]/g, "")}`} className="text-[10px] text-blue-600 hover:underline font-bold">{t(lang, "common.call", "Call")}</a>
                           )}
                         </div>
                       </div>
@@ -245,7 +245,7 @@ export function CustomerPicker({
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs" dir="ltr">{viewCustomer.whatsapp || viewCustomer.mobile || "—"}</span>
                           {(viewCustomer.whatsapp || viewCustomer.mobile) && (
-                            <a href={`https://wa.me/${String(viewCustomer.whatsapp || viewCustomer.mobile).replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="text-[10px] text-emerald-600 hover:underline font-bold">Chat</a>
+                            <a href={`https://wa.me/${String(viewCustomer.whatsapp || viewCustomer.mobile).replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="text-[10px] text-emerald-600 hover:underline font-bold">{t(lang, "common.chat", "Chat")}</a>
                           )}
                         </div>
                       </div>
