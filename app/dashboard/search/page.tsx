@@ -253,7 +253,7 @@ export default function SearchPage() {
       {/* Top Banner */}
       <section className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b pb-5 border-slate-200 dark:border-slate-800">
         <div>
-          <span className="text-xs font-bold text-teal-600 uppercase tracking-widest block mb-1">Unified Search Center</span>
+          <span className="text-xs font-bold text-teal-600 uppercase tracking-widest block mb-1">{th("Unified Search Center")}</span>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 flex items-center gap-2">
             <Search className="h-7 w-7 text-teal-600" />
             {th("Global ERP Search Engine")}
@@ -481,7 +481,7 @@ export default function SearchPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <strong className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{c.customer_name}</strong>
-                            <p className="text-xs text-slate-400 mt-0.5">{parsed.companyBusinessType || "Sole Proprietorship"} · {c.mobile || "No Contact"}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{parsed.companyBusinessType || th("Sole Proprietorship")} · {c.mobile || th("No Contact")}</p>
                           </div>
                           <span className="text-[10px] font-black uppercase tracking-widest font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200">
                             CUST-{c.id.slice(0, 6).toUpperCase()}
@@ -489,38 +489,38 @@ export default function SearchPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-2.5 text-xs border-y py-2.5 border-slate-100 dark:border-slate-850">
                           <div>
-                            <span className="text-slate-400 block text-[10px]">Account Name</span>
+                            <span className="text-slate-400 block text-[10px]">{th("Account Name")}</span>
                             <span className="font-bold text-slate-800 dark:text-slate-200">{parsed.accountName || c.customer_name}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px]">Registration No.</span>
+                            <span className="text-slate-400 block text-[10px]">{th("Registration No.")}</span>
                             <span className="font-bold text-slate-800 dark:text-slate-200">{parsed.companyRegNo || "—"}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px]">Tax NTN Number</span>
+                            <span className="text-slate-400 block text-[10px]">{th("Tax NTN Number")}</span>
                             <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{parsed.companyTaxNo || "—"}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px]">Manual Ref</span>
+                            <span className="text-slate-400 block text-[10px]">{th("Manual Ref")}</span>
                             <span className="font-bold text-slate-850 dark:text-slate-200 font-mono">{parsed.manualReference || "—"}</span>
                           </div>
                         </div>
 
                         {/* Customer Actions */}
                         <div className="flex flex-wrap gap-1.5 justify-end">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-50" title="View Profile" onClick={() => handleViewCustomer(c.id)}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-50" title={th("View Profile")} onClick={() => handleViewCustomer(c.id)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-600 hover:bg-slate-100" title="Edit Profile" onClick={() => handleEditCustomer(c.id)}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-600 hover:bg-slate-100" title={th("Edit Profile")} onClick={() => handleEditCustomer(c.id)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50" title="WhatsApp Share" onClick={() => handleWhatsApp(c.mobile || "", `Hello ${c.customer_name}, please check your customer card code: CUST-${c.id.slice(0,6).toUpperCase()}.`)}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50" title={th("WhatsApp Share")} onClick={() => handleWhatsApp(c.mobile || "", `Hello ${c.customer_name}, please check your customer card code: CUST-${c.id.slice(0,6).toUpperCase()}.`)}>
                             <MessageSquare className="h-4 w-4" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-indigo-600 hover:bg-indigo-50" title={th("Email Profile")} onClick={() => handleEmail(c.email || "", th("Customer Profile") + " — " + c.customer_name, `Customer Profile details for ${c.customer_name}.\nNTN: ${parsed.companyTaxNo || "-"}`)}>
                             <Mail className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-600 hover:bg-amber-50" title="Print Profile" onClick={() => handlePrint(`Customer Card: ${c.customer_name}`, { Name: c.customer_name, Phone: c.mobile, Email: c.email, NTN: parsed.companyTaxNo, "Manual Ref": parsed.manualReference })}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-amber-600 hover:bg-amber-50" title={th("Print Profile")} onClick={() => handlePrint(`Customer Card: ${c.customer_name}`, { Name: c.customer_name, Phone: c.mobile, Email: c.email, NTN: parsed.companyTaxNo, "Manual Ref": parsed.manualReference })}>
                             <Printer className="h-4 w-4" />
                           </Button>
                         </div>
@@ -591,19 +591,19 @@ export default function SearchPage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex gap-1 justify-end">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600" title="View Transaction" onClick={() => handleViewTransaction(t.id)}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600" title={th("View Transaction")} onClick={() => handleViewTransaction(t.id)}>
                                 <Eye className="h-3.5 w-3.5" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-500" title="Edit Transaction" onClick={() => handleEditTransaction(t.id)}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-500" title={th("Edit Transaction")} onClick={() => handleEditTransaction(t.id)}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" title="WhatsApp Export" onClick={() => handleWhatsApp("+923001234567", `Transaction Code: ${t.voucher_no} saved. Details: ${t.narration || "-"}`)}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" title={th("WhatsApp Export")} onClick={() => handleWhatsApp("+923001234567", `Transaction Code: ${t.voucher_no} saved. Details: ${t.narration || "-"}`)}>
                                 <MessageSquare className="h-3.5 w-3.5" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-amber-600" title="Print Voucher" onClick={() => handlePrint(`Voucher: ${t.voucher_no}`, { "Voucher No": t.voucher_no, Date: t.entry_date, Narration: t.narration, Status: t.status, "Debit Amt": debitAmount, "Credit Amt": creditAmount })}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-amber-600" title={th("Print Voucher")} onClick={() => handlePrint(`Voucher: ${t.voucher_no}`, { "Voucher No": t.voucher_no, Date: t.entry_date, Narration: t.narration, Status: t.status, "Debit Amt": debitAmount, "Credit Amt": creditAmount })}>
                                 <Printer className="h-3.5 w-3.5" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-teal-600" title="Export JSON" onClick={() => handleExportPDF(`Voucher_${t.voucher_no}`, t)}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-teal-600" title={th("Export JSON")} onClick={() => handleExportPDF(`Voucher_${t.voucher_no}`, t)}>
                                 <DownloadActionIcon className="h-3.5 w-3.5" />
                               </Button>
                             </div>
