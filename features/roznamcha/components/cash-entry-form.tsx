@@ -2965,12 +2965,12 @@ export function CashEntryForm({
                           ) : null}
                           {showCalcPanel && calcAmount && (!exchangeRate || Number(exchangeRate) <= 0) && (
                             <p className="mt-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                              ⚠️ Exchange rate is required for {currency} ➔ {branchCurrency} calculation
+                              ⚠️ {t(lang, "roz.exchange_rate_required", "Exchange rate is required for {from} ➔ {to} calculation").replace("{from}", String(currency)).replace("{to}", String(branchCurrency))}
                             </p>
                           )}
                           {showCalcPanel && calcFinal !== null && (
                             <div className="mt-1.5 p-1.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 flex justify-between items-center">
-                              <span>Converted Amount:</span>
+                              <span>{t(lang, "roz.converted_amount", "Converted Amount:")}</span>
                               <span className="font-mono text-xs font-black">{calcFinal.toFixed(2)} {branchCurrency}</span>
                             </div>
                           )}
@@ -3004,8 +3004,8 @@ export function CashEntryForm({
                                 setRoznamchaBookType("branch_payment_voucher");
                               }}
                             >
-                              Debit
-                              <span className="block text-[9px] opacity-75 font-medium">(Receive)</span>
+                              {t(lang, "roz.col_debit", "Debit")}
+                              <span className="block text-[9px] opacity-75 font-medium">({t(lang, "roz.receive", "Receive")})</span>
                             </Button>
                             <Button
                               type="button"
@@ -3016,8 +3016,8 @@ export function CashEntryForm({
                                 setRoznamchaBookType("branch_payment_voucher");
                               }}
                             >
-                              Credit
-                              <span className="block text-[9px] opacity-75 font-medium">(Pay)</span>
+                              {t(lang, "roz.col_credit", "Credit")}
+                              <span className="block text-[9px] opacity-75 font-medium">({t(lang, "roz.pay", "Pay")})</span>
                             </Button>
                           </div>
                         </FieldBlock>
@@ -3041,7 +3041,7 @@ export function CashEntryForm({
                         </FieldBlock>
                       </div>
                       <div className="text-[10px] font-semibold text-slate-500">
-                        Credit = جمع رقم (Money Paid) | Debit = ادا رقم (Money Received)
+                        {t(lang, "roz.col_credit", "Credit")} = {t(lang, "roz.money_paid", "Money Paid")} | {t(lang, "roz.col_debit", "Debit")} = {t(lang, "roz.money_received", "Money Received")}
                       </div>
                     </div>
                   )}
@@ -3094,7 +3094,7 @@ export function CashEntryForm({
             <Card className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
               <div className="border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:from-slate-900 dark:to-slate-950">
                 <CardTitle className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                  <span>📄 Professional Live Payment Report</span>
+                  <span>📄 {t(lang, "roz.live_payment_report", "Professional Live Payment Report")}</span>
                 </CardTitle>
               </div>
               <CardContent className="p-3 space-y-3">
@@ -3178,10 +3178,10 @@ export function CashEntryForm({
             <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
             <span>
               {tableDateMode === "day"
-                ? `${lang === "ur" ? "منتخب تاریخ" : "Showing"}: ${tableDate || entryDate} (1 Day)`
+                ? `${t(lang, "cef.showing_date", "Showing")}: ${tableDate || entryDate} (1 Day)`
                 : tableDateMode === "range"
                 ? `${tableFromDate} ➔ ${tableToDate}`
-                : lang === "ur" ? "تمام تاریخیں (مکمل ریکارڈز)" : "All Historical Entries"}
+                : t(lang, "cef.all_historical_entries", "All Historical Entries")}
             </span>
           </div>
         </div>
@@ -3196,7 +3196,7 @@ export function CashEntryForm({
                 size="sm"
                 className="h-7 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                 onClick={() => shiftTableDay(-1)}
-                title={lang === "ur" ? "پچھلا دن" : "Previous Day"}
+                title={t(lang, "cef.previous_day", "Previous Day")}
               >
                 ◀ {t(lang, "roz.prev_day", "Prev Day")}
               </Button>
@@ -3227,7 +3227,7 @@ export function CashEntryForm({
                 size="sm"
                 className="h-7 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                 onClick={() => shiftTableDay(1)}
-                title={lang === "ur" ? "اگلا دن" : "Next Day"}
+                title={t(lang, "cef.next_day", "Next Day")}
               >
                 {t(lang, "roz.next_day", "Next Day")} ▶
               </Button>
@@ -3237,14 +3237,14 @@ export function CashEntryForm({
           {tableDateMode === "range" && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs text-xs">
-                <span className="text-[11px] font-bold text-slate-500">{lang === "ur" ? "از:" : "From:"}</span>
+                <span className="text-[11px] font-bold text-slate-500">{t(lang, "cef.from_colon", "From:")}</span>
                 <input
                   type="date"
                   value={tableFromDate}
                   onChange={(e) => setTableFromDate(e.target.value)}
                   className="h-6 text-xs font-bold bg-transparent outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
                 />
-                <span className="text-[11px] font-bold text-slate-500 ms-1">{lang === "ur" ? "تا:" : "To:"}</span>
+                <span className="text-[11px] font-bold text-slate-500 ms-1">{t(lang, "cef.to_colon", "To:")}</span>
                 <input
                   type="date"
                   value={tableToDate}
@@ -3260,7 +3260,7 @@ export function CashEntryForm({
                   className="h-7 px-2 text-[11px] font-semibold"
                   onClick={() => setTableDatePreset("this_week")}
                 >
-                  {lang === "ur" ? "اس ہفتے" : "This Week"}
+                  {t(lang, "cef.this_week", "This Week")}
                 </Button>
                 <Button
                   type="button"
@@ -3269,7 +3269,7 @@ export function CashEntryForm({
                   className="h-7 px-2 text-[11px] font-semibold"
                   onClick={() => setTableDatePreset("this_month")}
                 >
-                  {lang === "ur" ? "اس مہینے" : "This Month"}
+                  {t(lang, "cef.this_month", "This Month")}
                 </Button>
                 <Button
                   type="button"
@@ -3278,7 +3278,7 @@ export function CashEntryForm({
                   className="h-7 px-2 text-[11px] font-semibold"
                   onClick={() => setTableDatePreset("last_30_days")}
                 >
-                  {lang === "ur" ? "گزشتہ 30 دن" : "Last 30 Days"}
+                  {t(lang, "cef.last_30_days", "Last 30 Days")}
                 </Button>
               </div>
             </div>

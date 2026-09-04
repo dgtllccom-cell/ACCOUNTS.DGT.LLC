@@ -927,6 +927,20 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "roz.receive"
+  | "roz.pay"
+  | "roz.exchange_rate_required"
+  | "roz.converted_amount"
+  | "roz.live_payment_report"
+  | "cef.showing_date"
+  | "cef.all_historical_entries"
+  | "cef.previous_day"
+  | "cef.next_day"
+  | "cef.from_colon"
+  | "cef.to_colon"
+  | "cef.this_week"
+  | "cef.this_month"
+  | "cef.last_30_days"
   | "upd.owner_badge"
   | "upd.master_intel_report"
   | "upd.title"
@@ -18601,6 +18615,34 @@ const en: Dict = {
 
 
 
+
+
+  "roz.receive": "Receive",
+
+  "roz.pay": "Pay",
+
+  "roz.exchange_rate_required": "Exchange rate is required for {from} ➔ {to} calculation",
+
+  "roz.converted_amount": "Converted Amount:",
+
+  "roz.live_payment_report": "Professional Live Payment Report",
+  "cef.showing_date": "Showing",
+
+  "cef.all_historical_entries": "All Historical Entries",
+
+  "cef.previous_day": "Previous Day",
+
+  "cef.next_day": "Next Day",
+
+  "cef.from_colon": "From:",
+
+  "cef.to_colon": "To:",
+
+  "cef.this_week": "This Week",
+
+  "cef.this_month": "This Month",
+
+  "cef.last_30_days": "Last 30 Days",
   "upd.owner_badge": "Owner",
   "upd.master_intel_report": "Master Unified Intelligence Report",
 
@@ -34151,6 +34193,34 @@ const ur: Dict = {
 
 
 
+
+
+  "roz.receive": "وصول",
+
+  "roz.pay": "ادائیگی",
+
+  "roz.exchange_rate_required": "{from} ➔ {to} حساب کے لیے شرح تبادلہ درکار ہے",
+
+  "roz.converted_amount": "تبدیل شدہ رقم:",
+
+  "roz.live_payment_report": "پروفیشنل لائیو پیمنٹ رپورٹ",
+  "cef.showing_date": "منتخب تاریخ",
+
+  "cef.all_historical_entries": "تمام تاریخیں (مکمل ریکارڈز)",
+
+  "cef.previous_day": "پچھلا دن",
+
+  "cef.next_day": "اگلا دن",
+
+  "cef.from_colon": "از:",
+
+  "cef.to_colon": "تا:",
+
+  "cef.this_week": "اس ہفتے",
+
+  "cef.this_month": "اس مہینے",
+
+  "cef.last_30_days": "گزشتہ 30 دن",
   "upd.owner_badge": "مالک",
   "upd.master_intel_report": "مرکزی ڈیٹا بیس رپورٹ",
 
@@ -49703,6 +49773,34 @@ const ar: Dict = {
 
 
 
+
+
+  "roz.receive": "استلام",
+
+  "roz.pay": "دفع",
+
+  "roz.exchange_rate_required": "سعر الصرف مطلوب لحساب {from} ➔ {to}",
+
+  "roz.converted_amount": "المبلغ المحوّل:",
+
+  "roz.live_payment_report": "تقرير الدفع المباشر الاحترافي",
+  "cef.showing_date": "التاريخ المحدد",
+
+  "cef.all_historical_entries": "جميع السجلات التاريخية",
+
+  "cef.previous_day": "اليوم السابق",
+
+  "cef.next_day": "اليوم التالي",
+
+  "cef.from_colon": "من:",
+
+  "cef.to_colon": "إلى:",
+
+  "cef.this_week": "هذا الأسبوع",
+
+  "cef.this_month": "هذا الشهر",
+
+  "cef.last_30_days": "آخر 30 يومًا",
   "upd.owner_badge": "المالك",
   "upd.master_intel_report": "تقرير الاستخبارات الموحد الرئيسي",
 
@@ -65254,6 +65352,34 @@ const fa: Dict = {
 
 
 
+
+
+  "roz.receive": "دریافت",
+
+  "roz.pay": "پرداخت",
+
+  "roz.exchange_rate_required": "نرخ ارز برای محاسبه {from} ➔ {to} لازم است",
+
+  "roz.converted_amount": "مبلغ تبدیل‌شده:",
+
+  "roz.live_payment_report": "گزارش پرداخت زنده حرفه‌ای",
+  "cef.showing_date": "تاریخ انتخاب‌شده",
+
+  "cef.all_historical_entries": "همه ورودی‌های تاریخی",
+
+  "cef.previous_day": "روز قبل",
+
+  "cef.next_day": "روز بعد",
+
+  "cef.from_colon": "از:",
+
+  "cef.to_colon": "تا:",
+
+  "cef.this_week": "این هفته",
+
+  "cef.this_month": "این ماه",
+
+  "cef.last_30_days": "30 روز گذشته",
   "upd.owner_badge": "مالک",
   "upd.master_intel_report": "گزارش هوشمند یکپارچه اصلی",
 
@@ -80811,6 +80937,34 @@ const ps: Dict = {
 
 
 
+
+
+  "roz.receive": "ترلاسه کول",
+
+  "roz.pay": "تادیه",
+
+  "roz.exchange_rate_required": "د {from} ➔ {to} محاسبې لپاره د اسعارو نرخ اړین دی",
+
+  "roz.converted_amount": "بدله شوی مقدار:",
+
+  "roz.live_payment_report": "مسلکي ژوندی تادیاتو راپور",
+  "cef.showing_date": "ټاکل شوې نېټه",
+
+  "cef.all_historical_entries": "ټول تاریخي ننوتنې",
+
+  "cef.previous_day": "مخکینۍ ورځ",
+
+  "cef.next_day": "راتلونکې ورځ",
+
+  "cef.from_colon": "له:",
+
+  "cef.to_colon": "تر:",
+
+  "cef.this_week": "دا اونۍ",
+
+  "cef.this_month": "دا میاشت",
+
+  "cef.last_30_days": "وروستۍ 30 ورځې",
   "upd.owner_badge": "مالک",
   "upd.master_intel_report": "اصلي یوځای شوی معلوماتي راپور",
 
