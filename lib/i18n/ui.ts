@@ -927,6 +927,8 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "lpjr.new_local_purchase"
+  | "lpjr.subtitle"
   | "pterv2.audit_log_line"
   | "pterv2.audit_ref_lbl"
   | "pterv2.booking_ref"
@@ -18298,6 +18300,12 @@ const en: Dict = {
 
 
 
+
+
+  "lpjr.new_local_purchase": "New Local Purchase",
+
+
+  "lpjr.subtitle": "ERP Master Console — Multi-Country Reporting",
   "pterv2.audit_log_line": "Audit log",
 
 
@@ -33261,6 +33269,12 @@ const ur: Dict = {
 
 
 
+
+
+  "lpjr.new_local_purchase": "نئی مقامی خریداری",
+
+
+  "lpjr.subtitle": "ERP ماسٹر کنسول — کثیر ملکی رپورٹنگ",
   "pterv2.audit_log_line": "آڈٹ لاگ",
 
 
@@ -48226,6 +48240,12 @@ const ar: Dict = {
 
 
 
+
+
+  "lpjr.new_local_purchase": "شراء محلي جديد",
+
+
+  "lpjr.subtitle": "وحدة تحكم ERP الرئيسية — تقارير متعددة الدول",
   "pterv2.audit_log_line": "سجل التدقيق",
 
 
@@ -63190,6 +63210,12 @@ const fa: Dict = {
 
 
 
+
+
+  "lpjr.new_local_purchase": "خرید محلی جدید",
+
+
+  "lpjr.subtitle": "کنسول اصلی ERP — گزارش‌گیری چندکشوری",
   "pterv2.audit_log_line": "گزارش حسابرسی",
 
 
@@ -78160,6 +78186,12 @@ const ps: Dict = {
 
 
 
+
+
+  "lpjr.new_local_purchase": "نوی محلي پیرود",
+
+
+  "lpjr.subtitle": "د ERP اصلي کنسول — څو هېوادیز راپور ورکول",
   "pterv2.audit_log_line": "د پلټنې ثبت",
 
 

@@ -229,8 +229,8 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
     }> = {};
 
     postedPurchases.forEach(p => {
-      const cName = p.countryName || p.country_name || "PAKISTAN";
-      const bName = p.branchName || p.branch_name || "—";
+      const cName = p.countryName || p.country_name || session.countryName || "—";
+      const bName = p.branchName || p.branch_name || session.branchName || "—";
       const curr = p.localCurrency || p.local_currency || (cName.toUpperCase().includes("UAE") ? "AED" : cName.toUpperCase().includes("AFG") ? "AFN" : "PKR");
       const cost = Number(p.finalCost || p.final_cost || p.purchaseCost || p.purchase_cost || 0);
       const tax = Number(p.taxAmount || p.tax_amount || 0);
@@ -286,7 +286,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
       <div className="flex flex-wrap items-center justify-between text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-xs gap-3">
         <div className="flex items-center gap-2">
           <span className="text-slate-400">{th("BRANCH NAME")}:</span>
-          <span className="text-blue-600 dark:text-blue-400 font-extrabold">{session.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}</span>
+          <span className="text-blue-600 dark:text-blue-400 font-extrabold">{session.branchName || "—"}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-slate-400">{th("USER NAME")}:</span>
@@ -304,11 +304,11 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
           <div className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-blue-600" />
             <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
-              Local Purchase Journal Report
+              {tt("lpjr.journal_title", "Local Purchase Journal Report")}
             </h1>
           </div>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Logistics ERP Master Console & Super Admin Multi-Country Reporting
+            {tt("lpjr.subtitle", "ERP Master Console — Multi-Country Reporting")}
           </p>
         </div>
 
@@ -356,8 +356,8 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             rows={filteredPurchases.map((p, idx) => ({
               ...p,
               journal_serial_no: p.journal_serial_no || p.serialNo || p.serial_no || `LP-${String(idx + 1).padStart(5, "0")}`,
-              countryName: p.countryName || p.country_name || session.countryName || "UAE",
-              branchName: p.branchName || p.branch_name || session.branchName || "Main Branch",
+              countryName: p.countryName || p.country_name || session.countryName || "—",
+              branchName: p.branchName || p.branch_name || session.branchName || "—",
               supplierName: p.supplierName || p.supplier_name || "-",
               goodsName: p.goodsName || p.goods_name || "-",
               quantityKgs: p.quantityKgs || p.quantity_kgs || 0,
@@ -382,7 +382,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             onClick={() => router.push("/dashboard/purchase/local-purchase")}
             className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-200"
           >
-            + New Local Purchase
+            + {tt("lpjr.new_local_purchase", "New Local Purchase")}
           </Button>
         </div>
       </div>
@@ -399,12 +399,12 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">{th("COUNTRY")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">PK PAKISTAN</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("BRANCH NAME")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">MAIN BRANCH</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("CITY BRANCH")}:</span> <span className="font-bold text-blue-600">CHAMAN CITY BRANCH</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("COUNTRY")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{session.countryName || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("BRANCH NAME")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{session.branchName || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("CITY BRANCH")}:</span> <span className="font-bold text-blue-600">{(session as any).cityBranchName || session.branchName || "—"}</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{th("USER NAME")}:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "—"}</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{th("ROLE")}:</span> <span className="font-black text-purple-600 uppercase">{session.role || "—"}</span></div>
-            <div className="flex justify-between" suppressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">20 JUL 2026, 09:35 PM</span></div>
+            <div className="flex justify-between" suppressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">{new Date().toLocaleString(`${activeLang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-400">{th("STATUS")}:</span> <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase">{th("ACTIVE")}</span></div>
           </CardContent>
         </Card>
@@ -471,16 +471,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 </div>
               ))
             ) : (
-              <>
-                <div className="flex justify-between items-center py-1 border-b border-amber-200/30">
-                  <span className="font-black text-slate-800 dark:text-slate-200 text-[10px] uppercase">PK PAKISTAN</span>
-                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">1 {th("BRANCHES")}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="font-black text-slate-800 dark:text-slate-200 text-[10px] uppercase">AE UNITED ARAB EMIRATES</span>
-                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">1 {th("BRANCHES")}</span>
-                </div>
-              </>
+              <div className="py-2 text-center text-[10px] text-slate-400">{th("No records found.")}</div>
             )}
           </CardContent>
         </Card>
@@ -523,7 +514,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                       <span className="font-mono font-bold text-emerald-600">{br.postedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] border-t border-slate-200/40 dark:border-slate-700/40 pt-1">
-                      <span className="text-slate-400">REM. BAL:</span>
+                      <span className="text-slate-400">{th("REM. BAL")}:</span>
                       <span className="font-mono font-bold text-slate-700 dark:text-slate-300">0.00</span>
                     </div>
                   </div>
@@ -666,7 +657,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                  onClick={() => setSelectedRowForVoucher(row)}
                                  className="h-6 px-2 text-[9px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
                                >
-                                 View Voucher
+                                 {th("View Voucher")}
                                </Button>
                              </td>
                           </tr>
@@ -722,7 +713,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
                       <>
-                        <Send className="h-3.5 w-3.5" /> Transfer & Post to GL
+                        <Send className="h-3.5 w-3.5" /> {th("Transfer & Post to GL")}
                       </>
                     )}
                   </Button>
@@ -731,14 +722,14 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                   onClick={() => printDomFragmentViaModal("printable-modal-voucher", "Voucher")}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
                 >
-                  <Printer className="h-3.5 w-3.5" /> Print
+                  <Printer className="h-3.5 w-3.5" /> {th("Print")}
                 </Button>
                 <button
                   type="button"
                   onClick={() => setSelectedRowForVoucher(null)}
                   className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
                 >
-                  Close
+                  {th("Close")}
                 </button>
               </div>
             </div>
@@ -783,7 +774,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                     <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">LOGO</div>
+                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">{th("LOGO")}</div>
                           <div className="space-y-1">
                             <h2 className="text-xl font-black uppercase tracking-[0.18em]">{tt("lpjr.inv_tax_invoice", "Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
