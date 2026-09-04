@@ -140,6 +140,7 @@ function formatDateTime(value: string) {
 
 export function UserJournalReport() {
   const lang = useActiveLanguage();
+  const thL = (x: string) => translateHeader(lang, x);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -635,8 +636,8 @@ export function UserJournalReport() {
             <Users className="h-3.5 w-3.5" />
           </div>
           <div>
-            <div className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">Users</div>
-            <h1 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none mt-0.5">User Journal Report</h1>
+            <div className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">{thL("Users")}</div>
+            <h1 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none mt-0.5">{thL("User Journal Report")}</h1>
           </div>
         </div>,
         titleSlot
@@ -653,12 +654,12 @@ export function UserJournalReport() {
         {/* Expanded Executive Management Summary Area */}
         <section className="mb-4 rounded-xl border border-[var(--ujr-line)] bg-[var(--ujr-card)] p-5 shadow-sm">
           <div className="border-b border-[var(--ujr-line)] pb-3 mb-4 flex justify-between items-center">
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-[var(--ujr-muted)]">Executive User Management Summary</h2>
+            <h2 className="text-[11px] font-black uppercase tracking-wider text-[var(--ujr-muted)]">{thL("Executive User Management Summary")}</h2>
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">Admin Name</div>
+              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Admin Name")}</div>
               <div className="text-sm font-black text-[var(--ujr-title)] flex items-center gap-2">
                 <div className="grid h-6 w-6 place-items-center rounded-full bg-blue-600 text-white font-black text-[9px] shadow-sm">
                   {initials(sessionInfo?.user?.fullName ?? superAdminRow?.fullName ?? "Super Admin")}
@@ -671,18 +672,18 @@ export function UserJournalReport() {
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">Branch Name</div>
+              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Branch Name")}</div>
               <div className="text-sm font-black text-[var(--ujr-title)]">{superAdminRow?.branchName || "Global"}</div>
               <div className="text-[9px] text-[var(--ujr-muted)] font-semibold">{superAdminRow?.branchType || "Global"}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">Branch Code</div>
+              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Branch Code")}</div>
               <div className="text-sm font-black text-[#1455ff] font-mono">{superAdminRow?.branchCode || "-"}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">ERP Team / Role</div>
+              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("ERP Team / Role")}</div>
               <div>
                 <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider">
                   {sessionInfo?.roles[0]?.replace(/_/g, " ") ?? superAdminRow?.role?.replace(/_/g, " ") ?? "Super Admin"}
@@ -691,12 +692,12 @@ export function UserJournalReport() {
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">Last Login</div>
+              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Last Login")}</div>
               <div className="text-xs font-black text-[var(--ujr-title)] font-mono">{formatDateTime(superAdminRow?.lastActivity ?? "")}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">Current Session Time</div>
+              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Current Session Time")}</div>
               <div className="text-xs font-black text-[var(--ujr-title)] font-mono">{clientGeneratedAt || "-"}</div>
             </div>
           </div>
@@ -708,7 +709,7 @@ export function UserJournalReport() {
           <div className="mb-3 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100 sm:flex-row sm:items-center sm:justify-between">
             <span>Report data could not refresh right now. Showing cached/fallback data where available. Detail: {error}</span>
             <button className="ujr-secondary-btn h-8 px-3" type="button" onClick={() => { loadReport({ force: true }); }}>
-              <RefreshCw className="h-3.5 w-3.5" /> Retry
+              <RefreshCw className="h-3.5 w-3.5" /> {thL("Retry")}
             </button>
           </div>
         ) : null}
@@ -726,7 +727,7 @@ export function UserJournalReport() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={13} className="px-4 py-8 text-center text-[var(--ujr-muted)]">Loading user journal report...</td></tr>
+                  <tr><td colSpan={13} className="px-4 py-8 text-center text-[var(--ujr-muted)]">{thL("Loading user journal report...")}</td></tr>
                 ) : paginatedRows.length ? (
                   paginatedRows.map((row, index) => (
                     <tr key={row.userId} className="bg-[var(--ujr-card)] text-[var(--ujr-title)] transition hover:bg-[var(--ujr-row-hover)] text-center">
@@ -865,9 +866,9 @@ export function UserJournalReport() {
             </div>
             <div className="flex items-center gap-3">
               <select className="ujr-page-select" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
-                <option value={10}>10 per page</option>
-                <option value={25}>25 per page</option>
-                <option value={50}>50 per page</option>
+                <option value={10}>{`10 ${thL("per page")}`}</option>
+                <option value={25}>{`25 ${thL("per page")}`}</option>
+                <option value={50}>{`50 ${thL("per page")}`}</option>
               </select>
               <button className="ujr-page-btn" disabled={safeCurrentPage <= 1} onClick={() => setCurrentPage(1)}>|&lt;</button>
               <button className="ujr-page-btn" disabled={safeCurrentPage <= 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}>&lt;</button>
