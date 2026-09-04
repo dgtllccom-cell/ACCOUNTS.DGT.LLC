@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "onboard.title"
+  | "onboard.subtitle"
+  | "onboard.company_name"
+  | "onboard.legal_name"
+  | "onboard.base_currency"
+  | "onboard.your_name"
+  | "onboard.first_branch"
+  | "onboard.branch_code"
+  | "onboard.create_workspace"
   | "wtv.banner_eyebrow"
   | "wtv.title"
   | "wtv.subtitle"
@@ -18693,6 +18702,24 @@ const en: Dict = {
 
 
 
+
+  "onboard.title": "Create your workspace",
+
+  "onboard.subtitle": "This creates the company, first branch, owner role, membership, and starter chart of accounts.",
+
+  "onboard.company_name": "Company name",
+
+  "onboard.legal_name": "Legal name",
+
+  "onboard.base_currency": "Base currency",
+
+  "onboard.your_name": "Your name",
+
+  "onboard.first_branch": "First branch",
+
+  "onboard.branch_code": "Branch code",
+
+  "onboard.create_workspace": "Create workspace",
   "wtv.banner_eyebrow": "Digital Dock ERP • System Walkthrough Video",
 
   "wtv.title": "System Walkthrough & Operating Guide",
@@ -34400,6 +34427,24 @@ const ur: Dict = {
 
 
 
+
+  "onboard.title": "اپنا ورک اسپیس بنائیں",
+
+  "onboard.subtitle": "یہ کمپنی، پہلی برانچ، مالک کا کردار، رکنیت، اور ابتدائی چارٹ آف اکاؤنٹس بناتا ہے۔",
+
+  "onboard.company_name": "کمپنی کا نام",
+
+  "onboard.legal_name": "قانونی نام",
+
+  "onboard.base_currency": "بنیادی کرنسی",
+
+  "onboard.your_name": "آپ کا نام",
+
+  "onboard.first_branch": "پہلی برانچ",
+
+  "onboard.branch_code": "برانچ کوڈ",
+
+  "onboard.create_workspace": "ورک اسپیس بنائیں",
   "wtv.banner_eyebrow": "ڈیجیٹل ڈاک ERP • سسٹم واک تھرو ویڈیو",
 
   "wtv.title": "سسٹم واک تھرو و آپریٹنگ گائیڈ",
@@ -50109,6 +50154,24 @@ const ar: Dict = {
 
 
 
+
+  "onboard.title": "أنشئ مساحة عملك",
+
+  "onboard.subtitle": "ينشئ هذا الشركة والفرع الأول ودور المالك والعضوية ودليل الحسابات الأولي.",
+
+  "onboard.company_name": "اسم الشركة",
+
+  "onboard.legal_name": "الاسم القانوني",
+
+  "onboard.base_currency": "العملة الأساسية",
+
+  "onboard.your_name": "اسمك",
+
+  "onboard.first_branch": "الفرع الأول",
+
+  "onboard.branch_code": "رمز الفرع",
+
+  "onboard.create_workspace": "إنشاء مساحة العمل",
   "wtv.banner_eyebrow": "Digital Dock ERP • فيديو استعراض النظام",
 
   "wtv.title": "استعراض النظام ودليل التشغيل",
@@ -65817,6 +65880,24 @@ const fa: Dict = {
 
 
 
+
+  "onboard.title": "فضای کاری خود را ایجاد کنید",
+
+  "onboard.subtitle": "این کار شرکت، اولین شعبه، نقش مالک، عضویت و دفتر حساب‌های اولیه را ایجاد می‌کند.",
+
+  "onboard.company_name": "نام شرکت",
+
+  "onboard.legal_name": "نام حقوقی",
+
+  "onboard.base_currency": "ارز پایه",
+
+  "onboard.your_name": "نام شما",
+
+  "onboard.first_branch": "اولین شعبه",
+
+  "onboard.branch_code": "کد شعبه",
+
+  "onboard.create_workspace": "ایجاد فضای کاری",
   "wtv.banner_eyebrow": "Digital Dock ERP • ویدیوی راهنمای سیستم",
 
   "wtv.title": "راهنمای سیستم و راهنمای عملیاتی",
@@ -81531,6 +81612,24 @@ const ps: Dict = {
 
 
 
+
+  "onboard.title": "خپله کاري ساحه جوړه کړئ",
+
+  "onboard.subtitle": "دا شرکت، لومړۍ څانګه، د مالک رول، غړیتوب، او ابتدايي د حسابونو چارټ جوړوي.",
+
+  "onboard.company_name": "د شرکت نوم",
+
+  "onboard.legal_name": "قانوني نوم",
+
+  "onboard.base_currency": "بنسټیز اسعار",
+
+  "onboard.your_name": "ستاسو نوم",
+
+  "onboard.first_branch": "لومړۍ څانګه",
+
+  "onboard.branch_code": "د څانګې کوډ",
+
+  "onboard.create_workspace": "کاري ساحه جوړه کړئ",
   "wtv.banner_eyebrow": "Digital Dock ERP • د سیسټم د تشریح ویډیو",
 
   "wtv.title": "د سیسټم تشریح او د چلولو لارښود",
