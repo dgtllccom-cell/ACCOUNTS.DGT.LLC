@@ -435,15 +435,17 @@ export function AdminUserManagementPanel() {
           <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800">
             <UserLiveReportPanel
               fullName={selectedReportUser.name}
-              gender="Male"
-              accountRegNo={`REG-${selectedReportUser.id.substring(0, 5)}`}
+              gender={(selectedReportUser as any).gender || "—"}
+              accountRegNo={(selectedReportUser as any).accountRegNo || selectedReportUser.id}
               role={selectedReportUser.role}
-              userCode={selectedReportUser.id.substring(0, 8)}
+              userCode={(selectedReportUser as any).userCode || selectedReportUser.id.substring(0, 8)}
               status={selectedReportUser.status || "Active"}
-              selectedCountryName={selectedReportUser.countryName || "Pakistan"}
-              selectedBranchName={selectedReportUser.branchName || "Main Branch"}
-              selectedBranchCode={selectedReportUser.branchCode || "PK-MAIN-001"}
-              selectedCityName={selectedReportUser.cityName || "Main City"}
+              selectedCountryName={selectedReportUser.countryName || ""}
+              selectedBranchName={selectedReportUser.branchName || ""}
+              selectedBranchCode={selectedReportUser.branchCode || ""}
+              selectedCityName={selectedReportUser.cityName || ""}
+              createdBy={(selectedReportUser as any).createdBy || "—"}
+              updatedBy={(selectedReportUser as any).updatedBy || (selectedReportUser as any).lastUpdatedBy || "—"}
               lastActivityDate={selectedReportUser.lastLogin || undefined}
               onBack={() => setSelectedReportUser(null)}
             />

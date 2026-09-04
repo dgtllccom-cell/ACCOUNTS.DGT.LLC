@@ -927,6 +927,25 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "ulrp.evt_activity_refresh"
+  | "ulrp.evt_assigned_perms"
+  | "ulrp.evt_auditable_logged"
+  | "ulrp.evt_initial_creation"
+  | "ulrp.evt_login_auth"
+  | "ulrp.footer_directory"
+  | "ulrp.journal_id"
+  | "ulrp.login_user_id"
+  | "ulrp.remarks_body"
+  | "ulrp.remarks_declarations"
+  | "ulrp.report_id"
+  | "ulrp.role_enterprise_admin"
+  | "ulrp.st_active"
+  | "ulrp.st_assigned"
+  | "ulrp.st_created"
+  | "ulrp.st_online"
+  | "ulrp.system_id"
+  | "ulrp.system_time"
+  | "ulrp.verified"
   | "shareform.backSide"
   | "shareform.frontSide"
   | "shareform.city"
@@ -18244,6 +18263,63 @@ const en: Dict = {
 
 
 
+
+
+  "ulrp.evt_activity_refresh": "System activity refresh",
+
+
+  "ulrp.evt_assigned_perms": "Assigned permissions / role defaults",
+
+
+  "ulrp.evt_auditable_logged": "Auditable action logged",
+
+
+  "ulrp.evt_initial_creation": "Initial User Creation & Role Assignment",
+
+
+  "ulrp.evt_login_auth": "User Login Session Authenticated",
+
+
+  "ulrp.footer_directory": "Enterprise ERP User Directory",
+
+
+  "ulrp.journal_id": "Journal ID",
+
+
+  "ulrp.login_user_id": "Login User ID",
+
+
+  "ulrp.remarks_body": "This is the official user journal audit report summary. All activities, permission matrices, and security tokens are logged and tracked under global ERP identity governance frameworks.",
+
+
+  "ulrp.remarks_declarations": "Remarks & Declarations",
+
+
+  "ulrp.report_id": "Report ID",
+
+
+  "ulrp.role_enterprise_admin": "Enterprise Administrator",
+
+
+  "ulrp.st_active": "ACTIVE",
+
+
+  "ulrp.st_assigned": "ASSIGNED",
+
+
+  "ulrp.st_created": "CREATED",
+
+
+  "ulrp.st_online": "ONLINE",
+
+
+  "ulrp.system_id": "System ID",
+
+
+  "ulrp.system_time": "System Time",
+
+
+  "ulrp.verified": "VERIFIED",
   "shareform.backSide": "Back Side",
 
 
@@ -33063,6 +33139,63 @@ const ur: Dict = {
 
 
 
+
+
+  "ulrp.evt_activity_refresh": "سسٹم سرگرمی ریفریش",
+
+
+  "ulrp.evt_assigned_perms": "تفویض کردہ اجازتیں / کردار ڈیفالٹس",
+
+
+  "ulrp.evt_auditable_logged": "قابل آڈٹ کارروائی درج",
+
+
+  "ulrp.evt_initial_creation": "ابتدائی صارف تخلیق و کردار تفویض",
+
+
+  "ulrp.evt_login_auth": "صارف لاگ ان سیشن تصدیق شدہ",
+
+
+  "ulrp.footer_directory": "انٹرپرائز ERP صارف ڈائریکٹری",
+
+
+  "ulrp.journal_id": "جرنل آئی ڈی",
+
+
+  "ulrp.login_user_id": "لاگ ان صارف آئی ڈی",
+
+
+  "ulrp.remarks_body": "یہ سرکاری صارف جرنل آڈٹ رپورٹ کا خلاصہ ہے۔ تمام سرگرمیاں، اجازت میٹرکس، اور سیکیورٹی ٹوکنز عالمی ERP شناخت گورننس فریم ورک کے تحت درج اور ٹریک کیے جاتے ہیں۔",
+
+
+  "ulrp.remarks_declarations": "ریمارکس و اعلانات",
+
+
+  "ulrp.report_id": "رپورٹ آئی ڈی",
+
+
+  "ulrp.role_enterprise_admin": "انٹرپرائز ایڈمنسٹریٹر",
+
+
+  "ulrp.st_active": "فعال",
+
+
+  "ulrp.st_assigned": "تفویض شدہ",
+
+
+  "ulrp.st_created": "تخلیق شدہ",
+
+
+  "ulrp.st_online": "آن لائن",
+
+
+  "ulrp.system_id": "سسٹم آئی ڈی",
+
+
+  "ulrp.system_time": "سسٹم کا وقت",
+
+
+  "ulrp.verified": "تصدیق شدہ",
   "shareform.backSide": "پیچھے کا رخ",
 
 
@@ -47884,6 +48017,63 @@ const ar: Dict = {
 
 
 
+
+
+  "ulrp.evt_activity_refresh": "تحديث نشاط النظام",
+
+
+  "ulrp.evt_assigned_perms": "الصلاحيات المعينة / إعدادات الدور الافتراضية",
+
+
+  "ulrp.evt_auditable_logged": "تم تسجيل إجراء قابل للتدقيق",
+
+
+  "ulrp.evt_initial_creation": "إنشاء المستخدم الأولي وتعيين الدور",
+
+
+  "ulrp.evt_login_auth": "تم توثيق جلسة دخول المستخدم",
+
+
+  "ulrp.footer_directory": "دليل مستخدمي ERP المؤسسي",
+
+
+  "ulrp.journal_id": "معرف اليومية",
+
+
+  "ulrp.login_user_id": "معرف مستخدم الدخول",
+
+
+  "ulrp.remarks_body": "هذا ملخص تقرير تدقيق سجل المستخدم الرسمي. يتم تسجيل وتتبع جميع الأنشطة ومصفوفات الصلاحيات ورموز الأمان ضمن أطر حوكمة الهوية العالمية لـ ERP.",
+
+
+  "ulrp.remarks_declarations": "الملاحظات والإقرارات",
+
+
+  "ulrp.report_id": "معرف التقرير",
+
+
+  "ulrp.role_enterprise_admin": "مسؤول المؤسسة",
+
+
+  "ulrp.st_active": "نشط",
+
+
+  "ulrp.st_assigned": "مُعيّن",
+
+
+  "ulrp.st_created": "تم الإنشاء",
+
+
+  "ulrp.st_online": "متصل",
+
+
+  "ulrp.system_id": "معرف النظام",
+
+
+  "ulrp.system_time": "وقت النظام",
+
+
+  "ulrp.verified": "موثّق",
   "shareform.backSide": "الوجه الخلفي",
 
 
@@ -62704,6 +62894,63 @@ const fa: Dict = {
 
 
 
+
+
+  "ulrp.evt_activity_refresh": "بازآوری فعالیت سیستم",
+
+
+  "ulrp.evt_assigned_perms": "مجوزهای تخصیص‌یافته / پیش‌فرض نقش",
+
+
+  "ulrp.evt_auditable_logged": "اقدام قابل حسابرسی ثبت شد",
+
+
+  "ulrp.evt_initial_creation": "ایجاد اولیه کاربر و تخصیص نقش",
+
+
+  "ulrp.evt_login_auth": "نشست ورود کاربر احراز هویت شد",
+
+
+  "ulrp.footer_directory": "فهرست کاربران ERP سازمانی",
+
+
+  "ulrp.journal_id": "شناسه ژورنال",
+
+
+  "ulrp.login_user_id": "شناسه کاربر ورود",
+
+
+  "ulrp.remarks_body": "این خلاصه گزارش رسمی حسابرسی ژورنال کاربر است. همه فعالیت‌ها، ماتریس‌های مجوز و توکن‌های امنیتی تحت چارچوب‌های حاکمیت هویت جهانی ERP ثبت و ردیابی می‌شوند.",
+
+
+  "ulrp.remarks_declarations": "یادداشت‌ها و اظهارات",
+
+
+  "ulrp.report_id": "شناسه گزارش",
+
+
+  "ulrp.role_enterprise_admin": "مدیر سازمانی",
+
+
+  "ulrp.st_active": "فعال",
+
+
+  "ulrp.st_assigned": "تخصیص‌یافته",
+
+
+  "ulrp.st_created": "ایجادشده",
+
+
+  "ulrp.st_online": "آنلاین",
+
+
+  "ulrp.system_id": "شناسه سیستم",
+
+
+  "ulrp.system_time": "زمان سیستم",
+
+
+  "ulrp.verified": "تأییدشده",
   "shareform.backSide": "سمت پشت",
 
 
@@ -77530,6 +77777,63 @@ const ps: Dict = {
 
 
 
+
+
+  "ulrp.evt_activity_refresh": "د سیسټم فعالیت تازه کول",
+
+
+  "ulrp.evt_assigned_perms": "ټاکل شوي اجازې / د رول تلوالې",
+
+
+  "ulrp.evt_auditable_logged": "د پلټنې وړ کړنه ثبت شوه",
+
+
+  "ulrp.evt_initial_creation": "لومړنی د کارن جوړول او د رول ټاکنه",
+
+
+  "ulrp.evt_login_auth": "د کارن د ننوتلو غونډه تایید شوه",
+
+
+  "ulrp.footer_directory": "د سازمان د ERP د کاروونکو لارښود",
+
+
+  "ulrp.journal_id": "د ژورنال پېژندنه",
+
+
+  "ulrp.login_user_id": "د ننوتلو کارن پېژندنه",
+
+
+  "ulrp.remarks_body": "دا د کارن د ژورنال د رسمي پلټنې راپور لنډیز دی. ټولې فعالیتونه، د اجازې ماتریسونه، او د امنیت ټوکنونه د نړیوال ERP هویت د حکومتولۍ چوکاټ لاندې ثبت او تعقیب کیږي.",
+
+
+  "ulrp.remarks_declarations": "یادښتونه او اعلانونه",
+
+
+  "ulrp.report_id": "د راپور پېژندنه",
+
+
+  "ulrp.role_enterprise_admin": "د سازمان مدیر",
+
+
+  "ulrp.st_active": "فعال",
+
+
+  "ulrp.st_assigned": "ټاکل شوی",
+
+
+  "ulrp.st_created": "جوړ شوی",
+
+
+  "ulrp.st_online": "آنلاین",
+
+
+  "ulrp.system_id": "د سیسټم پېژندنه",
+
+
+  "ulrp.system_time": "د سیسټم وخت",
+
+
+  "ulrp.verified": "تایید شوی",
   "shareform.backSide": "شا اړخ",
 
 

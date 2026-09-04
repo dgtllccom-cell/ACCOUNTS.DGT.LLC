@@ -34,6 +34,9 @@ type UserLiveReportPanelProps = {
   userCode: string;
   rawPassword?: string;
   status?: string;
+  /** Real audit values from the record — never fabricated; default "—". */
+  createdBy?: string;
+  updatedBy?: string;
 
   // Scopes context
   selectedCountryName?: string;
@@ -77,6 +80,8 @@ export function UserLiveReportPanel({
   role,
   userCode,
   status = "Active",
+  createdBy = "—",
+  updatedBy = "—",
   selectedCountryName = "",
   selectedCountryCode = "",
   selectedBranchName = "",
@@ -157,7 +162,7 @@ export function UserLiveReportPanel({
     const r = (role || "").toLowerCase();
 
     if (r.includes("super_admin")) {
-      des = "Enterprise Administrator";
+      des = tt("ulrp.role_enterprise_admin", "Enterprise Administrator");
       dept = "Executive Headquarters";
     } else if (r.includes("country_admin")) {
       des = "Country General Manager";
@@ -260,9 +265,9 @@ export function UserLiveReportPanel({
             <div>
               <h2 className="text-sm font-bold text-slate-900">{tt("ulrp.title", "User Journal Detailed Report")}</h2>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500 mt-1 font-medium">
-                <span><strong>Journal ID:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
-                <span><strong>Login User ID:</strong> <span className="text-[#1455ff] font-extrabold">{displayUserCode}</span></span>
-                <span><strong>System ID:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
+                <span><strong>{tt("ulrp.journal_id", "Journal ID")}:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
+                <span><strong>{tt("ulrp.login_user_id", "Login User ID")}:</strong> <span className="text-[#1455ff] font-extrabold">{displayUserCode}</span></span>
+                <span><strong>{tt("ulrp.system_id", "System ID")}:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
                 <span><strong>Registered:</strong> <span className="text-slate-700">{displayRegDate}</span></span>
               </div>
             </div>
@@ -274,7 +279,7 @@ export function UserLiveReportPanel({
               size="icon"
               className="h-8 w-8 text-slate-500 hover:text-slate-900 border-slate-200 bg-white"
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              title="More Actions"
+              title={tt("ujr.more_actions", "More Actions")}
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
@@ -492,51 +497,51 @@ export function UserLiveReportPanel({
                     <tr className="border-b border-slate-50 hover:bg-slate-50/50">
                       <td className="px-3 py-1.5 font-bold border-r border-slate-100">1</td>
                       <td className="px-3 py-1.5 border-r border-slate-100">{displayRegDate.slice(0, 17)}</td>
-                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">Initial User Creation & Role Assignment</td>
+                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_initial_creation", "Initial User Creation & Role Assignment")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">SYS-REG</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
                       <td className="px-3 py-1.5 text-[9px]">
-                        <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-bold uppercase">CREATED</span>
+                        <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-bold uppercase">{tt("ulrp.st_created", "CREATED")}</span>
                       </td>
                     </tr>
                     <tr className="border-b border-slate-50 hover:bg-slate-50/50">
                       <td className="px-3 py-1.5 font-bold border-r border-slate-100">2</td>
                       <td className="px-3 py-1.5 border-r border-slate-100">{displayRegDate.slice(0, 17)}</td>
-                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">Assigned permissions / role defaults</td>
+                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_assigned_perms", "Assigned permissions / role defaults")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">SYS-PERM</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
                       <td className="px-3 py-1.5 text-[9px]">
-                        <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 font-bold uppercase">ASSIGNED</span>
+                        <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 font-bold uppercase">{tt("ulrp.st_assigned", "ASSIGNED")}</span>
                       </td>
                     </tr>
                     <tr className="border-b border-slate-50 hover:bg-slate-50/50">
                       <td className="px-3 py-1.5 font-bold border-r border-slate-100">3</td>
                       <td className="px-3 py-1.5 border-r border-slate-100">{displayLastLogin.slice(0, 17)}</td>
-                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">User Login Session Authenticated</td>
+                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_login_auth", "User Login Session Authenticated")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">AUTH-LOG</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
                       <td className="px-3 py-1.5 text-[9px]">
-                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-250 font-bold uppercase">ONLINE</span>
+                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-250 font-bold uppercase">{tt("ulrp.st_online", "ONLINE")}</span>
                       </td>
                     </tr>
                     <tr className="border-b border-slate-50 hover:bg-slate-50/50">
                       <td className="px-3 py-1.5 font-bold border-r border-slate-100">4</td>
                       <td className="px-3 py-1.5 border-r border-slate-100">{displayLastLogin.slice(0, 17)}</td>
-                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">System activity refresh</td>
+                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_activity_refresh", "System activity refresh")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">ACT-REF</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
                       <td className="px-3 py-1.5 text-[9px]">
-                        <span className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-bold uppercase">ACTIVE</span>
+                        <span className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-bold uppercase">{tt("ulrp.st_active", "ACTIVE")}</span>
                       </td>
                     </tr>
                     <tr className="hover:bg-slate-50/50">
                       <td className="px-3 py-1.5 font-bold border-r border-slate-100">5</td>
                       <td className="px-3 py-1.5 border-r border-slate-100">{displayLastLogin.slice(0, 17)}</td>
-                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">Auditable action logged</td>
+                      <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_auditable_logged", "Auditable action logged")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">AUD-LOG</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
                       <td className="px-3 py-1.5 text-[9px]">
-                        <span className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-bold uppercase">ACTIVE</span>
+                        <span className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-bold uppercase">{tt("ulrp.st_active", "ACTIVE")}</span>
                       </td>
                     </tr>
                   </tbody>
@@ -553,9 +558,9 @@ export function UserLiveReportPanel({
                 {tt("ulrp.card8", "AUDIT TRAIL")}
               </div>
               <div className="p-4 space-y-3">
-                <DetailRow label={tt("ulrp.created_by", "Created By")} value="Super Admin (superadmin@dgtllc.com)" />
+                <DetailRow label={tt("ulrp.created_by", "Created By")} value={createdBy} />
                 <DetailRow label={tt("ulrp.created_on", "Created On")} value={displayRegDate} />
-                <DetailRow label={tt("ulrp.updated_by", "Last Updated By")} value="Super Admin (superadmin@dgtllc.com)" />
+                <DetailRow label={tt("ulrp.updated_by", "Last Updated By")} value={updatedBy} />
                 <DetailRow label={tt("ulrp.updated_on", "Last Updated On")} value={displayLastLogin} />
                 <DetailRow label={tt("ulrp.total_updates", "Total Updates")} value={activityCounts.edits.toString()} />
                 <DetailRow label={tt("ulrp.record_status", "Record Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
@@ -568,15 +573,15 @@ export function UserLiveReportPanel({
         {/* ── Signature & Stamp Block ───────────────────────────────────── */}
         <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="text-[10px] text-slate-400 max-w-md text-center sm:text-left leading-relaxed">
-            <strong className="text-slate-800 font-bold block mb-1">Remarks & Declarations:</strong>
-            This is the official user journal audit report summary. All activities, permission matrices, and security tokens are logged and tracked under global ERP identity governance frameworks.
+            <strong className="text-slate-800 font-bold block mb-1">{tt("ulrp.remarks_declarations", "Remarks & Declarations")}:</strong>
+            {tt("ulrp.remarks_body", "This is the official user journal audit report summary. All activities, permission matrices, and security tokens are logged and tracked under global ERP identity governance frameworks.")}
           </div>
 
           {/* Gold Verified CSS Seal Badge */}
           <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 text-white font-black text-[9px] border-2 border-double border-yellow-100 shadow-md tracking-wider flex-shrink-0">
             <div className="flex flex-col items-center">
-              <span>VERIFIED</span>
-              <span className="text-[5px] opacity-90 tracking-widest mt-0.5 font-bold">DGT ERP</span>
+              <span>{tt("ulrp.verified", "VERIFIED")}</span>
+              <span className="text-[5px] opacity-90 tracking-widest mt-0.5 font-bold">{tt("acct.brand_short", "Digital Dock ERP")}</span>
             </div>
           </div>
 
@@ -586,16 +591,16 @@ export function UserLiveReportPanel({
                 <path d="M10 28C25 24 35 12 45 10C55 8 68 18 60 25C52 32 30 38 42 22C54 6 78 5 90 12C102 19 110 32 122 25C134 18 140 10 145 15" stroke="#1e3b8b" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
             </div>
-            <div className="text-[10px] font-bold text-slate-800">Super Admin</div>
-            <div className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Enterprise Administrator</div>
+            <div className="text-[10px] font-bold text-slate-800">{tt("role.super_admin", "Super Admin")}</div>
+            <div className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{tt("ulrp.role_enterprise_admin", "Enterprise Administrator")}</div>
           </div>
         </div>
 
         {/* ── Footer ────────────────────────────────────────────────────── */}
         <div className="border-t border-slate-100 pt-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[8px] font-semibold text-slate-400 tracking-wider uppercase">
-          <span>🏢 ACCOUNTS.DGT.LLC | Enterprise ERP Directory</span>
-          <span>System Time: {new Date().toLocaleString()}</span>
-          <span>Report ID: UJR-DTL-{displayUserCode}-{new Date().toISOString().slice(0,10).replace(/-/g,"")}</span>
+          <span>{tt("ulrp.footer_directory", "Enterprise ERP User Directory")}</span>
+          <span suppressHydrationWarning>{tt("ulrp.system_time", "System Time")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span>
+          <span>{tt("ulrp.report_id", "Report ID")}: UJR-DTL-{displayUserCode}-{new Date().toISOString().slice(0,10).replace(/-/g,"")}</span>
         </div>
 
       </div>

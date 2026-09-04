@@ -885,7 +885,9 @@ export function UserJournalReport() {
           <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800">
             <UserLiveReportPanel
               fullName={viewUser.fullName}
-              gender="Male"
+              gender={(viewUser as any).gender || "—"}
+              createdBy={(viewUser as any).createdBy || "—"}
+              updatedBy={(viewUser as any).updatedBy || (viewUser as any).lastUpdatedBy || "—"}
               accountRegNo={viewUser.userId}
               role={viewUser.role}
               userCode={viewUser.userCode}
