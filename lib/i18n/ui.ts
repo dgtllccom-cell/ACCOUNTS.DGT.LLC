@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "sow.new_short"
+  | "sow.add_item_to_list"
+  | "sow.back_to_previous"
+  | "sow.close_review"
   | "smw.sales_bookings"
   | "smw.total_quantity"
   | "smw.total_containers"
@@ -18788,6 +18792,14 @@ const en: Dict = {
 
 
 
+
+  "sow.new_short": "New",
+
+  "sow.add_item_to_list": "Add Item to List",
+
+  "sow.back_to_previous": "← Back to Previous",
+
+  "sow.close_review": "Close Review ✕",
   "smw.sales_bookings": "Sales Bookings",
 
   "smw.total_quantity": "Total Quantity",
@@ -34661,6 +34673,14 @@ const ur: Dict = {
 
 
 
+
+  "sow.new_short": "نیا",
+
+  "sow.add_item_to_list": "لسٹ میں آئٹم شامل کریں",
+
+  "sow.back_to_previous": "← پچھلے پر واپس جائیں",
+
+  "sow.close_review": "جائزہ بند کریں ✕",
   "smw.sales_bookings": "سیلز بکنگز",
 
   "smw.total_quantity": "کل مقدار",
@@ -50536,6 +50556,14 @@ const ar: Dict = {
 
 
 
+
+  "sow.new_short": "جديد",
+
+  "sow.add_item_to_list": "إضافة عنصر إلى القائمة",
+
+  "sow.back_to_previous": "← العودة إلى السابق",
+
+  "sow.close_review": "إغلاق المراجعة ✕",
   "smw.sales_bookings": "حجوزات المبيعات",
 
   "smw.total_quantity": "إجمالي الكمية",
@@ -66410,6 +66438,14 @@ const fa: Dict = {
 
 
 
+
+  "sow.new_short": "جدید",
+
+  "sow.add_item_to_list": "افزودن مورد به فهرست",
+
+  "sow.back_to_previous": "← بازگشت به قبلی",
+
+  "sow.close_review": "بستن بازبینی ✕",
   "smw.sales_bookings": "رزروهای فروش",
 
   "smw.total_quantity": "مجموع مقدار",
@@ -82290,6 +82326,14 @@ const ps: Dict = {
 
 
 
+
+  "sow.new_short": "نوی",
+
+  "sow.add_item_to_list": "لست ته توکی اضافه کړئ",
+
+  "sow.back_to_previous": "← بېرته پخوانۍ ته",
+
+  "sow.close_review": "بیاکتنه تړل ✕",
   "smw.sales_bookings": "د پلورنې بکینګونه",
 
   "smw.total_quantity": "ټول اندازه",

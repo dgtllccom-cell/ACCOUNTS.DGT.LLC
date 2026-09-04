@@ -2688,7 +2688,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     onClick={() => window.location.reload()}
                     className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px]"
                   >
-                    + New
+                    + {t(lang, "sow.new_short", "New")}
                   </Button>
                   <Button
                     type="button"
@@ -2862,7 +2862,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   onClick={() => window.location.reload()}
                   className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px]"
                 >
-                  + New
+                  + {t(lang, "sow.new_short", "New")}
                 </Button>
                 <Button
                   type="button"
@@ -4450,7 +4450,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       onClick={handleAddGoodsEntry}
                       className="w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow transition-all"
                     >
-                      + Add Item to List
+                      + {t(lang, "sow.add_item_to_list", "Add Item to List")}
                     </Button>
                     <div className="flex gap-3">
                       <Button
@@ -4838,7 +4838,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               onClick={() => setActiveTab("goods")}
               className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-10 px-6 rounded-lg shadow-sm"
             >
-              ← Back to Previous
+              {t(lang, "sow.back_to_previous", "← Back to Previous")}
             </Button>
             <Button
               type="button"
@@ -4846,7 +4846,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               onClick={() => router.push("/dashboard/sales/sales-booking-register")}
               className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-10 px-6 rounded-lg shadow-sm"
             >
-              Close Review ✕
+              {t(lang, "sow.close_review", "Close Review ✕")}
             </Button>
           </div>
 
