@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Badge } from "@/components/ui/badge";
 import {
   History,
@@ -589,11 +590,14 @@ export function EnterpriseAuditMonitoringDashboard() {
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="h-8 w-36 text-xs"
+                  <ErpDatePicker
+                    mode="single"
+                    lang={lang}
+                    size="sm"
+                    presets={false}
+                    clearable={false}
+                    value={{ from: selectedDate || null }}
+                    onApply={(v) => setSelectedDate(v.from ?? "")}
                   />
                   <Button variant="outline" size="sm" onClick={fetchDailyBranchActivity} className="h-8 text-xs">
                     {tt("eaud.filter_date", "Filter Date")}

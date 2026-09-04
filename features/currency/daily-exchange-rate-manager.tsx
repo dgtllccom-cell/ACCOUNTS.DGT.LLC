@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
@@ -648,14 +649,17 @@ export function DailyExchangeRateManager() {
                 </select>
               </div>
 
-              {/* Date From */}
+              {/* Date range */}
               <div>
-                <Input
-                  type="date"
-                  placeholder={th("Date From")}
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="h-8 text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 rounded-lg shadow-xs"
+                <ErpDatePicker
+                  mode="range"
+                  lang={lang}
+                  size="sm"
+                  value={{ from: dateFrom || null, to: dateTo || null }}
+                  onApply={(v) => {
+                    setDateFrom(v.from ?? "");
+                    setDateTo(v.to ?? "");
+                  }}
                 />
               </div>
 

@@ -16,6 +16,7 @@ import { SavedReportsManager } from "./saved-reports-manager";
 import { ReportChartPanel } from "./report-chart-panel";
 import { AutoEmailManager } from "./auto-email-manager";
 import { Button } from "@/components/ui/button";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Settings2, Download, Printer, FileText, BarChart3, PanelLeftClose, PanelLeft, Sigma, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -276,21 +277,13 @@ export function CustomReportBuilder({
           {effectiveDateField ? (
             <>
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-500 uppercase">{t(lang, "report.builder_date_from", "From")}</label>
-                <input
-                  type="date"
-                  value={dateRange.from}
-                  onChange={(e) => setDateRange((d) => ({ ...d, from: e.target.value }))}
-                  className="h-8 text-xs border rounded px-2 bg-white dark:bg-slate-950"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-500 uppercase">{t(lang, "report.builder_date_to", "To")}</label>
-                <input
-                  type="date"
-                  value={dateRange.to}
-                  onChange={(e) => setDateRange((d) => ({ ...d, to: e.target.value }))}
-                  className="h-8 text-xs border rounded px-2 bg-white dark:bg-slate-950"
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">{t(lang, "datepick.date_range", "Date Range")}</label>
+                <ErpDatePicker
+                  mode="range"
+                  lang={lang}
+                  size="sm"
+                  value={{ from: dateRange.from || null, to: dateRange.to || null }}
+                  onApply={(v) => setDateRange((d) => ({ ...d, from: v.from ?? "", to: v.to ?? "" }))}
                 />
               </div>
               {(dateRange.from || dateRange.to) && (

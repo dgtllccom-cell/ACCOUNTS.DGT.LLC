@@ -26,6 +26,8 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { t } from "@/lib/i18n/ui";
 import { Label } from "@/components/ui/label";
 import { apiGet } from "@/lib/api/client";
 import { listCountries, type LocationCountry, listCities, type LocationCity } from "@/features/locations/location-api";
@@ -393,23 +395,17 @@ export default function SearchPage() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">{th("Start Date")}</Label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="h-9 text-xs bg-white text-slate-900 border-slate-200"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-600">{th("End Date")}</Label>
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="h-9 text-xs bg-white text-slate-900 border-slate-200"
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs font-bold text-slate-600">{t(lang, "datepick.date_range", "Date Range")}</Label>
+              <ErpDatePicker
+                mode="range"
+                lang={lang}
+                size="sm"
+                value={{ from: dateFrom || null, to: dateTo || null }}
+                onApply={(v) => {
+                  setDateFrom(v.from ?? "");
+                  setDateTo(v.to ?? "");
+                }}
               />
             </div>
 

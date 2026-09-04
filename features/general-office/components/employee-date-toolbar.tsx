@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Calendar, Filter, RotateCcw } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type DateRange = { mode: DateMode; from: string | null; to: string | null; anchor: string };
@@ -104,11 +105,14 @@ export function EmployeeDateToolbar({
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <input
-              type="date"
-              value={value.anchor}
-              onChange={(e) => onChange(computeRange("day", e.target.value))}
-              className="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium dark:border-slate-700 dark:bg-slate-950"
+            <ErpDatePicker
+              mode="single"
+              lang={lang}
+              size="sm"
+              presets={false}
+              clearable={false}
+              value={{ from: value.anchor || null }}
+              onApply={(v) => v.from && onChange(computeRange("day", v.from))}
             />
             <button
               type="button"
@@ -131,27 +135,20 @@ export function EmployeeDateToolbar({
         {/* Custom Range Inputs (when mode is custom) */}
         {value.mode === "custom" && (
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground font-medium">{tt("god.from_date", "From")}:</span>
-            <input
-              type="date"
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-950"
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="sm"
+              applyLabel="apply"
+              value={{ from: customFrom || null, to: customTo || null }}
+              onApply={(v) => {
+                const from = v.from ?? "";
+                const to = v.to ?? "";
+                setCustomFrom(from);
+                setCustomTo(to);
+                onChange({ mode: "custom", anchor: from, from, to });
+              }}
             />
-            <span className="text-muted-foreground font-medium">{tt("god.to_date", "To")}:</span>
-            <input
-              type="date"
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-950"
-            />
-            <button
-              type="button"
-              onClick={() => onChange({ mode: "custom", anchor: customFrom, from: customFrom, to: customTo })}
-              className="h-8.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
-            >
-              {tt("god.apply", "Apply")}
-            </button>
           </div>
         )}
       </div>

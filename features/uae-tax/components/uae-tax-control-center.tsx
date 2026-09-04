@@ -18,6 +18,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet, apiPost } from "@/lib/api/client";
 import type {
@@ -215,21 +216,16 @@ export function UaeTaxControlCenter({ lang: langProp }: { lang?: SupportedLangua
             </select>
           </label>
           <label className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            {s.t("cc_from", "From")}
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            {s.t("cc_to", "To")}
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            {s.tGlobal("datepick.date_range", "Date Range")}
+            <ErpDatePicker
+              mode="range"
+              lang={s.lang}
+              size="sm"
+              value={{ from: fromDate || null, to: toDate || null }}
+              onApply={(v) => {
+                setFromDate(v.from ?? "");
+                setToDate(v.to ?? "");
+              }}
             />
           </label>
         </div>

@@ -36,6 +36,7 @@ import {
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -683,26 +684,21 @@ export default function KycReportsPage() {
 
                 <div className="border-t border-border/60 pt-2.5 space-y-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Date to Date (Custom)</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-bold text-muted-foreground">From Date</label>
-                      <input
-                        type="date"
-                        value={customDateFrom}
-                        onChange={(e) => setCustomDateFrom(e.target.value)}
-                        className="w-full h-8 px-2 text-xs rounded-lg border border-border/80 bg-background text-foreground"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-muted-foreground">To Date</label>
-                      <input
-                        type="date"
-                        value={customDateTo}
-                        onChange={(e) => setCustomDateTo(e.target.value)}
-                        className="w-full h-8 px-2 text-xs rounded-lg border border-border/80 bg-background text-foreground"
-                      />
-                    </div>
-                  </div>
+                  <ErpDatePicker
+                    mode="range"
+                    lang={activeLang}
+                    size="sm"
+                    presets={false}
+                    value={{ from: customDateFrom || null, to: customDateTo || null }}
+                    onApply={(v) => {
+                      setCustomDateFrom(v.from ?? "");
+                      setCustomDateTo(v.to ?? "");
+                      if (v.from || v.to) {
+                        setDateFilter("custom");
+                        setIsDateMenuOpen(false);
+                      }
+                    }}
+                  />
                   <div className="flex items-center justify-between pt-1">
                     <button
                       type="button"

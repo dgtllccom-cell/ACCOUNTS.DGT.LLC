@@ -9,6 +9,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -323,13 +324,16 @@ export function LocalGoodsReceivedView({
             {activeCityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
 
-          {/* 4. Date From */}
-          <input
-            type="date"
-            placeholder={t(lang, "purchase.lgr_date_from", "Date From")}
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="h-8 text-[10px] font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2"
+          {/* 4. Date range */}
+          <ErpDatePicker
+            mode="range"
+            lang={lang}
+            size="sm"
+            value={{ from: dateFrom || null, to: dateTo || null }}
+            onApply={(v) => {
+              setDateFrom(v.from ?? "");
+              setDateTo(v.to ?? "");
+            }}
           />
 
           {/* 5. Process Type Dropdown */}
