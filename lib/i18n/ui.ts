@@ -927,6 +927,21 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "routeerr.try_again"
+  | "routeerr.go_to_dashboard"
+  | "routeerr.purchase_title"
+  | "routeerr.purchase_message"
+  | "routeerr.reload_order_form"
+  | "routeerr.sales_title"
+  | "routeerr.sales_message"
+  | "routeerr.reload_sales_module"
+  | "routeerr.settings_title"
+  | "routeerr.settings_message"
+  | "routeerr.all_settings"
+  | "routeerr.new_entry_title"
+  | "routeerr.new_entry_message"
+  | "routeerr.dashboard_title"
+  | "routeerr.dashboard_message"
   | "dsp.super_admin_settings_controls"
   | "dsp.dashboard_system_module_manager"
   | "dsp.custom_restriction_notice"
@@ -18848,6 +18863,37 @@ const en: Dict = {
 
 
 
+
+
+  "routeerr.try_again": "Try Again (Reload)",
+
+  "routeerr.go_to_dashboard": "Go to Dashboard",
+
+  "routeerr.purchase_title": "Purchase Module Recovery Notice",
+
+  "routeerr.purchase_message": "The purchase order module encountered a temporary exception or asset loading delay. Click below to reload the order form.",
+
+  "routeerr.reload_order_form": "Reload Order Form",
+
+  "routeerr.sales_title": "Sales Module Recovery Notice",
+
+  "routeerr.sales_message": "The sales booking module encountered a temporary exception. Click below to reload the sales form.",
+
+  "routeerr.reload_sales_module": "Reload Sales Module",
+
+  "routeerr.settings_title": "Settings Module Recovery Notice",
+
+  "routeerr.settings_message": "The settings management module encountered a temporary server or client rendering exception. Click below to refresh the parameters.",
+
+  "routeerr.all_settings": "All Settings",
+
+  "routeerr.new_entry_title": "New Entry & Journal Report Recovery Notice",
+
+  "routeerr.new_entry_message": "This entry form or report module encountered a temporary chunk loading delay. Click below to reload fresh assets.",
+
+  "routeerr.dashboard_title": "Module Temporary Exception",
+
+  "routeerr.dashboard_message": "This dashboard module encountered a temporary chunk loading error during a live update. Click below to reload fresh assets.",
   "dsp.super_admin_settings_controls": "Super Admin Settings & Controls",
 
   "dsp.dashboard_system_module_manager": "Dashboard System & Module Manager",
@@ -34817,6 +34863,37 @@ const ur: Dict = {
 
 
 
+
+
+  "routeerr.try_again": "دوبارہ کوشش کریں (ری لوڈ)",
+
+  "routeerr.go_to_dashboard": "ڈیش بورڈ پر جائیں",
+
+  "routeerr.purchase_title": "پرچیز ماڈیول ریکوری نوٹس",
+
+  "routeerr.purchase_message": "پرچیز آرڈر ماڈیول میں عارضی استثنا یا اثاثہ لوڈنگ تاخیر پیش آئی۔ آرڈر فارم دوبارہ لوڈ کرنے کے لیے نیچے کلک کریں۔",
+
+  "routeerr.reload_order_form": "آرڈر فارم دوبارہ لوڈ کریں",
+
+  "routeerr.sales_title": "سیلز ماڈیول ریکوری نوٹس",
+
+  "routeerr.sales_message": "سیلز بکنگ ماڈیول میں عارضی استثنا پیش آئی۔ سیلز فارم دوبارہ لوڈ کرنے کے لیے نیچے کلک کریں۔",
+
+  "routeerr.reload_sales_module": "سیلز ماڈیول دوبارہ لوڈ کریں",
+
+  "routeerr.settings_title": "سیٹنگز ماڈیول ریکوری نوٹس",
+
+  "routeerr.settings_message": "سیٹنگز مینجمنٹ ماڈیول میں عارضی سرور یا کلائنٹ رینڈرنگ استثنا پیش آئی۔ پیرامیٹرز کو ریفریش کرنے کے لیے نیچے کلک کریں۔",
+
+  "routeerr.all_settings": "تمام سیٹنگز",
+
+  "routeerr.new_entry_title": "نیو انٹری و جرنل رپورٹ ریکوری نوٹس",
+
+  "routeerr.new_entry_message": "اس اندراج فارم یا رپورٹ ماڈیول میں عارضی چنک لوڈنگ تاخیر پیش آئی۔ تازہ اثاثے دوبارہ لوڈ کرنے کے لیے نیچے کلک کریں۔",
+
+  "routeerr.dashboard_title": "ماڈیول عارضی استثنا",
+
+  "routeerr.dashboard_message": "اس ڈیش بورڈ ماڈیول میں لائیو اپ ڈیٹ کے دوران عارضی چنک لوڈنگ خرابی پیش آئی۔ تازہ اثاثے دوبارہ لوڈ کرنے کے لیے نیچے کلک کریں۔",
   "dsp.super_admin_settings_controls": "سپر ایڈمن سیٹنگز و کنٹرولز",
 
   "dsp.dashboard_system_module_manager": "ڈیش بورڈ سسٹم و ماڈیول مینیجر",
@@ -50788,6 +50865,37 @@ const ar: Dict = {
 
 
 
+
+
+  "routeerr.try_again": "أعد المحاولة (إعادة تحميل)",
+
+  "routeerr.go_to_dashboard": "الذهاب إلى لوحة التحكم",
+
+  "routeerr.purchase_title": "إشعار استعادة وحدة الشراء",
+
+  "routeerr.purchase_message": "واجهت وحدة أمر الشراء استثناءً مؤقتًا أو تأخيرًا في تحميل الأصول. انقر أدناه لإعادة تحميل نموذج الطلب.",
+
+  "routeerr.reload_order_form": "إعادة تحميل نموذج الطلب",
+
+  "routeerr.sales_title": "إشعار استعادة وحدة المبيعات",
+
+  "routeerr.sales_message": "واجهت وحدة حجز المبيعات استثناءً مؤقتًا. انقر أدناه لإعادة تحميل نموذج المبيعات.",
+
+  "routeerr.reload_sales_module": "إعادة تحميل وحدة المبيعات",
+
+  "routeerr.settings_title": "إشعار استعادة وحدة الإعدادات",
+
+  "routeerr.settings_message": "واجهت وحدة إدارة الإعدادات استثناءً مؤقتًا في الخادم أو التصيير من جانب العميل. انقر أدناه لتحديث المعلمات.",
+
+  "routeerr.all_settings": "جميع الإعدادات",
+
+  "routeerr.new_entry_title": "إشعار استعادة الإدخال الجديد وتقرير اليومية",
+
+  "routeerr.new_entry_message": "واجهت وحدة نموذج الإدخال أو التقرير هذه تأخيرًا مؤقتًا في تحميل الجزء. انقر أدناه لإعادة تحميل الأصول الجديدة.",
+
+  "routeerr.dashboard_title": "استثناء مؤقت في الوحدة",
+
+  "routeerr.dashboard_message": "واجهت وحدة لوحة التحكم هذه خطأً مؤقتًا في تحميل الجزء أثناء التحديث المباشر. انقر أدناه لإعادة تحميل الأصول الجديدة.",
   "dsp.super_admin_settings_controls": "إعدادات وضوابط المسؤول الأعلى",
 
   "dsp.dashboard_system_module_manager": "نظام لوحة التحكم ومدير الوحدات",
@@ -66758,6 +66866,37 @@ const fa: Dict = {
 
 
 
+
+
+  "routeerr.try_again": "دوباره تلاش کنید (بارگذاری مجدد)",
+
+  "routeerr.go_to_dashboard": "رفتن به داشبورد",
+
+  "routeerr.purchase_title": "اعلان بازیابی ماژول خرید",
+
+  "routeerr.purchase_message": "ماژول سفارش خرید با یک استثنای موقت یا تأخیر بارگذاری دارایی مواجه شد. برای بارگذاری مجدد فرم سفارش، در زیر کلیک کنید.",
+
+  "routeerr.reload_order_form": "بارگذاری مجدد فرم سفارش",
+
+  "routeerr.sales_title": "اعلان بازیابی ماژول فروش",
+
+  "routeerr.sales_message": "ماژول رزرو فروش با یک استثنای موقت مواجه شد. برای بارگذاری مجدد فرم فروش، در زیر کلیک کنید.",
+
+  "routeerr.reload_sales_module": "بارگذاری مجدد ماژول فروش",
+
+  "routeerr.settings_title": "اعلان بازیابی ماژول تنظیمات",
+
+  "routeerr.settings_message": "ماژول مدیریت تنظیمات با یک استثنای موقت سرور یا رندر سمت کلاینت مواجه شد. برای تازه‌سازی پارامترها، در زیر کلیک کنید.",
+
+  "routeerr.all_settings": "همه تنظیمات",
+
+  "routeerr.new_entry_title": "اعلان بازیابی ثبت جدید و گزارش ژورنال",
+
+  "routeerr.new_entry_message": "این ماژول فرم ثبت یا گزارش با یک تأخیر موقت بارگذاری بخش مواجه شد. برای بارگذاری مجدد دارایی‌های تازه، در زیر کلیک کنید.",
+
+  "routeerr.dashboard_title": "استثنای موقت ماژول",
+
+  "routeerr.dashboard_message": "این ماژول داشبورد در حین به‌روزرسانی زنده با خطای موقت بارگذاری بخش مواجه شد. برای بارگذاری مجدد دارایی‌های تازه، در زیر کلیک کنید.",
   "dsp.super_admin_settings_controls": "تنظیمات و کنترل‌های مدیر ارشد",
 
   "dsp.dashboard_system_module_manager": "سیستم داشبورد و مدیر ماژول",
@@ -82734,6 +82873,37 @@ const ps: Dict = {
 
 
 
+
+
+  "routeerr.try_again": "بیا هڅه وکړئ (بیا بارول)",
+
+  "routeerr.go_to_dashboard": "ډشبورډ ته لاړ شئ",
+
+  "routeerr.purchase_title": "د پیرود ماډیول د بیارغونې خبرتیا",
+
+  "routeerr.purchase_message": "د پیرود امر ماډیول یو لنډمهاله استثنا یا د شتمنۍ بارولو ځنډ ولید. د امر فورمې د بیا بارولو لپاره لاندې کلیک وکړئ.",
+
+  "routeerr.reload_order_form": "د امر فورمه بیا بار کړئ",
+
+  "routeerr.sales_title": "د پلورنې ماډیول د بیارغونې خبرتیا",
+
+  "routeerr.sales_message": "د پلورنې بکینګ ماډیول لنډمهاله استثنا ولیده۔ د پلورنې فورمې د بیا بارولو لپاره لاندې کلیک وکړئ.",
+
+  "routeerr.reload_sales_module": "د پلورنې ماډیول بیا بار کړئ",
+
+  "routeerr.settings_title": "د تنظیماتو ماډیول د بیارغونې خبرتیا",
+
+  "routeerr.settings_message": "د تنظیماتو مدیریت ماډیول لنډمهاله سرور یا پیرودګلي رینډرینګ استثنا ولیده۔ د پیرامیټرونو د تازه کولو لپاره لاندې کلیک وکړئ.",
+
+  "routeerr.all_settings": "ټول تنظیمات",
+
+  "routeerr.new_entry_title": "د نوي ننوتنې او ژورنال راپور د بیارغونې خبرتیا",
+
+  "routeerr.new_entry_message": "دې د ننوتنې فورمې یا راپور ماډیول لنډمهاله د ټوټې بارولو ځنډ ولید۔ د تازه شتمنیو د بیا بارولو لپاره لاندې کلیک وکړئ.",
+
+  "routeerr.dashboard_title": "د ماډیول لنډمهاله استثنا",
+
+  "routeerr.dashboard_message": "دې د ډشبورډ ماډیول د ژوندي تازه کولو پر مهال لنډمهاله د ټوټې بارولو تېروتنه ولیده۔ د تازه شتمنیو د بیا بارولو لپاره لاندې کلیک وکړئ.",
   "dsp.super_admin_settings_controls": "د سوپر مدیر تنظیمات او کنټرولونه",
 
   "dsp.dashboard_system_module_manager": "د ډشبورډ سیسټم او ماډیول مدیر",
