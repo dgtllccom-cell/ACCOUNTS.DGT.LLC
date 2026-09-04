@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import {
   BadgeDollarSign,
   Building2,
@@ -11,6 +12,7 @@ import {
   Users
 } from "lucide-react";
 import { OrgChartLink } from "@/features/branch-management/components/org-chart-link";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 const hierarchy = [
   {
@@ -65,22 +67,26 @@ const apiRows = [
   ["POST", "/api/branch-management/city-branches", "Create city branch after selected country"]
 ];
 
-export default function BranchManagementPage() {
+export default async function BranchManagementPage() {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("erp_lang")?.value ?? "en") as never;
+  const th = (label: string) => translateHeader(lang, label);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Administration</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Multi-Country Branch Management</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{th("Administration")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{th("Multi-Country Branch Management")}</h1>
           <p className="text-sm text-muted-foreground">
-            Super Admin, country main branch, city branch, role access, and USD reporting foundation.
+            {th("Super Admin, country main branch, city branch, role access, and USD reporting foundation.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <OrgChartLink />
           <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
             <CheckCircle2 className="h-4 w-4" aria-hidden />
-            Foundation designed
+            {th("Foundation designed")}
           </span>
         </div>
       </div>
@@ -91,9 +97,9 @@ export default function BranchManagementPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <item.icon className="h-5 w-5" aria-hidden />
             </div>
-            <p className="mt-4 text-xs font-semibold uppercase text-slate-500">{item.scope}</p>
-            <h2 className="mt-1 font-semibold text-slate-950">{item.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.detail}</p>
+            <p className="mt-4 text-xs font-semibold uppercase text-slate-500">{th(item.scope)}</p>
+            <h2 className="mt-1 font-semibold text-slate-950">{th(item.title)}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{th(item.detail)}</p>
           </article>
         ))}
       </section>
@@ -103,8 +109,8 @@ export default function BranchManagementPage() {
           <div className="flex items-center gap-2 border-b px-5 py-4">
             <Network className="h-5 w-5 text-primary" aria-hidden />
             <div>
-              <h2 className="font-semibold">Branch Creation Flow</h2>
-              <p className="text-sm text-muted-foreground">The software must follow this order.</p>
+              <h2 className="font-semibold">{th("Branch Creation Flow")}</h2>
+              <p className="text-sm text-muted-foreground">{th("The software must follow this order.")}</p>
             </div>
           </div>
           <div className="grid gap-3 p-5">
@@ -120,8 +126,8 @@ export default function BranchManagementPage() {
                   {step}
                 </span>
                 <div>
-                  <h3 className="font-semibold text-slate-950">{title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">{detail}</p>
+                  <h3 className="font-semibold text-slate-950">{th(title)}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">{th(detail)}</p>
                 </div>
               </div>
             ))}
@@ -132,15 +138,15 @@ export default function BranchManagementPage() {
           <div className="flex items-center gap-2 border-b px-5 py-4">
             <LockKeyhole className="h-5 w-5 text-primary" aria-hidden />
             <div>
-              <h2 className="font-semibold">Role Access Matrix</h2>
-              <p className="text-sm text-muted-foreground">Every query and report uses these boundaries.</p>
+              <h2 className="font-semibold">{th("Role Access Matrix")}</h2>
+              <p className="text-sm text-muted-foreground">{th("Every query and report uses these boundaries.")}</p>
             </div>
           </div>
           <div className="divide-y p-5">
             {permissionRows.map(([role, scope]) => (
               <div key={role} className="py-3 first:pt-0 last:pb-0">
-                <p className="font-semibold text-slate-950">{role}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{scope}</p>
+                <p className="font-semibold text-slate-950">{th(role)}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{th(scope)}</p>
               </div>
             ))}
           </div>
@@ -151,7 +157,7 @@ export default function BranchManagementPage() {
         <div className="rounded-lg border bg-card xl:col-span-2">
           <div className="flex items-center gap-2 border-b px-5 py-4">
             <Database className="h-5 w-5 text-primary" aria-hidden />
-            <h2 className="font-semibold">Database Tables</h2>
+            <h2 className="font-semibold">{th("Database Tables")}</h2>
           </div>
           <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
             {databaseTables.map((table) => (
@@ -165,12 +171,12 @@ export default function BranchManagementPage() {
         <div className="rounded-lg border bg-card">
           <div className="flex items-center gap-2 border-b px-5 py-4">
             <BadgeDollarSign className="h-5 w-5 text-primary" aria-hidden />
-            <h2 className="font-semibold">USD Reporting</h2>
+            <h2 className="font-semibold">{th("USD Reporting")}</h2>
           </div>
           <div className="space-y-3 p-5 text-sm leading-6 text-muted-foreground">
-            <p>Transactions keep local currency and local amount.</p>
-            <p>Currency rates convert the posted amount into USD.</p>
-            <p>Super Admin global reports always read USD totals.</p>
+            <p>{th("Transactions keep local currency and local amount.")}</p>
+            <p>{th("Currency rates convert the posted amount into USD.")}</p>
+            <p>{th("Super Admin global reports always read USD totals.")}</p>
           </div>
         </div>
       </section>
@@ -178,14 +184,14 @@ export default function BranchManagementPage() {
       <section className="rounded-lg border bg-card">
         <div className="flex items-center gap-2 border-b px-5 py-4">
           <GitBranch className="h-5 w-5 text-primary" aria-hidden />
-          <h2 className="font-semibold">Backend API Draft</h2>
+          <h2 className="font-semibold">{th("Backend API Draft")}</h2>
         </div>
         <div className="grid gap-3 p-5">
           {apiRows.map(([method, path, detail]) => (
             <div key={path} className="grid gap-2 rounded-lg border bg-white p-4 md:grid-cols-[90px_1fr_1fr]">
               <span className="rounded-full bg-slate-950 px-3 py-1 text-center text-xs font-bold text-white">{method}</span>
               <code className="text-sm font-semibold text-slate-800">{path}</code>
-              <span className="text-sm text-slate-500">{detail}</span>
+              <span className="text-sm text-slate-500">{th(detail)}</span>
             </div>
           ))}
         </div>
