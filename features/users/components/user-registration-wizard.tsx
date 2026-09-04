@@ -64,6 +64,7 @@ import {
 } from "@/lib/permissions/rbac-matrix-builder";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as centralT } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
@@ -166,6 +167,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
 
   const tr = (key: string) => centralT(activeLang, ("urw." + key) as never, userWizardFallback[key] ?? key);
+  const th = (label: string) => translateHeader(activeLang, label);
 
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
@@ -1085,7 +1087,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <div className="flex items-center gap-2.5">
                           <div className="h-9 w-9 rounded-lg bg-slate-900 text-slate-100 font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
                             {employeeProfile.photoUrl ? (
-                              <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
+                              <img src={employeeProfile.photoUrl} alt={th("Employee")} className="h-full w-full object-cover" />
                             ) : (
                               <User className="h-5 w-5 text-slate-300" />
                             )}
@@ -1212,7 +1214,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             setLoginUsername(`${val}.${lastName}`.toLowerCase().replace(/[^a-z0-9]/g, "."));
                           }
                         }}
-                        placeholder="e.g. Muhammad"
+                        placeholder={th("e.g. Muhammad")}
                         className="h-9 text-xs font-medium"
                       />
                     </div>
@@ -1230,7 +1232,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             setLoginUsername(`${firstName}.${val}`.toLowerCase().replace(/[^a-z0-9]/g, "."));
                           }
                         }}
-                        placeholder="e.g. Ali Shah"
+                        placeholder={th("e.g. Ali Shah")}
                         className="h-9 text-xs font-medium"
                       />
                     </div>
@@ -1246,7 +1248,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           setFirstName(parts[0] || "");
                           setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
                         }}
-                        placeholder="e.g. Muhammad Ali Shah"
+                        placeholder={th("e.g. Muhammad Ali Shah")}
                         className="h-9 text-xs font-medium bg-slate-50/50 dark:bg-slate-900/50"
                       />
                     </div>
@@ -1256,19 +1258,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <Input
                         value={loginUsername}
                         onChange={(e) => setLoginUsername(e.target.value)}
-                        placeholder="e.g. muhammad.ali"
+                        placeholder={th("e.g. muhammad.ali")}
                         className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                       />
                     </div>
 
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("designation")}</Label>
-                      <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Accountant" className="h-9 text-xs" />
+                      <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder={th("e.g. Senior Accountant")} className="h-9 text-xs" />
                     </div>
 
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("department")}</Label>
-                      <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Finance & Accounts" className="h-9 text-xs" />
+                      <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder={th("e.g. Finance & Accounts")} className="h-9 text-xs" />
                     </div>
 
                     <div className="space-y-1">
@@ -1290,12 +1292,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <span>{centralT(activeLang, "urw2.linked_contract_data" as never, "Linked Employment Contract & Schedule Data")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div><span className="text-slate-500">Employment Type:</span> <strong>{employeeProfile.employmentType || "Full-Time"}</strong></div>
-                        <div><span className="text-slate-500">Job Status:</span> <strong>{employeeProfile.jobStatus || "Active"}</strong></div>
-                        <div><span className="text-slate-500">Working Shift:</span> <strong>{employeeProfile.workingShift || "Day Shift"}</strong></div>
-                        <div><span className="text-slate-500">Duty Hours:</span> <strong>{`${employeeProfile.dutyStartTime || "09:00 AM"} - ${employeeProfile.dutyEndTime || "06:00 PM"}`}</strong></div>
-                        <div><span className="text-slate-500">Contract End:</span> <strong>{employeeProfile.contractEndDate || "Permanent"}</strong></div>
-                        <div><span className="text-slate-500">Salary Schedule:</span> <strong>{`${employeeProfile.salaryType || "Monthly"} (${employeeProfile.salaryCurrency || "USD"})`}</strong></div>
+                        <div><span className="text-slate-500">{th("Employment Type")}:</span> <strong>{employeeProfile.employmentType || "Full-Time"}</strong></div>
+                        <div><span className="text-slate-500">{th("Job Status")}:</span> <strong>{employeeProfile.jobStatus || "Active"}</strong></div>
+                        <div><span className="text-slate-500">{th("Working Shift")}:</span> <strong>{employeeProfile.workingShift || "Day Shift"}</strong></div>
+                        <div><span className="text-slate-500">{th("Duty Hours")}:</span> <strong>{`${employeeProfile.dutyStartTime || "09:00 AM"} - ${employeeProfile.dutyEndTime || "06:00 PM"}`}</strong></div>
+                        <div><span className="text-slate-500">{th("Contract End")}:</span> <strong>{employeeProfile.contractEndDate || "Permanent"}</strong></div>
+                        <div><span className="text-slate-500">{th("Salary Schedule")}:</span> <strong>{`${employeeProfile.salaryType || "Monthly"} (${employeeProfile.salaryCurrency || "USD"})`}</strong></div>
                       </div>
                     </div>
                   )}
@@ -1364,7 +1366,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     )}
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code & Scope</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Branch Code & Scope")}</Label>
                       <Input value={`${branchCode || "MAIN"} (${currency})`} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200" />
                     </div>
                   </div>
@@ -1382,7 +1384,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("cnicPassport")}</Label>
-                      <Input value={cnicPassportNo} onChange={(e) => setCnicPassportNo(e.target.value)} placeholder="e.g. 42101-1234567-1 or A1234567" className="h-9 text-xs font-mono font-bold" />
+                      <Input value={cnicPassportNo} onChange={(e) => setCnicPassportNo(e.target.value)} placeholder={th("e.g. 42101-1234567-1 or A1234567")} className="h-9 text-xs font-mono font-bold" />
                     </div>
 
                     <div className="space-y-1">
@@ -1404,7 +1406,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("address")}</Label>
-                      <Input value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} placeholder="Enter street / city address" className="h-9 text-xs" />
+                      <Input value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} placeholder={th("Enter street / city address")} className="h-9 text-xs" />
                     </div>
                   </div>
                 </div>
@@ -1420,14 +1422,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                      <div><span className="text-slate-500">Full Name:</span> <strong className="text-slate-900 dark:text-slate-100">{fullName || "-"}</strong></div>
-                      <div><span className="text-slate-500">Username:</span> <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong></div>
-                      <div><span className="text-slate-500">Designation:</span> <strong>{designation}</strong></div>
-                      <div><span className="text-slate-500">Department:</span> <strong>{department}</strong></div>
-                      <div><span className="text-slate-500">Country Scope:</span> <strong>{selectedCountry?.name || "Global Scope"}</strong></div>
-                      <div><span className="text-slate-500">Assigned Branch:</span> <strong>{branchCode || selectedMainBranch?.name || "Main Branch"}</strong></div>
-                      <div><span className="text-slate-500">KYC Status:</span> <strong className="text-emerald-600">{kycStatus === "VERIFIED" ? "Verified & Compliant" : "Pending Verification"}</strong></div>
-                      <div><span className="text-slate-500">CNIC / ID:</span> <strong className="font-mono">{cnicPassportNo || "Not Provided"}</strong></div>
+                      <div><span className="text-slate-500">{th("Full Name")}:</span> <strong className="text-slate-900 dark:text-slate-100">{fullName || "-"}</strong></div>
+                      <div><span className="text-slate-500">{th("Username")}:</span> <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong></div>
+                      <div><span className="text-slate-500">{th("Designation")}:</span> <strong>{designation}</strong></div>
+                      <div><span className="text-slate-500">{th("Department")}:</span> <strong>{department}</strong></div>
+                      <div><span className="text-slate-500">{th("Country Scope")}:</span> <strong>{selectedCountry?.name || "Global Scope"}</strong></div>
+                      <div><span className="text-slate-500">{th("Assigned Branch")}:</span> <strong>{branchCode || selectedMainBranch?.name || "Main Branch"}</strong></div>
+                      <div><span className="text-slate-500">{th("KYC Status")}:</span> <strong className="text-emerald-600">{kycStatus === "VERIFIED" ? "Verified & Compliant" : "Pending Verification"}</strong></div>
+                      <div><span className="text-slate-500">{th("CNIC / ID")}:</span> <strong className="font-mono">{cnicPassportNo || "Not Provided"}</strong></div>
                     </div>
                   </div>
 
@@ -1490,14 +1492,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[9px] sticky top-0 z-10">
                           <tr>
-                            <th className="p-2.5">Module / Form</th>
-                            <th className="p-2 text-center">View</th>
-                            <th className="p-2 text-center">Create</th>
-                            <th className="p-2 text-center">Edit</th>
-                            <th className="p-2 text-center">Delete</th>
-                            <th className="p-2 text-center">Approve</th>
-                            <th className="p-2 text-center">Export</th>
-                            <th className="p-2 text-center">All</th>
+                            <th className="p-2.5">{th("Module / Form")}</th>
+                            <th className="p-2 text-center">{th("View")}</th>
+                            <th className="p-2 text-center">{th("Create")}</th>
+                            <th className="p-2 text-center">{th("Edit")}</th>
+                            <th className="p-2 text-center">{th("Delete")}</th>
+                            <th className="p-2 text-center">{th("Approve")}</th>
+                            <th className="p-2 text-center">{th("Export")}</th>
+                            <th className="p-2 text-center">{th("All")}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
@@ -1589,7 +1591,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {/* Password & Security Credentials */}
                   <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Account Password *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Account Password *")}</Label>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
@@ -1605,7 +1607,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Confirm Password *")}</Label>
                       <Input
                         type="password"
                         value={confirmPassword}
@@ -1682,7 +1684,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-xl bg-slate-900 text-slate-100 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
                   {employeeProfile.photoUrl ? (
-                    <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
+                    <img src={employeeProfile.photoUrl} alt={th("Employee")} className="h-full w-full object-cover" />
                   ) : (
                     <User className="h-6 w-6 text-slate-300" />
                   )}
@@ -1719,19 +1721,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             <div className="space-y-2 text-xs">
               <div className="font-bold text-[11px] text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5" />
-                <span>1. Employee Master & Employment</span>
+                <span>{th("1. Employee Master & Employment")}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
-                <div><span className="text-slate-500 font-medium">First Name:</span> <span className="font-semibold">{firstName || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">Surname / Last:</span> <span className="font-semibold">{lastName || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">Department:</span> <span className="font-semibold">{department}</span></div>
-                <div><span className="text-slate-500 font-medium">Employment:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
-                <div><span className="text-slate-500 font-medium">Shift:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>
-                <div><span className="text-slate-500 font-medium">Job Status:</span> <span>{employeeProfile.jobStatus || "Active Permanent"}</span></div>
-                <div><span className="text-slate-500 font-medium">Phone:</span> <span>{contactPhone || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">WhatsApp:</span> <span>{employeeProfile.whatsapp || contactPhone || "-"}</span></div>
-                <div className="col-span-2"><span className="text-slate-500 font-medium">Email:</span> <span className="font-medium truncate">{personalEmail || "user@dgt.llc"}</span></div>
-                <div className="col-span-2 border-t pt-1 mt-0.5"><span className="text-slate-500 font-medium">Address:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{residentialAddress || "Not Provided"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("First Name")}:</span> <span className="font-semibold">{firstName || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Surname / Last")}:</span> <span className="font-semibold">{lastName || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Department")}:</span> <span className="font-semibold">{department}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Employment")}:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Shift")}:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Job Status")}:</span> <span>{employeeProfile.jobStatus || "Active Permanent"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Phone")}:</span> <span>{contactPhone || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("WhatsApp")}:</span> <span>{employeeProfile.whatsapp || contactPhone || "-"}</span></div>
+                <div className="col-span-2"><span className="text-slate-500 font-medium">{th("Email")}:</span> <span className="font-medium truncate">{personalEmail || "user@dgt.llc"}</span></div>
+                <div className="col-span-2 border-t pt-1 mt-0.5"><span className="text-slate-500 font-medium">{th("Address")}:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{residentialAddress || "Not Provided"}</span></div>
               </div>
             </div>
 
@@ -1739,13 +1741,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             <div className="space-y-2 text-xs border-t pt-3">
               <div className="font-bold text-[11px] text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5" />
-                <span>2. Geographic Scope & Branch Access</span>
+                <span>{th("2. Geographic Scope & Branch Access")}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
-                <div><span className="text-slate-500 font-medium">Country:</span> <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
-                <div><span className="text-slate-500 font-medium">Branch:</span> <span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
-                <div><span className="text-slate-500 font-medium">Currency:</span> <span className="font-mono font-bold text-emerald-600">{selectedMainBranch?.local_currency || "USD"}</span></div>
-                <div><span className="text-slate-500 font-medium">Role:</span> <span className="font-bold text-blue-600 uppercase">{role}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Country")}:</span> <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Branch")}:</span> <span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Currency")}:</span> <span className="font-mono font-bold text-emerald-600">{selectedMainBranch?.local_currency || "USD"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Role")}:</span> <span className="font-bold text-blue-600 uppercase">{role}</span></div>
               </div>
             </div>
 
@@ -1753,13 +1755,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             <div className="space-y-2 text-xs border-t pt-3">
               <div className="font-bold text-[11px] text-purple-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Lock className="h-3.5 w-3.5" />
-                <span>3. KYC & Credential Vault</span>
+                <span>{th("3. KYC & Credential Vault")}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
-                <div><span className="text-slate-500 font-medium">Login ID:</span> <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
-                <div><span className="text-slate-500 font-medium">CNIC/Passport:</span> <span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
-                <div><span className="text-slate-500 font-medium">Expiry Date:</span> <span>{idExpiryDate || "Permanent"}</span></div>
-                <div><span className="text-slate-500 font-medium">Vault Ref:</span> <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Login ID")}:</span> <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("CNIC/Passport")}:</span> <span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Expiry Date")}:</span> <span>{idExpiryDate || "Permanent"}</span></div>
+                <div><span className="text-slate-500 font-medium">{th("Vault Ref")}:</span> <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
               </div>
             </div>
 
@@ -1773,12 +1775,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <span className="text-[10px] text-emerald-600 font-mono font-bold">{effectivePermissions.length} rules</span>
               </div>
               <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] text-center">
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">View</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canView).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Create</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canCreate).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Edit</span><strong className="text-blue-600 text-xs">{moduleCapabilities.filter(m => m.canEdit).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Delete</span><strong className="text-red-600 text-xs">{moduleCapabilities.filter(m => m.canDelete).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Approve</span><strong className="text-purple-600 text-xs">{moduleCapabilities.filter(m => m.canPostApprove).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Export</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canPrintExport).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("View")}</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canView).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Create")}</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canCreate).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Edit")}</span><strong className="text-blue-600 text-xs">{moduleCapabilities.filter(m => m.canEdit).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Delete")}</span><strong className="text-red-600 text-xs">{moduleCapabilities.filter(m => m.canDelete).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Approve")}</span><strong className="text-purple-600 text-xs">{moduleCapabilities.filter(m => m.canPostApprove).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Export")}</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canPrintExport).length}</strong></div>
               </div>
             </div>
 
