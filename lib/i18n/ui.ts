@@ -927,6 +927,16 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "mobiledash.activity_title"
+  | "mobiledash.real_time"
+  | "mobiledash.no_activity"
+  | "mobiledash.secure_encryption"
+  | "mobiledash.five_lang_ai_ready"
+  | "mbl.live_db_verified"
+  | "mbl.auto_halt_paid"
+  | "mbl.default_user_name"
+  | "mbl.default_role"
+  | "mbl.live_sync_active"
   | "truckw.color_white"
   | "truckw.color_black"
   | "truckw.color_blue"
@@ -18416,6 +18426,26 @@ const en: Dict = {
 
 
 
+
+  "mobiledash.activity_title": "Live ERP Communication Activity",
+
+  "mobiledash.real_time": "Real-time",
+
+  "mobiledash.no_activity": "No recent activity yet.",
+
+  "mobiledash.secure_encryption": "Secure Encryption Active",
+
+  "mobiledash.five_lang_ai_ready": "5-Lang AI Ready",
+
+  "mbl.live_db_verified": "Live ERP DB Verified",
+
+  "mbl.auto_halt_paid": "Auto-halt when paid",
+
+  "mbl.default_user_name": "ERP Mobile User",
+
+  "mbl.default_role": "Manager",
+
+  "mbl.live_sync_active": "LIVE SYNC ACTIVE",
   "truckw.color_white": "White",
 
   "truckw.color_black": "Black",
@@ -33614,6 +33644,26 @@ const ur: Dict = {
 
 
 
+
+  "mobiledash.activity_title": "لائیو ERP کمیونیکیشن سرگرمی",
+
+  "mobiledash.real_time": "ریئل ٹائم",
+
+  "mobiledash.no_activity": "ابھی تک کوئی حالیہ سرگرمی نہیں۔",
+
+  "mobiledash.secure_encryption": "محفوظ خفیہ کاری فعال ہے",
+
+  "mobiledash.five_lang_ai_ready": "5-زبان AI تیار",
+
+  "mbl.live_db_verified": "لائیو ERP ڈی بی تصدیق شدہ",
+
+  "mbl.auto_halt_paid": "ادائیگی پر خودکار روک",
+
+  "mbl.default_user_name": "ERP موبائل صارف",
+
+  "mbl.default_role": "مینیجر",
+
+  "mbl.live_sync_active": "لائیو سنک فعال ہے",
   "truckw.color_white": "سفید",
 
   "truckw.color_black": "سیاہ",
@@ -48814,6 +48864,26 @@ const ar: Dict = {
 
 
 
+
+  "mobiledash.activity_title": "نشاط اتصالات ERP المباشر",
+
+  "mobiledash.real_time": "الوقت الفعلي",
+
+  "mobiledash.no_activity": "لا يوجد نشاط حديث بعد.",
+
+  "mobiledash.secure_encryption": "التشفير الآمن نشط",
+
+  "mobiledash.five_lang_ai_ready": "الذكاء الاصطناعي جاهز بـ5 لغات",
+
+  "mbl.live_db_verified": "تم التحقق من قاعدة بيانات ERP المباشرة",
+
+  "mbl.auto_halt_paid": "توقف تلقائي عند الدفع",
+
+  "mbl.default_user_name": "مستخدم ERP للجوال",
+
+  "mbl.default_role": "مدير",
+
+  "mbl.live_sync_active": "المزامنة المباشرة نشطة",
   "truckw.color_white": "أبيض",
 
   "truckw.color_black": "أسود",
@@ -64013,6 +64083,26 @@ const fa: Dict = {
 
 
 
+
+  "mobiledash.activity_title": "فعالیت ارتباطی زنده ERP",
+
+  "mobiledash.real_time": "بی‌درنگ",
+
+  "mobiledash.no_activity": "هنوز فعالیت اخیری وجود ندارد.",
+
+  "mobiledash.secure_encryption": "رمزگذاری امن فعال است",
+
+  "mobiledash.five_lang_ai_ready": "هوش مصنوعی 5 زبانه آماده",
+
+  "mbl.live_db_verified": "پایگاه داده زنده ERP تأیید شد",
+
+  "mbl.auto_halt_paid": "توقف خودکار پس از پرداخت",
+
+  "mbl.default_user_name": "کاربر موبایل ERP",
+
+  "mbl.default_role": "مدیر",
+
+  "mbl.live_sync_active": "همگام‌سازی زنده فعال است",
   "truckw.color_white": "سفید",
 
   "truckw.color_black": "سیاه",
@@ -79218,6 +79308,26 @@ const ps: Dict = {
 
 
 
+
+  "mobiledash.activity_title": "د ERP ژوندۍ اړیکې فعالیت",
+
+  "mobiledash.real_time": "ریښتینې وخت",
+
+  "mobiledash.no_activity": "تر اوسه هیڅ وروستی فعالیت نشته۔",
+
+  "mobiledash.secure_encryption": "خوندي کوډ فعال دی",
+
+  "mobiledash.five_lang_ai_ready": "5-ژبني AI چمتو",
+
+  "mbl.live_db_verified": "د ERP ژوندی ډیټابیس تایید شوی",
+
+  "mbl.auto_halt_paid": "د تادیې پر مهال اتومات درول",
+
+  "mbl.default_user_name": "د ERP موبایل کارن",
+
+  "mbl.default_role": "مدیر",
+
+  "mbl.live_sync_active": "ژوندی همغږي فعال دی",
   "truckw.color_white": "سپین",
 
   "truckw.color_black": "تور",

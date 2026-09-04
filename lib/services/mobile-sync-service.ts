@@ -34,6 +34,12 @@ export type MobileSyncPayload = {
     whatsappConnected: boolean;
     emailConnected: boolean;
   };
+  recentActivity?: Array<{
+    id: string;
+    channel: "whatsapp" | "email";
+    title: string;
+    detail: string;
+  }>;
   syncTimestamp: string;
 };
 

@@ -32,17 +32,17 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   const stats = syncData?.stats || {
-    newMessages: 8,
-    pendingReplies: 3,
-    aiRepliesReady: 5,
-    todayPaymentReminders: 4,
-    activeCustomers: 120,
-    activeSuppliers: 45,
-    unreadNotifications: 12
+    newMessages: 0,
+    pendingReplies: 0,
+    aiRepliesReady: 0,
+    todayPaymentReminders: 0,
+    activeCustomers: 0,
+    activeSuppliers: 0,
+    unreadNotifications: 0
   };
 
-  const user = syncData?.user || { fullName: "ERP Mobile User", role: "Manager" };
-  const company = syncData?.companyProfile || { name: "Digital Dock ERP" };
+  const user = syncData?.user || { fullName: tt("mbl.default_user_name", "ERP Mobile User"), role: tt("mbl.default_role", "Manager") };
+  const company = syncData?.companyProfile || { name: tt("acct.brand_short", "Digital Dock ERP") };
 
   return (
     <div className="space-y-4 pb-20" dir={isRTL ? "rtl" : "ltr"}>
@@ -53,7 +53,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
         <div className="relative flex items-center justify-between">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white/90">
-              {syncData?.scope?.scopeLabel || "LIVE SYNC ACTIVE"}
+              {syncData?.scope?.scopeLabel || tt("mbl.live_sync_active", "LIVE SYNC ACTIVE")}
             </span>
             <h2 className="text-xl font-black text-white mt-1">{user.fullName}</h2>
             <p className="text-xs text-white/80">{company.name} • {user.role.toUpperCase()}</p>
@@ -66,9 +66,9 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
         <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs text-white/90">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="h-4 w-4 text-emerald-300" />
-            <span>Secure Encryption Active</span>
+            <span>{tt("mobiledash.secure_encryption", "Secure Encryption Active")}</span>
           </div>
-          <span className="text-[10px] font-mono text-emerald-200">5-Lang AI Ready</span>
+          <span className="text-[10px] font-mono text-emerald-200">{tt("mobiledash.five_lang_ai_ready", "5-Lang AI Ready")}</span>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
             </div>
           </div>
           <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2">{stats.aiRepliesReady}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Live ERP DB Verified</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{tt("mbl.live_db_verified", "Live ERP DB Verified")}</p>
         </div>
 
         {/* Today's Payment Reminders */}
@@ -118,7 +118,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
             </div>
           </div>
           <p className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-2">{stats.todayPaymentReminders}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Auto-halt when paid</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{tt("mbl.auto_halt_paid", "Auto-halt when paid")}</p>
         </div>
 
         {/* Active Contacts */}
@@ -141,27 +141,29 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
       <div className="rounded-3xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm space-y-3">
         <div className="flex items-center justify-between border-b pb-2 dark:border-slate-800">
           <h3 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-            <Activity className="h-4 w-4 text-emerald-500" /> Live ERP Communication Activity
+            <Activity className="h-4 w-4 text-emerald-500" /> {tt("mobiledash.activity_title", "Live ERP Communication Activity")}
           </h3>
-          <span className="text-[10px] text-slate-400 font-mono">Real-time</span>
+          <span className="text-[10px] text-slate-400 font-mono">{tt("mobiledash.real_time", "Real-time")}</span>
         </div>
 
         <div className="space-y-2.5 text-xs">
-          <div className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950">
-            <MessageSquare className="h-4 w-4 text-emerald-600 mt-0.5" />
-            <div>
-              <p className="font-bold text-slate-800 dark:text-slate-200">WhatsApp message from Al-Farooq Traders</p>
-              <p className="text-[10px] text-slate-500">AI drafted reply in Urdu for PO #10293 • 2m ago</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950">
-            <Mail className="h-4 w-4 text-blue-600 mt-0.5" />
-            <div>
-              <p className="font-bold text-slate-800 dark:text-slate-200">Email inquiry regarding Invoice #4892</p>
-              <p className="text-[10px] text-slate-500">AI verified live balance (USD 12,500) • 12m ago</p>
-            </div>
-          </div>
+          {syncData?.recentActivity?.length ? (
+            syncData.recentActivity.map((item) => (
+              <div key={item.id} className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950">
+                {item.channel === "whatsapp" ? (
+                  <MessageSquare className="h-4 w-4 text-emerald-600 mt-0.5" />
+                ) : (
+                  <Mail className="h-4 w-4 text-blue-600 mt-0.5" />
+                )}
+                <div>
+                  <p className="font-bold text-slate-800 dark:text-slate-200">{item.title}</p>
+                  <p className="text-[10px] text-slate-500">{item.detail}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="py-4 text-center text-slate-400">{tt("mobiledash.no_activity", "No recent activity yet.")}</p>
+          )}
         </div>
       </div>
     </div>
