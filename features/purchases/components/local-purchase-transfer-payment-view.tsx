@@ -461,7 +461,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
                       <>
-                        <Send className="h-3.5 w-3.5" /> Transfer & Post to GL
+                        <Send className="h-3.5 w-3.5" /> {tt("lptp.transfer_post_gl", "Transfer & Post to GL")}
                       </>
                     )}
                   </Button>
@@ -476,17 +476,17 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                         voucherNo: `VOUCHER-${row.id.slice(0, 6).toUpperCase()}`,
                         billNo: row.serialNo || row.serial_no || row.billNo || row.bill_no || `LP-${row.id.slice(0, 6).toUpperCase()}`,
                         transferDate: row.createdAt || row.created_at || new Date().toISOString(),
-                        supplierName: row.supplierName || row.supplier_name || "LOCAL SUPPLIER",
+                        supplierName: row.supplierName || row.supplier_name || "—",
                         branchName: row.branchName || row.branch_name || session.branchName || "—",
-                        countryName: row.countryName || row.country_name || "UNITED ARAB EMIRATES",
-                        goodsName: row.goodsName || row.goods_name || "COMMODITY GOODS",
-                        paymentMode: row.paymentMode || row.payment_mode || "CASH / BANK TRANSFER",
-                        bankOrCashAccount: row.purchaseAccountNo || row.purchase_account_no || "1010 - CASH ON HAND",
+                        countryName: row.countryName || row.country_name || "—",
+                        goodsName: row.goodsName || row.goods_name || "—",
+                        paymentMode: row.paymentMode || row.payment_mode || "—",
+                        bankOrCashAccount: row.purchaseAccountNo || row.purchase_account_no || "—",
                         amountLc: Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0),
-                        currencyLc: row.localCurrency || row.local_currency || "AED",
-                        amountInWords: amountToWordsEn(Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0), row.localCurrency || "AED"),
-                        purchaseAccountNo: row.purchaseAccountNo || row.purchase_account_no || "PURCHASE-AC-001",
-                        salesAccountNo: row.salesAccountNo || row.sales_account_no || "CASH-SETTLEMENT-001",
+                        currencyLc: row.localCurrency || row.local_currency || "—",
+                        amountInWords: amountToWordsEn(Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0), row.localCurrency || ""),
+                        purchaseAccountNo: row.purchaseAccountNo || row.purchase_account_no || "—",
+                        salesAccountNo: row.salesAccountNo || row.sales_account_no || "—",
                         userFullName: session.fullName || session.email || "—"
                       },
                       companyInfo: {
@@ -498,14 +498,14 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                   }}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
                 >
-                  <Printer className="h-3.5 w-3.5" /> Print Voucher
+                  <Printer className="h-3.5 w-3.5" /> {tt("lptp.print_voucher", "Print Voucher")}
                 </Button>
                 <button
                   type="button"
                   onClick={() => setSelectedRowForVoucher(null)}
                   className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
                 >
-                  Close
+                  {tt("common.close", "Close")}
                 </button>
               </div>
             </div>
@@ -549,7 +549,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                     <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">LOGO</div>
+                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">{tt("lptp.logo_placeholder", "LOGO")}</div>
                           <div className="space-y-1">
                             <h2 className="text-xl font-black uppercase tracking-[0.18em]">{tt("lpjr.inv_tax_invoice","Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>

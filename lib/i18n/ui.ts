@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "lptp.transfer_post_gl"
+  | "lptp.print_voucher"
+  | "lptp.logo_placeholder"
   | "pmc.port_name_ph"
   | "pmc.port_code_ph"
   | "email_mgmt.search_ph"
@@ -18828,6 +18831,12 @@ const en: Dict = {
 
 
 
+
+  "lptp.transfer_post_gl": "Transfer & Post to GL",
+
+  "lptp.print_voucher": "Print Voucher",
+
+  "lptp.logo_placeholder": "LOGO",
   "pmc.port_name_ph": "e.g. Karachi Port, Taftan Border, Heathrow Airport",
 
   "pmc.port_code_ph": "e.g. KHI, LHR, TFN",
@@ -34765,6 +34774,12 @@ const ur: Dict = {
 
 
 
+
+  "lptp.transfer_post_gl": "GL میں ٹرانسفر و پوسٹ کریں",
+
+  "lptp.print_voucher": "واؤچر پرنٹ کریں",
+
+  "lptp.logo_placeholder": "لوگو",
   "pmc.port_name_ph": "مثلاً کراچی پورٹ، تفتان بارڈر، ہیتھرو ایئرپورٹ",
 
   "pmc.port_code_ph": "مثلاً KHI, LHR, TFN",
@@ -50704,6 +50719,12 @@ const ar: Dict = {
 
 
 
+
+  "lptp.transfer_post_gl": "تحويل وترحيل إلى دفتر الأستاذ العام",
+
+  "lptp.print_voucher": "طباعة السند",
+
+  "lptp.logo_placeholder": "الشعار",
   "pmc.port_name_ph": "مثال: ميناء كراتشي، حدود تافتان، مطار هيثرو",
 
   "pmc.port_code_ph": "مثال: KHI, LHR, TFN",
@@ -66642,6 +66663,12 @@ const fa: Dict = {
 
 
 
+
+  "lptp.transfer_post_gl": "انتقال و ثبت در دفتر کل",
+
+  "lptp.print_voucher": "چاپ سند",
+
+  "lptp.logo_placeholder": "لوگو",
   "pmc.port_name_ph": "مثال: بندر کراچی، مرز تفتان، فرودگاه هیترو",
 
   "pmc.port_code_ph": "مثال: KHI, LHR, TFN",
@@ -82586,6 +82613,12 @@ const ps: Dict = {
 
 
 
+
+  "lptp.transfer_post_gl": "GL ته لېږل او پوسټ کول",
+
+  "lptp.print_voucher": "واوچر چاپ کول",
+
+  "lptp.logo_placeholder": "لوګو",
   "pmc.port_name_ph": "بېلګه: د کراچۍ بندر، د تفتان پوله، د هیترو هوایي ډګر",
 
   "pmc.port_code_ph": "بېلګه: KHI, LHR, TFN",
