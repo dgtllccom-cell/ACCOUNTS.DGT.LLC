@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "purchase.super_admin_control"
+  | "purchase.draft_badge"
+  | "purchase.save_short"
+  | "purchase.extra_details_placeholder"
+  | "purchase.update_item_check"
+  | "purchase.back_to_goods_arrow"
+  | "purchase.back_colon_goods"
+  | "purchase.next_reports_arrow"
+  | "purchase.booking_register_title"
   | "setmenu.system_settings"
   | "setmenu.workspace_setup_desc"
   | "setmenu.core_configuration"
@@ -18335,6 +18344,32 @@ const en: Dict = {
 
 
 
+
+
+  "purchase.super_admin_control": "SUPER ADMIN CONTROL",
+
+
+  "purchase.draft_badge": "DRAFT",
+
+
+  "purchase.save_short": "Save",
+
+
+
+
+  "purchase.update_item_check": "✓ Update Item",
+
+
+  "purchase.back_to_goods_arrow": "← Back to Goods",
+
+
+  "purchase.back_colon_goods": "← Back: Goods",
+
+
+  "purchase.next_reports_arrow": "Next: Reports →",
+
+
+  "purchase.booking_register_title": "Purchase Booking Register",
   "setmenu.system_settings": "System Settings",
 
 
@@ -33379,6 +33414,32 @@ const ur: Dict = {
 
 
 
+
+
+  "purchase.super_admin_control": "سپر ایڈمن کنٹرول",
+
+
+  "purchase.draft_badge": "ڈرافٹ",
+
+
+  "purchase.save_short": "محفوظ کریں",
+
+
+
+
+  "purchase.update_item_check": "✓ آئٹم اپ ڈیٹ کریں",
+
+
+  "purchase.back_to_goods_arrow": "← گڈز کی طرف واپس",
+
+
+  "purchase.back_colon_goods": "← واپس: گڈز",
+
+
+  "purchase.next_reports_arrow": "اگلا: رپورٹس →",
+
+
+  "purchase.booking_register_title": "پرچیز بکنگ رجسٹر",
   "setmenu.system_settings": "سسٹم کی ترتیبات",
 
 
@@ -48425,6 +48486,32 @@ const ar: Dict = {
 
 
 
+
+
+  "purchase.super_admin_control": "تحكم المسؤول الأعلى",
+
+
+  "purchase.draft_badge": "مسودة",
+
+
+  "purchase.save_short": "حفظ",
+
+
+
+
+  "purchase.update_item_check": "✓ تحديث العنصر",
+
+
+  "purchase.back_to_goods_arrow": "← العودة إلى البضائع",
+
+
+  "purchase.back_colon_goods": "← رجوع: البضائع",
+
+
+  "purchase.next_reports_arrow": "التالي: التقارير ←",
+
+
+  "purchase.booking_register_title": "سجل حجز الشراء",
   "setmenu.system_settings": "إعدادات النظام",
 
 
@@ -63470,6 +63557,32 @@ const fa: Dict = {
 
 
 
+
+
+  "purchase.super_admin_control": "کنترل مدیر ارشد",
+
+
+  "purchase.draft_badge": "پیش‌نویس",
+
+
+  "purchase.save_short": "ذخیره",
+
+
+
+
+  "purchase.update_item_check": "✓ به‌روزرسانی مورد",
+
+
+  "purchase.back_to_goods_arrow": "← بازگشت به کالاها",
+
+
+  "purchase.back_colon_goods": "← بازگشت: کالاها",
+
+
+  "purchase.next_reports_arrow": "بعدی: گزارش‌ها ←",
+
+
+  "purchase.booking_register_title": "دفتر رزرو خرید",
   "setmenu.system_settings": "تنظیمات سیستم",
 
 
@@ -78521,6 +78634,32 @@ const ps: Dict = {
 
 
 
+
+
+  "purchase.super_admin_control": "د سوپر مدیر کنټرول",
+
+
+  "purchase.draft_badge": "مسوده",
+
+
+  "purchase.save_short": "خوندي کول",
+
+
+
+
+  "purchase.update_item_check": "✓ توکی تازه کړئ",
+
+
+  "purchase.back_to_goods_arrow": "← بېرته شیانو ته",
+
+
+  "purchase.back_colon_goods": "← بېرته: شیان",
+
+
+  "purchase.next_reports_arrow": "راتلونکی: راپورونه ←",
+
+
+  "purchase.booking_register_title": "د پیرود بکینګ راجستر",
   "setmenu.system_settings": "د سیسټم تنظیمات",
 
 

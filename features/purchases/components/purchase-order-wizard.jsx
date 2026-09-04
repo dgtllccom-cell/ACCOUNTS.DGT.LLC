@@ -3628,7 +3628,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div>
-                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600 dark:text-indigo-400 block leading-tight">SUPER ADMIN CONTROL</span>
+                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600 dark:text-indigo-400 block leading-tight">{t(lang, "purchase.super_admin_control", "SUPER ADMIN CONTROL")}</span>
                 <p className="text-xs text-muted-foreground font-medium">
                   {t(lang, "purchase.working_scope_desc", "Select Country, Main Branch, and City Branch scope.")}
                 </p>
@@ -4003,7 +4003,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">{t(lang, "purchase.bill_details_title", "Bill Details")}</h4>
                         </div>
                         <span className="text-[9.5px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
-                          DRAFT
+                          {t(lang, "purchase.draft_badge", "DRAFT")}
                         </span>
                       </div>
                       <div className="space-y-1.5 text-xs">
@@ -4980,7 +4980,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                           onClick={handleUpdateHsCode}
                                           className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
                                         >
-                                          Save
+                                          {t(lang, "purchase.save_short", "Save")}
                                         </button>
                                       );
                                     }
@@ -5020,7 +5020,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                           onClick={() => handleSaveParamToMaster("brand", form.brand)}
                                           className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
                                         >
-                                          Save
+                                          {t(lang, "purchase.save_short", "Save")}
                                         </button>
                                       );
                                     }
@@ -5072,7 +5072,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                           onClick={() => handleSaveParamToMaster("size", form.size)}
                                           className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
                                         >
-                                          Save
+                                          {t(lang, "purchase.save_short", "Save")}
                                         </button>
                                       );
                                     }
@@ -5128,7 +5128,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                           onClick={() => handleSaveParamToMaster("variety", form.variety)}
                                           className="text-[8.5px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 hover:bg-amber-100"
                                         >
-                                          Save
+                                          {t(lang, "purchase.save_short", "Save")}
                                         </button>
                                       );
                                     }
@@ -5169,7 +5169,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                   value={form.extraDetails || ""}
                                   onChange={(e) => setValue("extraDetails", e.target.value)}
                                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9"
-                                  placeholder="e.g. Soft Shell / Light Color"
+                                  placeholder={t(lang, "purchase.extra_details_placeholder", "e.g. Soft Shell / Light Color")}
                                 />
                               </div>
                             </div>
@@ -5414,14 +5414,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     onClick={handleCancelEditGoodsEntry}
                                     className="flex-1 h-9 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50"
                                   >
-                                    Cancel
+                                    {t(lang, "common.cancel", "Cancel")}
                                   </button>
                                   <button
                                     type="button"
                                     onClick={handleUpdateGoodsEntry}
                                     className="flex-1 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-sm"
                                   >
-                                    ✓ Update Item
+                                    {t(lang, "purchase.update_item_check", "✓ Update Item")}
                                   </button>
                                 </>
                               ) : (
@@ -5441,7 +5441,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 onClick={() => setActiveTab("booking")}
                                 className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                               >
-                                Back
+                                {t(lang, "common.back", "Back")}
                               </button>
                               <button
                                 type="button"
@@ -5468,7 +5468,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               onClick={() => setActiveTab("goods")}
                               className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 underline"
                             >
-                              ← Back to Goods
+                              {t(lang, "purchase.back_to_goods_arrow", "← Back to Goods")}
                             </button>
                           </div>
 
@@ -5710,14 +5710,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 onClick={() => setActiveTab("goods")}
                                 className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                               >
-                                ← Back: Goods
+                                {t(lang, "purchase.back_colon_goods", "← Back: Goods")}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setActiveTab("reports_tab")}
                                 className="flex-1 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors"
                               >
-                                Next: Reports →
+                                {t(lang, "purchase.next_reports_arrow", "Next: Reports →")}
                               </button>
                             </div>
                           </div>
@@ -5737,7 +5737,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           <div className="flex items-center gap-2">
                             <FileSpreadsheet className="h-4 w-4 text-blue-600" />
                             <h3 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100">
-                              Purchase Booking Register
+                              {t(lang, "purchase.booking_register_title", "Purchase Booking Register")}
                             </h3>
                           </div>
 
