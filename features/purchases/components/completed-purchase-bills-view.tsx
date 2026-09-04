@@ -152,7 +152,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
             <p style="margin: 4px 0 0 0; color: #64748b; font-weight: bold;">System Serial: ${row.purchase_order_no} | Manual Bill: ${details.manualBillNo}</p>
           </div>
           <div>
-            <span class="badge">FULLY COMPLETED & PAID</span>
+            <span class="badge">${t(lang, "cpb.fully_completed_paid", "FULLY COMPLETED & PAID")}</span>
           </div>
         </div>
 
@@ -388,11 +388,11 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
               <span className="font-bold text-slate-700 dark:text-slate-300">{summaryMetrics.totalContractQty.toLocaleString()} {orders[0]?.unitLabel || orders[0]?.quantity_name || ""}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Total Credit (Paid):</span>
+              <span className="text-slate-500">{tt("cpb.total_credit_paid", "Total Credit (Paid):")}</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400">${summaryMetrics.totalPaidUSD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Total Debit (Purchases):</span>
+              <span className="text-slate-500">{tt("cpb.total_debit_purchases", "Total Debit (Purchases):")}</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400">${summaryMetrics.totalPurchaseUSD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between items-center pt-1.5 border-t border-slate-200 dark:border-slate-800">
@@ -436,7 +436,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
             <div className="h-7 w-7 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
               4
             </div>
-            <h3 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider">4. ALL COUNTRIES REPORT DETAILS</h3>
+            <h3 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider">4. {tt("cpb.all_countries_report_details", "ALL COUNTRIES REPORT DETAILS")}</h3>
           </div>
 
           <div className="space-y-2 text-[11px]">
@@ -445,7 +445,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
             </p>
             <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] font-bold text-emerald-600">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              LIVE UPDATING
+              {tt("cpb.live_updating", "LIVE UPDATING")}
             </div>
           </div>
         </div>

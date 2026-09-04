@@ -927,6 +927,11 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cpb.fully_completed_paid"
+  | "cpb.total_credit_paid"
+  | "cpb.total_debit_purchases"
+  | "cpb.all_countries_report_details"
+  | "cpb.live_updating"
   | "jbsd.container_goods_received_desc"
   | "jbsd.total_bills_receipts"
   | "jbsd.total_quantity"
@@ -18762,6 +18767,16 @@ const en: Dict = {
 
 
 
+
+  "cpb.fully_completed_paid": "FULLY COMPLETED & PAID",
+
+  "cpb.total_credit_paid": "Total Credit (Paid):",
+
+  "cpb.total_debit_purchases": "Total Debit (Purchases):",
+
+  "cpb.all_countries_report_details": "ALL COUNTRIES REPORT DETAILS",
+
+  "cpb.live_updating": "LIVE UPDATING",
   "jbsd.container_goods_received_desc": "Container Goods Received — Transferred Purchase Orders Only",
 
   "jbsd.total_bills_receipts": "Total Bills (Receipts)",
@@ -34589,6 +34604,16 @@ const ur: Dict = {
 
 
 
+
+  "cpb.fully_completed_paid": "مکمل تکمیل شدہ و ادا شدہ",
+
+  "cpb.total_credit_paid": "کل کریڈٹ (ادا شدہ):",
+
+  "cpb.total_debit_purchases": "کل ڈیبٹ (خریداری):",
+
+  "cpb.all_countries_report_details": "تمام ممالک رپورٹ تفصیلات",
+
+  "cpb.live_updating": "لائیو اپڈیٹنگ",
   "jbsd.container_goods_received_desc": "کنٹینر گڈز موصول — صرف ٹرانسفر شدہ پرچیز آرڈرز",
 
   "jbsd.total_bills_receipts": "کل بلز (رسیدیں)",
@@ -50418,6 +50443,16 @@ const ar: Dict = {
 
 
 
+
+  "cpb.fully_completed_paid": "مكتمل بالكامل ومدفوع",
+
+  "cpb.total_credit_paid": "إجمالي الدائن (مدفوع):",
+
+  "cpb.total_debit_purchases": "إجمالي المدين (المشتريات):",
+
+  "cpb.all_countries_report_details": "تفاصيل تقرير جميع الدول",
+
+  "cpb.live_updating": "تحديث مباشر",
   "jbsd.container_goods_received_desc": "استلام بضائع الحاويات — أوامر الشراء المحولة فقط",
 
   "jbsd.total_bills_receipts": "إجمالي الفواتير (الإيصالات)",
@@ -66246,6 +66281,16 @@ const fa: Dict = {
 
 
 
+
+  "cpb.fully_completed_paid": "کاملاً تکمیل و پرداخت‌شده",
+
+  "cpb.total_credit_paid": "مجموع بستانکار (پرداخت‌شده):",
+
+  "cpb.total_debit_purchases": "مجموع بدهکار (خریدها):",
+
+  "cpb.all_countries_report_details": "جزئیات گزارش همه کشورها",
+
+  "cpb.live_updating": "به‌روزرسانی زنده",
   "jbsd.container_goods_received_desc": "کالای کانتینر دریافت‌شده — فقط سفارش‌های خرید منتقل‌شده",
 
   "jbsd.total_bills_receipts": "مجموع صورتحساب‌ها (رسیدها)",
@@ -82080,6 +82125,16 @@ const ps: Dict = {
 
 
 
+
+  "cpb.fully_completed_paid": "بشپړ سرته رسیدلی او تادیه شوی",
+
+  "cpb.total_credit_paid": "ټول کریډیټ (تادیه شوی):",
+
+  "cpb.total_debit_purchases": "ټول ډیبیټ (پیرودونه):",
+
+  "cpb.all_countries_report_details": "د ټولو هېوادونو راپور تفصیلات",
+
+  "cpb.live_updating": "ژوندی تازه کول",
   "jbsd.container_goods_received_desc": "د کانتینر توکي ترلاسه شوي — یوازې لېږدول شوي پیرود امرونه",
 
   "jbsd.total_bills_receipts": "ټول بلونه (رسیدونه)",
