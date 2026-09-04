@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "inv.select_goods_item"
+  | "inv.select_size_brand_variation"
+  | "inv.destination_warehouse"
+  | "inv.quantity_label"
   | "bgr.all_users"
   | "bgr.show_all_erp_users_super_admin"
   | "bgr.super_admin_user_directory"
@@ -18747,6 +18751,14 @@ const en: Dict = {
 
 
 
+
+  "inv.select_goods_item": "Select Goods Item *",
+
+  "inv.select_size_brand_variation": "Select Size / Brand Variation",
+
+  "inv.destination_warehouse": "Destination Warehouse *",
+
+  "inv.quantity_label": "Quantity *",
   "bgr.all_users": "All Users",
   "bgr.show_all_erp_users_super_admin": "Show all ERP users under Super Admin",
 
@@ -34548,6 +34560,14 @@ const ur: Dict = {
 
 
 
+
+  "inv.select_goods_item": "گڈز آئٹم منتخب کریں *",
+
+  "inv.select_size_brand_variation": "سائز / برانڈ ویری ایشن منتخب کریں",
+
+  "inv.destination_warehouse": "منزل گودام *",
+
+  "inv.quantity_label": "مقدار *",
   "bgr.all_users": "تمام صارفین",
   "bgr.show_all_erp_users_super_admin": "سپر ایڈمن کے تحت تمام ERP صارفین دکھائیں",
 
@@ -50351,6 +50371,14 @@ const ar: Dict = {
 
 
 
+
+  "inv.select_goods_item": "اختر عنصر البضاعة *",
+
+  "inv.select_size_brand_variation": "اختر مقاس / تنوع العلامة التجارية",
+
+  "inv.destination_warehouse": "المستودع الوجهة *",
+
+  "inv.quantity_label": "الكمية *",
   "bgr.all_users": "جميع المستخدمين",
   "bgr.show_all_erp_users_super_admin": "إظهار جميع مستخدمي ERP تحت المسؤول الأعلى",
 
@@ -66153,6 +66181,14 @@ const fa: Dict = {
 
 
 
+
+  "inv.select_goods_item": "انتخاب کالای موجودی *",
+
+  "inv.select_size_brand_variation": "انتخاب اندازه / گونه برند",
+
+  "inv.destination_warehouse": "انبار مقصد *",
+
+  "inv.quantity_label": "مقدار *",
   "bgr.all_users": "همه کاربران",
   "bgr.show_all_erp_users_super_admin": "نمایش همه کاربران ERP تحت مدیر ارشد",
 
@@ -81961,6 +81997,14 @@ const ps: Dict = {
 
 
 
+
+  "inv.select_goods_item": "د توکو توکی وټاکئ *",
+
+  "inv.select_size_brand_variation": "اندازه / د برانډ ډول وټاکئ",
+
+  "inv.destination_warehouse": "د موخې ګدام *",
+
+  "inv.quantity_label": "اندازه *",
   "bgr.all_users": "ټول کاروونکي",
   "bgr.show_all_erp_users_super_admin": "د سوپر مدیر لاندې ټول د ERP کاروونکي وښایاست",
 

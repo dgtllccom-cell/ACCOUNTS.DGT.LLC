@@ -604,7 +604,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
       >
         <div className="space-y-4 pt-2">
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">Select Goods Item *</label>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.select_goods_item", "Select Goods Item *")}</label>
             <select
               value={form.goodsId}
               onChange={(e) => setForm({ ...form, goodsId: e.target.value, goodsVariationId: "" })}
@@ -620,7 +620,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
 
           {selectedGoodsRecord?.variations && selectedGoodsRecord.variations.length > 0 && (
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Select Size / Brand Variation</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.select_size_brand_variation", "Select Size / Brand Variation")}</label>
               <select
                 value={form.goodsVariationId}
                 onChange={(e) => setForm({ ...form, goodsVariationId: e.target.value })}
@@ -637,7 +637,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
           )}
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">Destination Warehouse *</label>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.destination_warehouse", "Destination Warehouse *")}</label>
             <select
               value={form.warehouseId}
               onChange={(e) => setForm({ ...form, warehouseId: e.target.value })}
@@ -653,7 +653,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Quantity *</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.quantity_label", "Quantity *")}</label>
               <input
                 type="number"
                 min="0.01"
@@ -778,7 +778,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
 
             <div className="flex justify-end pt-3 border-t">
               <Button variant="outline" onClick={() => setViewMovement(null)}>
-                Close
+                {tt("common.close", "Close")}
               </Button>
             </div>
           </div>
