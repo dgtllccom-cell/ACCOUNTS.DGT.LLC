@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "acct.apv_customer_profile_dash"
+  | "acct.apv_official_certificate_title"
+  | "acct.apv_generated_on"
+  | "acct.apv_ref"
+  | "acct.apv_date_label"
+  | "acct.apv_prepared_by"
+  | "acct.apv_authorized_by"
+  | "acct.apv_active_posted"
+  | "acct.apv_verified"
   | "onboard.title"
   | "onboard.subtitle"
   | "onboard.company_name"
@@ -18703,6 +18712,24 @@ const en: Dict = {
 
 
 
+
+  "acct.apv_customer_profile_dash": "Customer Profile –",
+
+  "acct.apv_official_certificate_title": "OFFICIAL CUSTOMER PROFILE CERTIFICATE",
+
+  "acct.apv_generated_on": "Generated On:",
+
+  "acct.apv_ref": "Ref:",
+
+  "acct.apv_date_label": "Date",
+
+  "acct.apv_prepared_by": "Prepared By",
+
+  "acct.apv_authorized_by": "Authorized By",
+
+  "acct.apv_active_posted": "Active (Posted)",
+
+  "acct.apv_verified": "Verified",
   "onboard.title": "Create your workspace",
 
   "onboard.subtitle": "This creates the company, first branch, owner role, membership, and starter chart of accounts.",
@@ -34428,6 +34455,24 @@ const ur: Dict = {
 
 
 
+
+  "acct.apv_customer_profile_dash": "کسٹمر پروفائل –",
+
+  "acct.apv_official_certificate_title": "سرکاری کسٹمر پروفائل سرٹیفکیٹ",
+
+  "acct.apv_generated_on": "تیار کردہ:",
+
+  "acct.apv_ref": "حوالہ:",
+
+  "acct.apv_date_label": "تاریخ",
+
+  "acct.apv_prepared_by": "تیار کنندہ",
+
+  "acct.apv_authorized_by": "منظور کنندہ",
+
+  "acct.apv_active_posted": "فعال (پوسٹ شدہ)",
+
+  "acct.apv_verified": "تصدیق شدہ",
   "onboard.title": "اپنا ورک اسپیس بنائیں",
 
   "onboard.subtitle": "یہ کمپنی، پہلی برانچ، مالک کا کردار، رکنیت، اور ابتدائی چارٹ آف اکاؤنٹس بناتا ہے۔",
@@ -50155,6 +50200,24 @@ const ar: Dict = {
 
 
 
+
+  "acct.apv_customer_profile_dash": "ملف العميل –",
+
+  "acct.apv_official_certificate_title": "شهادة الملف الشخصي الرسمية للعميل",
+
+  "acct.apv_generated_on": "تم الإنشاء في:",
+
+  "acct.apv_ref": "المرجع:",
+
+  "acct.apv_date_label": "التاريخ",
+
+  "acct.apv_prepared_by": "أعدّه",
+
+  "acct.apv_authorized_by": "معتمد من",
+
+  "acct.apv_active_posted": "نشط (مُرحّل)",
+
+  "acct.apv_verified": "موثّق",
   "onboard.title": "أنشئ مساحة عملك",
 
   "onboard.subtitle": "ينشئ هذا الشركة والفرع الأول ودور المالك والعضوية ودليل الحسابات الأولي.",
@@ -65881,6 +65944,24 @@ const fa: Dict = {
 
 
 
+
+  "acct.apv_customer_profile_dash": "پروفایل مشتری –",
+
+  "acct.apv_official_certificate_title": "گواهی رسمی پروفایل مشتری",
+
+  "acct.apv_generated_on": "ایجادشده در:",
+
+  "acct.apv_ref": "مرجع:",
+
+  "acct.apv_date_label": "تاریخ",
+
+  "acct.apv_prepared_by": "تهیه‌شده توسط",
+
+  "acct.apv_authorized_by": "تأییدشده توسط",
+
+  "acct.apv_active_posted": "فعال (ثبت‌شده)",
+
+  "acct.apv_verified": "تأییدشده",
   "onboard.title": "فضای کاری خود را ایجاد کنید",
 
   "onboard.subtitle": "این کار شرکت، اولین شعبه، نقش مالک، عضویت و دفتر حساب‌های اولیه را ایجاد می‌کند.",
@@ -81613,6 +81694,24 @@ const ps: Dict = {
 
 
 
+
+  "acct.apv_customer_profile_dash": "د پیرودونکي پروفایل –",
+
+  "acct.apv_official_certificate_title": "رسمي د پیرودونکي پروفایل سند",
+
+  "acct.apv_generated_on": "جوړ شوی په:",
+
+  "acct.apv_ref": "حواله:",
+
+  "acct.apv_date_label": "نېټه",
+
+  "acct.apv_prepared_by": "چمتو شوی له خوا",
+
+  "acct.apv_authorized_by": "اجازه لرونکی له خوا",
+
+  "acct.apv_active_posted": "فعال (ثبت شوی)",
+
+  "acct.apv_verified": "تایید شوی",
   "onboard.title": "خپله کاري ساحه جوړه کړئ",
 
   "onboard.subtitle": "دا شرکت، لومړۍ څانګه، د مالک رول، غړیتوب، او ابتدايي د حسابونو چارټ جوړوي.",

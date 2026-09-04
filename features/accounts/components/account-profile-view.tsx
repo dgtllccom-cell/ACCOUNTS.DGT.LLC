@@ -433,7 +433,7 @@ export function AccountProfileView({
         { label: "Linked Ledger Name", value: selectedRow.ledgerName || "—", highlight: true, icon: BookOpen },
         { label: "Journal Code", value: selectedRow.journalCode || "—", icon: Hash },
         { label: "Ledger Currency", value: selectedRow.ledgerCurrency || selectedRow.currency, icon: Coins },
-        { label: "Ledger Operational Status", value: selectedRow.ledgerStatus === "active" ? "Active (Posted)" : "Verified", icon: CheckCircle2 },
+        { label: "Ledger Operational Status", value: selectedRow.ledgerStatus === "active" ? t(lang, "acct.apv_active_posted", "Active (Posted)") : t(lang, "acct.apv_verified", "Verified"), icon: CheckCircle2 },
         { label: "Opening Balance", value: `${fmtNumber(selectedRow.openingBalance)} ${selectedRow.currency}`, icon: Activity },
         { label: "Total Debits (DR)", value: `${fmtNumber(selectedRow.debitTotal)} ${selectedRow.currency}`, icon: Activity },
         { label: "Total Credits (CR)", value: `${fmtNumber(selectedRow.creditTotal)} ${selectedRow.currency}`, icon: Activity },
@@ -486,7 +486,7 @@ export function AccountProfileView({
             </Link>
             <div className="flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
-                Customer Profile – <span className="text-blue-600 dark:text-blue-400">{selectedRow.accountName}</span>
+                {t(lang, "acct.apv_customer_profile_dash", "Customer Profile –")} <span className="text-blue-600 dark:text-blue-400">{selectedRow.accountName}</span>
               </h1>
             </div>
           </div>
@@ -579,12 +579,12 @@ export function AccountProfileView({
           {/* Certificate Main Title & Header Metadata */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              OFFICIAL CUSTOMER PROFILE CERTIFICATE
+              {t(lang, "acct.apv_official_certificate_title", "OFFICIAL CUSTOMER PROFILE CERTIFICATE")}
             </h2>
             <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
-              <span>Generated On: <strong className="text-slate-800 dark:text-slate-200" suppressHydrationWarning>{fmtDate(new Date().toISOString())}</strong></span>
+              <span>{t(lang, "acct.apv_generated_on", "Generated On:")} <strong className="text-slate-800 dark:text-slate-200" suppressHydrationWarning>{fmtDate(new Date().toISOString())}</strong></span>
               <span className="text-slate-300 dark:text-slate-700">|</span>
-              <span>Ref: <strong className="font-mono text-blue-600 dark:text-blue-400">{selectedRow.accountCode || "—"}</strong></span>
+              <span>{t(lang, "acct.apv_ref", "Ref:")} <strong className="font-mono text-blue-600 dark:text-blue-400">{selectedRow.accountCode || "—"}</strong></span>
             </div>
           </div>
 
@@ -699,7 +699,7 @@ export function AccountProfileView({
                 <Calendar className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "acct.apv_date_label", "Date")}</p>
                 <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
                   <span suppressHydrationWarning>{fmtDate(new Date().toISOString())}</span>
                 </p>
@@ -712,7 +712,7 @@ export function AccountProfileView({
                 <User className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prepared By</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "acct.apv_prepared_by", "Prepared By")}</p>
                 <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
                   {data?.workspace.companyOwner || "—"}
                 </p>
@@ -725,7 +725,7 @@ export function AccountProfileView({
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Authorized By</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "acct.apv_authorized_by", "Authorized By")}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   {/* Handwritten-like digital signature mark */}
                   <span className="font-serif italic font-black text-blue-700 dark:text-blue-300 text-sm tracking-wide">
