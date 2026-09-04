@@ -849,9 +849,9 @@ function statusClass(status: string | null | undefined) {
   return "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300";
 }
 
-function exportRows(rows: PurchaseOrderRow[], mode: PaymentMode) {
+function exportRows(rows: PurchaseOrderRow[], mode: PaymentMode, lang: LanguageCode = "en") {
   try {
-    const headers = ["PO Number", "Contract", "Date", "Currency", "Order Total", "Advance", "Remaining", "Credit", "Payment Status", "Journal Status"];
+    const headers = ["PO Number", "Contract", "Date", "Currency", "Order Total", "Advance", "Remaining", "Credit", "Payment Status", "Journal Status"].map((h) => translateHeader(lang, h));
     const body = rows.map((row) =>
       [
         row.sales_order_no,
@@ -1786,15 +1786,15 @@ function DashboardSummaryHeader({
           <span className="font-black text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center mt-2">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> Total Purchase (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> {translateHeader(currentLanguage, "Total Purchase (All)")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalAllFC.totalPurchase.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> Total Invoice / Advance (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> {translateHeader(currentLanguage, "Total Invoice / Advance (All)")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalAllFC.advancePaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center pt-2 mt-auto border-t border-dashed border-slate-100 dark:border-slate-800">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> Total Not Transferred (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> {translateHeader(currentLanguage, "Total Not Transferred (All)")}:</span>
           <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{summary.totalAllFC.remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
@@ -1898,7 +1898,7 @@ function DashboardSummaryHeader({
           <div className="bg-orange-600 p-1 rounded-full text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
-          <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">4. TRANSACTION SUMMARY</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">{translateHeader(currentLanguage, "4. Transaction Summary")}</h4>
         </div>
         <div className="p-4 flex-1">
           {body}
@@ -4593,7 +4593,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   <div className="grid gap-3 p-4 xl:grid-cols-4">
                     {summaryCells.map(([label, value, sub, tone]) => (
                       <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
-                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</div>
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, String(label))}</div>
                         <div className={`mt-1 font-mono text-[13px] font-black ${tone}`}>{value}</div>
                         <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">{sub}</div>
                       </div>
@@ -4603,7 +4603,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   <div className="grid gap-3 border-t border-slate-100 p-4 text-xs dark:border-slate-800 lg:grid-cols-4">
                     {detailCells.map(([label, value]) => (
                       <div key={label} className="min-w-0">
-                        <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</span>
+                        <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, String(label))}</span>
                         <span className="block truncate font-extrabold text-slate-850 dark:text-slate-200" title={String(value)}>{value}</span>
                       </div>
                     ))}
@@ -4840,7 +4840,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     <div className="flex items-center gap-2 text-[10px] font-bold">
                       {isFullyPaid ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                          <CheckCircle className="h-3 w-3" /> Fully Paid
+                          <CheckCircle className="h-3 w-3" /> {translateHeader(currentLanguage, "Fully Paid")}
                         </span>
                       ) : isAdvComplete ? (
                         <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
@@ -5022,7 +5022,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   {/* Exchange Rate & Recorded Payments Pill Footer */}
                   <div className="flex items-center justify-between px-5 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
                     <div className="text-[9px] font-semibold text-slate-500">
-                      Exchange Rate: <span className="font-mono font-black text-slate-700 dark:text-slate-300">1 {poCurrency} = {Number(exRate).toFixed(2)} {baseCurrency}</span>
+                      {translateHeader(currentLanguage, "Exchange Rate")}: <span className="font-mono font-black text-slate-700 dark:text-slate-300">1 {poCurrency} = {Number(exRate).toFixed(2)} {baseCurrency}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
@@ -5551,7 +5551,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               {/* Payment Entry Form */}
               <div className="xl:col-span-7 space-y-4">
                 <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                  2. PAYMENT ENTRIES
+                  {translateHeader(currentLanguage, "2. Payment Entries")}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FieldBlock label={t("payment_source_account", currentLanguage)} required>
@@ -5989,7 +5989,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   </div>
 
                 <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                  3. NARRATION / REMARKS
+                  {translateHeader(currentLanguage, "3. Narration / Remarks")}
                 </div>
                 <FieldBlock label={t("comments_label", currentLanguage)}>
                   <textarea
@@ -6337,7 +6337,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   className="text-xs font-semibold"
                   value={addOptionValue}
                   onChange={(e) => setAddOptionValue(e.target.value)}
-                  placeholder="e.g. HBL Karachi Branch"
+                  placeholder={translateHeader(currentLanguage, "e.g. HBL Karachi Branch")}
                 />
               </div>
               <div className="space-y-1">
@@ -6523,8 +6523,8 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
       </summary>
       <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
         <MenuAction icon={<Eye />} label={t("plate_view", currentLanguage)} onClick={() => handleReportAction(() => undefined)} />
-        <MenuAction icon={<DownloadActionIcon />} label={t("download", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<FileSpreadsheet />} label={t("export_excel", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
+        <MenuAction icon={<DownloadActionIcon />} label={t("download", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode, currentLanguage))} />
+        <MenuAction icon={<FileSpreadsheet />} label={t("export_excel", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode, currentLanguage))} />
         <MenuAction icon={<PdfActionIcon />} label={t("export_pdf", currentLanguage)} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({

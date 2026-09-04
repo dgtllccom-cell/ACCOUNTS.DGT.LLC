@@ -886,9 +886,9 @@ function statusClass(status: string | null | undefined) {
   return "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300";
 }
 
-function exportRows(rows: PurchaseOrderRow[], mode: PaymentMode) {
+function exportRows(rows: PurchaseOrderRow[], mode: PaymentMode, lang: LanguageCode = "en") {
   try {
-    const headers = ["PO Number", "Contract", "Date", "Currency", "Order Total", "Advance", "Remaining", "Credit", "Payment Status", "Journal Status"];
+    const headers = ["PO Number", "Contract", "Date", "Currency", "Order Total", "Advance", "Remaining", "Credit", "Payment Status", "Journal Status"].map((h) => translateHeader(lang, h));
     const body = rows.map((row) =>
       [
         row.purchase_order_no,
@@ -1825,15 +1825,15 @@ function DashboardSummaryHeader({
           <span className="font-black text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center mt-2">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> Total Purchase (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> {translateHeader(currentLanguage, "Total Purchase (All)")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalAllFC.totalPurchase.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> Total Invoice / Advance (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> {translateHeader(currentLanguage, "Total Invoice / Advance (All)")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalAllFC.advancePaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center pt-2 mt-auto border-t border-dashed border-slate-100 dark:border-slate-800">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> Total Not Transferred (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> {translateHeader(currentLanguage, "Total Not Transferred (All)")}:</span>
           <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{summary.totalAllFC.remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
@@ -1937,7 +1937,7 @@ function DashboardSummaryHeader({
           <div className="bg-orange-600 p-1 rounded-full text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
-          <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">4. TRANSACTION SUMMARY</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">{translateHeader(currentLanguage, "4. Transaction Summary")}</h4>
         </div>
         <div className="p-4 flex-1">
           {body}
@@ -4820,7 +4820,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                     <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Debit A/c")}</span><span className="text-right text-rose-600 dark:text-rose-400 font-bold">{debitAccountName}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Party Name")}</span><span className="text-right truncate max-w-[130px]" title="PURCHASE & SALES">PURCHASE & SALES</span></div>
+                      {(() => {
+                        const partyName = (selectedForm as any)?.salesAccountName || (selectedForm as any)?.supplierName || (selectedForm as any)?.supplierAccountName || debitAccountName || "—";
+                        return (
+                          <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Party Name")}</span><span className="text-right truncate max-w-[130px]" title={partyName}>{partyName}</span></div>
+                        );
+                      })()}
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Company")}</span><span className="text-right truncate max-w-[130px]" title={purchaseCompany}>{purchaseCompany}</span></div>
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Currency")}</span><span className="text-right font-mono font-bold">{poCurrencyHeader}</span></div>
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Exchange Rate")}</span><span className="text-right font-mono font-bold">{exRate.toFixed(4)}</span></div>
@@ -4882,7 +4887,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
                         <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Sales Payment Amount (Final Currency) :")}</span>
-                        <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">USD 122,475.50 + AED 448,931.61</span>
+                        <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">
+                          {(() => {
+                            const sf = Number((selected as any)?.linked_sales_total || (selected as any)?.form_data?.linkedSalesForeign || 0);
+                            const sl = Number((selected as any)?.linked_sales_total_local || (selected as any)?.form_data?.linkedSalesLocal || 0);
+                            return sf || sl
+                              ? `USD ${sf.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED ${sl.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                              : "—";
+                          })()}
+                        </span>
                       </div>
                       <div>
                         <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Purchase Payment Amount (Final Currency) :")}</span>
@@ -5672,7 +5685,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   className="text-xs font-semibold"
                   value={addOptionValue}
                   onChange={(e) => setAddOptionValue(e.target.value)}
-                  placeholder="e.g. HBL Karachi Branch"
+                  placeholder={translateHeader(currentLanguage, "e.g. HBL Karachi Branch")}
                 />
               </div>
               <div className="space-y-1">
@@ -5859,8 +5872,8 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
       </summary>
       <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
         <MenuAction icon={<Eye />} label={translateHeader(currentLanguage, "Plate View")} onClick={() => handleReportAction(() => undefined)} />
-        <MenuAction icon={<DownloadActionIcon />} label={translateHeader(currentLanguage, "Download")} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<FileSpreadsheet />} label={translateHeader(currentLanguage, "Export Excel")} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
+        <MenuAction icon={<DownloadActionIcon />} label={translateHeader(currentLanguage, "Download")} onClick={() => handleReportAction(() => exportRows(rows, mode, currentLanguage))} />
+        <MenuAction icon={<FileSpreadsheet />} label={translateHeader(currentLanguage, "Export Excel")} onClick={() => handleReportAction(() => exportRows(rows, mode, currentLanguage))} />
         <MenuAction icon={<PdfActionIcon />} label={translateHeader(currentLanguage, "Export PDF")} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
