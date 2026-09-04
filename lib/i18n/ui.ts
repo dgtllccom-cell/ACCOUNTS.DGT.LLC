@@ -927,6 +927,25 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "plr.bill_summary"
+  | "plr.container_breakdown_for"
+  | "plr.current_entry_weight"
+  | "plr.fully_loaded_100"
+  | "plr.independent_note"
+  | "plr.loaded_qty"
+  | "plr.ph_e_g__bl12345"
+  | "plr.ph_e_g__checking___brand_remarks"
+  | "plr.ph_e_g__msc_alina"
+  | "plr.ph_e_g__mscu1234567"
+  | "plr.ph_e_g__sl998877"
+  | "plr.ph_india"
+  | "plr.ph_passed"
+  | "plr.sec_active_ops"
+  | "plr.sec_branch_user"
+  | "plr.sec_loading_qty"
+  | "plr.select_brand"
+  | "plr.select_size"
+  | "plr.transfer"
   | "ulrp.evt_activity_refresh"
   | "ulrp.evt_assigned_perms"
   | "ulrp.evt_auditable_logged"
@@ -18265,6 +18284,63 @@ const en: Dict = {
 
 
 
+
+
+  "plr.bill_summary": "Bill Summary",
+
+
+  "plr.container_breakdown_for": "Container Shipment Loading Breakdown for",
+
+
+  "plr.current_entry_weight": "Current Entry Weight",
+
+
+  "plr.fully_loaded_100": "100% Fully Loaded",
+
+
+  "plr.independent_note": "Independent from Purchase Booking Order unless explicitly linked.",
+
+
+  "plr.loaded_qty": "Loaded Qty",
+
+
+  "plr.ph_e_g__bl12345": "e.g. BL12345",
+
+
+  "plr.ph_e_g__checking___brand_remarks": "e.g. Checking / brand remarks",
+
+
+  "plr.ph_e_g__msc_alina": "e.g. MSC Alina",
+
+
+  "plr.ph_e_g__mscu1234567": "e.g. MSCU1234567",
+
+
+  "plr.ph_e_g__sl998877": "e.g. SL998877",
+
+
+  "plr.ph_india": "Origin country",
+
+
+  "plr.ph_passed": "Quality result",
+
+
+  "plr.sec_active_ops": "3. Active Operations Summary",
+
+
+  "plr.sec_branch_user": "1. Branch & User Details",
+
+
+  "plr.sec_loading_qty": "4. Loading Qty Summary",
+
+
+  "plr.select_brand": "Select Brand",
+
+
+  "plr.select_size": "Select Size",
+
+
+  "plr.transfer": "Transfer",
   "ulrp.evt_activity_refresh": "System activity refresh",
 
 
@@ -33141,6 +33217,63 @@ const ur: Dict = {
 
 
 
+
+
+  "plr.bill_summary": "بل کا خلاصہ",
+
+
+  "plr.container_breakdown_for": "کنٹینر شپمنٹ لوڈنگ کی تفصیل برائے",
+
+
+  "plr.current_entry_weight": "موجودہ انٹری وزن",
+
+
+  "plr.fully_loaded_100": "100% مکمل لوڈ",
+
+
+  "plr.independent_note": "جب تک واضح طور پر منسلک نہ ہو، خریداری بکنگ آرڈر سے آزاد۔",
+
+
+  "plr.loaded_qty": "لوڈ شدہ مقدار",
+
+
+  "plr.ph_e_g__bl12345": "مثلاً BL12345",
+
+
+  "plr.ph_e_g__checking___brand_remarks": "مثلاً چیکنگ / برانڈ ریمارکس",
+
+
+  "plr.ph_e_g__msc_alina": "مثلاً MSC Alina",
+
+
+  "plr.ph_e_g__mscu1234567": "مثلاً MSCU1234567",
+
+
+  "plr.ph_e_g__sl998877": "مثلاً SL998877",
+
+
+  "plr.ph_india": "اصل ملک",
+
+
+  "plr.ph_passed": "کوالٹی کا نتیجہ",
+
+
+  "plr.sec_active_ops": "3۔ فعال آپریشنز کا خلاصہ",
+
+
+  "plr.sec_branch_user": "1۔ برانچ و صارف کی تفصیلات",
+
+
+  "plr.sec_loading_qty": "4۔ لوڈنگ مقدار کا خلاصہ",
+
+
+  "plr.select_brand": "برانڈ منتخب کریں",
+
+
+  "plr.select_size": "سائز منتخب کریں",
+
+
+  "plr.transfer": "منتقل کریں",
   "ulrp.evt_activity_refresh": "سسٹم سرگرمی ریفریش",
 
 
@@ -48019,6 +48152,63 @@ const ar: Dict = {
 
 
 
+
+
+  "plr.bill_summary": "ملخص الفاتورة",
+
+
+  "plr.container_breakdown_for": "تفصيل تحميل شحنة الحاوية لـ",
+
+
+  "plr.current_entry_weight": "وزن الإدخال الحالي",
+
+
+  "plr.fully_loaded_100": "محمّل بالكامل 100%",
+
+
+  "plr.independent_note": "مستقل عن أمر حجز الشراء ما لم يتم ربطه صراحةً.",
+
+
+  "plr.loaded_qty": "الكمية المحمّلة",
+
+
+  "plr.ph_e_g__bl12345": "مثال: BL12345",
+
+
+  "plr.ph_e_g__checking___brand_remarks": "مثال: فحص / ملاحظات العلامة",
+
+
+  "plr.ph_e_g__msc_alina": "مثال: MSC Alina",
+
+
+  "plr.ph_e_g__mscu1234567": "مثال: MSCU1234567",
+
+
+  "plr.ph_e_g__sl998877": "مثال: SL998877",
+
+
+  "plr.ph_india": "بلد المنشأ",
+
+
+  "plr.ph_passed": "نتيجة الجودة",
+
+
+  "plr.sec_active_ops": "3. ملخص العمليات النشطة",
+
+
+  "plr.sec_branch_user": "1. تفاصيل الفرع والمستخدم",
+
+
+  "plr.sec_loading_qty": "4. ملخص كمية التحميل",
+
+
+  "plr.select_brand": "اختر العلامة التجارية",
+
+
+  "plr.select_size": "اختر الحجم",
+
+
+  "plr.transfer": "نقل",
   "ulrp.evt_activity_refresh": "تحديث نشاط النظام",
 
 
@@ -62896,6 +63086,63 @@ const fa: Dict = {
 
 
 
+
+
+  "plr.bill_summary": "خلاصه صورتحساب",
+
+
+  "plr.container_breakdown_for": "تفکیک بارگیری محموله کانتینر برای",
+
+
+  "plr.current_entry_weight": "وزن ورودی فعلی",
+
+
+  "plr.fully_loaded_100": "۱۰۰٪ کاملاً بارگیری‌شده",
+
+
+  "plr.independent_note": "تا زمانی که به‌صراحت پیوند نخورد، مستقل از سفارش رزرو خرید.",
+
+
+  "plr.loaded_qty": "مقدار بارگیری‌شده",
+
+
+  "plr.ph_e_g__bl12345": "مثلاً BL12345",
+
+
+  "plr.ph_e_g__checking___brand_remarks": "مثلاً بررسی / یادداشت برند",
+
+
+  "plr.ph_e_g__msc_alina": "مثلاً MSC Alina",
+
+
+  "plr.ph_e_g__mscu1234567": "مثلاً MSCU1234567",
+
+
+  "plr.ph_e_g__sl998877": "مثلاً SL998877",
+
+
+  "plr.ph_india": "کشور مبدأ",
+
+
+  "plr.ph_passed": "نتیجه کیفیت",
+
+
+  "plr.sec_active_ops": "3. خلاصه عملیات فعال",
+
+
+  "plr.sec_branch_user": "1. جزئیات شعبه و کاربر",
+
+
+  "plr.sec_loading_qty": "4. خلاصه مقدار بارگیری",
+
+
+  "plr.select_brand": "انتخاب برند",
+
+
+  "plr.select_size": "انتخاب اندازه",
+
+
+  "plr.transfer": "انتقال",
   "ulrp.evt_activity_refresh": "بازآوری فعالیت سیستم",
 
 
@@ -77779,6 +78026,63 @@ const ps: Dict = {
 
 
 
+
+
+  "plr.bill_summary": "د بیل لنډیز",
+
+
+  "plr.container_breakdown_for": "د کانټینر د بار وړلو تفصیل د",
+
+
+  "plr.current_entry_weight": "د اوسني ثبت وزن",
+
+
+  "plr.fully_loaded_100": "۱۰۰٪ بشپړ بار شوی",
+
+
+  "plr.independent_note": "تر هغه چې په ښکاره ونه تړل شي، د پیرود د بکنګ امر څخه خپلواک.",
+
+
+  "plr.loaded_qty": "بار شوی مقدار",
+
+
+  "plr.ph_e_g__bl12345": "لکه BL12345",
+
+
+  "plr.ph_e_g__checking___brand_remarks": "لکه کتنه / د برانډ یادښتونه",
+
+
+  "plr.ph_e_g__msc_alina": "لکه MSC Alina",
+
+
+  "plr.ph_e_g__mscu1234567": "لکه MSCU1234567",
+
+
+  "plr.ph_e_g__sl998877": "لکه SL998877",
+
+
+  "plr.ph_india": "د اصل هېواد",
+
+
+  "plr.ph_passed": "د کیفیت پایله",
+
+
+  "plr.sec_active_ops": "3. د فعالو عملیاتو لنډیز",
+
+
+  "plr.sec_branch_user": "1. د څانګې او کارن توضیحات",
+
+
+  "plr.sec_loading_qty": "4. د بار وړلو د مقدار لنډیز",
+
+
+  "plr.select_brand": "برانډ وټاکئ",
+
+
+  "plr.select_size": "اندازه وټاکئ",
+
+
+  "plr.transfer": "لېږد",
   "ulrp.evt_activity_refresh": "د سیسټم فعالیت تازه کول",
 
 
