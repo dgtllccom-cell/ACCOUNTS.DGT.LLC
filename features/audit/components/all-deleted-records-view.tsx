@@ -19,8 +19,6 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  TrendingDown,
-  TrendingUp,
   History,
   FileSpreadsheet,
   Printer,
@@ -279,10 +277,6 @@ export function AllDeletedRecordsView() {
               <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                 {kpis.deletedToday.toLocaleString()}
               </div>
-              <div className="flex items-center gap-1 text-[10.5px] font-semibold text-rose-600 mt-1">
-                <TrendingDown className="h-3 w-3" />
-                <span>-18.4% vs yesterday</span>
-              </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center shadow-xs">
               <Trash2 className="h-5 w-5" />
@@ -299,10 +293,6 @@ export function AllDeletedRecordsView() {
               </div>
               <div className="text-2xl font-black text-amber-600 mt-1">
                 {kpis.pendingReview.toLocaleString()}
-              </div>
-              <div className="flex items-center gap-1 text-[10.5px] font-semibold text-amber-600 mt-1">
-                <TrendingDown className="h-3 w-3" />
-                <span>-12.6% vs yesterday</span>
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center shadow-xs">
@@ -321,10 +311,6 @@ export function AllDeletedRecordsView() {
               <div className="text-2xl font-black text-rose-700 mt-1">
                 {kpis.highRiskDeletions.toLocaleString()}
               </div>
-              <div className="flex items-center gap-1 text-[10.5px] font-semibold text-rose-600 mt-1">
-                <TrendingUp className="h-3 w-3" />
-                <span>8.9% vs yesterday</span>
-              </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 flex items-center justify-center shadow-xs">
               <ShieldAlert className="h-5 w-5" />
@@ -341,10 +327,6 @@ export function AllDeletedRecordsView() {
               </div>
               <div className="text-2xl font-black text-emerald-600 mt-1">
                 {kpis.restoredRecords.toLocaleString()}
-              </div>
-              <div className="flex items-center gap-1 text-[10.5px] font-semibold text-emerald-600 mt-1">
-                <TrendingUp className="h-3 w-3" />
-                <span>15.6% vs yesterday</span>
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center shadow-xs">
@@ -741,7 +723,7 @@ export function AllDeletedRecordsView() {
         {/* ── PAGINATION CONTROLS ── */}
         <div className="p-3.5 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <div className="text-slate-500 font-medium">
-            Showing <span className="font-bold text-slate-800 dark:text-slate-200">{records.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPage * pageSize, totalCount)}</span> of <span className="font-bold text-slate-800 dark:text-slate-200">{totalCount.toLocaleString()}</span> records
+            {t(lang, "audit.showing_range", "Showing")} <span className="font-bold text-slate-800 dark:text-slate-200">{records.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> {t(lang, "audit.showing_to", "to")} <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPage * pageSize, totalCount)}</span> {t(lang, "audit.showing_of", "of")} <span className="font-bold text-slate-800 dark:text-slate-200">{totalCount.toLocaleString()}</span> {t(lang, "audit.showing_records", "records")}
           </div>
 
           <div className="flex items-center gap-2">
@@ -753,9 +735,9 @@ export function AllDeletedRecordsView() {
               }}
               className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs font-semibold"
             >
-              <option value="25">25 per page</option>
-              <option value="50">50 per page</option>
-              <option value="100">100 per page</option>
+              <option value="25">{t(lang, "audit.per_page_25", "25 per page")}</option>
+              <option value="50">{t(lang, "audit.per_page_50", "50 per page")}</option>
+              <option value="100">{t(lang, "audit.per_page_100", "100 per page")}</option>
             </select>
 
             <div className="flex items-center gap-1">

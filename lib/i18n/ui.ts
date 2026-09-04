@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "audit.per_page_25"
+  | "audit.per_page_50"
+  | "audit.per_page_100"
+  | "audit.showing_range"
+  | "audit.showing_to"
+  | "audit.showing_of"
+  | "audit.showing_records"
   | "mobiledash.activity_title"
   | "mobiledash.real_time"
   | "mobiledash.no_activity"
@@ -18427,6 +18434,20 @@ const en: Dict = {
 
 
 
+
+  "audit.per_page_25": "25 per page",
+
+  "audit.per_page_50": "50 per page",
+
+  "audit.per_page_100": "100 per page",
+
+  "audit.showing_range": "Showing",
+
+  "audit.showing_to": "to",
+
+  "audit.showing_of": "of",
+
+  "audit.showing_records": "records",
   "mobiledash.activity_title": "Live ERP Communication Activity",
 
   "mobiledash.real_time": "Real-time",
@@ -33645,6 +33666,20 @@ const ur: Dict = {
 
 
 
+
+  "audit.per_page_25": "25 فی صفحہ",
+
+  "audit.per_page_50": "50 فی صفحہ",
+
+  "audit.per_page_100": "100 فی صفحہ",
+
+  "audit.showing_range": "دکھایا جا رہا ہے",
+
+  "audit.showing_to": "تا",
+
+  "audit.showing_of": "میں سے",
+
+  "audit.showing_records": "ریکارڈز",
   "mobiledash.activity_title": "لائیو ERP کمیونیکیشن سرگرمی",
 
   "mobiledash.real_time": "ریئل ٹائم",
@@ -48865,6 +48900,20 @@ const ar: Dict = {
 
 
 
+
+  "audit.per_page_25": "25 لكل صفحة",
+
+  "audit.per_page_50": "50 لكل صفحة",
+
+  "audit.per_page_100": "100 لكل صفحة",
+
+  "audit.showing_range": "عرض",
+
+  "audit.showing_to": "إلى",
+
+  "audit.showing_of": "من",
+
+  "audit.showing_records": "سجلات",
   "mobiledash.activity_title": "نشاط اتصالات ERP المباشر",
 
   "mobiledash.real_time": "الوقت الفعلي",
@@ -64084,6 +64133,20 @@ const fa: Dict = {
 
 
 
+
+  "audit.per_page_25": "25 در هر صفحه",
+
+  "audit.per_page_50": "50 در هر صفحه",
+
+  "audit.per_page_100": "100 در هر صفحه",
+
+  "audit.showing_range": "نمایش",
+
+  "audit.showing_to": "تا",
+
+  "audit.showing_of": "از",
+
+  "audit.showing_records": "رکورد",
   "mobiledash.activity_title": "فعالیت ارتباطی زنده ERP",
 
   "mobiledash.real_time": "بی‌درنگ",
@@ -79309,6 +79372,20 @@ const ps: Dict = {
 
 
 
+
+  "audit.per_page_25": "25 هر پاڼه کې",
+
+  "audit.per_page_50": "50 هر پاڼه کې",
+
+  "audit.per_page_100": "100 هر پاڼه کې",
+
+  "audit.showing_range": "ښودل کیږي",
+
+  "audit.showing_to": "تر",
+
+  "audit.showing_of": "د",
+
+  "audit.showing_records": "ریکارډونه",
   "mobiledash.activity_title": "د ERP ژوندۍ اړیکې فعالیت",
 
   "mobiledash.real_time": "ریښتینې وخت",
