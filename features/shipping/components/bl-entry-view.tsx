@@ -595,7 +595,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                     <Field label={_("ble.lbl_booking_company_type", "Booking Company Type *")} value={form.bookingCompanyType} onChange={(v) => updateField("bookingCompanyType", v)} asSelect options={[{ value: "Shipping Line", label: "Shipping Line" }, { value: "Transport Company", label: "Transport Company" }, { value: "Airline", label: "Airline" }]} />
                     <Field label={_("ble.lbl_booking_company_name", "Booking Company Name *")} value={form.bookingCompanyName} onChange={(v) => updateField("bookingCompanyName", v)} />
                     <Field label={_("ble.lbl_booking_date", "Booking Date *")} type="date" value={form.bookingDate} onChange={(v) => updateField("bookingDate", v)} />
-                    <Field label={_("ble.lbl_vessel_name", "Vessel Name *")} value={form.vesselName} onChange={(v) => updateField("vesselName", v)} placeholder="e.g. MSC ATHENS" />
+                    <Field label={_("ble.lbl_vessel_name", "Vessel Name *")} value={form.vesselName} onChange={(v) => updateField("vesselName", v)} placeholder={_("ble.vessel_name_ph", "e.g. MSC ATHENS")} />
                     <Field label={_("ble.lbl_vessel_recharge_date", "Vessel Recharge Date *")} type="date" value={form.eta} onChange={(v) => updateField("eta", v)} />
                   </div>
                   <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">{_("ble.btn_reset", "Reset")}</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(2)}>{_("ble.btn_next", "Next")}</button></div>

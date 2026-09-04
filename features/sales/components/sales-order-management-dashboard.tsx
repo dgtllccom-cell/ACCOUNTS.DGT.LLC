@@ -276,7 +276,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-100"
           >
-            + Create Booking
+            + {t(activeLang, "sales.sodash_create_booking", "Create Booking")}
           </Button>
         </div>
       </div>

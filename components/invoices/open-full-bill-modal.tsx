@@ -331,7 +331,7 @@ export function OpenFullBillModal({
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
-                    Open Full Bill - <span className="font-mono text-blue-600 dark:text-blue-400">{poNumber}</span>
+                    {translateHeader(activeLang, "Open Full Bill -")} <span className="font-mono text-blue-600 dark:text-blue-400">{poNumber}</span>
                   </h2>
                   <span className={cn(
                     "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm",

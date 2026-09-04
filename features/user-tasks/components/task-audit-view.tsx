@@ -43,7 +43,7 @@ export function TaskAuditView({ lang: langProp }: { lang?: string }) {
       { key: (r: any) => fmtDateTime(r.created_at), label: s.t("col_updated", "When") },
       { key: (r: any) => r.task_no || "", label: s.t("col_task_no", "Task No") },
       { key: (r: any) => r.title || "", label: s.t("col_task", "Task") },
-      { key: (r: any) => s.t(`ev_${r.event_type}`, r.event_type.replace(/_/g, " ")), label: "Event" },
+      { key: (r: any) => s.t(`ev_${r.event_type}`, r.event_type.replace(/_/g, " ")), label: s.t("event_col", "Event") },
       { key: (r: any) => [r.from_status, r.to_status].filter(Boolean).join(" → "), label: s.t("col_status", "Status") },
       { key: (r: any) => r.actor_name || "", label: "By" },
       { key: (r: any) => r.assignee_name || "", label: s.t("col_assignee", "Assignee") },
@@ -115,9 +115,9 @@ export function TaskAuditView({ lang: langProp }: { lang?: string }) {
                 <tr>
                   <th className="px-3 py-2 text-start font-semibold">{s.t("col_updated", "When")}</th>
                   <th className="px-3 py-2 text-start font-semibold">{s.t("col_task", "Task")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">Event</th>
+                  <th className="px-3 py-2 text-start font-semibold">{s.t("event_col", "Event")}</th>
                   <th className="px-3 py-2 text-start font-semibold">{s.t("col_status", "Status")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">By</th>
+                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_by", "By")}</th>
                   <th className="px-3 py-2 text-start font-semibold">{s.t("col_assignee", "Assignee")}</th>
                   <th className="px-3 py-2 text-start font-semibold">{s.t("f_remarks", "Remarks")}</th>
                 </tr>

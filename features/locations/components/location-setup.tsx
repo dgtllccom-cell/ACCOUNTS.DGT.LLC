@@ -292,7 +292,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
     <div className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{tt("common.settings", "Settings")}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{tt("locsetup.title", "Location Management")}</h1>
           <p className="text-sm text-muted-foreground">
             {tt("locsetup.subtitle", "Centralized Country → State/Province → City → Area master data. Create once, reuse everywhere.")}

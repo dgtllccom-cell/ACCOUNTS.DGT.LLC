@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DocumentManagerModal } from "./document-manager-modal";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 interface DocumentAttachmentIconProps {
   entityType: string;
@@ -20,6 +22,7 @@ export function DocumentAttachmentIcon({
 }: DocumentAttachmentIconProps) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number | null>(initialCount ?? null);
+  const lang = useActiveLanguage();
 
   // If initialCount is not provided, fetch it (lazy load)
   useEffect(() => {
@@ -53,7 +56,7 @@ export function DocumentAttachmentIcon({
             : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
           className
         )}
-        title="Manage Attachments"
+        title={t(lang, "dai.manage_attachments", "Manage Attachments")}
       >
         <Paperclip className="h-3.5 w-3.5" />
         {displayCount > 0 && <span>{displayCount}</span>}

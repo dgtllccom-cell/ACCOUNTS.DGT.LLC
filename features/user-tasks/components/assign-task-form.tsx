@@ -132,7 +132,7 @@ export function AssignTaskForm({ s, onClose, onCreated }: { s: S; onClose: () =>
           <div>
             <label className={labelCls}>{s.t("f_record", "Related Record / Entry")}</label>
             <input className={inputCls} value={form.relatedRecordLabel} onChange={(e) => set("relatedRecordLabel", e.target.value)}
-              placeholder="e.g. PO-2026-0123 / Bill No / Contract No" maxLength={240} />
+              placeholder={s.t("related_ref_ph", "e.g. PO-2026-0123 / Bill No / Contract No")} maxLength={240} />
           </div>
         )}
 

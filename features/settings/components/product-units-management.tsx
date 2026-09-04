@@ -200,23 +200,23 @@ export function ProductUnitsManagementView({ lang }: { lang: SupportedLanguage }
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Product Units Report"
-        subtitle="Master Unit of Measurement Registry"
+        title={t(lang, "pu.report_title", "Product Units Report")}
+        subtitle={t(lang, "pu.report_subtitle", "Master Unit of Measurement Registry")}
         exportFileName="product_units_report"
-        filters={[{ label: "Search", value: query || "All" }]}
+        filters={[{ label: t(lang, "common.search", "Search"), value: query || t(lang, "common.all", "All") }]}
         columns={[
-          { key: "unitCode", label: "Unit Code" },
-          { key: "unitName", label: "Unit Name" },
-          { key: "baseUnitCode", label: "Base Unit Code" },
-          { key: "conversionFactor", label: "Conversion Factor", align: "right", isNumeric: true },
-          { key: "status", label: "Status", align: "center" }
+          { key: "unitCode", label: t(lang, "pu.code", "Unit Code") },
+          { key: "unitName", label: t(lang, "pu.name", "Unit Name") },
+          { key: "baseUnitCode", label: t(lang, "pu.base_code", "Base Unit Code") },
+          { key: "conversionFactor", label: t(lang, "pu.factor", "Conversion Factor"), align: "right", isNumeric: true },
+          { key: "status", label: t(lang, "common.status", "Status"), align: "center" }
         ]}
         data={filtered.map(u => ({
           unitCode: u.unitCode,
           unitName: u.unitName,
           baseUnitCode: u.baseUnitCode || "-",
           conversionFactor: u.conversionFactor,
-          status: u.isActive ? "Active" : "Inactive"
+          status: u.isActive ? t(lang, "pu.active", "Active") : t(lang, "pu.inactive", "Inactive")
         }))}
       />
     </div>

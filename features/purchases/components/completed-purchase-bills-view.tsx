@@ -85,8 +85,9 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
     
     const manualBillNo = String(form.manualBillNumber || form.billNo || row.purchase_contract_no || "-");
     const supplierName = String(form.salesAccountName || form.supplierName || "Supplier");
-    const countryName = String(row.countries?.name || form.originCountry || "UAE");
-    const branchName = String(row.country_branches?.name || form.branchName || "Main Branch");
+    const countryName = String(row.countries?.name || form.originCountry || "—");
+    const branchName = String(row.country_branches?.name || form.branchName || "—");
+    const localCurrency = String(row.countries?.currency_code || row.currency_code || "AED");
 
     const contractQty = goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || 0), 0) || Number(form.qtyNo || 0);
     const unitLabel = String(form.qtyName || goods?.[0]?.qtyName || "Bags");
@@ -108,6 +109,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
       supplierName,
       countryName,
       branchName,
+      localCurrency,
       contractQty,
       loadedQty,
       unitLabel,
@@ -163,7 +165,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
           </tr>
           <tr>
             <Th>${t(lang, "cpb.th_bl_numbers", "B/L Number(s)")}</Th><td>${details.blNumbers}</td>
-            <Th>${t(lang, "cpb.th_exchange_rate", "Exchange Rate")}</Th><td>1 USD = ${details.exRate.toFixed(2)} AED/PKR</td>
+            <Th>${t(lang, "cpb.th_exchange_rate", "Exchange Rate")}</Th><td>1 USD = ${details.exRate.toFixed(2)} ${details.localCurrency}</td>
           </tr>
           <tr>
             <Th>${t(lang, "cpb.th_contract_quantity", "Contract Quantity")}</Th><td>${details.contractQty.toLocaleString()} ${details.unitLabel}</td>
@@ -179,10 +181,10 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
           <table style="margin: 0; border: none;">
             <tr style="border: none;">
               <td style="border: none; font-size: 13px; font-weight: bold;">Total Purchase Amount (USD): $${details.purchaseAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-              <td style="border: none; font-size: 13px; font-weight: bold; text-align: right; color: #047857;">Total Paid: ${details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</td>
+              <td style="border: none; font-size: 13px; font-weight: bold; text-align: right; color: #047857;">Total Paid: ${details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${details.localCurrency}</td>
             </tr>
             <tr style="border: none;">
-              <td style="border: none; font-size: 13px; font-weight: bold; color: #047857;" colSpan="2">Remaining Balance: 0.00 AED (FULLY CLEARED)</td>
+              <td style="border: none; font-size: 13px; font-weight: bold; color: #047857;" colSpan="2">Remaining Balance: 0.00 ${details.localCurrency} (FULLY CLEARED)</td>
             </tr>
           </table>
         </div>
@@ -209,8 +211,8 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
       `Contract Qty: ${details.contractQty.toLocaleString()} ${details.unitLabel}\n` +
       `Loaded Qty: ${details.loadedQty.toLocaleString()} ${details.unitLabel}\n` +
       `Purchase Amount: $${details.purchaseAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}\n` +
-      `Total Paid: ${details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED\n` +
-      `Remaining Balance: 0.00 AED (FULLY PAID)\n` +
+      `Total Paid: ${details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${details.localCurrency}\n` +
+      `Remaining Balance: 0.00 ${details.localCurrency} (FULLY PAID)\n` +
       `Completed Date: ${details.completedAt}\n` +
       `Completed By: ${details.completedBy}`;
 
@@ -229,8 +231,8 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
       `Contract Quantity: ${details.contractQty.toLocaleString()} ${details.unitLabel}\n` +
       `Loaded Quantity: ${details.loadedQty.toLocaleString()} ${details.unitLabel}\n` +
       `Purchase Amount (USD): $${details.purchaseAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}\n` +
-      `Total Paid: ${details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED\n` +
-      `Remaining Balance: 0.00 AED\n\n` +
+      `Total Paid: ${details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${details.localCurrency}\n` +
+      `Remaining Balance: 0.00 ${details.localCurrency}\n\n` +
       `Completion Date: ${details.completedAt}\n` +
       `Completed By: ${details.completedBy}`;
 
@@ -308,7 +310,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
               { key: "branch", label: tt("cpb.country_branch", "Country & Branch"), align: "left" },
               { key: "loadedQty", label: tt("cpb.loaded_qty", "Loaded Qty"), align: "right" },
               { key: "purchaseAmountUSD", label: tt("cpb.col_purchase_usd", "Purchase ($)"), align: "right", format: "currency" },
-              { key: "totalPaidAED", label: tt("cpb.total_paid", "Total Paid (AED)"), align: "right", format: "currency" },
+              { key: "totalPaidAED", label: tt("cpb.total_paid_generic", "Total Paid"), align: "right", format: "currency" },
               { key: "completionDate", label: tt("cpb.completion_date", "Completion Date"), align: "center" }
             ]}
             rows={completedBills.map((row) => {
@@ -422,7 +424,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500">{t(lang, "cpb.f_payments_balance", "Payments & Balance:")}</span>
-              <span className="font-bold text-emerald-600">✓ 0.00 AED / USD (100% Paid)</span>
+              <span className="font-bold text-emerald-600">✓ {t(lang, "cpb.fully_paid_100pct", "100% Paid")}</span>
             </div>
             <div className="mt-2 text-[10px] text-center py-1.5 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-slate-500">
               {t(lang, "cpb.archived_note", "Archived for permanent record audit")}
@@ -505,11 +507,11 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
                       <div className="text-[9.5px] text-slate-400">@ {details.exRate.toFixed(2)}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">
-                      {details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED
+                      {details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {details.localCurrency}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
-                        0.00 AED
+                        0.00 {details.localCurrency}
                       </span>
                     </td>
                     <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">

@@ -332,7 +332,7 @@ function NotificationsPanel({
       <div dir={s.dir} className="h-full w-full max-w-sm overflow-y-auto bg-white p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-sm font-bold text-slate-700"><Bell className="h-4 w-4" /> {s.t("notif_title", "Task Notifications")}</h2>
-          <button onClick={onClose} aria-label="Close" className="rounded p-1 text-slate-400 hover:bg-slate-100"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} aria-label={s.tGlobal("common.close", "Close")} className="rounded p-1 text-slate-400 hover:bg-slate-100"><X className="h-4 w-4" /></button>
         </div>
         <button onClick={onMarkAll} className="mb-2 text-[11px] font-semibold text-indigo-600 hover:underline">{s.t("mark_all_read", "Mark all read")}</button>
         <ul className="divide-y divide-slate-100">

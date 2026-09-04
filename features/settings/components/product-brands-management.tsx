@@ -183,21 +183,21 @@ export function ProductBrandsManagementView({ lang }: { lang: SupportedLanguage 
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Product Brands Report"
-        subtitle="Master Brand Registry"
+        title={t(lang, "pb.report_title", "Product Brands Report")}
+        subtitle={t(lang, "pb.report_subtitle", "Master Brand Registry")}
         exportFileName="product_brands_report"
-        filters={[{ label: "Search", value: query || "All" }]}
+        filters={[{ label: t(lang, "common.search", "Search"), value: query || t(lang, "common.all", "All") }]}
         columns={[
-          { key: "brandCode", label: "Brand Code" },
-          { key: "brandName", label: "Brand Name" },
-          { key: "description", label: "Description" },
-          { key: "status", label: "Status", align: "center" }
+          { key: "brandCode", label: t(lang, "pb.code", "Brand Code") },
+          { key: "brandName", label: t(lang, "pb.name", "Brand Name") },
+          { key: "description", label: t(lang, "pb.description", "Description") },
+          { key: "status", label: t(lang, "common.status", "Status"), align: "center" }
         ]}
         data={filtered.map(b => ({
           brandCode: b.brandCode || "-",
           brandName: b.brandName,
           description: b.description || "-",
-          status: b.isActive ? "Active" : "Inactive"
+          status: b.isActive ? t(lang, "pb.active", "Active") : t(lang, "pb.inactive", "Inactive")
         }))}
       />
     </div>

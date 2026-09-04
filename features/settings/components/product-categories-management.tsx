@@ -183,21 +183,21 @@ export function ProductCategoriesManagementView({ lang }: { lang: SupportedLangu
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Product Categories Report"
-        subtitle="Master Product Category Classification"
+        title={t(lang, "pc.report_title", "Product Categories Report")}
+        subtitle={t(lang, "pc.report_subtitle", "Master Product Category Classification")}
         exportFileName="product_categories_report"
-        filters={[{ label: "Search", value: query || "All" }]}
+        filters={[{ label: t(lang, "common.search", "Search"), value: query || t(lang, "common.all", "All") }]}
         columns={[
-          { key: "categoryCode", label: "Category Code" },
-          { key: "categoryName", label: "Category Name" },
-          { key: "description", label: "Description" },
-          { key: "status", label: "Status", align: "center" }
+          { key: "categoryCode", label: t(lang, "pc.code", "Category Code") },
+          { key: "categoryName", label: t(lang, "pc.name", "Category Name") },
+          { key: "description", label: t(lang, "pc.description", "Description") },
+          { key: "status", label: t(lang, "common.status", "Status"), align: "center" }
         ]}
         data={filtered.map(c => ({
           categoryCode: c.categoryCode || "-",
           categoryName: c.categoryName,
           description: c.description || "-",
-          status: c.isActive ? "Active" : "Inactive"
+          status: c.isActive ? t(lang, "pc.active", "Active") : t(lang, "pc.inactive", "Inactive")
         }))}
       />
     </div>

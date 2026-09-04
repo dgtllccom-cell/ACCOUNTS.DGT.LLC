@@ -57,7 +57,7 @@ export function FiltersBar({ filters, onFilterChange, session, accounts }: Props
           <label className="text-[10px] text-muted-foreground w-16 flex-shrink-0">{tt("wa.country_label", "Country")}</label>
           <input
             type="text"
-            placeholder="Country ID"
+            placeholder={tt("wa.country_id_ph", "Country ID")}
             value={filters.countryId ?? ""}
             onChange={(e) => onFilterChange({ countryId: e.target.value || undefined })}
             className="flex-1 rounded border border-input bg-background px-2 py-1 text-[10px] placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#25D366]/50"

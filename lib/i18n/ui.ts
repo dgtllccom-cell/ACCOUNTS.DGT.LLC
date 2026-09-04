@@ -927,6 +927,28 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "ble.vessel_name_ph"
+  | "dintake.containers_ph"
+  | "utask.related_ref_ph"
+  | "utask.event_col"
+  | "utask.col_by"
+  | "wa.country_id_ph"
+  | "wa.image_alt"
+  | "dai.manage_attachments"
+  | "pb.report_title"
+  | "pb.report_subtitle"
+  | "pb.inactive"
+  | "pc.report_title"
+  | "pc.report_subtitle"
+  | "pc.inactive"
+  | "pu.report_title"
+  | "pu.report_subtitle"
+  | "pu.base_code"
+  | "pu.inactive"
+  | "sales.sodash_create_booking"
+  | "cpb.total_paid_generic"
+  | "cpb.fully_paid_100pct"
+  | "rp.delete_view"
   | "cpage.tabs_aria"
   | "prr.rows"
   | "prr.awaiting_data"
@@ -19049,6 +19071,74 @@ const en: Dict = {
 
 
 
+
+
+  "ble.vessel_name_ph": "e.g. MSC ATHENS",
+
+
+  "dintake.containers_ph": "MSCU1234567, TGHU7654321",
+
+
+  "utask.related_ref_ph": "e.g. PO-2026-0123 / Bill No / Contract No",
+
+
+  "utask.event_col": "Event",
+
+
+  "utask.col_by": "By",
+
+
+
+
+  "wa.country_id_ph": "Country ID",
+
+
+  "wa.image_alt": "Image",
+
+
+  "dai.manage_attachments": "Manage Attachments",
+
+
+  "pb.report_title": "Product Brands Report",
+
+
+  "pb.report_subtitle": "Master Brand Registry",
+
+
+  "pb.inactive": "Inactive",
+
+
+  "pc.report_title": "Product Categories Report",
+
+
+  "pc.report_subtitle": "Master Product Category Classification",
+
+
+  "pc.inactive": "Inactive",
+
+
+  "pu.report_title": "Product Units Report",
+
+
+  "pu.report_subtitle": "Master Unit of Measurement Registry",
+
+
+  "pu.base_code": "Base Unit Code",
+
+
+  "pu.inactive": "Inactive",
+
+
+  "sales.sodash_create_booking": "Create Booking",
+
+
+  "cpb.total_paid_generic": "Total Paid",
+
+
+  "cpb.fully_paid_100pct": "100% Paid",
+
+
+  "rp.delete_view": "Delete view",
   "cpage.tabs_aria": "Tabs",
 
 
@@ -35449,6 +35539,74 @@ const ur: Dict = {
 
 
 
+
+
+  "ble.vessel_name_ph": "مثلاً MSC ATHENS",
+
+
+  "dintake.containers_ph": "مثلاً MSCU1234567, TGHU7654321",
+
+
+  "utask.related_ref_ph": "مثلاً PO-2026-0123 / بل نمبر / کنٹریکٹ نمبر",
+
+
+  "utask.event_col": "ایونٹ",
+
+
+  "utask.col_by": "بذریعہ",
+
+
+
+
+  "wa.country_id_ph": "کنٹری آئی ڈی",
+
+
+  "wa.image_alt": "تصویر",
+
+
+  "dai.manage_attachments": "منسلکات کا نظم کریں",
+
+
+  "pb.report_title": "پروڈکٹ برانڈز رپورٹ",
+
+
+  "pb.report_subtitle": "ماسٹر برانڈ رجسٹری",
+
+
+  "pb.inactive": "غیر فعال",
+
+
+  "pc.report_title": "پروڈکٹ کیٹگریز رپورٹ",
+
+
+  "pc.report_subtitle": "ماسٹر پروڈکٹ کیٹگری کی درجہ بندی",
+
+
+  "pc.inactive": "غیر فعال",
+
+
+  "pu.report_title": "پروڈکٹ یونٹس رپورٹ",
+
+
+  "pu.report_subtitle": "ماسٹر یونٹ آف میژرمنٹ رجسٹری",
+
+
+  "pu.base_code": "بیس یونٹ کوڈ",
+
+
+  "pu.inactive": "غیر فعال",
+
+
+  "sales.sodash_create_booking": "بکنگ بنائیں",
+
+
+  "cpb.total_paid_generic": "کل ادا شدہ",
+
+
+  "cpb.fully_paid_100pct": "100% ادا شدہ",
+
+
+  "rp.delete_view": "ویو حذف کریں",
   "cpage.tabs_aria": "ٹیبز",
 
 
@@ -51851,6 +52009,74 @@ const ar: Dict = {
 
 
 
+
+
+  "ble.vessel_name_ph": "مثال: MSC ATHENS",
+
+
+  "dintake.containers_ph": "مثال: MSCU1234567, TGHU7654321",
+
+
+  "utask.related_ref_ph": "مثال: PO-2026-0123 / رقم الفاتورة / رقم العقد",
+
+
+  "utask.event_col": "الحدث",
+
+
+  "utask.col_by": "بواسطة",
+
+
+
+
+  "wa.country_id_ph": "معرّف الدولة",
+
+
+  "wa.image_alt": "صورة",
+
+
+  "dai.manage_attachments": "إدارة المرفقات",
+
+
+  "pb.report_title": "تقرير علامات المنتجات التجارية",
+
+
+  "pb.report_subtitle": "سجل العلامات التجارية الرئيسي",
+
+
+  "pb.inactive": "غير نشط",
+
+
+  "pc.report_title": "تقرير فئات المنتجات",
+
+
+  "pc.report_subtitle": "تصنيف فئات المنتجات الرئيسي",
+
+
+  "pc.inactive": "غير نشط",
+
+
+  "pu.report_title": "تقرير وحدات المنتجات",
+
+
+  "pu.report_subtitle": "سجل وحدات القياس الرئيسي",
+
+
+  "pu.base_code": "رمز الوحدة الأساسية",
+
+
+  "pu.inactive": "غير نشط",
+
+
+  "sales.sodash_create_booking": "إنشاء حجز",
+
+
+  "cpb.total_paid_generic": "إجمالي المدفوع",
+
+
+  "cpb.fully_paid_100pct": "مدفوع 100%",
+
+
+  "rp.delete_view": "حذف العرض",
   "cpage.tabs_aria": "علامات التبويب",
 
 
@@ -68252,6 +68478,74 @@ const fa: Dict = {
 
 
 
+
+
+  "ble.vessel_name_ph": "مثلاً MSC ATHENS",
+
+
+  "dintake.containers_ph": "مثلاً MSCU1234567, TGHU7654321",
+
+
+  "utask.related_ref_ph": "مثلاً PO-2026-0123 / شماره صورتحساب / شماره قرارداد",
+
+
+  "utask.event_col": "رویداد",
+
+
+  "utask.col_by": "توسط",
+
+
+
+
+  "wa.country_id_ph": "شناسه کشور",
+
+
+  "wa.image_alt": "تصویر",
+
+
+  "dai.manage_attachments": "مدیریت پیوست‌ها",
+
+
+  "pb.report_title": "گزارش برندهای محصول",
+
+
+  "pb.report_subtitle": "دفتر اصلی برندها",
+
+
+  "pb.inactive": "غیرفعال",
+
+
+  "pc.report_title": "گزارش دسته‌های محصول",
+
+
+  "pc.report_subtitle": "طبقه‌بندی اصلی دسته‌های محصول",
+
+
+  "pc.inactive": "غیرفعال",
+
+
+  "pu.report_title": "گزارش واحدهای محصول",
+
+
+  "pu.report_subtitle": "دفتر اصلی واحدهای اندازه‌گیری",
+
+
+  "pu.base_code": "کد واحد پایه",
+
+
+  "pu.inactive": "غیرفعال",
+
+
+  "sales.sodash_create_booking": "ایجاد رزرو",
+
+
+  "cpb.total_paid_generic": "کل پرداختی",
+
+
+  "cpb.fully_paid_100pct": "100% پرداخت‌شده",
+
+
+  "rp.delete_view": "حذف نما",
   "cpage.tabs_aria": "برگه‌ها",
 
 
@@ -84659,6 +84953,74 @@ const ps: Dict = {
 
 
 
+
+
+  "ble.vessel_name_ph": "بېلګه: MSC ATHENS",
+
+
+  "dintake.containers_ph": "بېلګه: MSCU1234567, TGHU7654321",
+
+
+  "utask.related_ref_ph": "بېلګه: PO-2026-0123 / د بیل شمېره / د تړون شمېره",
+
+
+  "utask.event_col": "پېښه",
+
+
+  "utask.col_by": "لخوا",
+
+
+
+
+  "wa.country_id_ph": "د هیواد پېژندنه",
+
+
+  "wa.image_alt": "انځور",
+
+
+  "dai.manage_attachments": "ضمیمې اداره کړئ",
+
+
+  "pb.report_title": "د محصول نښو راپور",
+
+
+  "pb.report_subtitle": "د ماسټر نښو راجستر",
+
+
+  "pb.inactive": "غیرفعال",
+
+
+  "pc.report_title": "د محصول کټګوریو راپور",
+
+
+  "pc.report_subtitle": "د محصول کټګورۍ ماسټر طبقه‌بندي",
+
+
+  "pc.inactive": "غیرفعال",
+
+
+  "pu.report_title": "د محصول واحدونو راپور",
+
+
+  "pu.report_subtitle": "د اندازه کولو واحد ماسټر راجستر",
+
+
+  "pu.base_code": "د بنسټیز واحد کوډ",
+
+
+  "pu.inactive": "غیرفعال",
+
+
+  "sales.sodash_create_booking": "بکینګ جوړول",
+
+
+  "cpb.total_paid_generic": "ټول تادیه شوی",
+
+
+  "cpb.fully_paid_100pct": "100% تادیه شوی",
+
+
+  "rp.delete_view": "لیدنه ړنګول",
   "cpage.tabs_aria": "ټبونه",
 
 

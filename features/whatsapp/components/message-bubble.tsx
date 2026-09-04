@@ -21,6 +21,7 @@ function DeliveryIcon({ status }: { status: WhatsAppMessage["status"] }) {
 }
 
 function MediaPreview({ message }: { message: WhatsAppMessage }) {
+  const lang = useActiveLanguage();
   const type = message.messageType;
   if (type === "image") {
     if (message.mediaUrl) {
@@ -29,7 +30,7 @@ function MediaPreview({ message }: { message: WhatsAppMessage }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={message.mediaUrl}
-            alt="Image"
+            alt={t(lang, "wa.image_alt", "Image")}
             className="max-h-48 max-w-[240px] rounded-lg object-cover"
           />
         </div>

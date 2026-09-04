@@ -181,7 +181,7 @@ function NewHandoverDrawer({ s, agents, pos, onClose, onDone }: { s: ReturnType<
             </select>
           </L>
           <L label={s.t("bh_f_containers", "Containers (optional)")}>
-            <input value={containers} onChange={(e) => setContainers(e.target.value)} className={INP} placeholder="MSCU1234567, TGHU7654321" />
+            <input value={containers} onChange={(e) => setContainers(e.target.value)} className={INP} placeholder={s.t("containers_ph", "MSCU1234567, TGHU7654321")} />
           </L>
         </div>
         <div className="mt-5 flex gap-2">

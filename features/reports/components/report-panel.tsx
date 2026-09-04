@@ -715,7 +715,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                     {Object.keys(savedViews).map((name) => (
                       <span key={name} className="inline-flex items-center rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-[10px] font-bold text-blue-700 dark:text-blue-300">
                         <button type="button" onClick={() => applySavedView(name)} className="px-1.5 py-0.5 hover:underline">{name}</button>
-                        <button type="button" onClick={() => deleteSavedView(name)} className="px-1 text-blue-400 hover:text-red-500" aria-label="delete view">×</button>
+                        <button type="button" onClick={() => deleteSavedView(name)} className="px-1 text-blue-400 hover:text-red-500" aria-label={t(lang, "rp.delete_view", "Delete view")}>×</button>
                       </span>
                     ))}
                   </div>

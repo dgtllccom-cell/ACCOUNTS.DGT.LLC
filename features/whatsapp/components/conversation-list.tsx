@@ -103,7 +103,7 @@ export function ConversationList({
         <button
           onClick={() => setShowFilters((v) => !v)}
           className={`px-2 py-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors border-b-2 ${showFilters ? "border-[#25D366] text-[#25D366]" : "border-transparent"}`}
-          title="Advanced filters"
+          title={tt("wa.advanced_filters", "Advanced filters")}
         >
           <Filter className="h-3 w-3" />
         </button>

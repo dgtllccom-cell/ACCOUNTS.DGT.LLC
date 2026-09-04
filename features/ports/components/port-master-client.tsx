@@ -465,7 +465,7 @@ export function PortMasterClient({
               {/* Country Selection */}
               <div className="space-y-1.5">
                 <SearchSelect
-                  label="Country"
+                  label={tt("common.country", "Country")}
                   value={formCountryId}
                   placeholder={tt("port.select_country_optional","Select Country (Optional)")}
                   options={countries.map((c) => ({ value: c.id, label: c.name, keywords: c.name }))}
