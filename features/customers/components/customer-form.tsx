@@ -731,7 +731,7 @@ export function CustomerForm({
                   <div className="flex flex-col items-center w-max gap-2 mt-2">
                     {passportPicture ? (
                       <div className="relative h-16 w-16 overflow-hidden rounded-full border shadow-sm">
-                        <img src={passportPicture} alt="Passport" className="h-full w-full object-cover" />
+                        <img src={passportPicture} alt={getLabel("passportSizePicture", lang)} className="h-full w-full object-cover" />
                         <button
                           type="button"
                           onClick={() => setPassportPicture("")}
@@ -1155,7 +1155,7 @@ export function CustomerForm({
               </p>
               <div className="flex items-center gap-3">
                 {passportPicture && (
-                  <img src={passportPicture} alt="Passport" className="h-10 w-10 rounded-full border shadow-sm object-cover" />
+                  <img src={passportPicture} alt={getLabel("passportSizePicture", lang)} className="h-10 w-10 rounded-full border shadow-sm object-cover" />
                 )}
                 <p className="text-sm font-extrabold text-slate-900">
                   {firstName || lastName ? `${firstName} ${lastName}`.trim() : getLabel("newCustomer", lang)}

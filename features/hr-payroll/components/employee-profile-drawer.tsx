@@ -255,31 +255,31 @@ export function EmployeeProfileDrawer({
           {/* 4-Level Serial Numbers Card */}
           <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800">
             <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
-              4-Level ERP Serial Tracking
+              {t(lang, "epd.serial_tracking_title", "4-Level ERP Serial Tracking")}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">1. Super Admin</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_super_admin", "1. Super Admin")}</div>
                 <div className="font-mono font-extrabold text-slate-900 dark:text-slate-100 truncate mt-0.5">
-                  {emp.super_admin_serial || emp.employee_code}
+                  {emp.super_admin_serial || emp.employee_code || "—"}
                 </div>
               </div>
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">2. Country Serial</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_country", "2. Country Serial")}</div>
                 <div className="font-mono font-extrabold text-blue-600 dark:text-blue-400 truncate mt-0.5">
-                  {emp.country_serial || `CS-${emp.employee_code?.slice(-4) || "0001"}`}
+                  {emp.country_serial || "—"}
                 </div>
               </div>
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">3. Branch Serial</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_branch", "3. Branch Serial")}</div>
                 <div className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 truncate mt-0.5">
-                  {emp.branch_serial || `BS-${emp.employee_code?.slice(-4) || "0001"}`}
+                  {emp.branch_serial || "—"}
                 </div>
               </div>
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">4. Entry Serial</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_entry", "4. Entry Serial")}</div>
                 <div className="font-mono font-extrabold text-purple-600 dark:text-purple-400 truncate mt-0.5">
-                  {emp.entry_serial || `ES-${emp.employee_code?.slice(-4) || "0001"}`}
+                  {emp.entry_serial || "—"}
                 </div>
               </div>
             </div>

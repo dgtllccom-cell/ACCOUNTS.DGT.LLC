@@ -339,7 +339,7 @@ export function ExpensesBillEntryForm({
 
   const saveNewTax = async () => {
     if (!newTaxForm.taxName || !newTaxForm.taxPct || !newTaxForm.countryName) {
-      alert("Please fill all tax fields");
+      alert(tt("ebef.alert_fill_tax_fields", "Please fill all tax fields"));
       return;
     }
     
@@ -394,7 +394,7 @@ export function ExpensesBillEntryForm({
 
   const handleGeneratePdf = (styleId: 1 | 2) => {
     if (rows.length === 0) {
-      alert("Please add some rows to the bill first.");
+      alert(tt("ebef.alert_add_rows_first", "Please add some rows to the bill first."));
       return;
     }
     setPrintStyle(styleId);
@@ -432,7 +432,7 @@ export function ExpensesBillEntryForm({
         window.open(pdfUrl, '_blank');
       } catch (err) {
         console.error("PDF generation failed:", err);
-        alert("Failed to generate PDF. Please try again.");
+        alert(tt("ebef.alert_pdf_failed", "Failed to generate PDF. Please try again."));
       }
     }, 100);
   };
@@ -473,7 +473,7 @@ export function ExpensesBillEntryForm({
         window.open(pdfUrl, '_blank');
       } catch (err) {
         console.error("PDF generation failed:", err);
-        alert("Failed to generate PDF. Please try again.");
+        alert(tt("ebef.alert_pdf_failed", "Failed to generate PDF. Please try again."));
       }
     }, 100);
   };
@@ -516,11 +516,11 @@ export function ExpensesBillEntryForm({
 
   const handleTransfer = async () => {
     if (!debitLedgerId || !creditLedgerId) {
-      alert("Please select both Debit and Credit ledgers");
+      alert(tt("ebef.alert_select_debit_credit", "Please select both Debit and Credit ledgers"));
       return;
     }
     if (debitLedgerId === creditLedgerId) {
-      alert("Debit and Credit ledgers cannot be the same");
+      alert(tt("ebef.alert_debit_credit_same", "Debit and Credit ledgers cannot be the same"));
       return;
     }
     setTransferring(true);
@@ -530,7 +530,7 @@ export function ExpensesBillEntryForm({
         debitLedgerId,
         creditLedgerId
       });
-      alert("Successfully transferred to Roznamcha!");
+      alert(tt("ebef.alert_transfer_success", "Successfully transferred to Roznamcha!"));
       setTransferBill(null);
       setDebitLedgerId("");
       setCreditLedgerId("");
@@ -544,7 +544,7 @@ export function ExpensesBillEntryForm({
 
   const handleEditBill = (bill: any) => {
     if (bill.transferred_to_roznamcha) {
-      alert("Cannot edit a bill that has already been transferred to Roznamcha.");
+      alert(tt("ebef.alert_cannot_edit_transferred", "Cannot edit a bill that has already been transferred to Roznamcha."));
       return;
     }
     setEditingBillId(bill.id);
@@ -718,26 +718,26 @@ export function ExpensesBillEntryForm({
 
   const addRow = () => {
     if (!headerLocked) {
-      alert("Please Lock the Header first.");
+      alert(tt("ebef.alert_lock_header_first", "Please Lock the Header first."));
       return;
     }
     const cleanRef = (referenceNo || "").trim();
     const cleanDetails = (details || "").trim();
 
     if (billMode === "attached" && !cleanRef) {
-      alert("Linked Reference No is required for attached bills.");
+      alert(tt("ebef.alert_linked_ref_required", "Linked Reference No is required for attached bills."));
       return;
     }
     if (!cleanDetails) {
-      alert("Enter details for the bill.");
+      alert(tt("ebef.alert_enter_bill_details", "Enter details for the bill."));
       return;
     }
     if (finalAmount <= 0) {
-      alert("Final amount must be greater than 0. Check Qty, Unit Price and FX rate.");
+      alert(tt("ebef.alert_final_amount_zero", "Final amount must be greater than 0. Check Qty, Unit Price and FX rate."));
       return;
     }
     if (taxOn && (taxPct === "" || isNaN(Number(taxPct)))) {
-      alert("Enter a valid Tax %");
+      alert(tt("ebef.alert_valid_tax_pct", "Enter a valid Tax %"));
       return;
     }
 
@@ -793,7 +793,7 @@ export function ExpensesBillEntryForm({
 
   const handleSaveToDatabase = async () => {
     if (!branch) {
-      alert("Please select a City Branch first.");
+      alert(tt("ebef.alert_select_city_branch", "Please select a City Branch first."));
       return;
     }
     setSaving(true);
@@ -1370,7 +1370,7 @@ export function ExpensesBillEntryForm({
 
             <div className="w-32 space-y-1">
               <Label className="text-xs font-black text-slate-800">{tt("exp.total_incl_tax", "Total (Incl. Tax)")}</Label>
-              <Input readOnly value={grandAmount.toFixed(2)} onKeyDown={handleKeyDown} className="bg-primary/5 border-primary/20 text-right font-mono font-bold text-primary cursor-pointer focus:ring-2 focus:ring-primary" title="Press Enter to Add Row" />
+              <Input readOnly value={grandAmount.toFixed(2)} onKeyDown={handleKeyDown} className="bg-primary/5 border-primary/20 text-right font-mono font-bold text-primary cursor-pointer focus:ring-2 focus:ring-primary" title={tt("ebef.press_enter_add_row", "Press Enter to Add Row")} />
             </div>
 
             {/* Submit */}
@@ -1548,7 +1548,7 @@ export function ExpensesBillEntryForm({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs text-slate-500 font-bold">{tt("exp.tax_name", "Tax Name")}</Label>
-            <Input placeholder="e.g. VAT, GST" value={newTaxForm.taxName} onChange={e => setNewTaxForm({...newTaxForm, taxName: e.target.value})} />
+            <Input placeholder={tt("ebef.tax_name_ph", "e.g. VAT, GST")} value={newTaxForm.taxName} onChange={e => setNewTaxForm({...newTaxForm, taxName: e.target.value})} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs text-slate-500 font-bold">{tt("exp.tax_pct_label", "Percentage (%)")}</Label>

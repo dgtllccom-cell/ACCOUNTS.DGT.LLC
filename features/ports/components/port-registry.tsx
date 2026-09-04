@@ -188,7 +188,7 @@ export function PortRegistry() {
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <button onClick={() => handleDelete(port.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title="Delete Port">
+                        <button onClick={() => handleDelete(port.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title={tt("ports.delete_port", "Delete Port")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -217,7 +217,7 @@ export function PortRegistry() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("port.code_label", "Port Code")} *</label>
                 <Input
-                  placeholder="e.g. PK-KHI"
+                  placeholder={tt("ports.code_ph", "e.g. PK-KHI")}
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   required
@@ -242,7 +242,7 @@ export function PortRegistry() {
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("port.name_label", "Port Name")} *</label>
               <Input
-                placeholder="e.g. Karachi Port Trust / Port Qasim"
+                placeholder={tt("ports.name_ph", "e.g. Karachi Port Trust / Port Qasim")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required

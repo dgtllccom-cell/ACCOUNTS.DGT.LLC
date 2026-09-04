@@ -237,7 +237,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
               <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.contact_person", "Contact Person")}</label>
               <input
                 type="text"
-                placeholder="e.g. Tariq Khan"
+                placeholder={tt("sag.contact_person_ph", "e.g. Tariq Khan")}
                 value={form.contact_person}
                 onChange={(e) => setForm({ ...form, contact_person: e.target.value })}
                 className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
@@ -284,7 +284,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
               <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.city", "City")}</label>
               <input
                 type="text"
-                placeholder="e.g. Karachi / Dubai"
+                placeholder={tt("sag.city_ph", "e.g. Karachi / Dubai")}
                 value={form.city_name}
                 onChange={(e) => setForm({ ...form, city_name: e.target.value })}
                 className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
@@ -295,7 +295,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
               <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.country", "Country")}</label>
               <input
                 type="text"
-                placeholder="e.g. Pakistan / United Arab Emirates"
+                placeholder={tt("sag.country_ph", "e.g. Pakistan / United Arab Emirates")}
                 value={form.country_name}
                 onChange={(e) => setForm({ ...form, country_name: e.target.value })}
                 className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"

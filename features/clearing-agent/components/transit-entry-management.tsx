@@ -883,7 +883,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       value={formData.notify_party}
                       onChange={(e) => handleInputChange("notify_party", e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="M/S Bright Traders, Karachi"
+                      placeholder={tt("transit.notify_party_ph", "M/S Bright Traders, Karachi")}
                     />
                   </div>
                 </div>

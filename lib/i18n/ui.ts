@@ -927,6 +927,65 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "apperr.reference_id"
+  | "apperr.update_needed"
+  | "apperr.diagnostic_error"
+  | "apperr.fresh_version"
+  | "apperr.execution_error"
+  | "apperr.error_fallback"
+  | "apperr.copied"
+  | "apperr.copy_diagnostic"
+  | "apperr.unknown_error"
+  | "apperr.update_reload"
+  | "apperr.hard_reload"
+  | "apperr.go_dashboard"
+  | "epd.serial_tracking_title"
+  | "epd.serial_super_admin"
+  | "epd.serial_country"
+  | "epd.serial_branch"
+  | "epd.serial_entry"
+  | "brp.profile_completion"
+  | "brp.completed_fields"
+  | "brp.missing_fields"
+  | "brp.missing"
+  | "brp.completed"
+  | "brp.missing_information"
+  | "transit.notify_party_ph"
+  | "ports.delete_port"
+  | "ports.code_ph"
+  | "ports.name_ph"
+  | "ebef.press_enter_add_row"
+  | "ebef.tax_name_ph"
+  | "ebef.alert_fill_tax_fields"
+  | "ebef.alert_add_rows_first"
+  | "ebef.alert_pdf_failed"
+  | "ebef.alert_select_debit_credit"
+  | "ebef.alert_debit_credit_same"
+  | "ebef.alert_transfer_success"
+  | "ebef.alert_cannot_edit_transferred"
+  | "ebef.alert_lock_header_first"
+  | "ebef.alert_linked_ref_required"
+  | "ebef.alert_enter_bill_details"
+  | "ebef.alert_final_amount_zero"
+  | "ebef.alert_valid_tax_pct"
+  | "ebef.alert_select_city_branch"
+  | "sag.contact_person_ph"
+  | "sag.city_ph"
+  | "sag.country_ph"
+  | "whf.select_person_hint"
+  | "whf.add_another_warehouse"
+  | "gpc.goods_item"
+  | "gpc.more"
+  | "gpc.goods_cargo_details"
+  | "gpc.items"
+  | "gpc.hover_info"
+  | "gpc.qty"
+  | "gpc.net_wt"
+  | "gpc.gross"
+  | "gpc.rate"
+  | "gpc.origin"
+  | "gpc.footer_brand"
+  | "gpc.total_registered_goods"
   | "loginerr.diagnostic_notice"
   | "loginerr.ref_id"
   | "loginerr.temporary_exception"
@@ -18880,6 +18939,124 @@ const en: Dict = {
 
 
 
+
+  "apperr.reference_id": "Reference ID:",
+
+  "apperr.update_needed": "Application Update Needed",
+
+  "apperr.diagnostic_error": "Client Diagnostic Error",
+
+  "apperr.fresh_version": "A fresh version of Digital Dock ERP is available or script chunks require updating. Click below to refresh your session.",
+
+  "apperr.execution_error": "The page encountered a client-side execution error. Technical details are displayed below for resolution.",
+
+  "apperr.error_fallback": "Error",
+
+  "apperr.copied": "Copied",
+
+  "apperr.copy_diagnostic": "Copy Diagnostic",
+
+  "apperr.unknown_error": "Unknown client error",
+
+  "apperr.update_reload": "Update App & Reload",
+
+  "apperr.hard_reload": "Hard Reload Page",
+
+  "apperr.go_dashboard": "Go to Dashboard",
+
+  "epd.serial_tracking_title": "4-Level ERP Serial Tracking",
+
+  "epd.serial_super_admin": "1. Super Admin",
+
+  "epd.serial_country": "2. Country Serial",
+
+  "epd.serial_branch": "3. Branch Serial",
+
+  "epd.serial_entry": "4. Entry Serial",
+
+  "brp.profile_completion": "Profile Completion",
+
+  "brp.completed_fields": "Completed Fields",
+
+  "brp.missing_fields": "Missing Fields",
+
+  "brp.missing": "Missing",
+
+  "brp.completed": "Completed",
+
+  "brp.missing_information": "Missing Information",
+
+  "transit.notify_party_ph": "M/S Bright Traders, Karachi",
+
+  "ports.delete_port": "Delete Port",
+
+  "ports.code_ph": "e.g. PK-KHI",
+
+  "ports.name_ph": "e.g. Karachi Port Trust / Port Qasim",
+
+  "ebef.press_enter_add_row": "Press Enter to Add Row",
+
+  "ebef.tax_name_ph": "e.g. VAT, GST",
+
+  "ebef.alert_fill_tax_fields": "Please fill all tax fields",
+
+  "ebef.alert_add_rows_first": "Please add some rows to the bill first.",
+
+  "ebef.alert_pdf_failed": "Failed to generate PDF. Please try again.",
+
+  "ebef.alert_select_debit_credit": "Please select both Debit and Credit ledgers",
+
+  "ebef.alert_debit_credit_same": "Debit and Credit ledgers cannot be the same",
+
+  "ebef.alert_transfer_success": "Successfully transferred to Roznamcha!",
+
+  "ebef.alert_cannot_edit_transferred": "Cannot edit a bill that has already been transferred to Roznamcha.",
+
+  "ebef.alert_lock_header_first": "Please Lock the Header first.",
+
+  "ebef.alert_linked_ref_required": "Linked Reference No is required for attached bills.",
+
+  "ebef.alert_enter_bill_details": "Enter details for the bill.",
+
+  "ebef.alert_final_amount_zero": "Final amount must be greater than 0. Check Qty, Unit Price and FX rate.",
+
+  "ebef.alert_valid_tax_pct": "Enter a valid Tax %",
+
+  "ebef.alert_select_city_branch": "Please select a City Branch first.",
+
+  "sag.contact_person_ph": "e.g. Tariq Khan",
+
+  "sag.city_ph": "e.g. Karachi / Dubai",
+
+  "sag.country_ph": "e.g. Pakistan / United Arab Emirates",
+
+  "whf.select_person_hint": "Select an existing person from the Central Person Master or register a new one.",
+
+  "whf.add_another_warehouse": "Add Another Warehouse",
+
+  "gpc.goods_item": "Goods Item",
+
+  "gpc.more": "more",
+
+  "gpc.goods_cargo_details": "Goods & Cargo Details",
+
+  "gpc.items": "Items",
+
+  "gpc.hover_info": "Hover Info",
+
+  "gpc.qty": "Qty:",
+
+  "gpc.net_wt": "Net Wt:",
+
+  "gpc.gross": "Gross:",
+
+  "gpc.rate": "Rate:",
+
+  "gpc.origin": "Origin:",
+
+  "gpc.footer_brand": "Digital Dock ERP Cargo System",
+
+  "gpc.total_registered_goods": "Total Registered Goods",
   "loginerr.diagnostic_notice": "Login Component Diagnostic Notice",
 
   "loginerr.ref_id": "Ref ID:",
@@ -34908,6 +35085,124 @@ const ur: Dict = {
 
 
 
+
+  "apperr.reference_id": "حوالہ آئی ڈی:",
+
+  "apperr.update_needed": "ایپلیکیشن اپ ڈیٹ درکار ہے",
+
+  "apperr.diagnostic_error": "کلائنٹ تشخیصی خرابی",
+
+  "apperr.fresh_version": "ڈیجیٹل ڈاک ای آر پی کا ایک نیا ورژن دستیاب ہے یا اسکرپٹ چنکس کو اپ ڈیٹ کرنے کی ضرورت ہے۔ اپنا سیشن ریفریش کرنے کے لیے نیچے کلک کریں۔",
+
+  "apperr.execution_error": "صفحے کو کلائنٹ سائیڈ ایگزیکیوشن خرابی کا سامنا ہوا۔ حل کے لیے تکنیکی تفصیلات ذیل میں دکھائی گئی ہیں۔",
+
+  "apperr.error_fallback": "خرابی",
+
+  "apperr.copied": "کاپی ہو گیا",
+
+  "apperr.copy_diagnostic": "تشخیصی کاپی کریں",
+
+  "apperr.unknown_error": "نامعلوم کلائنٹ خرابی",
+
+  "apperr.update_reload": "ایپ اپ ڈیٹ اور ری لوڈ کریں",
+
+  "apperr.hard_reload": "صفحہ ہارڈ ری لوڈ کریں",
+
+  "apperr.go_dashboard": "ڈیش بورڈ پر جائیں",
+
+  "epd.serial_tracking_title": "4 سطحی ای آر پی سیریل ٹریکنگ",
+
+  "epd.serial_super_admin": "1۔ سپر ایڈمن",
+
+  "epd.serial_country": "2۔ ملکی سیریل",
+
+  "epd.serial_branch": "3۔ برانچ سیریل",
+
+  "epd.serial_entry": "4۔ اندراج سیریل",
+
+  "brp.profile_completion": "پروفائل تکمیل",
+
+  "brp.completed_fields": "مکمل شدہ خانے",
+
+  "brp.missing_fields": "خالی خانے",
+
+  "brp.missing": "خالی",
+
+  "brp.completed": "مکمل",
+
+  "brp.missing_information": "معلومات ناپید",
+
+  "transit.notify_party_ph": "مثلاً M/S Bright Traders, Karachi",
+
+  "ports.delete_port": "بندرگاہ حذف کریں",
+
+  "ports.code_ph": "مثلاً PK-KHI",
+
+  "ports.name_ph": "مثلاً کراچی پورٹ ٹرسٹ / پورٹ قاسم",
+
+  "ebef.press_enter_add_row": "قطار شامل کرنے کے لیے اینٹر دبائیں",
+
+  "ebef.tax_name_ph": "مثلاً VAT, GST",
+
+  "ebef.alert_fill_tax_fields": "براہ کرم تمام ٹیکس فیلڈز پُر کریں",
+
+  "ebef.alert_add_rows_first": "براہ کرم پہلے بل میں کچھ قطاریں شامل کریں۔",
+
+  "ebef.alert_pdf_failed": "پی ڈی ایف بنانے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں۔",
+
+  "ebef.alert_select_debit_credit": "براہ کرم ڈیبٹ اور کریڈٹ دونوں لیجرز منتخب کریں",
+
+  "ebef.alert_debit_credit_same": "ڈیبٹ اور کریڈٹ لیجرز ایک جیسے نہیں ہو سکتے",
+
+  "ebef.alert_transfer_success": "روزنامچہ میں کامیابی سے منتقل ہو گیا!",
+
+  "ebef.alert_cannot_edit_transferred": "ایسے بل میں ترمیم نہیں کی جا سکتی جو پہلے ہی روزنامچہ میں منتقل ہو چکا ہے۔",
+
+  "ebef.alert_lock_header_first": "براہ کرم پہلے ہیڈر لاک کریں۔",
+
+  "ebef.alert_linked_ref_required": "منسلک بلوں کے لیے منسلک حوالہ نمبر ضروری ہے۔",
+
+  "ebef.alert_enter_bill_details": "بل کی تفصیلات درج کریں۔",
+
+  "ebef.alert_final_amount_zero": "حتمی رقم 0 سے زیادہ ہونی چاہیے۔ مقدار، یونٹ قیمت اور زر مبادلہ کی شرح چیک کریں۔",
+
+  "ebef.alert_valid_tax_pct": "درست ٹیکس فیصد درج کریں",
+
+  "ebef.alert_select_city_branch": "براہ کرم پہلے سٹی برانچ منتخب کریں۔",
+
+  "sag.contact_person_ph": "مثلاً طارق خان",
+
+  "sag.city_ph": "مثلاً کراچی / دبئی",
+
+  "sag.country_ph": "مثلاً پاکستان / متحدہ عرب امارات",
+
+  "whf.select_person_hint": "مرکزی پرسن ماسٹر سے موجودہ شخص منتخب کریں یا نیا رجسٹر کریں۔",
+
+  "whf.add_another_warehouse": "ایک اور گودام شامل کریں",
+
+  "gpc.goods_item": "سامان آئٹم",
+
+  "gpc.more": "مزید",
+
+  "gpc.goods_cargo_details": "سامان اور کارگو تفصیلات",
+
+  "gpc.items": "آئٹمز",
+
+  "gpc.hover_info": "ہوور معلومات",
+
+  "gpc.qty": "مقدار:",
+
+  "gpc.net_wt": "خالص وزن:",
+
+  "gpc.gross": "مجموعی وزن:",
+
+  "gpc.rate": "ریٹ:",
+
+  "gpc.origin": "ماخذ:",
+
+  "gpc.footer_brand": "ڈیجیٹل ڈاک ای آر پی کارگو سسٹم",
+
+  "gpc.total_registered_goods": "کل رجسٹرڈ سامان",
   "loginerr.diagnostic_notice": "لاگ اِن جزو تشخیصی نوٹس",
 
   "loginerr.ref_id": "حوالہ آئی ڈی:",
@@ -50938,6 +51233,124 @@ const ar: Dict = {
 
 
 
+
+  "apperr.reference_id": "معرّف المرجع:",
+
+  "apperr.update_needed": "التطبيق بحاجة إلى تحديث",
+
+  "apperr.diagnostic_error": "خطأ تشخيصي لدى العميل",
+
+  "apperr.fresh_version": "يتوفر إصدار جديد من Digital Dock ERP أو تحتاج مقاطع البرنامج النصي إلى تحديث. انقر أدناه لتحديث جلستك.",
+
+  "apperr.execution_error": "واجهت الصفحة خطأ في التنفيذ لدى العميل. التفاصيل الفنية معروضة أدناه لحل المشكلة.",
+
+  "apperr.error_fallback": "خطأ",
+
+  "apperr.copied": "تم النسخ",
+
+  "apperr.copy_diagnostic": "نسخ التشخيص",
+
+  "apperr.unknown_error": "خطأ غير معروف لدى العميل",
+
+  "apperr.update_reload": "تحديث التطبيق وإعادة التحميل",
+
+  "apperr.hard_reload": "إعادة تحميل الصفحة بالكامل",
+
+  "apperr.go_dashboard": "الانتقال إلى لوحة التحكم",
+
+  "epd.serial_tracking_title": "تتبع تسلسلي بأربعة مستويات في نظام تخطيط الموارد",
+
+  "epd.serial_super_admin": "1. المدير العام",
+
+  "epd.serial_country": "2. الرقم التسلسلي للدولة",
+
+  "epd.serial_branch": "3. الرقم التسلسلي للفرع",
+
+  "epd.serial_entry": "4. الرقم التسلسلي للإدخال",
+
+  "brp.profile_completion": "اكتمال الملف",
+
+  "brp.completed_fields": "الحقول المكتملة",
+
+  "brp.missing_fields": "الحقول الناقصة",
+
+  "brp.missing": "ناقص",
+
+  "brp.completed": "مكتمل",
+
+  "brp.missing_information": "معلومات ناقصة",
+
+  "transit.notify_party_ph": "مثال: M/S Bright Traders, Karachi",
+
+  "ports.delete_port": "حذف الميناء",
+
+  "ports.code_ph": "مثال: PK-KHI",
+
+  "ports.name_ph": "مثال: هيئة ميناء كراتشي / ميناء قاسم",
+
+  "ebef.press_enter_add_row": "اضغط Enter لإضافة صف",
+
+  "ebef.tax_name_ph": "مثال: VAT, GST",
+
+  "ebef.alert_fill_tax_fields": "يرجى تعبئة جميع حقول الضريبة",
+
+  "ebef.alert_add_rows_first": "يرجى إضافة بعض الصفوف إلى الفاتورة أولاً.",
+
+  "ebef.alert_pdf_failed": "فشل إنشاء ملف PDF. يرجى المحاولة مرة أخرى.",
+
+  "ebef.alert_select_debit_credit": "يرجى تحديد دفتري المدين والدائن كليهما",
+
+  "ebef.alert_debit_credit_same": "لا يمكن أن يكون دفترا المدين والدائن متطابقين",
+
+  "ebef.alert_transfer_success": "تم النقل بنجاح إلى دفتر اليومية!",
+
+  "ebef.alert_cannot_edit_transferred": "لا يمكن تعديل فاتورة تم نقلها بالفعل إلى دفتر اليومية.",
+
+  "ebef.alert_lock_header_first": "يرجى قفل الترويسة أولاً.",
+
+  "ebef.alert_linked_ref_required": "الرقم المرجعي المرتبط مطلوب للفواتير المرفقة.",
+
+  "ebef.alert_enter_bill_details": "أدخل تفاصيل الفاتورة.",
+
+  "ebef.alert_final_amount_zero": "يجب أن يكون المبلغ النهائي أكبر من 0. تحقق من الكمية وسعر الوحدة وسعر الصرف.",
+
+  "ebef.alert_valid_tax_pct": "أدخل نسبة ضريبة صحيحة",
+
+  "ebef.alert_select_city_branch": "يرجى تحديد فرع المدينة أولاً.",
+
+  "sag.contact_person_ph": "مثال: طارق خان",
+
+  "sag.city_ph": "مثال: كراتشي / دبي",
+
+  "sag.country_ph": "مثال: باكستان / الإمارات العربية المتحدة",
+
+  "whf.select_person_hint": "اختر شخصًا موجودًا من سجل الأشخاص المركزي أو سجّل شخصًا جديدًا.",
+
+  "whf.add_another_warehouse": "إضافة مستودع آخر",
+
+  "gpc.goods_item": "بند بضاعة",
+
+  "gpc.more": "المزيد",
+
+  "gpc.goods_cargo_details": "تفاصيل البضائع والشحن",
+
+  "gpc.items": "عناصر",
+
+  "gpc.hover_info": "معلومات عند التحويم",
+
+  "gpc.qty": "الكمية:",
+
+  "gpc.net_wt": "الوزن الصافي:",
+
+  "gpc.gross": "الوزن الإجمالي:",
+
+  "gpc.rate": "السعر:",
+
+  "gpc.origin": "المنشأ:",
+
+  "gpc.footer_brand": "نظام شحن ديجيتال دوك ERP",
+
+  "gpc.total_registered_goods": "إجمالي البضائع المسجلة",
   "loginerr.diagnostic_notice": "إشعار تشخيصي لمكوّن تسجيل الدخول",
 
   "loginerr.ref_id": "معرّف المرجع:",
@@ -66967,6 +67380,124 @@ const fa: Dict = {
 
 
 
+
+  "apperr.reference_id": "شناسه مرجع:",
+
+  "apperr.update_needed": "برنامه نیاز به به‌روزرسانی دارد",
+
+  "apperr.diagnostic_error": "خطای تشخیصی سمت کلاینت",
+
+  "apperr.fresh_version": "نسخه جدید Digital Dock ERP در دسترس است یا قطعات اسکریپت نیاز به به‌روزرسانی دارند. برای تازه‌سازی نشست خود در زیر کلیک کنید.",
+
+  "apperr.execution_error": "این صفحه با خطای اجرای سمت کلاینت مواجه شد. جزئیات فنی برای رفع مشکل در زیر نمایش داده شده است.",
+
+  "apperr.error_fallback": "خطا",
+
+  "apperr.copied": "کپی شد",
+
+  "apperr.copy_diagnostic": "کپی تشخیص",
+
+  "apperr.unknown_error": "خطای ناشناخته کلاینت",
+
+  "apperr.update_reload": "به‌روزرسانی برنامه و بارگذاری مجدد",
+
+  "apperr.hard_reload": "بارگذاری مجدد کامل صفحه",
+
+  "apperr.go_dashboard": "رفتن به داشبورد",
+
+  "epd.serial_tracking_title": "ردیابی سریال ۴ سطحی ای‌آرپی",
+
+  "epd.serial_super_admin": "۱. مدیر ارشد",
+
+  "epd.serial_country": "۲. سریال کشور",
+
+  "epd.serial_branch": "۳. سریال شعبه",
+
+  "epd.serial_entry": "۴. سریال ورودی",
+
+  "brp.profile_completion": "تکمیل پروفایل",
+
+  "brp.completed_fields": "فیلدهای تکمیل‌شده",
+
+  "brp.missing_fields": "فیلدهای ناقص",
+
+  "brp.missing": "ناقص",
+
+  "brp.completed": "تکمیل‌شده",
+
+  "brp.missing_information": "اطلاعات ناقص",
+
+  "transit.notify_party_ph": "مثلاً M/S Bright Traders, Karachi",
+
+  "ports.delete_port": "حذف بندر",
+
+  "ports.code_ph": "مثلاً PK-KHI",
+
+  "ports.name_ph": "مثلاً بندر تراست کراچی / بندر قاسم",
+
+  "ebef.press_enter_add_row": "برای افزودن ردیف Enter را فشار دهید",
+
+  "ebef.tax_name_ph": "مثلاً VAT, GST",
+
+  "ebef.alert_fill_tax_fields": "لطفاً همه فیلدهای مالیات را پر کنید",
+
+  "ebef.alert_add_rows_first": "لطفاً ابتدا چند ردیف به صورتحساب اضافه کنید.",
+
+  "ebef.alert_pdf_failed": "ایجاد PDF ناموفق بود. لطفاً دوباره تلاش کنید.",
+
+  "ebef.alert_select_debit_credit": "لطفاً هر دو دفتر بدهکار و بستانکار را انتخاب کنید",
+
+  "ebef.alert_debit_credit_same": "دفتر بدهکار و بستانکار نمی‌توانند یکسان باشند",
+
+  "ebef.alert_transfer_success": "با موفقیت به روزنامچه منتقل شد!",
+
+  "ebef.alert_cannot_edit_transferred": "امکان ویرایش صورتحسابی که قبلاً به روزنامچه منتقل شده وجود ندارد.",
+
+  "ebef.alert_lock_header_first": "لطفاً ابتدا سربرگ را قفل کنید.",
+
+  "ebef.alert_linked_ref_required": "برای صورتحساب‌های پیوست‌شده شماره مرجع پیوندی الزامی است.",
+
+  "ebef.alert_enter_bill_details": "جزئیات صورتحساب را وارد کنید.",
+
+  "ebef.alert_final_amount_zero": "مبلغ نهایی باید بیشتر از ۰ باشد. تعداد، قیمت واحد و نرخ ارز را بررسی کنید.",
+
+  "ebef.alert_valid_tax_pct": "درصد مالیات معتبر وارد کنید",
+
+  "ebef.alert_select_city_branch": "لطفاً ابتدا شعبه شهر را انتخاب کنید.",
+
+  "sag.contact_person_ph": "مثلاً طارق خان",
+
+  "sag.city_ph": "مثلاً کراچی / دبی",
+
+  "sag.country_ph": "مثلاً پاکستان / امارات متحده عربی",
+
+  "whf.select_person_hint": "یک شخص موجود را از فهرست اصلی اشخاص انتخاب کنید یا شخص جدیدی ثبت کنید.",
+
+  "whf.add_another_warehouse": "افزودن انبار دیگر",
+
+  "gpc.goods_item": "قلم کالا",
+
+  "gpc.more": "بیشتر",
+
+  "gpc.goods_cargo_details": "جزئیات کالا و بار",
+
+  "gpc.items": "اقلام",
+
+  "gpc.hover_info": "اطلاعات هاور",
+
+  "gpc.qty": "تعداد:",
+
+  "gpc.net_wt": "وزن خالص:",
+
+  "gpc.gross": "وزن ناخالص:",
+
+  "gpc.rate": "نرخ:",
+
+  "gpc.origin": "مبدأ:",
+
+  "gpc.footer_brand": "سیستم بار دیجیتال داک ERP",
+
+  "gpc.total_registered_goods": "کل کالای ثبت‌شده",
   "loginerr.diagnostic_notice": "اعلامیه تشخیصی مؤلفه ورود",
 
   "loginerr.ref_id": "شناسه مرجع:",
@@ -83002,6 +83533,124 @@ const ps: Dict = {
 
 
 
+
+  "apperr.reference_id": "د حواله شمېره:",
+
+  "apperr.update_needed": "غوښتنلیک اپډیټ ته اړتیا لري",
+
+  "apperr.diagnostic_error": "د پیرودګلي تشخیصي تېروتنه",
+
+  "apperr.fresh_version": "د Digital Dock ERP نوې نسخه شتون لري یا د سکرېپټ ټوټو ته اپډیټ اړین دی. خپله دوره تازه کولو لپاره لاندې کلیک وکړئ.",
+
+  "apperr.execution_error": "پاڼې د پیرودګلي اجرايي تېروتنې سره مخ شوه. د حل لپاره تخنیکي جزئیات لاندې ښودل شوي دي.",
+
+  "apperr.error_fallback": "تېروتنه",
+
+  "apperr.copied": "کاپي شو",
+
+  "apperr.copy_diagnostic": "تشخیص کاپي کړئ",
+
+  "apperr.unknown_error": "ناڅرګنده د پیرودګلي تېروتنه",
+
+  "apperr.update_reload": "غوښتنلیک اپډیټ او بیا پورته کړئ",
+
+  "apperr.hard_reload": "پاڼه کلکه بیا پورته کړئ",
+
+  "apperr.go_dashboard": "ډشبورډ ته لاړ شئ",
+
+  "epd.serial_tracking_title": "۴-کچنیزه د ای آر پي سریال تعقیب",
+
+  "epd.serial_super_admin": "۱. سوپر اډمین",
+
+  "epd.serial_country": "۲. د هیواد سریال",
+
+  "epd.serial_branch": "۳. د څانګې سریال",
+
+  "epd.serial_entry": "۴. د ننوتلو سریال",
+
+  "brp.profile_completion": "پروفایل بشپړتیا",
+
+  "brp.completed_fields": "بشپړ شوي ساحې",
+
+  "brp.missing_fields": "ورک شوي ساحې",
+
+  "brp.missing": "ورک",
+
+  "brp.completed": "بشپړ شوی",
+
+  "brp.missing_information": "ورک معلومات",
+
+  "transit.notify_party_ph": "بېلګه: M/S Bright Traders, Karachi",
+
+  "ports.delete_port": "بندر ړنګول",
+
+  "ports.code_ph": "بېلګه: PK-KHI",
+
+  "ports.name_ph": "بېلګه: د کراچۍ بندر امانت / د قاسم بندر",
+
+  "ebef.press_enter_add_row": "د قطار د زیاتولو لپاره Enter کېکاږئ",
+
+  "ebef.tax_name_ph": "بېلګه: VAT, GST",
+
+  "ebef.alert_fill_tax_fields": "مهرباني وکړئ ټول مالیاتي ساحې ډکې کړئ",
+
+  "ebef.alert_add_rows_first": "مهرباني وکړئ لومړی بیل ته ځینې قطارونه ورزیات کړئ.",
+
+  "ebef.alert_pdf_failed": "PDF جوړول ناکام شول. مهرباني وکړئ بیا هڅه وکړئ.",
+
+  "ebef.alert_select_debit_credit": "مهرباني وکړئ دواړه بنام او جمع لېجرونه وټاکئ",
+
+  "ebef.alert_debit_credit_same": "بنام او جمع لېجرونه یو شان نشي کیدی",
+
+  "ebef.alert_transfer_success": "بریالیتوب سره روزنامچې ته لېږدول شو!",
+
+  "ebef.alert_cannot_edit_transferred": "هغه بیل چې مخکې روزنامچې ته لېږدول شوی، نشي سمولی.",
+
+  "ebef.alert_lock_header_first": "مهرباني وکړئ لومړی سرلیک لاک کړئ.",
+
+  "ebef.alert_linked_ref_required": "د تړلو بیلونو لپاره تړلی حواله شمېره اړینه ده.",
+
+  "ebef.alert_enter_bill_details": "د بیل جزئیات دننه کړئ.",
+
+  "ebef.alert_final_amount_zero": "وروستی مبلغ باید له 0 څخه ډېر وي. مقدار، د واحد نرخ او د اسعارو نرخ وګورئ.",
+
+  "ebef.alert_valid_tax_pct": "د مالیې سمه سلنه دننه کړئ",
+
+  "ebef.alert_select_city_branch": "مهرباني وکړئ لومړی د ښار څانګه وټاکئ.",
+
+  "sag.contact_person_ph": "بېلګه: طارق خان",
+
+  "sag.city_ph": "بېلګه: کراچي / دبۍ",
+
+  "sag.country_ph": "بېلګه: پاکستان / متحده عرب امارات",
+
+  "whf.select_person_hint": "د مرکزي شخص ماسټر څخه یو شتون لرونکی کس وټاکئ یا نوی راجستر کړئ.",
+
+  "whf.add_another_warehouse": "بله گدام زیاته کړئ",
+
+  "gpc.goods_item": "توکي توکی",
+
+  "gpc.more": "نور",
+
+  "gpc.goods_cargo_details": "د توکو او بار جزئیات",
+
+  "gpc.items": "توکي",
+
+  "gpc.hover_info": "د هاور معلومات",
+
+  "gpc.qty": "مقدار:",
+
+  "gpc.net_wt": "خالص وزن:",
+
+  "gpc.gross": "ټول وزن:",
+
+  "gpc.rate": "نرخ:",
+
+  "gpc.origin": "سرچینه:",
+
+  "gpc.footer_brand": "د ډیجیټل ډاک ERP د بار سیسټم",
+
+  "gpc.total_registered_goods": "ټول ثبت شوي توکي",
   "loginerr.diagnostic_notice": "د لاگ ان برخې تشخيصي خبرتیا",
 
   "loginerr.ref_id": "د حواله شمېره:",

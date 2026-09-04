@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Package, Layers, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export type GoodItemSummary = {
   goodsName?: string;
@@ -36,6 +38,9 @@ export function GoodsPopoverCell({
   maxDisplayLength = 28
 }: GoodsPopoverCellProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const lang = useActiveLanguage();
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
+  const gt = (key: string, fallback: string) => t(lang, ("gpc." + key) as never, fallback);
 
   // Normalize goods list
   const goodsList: GoodItemSummary[] = Array.isArray(goods)
@@ -53,7 +58,7 @@ export function GoodsPopoverCell({
     return <span className={cn("text-slate-400 font-normal", className)}>-</span>;
   }
 
-  const firstItemName = goodsList[0]?.goodsName || goodsList[0]?.productName || goodsList[0]?.name || "Goods Item";
+  const firstItemName = goodsList[0]?.goodsName || goodsList[0]?.productName || goodsList[0]?.name || gt("goods_item", "Goods Item");
   const otherCount = goodsList.length - 1;
   const fullText = goodsList.map((g) => g.goodsName || g.productName || g.name).filter(Boolean).join(", ");
 
@@ -63,6 +68,7 @@ export function GoodsPopoverCell({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       title={fullText}
+      dir={isRtl ? "rtl" : "ltr"}
     >
       {/* Compact In-Cell View */}
       <div className="flex items-center gap-1.5 py-0.5">
@@ -77,7 +83,7 @@ export function GoodsPopoverCell({
 
         {otherCount > 0 ? (
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border border-blue-300 dark:border-blue-700 whitespace-nowrap shadow-2xs">
-            +{otherCount} more
+            +{otherCount} {gt("more", "more")}
           </span>
         ) : null}
       </div>
@@ -94,10 +100,10 @@ export function GoodsPopoverCell({
         <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-2">
           <div className="flex items-center gap-1.5 font-bold text-xs text-blue-400">
             <Package className="h-3.5 w-3.5 text-blue-400" />
-            <span>Goods & Cargo Details ({goodsList.length} Items)</span>
+            <span>{gt("goods_cargo_details", "Goods & Cargo Details")} ({goodsList.length} {gt("items", "Items")})</span>
           </div>
           <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">
-            Hover Info
+            {gt("hover_info", "Hover Info")}
           </span>
         </div>
 
@@ -133,27 +139,27 @@ export function GoodsPopoverCell({
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] text-slate-300 border-t border-slate-700/40 pt-1 mt-0.5">
                     {qty && (
                       <span>
-                        <strong className="text-slate-400">Qty:</strong> {qty} {item.unit || "CTN"}
+                        <strong className="text-slate-400">{gt("qty", "Qty:")}</strong> {qty} {item.unit || "CTN"}
                       </span>
                     )}
                     {netWt && (
                       <span>
-                        <strong className="text-slate-400">Net Wt:</strong> {Number(netWt).toLocaleString()} KG
+                        <strong className="text-slate-400">{gt("net_wt", "Net Wt:")}</strong> {Number(netWt).toLocaleString()} KG
                       </span>
                     )}
                     {grossWt && (
                       <span>
-                        <strong className="text-slate-400">Gross:</strong> {Number(grossWt).toLocaleString()} KG
+                        <strong className="text-slate-400">{gt("gross", "Gross:")}</strong> {Number(grossWt).toLocaleString()} KG
                       </span>
                     )}
                     {rate && (
                       <span>
-                        <strong className="text-slate-400">Rate:</strong> ${rate}
+                        <strong className="text-slate-400">{gt("rate", "Rate:")}</strong> ${rate}
                       </span>
                     )}
                     {origin && (
                       <span>
-                        <strong className="text-slate-400">Origin:</strong> {origin}
+                        <strong className="text-slate-400">{gt("origin", "Origin:")}</strong> {origin}
                       </span>
                     )}
                   </div>
@@ -165,8 +171,8 @@ export function GoodsPopoverCell({
 
         {/* Popover Footer */}
         <div className="mt-2 pt-1.5 border-t border-slate-800 text-[8.5px] text-slate-400 flex justify-between items-center">
-          <span>Digital Dock ERP Cargo System</span>
-          <span className="text-blue-400 font-semibold">{goodsList.length} Total Registered Goods</span>
+          <span>{gt("footer_brand", "Digital Dock ERP Cargo System")}</span>
+          <span className="text-blue-400 font-semibold">{goodsList.length} {gt("total_registered_goods", "Total Registered Goods")}</span>
         </div>
       </div>
     </div>

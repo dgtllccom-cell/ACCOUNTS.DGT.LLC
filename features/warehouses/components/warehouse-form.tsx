@@ -398,7 +398,7 @@ export function WarehouseForm({
                     placeholder={t(lang, "wh.wf_search_owner_customer_person", "Search owner from Person Master")}
                     lang={lang}
                   />
-                  <p className="text-[10px] text-muted-foreground">Select an existing person from the Central Person Master or register a new one.</p>
+                  <p className="text-[10px] text-muted-foreground">{t(lang, "whf.select_person_hint", "Select an existing person from the Central Person Master or register a new one.")}</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -747,7 +747,7 @@ export function WarehouseForm({
                 className="w-full text-xs mt-2"
                 onClick={handleReset}
               >
-                + Add Another Warehouse
+                + {t(lang, "whf.add_another_warehouse", "Add Another Warehouse")}
               </Button>
             )}
           </div>
