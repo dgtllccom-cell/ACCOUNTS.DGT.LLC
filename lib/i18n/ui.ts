@@ -927,6 +927,16 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "uipreview.breadcrumb_ui_preview"
+  | "uipreview.breadcrumb_auth_portal"
+  | "uipreview.breadcrumb_mobile_login"
+  | "uipreview.mobile_login_title"
+  | "uipreview.mobile_login_subtitle"
+  | "uipreview.enterprise_erp"
+  | "uipreview.enterprise_system"
+  | "uipreview.global_enterprise_portal"
+  | "uipreview.multi_country_desc"
+  | "uipreview.server_connected"
   | "dash.db_summary_failed_generic"
   | "docmgr.size_limit"
   | "docmgr.upload_failed"
@@ -18381,6 +18391,26 @@ const en: Dict = {
 
 
 
+
+  "uipreview.breadcrumb_ui_preview": "UI Preview",
+
+  "uipreview.breadcrumb_auth_portal": "Auth Portal",
+
+  "uipreview.breadcrumb_mobile_login": "Mobile & Device Responsive Login",
+
+  "uipreview.mobile_login_title": "{brand} Mobile & Tablet Login Preview",
+
+  "uipreview.mobile_login_subtitle": "Test and preview the responsive ERP login screen across iPhone, Android, iPad, and Desktop screens.",
+
+  "uipreview.enterprise_erp": "Enterprise ERP",
+
+  "uipreview.enterprise_system": "Enterprise System",
+
+  "uipreview.global_enterprise_portal": "Global Enterprise Portal",
+
+  "uipreview.multi_country_desc": "Multi-country enterprise resource planning system connecting Pakistan, UAE, Afghanistan, Iran, and Saudi Arabia branches in real time.",
+
+  "uipreview.server_connected": "Production Server Connected",
   "dash.db_summary_failed_generic": "Database summary failed",
   "docmgr.size_limit": "File size exceeds 20MB limit.",
 
@@ -33515,6 +33545,26 @@ const ur: Dict = {
 
 
 
+
+  "uipreview.breadcrumb_ui_preview": "یو آئی پیش نظارہ",
+
+  "uipreview.breadcrumb_auth_portal": "آتھ پورٹل",
+
+  "uipreview.breadcrumb_mobile_login": "موبائل و ڈیوائس ریسپانسو لاگ ان",
+
+  "uipreview.mobile_login_title": "{brand} موبائل و ٹیبلٹ لاگ ان پیش نظارہ",
+
+  "uipreview.mobile_login_subtitle": "iPhone، Android، iPad، اور ڈیسک ٹاپ اسکرینز پر ریسپانسو ERP لاگ ان اسکرین کو ٹیسٹ اور پیش نظارہ کریں۔",
+
+  "uipreview.enterprise_erp": "انٹرپرائز ERP",
+
+  "uipreview.enterprise_system": "انٹرپرائز سسٹم",
+
+  "uipreview.global_enterprise_portal": "عالمی انٹرپرائز پورٹل",
+
+  "uipreview.multi_country_desc": "ملٹی کنٹری انٹرپرائز ریسورس پلاننگ سسٹم جو پاکستان، UAE، افغانستان، ایران، اور سعودی عرب کی برانچز کو ریئل ٹائم میں جوڑتا ہے۔",
+
+  "uipreview.server_connected": "پروڈکشن سرور منسلک ہے",
   "dash.db_summary_failed_generic": "ڈیٹا بیس خلاصہ ناکام ہوا",
   "docmgr.size_limit": "فائل کا سائز 20MB کی حد سے تجاوز کرتا ہے۔",
 
@@ -48651,6 +48701,26 @@ const ar: Dict = {
 
 
 
+
+  "uipreview.breadcrumb_ui_preview": "معاينة واجهة المستخدم",
+
+  "uipreview.breadcrumb_auth_portal": "بوابة المصادقة",
+
+  "uipreview.breadcrumb_mobile_login": "تسجيل دخول متجاوب للجوال والأجهزة",
+
+  "uipreview.mobile_login_title": "معاينة تسجيل دخول {brand} للجوال والجهاز اللوحي",
+
+  "uipreview.mobile_login_subtitle": "اختبر وعاين شاشة تسجيل دخول ERP المتجاوبة عبر شاشات iPhone وAndroid وiPad وسطح المكتب.",
+
+  "uipreview.enterprise_erp": "نظام تخطيط موارد المؤسسة",
+
+  "uipreview.enterprise_system": "نظام المؤسسة",
+
+  "uipreview.global_enterprise_portal": "بوابة المؤسسة العالمية",
+
+  "uipreview.multi_country_desc": "نظام تخطيط موارد المؤسسة متعدد الدول يربط فروع باكستان والإمارات وأفغانستان وإيران والسعودية في الوقت الفعلي.",
+
+  "uipreview.server_connected": "خادم الإنتاج متصل",
   "dash.db_summary_failed_generic": "فشل ملخص قاعدة البيانات",
   "docmgr.size_limit": "يتجاوز حجم الملف الحد الأقصى 20 ميجابايت.",
 
@@ -63786,6 +63856,26 @@ const fa: Dict = {
 
 
 
+
+  "uipreview.breadcrumb_ui_preview": "پیش‌نمایش رابط کاربری",
+
+  "uipreview.breadcrumb_auth_portal": "درگاه احراز هویت",
+
+  "uipreview.breadcrumb_mobile_login": "ورود واکنش‌گرا برای موبایل و دستگاه",
+
+  "uipreview.mobile_login_title": "پیش‌نمایش ورود موبایل و تبلت {brand}",
+
+  "uipreview.mobile_login_subtitle": "صفحه ورود واکنش‌گرای ERP را در iPhone، Android، iPad و دسکتاپ آزمایش و پیش‌نمایش کنید.",
+
+  "uipreview.enterprise_erp": "ERP سازمانی",
+
+  "uipreview.enterprise_system": "سیستم سازمانی",
+
+  "uipreview.global_enterprise_portal": "درگاه سازمانی جهانی",
+
+  "uipreview.multi_country_desc": "سیستم برنامه‌ریزی منابع سازمانی چندکشوری که شعبه‌های پاکستان، امارات، افغانستان، ایران و عربستان سعودی را به‌صورت آنی متصل می‌کند.",
+
+  "uipreview.server_connected": "سرور تولید متصل است",
   "dash.db_summary_failed_generic": "خلاصه پایگاه داده ناموفق بود",
   "docmgr.size_limit": "اندازه فایل از حد 20 مگابایت بیشتر است.",
 
@@ -78927,6 +79017,26 @@ const ps: Dict = {
 
 
 
+
+  "uipreview.breadcrumb_ui_preview": "د UI مخکتنه",
+
+  "uipreview.breadcrumb_auth_portal": "د تصدیق دروازه",
+
+  "uipreview.breadcrumb_mobile_login": "د موبایل او وسیلې غبرګون ننوتنه",
+
+  "uipreview.mobile_login_title": "{brand} د موبایل او ټابلېټ ننوتنې مخکتنه",
+
+  "uipreview.mobile_login_subtitle": "د iPhone، Android، iPad، او ډیسکټاپ پردو کې د ERP غبرګون ننوتنې پرده وازمویئ او مخکتنه یې وکړئ.",
+
+  "uipreview.enterprise_erp": "د سازمان ERP",
+
+  "uipreview.enterprise_system": "د سازمان سیسټم",
+
+  "uipreview.global_enterprise_portal": "نړیوال د سازمان دروازه",
+
+  "uipreview.multi_country_desc": "د څو هېوادونو د سازمان سرچینو پلان جوړونې سیسټم چې د پاکستان، متحده عربي امارتونو، افغانستان، ایران، او سعودي عربستان څانګې په ریښتینې وخت کې نښلوي.",
+
+  "uipreview.server_connected": "د تولید سرور نښلول شوی",
   "dash.db_summary_failed_generic": "د ډیټابیس لنډیز ناکام شو",
   "docmgr.size_limit": "د دوتنې اندازه د 20MB حد څخه ډېره ده۔",
 

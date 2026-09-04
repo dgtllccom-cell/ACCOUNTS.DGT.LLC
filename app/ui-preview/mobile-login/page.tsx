@@ -1,13 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Smartphone, Tablet, Monitor, CheckCircle2, ShieldCheck, Server, Globe2 } from "lucide-react";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 type DeviceMode = "iphone" | "android" | "ipad" | "desktop";
 
 export default function MobileLoginPreviewPage() {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("iphone");
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("uipreview." + k) as never, f);
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchBranding(null)
+      .then((b) => {
+        if (!alive) return;
+        setBrandCompany(brandingName(b, lang) || null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
+
+  const brandLine = brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP");
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 p-4 sm:p-6 space-y-6">
@@ -16,15 +37,15 @@ export default function MobileLoginPreviewPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 max-w-7xl mx-auto">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-            <span>UI Preview</span><span>›</span><span>Auth Portal</span><span>›</span>
-            <span className="font-extrabold text-slate-800 dark:text-slate-200">Mobile & Device Responsive Login</span>
+            <span>{tt("breadcrumb_ui_preview", "UI Preview")}</span><span>›</span><span>{tt("breadcrumb_auth_portal", "Auth Portal")}</span><span>›</span>
+            <span className="font-extrabold text-slate-800 dark:text-slate-200">{tt("breadcrumb_mobile_login", "Mobile & Device Responsive Login")}</span>
           </div>
           <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
             <Smartphone className="h-7 w-7 text-blue-600" />
-            Digital Dock ERP Mobile & Tablet Login Preview
+            {tt("mobile_login_title", "{brand} Mobile & Tablet Login Preview").replace("{brand}", brandLine)}
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Test and preview the responsive ERP login screen across iPhone, Android, iPad, and Desktop screens.
+            {tt("mobile_login_subtitle", "Test and preview the responsive ERP login screen across iPhone, Android, iPad, and Desktop screens.")}
           </p>
         </div>
 
@@ -96,8 +117,8 @@ export default function MobileLoginPreviewPage() {
                   DB
                 </div>
                 <div>
-                  <div className="text-xs font-black tracking-widest text-slate-900 dark:text-white">DAMAN</div>
-                  <div className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Business Group</div>
+                  <div className="text-xs font-black tracking-widest text-slate-900 dark:text-white">{brandLine}</div>
+                  <div className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400">{tt("enterprise_erp", "Enterprise ERP")}</div>
                 </div>
               </div>
 
@@ -123,8 +144,8 @@ export default function MobileLoginPreviewPage() {
                   ERP
                 </div>
                 <div>
-                  <div className="text-xs font-black tracking-widest text-slate-900 dark:text-white">DAMAN GROUP</div>
-                  <div className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Enterprise System</div>
+                  <div className="text-xs font-black tracking-widest text-slate-900 dark:text-white">{brandLine}</div>
+                  <div className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400">{tt("enterprise_system", "Enterprise System")}</div>
                 </div>
               </div>
 
@@ -152,15 +173,15 @@ export default function MobileLoginPreviewPage() {
                     DHT
                   </div>
                   <div>
-                    <h2 className="text-xl font-black">Digital Dock ERP</h2>
-                    <p className="text-xs text-blue-200">Global Enterprise Portal</p>
+                    <h2 className="text-xl font-black">{brandLine}</h2>
+                    <p className="text-xs text-blue-200">{tt("global_enterprise_portal", "Global Enterprise Portal")}</p>
                   </div>
                 </div>
                 <p className="text-xs leading-relaxed text-blue-100/80 pt-4 border-t border-white/10">
-                  Multi-country enterprise resource planning system connecting Pakistan, UAE, Afghanistan, Iran, and Saudi Arabia branches in real time.
+                  {tt("multi_country_desc", "Multi-country enterprise resource planning system connecting Pakistan, UAE, Afghanistan, Iran, and Saudi Arabia branches in real time.")}
                 </p>
                 <div className="pt-4 flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                  <Server className="h-4 w-4" /> Production Server Connected: 72.60.209.121
+                  <Server className="h-4 w-4" /> {tt("server_connected", "Production Server Connected")}
                 </div>
               </div>
 
