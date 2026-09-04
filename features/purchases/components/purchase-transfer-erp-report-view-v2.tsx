@@ -500,7 +500,7 @@ function PurchaseTransferErpReportViewContent({
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
                 {tt("pterv2.report_title","ENTERPRISE PURCHASE TRANSFER & SETTLEMENT VERIFICATION AUDIT SHEET")}
               </h3>
-              <div>DATE: <span>{fmtDate(new Date().toISOString())}</span> | {tt("pterv2.status_lbl", "Status")}: <span className="font-bold text-amber-400 uppercase">{isPosted ? tt("pterv2.st_posted", "POSTED") : tt("pterv2.st_accepted", "ACCEPTED")}</span></div>
+              <div>{tt("pterv2.date_lbl", "Date")}: <span suppressHydrationWarning>{fmtDate(new Date().toISOString())}</span> | {tt("pterv2.status_lbl", "Status")}: <span className="font-bold text-amber-400 uppercase">{isPosted ? tt("pterv2.st_posted", "POSTED") : tt("pterv2.st_accepted", "ACCEPTED")}</span></div>
             </div>
 
             {/* ── VISUAL END-TO-END TRANSACTION PROCESS FLOW BANNER ── */}
