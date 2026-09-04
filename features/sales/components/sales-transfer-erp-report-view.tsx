@@ -28,6 +28,7 @@ import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-posting-state";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 /* ─────────────────────── helpers ─────────────────────── */
 
@@ -133,6 +134,22 @@ function SalesTransferErpReportViewContent({
   const [reportData, setReportData] = useState<any>(initialData || null);
   const [loading, setLoading] = useState(!initialData && Boolean(idParam));
   const [error, setError] = useState<string | null>(null);
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchBranding(null)
+      .then((b) => {
+        if (!alive) return;
+        setBrandCompany(brandingName(b, lang) || null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
+
+  const brandLine = brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP");
 
   const [transferring, setTransferring] = useState(false);
   const [transferSuccess, setTransferSuccess] = useState("");
@@ -308,7 +325,7 @@ function getCurrencySymbol(c: string) {
       <div className="flex h-screen items-center justify-center text-slate-500">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold">Loading ERP Transaction Report…</p>
+          <p className="text-sm font-semibold">{t(lang, "ster.loading_report", "Loading ERP Transaction Report…")}</p>
         </div>
       </div>
     );
@@ -321,7 +338,7 @@ function getCurrencySymbol(c: string) {
           <AlertTriangle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
           <p className="text-sm font-bold text-rose-800">{error || t(lang, "sales.ster_sales_record_not_found", "Sales order record not found.")}</p>
           <Button onClick={() => router.back()} variant="outline" size="sm" className="mt-4">
-            ← Go Back
+            {t(lang, "ster.go_back_arrow", "← Go Back")}
           </Button>
         </div>
       </div>
@@ -402,9 +419,9 @@ function getCurrencySymbol(c: string) {
         <div className="rounded-xl bg-[#0f2942] text-white p-5 shadow-md print:rounded-none">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-blue-200">Daman Business Group — Enterprise ERP</p>
+              <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-blue-200">{brandLine} — {t(lang, "ster.enterprise_erp", "Enterprise ERP")}</p>
               <h1 className="text-xl font-black tracking-tight mt-0.5">{t(lang, "pter.erp_report_title", "ERP Transaction Report")}</h1>
-              <p className="text-[10px] text-blue-200 font-semibold mt-0.5">Sales Transfer Payment — Official Audit Document</p>
+              <p className="text-[10px] text-blue-200 font-semibold mt-0.5">{t(lang, "ster.sales_transfer_audit_doc", "Sales Transfer Payment — Official Audit Document")}</p>
             </div>
             <div className="text-right">
               <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "pter.journal_number", "Journal Number")}</p>
@@ -581,7 +598,7 @@ function getCurrencySymbol(c: string) {
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-rose-200 bg-rose-50 text-rose-700"
           }`}>
-            <CheckCircle2 className="h-4 w-4" /> Journal Entry Balanced — Total Debit equals Total Credit
+            <CheckCircle2 className="h-4 w-4" /> {t(lang, "ster.journal_balanced", "Journal Entry Balanced — Total Debit equals Total Credit")}
           </div>
 
           <div className="space-y-6">
@@ -621,7 +638,7 @@ function getCurrencySymbol(c: string) {
 
           {/* Accounting flow note */}
           <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-semibold text-slate-500 space-y-1">
-            <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">Accounting Flow — Purchase Transfer Stage</p>
+            <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">{t(lang, "ster.accounting_flow_stage", "Accounting Flow — Purchase Transfer Stage")}</p>
             <p>
               <span className="text-blue-700 font-black">{t(lang, "pter.debit_label", "DEBIT:")}</span>{" "}
               Customer Account ({form.purchaseAccountNo || d.purchaseAccountNumber || "—"}) = Goods received at purchase cost
@@ -641,7 +658,7 @@ function getCurrencySymbol(c: string) {
               <TrendingUp className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-black text-emerald-900">Ready to process payment transfer?</p>
+              <p className="text-xs font-black text-emerald-900">{t(lang, "ster.ready_to_process_transfer", "Ready to process payment transfer?")}</p>
               <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">
                 This will automatically generate double-entry ledgers, post to general/supplier/cash accounts, and update status.
               </p>
@@ -674,7 +691,7 @@ function getCurrencySymbol(c: string) {
         <footer className="rounded-xl bg-[#0f2942] text-white py-3 px-5 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider print:rounded-none">
           <div className="flex items-center gap-2">
             <Globe className="h-3.5 w-3.5" />
-            <span>{t(lang, "purchase.damaan_business_group", "Daman Business Group")}</span>
+            <span>{brandLine}</span>
           </div>
           <div className="flex items-center gap-2 font-mono">
             <Hash className="h-3.5 w-3.5" />

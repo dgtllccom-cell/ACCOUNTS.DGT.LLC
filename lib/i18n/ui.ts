@@ -927,6 +927,13 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "ster.loading_report"
+  | "ster.go_back_arrow"
+  | "ster.enterprise_erp"
+  | "ster.sales_transfer_audit_doc"
+  | "ster.journal_balanced"
+  | "ster.accounting_flow_stage"
+  | "ster.ready_to_process_transfer"
   | "dtr.total"
   | "dtr.active"
   | "dtr.inactive"
@@ -18728,6 +18735,20 @@ const en: Dict = {
 
 
 
+
+  "ster.loading_report": "Loading ERP Transaction Report…",
+
+  "ster.go_back_arrow": "← Go Back",
+
+  "ster.enterprise_erp": "Enterprise ERP",
+
+  "ster.sales_transfer_audit_doc": "Sales Transfer Payment — Official Audit Document",
+
+  "ster.journal_balanced": "Journal Entry Balanced — Total Debit equals Total Credit",
+
+  "ster.accounting_flow_stage": "Accounting Flow — Purchase Transfer Stage",
+
+  "ster.ready_to_process_transfer": "Ready to process payment transfer?",
   "dtr.total": "TOTAL",
 
   "dtr.active": "ACTIVE",
@@ -34497,6 +34518,20 @@ const ur: Dict = {
 
 
 
+
+  "ster.loading_report": "ERP لین دین رپورٹ لوڈ ہو رہی ہے…",
+
+  "ster.go_back_arrow": "← واپس جائیں",
+
+  "ster.enterprise_erp": "انٹرپرائز ERP",
+
+  "ster.sales_transfer_audit_doc": "سیلز ٹرانسفر ادائیگی — سرکاری آڈٹ دستاویز",
+
+  "ster.journal_balanced": "جرنل اندراج متوازن — کل ڈیبٹ کل کریڈٹ کے برابر ہے",
+
+  "ster.accounting_flow_stage": "اکاؤنٹنگ فلو — پرچیز ٹرانسفر مرحلہ",
+
+  "ster.ready_to_process_transfer": "پیمنٹ ٹرانسفر پروسیس کرنے کے لیے تیار ہیں؟",
   "dtr.total": "کل",
 
   "dtr.active": "فعال",
@@ -50268,6 +50303,20 @@ const ar: Dict = {
 
 
 
+
+  "ster.loading_report": "جارٍ تحميل تقرير معاملة ERP…",
+
+  "ster.go_back_arrow": "← رجوع",
+
+  "ster.enterprise_erp": "نظام ERP للمؤسسات",
+
+  "ster.sales_transfer_audit_doc": "دفع تحويل المبيعات — مستند تدقيق رسمي",
+
+  "ster.journal_balanced": "قيد اليومية متوازن — إجمالي المدين يساوي إجمالي الدائن",
+
+  "ster.accounting_flow_stage": "تدفق المحاسبة — مرحلة تحويل الشراء",
+
+  "ster.ready_to_process_transfer": "جاهز لمعالجة تحويل الدفع؟",
   "dtr.total": "الإجمالي",
 
   "dtr.active": "نشط",
@@ -66038,6 +66087,20 @@ const fa: Dict = {
 
 
 
+
+  "ster.loading_report": "در حال بارگذاری گزارش تراکنش ERP…",
+
+  "ster.go_back_arrow": "← بازگشت",
+
+  "ster.enterprise_erp": "ERP سازمانی",
+
+  "ster.sales_transfer_audit_doc": "پرداخت انتقال فروش — سند رسمی حسابرسی",
+
+  "ster.journal_balanced": "ثبت ژورنال متوازن — مجموع بدهکار برابر مجموع بستانکار است",
+
+  "ster.accounting_flow_stage": "جریان حسابداری — مرحله انتقال خرید",
+
+  "ster.ready_to_process_transfer": "آماده پردازش انتقال پرداخت؟",
   "dtr.total": "مجموع",
 
   "dtr.active": "فعال",
@@ -81814,6 +81877,20 @@ const ps: Dict = {
 
 
 
+
+  "ster.loading_report": "د ERP د معاملې راپور بارول کیږي…",
+
+  "ster.go_back_arrow": "← بېرته لاړ شئ",
+
+  "ster.enterprise_erp": "د سازمان ERP",
+
+  "ster.sales_transfer_audit_doc": "د پلور لېږد تادیه — رسمي پلټنې سند",
+
+  "ster.journal_balanced": "ژورنال ننوتنه متوازنه — ټول ډیبیټ د ټول کریډیټ سره برابر دی",
+
+  "ster.accounting_flow_stage": "د حساب بهیر — د پیرود لېږد مرحله",
+
+  "ster.ready_to_process_transfer": "د تادیې لېږد پروسس کولو ته چمتو یاست؟",
   "dtr.total": "ټول",
 
   "dtr.active": "فعال",
