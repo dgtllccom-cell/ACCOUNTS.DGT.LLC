@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { ShieldCheck, RefreshCw, Clock, Filter } from "lucide-react";
 
 export function SettlementAuditView() {
   const [history, setHistory] = useState<any[]>([]);
+  const _lang = useActiveLanguage();
+  const th = (x: string) => translateHeader(_lang, x);
   const [loading, setLoading] = useState(true);
 
   async function loadData() {
@@ -30,14 +34,14 @@ export function SettlementAuditView() {
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Settlement Audit Trail</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{th("Settlement Audit Trail")}</h1>
           <p className="text-xs text-slate-500">Immutable chronological log of all settlement links, adjustments, and review actions</p>
         </div>
         <button
           onClick={loadData}
           className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
         >
-          <RefreshCw className="h-4 w-4" /> Refresh Log
+          <RefreshCw className="h-4 w-4" /> {th("Refresh Log")}
         </button>
       </div>
 
@@ -46,23 +50,23 @@ export function SettlementAuditView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
               <tr>
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4">Actor</th>
-                <th className="py-3 px-4">Action</th>
-                <th className="py-3 px-4">Ref / Entity</th>
-                <th className="py-3 px-4 text-right">Amount</th>
-                <th className="py-3 px-4">Status Change</th>
-                <th className="py-3 px-4">Reason / Notes</th>
+                <th className="py-3 px-4">{th("Timestamp")}</th>
+                <th className="py-3 px-4">{th("Actor")}</th>
+                <th className="py-3 px-4">{th("Action")}</th>
+                <th className="py-3 px-4">{th("Ref / Entity")}</th>
+                <th className="py-3 px-4 text-right">{th("Amount")}</th>
+                <th className="py-3 px-4">{th("Status Change")}</th>
+                <th className="py-3 px-4">{th("Reason / Notes")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">Loading audit trail...</td>
+                  <td colSpan={7} className="py-8 text-center text-slate-400">{th("Loading audit trail...")}</td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">No audit log entries recorded yet.</td>
+                  <td colSpan={7} className="py-8 text-center text-slate-400">{th("No audit log entries recorded yet.")}</td>
                 </tr>
               ) : (
                 history.map((row) => (

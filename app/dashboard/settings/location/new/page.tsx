@@ -8,10 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api/client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export default function NewLocationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const _lang = useActiveLanguage();
+  const th = (x: string) => translateHeader(_lang, x);
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -60,25 +64,25 @@ export default function NewLocationPage() {
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h1 className="text-2xl font-bold">Create New Location</h1>
+        <h1 className="text-2xl font-bold">{th("Create New Location")}</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Location Details</CardTitle>
+          <CardTitle>{th("Location Details")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Location Name */}
             <div>
               <Label htmlFor="name" className="font-semibold">
-                Location Name *
+                {th("Location Name")} *
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Karachi Main Office"
+                placeholder={th("e.g., Karachi Main Office")}
                 required
               />
             </div>
@@ -86,13 +90,13 @@ export default function NewLocationPage() {
             {/* Code */}
             <div>
               <Label htmlFor="code" className="font-semibold">
-                Location Code
+                {th("Location Code")}
               </Label>
               <Input
                 id="code"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                placeholder="e.g., KHI-001"
+                placeholder={th("e.g., KHI-001")}
               />
             </div>
 
@@ -105,7 +109,7 @@ export default function NewLocationPage() {
                 id="countryId"
                 value={formData.countryId}
                 onChange={(e) => setFormData({ ...formData, countryId: e.target.value })}
-                placeholder="e.g., pk-001"
+                placeholder={th("e.g., pk-001")}
                 required
               />
             </div>
@@ -119,7 +123,7 @@ export default function NewLocationPage() {
                 id="stateId"
                 value={formData.stateId}
                 onChange={(e) => setFormData({ ...formData, stateId: e.target.value })}
-                placeholder="e.g., state-id"
+                placeholder={th("e.g., state-id")}
               />
             </div>
 
@@ -132,7 +136,7 @@ export default function NewLocationPage() {
                 id="districtId"
                 value={formData.districtId}
                 onChange={(e) => setFormData({ ...formData, districtId: e.target.value })}
-                placeholder="e.g., district-id"
+                placeholder={th("e.g., district-id")}
               />
             </div>
 
@@ -145,7 +149,7 @@ export default function NewLocationPage() {
                 id="postalCode"
                 value={formData.postalCode}
                 onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                placeholder="e.g., 75000"
+                placeholder={th("e.g., 75000")}
               />
             </div>
 
@@ -159,7 +163,7 @@ export default function NewLocationPage() {
                 className="w-4 h-4 rounded border-slate-300"
               />
               <Label htmlFor="isActive" className="font-semibold">
-                Active
+                {th("Active")}
               </Label>
             </div>
 
@@ -181,7 +185,7 @@ export default function NewLocationPage() {
                 onClick={() => router.push("/dashboard/settings/location")}
                 disabled={loading}
               >
-                Cancel
+                {th("Cancel")}
               </Button>
             </div>
           </form>

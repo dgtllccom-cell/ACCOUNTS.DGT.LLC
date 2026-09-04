@@ -6,10 +6,14 @@ import { ArrowLeft, Loader2, PencilLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet } from "@/lib/api/client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 
 export default function ViewLocationPage() {
   const router = useRouter();
+  const _lang = useActiveLanguage();
+  const th = (x: string) => translateHeader(_lang, x);
   const params = useParams();
   const id = params.id as string;
 
@@ -40,7 +44,7 @@ export default function ViewLocationPage() {
   }
 
   if (!location) {
-    return <div className="p-4 text-red-600">Location not found</div>;
+    return <div className="p-4 text-red-600">{th("Location not found")}</div>;
   }
 
   return (
@@ -54,11 +58,11 @@ export default function ViewLocationPage() {
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="text-2xl font-bold">Location Details</h1>
+          <h1 className="text-2xl font-bold">{th("Location Details")}</h1>
         </div>
         <Button onClick={() => router.push(`/dashboard/settings/location/${id}/edit`)}>
           <PencilLine className="w-4 h-4 mr-2" />
-          Edit
+          {th("Edit")}
         </Button>
       </div>
 
@@ -69,17 +73,17 @@ export default function ViewLocationPage() {
         <CardContent>
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">Location Name</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("Location Name")}</label>
               <p className="text-lg font-semibold text-slate-900 mt-1">{location.name}</p>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">Code</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("Code")}</label>
               <p className="text-lg font-mono text-slate-900 mt-1">{location.code || "-"}</p>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">Country</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("Country")}</label>
               <p className="text-lg font-semibold text-slate-900 mt-1">
                 {location.country?.name || "-"}
               </p>
@@ -93,21 +97,21 @@ export default function ViewLocationPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">District</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("District")}</label>
               <p className="text-lg font-semibold text-slate-900 mt-1">
                 {location.district?.name || "-"}
               </p>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">Postal Code</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("Postal Code")}</label>
               <p className="text-lg font-semibold text-slate-900 mt-1">
                 {location.postal_code || "-"}
               </p>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">Status</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("Status")}</label>
               <p className="mt-1">
                 <span
                   className={cn(
@@ -123,7 +127,7 @@ export default function ViewLocationPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase">Created Date</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase">{th("Created Date")}</label>
               <p className="text-lg font-semibold text-slate-900 mt-1">
                 {new Date(location.created_at).toLocaleString()}
               </p>
@@ -135,7 +139,7 @@ export default function ViewLocationPage() {
               onClick={() => router.push("/dashboard/settings/location")}
               variant="outline"
             >
-              Back to Locations
+              {th("Back to Locations")}
             </Button>
           </div>
         </CardContent>
