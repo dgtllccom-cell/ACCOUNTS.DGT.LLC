@@ -927,6 +927,24 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "shareform.backSide"
+  | "shareform.frontSide"
+  | "shareform.city"
+  | "shareform.country"
+  | "shareform.fatherGuardian"
+  | "shareform.firstName"
+  | "shareform.lastName"
+  | "shareform.fullStreetAddress"
+  | "shareform.gender"
+  | "shareform.linkPurposePlaceholder"
+  | "shareform.loadingRegistry"
+  | "shareform.mobilePhone"
+  | "shareform.noDocuments"
+  | "shareform.noSnapshot"
+  | "shareform.postalCode"
+  | "shareform.stateProvince"
+  | "shareform.uploadedPhoto"
+  | "shareform.whatsapp"
   | "extform.applicant"
   | "extform.applicantStatus"
   | "extform.applicationDraft"
@@ -18224,6 +18242,60 @@ const en: Dict = {
 
 
 
+
+
+  "shareform.backSide": "Back Side",
+
+
+  "shareform.frontSide": "Front Side",
+
+
+  "shareform.city": "City",
+
+
+  "shareform.country": "Country",
+
+
+  "shareform.fatherGuardian": "Father / Guardian",
+
+
+  "shareform.firstName": "First Name",
+
+
+  "shareform.lastName": "Last Name",
+
+
+  "shareform.fullStreetAddress": "Full Street Address",
+
+
+  "shareform.gender": "Gender",
+
+
+  "shareform.linkPurposePlaceholder": "e.g. For customer onboarding",
+
+
+  "shareform.loadingRegistry": "Loading links registry...",
+
+
+  "shareform.mobilePhone": "Mobile / Phone",
+
+
+  "shareform.noDocuments": "No documents attached.",
+
+
+  "shareform.noSnapshot": "No detailed snapshot recorded for this submission.",
+
+
+  "shareform.postalCode": "Postal / Zip Code",
+
+
+  "shareform.stateProvince": "State / Province",
+
+
+  "shareform.uploadedPhoto": "Uploaded Photo",
+
+
+  "shareform.whatsapp": "WhatsApp",
   "extform.applicant": "Applicant",
 
 
@@ -32989,6 +33061,60 @@ const ur: Dict = {
 
 
 
+
+
+  "shareform.backSide": "پیچھے کا رخ",
+
+
+  "shareform.frontSide": "سامنے کا رخ",
+
+
+  "shareform.city": "شہر",
+
+
+  "shareform.country": "ملک",
+
+
+  "shareform.fatherGuardian": "والد / سرپرست",
+
+
+  "shareform.firstName": "پہلا نام",
+
+
+  "shareform.lastName": "آخری نام",
+
+
+  "shareform.fullStreetAddress": "مکمل گلی کا پتہ",
+
+
+  "shareform.gender": "جنس",
+
+
+  "shareform.linkPurposePlaceholder": "مثلاً کسٹمر آن بورڈنگ کے لیے",
+
+
+  "shareform.loadingRegistry": "لنکس رجسٹری لوڈ ہو رہی ہے...",
+
+
+  "shareform.mobilePhone": "موبائل / فون",
+
+
+  "shareform.noDocuments": "کوئی دستاویزات منسلک نہیں۔",
+
+
+  "shareform.noSnapshot": "اس جمع کرائی گئی معلومات کے لیے کوئی تفصیلی اسنیپ شاٹ ریکارڈ نہیں ہے۔",
+
+
+  "shareform.postalCode": "پوسٹل / زپ کوڈ",
+
+
+  "shareform.stateProvince": "ریاست / صوبہ",
+
+
+  "shareform.uploadedPhoto": "اپ لوڈ کردہ تصویر",
+
+
+  "shareform.whatsapp": "واٹس ایپ",
   "extform.applicant": "درخواست دہندہ",
 
 
@@ -47756,6 +47882,60 @@ const ar: Dict = {
 
 
 
+
+
+  "shareform.backSide": "الوجه الخلفي",
+
+
+  "shareform.frontSide": "الوجه الأمامي",
+
+
+  "shareform.city": "المدينة",
+
+
+  "shareform.country": "الدولة",
+
+
+  "shareform.fatherGuardian": "الأب / الوصي",
+
+
+  "shareform.firstName": "الاسم الأول",
+
+
+  "shareform.lastName": "اسم العائلة",
+
+
+  "shareform.fullStreetAddress": "عنوان الشارع الكامل",
+
+
+  "shareform.gender": "الجنس",
+
+
+  "shareform.linkPurposePlaceholder": "مثال: لإعداد العميل",
+
+
+  "shareform.loadingRegistry": "جارٍ تحميل سجل الروابط...",
+
+
+  "shareform.mobilePhone": "الجوال / الهاتف",
+
+
+  "shareform.noDocuments": "لا توجد مستندات مرفقة.",
+
+
+  "shareform.noSnapshot": "لم يتم تسجيل لقطة مفصلة لهذا الإرسال.",
+
+
+  "shareform.postalCode": "الرمز البريدي",
+
+
+  "shareform.stateProvince": "الولاية / المقاطعة",
+
+
+  "shareform.uploadedPhoto": "الصورة المرفوعة",
+
+
+  "shareform.whatsapp": "واتساب",
   "extform.applicant": "مقدم الطلب",
 
 
@@ -62522,6 +62702,60 @@ const fa: Dict = {
 
 
 
+
+
+  "shareform.backSide": "سمت پشت",
+
+
+  "shareform.frontSide": "سمت جلو",
+
+
+  "shareform.city": "شهر",
+
+
+  "shareform.country": "کشور",
+
+
+  "shareform.fatherGuardian": "پدر / سرپرست",
+
+
+  "shareform.firstName": "نام",
+
+
+  "shareform.lastName": "نام خانوادگی",
+
+
+  "shareform.fullStreetAddress": "نشانی کامل خیابان",
+
+
+  "shareform.gender": "جنسیت",
+
+
+  "shareform.linkPurposePlaceholder": "مثلاً برای پذیرش مشتری",
+
+
+  "shareform.loadingRegistry": "در حال بارگذاری دفتر پیوندها...",
+
+
+  "shareform.mobilePhone": "موبایل / تلفن",
+
+
+  "shareform.noDocuments": "هیچ سندی پیوست نشده است.",
+
+
+  "shareform.noSnapshot": "برای این ارسال هیچ عکس فوری دقیقی ثبت نشده است.",
+
+
+  "shareform.postalCode": "کد پستی",
+
+
+  "shareform.stateProvince": "ایالت / استان",
+
+
+  "shareform.uploadedPhoto": "عکس بارگذاری‌شده",
+
+
+  "shareform.whatsapp": "واتساپ",
   "extform.applicant": "متقاضی",
 
 
@@ -77294,6 +77528,60 @@ const ps: Dict = {
 
 
 
+
+
+  "shareform.backSide": "شا اړخ",
+
+
+  "shareform.frontSide": "مخ اړخ",
+
+
+  "shareform.city": "ښار",
+
+
+  "shareform.country": "هېواد",
+
+
+  "shareform.fatherGuardian": "پلار / سرپرست",
+
+
+  "shareform.firstName": "لومړی نوم",
+
+
+  "shareform.lastName": "تخلص",
+
+
+  "shareform.fullStreetAddress": "بشپړه د کوڅې پته",
+
+
+  "shareform.gender": "جنسیت",
+
+
+  "shareform.linkPurposePlaceholder": "لکه د پیرودونکي داخلولو لپاره",
+
+
+  "shareform.loadingRegistry": "د لینکونو راجستر بارول کیږي...",
+
+
+  "shareform.mobilePhone": "موبایل / تلیفون",
+
+
+  "shareform.noDocuments": "هیڅ سند نه دی نښلول شوی.",
+
+
+  "shareform.noSnapshot": "د دې سپارلو لپاره هیڅ تفصیلي سنیپ شاټ نه دی ثبت شوی.",
+
+
+  "shareform.postalCode": "پوستي کوډ",
+
+
+  "shareform.stateProvince": "ایالت / ولایت",
+
+
+  "shareform.uploadedPhoto": "پورته شوی انځور",
+
+
+  "shareform.whatsapp": "واټساپ",
   "extform.applicant": "غوښتونکی",
 
 

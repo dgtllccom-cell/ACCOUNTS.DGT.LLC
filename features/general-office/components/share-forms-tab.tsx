@@ -399,7 +399,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. For Karachi customer onboarding"
+              placeholder={tx("linkPurposePlaceholder", lang)}
               className="w-full h-10 px-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:outline-none"
             />
           </div>
@@ -502,7 +502,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
         {loadingLinks ? (
           <div className="text-center py-12 text-slate-400">
             <RefreshCcw size={20} className="animate-spin mx-auto mb-2 text-blue-600" />
-            <span className="text-xs">Loading links registry...</span>
+            <span className="text-xs">{tx("loadingRegistry", lang)}</span>
           </div>
         ) : links.length === 0 ? (
           <div className="text-center py-14 px-4 text-slate-400">
@@ -698,7 +698,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                   {viewSubmissionModal.submission_data.photo ? (
                     <img
                       src={viewSubmissionModal.submission_data.photo}
-                      alt="Uploaded Photo"
+                      alt={tx("uploadedPhoto", lang)}
                       className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-xs"
                     />
                   ) : (
@@ -729,27 +729,27 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-white border border-slate-200 p-4 rounded-2xl text-xs">
                     <div>
-                      <span className="text-slate-400 block text-[11px]">First Name</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("firstName", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.firstName || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Last Name</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("lastName", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.lastName || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Father / Guardian</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("fatherGuardian", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.fatherName || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Mobile / Phone</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("mobilePhone", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.mobile || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">WhatsApp</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("whatsapp", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.whatsapp || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Gender</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("gender", lang)}</span>
                       <span className="font-semibold text-slate-800 capitalize">{viewSubmissionModal.submission_data.gender || "—"}</span>
                     </div>
                   </div>
@@ -763,23 +763,23 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white border border-slate-200 p-4 rounded-2xl text-xs">
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Country</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("country", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.country || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">State / Province</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("stateProvince", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.stateProvince || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">City</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("city", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.city || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Postal / Zip Code</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("postalCode", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.postalCode || "—"}</span>
                     </div>
                     <div className="col-span-2 sm:col-span-4 border-t border-slate-100 pt-2.5 mt-1">
-                      <span className="text-slate-400 block text-[11px]">Full Street Address</span>
+                      <span className="text-slate-400 block text-[11px]">{tx("fullStreetAddress", lang)}</span>
                       <span className="font-semibold text-slate-800">{viewSubmissionModal.submission_data.address || "—"}</span>
                     </div>
                   </div>
@@ -809,11 +809,11 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                             {doc.frontImage && (
                               <div className="border border-slate-200 rounded-xl p-2 bg-slate-50">
                                 <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                                  Front Side / سامنے کا رخ
+                                  {tx("frontSide", lang)}
                                 </span>
                                 <img
                                   src={doc.frontImage}
-                                  alt="Front Side"
+                                  alt={tx("frontSide", lang)}
                                   className="h-28 w-full object-cover rounded-lg border border-slate-200"
                                 />
                               </div>
@@ -821,11 +821,11 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                             {doc.backImage && (
                               <div className="border border-slate-200 rounded-xl p-2 bg-slate-50">
                                 <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                                  Back Side / پیچھے کا رخ
+                                  {tx("backSide", lang)}
                                 </span>
                                 <img
                                   src={doc.backImage}
-                                  alt="Back Side"
+                                  alt={tx("backSide", lang)}
                                   className="h-28 w-full object-cover rounded-lg border border-slate-200"
                                 />
                               </div>
@@ -840,7 +840,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                       ))
                     ) : (
                       <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                        No documents attached.
+                        {tx("noDocuments", lang)}
                       </div>
                     )}
                   </div>
@@ -866,7 +866,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
               </div>
             ) : (
               <div className="text-center py-8 text-xs text-slate-400">
-                No detailed snapshot recorded for this submission.
+                {tx("noSnapshot", lang)}
               </div>
             )}
 
