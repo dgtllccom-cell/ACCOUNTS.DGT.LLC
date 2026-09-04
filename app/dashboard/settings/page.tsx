@@ -311,9 +311,9 @@ export default function SettingsPage() {
                 <SlidersHorizontal className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight">System Settings</h1>
+                <h1 className="text-xl font-bold tracking-tight">{t(lang, "setmenu.system_settings", "System Settings")}</h1>
                 <p className="text-xs text-muted-foreground">
-                  Workspace setup & master data configurations
+                  {t(lang, "setmenu.workspace_setup_desc", "Workspace setup & master data configurations")}
                 </p>
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function SettingsPage() {
               </div>
               <Button size="sm" variant="outline" className="h-8 text-xs">
                 <Filter className="mr-1.5 h-3 w-3" />
-                Filter
+                {t(lang, "common.filter", "Filter")}
               </Button>
             </div>
           </div>
@@ -395,7 +395,7 @@ export default function SettingsPage() {
         <div className="flex items-start gap-3">
           <Settings className="mt-0.5 h-5 w-5 text-primary" aria-hidden />
           <div>
-            <h2 className="font-bold text-sm">Digital Dock ERP Core Configuration</h2>
+            <h2 className="font-bold text-sm">{t(lang, "setmenu.core_configuration", "Core Configuration")}</h2>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               All settings modules are synced with role-based access permissions. Super Admins have full access across all countries and branch networks.
             </p>

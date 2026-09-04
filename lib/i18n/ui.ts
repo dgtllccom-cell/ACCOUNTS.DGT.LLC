@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "setmenu.system_settings"
+  | "setmenu.workspace_setup_desc"
+  | "setmenu.core_configuration"
+  | "common.filter"
   | "pbjr.accounting_information"
   | "pbjr.booking_information"
   | "pbjr.buyer_information"
@@ -18329,6 +18333,18 @@ const en: Dict = {
 
 
 
+
+
+  "setmenu.system_settings": "System Settings",
+
+
+  "setmenu.workspace_setup_desc": "Workspace setup & master data configurations",
+
+
+  "setmenu.core_configuration": "Core Configuration",
+
+
+  "common.filter": "Filter",
   "pbjr.accounting_information": "Accounting Information",
 
 
@@ -33361,6 +33377,18 @@ const ur: Dict = {
 
 
 
+
+
+  "setmenu.system_settings": "سسٹم کی ترتیبات",
+
+
+  "setmenu.workspace_setup_desc": "ورک اسپیس سیٹ اپ و ماسٹر ڈیٹا کنفیگریشنز",
+
+
+  "setmenu.core_configuration": "بنیادی کنفیگریشن",
+
+
+  "common.filter": "فلٹر",
   "pbjr.accounting_information": "اکاؤنٹنگ معلومات",
 
 
@@ -48395,6 +48423,18 @@ const ar: Dict = {
 
 
 
+
+
+  "setmenu.system_settings": "إعدادات النظام",
+
+
+  "setmenu.workspace_setup_desc": "إعداد مساحة العمل وتكوينات البيانات الرئيسية",
+
+
+  "setmenu.core_configuration": "التكوين الأساسي",
+
+
+  "common.filter": "تصفية",
   "pbjr.accounting_information": "معلومات المحاسبة",
 
 
@@ -63428,6 +63468,18 @@ const fa: Dict = {
 
 
 
+
+
+  "setmenu.system_settings": "تنظیمات سیستم",
+
+
+  "setmenu.workspace_setup_desc": "راه‌اندازی فضای کاری و پیکربندی داده‌های اصلی",
+
+
+  "setmenu.core_configuration": "پیکربندی هسته",
+
+
+  "common.filter": "فیلتر",
   "pbjr.accounting_information": "اطلاعات حسابداری",
 
 
@@ -78467,6 +78519,18 @@ const ps: Dict = {
 
 
 
+
+
+  "setmenu.system_settings": "د سیسټم تنظیمات",
+
+
+  "setmenu.workspace_setup_desc": "د کاري ساحې تنظیم او د اصلي معلوماتو ترتیبات",
+
+
+  "setmenu.core_configuration": "اصلي ترتیب",
+
+
+  "common.filter": "فلټر",
   "pbjr.accounting_information": "د حساب معلومات",
 
 
