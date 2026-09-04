@@ -253,17 +253,17 @@ export default function HandoverReportPage() {
 
   const handlePrintGenericReport = () => {
     openGenericErpReport({
-      title: "Living Production System & Journal Report PDF — ERP Handover",
-      subtitle: "Complete architecture overview, 33 database tables verification, and 14 branch login credentials audit",
+      title: th("Living Production System & Journal Report PDF — ERP Handover"),
+      subtitle: th("Complete architecture overview, 33 database tables verification, and 14 branch login credentials audit"),
       columns: [
-        { key: "country", label: "Country" },
-        { key: "mainBranch", label: "Main Branch" },
-        { key: "cityBranch", label: "City Branch" },
-        { key: "responsiblePerson", label: "Responsible Person" },
-        { key: "role", label: "Role" },
-        { key: "username", label: "Username / Login ID" },
-        { key: "passwordVaultRef", label: "Vault Ref / Credential ID" },
-        { key: "status", label: "Status", format: "status" }
+        { key: "country", label: th("Country") },
+        { key: "mainBranch", label: th("Main Branch") },
+        { key: "cityBranch", label: th("City Branch") },
+        { key: "responsiblePerson", label: th("Responsible Person") },
+        { key: "role", label: th("Role") },
+        { key: "username", label: th("Username / Login ID") },
+        { key: "passwordVaultRef", label: th("Vault Ref / Credential ID") },
+        { key: "status", label: th("Status"), format: "status" }
       ],
       rows: accessRegister as any,
       summary: {
@@ -445,22 +445,22 @@ export default function HandoverReportPage() {
               <table className="w-full text-xs text-left">
                 <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold text-[11px] shadow-sm">
                   <tr>
-                    <th className="whitespace-nowrap p-3">Country</th>
-                    <th className="whitespace-nowrap p-3">Main Branch</th>
-                    <th className="whitespace-nowrap p-3">City Branch</th>
-                    <th className="whitespace-nowrap p-3">User / Person</th>
-                    <th className="whitespace-nowrap p-3">Role</th>
-                    <th className="whitespace-nowrap p-3">Username / Login ID</th>
-                    <th className="whitespace-nowrap p-3">Assigned Permissions</th>
-                    <th className="whitespace-nowrap p-3">Vault Ref ID</th>
-                    <th className="whitespace-nowrap p-3">Status</th>
+                    <th className="whitespace-nowrap p-3">{th("Country")}</th>
+                    <th className="whitespace-nowrap p-3">{th("Main Branch")}</th>
+                    <th className="whitespace-nowrap p-3">{th("City Branch")}</th>
+                    <th className="whitespace-nowrap p-3">{th("User / Person")}</th>
+                    <th className="whitespace-nowrap p-3">{th("Role")}</th>
+                    <th className="whitespace-nowrap p-3">{th("Username / Login ID")}</th>
+                    <th className="whitespace-nowrap p-3">{th("Assigned Permissions")}</th>
+                    <th className="whitespace-nowrap p-3">{th("Vault Ref ID")}</th>
+                    <th className="whitespace-nowrap p-3">{th("Status")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {(accessRegisterLoading || filteredAccessEntries.length === 0) && (
                     <tr>
                       <td colSpan={9} className="p-8 text-center text-slate-400 text-xs">
-                        {accessRegisterLoading ? "Loading access register…" : "No access-register records found."}
+                        {accessRegisterLoading ? th("Loading access register…") : th("No access-register records found.")}
                       </td>
                     </tr>
                   )}
@@ -490,7 +490,7 @@ export default function HandoverReportPage() {
                             return (
                               <details className="print:open">
                                 <summary className="cursor-pointer list-none font-semibold text-slate-700 dark:text-slate-300 marker:content-none">
-                                  {list.length} permission{list.length === 1 ? "" : "s"} assigned
+                                  {list.length} {th("permissions assigned")}
                                 </summary>
                                 <div className="mt-1 flex max-w-[260px] flex-wrap gap-1">
                                   {list.map((p, i) => (
@@ -525,14 +525,14 @@ export default function HandoverReportPage() {
           <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              System Status & VPS Production Handover
+              {th("System Status & VPS Production Handover")}
             </h2>
             <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
               The <strong>ACCOUNTS.DGT.LLC</strong> enterprise system is fully deployed and operational on the production host <strong>72.60.209.121</strong>. All master registries (Companies, Banks, Warehouses, Customers/Owners, Accounts, Goods, Locations, Employees) operate on genuine PostgreSQL database tables with live search, filters, pagination, and multi-language support.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2">Core Architectures Implemented</h3>
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2">{th("Core Architectures Implemented")}</h3>
                 <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-disc pl-4">
                   <li><strong>Country / Branch Login Register:</strong> Centralized multi-tier access mapping.</li>
                   <li><strong>Account Multi-Linking:</strong> 4 junction tables linking single accounts across entities.</li>
@@ -542,7 +542,7 @@ export default function HandoverReportPage() {
                 </ul>
               </div>
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2">Production Environment</h3>
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2">{th("Production Environment")}</h3>
                 <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-disc pl-4">
                   <li><strong>VPS Host:</strong> <code>72.60.209.121</code> (Port 3000 / Port 80 via Nginx)</li>
                   <li><strong>PM2 Runtime:</strong> <code>dgt-nextjs</code> (Process ID 0, auto-restart on boot)</li>
@@ -588,7 +588,7 @@ export default function HandoverReportPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
                     <div>
-                      <strong className="text-slate-700 dark:text-slate-200 block mb-1">Modules Affected:</strong>
+                      <strong className="text-slate-700 dark:text-slate-200 block mb-1">{th("Modules Affected:")}</strong>
                       <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
                         {log.modulesAffected.map((mod, i) => (
                           <li key={i}>{mod}</li>
@@ -596,7 +596,7 @@ export default function HandoverReportPage() {
                       </ul>
                     </div>
                     <div>
-                      <strong className="text-slate-700 dark:text-slate-200 block mb-1">Issues Fixed:</strong>
+                      <strong className="text-slate-700 dark:text-slate-200 block mb-1">{th("Issues Fixed:")}</strong>
                       <ul className="list-disc pl-4 space-y-0.5 text-emerald-600 dark:text-emerald-400">
                         {log.issuesFixed.map((fix, i) => (
                           <li key={i}>{fix}</li>
@@ -614,16 +614,16 @@ export default function HandoverReportPage() {
       {/* Tab: Database Audit */}
       {activeTab === "database" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Direct SQL Row Counts (Local vs VPS PostgreSQL)</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{th("Direct SQL Row Counts (Local vs VPS PostgreSQL)")}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold">
                 <tr>
-                  <th className="p-2.5">Module Name</th>
-                  <th className="p-2.5">Database Table</th>
-                  <th className="p-2.5">Local DB Rows</th>
-                  <th className="p-2.5">VPS DB Rows</th>
-                  <th className="p-2.5">Status</th>
+                  <th className="p-2.5">{th("Module Name")}</th>
+                  <th className="p-2.5">{th("Database Table")}</th>
+                  <th className="p-2.5">{th("Local DB Rows")}</th>
+                  <th className="p-2.5">{th("VPS DB Rows")}</th>
+                  <th className="p-2.5">{th("Status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -653,7 +653,7 @@ export default function HandoverReportPage() {
                     <td className="p-2.5 font-mono font-semibold text-blue-600">{row.v.toLocaleString()}</td>
                     <td className="p-2.5">
                       <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                        100% Synced
+                        {th("100% Synced")}
                       </span>
                     </td>
                   </tr>
@@ -667,9 +667,9 @@ export default function HandoverReportPage() {
       {/* Tab: i18n Audit */}
       {activeTab === "i18n" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">5-Language Translation Audit (11,154 Database Records)</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{th("5-Language Translation Audit (11,154 Database Records)")}</h2>
           <p className="text-xs text-slate-600 dark:text-slate-300">
-            Every master entity has 5-language coverage stored directly in <code>public.record_translations</code>:
+            {th("Every master entity has 5-language coverage stored directly in")} <code>public.record_translations</code>:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-2">
             {[
@@ -683,7 +683,7 @@ export default function HandoverReportPage() {
                 <div className="text-xs font-mono font-bold uppercase text-slate-500">{lang.code} • {lang.dir}</div>
                 <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{lang.name}</div>
                 <span className="inline-block px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-100 text-emerald-800">
-                  {lang.status}
+                  {th(lang.status)}
                 </span>
               </div>
             ))}
@@ -694,51 +694,51 @@ export default function HandoverReportPage() {
       {/* Tab: RBAC */}
       {activeTab === "rbac" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Role-Based Access Control (RBAC) Hierarchy</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{th("Role-Based Access Control (RBAC) Hierarchy")}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold">
                 <tr>
-                  <th className="p-2.5">Role</th>
-                  <th className="p-2.5">Geographic Scope</th>
-                  <th className="p-2.5">Master CRUD</th>
-                  <th className="p-2.5">Ledger & Journal</th>
-                  <th className="p-2.5">Stock & Inventory</th>
-                  <th className="p-2.5">System Config</th>
+                  <th className="p-2.5">{th("Role")}</th>
+                  <th className="p-2.5">{th("Geographic Scope")}</th>
+                  <th className="p-2.5">{th("Master CRUD")}</th>
+                  <th className="p-2.5">{th("Ledger & Journal")}</th>
+                  <th className="p-2.5">{th("Stock & Inventory")}</th>
+                  <th className="p-2.5">{th("System Config")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 <tr>
-                  <td className="p-2.5 font-semibold text-blue-600">Super Admin</td>
-                  <td className="p-2.5">Global (All Countries)</td>
-                  <td className="p-2.5">Full CRUD</td>
-                  <td className="p-2.5">Global Consolidation</td>
-                  <td className="p-2.5">All Warehouses</td>
-                  <td className="p-2.5">Full Admin</td>
+                  <td className="p-2.5 font-semibold text-blue-600">{th("Super Admin")}</td>
+                  <td className="p-2.5">{th("Global (All Countries)")}</td>
+                  <td className="p-2.5">{th("Full CRUD")}</td>
+                  <td className="p-2.5">{th("Global Consolidation")}</td>
+                  <td className="p-2.5">{th("All Warehouses")}</td>
+                  <td className="p-2.5">{th("Full Admin")}</td>
                 </tr>
                 <tr>
-                  <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-100">Country Admin</td>
-                  <td className="p-2.5">Assigned Country</td>
-                  <td className="p-2.5">Country Scoped</td>
-                  <td className="p-2.5">Country Ledger</td>
-                  <td className="p-2.5">Country Warehouses</td>
-                  <td className="p-2.5">Branch Setup</td>
+                  <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-100">{th("Country Admin")}</td>
+                  <td className="p-2.5">{th("Assigned Country")}</td>
+                  <td className="p-2.5">{th("Country Scoped")}</td>
+                  <td className="p-2.5">{th("Country Ledger")}</td>
+                  <td className="p-2.5">{th("Country Warehouses")}</td>
+                  <td className="p-2.5">{th("Branch Setup")}</td>
                 </tr>
                 <tr>
-                  <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-100">Main Branch Admin</td>
-                  <td className="p-2.5">Assigned Branch</td>
-                  <td className="p-2.5">Branch Scoped</td>
-                  <td className="p-2.5">Branch Ledger</td>
-                  <td className="p-2.5">Branch Warehouses</td>
-                  <td className="p-2.5">Staff Management</td>
+                  <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-100">{th("Main Branch Admin")}</td>
+                  <td className="p-2.5">{th("Assigned Branch")}</td>
+                  <td className="p-2.5">{th("Branch Scoped")}</td>
+                  <td className="p-2.5">{th("Branch Ledger")}</td>
+                  <td className="p-2.5">{th("Branch Warehouses")}</td>
+                  <td className="p-2.5">{th("Staff Management")}</td>
                 </tr>
                 <tr>
-                  <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-100">City Branch User</td>
-                  <td className="p-2.5">Assigned City Branch</td>
-                  <td className="p-2.5">Read & Entry Only</td>
-                  <td className="p-2.5">Roznamcha Entry</td>
-                  <td className="p-2.5">Stock In/Out Entry</td>
-                  <td className="p-2.5">No Access</td>
+                  <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-100">{th("City Branch User")}</td>
+                  <td className="p-2.5">{th("Assigned City Branch")}</td>
+                  <td className="p-2.5">{th("Read & Entry Only")}</td>
+                  <td className="p-2.5">{th("Roznamcha Entry")}</td>
+                  <td className="p-2.5">{th("Stock In/Out Entry")}</td>
+                  <td className="p-2.5">{th("No Access")}</td>
                 </tr>
               </tbody>
             </table>
@@ -749,7 +749,7 @@ export default function HandoverReportPage() {
       {/* Tab: Guide */}
       {activeTab === "guide" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Instructions for Future Developers & Engineers</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{th("Instructions for Future Developers & Engineers")}</h2>
           <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             <p>
               1. <strong>Do Not Re-implement Existing Architecture:</strong> All master registries follow the unified <code>UniversalReportModal</code>, <code>localizeRecordNames</code>, and <code>record_translations</code> pattern.
