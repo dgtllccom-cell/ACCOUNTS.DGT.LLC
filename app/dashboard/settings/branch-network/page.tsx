@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { Building, Globe } from "lucide-react";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export const metadata = { title: "Settings — Branch Network" };
 
@@ -63,27 +65,30 @@ async function loadBranchNetworks(): Promise<CountryBranchNode[]> {
 
 export default async function BranchNetworkPage() {
   const countryBranches = await loadBranchNetworks();
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("erp_lang")?.value ?? "en") as never;
+  const th = (label: string) => translateHeader(lang, label);
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Master Form</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{th("Master Form")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight flex items-center gap-2">
           <Globe className="h-6 w-6 text-indigo-500" />
-          Nations & Branch Networks
+          {th("Nations & Branch Networks")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Country -&gt; Main Branch -&gt; City Branch topology view
+          {th("Country -> Main Branch -> City Branch topology view")}
         </p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/40">
           <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Configured Networks</h2>
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{th("Configured Networks")}</h2>
           </div>
           <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" /> Live
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" /> {th("Live")}
           </span>
         </div>
         <div className="p-5">
@@ -123,12 +128,12 @@ export default async function BranchNetworkPage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="mt-1 pl-4 text-[10px] italic text-slate-400">No city branches</p>
+                              <p className="mt-1 pl-4 text-[10px] italic text-slate-400">{th("No city branches")}</p>
                             )}
                           </div>
                         ))
                       ) : (
-                        <p className="text-[11px] italic text-slate-400">No main branch configured</p>
+                        <p className="text-[11px] italic text-slate-400">{th("No main branch configured")}</p>
                       )}
                     </div>
                   </div>
@@ -136,7 +141,7 @@ export default async function BranchNetworkPage() {
               })}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-slate-400">No countries configured yet.</p>
+            <p className="py-8 text-center text-sm text-slate-400">{th("No countries configured yet.")}</p>
           )}
         </div>
       </div>
