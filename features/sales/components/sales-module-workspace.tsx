@@ -466,10 +466,10 @@ export function SalesModuleWorkspace({
           </Button>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MiniStat label="Sales Bookings" value={totals.orders.toLocaleString()} />
-          <MiniStat label="Total Quantity" value={totals.quantity.toLocaleString()} />
-          <MiniStat label="Total Containers" value={totals.containers.toLocaleString()} />
-          <MiniStat label="Total Weight" value={`${totals.weight.toLocaleString()} KG`} />
+          <MiniStat label={t(lang, "smw.sales_bookings", "Sales Bookings")} value={totals.orders.toLocaleString()} />
+          <MiniStat label={t(lang, "smw.total_quantity", "Total Quantity")} value={totals.quantity.toLocaleString()} />
+          <MiniStat label={t(lang, "smw.total_containers", "Total Containers")} value={totals.containers.toLocaleString()} />
+          <MiniStat label={t(lang, "smw.total_weight", "Total Weight")} value={`${totals.weight.toLocaleString()} KG`} />
         </div>
       </section>
 

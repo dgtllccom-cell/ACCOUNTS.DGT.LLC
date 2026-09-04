@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "smw.sales_bookings"
+  | "smw.total_quantity"
+  | "smw.total_containers"
+  | "smw.total_weight"
   | "branch.seal_verified"
   | "branch.seal_authorized"
   | "branch.enterprise_erp_fms"
@@ -18783,6 +18787,14 @@ const en: Dict = {
 
 
 
+
+  "smw.sales_bookings": "Sales Bookings",
+
+  "smw.total_quantity": "Total Quantity",
+
+  "smw.total_containers": "Total Containers",
+
+  "smw.total_weight": "Total Weight",
   "branch.seal_verified": "VERIFIED",
 
   "branch.seal_authorized": "AUTHORIZED",
@@ -34648,6 +34660,14 @@ const ur: Dict = {
 
 
 
+
+  "smw.sales_bookings": "سیلز بکنگز",
+
+  "smw.total_quantity": "کل مقدار",
+
+  "smw.total_containers": "کل کنٹینرز",
+
+  "smw.total_weight": "کل وزن",
   "branch.seal_verified": "تصدیق شدہ",
 
   "branch.seal_authorized": "مجاز",
@@ -50515,6 +50535,14 @@ const ar: Dict = {
 
 
 
+
+  "smw.sales_bookings": "حجوزات المبيعات",
+
+  "smw.total_quantity": "إجمالي الكمية",
+
+  "smw.total_containers": "إجمالي الحاويات",
+
+  "smw.total_weight": "إجمالي الوزن",
   "branch.seal_verified": "موثّق",
 
   "branch.seal_authorized": "مخوّل",
@@ -66381,6 +66409,14 @@ const fa: Dict = {
 
 
 
+
+  "smw.sales_bookings": "رزروهای فروش",
+
+  "smw.total_quantity": "مجموع مقدار",
+
+  "smw.total_containers": "مجموع کانتینرها",
+
+  "smw.total_weight": "مجموع وزن",
   "branch.seal_verified": "تأییدشده",
 
   "branch.seal_authorized": "مجاز",
@@ -82253,6 +82289,14 @@ const ps: Dict = {
 
 
 
+
+  "smw.sales_bookings": "د پلورنې بکینګونه",
+
+  "smw.total_quantity": "ټول اندازه",
+
+  "smw.total_containers": "ټول کانتینرونه",
+
+  "smw.total_weight": "ټول وزن",
   "branch.seal_verified": "تایید شوی",
 
   "branch.seal_authorized": "اجازه لرونکی",
