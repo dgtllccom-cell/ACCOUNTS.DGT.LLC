@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { t } from "@/lib/i18n/ui";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+
+function readLangCookie(): SupportedLanguage {
+  try {
+    if (typeof document === "undefined") return "en";
+    const match = document.cookie.match(/(?:^|;\s*)erp_lang=([^;]+)/);
+    const v = match ? decodeURIComponent(match[1]) : "en";
+    return (["en", "ur", "ar", "fa", "ps"] as const).includes(v as any) ? (v as SupportedLanguage) : "en";
+  } catch {
+    return "en";
+  }
+}
 
 export default function GlobalError({
   error,
@@ -10,6 +23,8 @@ export default function GlobalError({
   reset: () => void;
 }) {
   const [refId] = useState(() => "ERR-ROOT-" + Math.random().toString(36).substring(2, 8).toUpperCase());
+  const [lang] = useState<SupportedLanguage>(() => readLangCookie());
+  const tt = (key: string, fallback: string) => t(lang, ("globalerr." + key) as never, fallback);
 
   useEffect(() => {
     console.error(`[GlobalError ${refId}] Root error boundary caught exception:`, error);
@@ -86,21 +101,23 @@ export default function GlobalError({
     window.location.href = window.location.href;
   };
 
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
+
   return (
-    <html lang="en">
+    <html lang={lang} dir={isRtl ? "rtl" : "ltr"}>
       <body style={{ margin: 0, padding: 0, fontFamily: "system-ui, -apple-system, sans-serif", backgroundColor: "#0f172a", color: "#f8fafc", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ maxWidth: "480px", width: "90%", margin: "auto", padding: "2rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)" }}>
           <div style={{ width: "48px", height: "48px", margin: "0 auto 1rem", borderRadius: "1rem", backgroundColor: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>
             ⚠️
           </div>
           <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#94a3b8", marginBottom: "8px" }}>
-            Reference ID: {refId}
+            {tt("reference_id", "Reference ID:")} {refId}
           </div>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 900, marginBottom: "0.5rem" }}>
-            Application Diagnostic Notice
+            {tt("diagnostic_notice", "Application Diagnostic Notice")}
           </h2>
           <p style={{ fontSize: "0.85rem", color: "#94a3b8", lineHeight: 1.5, marginBottom: "1rem" }}>
-            A client-side execution exception occurred. Details:
+            {tt("exception_occurred", "A client-side execution exception occurred. Details:")}
           </p>
 
           <div style={{ textAlign: "left", backgroundColor: "#090d16", padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", fontSize: "11px", fontFamily: "monospace", color: "#f87171", marginBottom: "1.5rem", overflowX: "auto", maxHeight: "140px" }}>
@@ -115,13 +132,13 @@ export default function GlobalError({
               onClick={handleHardReload}
               style={{ flex: 1, padding: "0.75rem", backgroundColor: "#2563eb", color: "#ffffff", border: "none", borderRadius: "0.75rem", fontWeight: "bold", fontSize: "0.85rem", cursor: "pointer" }}
             >
-              🔄 Update App & Reload
+              🔄 {tt("update_reload", "Update App & Reload")}
             </button>
             <button
               onClick={() => (window.location.href = "/dashboard")}
               style={{ flex: 1, padding: "0.75rem", backgroundColor: "transparent", color: "#cbd5e1", border: "1px solid #475569", borderRadius: "0.75rem", fontWeight: "bold", fontSize: "0.85rem", cursor: "pointer" }}
             >
-              🏠 Dashboard
+              🏠 {tt("dashboard", "Dashboard")}
             </button>
           </div>
         </div>

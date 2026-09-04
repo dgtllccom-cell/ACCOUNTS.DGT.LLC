@@ -927,6 +927,11 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "globalerr.reference_id"
+  | "globalerr.diagnostic_notice"
+  | "globalerr.exception_occurred"
+  | "globalerr.update_reload"
+  | "globalerr.dashboard"
   | "plf.transfer_remaining_balance"
   | "plf.container_no_ph"
   | "plf.stock_stage"
@@ -18837,6 +18842,16 @@ const en: Dict = {
 
 
 
+
+  "globalerr.reference_id": "Reference ID:",
+
+  "globalerr.diagnostic_notice": "Application Diagnostic Notice",
+
+  "globalerr.exception_occurred": "A client-side execution exception occurred. Details:",
+
+  "globalerr.update_reload": "Update App & Reload",
+
+  "globalerr.dashboard": "Dashboard",
   "plf.transfer_remaining_balance": "Transfer Remaining Balance to Journal",
 
   "plf.container_no_ph": "e.g. MSKU-1234567",
@@ -34788,6 +34803,16 @@ const ur: Dict = {
 
 
 
+
+  "globalerr.reference_id": "حوالہ آئی ڈی:",
+
+  "globalerr.diagnostic_notice": "ایپلیکیشن تشخیصی نوٹس",
+
+  "globalerr.exception_occurred": "کلائنٹ سائیڈ ایگزیکیوشن میں استثنا پیش آیا۔ تفصیلات:",
+
+  "globalerr.update_reload": "ایپ اپ ڈیٹ کریں و ری لوڈ کریں",
+
+  "globalerr.dashboard": "ڈیش بورڈ",
   "plf.transfer_remaining_balance": "بقیہ بیلنس جرنل میں منتقل کریں",
 
   "plf.container_no_ph": "مثلاً MSKU-1234567",
@@ -50741,6 +50766,16 @@ const ar: Dict = {
 
 
 
+
+  "globalerr.reference_id": "معرف المرجع:",
+
+  "globalerr.diagnostic_notice": "إشعار تشخيص التطبيق",
+
+  "globalerr.exception_occurred": "حدث استثناء تنفيذ من جانب العميل. التفاصيل:",
+
+  "globalerr.update_reload": "تحديث التطبيق وإعادة التحميل",
+
+  "globalerr.dashboard": "لوحة التحكم",
   "plf.transfer_remaining_balance": "تحويل الرصيد المتبقي إلى اليومية",
 
   "plf.container_no_ph": "مثال: MSKU-1234567",
@@ -66693,6 +66728,16 @@ const fa: Dict = {
 
 
 
+
+  "globalerr.reference_id": "شناسه مرجع:",
+
+  "globalerr.diagnostic_notice": "اعلان تشخیصی برنامه",
+
+  "globalerr.exception_occurred": "یک استثنای اجرای سمت کلاینت رخ داد. جزئیات:",
+
+  "globalerr.update_reload": "به‌روزرسانی برنامه و بارگذاری مجدد",
+
+  "globalerr.dashboard": "داشبورد",
   "plf.transfer_remaining_balance": "انتقال مانده باقی به ژورنال",
 
   "plf.container_no_ph": "مثال: MSKU-1234567",
@@ -82651,6 +82696,16 @@ const ps: Dict = {
 
 
 
+
+  "globalerr.reference_id": "د حواله پیژندنه:",
+
+  "globalerr.diagnostic_notice": "د اپلیکیشن تشخیصي خبرتیا",
+
+  "globalerr.exception_occurred": "د پیرودګلي اړخ اجرا استثنا رامنځته شوه. تفصیلات:",
+
+  "globalerr.update_reload": "اپلیکیشن تازه کول او بیا بارول",
+
+  "globalerr.dashboard": "ډشبورډ",
   "plf.transfer_remaining_balance": "پاتې بیلانس ژورنال ته لېږل",
 
   "plf.container_no_ph": "بېلګه: MSKU-1234567",
