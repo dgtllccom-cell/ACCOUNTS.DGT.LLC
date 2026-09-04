@@ -73,18 +73,21 @@ type Props = {
   initialConversations?: ConversationItem[];
 };
 
-const INBOX_TABS = [
-  { key: "all", label: "All Messages" },
-  { key: "whatsapp", label: "WhatsApp" },
-  { key: "email", label: "Email" },
-  { key: "unread", label: "Unread" },
-  { key: "pending_reply", label: "Pending Reply" },
-  { key: "ai_ready", label: "AI Reply Ready" },
-  { key: "approval_required", label: "Approval Required" },
-  { key: "replied", label: "Replied" },
-  { key: "scheduled", label: "Scheduled" },
-  { key: "failed", label: "Failed" }
+const INBOX_TABS: ReadonlyArray<{ key: string; labelKey: UiKey }> = [
+  { key: "all", labelKey: "rsms.tab_all" },
+  { key: "whatsapp", labelKey: "rsms.tab_whatsapp" },
+  { key: "email", labelKey: "rsms.tab_email" },
+  { key: "unread", labelKey: "rsms.tab_unread" },
+  { key: "pending_reply", labelKey: "rsms.tab_pending" },
+  { key: "ai_ready", labelKey: "rsms.tab_ai_ready" },
+  { key: "approval_required", labelKey: "rsms.tab_approval" },
+  { key: "replied", labelKey: "rsms.tab_replied" },
+  { key: "scheduled", labelKey: "rsms.tab_scheduled" },
+  { key: "failed", labelKey: "rsms.tab_failed" }
 ] as const;
+
+/** One selectable WhatsApp scope profile, built from real verified DB accounts. */
+type BranchScopeOption = { value: string; label: string };
 
 export function UnifiedInboxView({ lang: langProp }: Props) {
   const activeLang = useActiveLanguage();
@@ -110,14 +113,21 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [selectedBranchScope, setSelectedBranchScope] = useState("global");
+  const [branchScopeOptions, setBranchScopeOptions] = useState<BranchScopeOption[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  // Webhook receiver is served by this same deployment — derive it from the
+  // live origin so it is correct on DEV, staging and production alike.
+  const webhookUrl = useMemo(() => {
+    const origin =
+      (typeof window !== "undefined" && window.location?.origin) || "https://api.dgt.llc";
+    return `${origin}/api/erp/return-sms-reply/webhooks/whatsapp`;
+  }, []);
   const [whatsappConfig, setWhatsappConfig] = useState({
     officialNumber: null as string | null,
     adminNumber: null as string | null,
     accountName: null as string | null,
     wbaId: null as string | null,
     phoneNumberId: null as string | null,
-    webhookUrl: "http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp",
     isConnected: false // Always false until a real verified account is found in DB
   });
 
@@ -127,6 +137,26 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
       const res = await fetch("/api/erp/whatsapp/accounts");
       const json = await res.json();
       const accounts = json.data || json || [];
+
+      // Real, scope-filtered profiles the operator can configure — from verified
+      // DB records only, never a hard-coded preset list. Branch / country names
+      // are business data, so they are shown verbatim (not translated).
+      if (Array.isArray(accounts)) {
+        const opts: BranchScopeOption[] = [];
+        for (const a of accounts) {
+          const name =
+            a.city_branches?.city_name ||
+            a.city_branches?.name ||
+            a.country_branches?.name ||
+            a.countries?.name ||
+            a.display_name;
+          if (!name) continue;
+          const value = a.city_branch_id || a.country_branch_id || a.country_id || a.id;
+          if (opts.some((o) => o.value === String(value))) continue;
+          opts.push({ value: String(value), label: String(name) });
+        }
+        setBranchScopeOptions(opts);
+      }
 
       if (Array.isArray(accounts) && accounts.length > 0) {
         // Only count as CONNECTED if the account has real (non-placeholder) credentials
@@ -335,33 +365,33 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-black tracking-tight text-white">WhatsApp Business API Official Channel</h2>
+                <h2 className="text-base font-black tracking-tight text-white">{_("rsms.banner_title", "WhatsApp Business API Official Channel")}</h2>
                 {whatsappConfig.isConnected ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-emerald-300 shadow-xs">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                     </span>
-                    CONNECTED ({whatsappConfig.officialNumber})
+                    {_("rsms.banner_connected", "Connected")} ({whatsappConfig.officialNumber})
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-amber-300 shadow-xs">
                     <span className="h-2 w-2 rounded-full bg-amber-400"></span>
-                    {th("NOT CONNECTED — Click Connect Official WhatsApp")}
+                    {_("rsms.banner_not_connected", "Not connected — click Connect Official WhatsApp")}
                   </span>
                 )}
               </div>
               <p className="text-xs font-medium text-slate-300/80 mt-1 flex items-center gap-1.5 flex-wrap">
                 {whatsappConfig.isConnected ? (
                   <>
-                    <span>{th("Live Webhook")}:</span>
+                    <span>{_("rsms.banner_live_webhook", "Live Webhook")}:</span>
                     <code className="bg-slate-950/80 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[10.5px] font-mono text-emerald-300">
-                      http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp
+                      {webhookUrl}
                     </code>
                   </>
                 ) : (
                   <span className="text-emerald-300/90 font-medium">
-                    Click Connect Official WhatsApp → Enter your branch phone number to receive 6-digit verification code
+                    {_("rsms.banner_connect_hint", "Click Connect Official WhatsApp, then enter your branch phone number to receive a 6-digit verification code.")}
                   </span>
                 )}
               </p>
@@ -375,14 +405,14 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   onClick={() => setShowQrModal(true)}
                   className="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 border border-emerald-300/40 transition-all active:scale-95 cursor-pointer"
                 >
-                  <QrCode className="h-4 w-4 text-slate-950" /> Connect Official WhatsApp
+                  <QrCode className="h-4 w-4 text-slate-950" /> {_("rsms.connect_btn", "Connect Official WhatsApp")}
                 </button>
 
                 <button
                   onClick={() => setShowConfigModal(true)}
                   className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 backdrop-blur-md shadow-sm transition-all cursor-pointer"
                 >
-                  <ShieldAlert className="h-4 w-4 text-amber-300" /> Config
+                  <ShieldAlert className="h-4 w-4 text-amber-300" /> {_("rsms.config_btn", "Config")}
                 </button>
               </>
             )}
@@ -406,7 +436,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
             {tab.key === "whatsapp" && <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />}
             {tab.key === "email" && <Mail className="h-3.5 w-3.5 text-blue-400" />}
             {tab.key === "ai_ready" && <Sparkles className="h-3.5 w-3.5 text-amber-400" />}
-            {th(tab.label)}
+            {_(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -423,7 +453,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
               <Search className={cn("absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400", isRTL ? "right-3" : "left-3")} />
               <input
                 type="text"
-                placeholder={th("Search sender, number, or text...")}
+                placeholder={_("rsms.search_ph", "Search sender, number, or text…")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={cn(
@@ -439,12 +469,12 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
             {loadingConv ? (
               <div className="py-12 text-center text-xs text-slate-400">
                 <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-emerald-500" />
-                {th("Loading conversations...")}
+                {_("rsms.loading_conversations", "Loading conversations…")}
               </div>
             ) : conversations.length === 0 ? (
               <div className="py-16 text-center text-xs text-slate-400">
                 <MessageSquare className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                {th("No messages found")}
+                {_("rsms.no_messages", "No messages found")}
               </div>
             ) : (
               conversations.map((c) => (
@@ -474,7 +504,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     </div>
 
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                      {c.lastMessageText || "No message history"}
+                      {c.lastMessageText || _("rsms.no_message_history", "No message history")}
                     </p>
 
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -488,12 +518,12 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                       )}
                       {c.status === "ai_ready" && (
                         <span className="text-[9px] font-black rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-950 dark:text-amber-400 flex items-center gap-0.5">
-                          <Sparkles className="h-2.5 w-2.5" /> AI Ready
+                          <Sparkles className="h-2.5 w-2.5" /> {_("rsms.badge_ai_ready", "AI Ready")}
                         </span>
                       )}
                       {c.status === "approval_required" && (
                         <span className="text-[9px] font-black rounded-md bg-rose-100 px-1.5 py-0.5 text-rose-700 dark:bg-rose-950 dark:text-rose-400 flex items-center gap-0.5">
-                          <ShieldAlert className="h-2.5 w-2.5" /> Approval
+                          <ShieldAlert className="h-2.5 w-2.5" /> {_("rsms.badge_approval", "Approval")}
                         </span>
                       )}
                     </div>
@@ -509,7 +539,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
           {!selectedConv ? (
             <div className="flex flex-col items-center justify-center flex-1 p-8 text-center text-slate-400">
               <Bot className="h-12 w-12 text-slate-300 dark:text-slate-700 mb-3" />
-              <p className="text-sm font-bold">Select a conversation from the list to start replying</p>
+              <p className="text-sm font-bold">{_("rsms.pick_conversation", "Select a conversation from the list to start replying")}</p>
             </div>
           ) : (
             <>
@@ -544,7 +574,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:border-indigo-900 dark:text-indigo-300 shadow-sm"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    {th("Open Related ERP Record")}
+                    {_("rsms.open_related_record", "Open Related ERP Record")}
                   </a>
                 )}
               </div>
@@ -552,19 +582,21 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
               {/* Chat Messages Timeline */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/30 dark:bg-slate-950/30">
                 {loadingMsgs ? (
-                  <div className="py-12 text-center text-xs text-slate-400">Loading messages...</div>
-                ) : messages.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-slate-400">{_("rsms.loading_messages", "Loading messages…")}</div>
+                ) : messages.length === 0 && selectedConv.lastMessageText ? (
                   <div className="flex flex-col max-w-[85%] mr-auto items-start">
                     <div className="rounded-2xl p-3.5 text-xs leading-relaxed shadow-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none">
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-                        <MessageSquare className="h-3 w-3" /> Incoming Customer Message
+                        <MessageSquare className="h-3 w-3" /> {_("rsms.incoming_message", "Incoming Customer Message")}
                       </div>
-                      <p className="whitespace-pre-wrap font-medium">{selectedConv.lastMessageText || "Hello, requesting update on order status."}</p>
+                      <p className="whitespace-pre-wrap font-medium">{selectedConv.lastMessageText}</p>
                     </div>
                     <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400">
-                      <span>{selectedConv.lastMessageAt ? new Date(selectedConv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}</span>
+                      <span>{selectedConv.lastMessageAt ? new Date(selectedConv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : _("rsms.just_now", "Just now")}</span>
                     </div>
                   </div>
+                ) : messages.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-slate-400">{_("rsms.no_message_yet", "No messages in this conversation yet.")}</div>
                 ) : (
                   messages.map((m) => (
                     <div
@@ -611,7 +643,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                       className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 text-xs font-bold hover:opacity-90 shadow-sm disabled:opacity-50"
                     >
                       <Sparkles className={cn("h-3.5 w-3.5", isGeneratingAi && "animate-spin")} />
-                      {isGeneratingAi ? "Querying ERP Live Data..." : "Generate AI Reply"}
+                      {isGeneratingAi ? _("rsms.querying_erp", "Querying ERP live data…") : _("rsms.generate_ai", "Generate AI Reply")}
                     </button>
 
                     {/* Language Selector */}
@@ -634,7 +666,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
 
                   {aiDraft && (
                     <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded-lg">
-                      ✓ AI Verified Live Context
+                      ✓ {_("rsms.ai_verified", "AI verified against live context")}
                     </span>
                   )}
                 </div>
@@ -643,7 +675,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                 <div className="relative">
                   <textarea
                     rows={3}
-                    placeholder={th("Type a reply or click Generate AI Reply to draft automatically...")}
+                    placeholder={_("rsms.reply_ph", "Type a reply, or click Generate AI Reply to draft one automatically…")}
                     value={replyInput}
                     onChange={(e) => setReplyInput(e.target.value)}
                     className="w-full text-xs rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-950 dark:border-slate-800 p-3 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
@@ -652,7 +684,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2 text-slate-400">
                       <Paperclip className="h-4 w-4 cursor-pointer hover:text-slate-600" />
-                      <span className="text-[10px]">Zero Hallucination DB Active</span>
+                      <span className="text-[10px]">{_("rsms.zero_hallucination", "Zero-hallucination database mode active")}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -662,7 +694,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                         className="flex items-center gap-1.5 rounded-xl bg-amber-600 text-white px-4 py-2 text-xs font-bold hover:bg-amber-700 disabled:opacity-40"
                       >
                         <UserCheck className="h-3.5 w-3.5" />
-                        {th("Approve & Send")}
+                        {_("rsms.approve_send", "Approve & Send")}
                       </button>
 
                       <button
@@ -671,7 +703,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                         className="flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white px-4 py-2 text-xs font-bold hover:bg-emerald-700 disabled:opacity-40 shadow-sm"
                       >
                         <Send className="h-3.5 w-3.5" />
-                        {isSending ? "Sending..." : "Send Reply"}
+                        {isSending ? _("rsms.sending", "Sending…") : _("rsms.send_reply", "Send Reply")}
                       </button>
                     </div>
                   </div>
@@ -693,9 +725,9 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                 </div>
                 <div>
                   <h3 className="font-black text-base text-slate-900 dark:text-white">
-                    {th("WhatsApp Business API Account & Admin Config")}
+                    {_("rsms.cfg_title", "WhatsApp Business API — Account & Admin Config")}
                   </h3>
-                  <p className="text-xs text-slate-500">{th("Official ERP WhatsApp Channel & Admin Mobile Numbers")}</p>
+                  <p className="text-xs text-slate-500">{_("rsms.cfg_subtitle", "Official ERP WhatsApp channel and admin mobile numbers")}</p>
                 </div>
               </div>
               <button
@@ -709,7 +741,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
             <div className="space-y-4 text-xs">
               <div className="space-y-1 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <label className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <Globe className="h-4 w-4 text-blue-500" /> Select Branch / Country Profile to Configure WhatsApp
+                  <Globe className="h-4 w-4 text-blue-500" /> {_("rsms.cfg_select_scope", "Select the branch / country profile to configure")}
                 </label>
                 <select
                   value={selectedBranchScope}
@@ -720,27 +752,29 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   }}
                   className="w-full font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
                 >
-                  <option value="global">🌐 Super Admin Main Line (Global Oversight)</option>
-                  <option value="karachi">🇵🇰 Pakistan — Karachi Main Branch</option>
-                  <option value="kabul">🇦🇫 Afghanistan — Kabul Central Branch</option>
-                  <option value="dubai">🇦🇪 UAE — Dubai Branch</option>
-                  <option value="tehran">🇮🇷 Iran — Tehran Branch</option>
+                  <option value="global">{_("rsms.cfg_scope_global", "Super Admin main line (global oversight)")}</option>
+                  {branchScopeOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                  {branchScopeOptions.length === 0 && (
+                    <option value="" disabled>{_("rsms.cfg_no_accounts", "No verified WhatsApp account is configured yet")}</option>
+                  )}
                 </select>
               </div>
 
               <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 p-4 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
                 <div>
-                  <p className="font-extrabold text-emerald-800 dark:text-emerald-300">{th("Live Status: Active & Connected")}</p>
+                  <p className="font-extrabold text-emerald-800 dark:text-emerald-300">{_("rsms.cfg_live_status", "Live status: active & connected")}</p>
                   <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">{whatsappConfig.accountName}</p>
                 </div>
                 <span className="bg-emerald-600 text-white font-black px-3 py-1 rounded-full text-[10px] tracking-wider uppercase">
-                  {th("ONLINE")}
+                  {_("rsms.cfg_online", "Online")}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Connected Company WhatsApp Number</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300">{_("rsms.cfg_company_number", "Connected company WhatsApp number")}</label>
                   <input
                     type="text"
                     value={whatsappConfig.officialNumber || ""}
@@ -749,7 +783,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Admin Notification Mobile Number</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300">{_("rsms.cfg_admin_number", "Admin notification mobile number")}</label>
                   <input
                     type="text"
                     value={whatsappConfig.adminNumber || ""}
@@ -761,7 +795,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp Business Account ID (WBAID)</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300">{_("rsms.cfg_wbaid", "WhatsApp Business Account ID (WBAID)")}</label>
                   <input
                     type="text"
                     value={whatsappConfig.wbaId || ""}
@@ -770,7 +804,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Phone Number ID</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300">{_("rsms.cfg_phone_id", "Phone Number ID")}</label>
                   <input
                     type="text"
                     value={whatsappConfig.phoneNumberId || ""}
@@ -781,19 +815,19 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Live Server Webhook Receiver URL</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300">{_("rsms.cfg_webhook_url", "Live server webhook receiver URL")}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
-                    value={whatsappConfig.webhookUrl}
+                    value={webhookUrl}
                     className="w-full font-mono text-[10.5px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 outline-none"
                   />
                   <button
-                    onClick={() => navigator.clipboard.writeText(whatsappConfig.webhookUrl)}
+                    onClick={() => navigator.clipboard.writeText(webhookUrl)}
                     className="px-3 py-2.5 bg-slate-800 text-white font-bold text-xs rounded-xl hover:bg-slate-700 shrink-0"
                   >
-                    Copy
+                    {_("rsms.copy", "Copy")}
                   </button>
                 </div>
               </div>
@@ -804,7 +838,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                 onClick={() => setShowConfigModal(false)}
                 className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                Close
+                {_("common.close", "Close")}
               </button>
               <button
                 onClick={() => {
@@ -812,7 +846,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                 }}
                 className="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
               >
-                {th("Save Configuration")}
+                {_("rsms.save_config", "Save Configuration")}
               </button>
             </div>
           </div>

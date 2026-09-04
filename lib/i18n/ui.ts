@@ -927,6 +927,60 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "sms_reply.scope_global"
+  | "sms_reply.scope_country"
+  | "sms_reply.scope_branch"
+  | "rsms.tab_all"
+  | "rsms.tab_whatsapp"
+  | "rsms.tab_email"
+  | "rsms.tab_unread"
+  | "rsms.tab_pending"
+  | "rsms.tab_ai_ready"
+  | "rsms.tab_approval"
+  | "rsms.tab_replied"
+  | "rsms.tab_scheduled"
+  | "rsms.tab_failed"
+  | "rsms.banner_title"
+  | "rsms.banner_connected"
+  | "rsms.banner_not_connected"
+  | "rsms.banner_live_webhook"
+  | "rsms.banner_connect_hint"
+  | "rsms.connect_btn"
+  | "rsms.config_btn"
+  | "rsms.search_ph"
+  | "rsms.loading_conversations"
+  | "rsms.no_messages"
+  | "rsms.badge_ai_ready"
+  | "rsms.badge_approval"
+  | "rsms.pick_conversation"
+  | "rsms.open_related_record"
+  | "rsms.loading_messages"
+  | "rsms.incoming_message"
+  | "rsms.no_message_history"
+  | "rsms.no_message_yet"
+  | "rsms.just_now"
+  | "rsms.querying_erp"
+  | "rsms.generate_ai"
+  | "rsms.ai_verified"
+  | "rsms.reply_ph"
+  | "rsms.zero_hallucination"
+  | "rsms.approve_send"
+  | "rsms.sending"
+  | "rsms.send_reply"
+  | "rsms.cfg_title"
+  | "rsms.cfg_subtitle"
+  | "rsms.cfg_select_scope"
+  | "rsms.cfg_scope_global"
+  | "rsms.cfg_no_accounts"
+  | "rsms.cfg_live_status"
+  | "rsms.cfg_online"
+  | "rsms.cfg_company_number"
+  | "rsms.cfg_admin_number"
+  | "rsms.cfg_wbaid"
+  | "rsms.cfg_phone_id"
+  | "rsms.cfg_webhook_url"
+  | "rsms.copy"
+  | "rsms.save_config"
   | "dintake.purpose_bill_expense_line"
   | "bexp.ai_scan_receipt"
   | "bexp.ai_verify_first"
@@ -18076,6 +18130,168 @@ const en: Dict = {
 
 
 
+
+
+
+
+  "sms_reply.scope_global": "Global Scope",
+
+
+  "sms_reply.scope_country": "Country Scope",
+
+
+  "sms_reply.scope_branch": "Branch Scope",
+  "rsms.tab_all": "All Messages",
+
+
+  "rsms.tab_whatsapp": "WhatsApp",
+
+
+  "rsms.tab_email": "Email",
+
+
+  "rsms.tab_unread": "Unread",
+
+
+  "rsms.tab_pending": "Pending Reply",
+
+
+  "rsms.tab_ai_ready": "AI Reply Ready",
+
+
+  "rsms.tab_approval": "Approval Required",
+
+
+  "rsms.tab_replied": "Replied",
+
+
+  "rsms.tab_scheduled": "Scheduled",
+
+
+  "rsms.tab_failed": "Failed",
+
+
+  "rsms.banner_title": "WhatsApp Business API Official Channel",
+
+
+  "rsms.banner_connected": "Connected",
+
+
+  "rsms.banner_not_connected": "Not connected — click Connect Official WhatsApp",
+
+
+  "rsms.banner_live_webhook": "Live Webhook",
+
+
+  "rsms.banner_connect_hint": "Click Connect Official WhatsApp, then enter your branch phone number to receive a 6-digit verification code.",
+
+
+  "rsms.connect_btn": "Connect Official WhatsApp",
+
+
+  "rsms.config_btn": "Config",
+
+
+  "rsms.search_ph": "Search sender, number, or text…",
+
+
+  "rsms.loading_conversations": "Loading conversations…",
+
+
+  "rsms.no_messages": "No messages found",
+
+
+  "rsms.badge_ai_ready": "AI Ready",
+
+
+  "rsms.badge_approval": "Approval",
+
+
+  "rsms.pick_conversation": "Select a conversation from the list to start replying",
+
+
+  "rsms.open_related_record": "Open Related ERP Record",
+
+
+  "rsms.loading_messages": "Loading messages…",
+
+
+  "rsms.incoming_message": "Incoming Customer Message",
+
+
+  "rsms.no_message_history": "No message history",
+
+
+  "rsms.no_message_yet": "No messages in this conversation yet.",
+
+
+  "rsms.just_now": "Just now",
+
+
+  "rsms.querying_erp": "Querying ERP live data…",
+
+
+  "rsms.generate_ai": "Generate AI Reply",
+
+
+  "rsms.ai_verified": "AI verified against live context",
+
+
+  "rsms.reply_ph": "Type a reply, or click Generate AI Reply to draft one automatically…",
+
+
+  "rsms.zero_hallucination": "Zero-hallucination database mode active",
+
+
+  "rsms.approve_send": "Approve & Send",
+
+
+  "rsms.sending": "Sending…",
+
+
+  "rsms.send_reply": "Send Reply",
+
+
+  "rsms.cfg_title": "WhatsApp Business API — Account & Admin Config",
+
+
+  "rsms.cfg_subtitle": "Official ERP WhatsApp channel and admin mobile numbers",
+
+
+  "rsms.cfg_select_scope": "Select the branch / country profile to configure",
+
+
+  "rsms.cfg_scope_global": "Super Admin main line (global oversight)",
+
+
+  "rsms.cfg_no_accounts": "No verified WhatsApp account is configured yet",
+
+
+  "rsms.cfg_live_status": "Live status: active & connected",
+
+
+  "rsms.cfg_online": "Online",
+
+
+  "rsms.cfg_company_number": "Connected company WhatsApp number",
+
+
+  "rsms.cfg_admin_number": "Admin notification mobile number",
+
+
+  "rsms.cfg_wbaid": "WhatsApp Business Account ID (WBAID)",
+
+
+  "rsms.cfg_phone_id": "Phone Number ID",
+
+
+  "rsms.cfg_webhook_url": "Live server webhook receiver URL",
+
+
+  "rsms.copy": "Copy",
+
+
+  "rsms.save_config": "Save Configuration",
   "dintake.purpose_bill_expense_line": "Bill Expense Line (Freight / Customs / Clearing)",
 
 
@@ -32433,6 +32649,168 @@ const ur: Dict = {
 
 
 
+
+
+
+
+  "sms_reply.scope_global": "عالمی دائرہ کار",
+
+
+  "sms_reply.scope_country": "ملکی دائرہ کار",
+
+
+  "sms_reply.scope_branch": "برانچ دائرہ کار",
+  "rsms.tab_all": "تمام پیغامات",
+
+
+  "rsms.tab_whatsapp": "واٹس ایپ",
+
+
+  "rsms.tab_email": "ای میل",
+
+
+  "rsms.tab_unread": "غیر پڑھے",
+
+
+  "rsms.tab_pending": "جواب زیر التوا",
+
+
+  "rsms.tab_ai_ready": "AI جواب تیار",
+
+
+  "rsms.tab_approval": "منظوری درکار",
+
+
+  "rsms.tab_replied": "جواب دیا گیا",
+
+
+  "rsms.tab_scheduled": "شیڈول شدہ",
+
+
+  "rsms.tab_failed": "ناکام",
+
+
+  "rsms.banner_title": "واٹس ایپ بزنس API آفیشل چینل",
+
+
+  "rsms.banner_connected": "منسلک",
+
+
+  "rsms.banner_not_connected": "منسلک نہیں — Connect Official WhatsApp پر کلک کریں",
+
+
+  "rsms.banner_live_webhook": "لائیو ویب ہک",
+
+
+  "rsms.banner_connect_hint": "Connect Official WhatsApp پر کلک کریں، پھر 6 ہندسوں کا تصدیقی کوڈ حاصل کرنے کے لیے اپنی برانچ کا فون نمبر درج کریں۔",
+
+
+  "rsms.connect_btn": "آفیشل واٹس ایپ منسلک کریں",
+
+
+  "rsms.config_btn": "کنفیگ",
+
+
+  "rsms.search_ph": "بھیجنے والا، نمبر یا متن تلاش کریں…",
+
+
+  "rsms.loading_conversations": "گفتگوئیں لوڈ ہو رہی ہیں…",
+
+
+  "rsms.no_messages": "کوئی پیغام نہیں ملا",
+
+
+  "rsms.badge_ai_ready": "AI تیار",
+
+
+  "rsms.badge_approval": "منظوری",
+
+
+  "rsms.pick_conversation": "جواب دینا شروع کرنے کے لیے فہرست سے ایک گفتگو منتخب کریں",
+
+
+  "rsms.open_related_record": "متعلقہ ERP ریکارڈ کھولیں",
+
+
+  "rsms.loading_messages": "پیغامات لوڈ ہو رہے ہیں…",
+
+
+  "rsms.incoming_message": "کسٹمر کا آنے والا پیغام",
+
+
+  "rsms.no_message_history": "کوئی پیغام کی تاریخ نہیں",
+
+
+  "rsms.no_message_yet": "اس گفتگو میں ابھی کوئی پیغام نہیں۔",
+
+
+  "rsms.just_now": "ابھی",
+
+
+  "rsms.querying_erp": "ERP لائیو ڈیٹا حاصل کیا جا رہا ہے…",
+
+
+  "rsms.generate_ai": "AI جواب بنائیں",
+
+
+  "rsms.ai_verified": "AI نے لائیو سیاق و سباق کے مطابق تصدیق کی",
+
+
+  "rsms.reply_ph": "جواب لکھیں، یا خودکار مسودہ کے لیے Generate AI Reply پر کلک کریں…",
+
+
+  "rsms.zero_hallucination": "زیرو ہیلوسینیشن ڈیٹابیس موڈ فعال",
+
+
+  "rsms.approve_send": "منظور کر کے بھیجیں",
+
+
+  "rsms.sending": "بھیجا جا رہا ہے…",
+
+
+  "rsms.send_reply": "جواب بھیجیں",
+
+
+  "rsms.cfg_title": "واٹس ایپ بزنس API — اکاؤنٹ اور ایڈمن کنفیگ",
+
+
+  "rsms.cfg_subtitle": "آفیشل ERP واٹس ایپ چینل اور ایڈمن موبائل نمبرز",
+
+
+  "rsms.cfg_select_scope": "کنفیگر کرنے کے لیے برانچ / ملک پروفائل منتخب کریں",
+
+
+  "rsms.cfg_scope_global": "سپر ایڈمن مین لائن (عالمی نگرانی)",
+
+
+  "rsms.cfg_no_accounts": "ابھی کوئی تصدیق شدہ واٹس ایپ اکاؤنٹ کنفیگر نہیں",
+
+
+  "rsms.cfg_live_status": "لائیو اسٹیٹس: فعال اور منسلک",
+
+
+  "rsms.cfg_online": "آن لائن",
+
+
+  "rsms.cfg_company_number": "منسلک کمپنی واٹس ایپ نمبر",
+
+
+  "rsms.cfg_admin_number": "ایڈمن نوٹیفکیشن موبائل نمبر",
+
+
+  "rsms.cfg_wbaid": "واٹس ایپ بزنس اکاؤنٹ ID (WBAID)",
+
+
+  "rsms.cfg_phone_id": "فون نمبر ID",
+
+
+  "rsms.cfg_webhook_url": "لائیو سرور ویب ہک ریسیور URL",
+
+
+  "rsms.copy": "کاپی",
+
+
+  "rsms.save_config": "کنفیگریشن محفوظ کریں",
   "dintake.purpose_bill_expense_line": "بل اخراجات لائن (فریٹ / کسٹمز / کلیئرنگ)",
 
 
@@ -46792,6 +47170,168 @@ const ar: Dict = {
 
 
 
+
+
+
+
+  "sms_reply.scope_global": "النطاق العالمي",
+
+
+  "sms_reply.scope_country": "نطاق الدولة",
+
+
+  "sms_reply.scope_branch": "نطاق الفرع",
+  "rsms.tab_all": "كل الرسائل",
+
+
+  "rsms.tab_whatsapp": "واتساب",
+
+
+  "rsms.tab_email": "البريد الإلكتروني",
+
+
+  "rsms.tab_unread": "غير المقروءة",
+
+
+  "rsms.tab_pending": "بانتظار الرد",
+
+
+  "rsms.tab_ai_ready": "رد الذكاء الاصطناعي جاهز",
+
+
+  "rsms.tab_approval": "يتطلب الموافقة",
+
+
+  "rsms.tab_replied": "تم الرد",
+
+
+  "rsms.tab_scheduled": "مجدول",
+
+
+  "rsms.tab_failed": "فشل",
+
+
+  "rsms.banner_title": "قناة WhatsApp Business API الرسمية",
+
+
+  "rsms.banner_connected": "متصل",
+
+
+  "rsms.banner_not_connected": "غير متصل — انقر على ربط WhatsApp الرسمي",
+
+
+  "rsms.banner_live_webhook": "خطاف ويب مباشر",
+
+
+  "rsms.banner_connect_hint": "انقر على ربط WhatsApp الرسمي، ثم أدخل رقم هاتف فرعك لتلقّي رمز تحقق من 6 أرقام.",
+
+
+  "rsms.connect_btn": "ربط WhatsApp الرسمي",
+
+
+  "rsms.config_btn": "الإعداد",
+
+
+  "rsms.search_ph": "ابحث عن المرسل أو الرقم أو النص…",
+
+
+  "rsms.loading_conversations": "جارٍ تحميل المحادثات…",
+
+
+  "rsms.no_messages": "لم يتم العثور على رسائل",
+
+
+  "rsms.badge_ai_ready": "الذكاء الاصطناعي جاهز",
+
+
+  "rsms.badge_approval": "موافقة",
+
+
+  "rsms.pick_conversation": "اختر محادثة من القائمة لبدء الرد",
+
+
+  "rsms.open_related_record": "فتح سجل ERP ذي الصلة",
+
+
+  "rsms.loading_messages": "جارٍ تحميل الرسائل…",
+
+
+  "rsms.incoming_message": "رسالة واردة من العميل",
+
+
+  "rsms.no_message_history": "لا يوجد سجل رسائل",
+
+
+  "rsms.no_message_yet": "لا توجد رسائل في هذه المحادثة بعد.",
+
+
+  "rsms.just_now": "الآن",
+
+
+  "rsms.querying_erp": "جارٍ الاستعلام عن بيانات ERP المباشرة…",
+
+
+  "rsms.generate_ai": "إنشاء رد بالذكاء الاصطناعي",
+
+
+  "rsms.ai_verified": "تم التحقق بالذكاء الاصطناعي مقابل السياق المباشر",
+
+
+  "rsms.reply_ph": "اكتب ردًا، أو انقر على إنشاء رد بالذكاء الاصطناعي لصياغته تلقائيًا…",
+
+
+  "rsms.zero_hallucination": "وضع قاعدة بيانات بدون هلوسة نشط",
+
+
+  "rsms.approve_send": "الموافقة والإرسال",
+
+
+  "rsms.sending": "جارٍ الإرسال…",
+
+
+  "rsms.send_reply": "إرسال الرد",
+
+
+  "rsms.cfg_title": "WhatsApp Business API — إعداد الحساب والمشرف",
+
+
+  "rsms.cfg_subtitle": "قناة WhatsApp الرسمية لـ ERP وأرقام هواتف المشرفين",
+
+
+  "rsms.cfg_select_scope": "اختر ملف الفرع / الدولة للإعداد",
+
+
+  "rsms.cfg_scope_global": "الخط الرئيسي للمشرف الأعلى (إشراف عالمي)",
+
+
+  "rsms.cfg_no_accounts": "لم يتم إعداد أي حساب WhatsApp موثّق بعد",
+
+
+  "rsms.cfg_live_status": "الحالة المباشرة: نشط ومتصل",
+
+
+  "rsms.cfg_online": "متصل",
+
+
+  "rsms.cfg_company_number": "رقم WhatsApp الخاص بالشركة المتصل",
+
+
+  "rsms.cfg_admin_number": "رقم هاتف إشعارات المشرف",
+
+
+  "rsms.cfg_wbaid": "معرّف حساب WhatsApp Business (WBAID)",
+
+
+  "rsms.cfg_phone_id": "معرّف رقم الهاتف",
+
+
+  "rsms.cfg_webhook_url": "عنوان URL لمستقبِل خطاف الويب على الخادم المباشر",
+
+
+  "rsms.copy": "نسخ",
+
+
+  "rsms.save_config": "حفظ الإعداد",
   "dintake.purpose_bill_expense_line": "بند مصروفات الفاتورة (شحن / جمارك / تخليص)",
 
 
@@ -61150,6 +61690,168 @@ const fa: Dict = {
 
 
 
+
+
+
+
+  "sms_reply.scope_global": "محدوده جهانی",
+
+
+  "sms_reply.scope_country": "محدوده کشوری",
+
+
+  "sms_reply.scope_branch": "محدوده شعبه",
+  "rsms.tab_all": "همه پیام‌ها",
+
+
+  "rsms.tab_whatsapp": "واتساپ",
+
+
+  "rsms.tab_email": "ایمیل",
+
+
+  "rsms.tab_unread": "خوانده‌نشده",
+
+
+  "rsms.tab_pending": "در انتظار پاسخ",
+
+
+  "rsms.tab_ai_ready": "پاسخ هوش مصنوعی آماده",
+
+
+  "rsms.tab_approval": "نیازمند تأیید",
+
+
+  "rsms.tab_replied": "پاسخ داده‌شده",
+
+
+  "rsms.tab_scheduled": "زمان‌بندی‌شده",
+
+
+  "rsms.tab_failed": "ناموفق",
+
+
+  "rsms.banner_title": "کانال رسمی WhatsApp Business API",
+
+
+  "rsms.banner_connected": "متصل",
+
+
+  "rsms.banner_not_connected": "متصل نیست — روی اتصال WhatsApp رسمی کلیک کنید",
+
+
+  "rsms.banner_live_webhook": "وب‌هوک زنده",
+
+
+  "rsms.banner_connect_hint": "روی اتصال WhatsApp رسمی کلیک کنید، سپس شماره تلفن شعبه خود را برای دریافت کد تأیید ۶ رقمی وارد کنید.",
+
+
+  "rsms.connect_btn": "اتصال WhatsApp رسمی",
+
+
+  "rsms.config_btn": "پیکربندی",
+
+
+  "rsms.search_ph": "جستجوی فرستنده، شماره یا متن…",
+
+
+  "rsms.loading_conversations": "در حال بارگذاری گفتگوها…",
+
+
+  "rsms.no_messages": "پیامی یافت نشد",
+
+
+  "rsms.badge_ai_ready": "هوش مصنوعی آماده",
+
+
+  "rsms.badge_approval": "تأیید",
+
+
+  "rsms.pick_conversation": "برای شروع پاسخ، یک گفتگو را از فهرست انتخاب کنید",
+
+
+  "rsms.open_related_record": "باز کردن سابقه ERP مرتبط",
+
+
+  "rsms.loading_messages": "در حال بارگذاری پیام‌ها…",
+
+
+  "rsms.incoming_message": "پیام ورودی مشتری",
+
+
+  "rsms.no_message_history": "سابقه پیامی نیست",
+
+
+  "rsms.no_message_yet": "هنوز پیامی در این گفتگو نیست.",
+
+
+  "rsms.just_now": "همین حالا",
+
+
+  "rsms.querying_erp": "در حال دریافت داده‌های زنده ERP…",
+
+
+  "rsms.generate_ai": "ساخت پاسخ هوش مصنوعی",
+
+
+  "rsms.ai_verified": "هوش مصنوعی با زمینه زنده تأیید شد",
+
+
+  "rsms.reply_ph": "پاسخی بنویسید، یا برای پیش‌نویس خودکار روی ساخت پاسخ هوش مصنوعی کلیک کنید…",
+
+
+  "rsms.zero_hallucination": "حالت پایگاه‌داده بدون توهم فعال",
+
+
+  "rsms.approve_send": "تأیید و ارسال",
+
+
+  "rsms.sending": "در حال ارسال…",
+
+
+  "rsms.send_reply": "ارسال پاسخ",
+
+
+  "rsms.cfg_title": "WhatsApp Business API — پیکربندی حساب و مدیر",
+
+
+  "rsms.cfg_subtitle": "کانال رسمی WhatsApp ERP و شماره‌های موبایل مدیر",
+
+
+  "rsms.cfg_select_scope": "پروفایل شعبه / کشور را برای پیکربندی انتخاب کنید",
+
+
+  "rsms.cfg_scope_global": "خط اصلی سوپر ادمین (نظارت جهانی)",
+
+
+  "rsms.cfg_no_accounts": "هنوز هیچ حساب WhatsApp تأییدشده‌ای پیکربندی نشده",
+
+
+  "rsms.cfg_live_status": "وضعیت زنده: فعال و متصل",
+
+
+  "rsms.cfg_online": "آنلاین",
+
+
+  "rsms.cfg_company_number": "شماره WhatsApp شرکت متصل",
+
+
+  "rsms.cfg_admin_number": "شماره موبایل اعلان مدیر",
+
+
+  "rsms.cfg_wbaid": "شناسه حساب WhatsApp Business (WBAID)",
+
+
+  "rsms.cfg_phone_id": "شناسه شماره تلفن",
+
+
+  "rsms.cfg_webhook_url": "آدرس URL گیرنده وب‌هوک سرور زنده",
+
+
+  "rsms.copy": "کپی",
+
+
+  "rsms.save_config": "ذخیره پیکربندی",
   "dintake.purpose_bill_expense_line": "ردیف هزینه فاکتور (کرایه / گمرک / ترخیص)",
 
 
@@ -75514,6 +76216,168 @@ const ps: Dict = {
 
 
 
+
+
+
+
+  "sms_reply.scope_global": "نړیواله ساحه",
+
+
+  "sms_reply.scope_country": "د هېواد ساحه",
+
+
+  "sms_reply.scope_branch": "د څانګې ساحه",
+  "rsms.tab_all": "ټول پیغامونه",
+
+
+  "rsms.tab_whatsapp": "واټساپ",
+
+
+  "rsms.tab_email": "بریښنالیک",
+
+
+  "rsms.tab_unread": "نالوستل شوي",
+
+
+  "rsms.tab_pending": "د ځواب په تمه",
+
+
+  "rsms.tab_ai_ready": "د AI ځواب چمتو",
+
+
+  "rsms.tab_approval": "تصویب ته اړتیا",
+
+
+  "rsms.tab_replied": "ځواب ورکړل شو",
+
+
+  "rsms.tab_scheduled": "مهالویش شوی",
+
+
+  "rsms.tab_failed": "ناکام",
+
+
+  "rsms.banner_title": "د WhatsApp Business API رسمي چینل",
+
+
+  "rsms.banner_connected": "وصل شوی",
+
+
+  "rsms.banner_not_connected": "نه دی وصل — په Connect Official WhatsApp کلیک وکړئ",
+
+
+  "rsms.banner_live_webhook": "ژوندی ویب هوک",
+
+
+  "rsms.banner_connect_hint": "په Connect Official WhatsApp کلیک وکړئ، بیا د ۶ عددي تایید کوډ ترلاسه کولو لپاره د خپلې څانګې د تلیفون شمیره دننه کړئ.",
+
+
+  "rsms.connect_btn": "رسمي WhatsApp وصل کړئ",
+
+
+  "rsms.config_btn": "تنظیم",
+
+
+  "rsms.search_ph": "لیږونکی، شمیره یا متن ولټوئ…",
+
+
+  "rsms.loading_conversations": "خبرې اترې بارېږي…",
+
+
+  "rsms.no_messages": "کوم پیغام و نه موندل شو",
+
+
+  "rsms.badge_ai_ready": "AI چمتو",
+
+
+  "rsms.badge_approval": "تصویب",
+
+
+  "rsms.pick_conversation": "د ځواب پیل کولو لپاره له لیست څخه یوه خبرې اترې وټاکئ",
+
+
+  "rsms.open_related_record": "اړوند ERP ریکارډ پرانیزئ",
+
+
+  "rsms.loading_messages": "پیغامونه بارېږي…",
+
+
+  "rsms.incoming_message": "د پیرودونکي راتلونکی پیغام",
+
+
+  "rsms.no_message_history": "د پیغام تاریخچه نشته",
+
+
+  "rsms.no_message_yet": "پدې خبرو اترو کې تر اوسه کوم پیغام نشته.",
+
+
+  "rsms.just_now": "همدا اوس",
+
+
+  "rsms.querying_erp": "د ERP ژوندي معلومات پوښتل کیږي…",
+
+
+  "rsms.generate_ai": "د AI ځواب جوړ کړئ",
+
+
+  "rsms.ai_verified": "AI د ژوندي شرایطو په وړاندې تایید شو",
+
+
+  "rsms.reply_ph": "ځواب ولیکئ، یا د اتوماتیک مسودې لپاره په Generate AI Reply کلیک وکړئ…",
+
+
+  "rsms.zero_hallucination": "د صفر هالوسینیشن ډیټابیس حالت فعال",
+
+
+  "rsms.approve_send": "تصویب او لیږل",
+
+
+  "rsms.sending": "لیږل کیږي…",
+
+
+  "rsms.send_reply": "ځواب ولیږئ",
+
+
+  "rsms.cfg_title": "WhatsApp Business API — د حساب او مدیر تنظیم",
+
+
+  "rsms.cfg_subtitle": "رسمي ERP WhatsApp چینل او د مدیر ګرځنده شمیرې",
+
+
+  "rsms.cfg_select_scope": "د تنظیم لپاره د څانګې / هېواد پروفایل وټاکئ",
+
+
+  "rsms.cfg_scope_global": "د سوپر اډمین اصلي کرښه (نړیوال څارنه)",
+
+
+  "rsms.cfg_no_accounts": "تر اوسه کوم تایید شوی WhatsApp حساب نه دی تنظیم شوی",
+
+
+  "rsms.cfg_live_status": "ژوندی حالت: فعال او وصل",
+
+
+  "rsms.cfg_online": "آنلاین",
+
+
+  "rsms.cfg_company_number": "د تړل شوې شرکت WhatsApp شمیره",
+
+
+  "rsms.cfg_admin_number": "د مدیر خبرتیا ګرځنده شمیره",
+
+
+  "rsms.cfg_wbaid": "د WhatsApp Business حساب ID (WBAID)",
+
+
+  "rsms.cfg_phone_id": "د تلیفون شمیرې ID",
+
+
+  "rsms.cfg_webhook_url": "د ژوندي سرور ویب هوک ترلاسه کوونکي URL",
+
+
+  "rsms.copy": "کاپي",
+
+
+  "rsms.save_config": "تنظیم خوندي کړئ",
   "dintake.purpose_bill_expense_line": "د بل لګښت کرښه (وړل / ګمرک / پاکول)",
 
 
