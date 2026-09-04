@@ -1066,7 +1066,7 @@ function DashboardSummaryHeader({
 
       <div className="flex justify-between items-center gap-2 border-b border-slate-100/50 dark:border-slate-800/40 md:border-b-0 pb-1.5 md:pb-0">
         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-455">
-          <Fingerprint className="h-3.5 w-3.5 text-slate-400" /> User ID:
+          <Fingerprint className="h-3.5 w-3.5 text-slate-400" /> {tr("User ID")}:
         </span>
         <span className="font-extrabold text-[11px] text-slate-800 dark:text-slate-200">{summary.userId}</span>
       </div>
@@ -1642,6 +1642,8 @@ export function PurchaseOrderManagementDashboard() {
 
   const [activeTab, setActiveTab] = useState<LifecycleTab>("Dashboard Overview");
   const [session, setSession] = useState<any>(null);
+  const [sessionNow, setSessionNow] = useState<Date | null>(null);
+  useEffect(() => { setSessionNow(new Date()); }, []);
   const [selectedCountryForSummary, setSelectedCountryForSummary] = useState<string | null>(null);
   const [expandedCountries, setExpandedCountries] = useState<Record<string, boolean>>({});
   const [expandedTableCountries, setExpandedTableCountries] = useState<Record<string, boolean>>({});
@@ -1889,6 +1891,14 @@ export function PurchaseOrderManagementDashboard() {
   }, [filtered]);
 
   const selected = filtered.find((row) => row.id === selectedId) || filtered[0] || reports[0] || null;
+  // Dynamic document brand — the bill's own purchasing company / branch, never a hard-coded name.
+  const brandName: string = (
+    selected?.form_data?.form?.purchaseCompanyName
+    || selected?.form_data?.form?.companyName
+    || (selected as any)?.companyName
+    || selected?.branchName
+    || tUi(activeLang, "purchase.damaan_business_group", "Digital Dock ERP")
+  );
   const containers = selected ? makeContainers(selected) : [];
   const loadedContainers = containers.filter((row) => row.status !== "Pending").length;
   const totalPosted = useMemo(() => {
@@ -2145,11 +2155,19 @@ export function PurchaseOrderManagementDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-slate-400">{tr("Date")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold">17 JUN 2026</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>
+                  {sessionNow
+                    ? new Intl.DateTimeFormat(`${activeLang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" }).format(sessionNow)
+                    : "—"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-slate-400">{tr("Time")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold">08:54 PM</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>
+                  {sessionNow
+                    ? new Intl.DateTimeFormat(`${activeLang}-u-nu-latn`, { numberingSystem: "latn", hour: "2-digit", minute: "2-digit", hour12: true }).format(sessionNow)
+                    : "—"}
+                </span>
               </div>
             </div>
           </div>
@@ -2958,7 +2976,7 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                       <div>
                         <div className="text-sm font-black tracking-widest text-blue-900 uppercase leading-none">
-                          DEMI TRADING CO.
+                          {brandName}
                         </div>
                         
                       </div>
@@ -3091,7 +3109,7 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Goods Details section */}
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <div className="bg-[#0f2942] text-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider">
-                       Goods Details
+                      {tr("Goods Details")}
                     </div>
                     <table className="w-full text-[8px] text-left border-collapse">
                       <thead>
@@ -3206,7 +3224,7 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Payment Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>"µ</span> Payment Information
+                        {tr("Payment Information")}
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3233,9 +3251,9 @@ export function PurchaseOrderManagementDashboard() {
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <span> </span> Accounting Information & Serials
+                          {tr("Accounting Information & Serials")}
                         </div>
-                        <span className="font-mono text-blue-700 text-[7px]">S/N AUDIT VERIFIED</span>
+                        <span className="font-mono text-blue-700 text-[7px]">{tr("S/N AUDIT VERIFIED")}</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3325,7 +3343,7 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Stamp & Signatures */}
                   <div className="flex justify-between items-center pt-2 border-t border-slate-200 mt-auto text-[7.5px]">
                     <div className="w-[45%] text-slate-400 font-medium leading-relaxed">
-                      This is a system generated print sheet of Demi Trading Co. accounts ledger. Double-entry transaction postings have been validated.
+                      {tr("This is a system-generated print sheet of")} {brandName} {tr("accounts ledger. Double-entry transaction postings have been validated.")}
                     </div>
                     <div className="w-[12%] text-center">
                       {/* Stamp SVG */}
@@ -3336,18 +3354,18 @@ export function PurchaseOrderManagementDashboard() {
                         <path d="M15 50 A35 35 0 0 1 50 15" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <path d="M50 85 A35 35 0 0 1 15 50" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <path d="M85 50 A35 35 0 0 1 50 85" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                        <text x="50" y="42" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">DEMI TRADING</text>
-                        <text x="50" y="52" textAnchor="middle" fontSize="6" fontWeight="bold" fill="currentColor">★ STAMP ★</text>
+                        <text x="50" y="42" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{brandName.slice(0, 18).toUpperCase()}</text>
+                        <text x="50" y="52" textAnchor="middle" fontSize="6" fontWeight="bold" fill="currentColor">{`★ ${tr("STAMP")} ★`}</text>
                         <text x="50" y="62" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "—").toUpperCase()}</text>
                       </svg>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
                       <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "—"}</div>
-                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">PREPARED BY</div>
+                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">{tr("PREPARED BY")}</div>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
                       <div className="font-bold text-slate-800 text-[8px] italic leading-none">{tr("Branch Manager")}</div>
-                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">AUTHORIZED BY</div>
+                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">{tr("AUTHORIZED BY")}</div>
                     </div>
                   </div>
 
@@ -3361,7 +3379,7 @@ export function PurchaseOrderManagementDashboard() {
                   <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
                     <h3 className="text-base font-black text-[#0f2942] dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <FileCheck2 className="h-5 w-5 text-emerald-600" />
-                      Transfer Verification Form
+                      {tr("Transfer Verification Form")}
                     </h3>
                     <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">{tr("Review details before posting to Roznamcha")}</p>
                   </div>
