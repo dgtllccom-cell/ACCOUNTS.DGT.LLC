@@ -896,7 +896,7 @@ export function ExtFormClient({ token }: { token: string }) {
       ctx.textAlign = "start";
       ctx.fillStyle = "#0f172a";
       ctx.font = "bold 34px sans-serif";
-      ctx.fillText(`${firstName} ${lastName}`.trim() || "Applicant", 90, 260);
+      ctx.fillText(`${firstName} ${lastName}`.trim() || t("applicant", lang), 90, 260);
 
       if (fatherName) {
         ctx.font = "bold 22px sans-serif";
@@ -1190,7 +1190,7 @@ export function ExtFormClient({ token }: { token: string }) {
           <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl max-w-xs w-full border border-slate-200 p-5 shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-bold text-slate-900 text-sm">Select Language / زبان منتخب کریں</h3>
+                <h3 className="font-bold text-slate-900 text-sm">{t("selectLanguageTitle", lang)}</h3>
                 <button
                   type="button"
                   onClick={() => setLangModalOpen(false)}
@@ -1631,7 +1631,7 @@ export function ExtFormClient({ token }: { token: string }) {
                             </span>
                           ) : (
                             <span className="text-[10px] font-medium text-slate-400">
-                              Required *
+                              {t("requiredMark", lang)}
                             </span>
                           )}
                         </div>
@@ -1640,11 +1640,11 @@ export function ExtFormClient({ token }: { token: string }) {
                         {docFrontImage ? (
                           <div className="space-y-2">
                             <div
-                              onClick={() => setPreviewModalImage({ src: docFrontImage, title: isPassport ? "Passport Main Page" : "ID Front Side" })}
+                              onClick={() => setPreviewModalImage({ src: docFrontImage, title: isPassport ? t("passportMainPage", lang) : t("idFrontSide", lang) })}
                               className="relative h-28 w-full rounded-xl overflow-hidden border border-indigo-100 bg-slate-100 flex items-center justify-center cursor-pointer group"
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={docFrontImage} alt="Front Preview" className="h-full w-full object-contain" />
+                              <img src={docFrontImage} alt={t("previewFront", lang)} className="h-full w-full object-contain" />
                               <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white text-xs font-bold">
                                 <Eye size={14} />
                                 <span>{t("viewFullBtn", lang)}</span>
@@ -1723,11 +1723,11 @@ export function ExtFormClient({ token }: { token: string }) {
                           {docBackImage ? (
                             <div className="space-y-2">
                               <div
-                                onClick={() => setPreviewModalImage({ src: docBackImage, title: "ID Back Side" })}
+                                onClick={() => setPreviewModalImage({ src: docBackImage, title: t("idBackSide", lang) })}
                                 className="relative h-28 w-full rounded-xl overflow-hidden border border-indigo-100 bg-slate-100 flex items-center justify-center cursor-pointer group"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={docBackImage} alt="Back Preview" className="h-full w-full object-contain" />
+                                <img src={docBackImage} alt={t("previewBack", lang)} className="h-full w-full object-contain" />
                                 <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white text-xs font-bold">
                                   <Eye size={14} />
                                   <span>{t("viewFullBtn", lang)}</span>
@@ -1912,13 +1912,13 @@ export function ExtFormClient({ token }: { token: string }) {
                                 {doc.frontImage && (
                                   <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={doc.frontImage} alt="Front" className="h-full w-full object-cover" />
+                                    <img src={doc.frontImage} alt={t("docFront", lang)} className="h-full w-full object-cover" />
                                   </div>
                                 )}
                                 {doc.backImage && (
                                   <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={doc.backImage} alt="Back" className="h-full w-full object-cover" />
+                                    <img src={doc.backImage} alt={t("docBack", lang)} className="h-full w-full object-cover" />
                                   </div>
                                 )}
                               </div>
@@ -2170,7 +2170,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   <div className="relative mx-auto w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
                     {photoPreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoPreview} alt="Candidate Avatar" className="h-full w-full object-cover" />
+                      <img src={photoPreview} alt={t("candidateAvatar", lang)} className="h-full w-full object-cover" />
                     ) : (
                       <User size={56} className="text-slate-400" />
                     )}
@@ -2242,7 +2242,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-300 font-normal">
-                      Download or print your complete verified application before submitting.
+                      {t("downloadPrintHint", lang)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -2278,13 +2278,13 @@ export function ExtFormClient({ token }: { token: string }) {
                           Digital Dock ERP
                         </h4>
                         <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
-                          Public Verification Gateway
+                          {t("publicVerificationGateway", lang)}
                         </p>
                       </div>
                     </div>
                     <div className="text-end">
                       <span className="inline-block text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                        APPLICATION DRAFT
+                        {t("applicationDraft", lang)}
                       </span>
                       <p className="text-[9px] text-slate-400 font-mono mt-0.5">
                         Ref: {token.slice(0, 12).toUpperCase()}
@@ -2297,7 +2297,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     <div className="h-20 w-20 rounded-2xl border-2 border-white shadow-sm overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center">
                       {photoPreview ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={photoPreview} alt="Applicant" className="h-full w-full object-cover" />
+                        <img src={photoPreview} alt={t("applicant", lang)} className="h-full w-full object-cover" />
                       ) : (
                         <User size={36} className="text-slate-400" />
                       )}
@@ -2378,7 +2378,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     </div>
 
                     {documents.length === 0 && !docFrontImage ? (
-                      <p className="text-xs text-slate-400 italic">No identity documents attached.</p>
+                      <p className="text-xs text-slate-400 italic">{t("noDocsAttached", lang)}</p>
                     ) : (
                       <div className="space-y-3">
                         {/* If user hasn't pressed '+ Add Document' but has active front image */}
@@ -2403,25 +2403,25 @@ export function ExtFormClient({ token }: { token: string }) {
                             <div className="grid grid-cols-2 gap-2 pt-1">
                               {docFrontImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">Front Side</span>
+                                  <span className="text-[10px] font-bold text-slate-500 block">{t("frontSide", lang)}</span>
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: docFrontImage, title: "ID Front Side" })}
+                                    onClick={() => setPreviewModalImage({ src: docFrontImage, title: t("idFrontSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={docFrontImage} alt="Front" className="h-full w-full object-contain" />
+                                    <img src={docFrontImage} alt={t("docFront", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 </div>
                               )}
                               {docBackImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">Back Side</span>
+                                  <span className="text-[10px] font-bold text-slate-500 block">{t("backSide", lang)}</span>
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: docBackImage, title: "ID Back Side" })}
+                                    onClick={() => setPreviewModalImage({ src: docBackImage, title: t("idBackSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={docBackImage} alt="Back" className="h-full w-full object-contain" />
+                                    <img src={docBackImage} alt={t("docBack", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 </div>
                               )}
@@ -2451,20 +2451,20 @@ export function ExtFormClient({ token }: { token: string }) {
                               <div className="grid grid-cols-2 gap-2 pt-1">
                                 {doc.frontImage && (
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: doc.frontImage!, title: "Document Front" })}
+                                    onClick={() => setPreviewModalImage({ src: doc.frontImage!, title: t("documentFront", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={doc.frontImage} alt="Front" className="h-full w-full object-contain" />
+                                    <img src={doc.frontImage} alt={t("docFront", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 )}
                                 {doc.backImage && (
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: doc.backImage!, title: "Document Back" })}
+                                    onClick={() => setPreviewModalImage({ src: doc.backImage!, title: t("documentBack", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={doc.backImage} alt="Back" className="h-full w-full object-contain" />
+                                    <img src={doc.backImage} alt={t("docBack", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 )}
                               </div>
@@ -2480,7 +2480,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     <div className="h-20 w-20 rounded-2xl border-2 border-white shadow-sm overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center">
                       {photoPreview ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={photoPreview} alt="Applicant" className="h-full w-full object-cover" />
+                        <img src={photoPreview} alt={t("applicant", lang)} className="h-full w-full object-cover" />
                       ) : (
                         <User size={36} className="text-slate-400" />
                       )}
@@ -2561,7 +2561,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     </div>
 
                     {documents.length === 0 && !docFrontImage ? (
-                      <p className="text-xs text-slate-400 italic">No identity documents attached.</p>
+                      <p className="text-xs text-slate-400 italic">{t("noDocsAttached", lang)}</p>
                     ) : (
                       <div className="space-y-3">
                         {/* If user hasn't pressed '+ Add Document' but has active front image */}
@@ -2584,25 +2584,25 @@ export function ExtFormClient({ token }: { token: string }) {
                             <div className="grid grid-cols-2 gap-2 pt-1">
                               {docFrontImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">Front Side</span>
+                                  <span className="text-[10px] font-bold text-slate-500 block">{t("frontSide", lang)}</span>
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: docFrontImage, title: "ID Front Side" })}
+                                    onClick={() => setPreviewModalImage({ src: docFrontImage, title: t("idFrontSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={docFrontImage} alt="Front" className="h-full w-full object-contain" />
+                                    <img src={docFrontImage} alt={t("docFront", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 </div>
                               )}
                               {docBackImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">Back Side</span>
+                                  <span className="text-[10px] font-bold text-slate-500 block">{t("backSide", lang)}</span>
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: docBackImage, title: "ID Back Side" })}
+                                    onClick={() => setPreviewModalImage({ src: docBackImage, title: t("idBackSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={docBackImage} alt="Back" className="h-full w-full object-contain" />
+                                    <img src={docBackImage} alt={t("docBack", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 </div>
                               )}
@@ -2630,20 +2630,20 @@ export function ExtFormClient({ token }: { token: string }) {
                               <div className="grid grid-cols-2 gap-2 pt-1">
                                 {doc.frontImage && (
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: doc.frontImage!, title: "Document Front" })}
+                                    onClick={() => setPreviewModalImage({ src: doc.frontImage!, title: t("documentFront", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={doc.frontImage} alt="Front" className="h-full w-full object-contain" />
+                                    <img src={doc.frontImage} alt={t("docFront", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 )}
                                 {doc.backImage && (
                                   <div
-                                    onClick={() => setPreviewModalImage({ src: doc.backImage!, title: "Document Back" })}
+                                    onClick={() => setPreviewModalImage({ src: doc.backImage!, title: t("documentBack", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={doc.backImage} alt="Back" className="h-full w-full object-contain" />
+                                    <img src={doc.backImage} alt={t("docBack", lang)} className="h-full w-full object-contain" />
                                   </div>
                                 )}
                               </div>
@@ -2700,15 +2700,15 @@ export function ExtFormClient({ token }: { token: string }) {
                     </p>
                     <div className="flex items-center justify-between pt-2">
                       <div>
-                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Generated On</span>
+                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">{t("generatedOn", lang)}</span>
                         <span className="text-[10px] font-mono text-slate-700">
                           {new Date().toLocaleDateString()}
                         </span>
                       </div>
                       <div className="text-end">
-                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Applicant Status</span>
+                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">{t("applicantStatus", lang)}</span>
                         <span className="text-[10px] font-bold text-emerald-700 font-mono">
-                          Ready for Submission
+                          {t("readyForSubmission", lang)}
                         </span>
                       </div>
                     </div>
@@ -2781,7 +2781,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   </span>
                 </div>
                 <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  VERIFIED RECORD
+                  {t("verifiedRecord", lang)}
                 </span>
               </div>
 
@@ -2790,7 +2790,7 @@ export function ExtFormClient({ token }: { token: string }) {
                 <div className="h-14 w-14 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center">
                   {photoPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photoPreview} alt="Applicant" className="h-full w-full object-cover" />
+                    <img src={photoPreview} alt={t("applicant", lang)} className="h-full w-full object-cover" />
                   ) : (
                     <User size={24} className="text-slate-400" />
                   )}
@@ -2880,13 +2880,13 @@ export function ExtFormClient({ token }: { token: string }) {
                             {d.frontImage && (
                               <div className="h-9 w-12 rounded border border-slate-200 overflow-hidden bg-slate-50">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={d.frontImage} alt="Front" className="h-full w-full object-cover" />
+                                <img src={d.frontImage} alt={t("docFront", lang)} className="h-full w-full object-cover" />
                               </div>
                             )}
                             {d.backImage && (
                               <div className="h-9 w-12 rounded border border-slate-200 overflow-hidden bg-slate-50">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={d.backImage} alt="Back" className="h-full w-full object-cover" />
+                                <img src={d.backImage} alt={t("docBack", lang)} className="h-full w-full object-cover" />
                               </div>
                             )}
                           </div>
@@ -2900,7 +2900,7 @@ export function ExtFormClient({ token }: { token: string }) {
               {/* Footer Timestamp */}
               <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
                 <span>{t("submittedOn", lang)}: {submittedTimestamp}</span>
-                <span className="font-mono font-bold text-indigo-600">SECURE ERP GATEWAY</span>
+                <span className="font-mono font-bold text-indigo-600">{t("secureErpGateway", lang)}</span>
               </div>
             </div>
 
@@ -2929,7 +2929,7 @@ export function ExtFormClient({ token }: { token: string }) {
         {/* Footer Gateway Brand */}
         <div className="text-center pt-2 border-t border-slate-100 print:hidden">
           <p className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
-            Powered by Digital Dock ERP • Secure Public Gateway
+            {t("poweredBy", lang)}
           </p>
         </div>
 
@@ -2968,7 +2968,7 @@ export function ExtFormClient({ token }: { token: string }) {
                 onClick={() => setPreviewModalImage(null)}
                 className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition-all"
               >
-                Close Preview
+                {t("closePreview", lang)}
               </button>
             </div>
           </div>

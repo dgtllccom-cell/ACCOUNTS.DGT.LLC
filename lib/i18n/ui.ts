@@ -927,6 +927,31 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "extform.applicant"
+  | "extform.applicantStatus"
+  | "extform.applicationDraft"
+  | "extform.candidateAvatar"
+  | "extform.chooseGallery"
+  | "extform.closePreview"
+  | "extform.docFront"
+  | "extform.docBack"
+  | "extform.documentFront"
+  | "extform.documentBack"
+  | "extform.downloadPrintHint"
+  | "extform.generatedOn"
+  | "extform.idFrontSide"
+  | "extform.idBackSide"
+  | "extform.noDocsAttached"
+  | "extform.passportMainPage"
+  | "extform.poweredBy"
+  | "extform.previewFront"
+  | "extform.previewBack"
+  | "extform.publicVerificationGateway"
+  | "extform.readyForSubmission"
+  | "extform.requiredMark"
+  | "extform.secureErpGateway"
+  | "extform.selectLanguageTitle"
+  | "extform.verifiedRecord"
   | "safd.generated_on"
   | "safd.portfolio_desc"
   | "safd.report_date"
@@ -18197,6 +18222,81 @@ const en: Dict = {
 
 
 
+
+
+  "extform.applicant": "Applicant",
+
+
+  "extform.applicantStatus": "Applicant Status",
+
+
+  "extform.applicationDraft": "APPLICATION DRAFT",
+
+
+  "extform.candidateAvatar": "Candidate Avatar",
+
+
+  "extform.chooseGallery": "Choose from Gallery",
+
+
+  "extform.closePreview": "Close Preview",
+
+
+  "extform.docFront": "Front",
+
+
+  "extform.docBack": "Back",
+
+
+  "extform.documentFront": "Document Front",
+
+
+  "extform.documentBack": "Document Back",
+
+
+  "extform.downloadPrintHint": "Download or print your complete verified application before submitting.",
+
+
+  "extform.generatedOn": "Generated On",
+
+
+  "extform.idFrontSide": "ID Front Side",
+
+
+  "extform.idBackSide": "ID Back Side",
+
+
+  "extform.noDocsAttached": "No identity documents attached.",
+
+
+  "extform.passportMainPage": "Passport Main Page",
+
+
+  "extform.poweredBy": "Powered by Digital Dock ERP • Secure Public Gateway",
+
+
+  "extform.previewFront": "Front Preview",
+
+
+  "extform.previewBack": "Back Preview",
+
+
+  "extform.publicVerificationGateway": "Public Verification Gateway",
+
+
+  "extform.readyForSubmission": "Ready for Submission",
+
+
+  "extform.requiredMark": "Required *",
+
+
+  "extform.secureErpGateway": "SECURE ERP GATEWAY",
+
+
+  "extform.selectLanguageTitle": "Select Language / زبان منتخب کریں",
+
+
+  "extform.verifiedRecord": "VERIFIED RECORD",
   "safd.generated_on": "Generated",
 
 
@@ -32887,6 +32987,81 @@ const ur: Dict = {
 
 
 
+
+
+  "extform.applicant": "درخواست دہندہ",
+
+
+  "extform.applicantStatus": "درخواست دہندہ کی حیثیت",
+
+
+  "extform.applicationDraft": "درخواست کا مسودہ",
+
+
+  "extform.candidateAvatar": "امیدوار کی تصویر",
+
+
+  "extform.chooseGallery": "گیلری سے منتخب کریں",
+
+
+  "extform.closePreview": "پیش نظارہ بند کریں",
+
+
+  "extform.docFront": "سامنے",
+
+
+  "extform.docBack": "پیچھے",
+
+
+  "extform.documentFront": "دستاویز کا سامنے کا حصہ",
+
+
+  "extform.documentBack": "دستاویز کا پچھلا حصہ",
+
+
+  "extform.downloadPrintHint": "جمع کرانے سے پہلے اپنی مکمل تصدیق شدہ درخواست ڈاؤن لوڈ یا پرنٹ کریں۔",
+
+
+  "extform.generatedOn": "تیار کیا گیا",
+
+
+  "extform.idFrontSide": "شناختی کارڈ کا سامنے کا حصہ",
+
+
+  "extform.idBackSide": "شناختی کارڈ کا پچھلا حصہ",
+
+
+  "extform.noDocsAttached": "کوئی شناختی دستاویزات منسلک نہیں۔",
+
+
+  "extform.passportMainPage": "پاسپورٹ کا مرکزی صفحہ",
+
+
+  "extform.poweredBy": "Digital Dock ERP کے ذریعے • محفوظ عوامی گیٹ وے",
+
+
+  "extform.previewFront": "سامنے کا پیش نظارہ",
+
+
+  "extform.previewBack": "پیچھے کا پیش نظارہ",
+
+
+  "extform.publicVerificationGateway": "عوامی تصدیقی گیٹ وے",
+
+
+  "extform.readyForSubmission": "جمع کرانے کے لیے تیار",
+
+
+  "extform.requiredMark": "لازمی *",
+
+
+  "extform.secureErpGateway": "محفوظ ERP گیٹ وے",
+
+
+  "extform.selectLanguageTitle": "زبان منتخب کریں",
+
+
+  "extform.verifiedRecord": "تصدیق شدہ ریکارڈ",
   "safd.generated_on": "تیار کردہ",
 
 
@@ -47579,6 +47754,81 @@ const ar: Dict = {
 
 
 
+
+
+  "extform.applicant": "مقدم الطلب",
+
+
+  "extform.applicantStatus": "حالة مقدم الطلب",
+
+
+  "extform.applicationDraft": "مسودة الطلب",
+
+
+  "extform.candidateAvatar": "صورة المرشح",
+
+
+  "extform.chooseGallery": "اختر من المعرض",
+
+
+  "extform.closePreview": "إغلاق المعاينة",
+
+
+  "extform.docFront": "الأمام",
+
+
+  "extform.docBack": "الخلف",
+
+
+  "extform.documentFront": "وجه المستند",
+
+
+  "extform.documentBack": "ظهر المستند",
+
+
+  "extform.downloadPrintHint": "قم بتنزيل أو طباعة طلبك الكامل الموثّق قبل الإرسال.",
+
+
+  "extform.generatedOn": "تم الإنشاء في",
+
+
+  "extform.idFrontSide": "الوجه الأمامي للهوية",
+
+
+  "extform.idBackSide": "الوجه الخلفي للهوية",
+
+
+  "extform.noDocsAttached": "لا توجد مستندات هوية مرفقة.",
+
+
+  "extform.passportMainPage": "الصفحة الرئيسية لجواز السفر",
+
+
+  "extform.poweredBy": "مدعوم بواسطة Digital Dock ERP • بوابة عامة آمنة",
+
+
+  "extform.previewFront": "معاينة الأمام",
+
+
+  "extform.previewBack": "معاينة الخلف",
+
+
+  "extform.publicVerificationGateway": "بوابة التحقق العامة",
+
+
+  "extform.readyForSubmission": "جاهز للإرسال",
+
+
+  "extform.requiredMark": "مطلوب *",
+
+
+  "extform.secureErpGateway": "بوابة ERP آمنة",
+
+
+  "extform.selectLanguageTitle": "اختر اللغة",
+
+
+  "extform.verifiedRecord": "سجل موثّق",
   "safd.generated_on": "تم الإنشاء",
 
 
@@ -62270,6 +62520,81 @@ const fa: Dict = {
 
 
 
+
+
+  "extform.applicant": "متقاضی",
+
+
+  "extform.applicantStatus": "وضعیت متقاضی",
+
+
+  "extform.applicationDraft": "پیش‌نویس درخواست",
+
+
+  "extform.candidateAvatar": "تصویر داوطلب",
+
+
+  "extform.chooseGallery": "انتخاب از گالری",
+
+
+  "extform.closePreview": "بستن پیش‌نمایش",
+
+
+  "extform.docFront": "جلو",
+
+
+  "extform.docBack": "پشت",
+
+
+  "extform.documentFront": "روی سند",
+
+
+  "extform.documentBack": "پشت سند",
+
+
+  "extform.downloadPrintHint": "پیش از ارسال، درخواست تأییدشده کامل خود را دانلود یا چاپ کنید.",
+
+
+  "extform.generatedOn": "تولید شده در",
+
+
+  "extform.idFrontSide": "روی کارت شناسایی",
+
+
+  "extform.idBackSide": "پشت کارت شناسایی",
+
+
+  "extform.noDocsAttached": "هیچ سند هویتی پیوست نشده است.",
+
+
+  "extform.passportMainPage": "صفحه اصلی گذرنامه",
+
+
+  "extform.poweredBy": "قدرت‌گرفته از Digital Dock ERP • درگاه عمومی امن",
+
+
+  "extform.previewFront": "پیش‌نمایش جلو",
+
+
+  "extform.previewBack": "پیش‌نمایش پشت",
+
+
+  "extform.publicVerificationGateway": "درگاه راستی‌آزمایی عمومی",
+
+
+  "extform.readyForSubmission": "آماده ارسال",
+
+
+  "extform.requiredMark": "الزامی *",
+
+
+  "extform.secureErpGateway": "درگاه امن ERP",
+
+
+  "extform.selectLanguageTitle": "زبان را انتخاب کنید",
+
+
+  "extform.verifiedRecord": "رکورد تأییدشده",
   "safd.generated_on": "تولید شده",
 
 
@@ -76967,6 +77292,81 @@ const ps: Dict = {
 
 
 
+
+
+  "extform.applicant": "غوښتونکی",
+
+
+  "extform.applicantStatus": "د غوښتونکي حالت",
+
+
+  "extform.applicationDraft": "د غوښتنلیک مسوده",
+
+
+  "extform.candidateAvatar": "د کاندید انځور",
+
+
+  "extform.chooseGallery": "له ګالري څخه وټاکئ",
+
+
+  "extform.closePreview": "مخکتنه بنده کړئ",
+
+
+  "extform.docFront": "مخ",
+
+
+  "extform.docBack": "شا",
+
+
+  "extform.documentFront": "د سند مخ",
+
+
+  "extform.documentBack": "د سند شا",
+
+
+  "extform.downloadPrintHint": "د سپارلو دمخه خپل بشپړ تایید شوی غوښتنلیک ډاونلوډ یا چاپ کړئ.",
+
+
+  "extform.generatedOn": "جوړ شوی په",
+
+
+  "extform.idFrontSide": "د پېژندپاڼې مخ",
+
+
+  "extform.idBackSide": "د پېژندپاڼې شا",
+
+
+  "extform.noDocsAttached": "د هویت هیڅ سند نه دی نښلول شوی.",
+
+
+  "extform.passportMainPage": "د پاسپورټ اصلي پاڼه",
+
+
+  "extform.poweredBy": "د Digital Dock ERP لخوا • خوندي عامه دروازه",
+
+
+  "extform.previewFront": "د مخ مخکتنه",
+
+
+  "extform.previewBack": "د شا مخکتنه",
+
+
+  "extform.publicVerificationGateway": "د عامه تایید دروازه",
+
+
+  "extform.readyForSubmission": "د سپارلو لپاره چمتو",
+
+
+  "extform.requiredMark": "اړین *",
+
+
+  "extform.secureErpGateway": "خوندي د ERP دروازه",
+
+
+  "extform.selectLanguageTitle": "ژبه وټاکئ",
+
+
+  "extform.verifiedRecord": "تایید شوی ریکارډ",
   "safd.generated_on": "تولید شوی",
 
 
