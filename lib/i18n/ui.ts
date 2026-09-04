@@ -927,6 +927,23 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "docmgr.size_limit"
+  | "docmgr.upload_failed"
+  | "docmgr.confirm_delete"
+  | "docmgr.delete_failed"
+  | "docmgr.download_failed"
+  | "docmgr.title"
+  | "docmgr.subtitle"
+  | "docmgr.upload_new_document"
+  | "docmgr.upload_hint"
+  | "docmgr.browse_files"
+  | "docmgr.attached_documents"
+  | "docmgr.no_documents"
+  | "docmgr.download"
+  | "docmgr.upload_new_version"
+  | "docmgr.version_history"
+  | "docmgr.delete_document"
+  | "docmgr.version_label"
   | "dash.overview_subtitle"
   | "dash.new_account_link"
   | "dash.db_summary_failed"
@@ -18361,6 +18378,40 @@ const en: Dict = {
 
 
 
+
+  "docmgr.size_limit": "File size exceeds 20MB limit.",
+
+  "docmgr.upload_failed": "Failed to upload document",
+
+  "docmgr.confirm_delete": "Are you sure you want to delete this document? This cannot be undone.",
+
+  "docmgr.delete_failed": "Failed to delete document. You might not have permission.",
+
+  "docmgr.download_failed": "Failed to download document",
+
+  "docmgr.title": "Document Manager",
+
+  "docmgr.subtitle": "Manage attachments, versions, and uploads for this record.",
+
+  "docmgr.upload_new_document": "Upload New Document",
+
+  "docmgr.upload_hint": "Drag and drop your files here or click to browse. Supported formats: PDF, Word, Excel, Images, ZIP. (Max 20MB)",
+
+  "docmgr.browse_files": "Browse Files",
+
+  "docmgr.attached_documents": "Attached Documents",
+
+  "docmgr.no_documents": "No documents attached yet",
+
+  "docmgr.download": "Download",
+
+  "docmgr.upload_new_version": "Upload New Version",
+
+  "docmgr.version_history": "Version History",
+
+  "docmgr.delete_document": "Delete Document",
+
+  "docmgr.version_label": "Version",
   "dash.overview_subtitle": "Live ERP overview from production tables: accounts, ledgers, roznamcha, purchases, sales, and shipping.",
 
   "dash.new_account_link": "New Account",
@@ -33459,6 +33510,40 @@ const ur: Dict = {
 
 
 
+
+  "docmgr.size_limit": "فائل کا سائز 20MB کی حد سے تجاوز کرتا ہے۔",
+
+  "docmgr.upload_failed": "دستاویز اپ لوڈ کرنے میں ناکامی",
+
+  "docmgr.confirm_delete": "کیا آپ واقعی اس دستاویز کو حذف کرنا چاہتے ہیں؟ اسے واپس نہیں کیا جا سکتا۔",
+
+  "docmgr.delete_failed": "دستاویز حذف کرنے میں ناکامی۔ ہو سکتا ہے آپ کے پاس اجازت نہ ہو۔",
+
+  "docmgr.download_failed": "دستاویز ڈاؤن لوڈ کرنے میں ناکامی",
+
+  "docmgr.title": "دستاویز مینیجر",
+
+  "docmgr.subtitle": "اس ریکارڈ کے منسلکات، ورژنز، اور اپ لوڈز کا نظم کریں۔",
+
+  "docmgr.upload_new_document": "نئی دستاویز اپ لوڈ کریں",
+
+  "docmgr.upload_hint": "اپنی فائلیں یہاں ڈریگ اینڈ ڈراپ کریں یا براؤز کرنے کے لیے کلک کریں۔ معاون فارمیٹس: PDF، Word، Excel، تصاویر، ZIP۔ (زیادہ سے زیادہ 20MB)",
+
+  "docmgr.browse_files": "فائلیں براؤز کریں",
+
+  "docmgr.attached_documents": "منسلک دستاویزات",
+
+  "docmgr.no_documents": "ابھی تک کوئی دستاویز منسلک نہیں",
+
+  "docmgr.download": "ڈاؤن لوڈ",
+
+  "docmgr.upload_new_version": "نیا ورژن اپ لوڈ کریں",
+
+  "docmgr.version_history": "ورژن تاریخ",
+
+  "docmgr.delete_document": "دستاویز حذف کریں",
+
+  "docmgr.version_label": "ورژن",
   "dash.overview_subtitle": "پروڈکشن ٹیبلز سے لائیو ERP جائزہ: اکاؤنٹس، لیجرز، روزنامچہ، خریداری، فروخت، اور شپنگ۔",
 
   "dash.new_account_link": "نیا اکاؤنٹ",
@@ -48559,6 +48644,40 @@ const ar: Dict = {
 
 
 
+
+  "docmgr.size_limit": "يتجاوز حجم الملف الحد الأقصى 20 ميجابايت.",
+
+  "docmgr.upload_failed": "فشل تحميل المستند",
+
+  "docmgr.confirm_delete": "هل أنت متأكد أنك تريد حذف هذا المستند؟ لا يمكن التراجع عن هذا.",
+
+  "docmgr.delete_failed": "فشل حذف المستند. قد لا تملك الصلاحية.",
+
+  "docmgr.download_failed": "فشل تنزيل المستند",
+
+  "docmgr.title": "مدير المستندات",
+
+  "docmgr.subtitle": "إدارة المرفقات والإصدارات والتحميلات لهذا السجل.",
+
+  "docmgr.upload_new_document": "تحميل مستند جديد",
+
+  "docmgr.upload_hint": "اسحب وأفلت ملفاتك هنا أو انقر للتصفح. الصيغ المدعومة: PDF، Word، Excel، الصور، ZIP. (بحد أقصى 20 ميجابايت)",
+
+  "docmgr.browse_files": "تصفح الملفات",
+
+  "docmgr.attached_documents": "المستندات المرفقة",
+
+  "docmgr.no_documents": "لا توجد مستندات مرفقة بعد",
+
+  "docmgr.download": "تنزيل",
+
+  "docmgr.upload_new_version": "تحميل إصدار جديد",
+
+  "docmgr.version_history": "سجل الإصدارات",
+
+  "docmgr.delete_document": "حذف المستند",
+
+  "docmgr.version_label": "الإصدار",
   "dash.overview_subtitle": "نظرة عامة حية على ERP من جداول الإنتاج: الحسابات ودفاتر الأستاذ والروزنامة والمشتريات والمبيعات والشحن.",
 
   "dash.new_account_link": "حساب جديد",
@@ -63658,6 +63777,40 @@ const fa: Dict = {
 
 
 
+
+  "docmgr.size_limit": "اندازه فایل از حد 20 مگابایت بیشتر است.",
+
+  "docmgr.upload_failed": "بارگذاری سند ناموفق بود",
+
+  "docmgr.confirm_delete": "آیا مطمئن هستید می‌خواهید این سند را حذف کنید؟ این عمل قابل بازگشت نیست.",
+
+  "docmgr.delete_failed": "حذف سند ناموفق بود. ممکن است مجوز نداشته باشید.",
+
+  "docmgr.download_failed": "دانلود سند ناموفق بود",
+
+  "docmgr.title": "مدیر اسناد",
+
+  "docmgr.subtitle": "پیوست‌ها، نسخه‌ها و بارگذاری‌های این رکورد را مدیریت کنید.",
+
+  "docmgr.upload_new_document": "بارگذاری سند جدید",
+
+  "docmgr.upload_hint": "فایل‌های خود را اینجا بکشید و رها کنید یا برای مرور کلیک کنید. فرمت‌های پشتیبانی‌شده: PDF، Word، Excel، تصاویر، ZIP. (حداکثر 20 مگابایت)",
+
+  "docmgr.browse_files": "مرور فایل‌ها",
+
+  "docmgr.attached_documents": "اسناد پیوست‌شده",
+
+  "docmgr.no_documents": "هنوز سندی پیوست نشده است",
+
+  "docmgr.download": "دانلود",
+
+  "docmgr.upload_new_version": "بارگذاری نسخه جدید",
+
+  "docmgr.version_history": "تاریخچه نسخه‌ها",
+
+  "docmgr.delete_document": "حذف سند",
+
+  "docmgr.version_label": "نسخه",
   "dash.overview_subtitle": "نمای زنده ERP از جداول تولید: حساب‌ها، دفاتر، روزنامچه، خریدها، فروش‌ها و حمل‌ونقل.",
 
   "dash.new_account_link": "حساب جدید",
@@ -78763,6 +78916,40 @@ const ps: Dict = {
 
 
 
+
+  "docmgr.size_limit": "د دوتنې اندازه د 20MB حد څخه ډېره ده۔",
+
+  "docmgr.upload_failed": "د سند اپلوډ ناکام شو",
+
+  "docmgr.confirm_delete": "ایا تاسو ډاډه یاست چې دا سند حذف کول غواړئ؟ دا نشي بېرته کیدی۔",
+
+  "docmgr.delete_failed": "د سند حذف ناکام شو۔ ښایي تاسو اجازه ونلرئ۔",
+
+  "docmgr.download_failed": "د سند ډاونلوډ ناکام شو",
+
+  "docmgr.title": "د سند مدیر",
+
+  "docmgr.subtitle": "د دې ریکارډ ضمیمې، نسخې، او اپلوډونه اداره کړئ۔",
+
+  "docmgr.upload_new_document": "نوی سند اپلوډ کړئ",
+
+  "docmgr.upload_hint": "خپلې دوتنې دلته کش کړئ یا د لیدلو لپاره کلیک وکړئ۔ ملاتړ شوي بڼې: PDF، Word، Excel، انځورونه، ZIP۔ (اعظمي 20MB)",
+
+  "docmgr.browse_files": "دوتنې وپلټئ",
+
+  "docmgr.attached_documents": "ضمیمه شوي اسناد",
+
+  "docmgr.no_documents": "تر اوسه هیڅ سند نه دی ضمیمه شوی",
+
+  "docmgr.download": "ډاونلوډ",
+
+  "docmgr.upload_new_version": "نوې نسخه اپلوډ کړئ",
+
+  "docmgr.version_history": "د نسخې تاریخچه",
+
+  "docmgr.delete_document": "سند حذف کول",
+
+  "docmgr.version_label": "نسخه",
   "dash.overview_subtitle": "د تولید جدولونو څخه ژوندی ERP کتنه: حسابونه، لیجرونه، روزنامچه، پیرودونه، پلورنې، او لېږد.",
 
   "dash.new_account_link": "نوی حساب",
