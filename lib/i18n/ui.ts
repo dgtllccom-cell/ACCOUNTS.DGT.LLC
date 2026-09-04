@@ -927,6 +927,15 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "jbsd.container_goods_received_desc"
+  | "jbsd.total_bills_receipts"
+  | "jbsd.total_quantity"
+  | "jbsd.total_gross_weight_kg"
+  | "jbsd.total_net_weight_kg"
+  | "jbsd.total_containers"
+  | "jbsd.total_remarks"
+  | "jbsd.stock_util_history_for"
+  | "jbsd.original_capacity"
   | "inv.select_goods_item"
   | "inv.select_size_brand_variation"
   | "inv.destination_warehouse"
@@ -18752,6 +18761,24 @@ const en: Dict = {
 
 
 
+
+  "jbsd.container_goods_received_desc": "Container Goods Received — Transferred Purchase Orders Only",
+
+  "jbsd.total_bills_receipts": "Total Bills (Receipts)",
+
+  "jbsd.total_quantity": "Total Quantity",
+
+  "jbsd.total_gross_weight_kg": "Total Gross Weight (KG)",
+
+  "jbsd.total_net_weight_kg": "Total Net Weight (KG)",
+
+  "jbsd.total_containers": "Total Containers",
+
+  "jbsd.total_remarks": "Total Remarks",
+
+  "jbsd.stock_util_history_for": "Stock Utilization History & Balance for",
+
+  "jbsd.original_capacity": "Original Capacity:",
   "inv.select_goods_item": "Select Goods Item *",
 
   "inv.select_size_brand_variation": "Select Size / Brand Variation",
@@ -34561,6 +34588,24 @@ const ur: Dict = {
 
 
 
+
+  "jbsd.container_goods_received_desc": "کنٹینر گڈز موصول — صرف ٹرانسفر شدہ پرچیز آرڈرز",
+
+  "jbsd.total_bills_receipts": "کل بلز (رسیدیں)",
+
+  "jbsd.total_quantity": "کل مقدار",
+
+  "jbsd.total_gross_weight_kg": "کل مجموعی وزن (KG)",
+
+  "jbsd.total_net_weight_kg": "کل خالص وزن (KG)",
+
+  "jbsd.total_containers": "کل کنٹینرز",
+
+  "jbsd.total_remarks": "کل ریمارکس",
+
+  "jbsd.stock_util_history_for": "اسٹاک استعمال کی تاریخ و بیلنس برائے",
+
+  "jbsd.original_capacity": "اصل گنجائش:",
   "inv.select_goods_item": "گڈز آئٹم منتخب کریں *",
 
   "inv.select_size_brand_variation": "سائز / برانڈ ویری ایشن منتخب کریں",
@@ -50372,6 +50417,24 @@ const ar: Dict = {
 
 
 
+
+  "jbsd.container_goods_received_desc": "استلام بضائع الحاويات — أوامر الشراء المحولة فقط",
+
+  "jbsd.total_bills_receipts": "إجمالي الفواتير (الإيصالات)",
+
+  "jbsd.total_quantity": "إجمالي الكمية",
+
+  "jbsd.total_gross_weight_kg": "إجمالي الوزن الإجمالي (كجم)",
+
+  "jbsd.total_net_weight_kg": "إجمالي الوزن الصافي (كجم)",
+
+  "jbsd.total_containers": "إجمالي الحاويات",
+
+  "jbsd.total_remarks": "إجمالي الملاحظات",
+
+  "jbsd.stock_util_history_for": "سجل استخدام المخزون والرصيد لـ",
+
+  "jbsd.original_capacity": "السعة الأصلية:",
   "inv.select_goods_item": "اختر عنصر البضاعة *",
 
   "inv.select_size_brand_variation": "اختر مقاس / تنوع العلامة التجارية",
@@ -66182,6 +66245,24 @@ const fa: Dict = {
 
 
 
+
+  "jbsd.container_goods_received_desc": "کالای کانتینر دریافت‌شده — فقط سفارش‌های خرید منتقل‌شده",
+
+  "jbsd.total_bills_receipts": "مجموع صورتحساب‌ها (رسیدها)",
+
+  "jbsd.total_quantity": "مجموع مقدار",
+
+  "jbsd.total_gross_weight_kg": "مجموع وزن ناخالص (کیلوگرم)",
+
+  "jbsd.total_net_weight_kg": "مجموع وزن خالص (کیلوگرم)",
+
+  "jbsd.total_containers": "مجموع کانتینرها",
+
+  "jbsd.total_remarks": "مجموع یادداشت‌ها",
+
+  "jbsd.stock_util_history_for": "تاریخچه بهره‌برداری و مانده موجودی برای",
+
+  "jbsd.original_capacity": "ظرفیت اصلی:",
   "inv.select_goods_item": "انتخاب کالای موجودی *",
 
   "inv.select_size_brand_variation": "انتخاب اندازه / گونه برند",
@@ -81998,6 +82079,24 @@ const ps: Dict = {
 
 
 
+
+  "jbsd.container_goods_received_desc": "د کانتینر توکي ترلاسه شوي — یوازې لېږدول شوي پیرود امرونه",
+
+  "jbsd.total_bills_receipts": "ټول بلونه (رسیدونه)",
+
+  "jbsd.total_quantity": "ټول اندازه",
+
+  "jbsd.total_gross_weight_kg": "ټول ناخالص وزن (KG)",
+
+  "jbsd.total_net_weight_kg": "ټول خالص وزن (KG)",
+
+  "jbsd.total_containers": "ټول کانتینرونه",
+
+  "jbsd.total_remarks": "ټول تبصرې",
+
+  "jbsd.stock_util_history_for": "د سټاک کارونې تاریخچه او بیلانس د",
+
+  "jbsd.original_capacity": "اصلي ظرفیت:",
   "inv.select_goods_item": "د توکو توکی وټاکئ *",
 
   "inv.select_size_brand_variation": "اندازه / د برانډ ډول وټاکئ",

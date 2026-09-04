@@ -301,7 +301,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-lg font-black tracking-wide uppercase">{t(lang, "jr.jbsd_title", "Journal Booking Stock for Admin Dashboard")}</h1>
-            <p className="text-blue-200 text-xs mt-0.5">Container Goods Received — Transferred Purchase Orders Only</p>
+            <p className="text-blue-200 text-xs mt-0.5">{t(lang, "jbsd.container_goods_received_desc", "Container Goods Received — Transferred Purchase Orders Only")}</p>
           </div>
           <div className="flex items-center gap-2">
             {/* Search/Filter Toggle */}
@@ -422,17 +422,17 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
             <Gauge className="w-3.5 h-3.5" /> {t(lang, "jr.jbsd_summary_report", "Summary Report")}
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-            <SummaryCard icon={FileText} label="Total Bills (Receipts)" iconColor="bg-blue-600"
+            <SummaryCard icon={FileText} label={t(lang, "jbsd.total_bills_receipts", "Total Bills (Receipts)")} iconColor="bg-blue-600"
               value={loading ? "—" : fmtNum(summary?.totalBills ?? 0)} />
-            <SummaryCard icon={Package} label="Total Quantity" iconColor="bg-indigo-600"
+            <SummaryCard icon={Package} label={t(lang, "jbsd.total_quantity", "Total Quantity")} iconColor="bg-indigo-600"
               value={loading ? "—" : fmtNum(summary?.totalQuantity ?? 0)} />
-            <SummaryCard icon={Scale} label="Total Gross Weight (KG)" iconColor="bg-violet-600"
+            <SummaryCard icon={Scale} label={t(lang, "jbsd.total_gross_weight_kg", "Total Gross Weight (KG)")} iconColor="bg-violet-600"
               value={loading ? "—" : fmtNum(summary?.totalGrossWeight ?? 0, 2)} />
-            <SummaryCard icon={Scale} label="Total Net Weight (KG)" iconColor="bg-purple-600"
+            <SummaryCard icon={Scale} label={t(lang, "jbsd.total_net_weight_kg", "Total Net Weight (KG)")} iconColor="bg-purple-600"
               value={loading ? "—" : fmtNum(summary?.totalNetWeight ?? 0, 2)} />
-            <SummaryCard icon={Container} label="Total Containers" iconColor="bg-cyan-600"
+            <SummaryCard icon={Container} label={t(lang, "jbsd.total_containers", "Total Containers")} iconColor="bg-cyan-600"
               value={loading ? "—" : fmtNum(summary?.totalContainers ?? 0)} />
-            <SummaryCard icon={MessageSquare} label="Total Remarks" iconColor="bg-teal-600"
+            <SummaryCard icon={MessageSquare} label={t(lang, "jbsd.total_remarks", "Total Remarks")} iconColor="bg-teal-600"
               value={loading ? "—" : fmtNum(summary?.totalRemarks ?? 0)} />
           </div>
         </div>
@@ -576,10 +576,10 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
                                   <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                                     <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse"></span>
-                                    Stock Utilization History & Balance for {row.billNumber}
+                                    {t(lang, "jbsd.stock_util_history_for", "Stock Utilization History & Balance for")} {row.billNumber}
                                   </h5>
                                   <div className="text-[9px] font-bold text-slate-500">
-                                    {t(lang, "sales.goods_colon", "Goods:")}<span className="text-slate-800 font-bold">{row.goodsName}</span> | Original Capacity: <span className="font-mono text-slate-800">{originalQty.toLocaleString()} {row.unit}</span> ({originalWeight.toLocaleString()} KG)
+                                    {t(lang, "sales.goods_colon", "Goods:")}<span className="text-slate-800 font-bold">{row.goodsName}</span> | {t(lang, "jbsd.original_capacity", "Original Capacity:")} <span className="font-mono text-slate-800">{originalQty.toLocaleString()} {row.unit}</span> ({originalWeight.toLocaleString()} KG)
                                   </div>
                                 </div>
 
@@ -655,12 +655,12 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
             <div className="border-t-2 border-[#0d2d6b] bg-[#0d2d6b]/5 dark:bg-blue-950/30 px-5 py-4">
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 {[
-                  { label: "Total Bills (Receipts)", value: fmtNum(summary.totalBills) },
-                  { label: "Total Quantity", value: fmtNum(summary.totalQuantity) },
-                  { label: "Total Gross Weight (KG)", value: fmtNum(summary.totalGrossWeight, 2) },
-                  { label: "Total Net Weight (KG)", value: fmtNum(summary.totalNetWeight, 2) },
-                  { label: "Total Containers", value: fmtNum(summary.totalContainers) },
-                  { label: "Total Remarks", value: fmtNum(summary.totalRemarks) }
+                  { label: t(lang, "jbsd.total_bills_receipts", "Total Bills (Receipts)"), value: fmtNum(summary.totalBills) },
+                  { label: t(lang, "jbsd.total_quantity", "Total Quantity"), value: fmtNum(summary.totalQuantity) },
+                  { label: t(lang, "jbsd.total_gross_weight_kg", "Total Gross Weight (KG)"), value: fmtNum(summary.totalGrossWeight, 2) },
+                  { label: t(lang, "jbsd.total_net_weight_kg", "Total Net Weight (KG)"), value: fmtNum(summary.totalNetWeight, 2) },
+                  { label: t(lang, "jbsd.total_containers", "Total Containers"), value: fmtNum(summary.totalContainers) },
+                  { label: t(lang, "jbsd.total_remarks", "Total Remarks"), value: fmtNum(summary.totalRemarks) }
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
                     <p className="text-[10px] font-bold uppercase text-[#0d2d6b] dark:text-blue-400 mb-1">{label}</p>
