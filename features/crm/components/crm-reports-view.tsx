@@ -250,25 +250,25 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
       {/* KPI Stats Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Records</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_records", "Total Records")}</span>
           <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1 font-mono">
             {data?.recordCount || 0}
           </p>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Value</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_value", "Total Value")}</span>
           <p className="text-2xl font-black text-blue-600 mt-1 font-mono">
             {Number(data?.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Settled / Paid</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_settled_paid", "Total Settled / Paid")}</span>
           <p className="text-2xl font-black text-emerald-600 mt-1 font-mono">
             {Number(data?.totalPaid || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Outstanding Due</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_outstanding_due", "Total Outstanding Due")}</span>
           <p className="text-2xl font-black text-rose-600 mt-1 font-mono">
             {Number(data?.totalRemaining || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>

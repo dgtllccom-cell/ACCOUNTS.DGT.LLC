@@ -927,6 +927,10 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "crm.total_records"
+  | "crm.total_value"
+  | "crm.total_settled_paid"
+  | "crm.total_outstanding_due"
   | "pbm.order_no_ph"
   | "pbm.bl_no_ph"
   | "pbm.container_no_ph"
@@ -18816,6 +18820,14 @@ const en: Dict = {
 
 
 
+
+  "crm.total_records": "Total Records",
+
+  "crm.total_value": "Total Value",
+
+  "crm.total_settled_paid": "Total Settled / Paid",
+
+  "crm.total_outstanding_due": "Total Outstanding Due",
   "pbm.order_no_ph": "e.g. CL-ORD-2026-0001",
 
   "pbm.bl_no_ph": "e.g. BL-984712",
@@ -34735,6 +34747,14 @@ const ur: Dict = {
 
 
 
+
+  "crm.total_records": "کل ریکارڈز",
+
+  "crm.total_value": "کل قدر",
+
+  "crm.total_settled_paid": "کل سیٹلڈ / ادا شدہ",
+
+  "crm.total_outstanding_due": "کل واجب الادا",
   "pbm.order_no_ph": "مثلاً CL-ORD-2026-0001",
 
   "pbm.bl_no_ph": "مثلاً BL-984712",
@@ -50656,6 +50676,14 @@ const ar: Dict = {
 
 
 
+
+  "crm.total_records": "إجمالي السجلات",
+
+  "crm.total_value": "إجمالي القيمة",
+
+  "crm.total_settled_paid": "إجمالي المسدد / المدفوع",
+
+  "crm.total_outstanding_due": "إجمالي المستحق",
   "pbm.order_no_ph": "مثال: CL-ORD-2026-0001",
 
   "pbm.bl_no_ph": "مثال: BL-984712",
@@ -66576,6 +66604,14 @@ const fa: Dict = {
 
 
 
+
+  "crm.total_records": "مجموع رکوردها",
+
+  "crm.total_value": "مجموع ارزش",
+
+  "crm.total_settled_paid": "مجموع تسویه‌شده / پرداخت‌شده",
+
+  "crm.total_outstanding_due": "مجموع مانده معوق",
   "pbm.order_no_ph": "مثال: CL-ORD-2026-0001",
 
   "pbm.bl_no_ph": "مثال: BL-984712",
@@ -82502,6 +82538,14 @@ const ps: Dict = {
 
 
 
+
+  "crm.total_records": "ټول ریکارډونه",
+
+  "crm.total_value": "ټول ارزښت",
+
+  "crm.total_settled_paid": "ټول تصفیه شوی / تادیه شوی",
+
+  "crm.total_outstanding_due": "ټول پاتې بیل",
   "pbm.order_no_ph": "بېلګه: CL-ORD-2026-0001",
 
   "pbm.bl_no_ph": "بېلګه: BL-984712",
