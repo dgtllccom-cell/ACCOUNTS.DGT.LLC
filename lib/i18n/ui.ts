@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "cbr.currency_ph"
+  | "cbr.branch_name_ph"
+  | "cbr.branch_code_ph"
   | "goodstest.title"
   | "goodstest.country"
   | "goodstest.select_country"
@@ -18807,6 +18810,12 @@ const en: Dict = {
 
 
 
+
+  "cbr.currency_ph": "PKR / AED / USD",
+
+  "cbr.branch_name_ph": "e.g. Chaman City Branch",
+
+  "cbr.branch_code_ph": "e.g. PAK-CH-001",
   "goodstest.title": "Goods Entry Test",
 
   "goodstest.country": "Country",
@@ -34712,6 +34721,12 @@ const ur: Dict = {
 
 
 
+
+  "cbr.currency_ph": "مثلاً PKR / AED / USD",
+
+  "cbr.branch_name_ph": "مثلاً چمن سٹی برانچ",
+
+  "cbr.branch_code_ph": "مثلاً PAK-CH-001",
   "goodstest.title": "گڈز اندراج ٹیسٹ",
 
   "goodstest.country": "ملک",
@@ -50619,6 +50634,12 @@ const ar: Dict = {
 
 
 
+
+  "cbr.currency_ph": "مثال: PKR / AED / USD",
+
+  "cbr.branch_name_ph": "مثال: فرع مدينة تشامان",
+
+  "cbr.branch_code_ph": "مثال: PAK-CH-001",
   "goodstest.title": "اختبار إدخال البضائع",
 
   "goodstest.country": "الدولة",
@@ -66525,6 +66546,12 @@ const fa: Dict = {
 
 
 
+
+  "cbr.currency_ph": "مثال: PKR / AED / USD",
+
+  "cbr.branch_name_ph": "مثال: شعبه شهر چمن",
+
+  "cbr.branch_code_ph": "مثال: PAK-CH-001",
   "goodstest.title": "آزمایش ثبت کالا",
 
   "goodstest.country": "کشور",
@@ -82437,6 +82464,12 @@ const ps: Dict = {
 
 
 
+
+  "cbr.currency_ph": "بېلګه: PKR / AED / USD",
+
+  "cbr.branch_name_ph": "بېلګه: د چمن ښار څانګه",
+
+  "cbr.branch_code_ph": "بېلګه: PAK-CH-001",
   "goodstest.title": "د توکو ننوتنه ازموینه",
 
   "goodstest.country": "هېواد",

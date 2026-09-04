@@ -449,14 +449,14 @@ export function CityBranchRegistrationWizard() {
                     setBranchCode("");
                   }}
                 />
-                <InputField label={_("cbr.lbl_currency", "Currency")} value={currency} onChange={setCurrency} placeholder="PKR / AED / USD" />
-                <InputField label={_("cbr.lbl_branch_name", "City Branch Name *")} value={branchName} onChange={setBranchName} placeholder="e.g. Chaman City Branch" />
-                <InputField label={_("cbr.lbl_branch_code", "City Branch Code *")} value={branchCode} onChange={(value) => setBranchCode(normalizeCode(value))} placeholder="e.g. PAK-CH-001" />
+                <InputField label={_("cbr.lbl_currency", "Currency")} value={currency} onChange={setCurrency} placeholder={_("cbr.currency_ph", "PKR / AED / USD")} />
+                <InputField label={_("cbr.lbl_branch_name", "City Branch Name *")} value={branchName} onChange={setBranchName} placeholder={_("cbr.branch_name_ph", "e.g. Chaman City Branch")} />
+                <InputField label={_("cbr.lbl_branch_code", "City Branch Code *")} value={branchCode} onChange={(value) => setBranchCode(normalizeCode(value))} placeholder={_("cbr.branch_code_ph", "e.g. PAK-CH-001")} />
                 <InputField
                   label={_("cbr.lbl_branch_email", "Branch Email (Hostinger Titan Mailbox) *")}
                   value={communication.branchEmail}
                   onChange={(value) => updateCommunication("branchEmail", value)}
-                  placeholder="e.g. dubai@dgtllc.com or khi@dgtllc.com"
+                  placeholder={_("cnbs.branch_email_ph", "e.g. dubai@dgtllc.com or khi@dgtllc.com")}
                 />
                 <InputField label={_("cbr.lbl_phone", "Phone Number")} value={phone} onChange={setPhone} placeholder="+92..." />
                 <CompanyPicker label={_("cbr.lbl_linked_company", "Linked Company / Owner Master")} value={companyId} onValueChange={setCompanyId} placeholder={_("cbr.ph_company", "Search company master...")} />
