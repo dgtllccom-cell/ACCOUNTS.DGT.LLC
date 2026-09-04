@@ -97,7 +97,7 @@ export function ShippingLinePicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel={t(lang, "shl.new_shipping_line", "+ New Shipping Line")}
+        createLabel={t(lang, "shl.new_shipping_line", "New Shipping Line")}
         createButtonPlacement="both"
         onCreateWithSearch={createShippingLine}
         onCreateNew={async () => setOpenCreate(true)}
@@ -105,7 +105,7 @@ export function ShippingLinePicker({
 
       {openCreate ? (
         <SimpleModal
-          title={t(lang, "shl.new_shipping_line", "+ New Shipping Line")}
+          title={t(lang, "shl.new_shipping_line", "New Shipping Line")}
           onClose={() => setOpenCreate(false)}
           className="w-[96vw] max-w-md rounded-2xl font-sans"
         >

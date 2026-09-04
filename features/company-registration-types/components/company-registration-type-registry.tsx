@@ -104,7 +104,7 @@ export function CompanyRegistrationTypeRegistry() {
             <Printer className="w-4 h-4 mr-1" /> {t(lang, "acct.print_preview", "Print Preview")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="w-4 h-4 mr-1" /> {t(lang, "creg.crtr_new_registration_type", "+ New Registration Type")}
+            <Plus className="w-4 h-4 mr-1" /> {t(lang, "creg.crtr_new_registration_type", "New Registration Type")}
           </Button>
         </div>
       </CardHeader>

@@ -296,7 +296,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   className="h-6.5 text-[11px] font-bold text-sky-700 border-sky-300 hover:bg-sky-100 gap-1"
                 >
                   <UserPlus className="h-3 w-3" />
-                  {tt("uf.new_employee", "+ New Employee")}
+                  {tt("uf.new_employee", "New Employee")}
                 </Button>
               </div>
 

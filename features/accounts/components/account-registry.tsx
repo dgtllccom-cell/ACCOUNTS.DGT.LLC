@@ -137,7 +137,7 @@ export function AccountRegistry() {
             <Printer className="w-4 h-4" /> {t(lang, "wh.print_report", "Print / Report")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="w-4 h-4 mr-1" /> {t(lang, "acct.areg_new_account", "+ New Account")}
+            <Plus className="w-4 h-4 mr-1" /> {t(lang, "acct.areg_new_account", "New Account")}
           </Button>
         </div>
       </CardHeader>

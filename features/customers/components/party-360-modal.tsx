@@ -375,7 +375,7 @@ export function Party360Modal({
                       className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      {t(lang, "party360.new_sister_company", "+ New Sister Company")}
+                      {t(lang, "party360.new_sister_company", "New Sister Company")}
                     </button>
                   </div>
 

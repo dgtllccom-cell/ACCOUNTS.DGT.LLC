@@ -490,7 +490,7 @@ export function AdminUserManagementPanel() {
           <Link href="/dashboard/users/new">
             <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm">
               <UserPlus className="h-4 w-4" />
-              <span>+ {tt("nav.user_registration", "Register New User")}</span>
+              <span>{tt("nav.user_registration", "Register New User")}</span>
             </Button>
           </Link>
         </div>
@@ -808,7 +808,7 @@ export function AdminUserManagementPanel() {
                                 <Link href="/dashboard/city">
                                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
                                     <Plus className="h-3 w-3" />
-                                    <span>+ {tt("aump.add_city_branch", "Add City Branch")}</span>
+                                    <span>{tt("aump.add_city_branch", "Add City Branch")}</span>
                                   </Button>
                                 </Link>
                               </div>

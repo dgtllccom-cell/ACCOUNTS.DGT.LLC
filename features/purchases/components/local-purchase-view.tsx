@@ -215,7 +215,7 @@ function MasterSelectPopover({
               }}
               className="w-full h-8 text-[11px] font-bold text-blue-600 hover:bg-blue-50 rounded-lg flex items-center justify-center gap-1 transition-colors"
             >
-              <Plus className="h-3 w-3" /> {addNewLabel.replace(/^\+\s*/, "")}
+              <Plus className="h-3 w-3" /> {addNewLabel}
             </button>
           </div>
         </div>
@@ -1823,7 +1823,7 @@ export function LocalPurchaseView({
                             options={brandOptions}
                             onSelect={v => setBrand(v)}
                             onAddNew={() => setIsAddingBrandModal(true)}
-                            addNewLabel={t(lang, "lp.new_brand", "+ New Brand")}
+                            addNewLabel={t(lang, "lp.new_brand", "New Brand")}
                             placeholder={t(lang, "lp.ph_brand", "Select Brand...")}
                           />
                         ) : (
@@ -1855,7 +1855,7 @@ export function LocalPurchaseView({
                             options={sizeOptions}
                             onSelect={v => setSize(v)}
                             onAddNew={() => setIsAddingSizeModal(true)}
-                            addNewLabel={t(lang, "lp.new_size", "+ New Size")}
+                            addNewLabel={t(lang, "lp.new_size", "New Size")}
                             placeholder={t(lang, "lp.ph_size", "Select Size...")}
                           />
                         ) : (

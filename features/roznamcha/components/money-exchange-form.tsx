@@ -337,7 +337,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
             className="h-8 px-3.5 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-1.5"
           >
             <Plus className="h-3.5 w-3.5 stroke-[3]" />
-            <span>{tr("money_exchange.new_entry_btn", "+ New Entry")}</span>
+            <span>{tr("money_exchange.new_entry_btn", "New Entry")}</span>
           </Button>
           <Button
             type="button"
@@ -478,7 +478,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
               }}
             >
               <Plus className="h-3.5 w-3.5 stroke-[3]" />
-              <span>{tr("money_exchange.new_entry_btn", "+ New Entry")}</span>
+              <span>{tr("money_exchange.new_entry_btn", "New Entry")}</span>
             </Button>
 
             <Button

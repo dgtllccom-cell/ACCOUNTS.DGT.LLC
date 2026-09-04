@@ -108,7 +108,7 @@ export function ClearingAgentPicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel={t(lang, "cla.new_clearing_agent", "+ New Clearing Agent")}
+        createLabel={t(lang, "cla.new_clearing_agent", "New Clearing Agent")}
         createButtonPlacement="both"
         onCreateWithSearch={createClearingAgent}
         onCreateNew={async () => setOpenCreate(true)}
@@ -116,7 +116,7 @@ export function ClearingAgentPicker({
 
       {openCreate ? (
         <SimpleModal
-          title={t(lang, "cla.new_clearing_agent", "+ New Clearing Agent")}
+          title={t(lang, "cla.new_clearing_agent", "New Clearing Agent")}
           onClose={() => setOpenCreate(false)}
           className="w-[96vw] max-w-md rounded-2xl font-sans"
         >

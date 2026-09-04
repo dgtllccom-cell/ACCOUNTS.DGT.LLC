@@ -8949,7 +8949,7 @@ const en: Dict = {
   "money_exchange.number_placeholder": "Number...",
   "money_exchange.clear_button": "Clear",
   "money_exchange.save_button": "Save Exchange Entry",
-  "money_exchange.new_entry_btn": "+ New Entry",
+  "money_exchange.new_entry_btn": "New Entry",
   "money_exchange.total_entries": "Total Transactions",
   "money_exchange.purchase_volume": "Total Purchases",
   "money_exchange.sale_volume": "Total Sales",
@@ -9163,12 +9163,12 @@ const en: Dict = {
   "wh.wf_search_responsible_person": "Search responsible person from Person Master",
   "shl.picker_label": "Shipping Line",
   "shl.search_placeholder": "Search shipping line by name or code...",
-  "shl.new_shipping_line": "+ New Shipping Line",
+  "shl.new_shipping_line": "New Shipping Line",
   "shl.name_label": "Shipping Line Name",
   "shl.name_placeholder": "e.g. Maersk Line",
   "cla.picker_label": "Clearing Agent",
   "cla.search_placeholder": "Search clearing agent by name or code...",
-  "cla.new_clearing_agent": "+ New Clearing Agent",
+  "cla.new_clearing_agent": "New Clearing Agent",
   "cla.name_label": "Clearing Agent Name",
   "cla.name_placeholder": "e.g. DGT Clearing Services",
   "cla.agent_kind_label": "Agent Type",
@@ -11057,7 +11057,7 @@ const en: Dict = {
   "creg.cp_other_companies_owned_by": "Other Companies Owned by",
   "creg.crtr_title": "Company Registration Types",
   "creg.crtr_subtitle": "Manage company registration classification types, license kinds and legal structures",
-  "creg.crtr_new_registration_type": "+ New Registration Type",
+  "creg.crtr_new_registration_type": "New Registration Type",
   "creg.crtr_search_placeholder": "Search registration types...",
   "creg.crtr_total_word": "TOTAL",
   "creg.crtr_inactive_word": "INACTIVE",
@@ -11167,7 +11167,7 @@ const en: Dict = {
   "acct.adv_failed_to_unlink": "Failed to unlink:",
   "acct.areg_title": "Chart of Accounts",
   "acct.areg_subtitle": "Manage master ledger accounts, control accounts and currency mappings",
-  "acct.areg_new_account": "+ New Account",
+  "acct.areg_new_account": "New Account",
   "acct.areg_search_placeholder": "Search accounts by code or name...",
   "acct.areg_no_accounts_found": "No accounts found",
   "acct.areg_delete_account": "Delete Account",
@@ -12925,8 +12925,8 @@ const en: Dict = {
   "lp.sel_scope": "Select Credit Account...",
   "lp.add_brand_btn": "Add Brand",
   "lp.add_size_btn": "Add Size",
-  "lp.new_brand": "+ New Brand",
-  "lp.new_size": "+ New Size",
+  "lp.new_brand": "New Brand",
+  "lp.new_size": "New Size",
   "lp.wh_stock_auto": "Stock will be automatically transferred to this Warehouse Account upon posting.",
 
   "lp.scope_modal_title": "SELECT WORKING LOCATION SCOPE",
@@ -14037,7 +14037,7 @@ const en: Dict = {
   "uf.form_title": "User Setup & Credential Form",
   "uf.form_sub": "Select from Employee Master or register a new administrative account.",
   "uf.select_employee": "Select Registered Employee",
-  "uf.new_employee": "+ New Employee",
+  "uf.new_employee": "New Employee",
   "uf.choose_employee": "-- Choose Employee (or type manually below) --",
   "uf.full_name": "Full Name",
   "uf.login_email": "Login Email",
@@ -20010,7 +20010,7 @@ const en: Dict = {
 
   "party360.registered_companies": "🏢 Registered Sister & Owned Companies ({n})",
 
-  "party360.new_sister_company": "+ New Sister Company",
+  "party360.new_sister_company": "New Sister Company",
 
   "party360.no_registered_companies": "No registered companies linked to this entity.",
 
@@ -20134,7 +20134,7 @@ const en: Dict = {
 
   "cif.search_manager_ph": "Search manager name...",
 
-  "cif.add_new_sister": "+ Add New Sister Company",
+  "cif.add_new_sister": "Add New Sister Company",
 
   "cif.country_req": "Country *",
 
@@ -20228,7 +20228,7 @@ const en: Dict = {
 
   "cif.license_tax_ids": "License, Tax & Registration IDs *",
 
-  "cif.add_registration_id": "+ Add Registration ID",
+  "cif.add_registration_id": "Add Registration ID",
 
   "cif.add_another_registration": "Add another registration",
 
@@ -23041,7 +23041,7 @@ const en: Dict = {
 
   "cl.filters": "Filters",
 
-  "cl.add_lead": "+ Add Lead",
+  "cl.add_lead": "Add Lead",
 
   "cl.reset_all_filters": "Reset all filters",
 
@@ -24690,8 +24690,8 @@ const ur: Dict = {
   "lp.sel_scope": "جمع اکاؤنٹ منتخب کریں...",
   "lp.add_brand_btn": "برانڈ شامل کریں",
   "lp.add_size_btn": "سائز شامل کریں",
-  "lp.new_brand": "+ نیا برانڈ",
-  "lp.new_size": "+ نیا سائز",
+  "lp.new_brand": "نیا برانڈ",
+  "lp.new_size": "نیا سائز",
   "lp.wh_stock_auto": "پوسٹ کرنے پر اسٹاک خودکار اس گودام اکاؤنٹ میں منتقل ہو جائے گا۔",
   "purchase.pmw_col_po_number": "پرچیز آرڈر نمبر",
   "purchase.pmw_col_so_bill": "ایس او / بل نمبر",
@@ -26445,7 +26445,7 @@ const ur: Dict = {
   "money_exchange.number_placeholder": "نمبر...",
   "money_exchange.clear_button": "صاف کریں",
   "money_exchange.save_button": "ایکسچینج اندراج محفوظ کریں",
-  "money_exchange.new_entry_btn": "+ نیا اندراج",
+  "money_exchange.new_entry_btn": "نیا اندراج",
   "money_exchange.total_entries": "کل لین دین",
   "money_exchange.purchase_volume": "کل خریداری",
   "money_exchange.sale_volume": "کل فروخت",
@@ -26659,12 +26659,12 @@ const ur: Dict = {
   "wh.wf_search_responsible_person": "پرسن ماسٹر سے ذمہ دار شخص تلاش کریں",
   "shl.picker_label": "شپنگ لائن",
   "shl.search_placeholder": "نام یا کوڈ سے شپنگ لائن تلاش کریں...",
-  "shl.new_shipping_line": "+ نئی شپنگ لائن",
+  "shl.new_shipping_line": "نئی شپنگ لائن",
   "shl.name_label": "شپنگ لائن کا نام",
   "shl.name_placeholder": "مثلاً میرسک لائن",
   "cla.picker_label": "کلیئرنگ ایجنٹ",
   "cla.search_placeholder": "نام یا کوڈ سے کلیئرنگ ایجنٹ تلاش کریں...",
-  "cla.new_clearing_agent": "+ نیا کلیئرنگ ایجنٹ",
+  "cla.new_clearing_agent": "نیا کلیئرنگ ایجنٹ",
   "cla.name_label": "کلیئرنگ ایجنٹ کا نام",
   "cla.name_placeholder": "مثلاً ڈی جی ٹی کلیئرنگ سروسز",
   "cla.agent_kind_label": "ایجنٹ کی قسم",
@@ -29054,7 +29054,7 @@ const ur: Dict = {
   "creg.cp_other_companies_owned_by": "دیگر کمپنیاں جن کے مالک ہیں",
   "creg.crtr_title": "کمپنی رجسٹریشن اقسام",
   "creg.crtr_subtitle": "کمپنی رجسٹریشن کی درجہ بندی کی اقسام، لائسنس کی قسمیں اور قانونی ڈھانچے منظم کریں",
-  "creg.crtr_new_registration_type": "+ نئی رجسٹریشن قسم",
+  "creg.crtr_new_registration_type": "نئی رجسٹریشن قسم",
   "creg.crtr_search_placeholder": "رجسٹریشن اقسام تلاش کریں...",
   "creg.crtr_total_word": "کل",
   "creg.crtr_inactive_word": "غیر فعال",
@@ -29164,7 +29164,7 @@ const ur: Dict = {
   "acct.adv_failed_to_unlink": "منسلک ختم کرنے میں ناکامی:",
   "acct.areg_title": "چارٹ آف اکاؤنٹس",
   "acct.areg_subtitle": "ماسٹر لیجر اکاؤنٹس، کنٹرول اکاؤنٹس اور کرنسی میپنگ منظم کریں",
-  "acct.areg_new_account": "+ نیا اکاؤنٹ",
+  "acct.areg_new_account": "نیا اکاؤنٹ",
   "acct.areg_search_placeholder": "کوڈ یا نام سے اکاؤنٹس تلاش کریں...",
   "acct.areg_no_accounts_found": "کوئی اکاؤنٹ نہیں ملا",
   "acct.areg_delete_account": "اکاؤنٹ حذف کریں",
@@ -30532,7 +30532,7 @@ const ur: Dict = {
   "uf.form_title": "صارف سیٹ اپ فارم",
   "uf.form_sub": "ملازم ماسٹر سے انتخاب کریں یا نیا اکاؤنٹ رجسٹر کریں",
   "uf.select_employee": "رجسٹرڈ ملازم منتخب کریں",
-  "uf.new_employee": "+ نیا ملازم",
+  "uf.new_employee": "نیا ملازم",
   "uf.choose_employee": "-- ملازم منتخب کریں --",
   "uf.full_name": "پورا نام",
   "uf.login_email": "لاگ ان ای میل",
@@ -36629,7 +36629,7 @@ const ur: Dict = {
 
   "cif.search_manager_ph": "منیجر کا نام تلاش کریں...",
 
-  "cif.add_new_sister": "+ نئی سسٹر کمپنی بنائیں (+ New Sister Company)",
+  "cif.add_new_sister": "نئی سسٹر کمپنی بنائیں",
 
   "cif.country_req": "ملک کا انتخاب کریں (Country) *",
 
@@ -36723,7 +36723,7 @@ const ur: Dict = {
 
   "cif.license_tax_ids": "لائسنس و رجسٹریشن نمبرز (License & Registration IDs) *",
 
-  "cif.add_registration_id": "+ مزید نمبر شامل کریں",
+  "cif.add_registration_id": "مزید نمبر شامل کریں",
 
   "cif.add_another_registration": "ایک اور نمبر شامل کریں",
 
@@ -39536,7 +39536,7 @@ const ur: Dict = {
 
   "cl.filters": "فلٹرز",
 
-  "cl.add_lead": "+ لیڈ شامل کریں",
+  "cl.add_lead": "لیڈ شامل کریں",
 
   "cl.reset_all_filters": "تمام فلٹرز ری سیٹ کریں",
 
@@ -41185,8 +41185,8 @@ const ar: Dict = {
   "lp.sel_scope": "اختر حساب الدائن...",
   "lp.add_brand_btn": "إضافة علامة تجارية",
   "lp.add_size_btn": "إضافة حجم",
-  "lp.new_brand": "+ علامة تجارية جديدة",
-  "lp.new_size": "+ حجم جديد",
+  "lp.new_brand": "علامة تجارية جديدة",
+  "lp.new_size": "حجم جديد",
   "lp.wh_stock_auto": "سيتم نقل المخزون تلقائياً إلى حساب المستودع عند الترحيل.",
   "purchase.pmw_col_po_number": "رقم أمر الشراء",
   "purchase.pmw_col_so_bill": "رقم أمر البيع / الفاتورة",
@@ -42940,7 +42940,7 @@ const ar: Dict = {
   "money_exchange.number_placeholder": "الرقم...",
   "money_exchange.clear_button": "مسح",
   "money_exchange.save_button": "حفظ إدخال الصرف",
-  "money_exchange.new_entry_btn": "+ إدخال جديد",
+  "money_exchange.new_entry_btn": "إدخال جديد",
   "money_exchange.total_entries": "إجمالي المعاملات",
   "money_exchange.purchase_volume": "إجمالي المشتريات",
   "money_exchange.sale_volume": "إجمالي المبيعات",
@@ -43159,12 +43159,12 @@ const ar: Dict = {
   "wh.wf_search_responsible_person": "ابحث عن الشخص المسؤول من السجل الرئيسي للأشخاص",
   "shl.picker_label": "خط الشحن",
   "shl.search_placeholder": "ابحث عن خط الشحن بالاسم أو الرمز...",
-  "shl.new_shipping_line": "+ خط شحن جديد",
+  "shl.new_shipping_line": "خط شحن جديد",
   "shl.name_label": "اسم خط الشحن",
   "shl.name_placeholder": "مثال: ميرسك لاين",
   "cla.picker_label": "وكيل التخليص",
   "cla.search_placeholder": "ابحث عن وكيل التخليص بالاسم أو الرمز...",
-  "cla.new_clearing_agent": "+ وكيل تخليص جديد",
+  "cla.new_clearing_agent": "وكيل تخليص جديد",
   "cla.name_label": "اسم وكيل التخليص",
   "cla.name_placeholder": "مثال: خدمات دي جي تي للتخليص",
   "cla.agent_kind_label": "نوع الوكيل",
@@ -45554,7 +45554,7 @@ const ar: Dict = {
   "creg.cp_other_companies_owned_by": "شركات أخرى مملوكة لـ",
   "creg.crtr_title": "أنواع تسجيل الشركات",
   "creg.crtr_subtitle": "إدارة أنواع تصنيف تسجيل الشركات وأنواع التراخيص والهياكل القانونية",
-  "creg.crtr_new_registration_type": "+ نوع تسجيل جديد",
+  "creg.crtr_new_registration_type": "نوع تسجيل جديد",
   "creg.crtr_search_placeholder": "البحث عن أنواع التسجيل...",
   "creg.crtr_total_word": "الإجمالي",
   "creg.crtr_inactive_word": "غير نشط",
@@ -45664,7 +45664,7 @@ const ar: Dict = {
   "acct.adv_failed_to_unlink": "فشل إلغاء الربط:",
   "acct.areg_title": "دليل الحسابات",
   "acct.areg_subtitle": "إدارة حسابات دفتر الأستاذ الرئيسية وحسابات التحكم وتعيينات العملة",
-  "acct.areg_new_account": "+ حساب جديد",
+  "acct.areg_new_account": "حساب جديد",
   "acct.areg_search_placeholder": "البحث عن الحسابات حسب الرمز أو الاسم...",
   "acct.areg_no_accounts_found": "لم يتم العثور على حسابات",
   "acct.areg_delete_account": "حذف الحساب",
@@ -47041,7 +47041,7 @@ const ar: Dict = {
   "uf.form_title": "نموذج إعداد المستخدم",
   "uf.form_sub": "اختر من سجل الموظفين أو سجّل حساباً إدارياً جديداً",
   "uf.select_employee": "اختر موظفاً مسجلاً",
-  "uf.new_employee": "+ موظف جديد",
+  "uf.new_employee": "موظف جديد",
   "uf.choose_employee": "-- اختر موظفاً --",
   "uf.full_name": "الاسم الكامل",
   "uf.login_email": "البريد الإلكتروني لتسجيل الدخول",
@@ -53002,7 +53002,7 @@ const ar: Dict = {
 
   "party360.registered_companies": "🏢 الشركات الشقيقة والمملوكة المسجلة ({n})",
 
-  "party360.new_sister_company": "+ شركة شقيقة جديدة",
+  "party360.new_sister_company": "شركة شقيقة جديدة",
 
   "party360.no_registered_companies": "لا توجد شركات مسجلة مرتبطة بهذا الكيان.",
 
@@ -53126,7 +53126,7 @@ const ar: Dict = {
 
   "cif.search_manager_ph": "ابحث عن اسم المدير...",
 
-  "cif.add_new_sister": "+ إضافة شركة شقيقة جديدة",
+  "cif.add_new_sister": "إضافة شركة شقيقة جديدة",
 
   "cif.country_req": "الدولة *",
 
@@ -53220,7 +53220,7 @@ const ar: Dict = {
 
   "cif.license_tax_ids": "معرفات الترخيص والضريبة والتسجيل *",
 
-  "cif.add_registration_id": "+ إضافة معرف تسجيل",
+  "cif.add_registration_id": "إضافة معرف تسجيل",
 
   "cif.add_another_registration": "إضافة تسجيل آخر",
 
@@ -56033,7 +56033,7 @@ const ar: Dict = {
 
   "cl.filters": "عوامل التصفية",
 
-  "cl.add_lead": "+ إضافة عميل محتمل",
+  "cl.add_lead": "إضافة عميل محتمل",
 
   "cl.reset_all_filters": "إعادة تعيين كل عوامل التصفية",
 
@@ -57682,8 +57682,8 @@ const fa: Dict = {
   "lp.sel_scope": "حساب بستانکار را انتخاب کنید...",
   "lp.add_brand_btn": "افزودن برند",
   "lp.add_size_btn": "افزودن اندازه",
-  "lp.new_brand": "+ برند جدید",
-  "lp.new_size": "+ اندازه جدید",
+  "lp.new_brand": "برند جدید",
+  "lp.new_size": "اندازه جدید",
   "lp.wh_stock_auto": "موجودی پس از ثبت به‌طور خودکار به این حساب انبار منتقل خواهد شد.",
   "purchase.pmw_col_po_number": "شماره سفارش خرید",
   "purchase.pmw_col_so_bill": "شماره SO / فاکتور",
@@ -59442,7 +59442,7 @@ const fa: Dict = {
   "money_exchange.number_placeholder": "شماره...",
   "money_exchange.clear_button": "پاک کردن",
   "money_exchange.save_button": "ذخیره ورودی صرافی",
-  "money_exchange.new_entry_btn": "+ ورودی جدید",
+  "money_exchange.new_entry_btn": "ورودی جدید",
   "money_exchange.total_entries": "کل تراکنش‌ها",
   "money_exchange.purchase_volume": "کل خریدها",
   "money_exchange.sale_volume": "کل فروش‌ها",
@@ -59656,12 +59656,12 @@ const fa: Dict = {
   "wh.wf_search_responsible_person": "جستجوی شخص مسئول از مرجع اصلی اشخاص",
   "shl.picker_label": "خط کشتیرانی",
   "shl.search_placeholder": "جستجوی خط کشتیرانی با نام یا کد...",
-  "shl.new_shipping_line": "+ خط کشتیرانی جدید",
+  "shl.new_shipping_line": "خط کشتیرانی جدید",
   "shl.name_label": "نام خط کشتیرانی",
   "shl.name_placeholder": "مثلاً میرسک لاین",
   "cla.picker_label": "کارگزار ترخیص",
   "cla.search_placeholder": "جستجوی کارگزار ترخیص با نام یا کد...",
-  "cla.new_clearing_agent": "+ کارگزار ترخیص جدید",
+  "cla.new_clearing_agent": "کارگزار ترخیص جدید",
   "cla.name_label": "نام کارگزار ترخیص",
   "cla.name_placeholder": "مثلاً خدمات ترخیص دی جی تی",
   "cla.agent_kind_label": "نوع کارگزار",
@@ -62030,7 +62030,7 @@ const fa: Dict = {
   "creg.cp_other_companies_owned_by": "سایر شرکت‌های متعلق به",
   "creg.crtr_title": "انواع ثبت شرکت",
   "creg.crtr_subtitle": "مدیریت انواع طبقه‌بندی ثبت شرکت، نوع مجوز و ساختارهای حقوقی",
-  "creg.crtr_new_registration_type": "+ نوع ثبت جدید",
+  "creg.crtr_new_registration_type": "نوع ثبت جدید",
   "creg.crtr_search_placeholder": "جستجوی انواع ثبت...",
   "creg.crtr_total_word": "کل",
   "creg.crtr_inactive_word": "غیرفعال",
@@ -62140,7 +62140,7 @@ const fa: Dict = {
   "acct.adv_failed_to_unlink": "قطع اتصال ناموفق بود:",
   "acct.areg_title": "فهرست حساب‌ها",
   "acct.areg_subtitle": "مدیریت حساب‌های اصلی دفتر کل، حساب‌های کنترلی و نگاشت ارز",
-  "acct.areg_new_account": "+ حساب جدید",
+  "acct.areg_new_account": "حساب جدید",
   "acct.areg_search_placeholder": "جستجوی حساب‌ها بر اساس کد یا نام...",
   "acct.areg_no_accounts_found": "هیچ حسابی یافت نشد",
   "acct.areg_delete_account": "حذف حساب",
@@ -63537,7 +63537,7 @@ const fa: Dict = {
   "uf.form_title": "فرم تنظیم کاربر",
   "uf.form_sub": "از کارمندان ثبت شده انتخاب کنید یا حساب جدیدی ایجاد کنید",
   "uf.select_employee": "انتخاب کارمند ثبت شده",
-  "uf.new_employee": "+ کارمند جدید",
+  "uf.new_employee": "کارمند جدید",
   "uf.choose_employee": "-- کارمند را انتخاب کنید --",
   "uf.full_name": "نام کامل",
   "uf.login_email": "ایمیل ورود",
@@ -69498,7 +69498,7 @@ const fa: Dict = {
 
   "party360.registered_companies": "🏢 شرکت‌های خواهر و مالکیتی ثبت‌شده ({n})",
 
-  "party360.new_sister_company": "+ شرکت خواهر جدید",
+  "party360.new_sister_company": "شرکت خواهر جدید",
 
   "party360.no_registered_companies": "شرکت ثبت‌شده‌ای مرتبط با این نهاد وجود ندارد.",
 
@@ -69622,7 +69622,7 @@ const fa: Dict = {
 
   "cif.search_manager_ph": "جستجوی نام مدیر...",
 
-  "cif.add_new_sister": "+ افزودن شرکت خواهر جدید",
+  "cif.add_new_sister": "افزودن شرکت خواهر جدید",
 
   "cif.country_req": "کشور *",
 
@@ -69716,7 +69716,7 @@ const fa: Dict = {
 
   "cif.license_tax_ids": "شناسه‌های مجوز، مالیات و ثبت *",
 
-  "cif.add_registration_id": "+ افزودن شناسه ثبت",
+  "cif.add_registration_id": "افزودن شناسه ثبت",
 
   "cif.add_another_registration": "افزودن ثبت دیگر",
 
@@ -72529,7 +72529,7 @@ const fa: Dict = {
 
   "cl.filters": "فیلترها",
 
-  "cl.add_lead": "+ افزودن سرنخ",
+  "cl.add_lead": "افزودن سرنخ",
 
   "cl.reset_all_filters": "بازنشانی همه فیلترها",
 
@@ -74178,8 +74178,8 @@ const ps: Dict = {
   "lp.sel_scope": "د کریډیټ حساب وټاکئ...",
   "lp.add_brand_btn": "برانډ اضافه کړئ",
   "lp.add_size_btn": "اندازه اضافه کړئ",
-  "lp.new_brand": "+ نوی برانډ",
-  "lp.new_size": "+ نوی اندازه",
+  "lp.new_brand": "نوی برانډ",
+  "lp.new_size": "نوی اندازه",
   "lp.wh_stock_auto": "د ثبت کولو پر مهال به اسټاک اتومات دې ګودام حساب ته لیږدول کیږي.",
   "purchase.pmw_col_po_number": "د پیرود امر شمیره",
   "purchase.pmw_col_so_bill": "SO / د بل شمیره",
@@ -75933,7 +75933,7 @@ const ps: Dict = {
   "money_exchange.number_placeholder": "شمېره...",
   "money_exchange.clear_button": "پاکول",
   "money_exchange.save_button": "د تبادلې ننوتنه خوندي کړئ",
-  "money_exchange.new_entry_btn": "+ نوی ننوت",
+  "money_exchange.new_entry_btn": "نوی ننوت",
   "money_exchange.total_entries": "ټولې راکړې ورکړې",
   "money_exchange.purchase_volume": "ټول پیرودونه",
   "money_exchange.sale_volume": "ټول پلورونه",
@@ -76147,12 +76147,12 @@ const ps: Dict = {
   "wh.wf_search_responsible_person": "د فرد ماسټر څخه مسؤل شخص ولټوئ",
   "shl.picker_label": "د بار وړونکی کرښه",
   "shl.search_placeholder": "د نوم یا کوډ له مخې د بار وړونکی کرښه ولټوئ...",
-  "shl.new_shipping_line": "+ نوې بار وړونکی کرښه",
+  "shl.new_shipping_line": "نوې بار وړونکی کرښه",
   "shl.name_label": "د بار وړونکی کرښې نوم",
   "shl.name_placeholder": "لکه میرسک لاین",
   "cla.picker_label": "د گمرک ایجنټ",
   "cla.search_placeholder": "د نوم یا کوډ له مخې د گمرک ایجنټ ولټوئ...",
-  "cla.new_clearing_agent": "+ نوی د گمرک ایجنټ",
+  "cla.new_clearing_agent": "نوی د گمرک ایجنټ",
   "cla.name_label": "د گمرک ایجنټ نوم",
   "cla.name_placeholder": "لکه DGT د گمرک خدمات",
   "cla.agent_kind_label": "د ایجنټ ډول",
@@ -78533,7 +78533,7 @@ const ps: Dict = {
   "creg.cp_other_companies_owned_by": "نور شرکتونه چې مالکیت لري",
   "creg.crtr_title": "د شرکت ثبت ډولونه",
   "creg.crtr_subtitle": "د شرکت ثبت طبقه بندۍ ډولونه، جواز ډولونه او قانوني جوړښتونه اداره کړئ",
-  "creg.crtr_new_registration_type": "+ نوی ثبت ډول",
+  "creg.crtr_new_registration_type": "نوی ثبت ډول",
   "creg.crtr_search_placeholder": "د ثبت ډولونه ولټوئ...",
   "creg.crtr_total_word": "ټول",
   "creg.crtr_inactive_word": "غیر فعال",
@@ -78643,7 +78643,7 @@ const ps: Dict = {
   "acct.adv_failed_to_unlink": "بې تړلی کول ناکام شول:",
   "acct.areg_title": "د حسابونو جدول",
   "acct.areg_subtitle": "اصلي لیجر حسابونه، کنټرول حسابونه او د اسعارو نقشه اداره کړئ",
-  "acct.areg_new_account": "+ نوی حساب",
+  "acct.areg_new_account": "نوی حساب",
   "acct.areg_search_placeholder": "حسابونه د کوډ یا نوم له مخې ولټوئ...",
   "acct.areg_no_accounts_found": "هیڅ حساب ونه موندل شو",
   "acct.areg_delete_account": "حساب ړنګول",
@@ -80039,7 +80039,7 @@ const ps: Dict = {
   "uf.form_title": "د کارونکي د سیٹ اپ فورمه",
   "uf.form_sub": "د ملازمینو له ثبت نه غوره کړئ یا نوی حساب رامنځته کړئ",
   "uf.select_employee": "ثبت شوی ملازم غوره کړئ",
-  "uf.new_employee": "+ نوی ملازم",
+  "uf.new_employee": "نوی ملازم",
   "uf.choose_employee": "-- ملازم غوره کړئ --",
   "uf.full_name": "بشپړ نوم",
   "uf.login_email": "د ننوتلو بریښنالیک",
@@ -86000,7 +86000,7 @@ const ps: Dict = {
 
   "party360.registered_companies": "🏢 ثبت شوي خور او ملکیتي شرکتونه ({n})",
 
-  "party360.new_sister_company": "+ نوی خور شرکت",
+  "party360.new_sister_company": "نوی خور شرکت",
 
   "party360.no_registered_companies": "د دې ادارې سره تړلی هیڅ ثبت شوی شرکت نشته.",
 
@@ -86124,7 +86124,7 @@ const ps: Dict = {
 
   "cif.search_manager_ph": "د مدیر نوم ولټوئ...",
 
-  "cif.add_new_sister": "+ نوی خور شرکت اضافه کړئ",
+  "cif.add_new_sister": "نوی خور شرکت اضافه کړئ",
 
   "cif.country_req": "هېواد *",
 
@@ -86218,7 +86218,7 @@ const ps: Dict = {
 
   "cif.license_tax_ids": "د جواز، مالیې او راجستریشن پیژندنې *",
 
-  "cif.add_registration_id": "+ د راجستریشن پیژندنه اضافه کړئ",
+  "cif.add_registration_id": "د راجستریشن پیژندنه اضافه کړئ",
 
   "cif.add_another_registration": "بل راجستریشن اضافه کړئ",
 
@@ -89031,7 +89031,7 @@ const ps: Dict = {
 
   "cl.filters": "فلټرونه",
 
-  "cl.add_lead": "+ لید اضافه کړئ",
+  "cl.add_lead": "لید اضافه کړئ",
 
   "cl.reset_all_filters": "ټول فلټرونه بیا تنظیم کړئ",
 

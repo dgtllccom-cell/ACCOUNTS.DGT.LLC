@@ -481,7 +481,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-9 px-4 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>{t(lang, "cl.add_lead", "+ Add Lead")}</span>
+              <span>{t(lang, "cl.add_lead", "Add Lead")}</span>
             </Button>
 
             {/* More Menu Dropdown */}

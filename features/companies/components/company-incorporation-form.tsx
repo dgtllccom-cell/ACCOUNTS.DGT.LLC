@@ -698,7 +698,7 @@ export function CompanyIncorporationForm({
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-4 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
-                <span>{t(lang, "cif.add_new_sister", "+ Add New Sister Company")}</span>
+                <span>{t(lang, "cif.add_new_sister", "Add New Sister Company")}</span>
               </Button>
             </div>
           </div>
@@ -1236,7 +1236,7 @@ export function CompanyIncorporationForm({
                           className="h-8 px-3 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs"
                         >
                           <Plus className="h-3.5 w-3.5" />
-                          <span>{t(lang, "cif.add_registration_id", "+ Add Registration ID")}</span>
+                          <span>{t(lang, "cif.add_registration_id", "Add Registration ID")}</span>
                         </Button>
                       </div>
 

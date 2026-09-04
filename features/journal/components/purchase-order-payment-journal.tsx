@@ -5237,7 +5237,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
                     >
                       {isDoubleEntryExpanded ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      <span>{isDoubleEntryExpanded ? translateHeader(currentLanguage, "Collapse Entry Form") : translateHeader(currentLanguage, "+ Add Payment Entry")}</span>
+                      <span>{isDoubleEntryExpanded ? translateHeader(currentLanguage, "Collapse Entry Form") : translateHeader(currentLanguage, "Add Payment Entry")}</span>
                     </button>
                   </div>
 

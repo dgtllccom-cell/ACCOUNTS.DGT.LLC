@@ -1445,7 +1445,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   onClick={handleOpenAddModal}
                   className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 gap-1.5 font-bold shadow-sm"
                 >
-                  <Plus className="h-4 w-4" /> + {tt("loc.add_new_location", "Add New Location")}
+                  <Plus className="h-4 w-4" /> {tt("loc.add_new_location", "Add New Location")}
                 </Button>
               </div>
             </div>
