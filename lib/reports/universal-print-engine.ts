@@ -275,14 +275,16 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
     @page {
       size: A4 ${effectiveOrientation};
       margin: 6mm 6mm 10mm 6mm;
+      orphans: 3;
+      widows: 3;
     }
-    
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       font-family: ${isRtl ? "'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif" : "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"};
       font-size: 7.2pt;
@@ -292,6 +294,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
       position: relative;
+      direction: ${isRtl ? "rtl" : "ltr"};
+      text-align: ${isRtl ? "right" : "left"};
     }
 
     .no-print {
@@ -518,7 +522,9 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       color: #475569;
       display: flex;
       flex-wrap: wrap;
+      flex-direction: ${isRtl ? "row-reverse" : "row"};
       gap: 4px 14px;
+      direction: ${isRtl ? "rtl" : "ltr"};
     }
     .filter-strip strong { color: #0f172a; font-weight: 800; }
 
@@ -565,6 +571,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       border-collapse: collapse;
       font-size: 7pt;
       margin-bottom: 6px;
+      table-layout: fixed;
     }
     .report-table th {
       background: #0f172a;
@@ -576,12 +583,21 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       padding: 3.5px 4px;
       border: 1px solid #0f172a;
       text-align: ${isRtl ? "right" : "left"};
+      word-wrap: break-word;
+      word-break: break-word;
     }
     .report-table td {
       padding: 3px 4px;
       border: 1px solid #cbd5e1;
       color: #1e293b;
       vertical-align: middle;
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .report-table tbody tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .report-table tbody tr:nth-child(even) {
       background-color: #f8fafc;
@@ -589,8 +605,18 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
     .text-center { text-align: center !important; }
     .text-right { text-align: right !important; }
     .text-left { text-align: left !important; }
+    .text-start { text-align: ${isRtl ? "right" : "left"} !important; }
+    .text-end { text-align: ${isRtl ? "left" : "right"} !important; }
     .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
     .font-bold { font-weight: 800; }
+
+    /* RTL Logical Properties */
+    .ms-auto { margin-inline-start: auto; }
+    .me-auto { margin-inline-end: auto; }
+    .ps-4 { padding-inline-start: 4px; }
+    .pe-4 { padding-inline-end: 4px; }
+    .ms-2 { margin-inline-start: 2px; }
+    .me-2 { margin-inline-end: 2px; }
 
     .totals-row {
       background: #e2e8f0 !important;
