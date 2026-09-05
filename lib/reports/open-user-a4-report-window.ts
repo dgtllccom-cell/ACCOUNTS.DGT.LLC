@@ -193,6 +193,8 @@ export function openUserA4ReportWindow(input: {
     @page {
       size: A4 portrait;
       margin: 12mm 12mm 12mm 12mm;
+      orphans: 3;
+      widows: 3;
       @bottom-right {
         content: "Page " counter(page);
         font-size: 8pt;
@@ -327,6 +329,7 @@ export function openUserA4ReportWindow(input: {
       border-collapse: collapse;
       font-size: 7pt;
       margin: 4px 0 8px 0;
+      table-layout: fixed;
     }
 
     th {
@@ -338,6 +341,8 @@ export function openUserA4ReportWindow(input: {
       text-align: left;
       font-size: 6.8pt;
       text-transform: uppercase;
+      word-wrap: break-word;
+      word-break: break-word;
     }
 
     [dir="rtl"] th {
@@ -349,6 +354,14 @@ export function openUserA4ReportWindow(input: {
       border: 1px solid #e2e8f0;
       color: #334155;
       vertical-align: middle;
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
 
     tr:nth-child(even) td {

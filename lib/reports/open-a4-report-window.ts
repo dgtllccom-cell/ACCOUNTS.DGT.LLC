@@ -627,9 +627,9 @@ export function openA4ReportWindow(input: {
     <title>${title}</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-      @page { size: A4; margin: 12mm; }
+      @page { size: A4; margin: 12mm; orphans: 3; widows: 3; }
       html, body { height: 100%; margin: 0; padding: 0; }
-      body { background: #f1f5f9; color: #1e293b; font-family: 'Inter', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { background: #f1f5f9; color: #1e293b; font-family: 'Inter', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; direction: ltr; }
       .wrap { padding: 25px; display: flex; justify-content: center; }
       .page {
         width: 210mm;
@@ -651,10 +651,11 @@ export function openA4ReportWindow(input: {
       .meta { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; color: #6b7280; font-size: 12px; }
       .pill { border: 1px solid #e5e7eb; border-radius: 999px; padding: 4px 10px; background: #f9fafb; }
       .content { padding: 18px 22px; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { border: 1px solid #e5e7eb; padding: 10px 12px; font-size: 13px; text-align: left; vertical-align: top; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { border: 1px solid #e5e7eb; padding: 10px 12px; font-size: 13px; text-align: left; vertical-align: top; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; }
       th { width: 32%; background: #f9fafb; color: #374151; font-weight: 700; }
       td { font-weight: 600; }
+      tr { page-break-inside: avoid !important; break-inside: avoid !important; }
 
       /* Branch data premium templates styling */
       .header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
