@@ -4,25 +4,14 @@ import { financialStatementQuerySchema } from "@/lib/api/erp-validation";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
-
-type StatementRow = {
-  ledger_id: string;
-  code: string | null;
-  name: string | null;
-  currency: string | null;
-  kind: string;
-  period_debit: number;
-  period_credit: number;
-};
+import { fetchFinancialStatementRows, classifyProfitAndLoss } from "@/lib/reports/financial-statement-data";
 
 /**
  * Profit & Loss (Income Statement) — CLAUDE.md Master Requirement Section A.
  * Reuses get_financial_statement_ledgers (20261103_financial_statements.sql),
  * the same RBAC scope pattern as get_trial_balance, and the same
- * ledgers/ledger_balances tables. Classifies rows already tagged by
- * enterprise_accounts.kind: income accounts show revenue as
- * (credit - debit) for the period, expense accounts show cost as
- * (debit - credit). Net Profit = totalIncome - totalExpense.
+ * ledgers/ledger_balances tables. Classification (lib/reports/
+ * financial-statement-data.ts) is shared with the AI Business Assistant.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -45,46 +34,10 @@ export async function GET(request: NextRequest) {
     });
 
     const supabase = await createApiSupabaseClient();
-    const { data, error } = await supabase.rpc("get_financial_statement_ledgers", {
-      p_scope: query.scope,
-      p_country_id: query.countryId ?? null,
-      p_country_branch_id: query.countryBranchId ?? null,
-      p_city_branch_id: query.cityBranchId ?? null,
-      p_from_date: query.fromDate,
-      p_to_date: query.toDate
-    });
+    const rows = await fetchFinancialStatementRows(supabase, query);
+    const { income, expense, totals } = classifyProfitAndLoss(rows);
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const rows = (data ?? []) as StatementRow[];
-
-    const income = rows
-      .filter((r) => r.kind === "income")
-      .map((r) => ({ ...r, amount: Number(r.period_credit || 0) - Number(r.period_debit || 0) }))
-      .filter((r) => r.amount !== 0);
-
-    const expense = rows
-      .filter((r) => r.kind === "expense")
-      .map((r) => ({ ...r, amount: Number(r.period_debit || 0) - Number(r.period_credit || 0) }))
-      .filter((r) => r.amount !== 0);
-
-    const totalIncome = income.reduce((sum, r) => sum + r.amount, 0);
-    const totalExpense = expense.reduce((sum, r) => sum + r.amount, 0);
-
-    return apiOk({
-      fromDate: query.fromDate,
-      toDate: query.toDate,
-      scope: query.scope,
-      income,
-      expense,
-      totals: {
-        totalIncome,
-        totalExpense,
-        netProfit: totalIncome - totalExpense
-      }
-    });
+    return apiOk({ fromDate: query.fromDate, toDate: query.toDate, scope: query.scope, income, expense, totals });
   } catch (error) {
     return handleApiError(error);
   }

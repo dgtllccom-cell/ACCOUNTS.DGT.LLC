@@ -39,6 +39,7 @@ import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sid
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { GlobalCalculator } from "@/components/layout/global-calculator";
+import { AiBusinessAssistant } from "@/components/layout/ai-business-assistant";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
@@ -577,6 +578,7 @@ export function DashboardFrame({
               </div>
 
               <GlobalCalculator />
+              <AiBusinessAssistant />
 
               <div className="relative" ref={notificationsRef}>
                 <button

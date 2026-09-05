@@ -927,6 +927,28 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "aiassist.ex_profit"
+  | "aiassist.ex_balance"
+  | "aiassist.ex_cash"
+  | "aiassist.ex_summary"
+  | "aiassist.title"
+  | "aiassist.open"
+  | "aiassist.placeholder"
+  | "aiassist.send"
+  | "aiassist.thinking"
+  | "aiassist.disclaimer"
+  | "aiassist.write_refused"
+  | "aiassist.help"
+  | "aiassist.error"
+  | "aiassist.clear"
+  | "aiassist.close"
+  | "aiassist.minimize"
+  | "aiassist.restore"
+  | "aiassist.examples_title"
+  | "aiassist.ans_profit_loss"
+  | "aiassist.ans_balance_sheet"
+  | "aiassist.ans_cash_flow"
+  | "aiassist.ans_business_summary"
   | "finstmt.title"
   | "finstmt.stmt_pl"
   | "finstmt.stmt_bs"
@@ -19126,6 +19148,72 @@ const en: Dict = {
 
 
 
+
+
+
+
+  "aiassist.ex_profit": "What is our net profit this year?",
+
+
+  "aiassist.ex_balance": "What is our balance sheet position?",
+
+
+  "aiassist.ex_cash": "What is our cash position?",
+
+
+  "aiassist.ex_summary": "What is our sales and purchase summary?",
+  "aiassist.title": "AI Business Assistant",
+
+
+  "aiassist.open": "Ask the AI Business Assistant",
+
+
+  "aiassist.placeholder": "Ask about profit, balance sheet, cash, purchases, sales, outstanding…",
+
+
+  "aiassist.send": "Ask",
+
+
+  "aiassist.thinking": "Thinking…",
+
+
+  "aiassist.disclaimer": "Read-only — answers use your existing ERP data only. It can never create, edit, delete or post any transaction.",
+
+
+  "aiassist.write_refused": "I'm read-only and can't create, edit, delete, post, pay, approve or void anything. Please do that from the relevant ERP screen — I can only answer questions about your existing data.",
+
+
+  "aiassist.help": "I can answer about Profit & Loss, Balance Sheet, Cash & Bank position, and the overall Purchase/Sales/Outstanding/Stock summary for your scope. Try: \"What is our net profit this year?\" or \"What is our cash position?\"",
+
+
+  "aiassist.error": "Sorry, I couldn't answer that right now.",
+
+
+  "aiassist.clear": "Clear chat",
+
+
+  "aiassist.close": "Close",
+
+
+  "aiassist.minimize": "Minimize",
+
+
+  "aiassist.restore": "Restore",
+
+
+  "aiassist.examples_title": "Try asking",
+
+
+  "aiassist.ans_profit_loss": "For {from} to {to} ({scope}): Total Income {income}, Total Expense {expense}, Net Profit/(Loss) {net}.",
+
+
+  "aiassist.ans_balance_sheet": "As of {date} ({scope}): Total Assets {assets}, Total Liabilities {liabilities}, Total Equity {equity}.",
+
+
+  "aiassist.ans_cash_flow": "For {from} to {to} ({scope}): Opening {opening}, Closing {closing}, Net Movement {net}.",
+
+
+  "aiassist.ans_business_summary": "For {scope}: Purchases {purchase} (outstanding {purchaseOut}), Sales {sales} (outstanding {salesOut}), Expenses {expenses}, Estimated Gross Profit {grossProfit}, Stock Value {stock}, Customer Balances {customerBalance}.",
   "finstmt.title": "Financial Statements",
 
 
@@ -35741,6 +35829,72 @@ const ur: Dict = {
 
 
 
+
+
+
+
+  "aiassist.ex_profit": "اس سال ہمارا خالص منافع کیا ہے؟",
+
+
+  "aiassist.ex_balance": "ہمارا بیلنس شیٹ کیا ہے؟",
+
+
+  "aiassist.ex_cash": "ہماری کیش پوزیشن کیا ہے؟",
+
+
+  "aiassist.ex_summary": "خریداری اور فروخت کا خلاصہ کیا ہے؟",
+  "aiassist.title": "اے آئی بزنس اسسٹنٹ",
+
+
+  "aiassist.open": "اے آئی بزنس اسسٹنٹ سے پوچھیں",
+
+
+  "aiassist.placeholder": "منافع، بیلنس شیٹ، کیش، خریداری، فروخت، بقایا کے بارے میں پوچھیں…",
+
+
+  "aiassist.send": "پوچھیں",
+
+
+  "aiassist.thinking": "سوچ رہا ہے…",
+
+
+  "aiassist.disclaimer": "صرف پڑھنے کے لیے — جوابات صرف آپ کے موجودہ ای آر پی ڈیٹا پر مبنی ہیں۔ یہ کبھی بھی کوئی ٹرانزیکشن نہیں بنا، ترمیم، حذف یا پوسٹ کر سکتا۔",
+
+
+  "aiassist.write_refused": "میں صرف پڑھنے کے لیے ہوں اور کچھ بھی بنا، ترمیم، حذف، پوسٹ، ادائیگی، منظور یا منسوخ نہیں کر سکتا۔ براہ کرم متعلقہ ای آر پی اسکرین سے یہ کریں — میں صرف آپ کے موجودہ ڈیٹا کے بارے میں سوالات کے جواب دے سکتا ہوں۔",
+
+
+  "aiassist.help": "میں منافع و نقصان، بیلنس شیٹ، کیش اینڈ بینک پوزیشن، اور آپ کے دائرہ کار کے مجموعی خریداری/فروخت/بقایا/اسٹاک خلاصے کے بارے میں جواب دے سکتا ہوں۔ آزمائیں: \"اس سال ہمارا خالص منافع کیا ہے؟\"",
+
+
+  "aiassist.error": "معذرت، میں ابھی اس کا جواب نہیں دے سکا۔",
+
+
+  "aiassist.clear": "چیٹ صاف کریں",
+
+
+  "aiassist.close": "بند کریں",
+
+
+  "aiassist.minimize": "چھوٹا کریں",
+
+
+  "aiassist.restore": "بحال کریں",
+
+
+  "aiassist.examples_title": "یہ پوچھ کر دیکھیں",
+
+
+  "aiassist.ans_profit_loss": "{from} سے {to} تک ({scope}): کل آمدنی {income}، کل خرچہ {expense}، خالص منافع/(نقصان) {net}۔",
+
+
+  "aiassist.ans_balance_sheet": "بمطابق {date} ({scope}): کل اثاثے {assets}، کل واجبات {liabilities}، کل ایکویٹی {equity}۔",
+
+
+  "aiassist.ans_cash_flow": "{from} سے {to} تک ({scope}): ابتدائی {opening}، اختتامی {closing}، خالص نقل و حرکت {net}۔",
+
+
+  "aiassist.ans_business_summary": "{scope} کے لیے: خریداری {purchase} (بقایا {purchaseOut})، فروخت {sales} (بقایا {salesOut})، اخراجات {expenses}، تخمینی مجموعی منافع {grossProfit}، اسٹاک ویلیو {stock}، کسٹمر بیلنس {customerBalance}۔",
   "finstmt.title": "مالیاتی گوشوارے",
 
 
@@ -52358,6 +52512,72 @@ const ar: Dict = {
 
 
 
+
+
+
+
+  "aiassist.ex_profit": "ما هو صافي ربحنا هذا العام؟",
+
+
+  "aiassist.ex_balance": "ما هي الميزانية العمومية؟",
+
+
+  "aiassist.ex_cash": "ما هو وضعنا النقدي؟",
+
+
+  "aiassist.ex_summary": "ما هو ملخص المشتريات والمبيعات؟",
+  "aiassist.title": "المساعد التجاري بالذكاء الاصطناعي",
+
+
+  "aiassist.open": "اسأل المساعد التجاري بالذكاء الاصطناعي",
+
+
+  "aiassist.placeholder": "اسأل عن الربح والميزانية والنقد والمشتريات والمبيعات والمستحقات…",
+
+
+  "aiassist.send": "اسأل",
+
+
+  "aiassist.thinking": "جارٍ التفكير…",
+
+
+  "aiassist.disclaimer": "للقراءة فقط — تعتمد الإجابات على بيانات ERP الحالية فقط. لا يمكنه أبدًا إنشاء أو تعديل أو حذف أو ترحيل أي معاملة.",
+
+
+  "aiassist.write_refused": "أنا للقراءة فقط ولا يمكنني إنشاء أو تعديل أو حذف أو ترحيل أو دفع أو اعتماد أو إلغاء أي شيء. يرجى القيام بذلك من شاشة ERP المعنية — يمكنني فقط الإجابة عن أسئلة حول بياناتك الحالية.",
+
+
+  "aiassist.help": "يمكنني الإجابة عن الأرباح والخسائر والميزانية العمومية ووضع النقد والبنك، وملخص المشتريات/المبيعات/المستحقات/المخزون لنطاقك. جرّب: \"ما هو صافي ربحنا هذا العام؟\"",
+
+
+  "aiassist.error": "عذرًا، لم أتمكن من الإجابة على ذلك الآن.",
+
+
+  "aiassist.clear": "مسح المحادثة",
+
+
+  "aiassist.close": "إغلاق",
+
+
+  "aiassist.minimize": "تصغير",
+
+
+  "aiassist.restore": "استعادة",
+
+
+  "aiassist.examples_title": "جرّب أن تسأل",
+
+
+  "aiassist.ans_profit_loss": "من {from} إلى {to} ({scope}): إجمالي الدخل {income}، إجمالي المصروفات {expense}، صافي الربح/(الخسارة) {net}.",
+
+
+  "aiassist.ans_balance_sheet": "حتى {date} ({scope}): إجمالي الأصول {assets}، إجمالي الخصوم {liabilities}، إجمالي حقوق الملكية {equity}.",
+
+
+  "aiassist.ans_cash_flow": "من {from} إلى {to} ({scope}): الافتتاحي {opening}، الختامي {closing}، صافي الحركة {net}.",
+
+
+  "aiassist.ans_business_summary": "لـ {scope}: المشتريات {purchase} (المستحق {purchaseOut})، المبيعات {sales} (المستحق {salesOut})، المصروفات {expenses}، الربح الإجمالي التقديري {grossProfit}، قيمة المخزون {stock}، أرصدة العملاء {customerBalance}.",
   "finstmt.title": "البيانات المالية",
 
 
@@ -68974,6 +69194,72 @@ const fa: Dict = {
 
 
 
+
+
+
+
+  "aiassist.ex_profit": "سود خالص ما امسال چقدر است؟",
+
+
+  "aiassist.ex_balance": "ترازنامه ما چیست؟",
+
+
+  "aiassist.ex_cash": "وضعیت نقدی ما چیست؟",
+
+
+  "aiassist.ex_summary": "خلاصه خرید و فروش ما چیست؟",
+  "aiassist.title": "دستیار تجاری هوش مصنوعی",
+
+
+  "aiassist.open": "از دستیار تجاری هوش مصنوعی بپرسید",
+
+
+  "aiassist.placeholder": "درباره سود، ترازنامه، نقد، خرید، فروش، معوقه بپرسید…",
+
+
+  "aiassist.send": "بپرس",
+
+
+  "aiassist.thinking": "در حال فکر کردن…",
+
+
+  "aiassist.disclaimer": "فقط خواندنی — پاسخ‌ها فقط بر اساس داده‌های موجود ERP شماست. هرگز نمی‌تواند تراکنشی ایجاد، ویرایش، حذف یا ثبت کند.",
+
+
+  "aiassist.write_refused": "من فقط خواندنی هستم و نمی‌توانم چیزی ایجاد، ویرایش، حذف، ثبت، پرداخت، تایید یا لغو کنم. لطفاً این کار را از صفحه مربوطه ERP انجام دهید — من فقط می‌توانم به سؤالات درباره داده‌های موجود شما پاسخ دهم.",
+
+
+  "aiassist.help": "می‌توانم درباره سود و زیان، ترازنامه، وضعیت نقد و بانک، و خلاصه کلی خرید/فروش/معوقه/موجودی برای محدوده شما پاسخ دهم. امتحان کنید: \"سود خالص ما امسال چقدر است؟\"",
+
+
+  "aiassist.error": "متأسفم، اکنون نتوانستم به این پاسخ دهم.",
+
+
+  "aiassist.clear": "پاک کردن گفتگو",
+
+
+  "aiassist.close": "بستن",
+
+
+  "aiassist.minimize": "کوچک کردن",
+
+
+  "aiassist.restore": "بازیابی",
+
+
+  "aiassist.examples_title": "امتحان کنید بپرسید",
+
+
+  "aiassist.ans_profit_loss": "از {from} تا {to} ({scope}): کل درآمد {income}، کل هزینه {expense}، سود/(زیان) خالص {net}.",
+
+
+  "aiassist.ans_balance_sheet": "تا {date} ({scope}): کل دارایی‌ها {assets}، کل بدهی‌ها {liabilities}، کل حقوق صاحبان سهام {equity}.",
+
+
+  "aiassist.ans_cash_flow": "از {from} تا {to} ({scope}): ابتدایی {opening}، پایانی {closing}، حرکت خالص {net}.",
+
+
+  "aiassist.ans_business_summary": "برای {scope}: خرید {purchase} (معوقه {purchaseOut})، فروش {sales} (معوقه {salesOut})، هزینه‌ها {expenses}، سود ناخالص تخمینی {grossProfit}، ارزش موجودی {stock}، مانده مشتریان {customerBalance}.",
   "finstmt.title": "صورت‌های مالی",
 
 
@@ -85596,6 +85882,72 @@ const ps: Dict = {
 
 
 
+
+
+
+
+  "aiassist.ex_profit": "زموږ خالص ګټه پدې کال کومه ده؟",
+
+
+  "aiassist.ex_balance": "زموږ بیلانس پاڼه څه ده؟",
+
+
+  "aiassist.ex_cash": "زموږ نغدي حالت څه دی؟",
+
+
+  "aiassist.ex_summary": "زموږ د پیرودنه او پلور لنډیز څه دی؟",
+  "aiassist.title": "د بزنس AI مرستیال",
+
+
+  "aiassist.open": "د بزنس AI مرستیال نه پوښتنه وکړئ",
+
+
+  "aiassist.placeholder": "د ګټې، بیلانس، نغدو، پیرودنې، پلور، پاتې کالاو په اړه وپوښتئ…",
+
+
+  "aiassist.send": "وپوښتئ",
+
+
+  "aiassist.thinking": "فکر کوي…",
+
+
+  "aiassist.disclaimer": "یوازې لوستل — ځوابونه یوازې ستاسو د موجود ERP معلوماتو پر بنسټ دي. دا هیڅکله کولی نشي کوم لیږد جوړ، سم، حذف یا ثبت کړي.",
+
+
+  "aiassist.write_refused": "زه یوازې لوستونکی یم او نشم کولی هیڅ شی جوړ، سم، حذف، ثبت، تادیه، منظور یا لغوه کړم۔ مهرباني وکړئ دا کار د اړوندې ERP سکرین څخه وکړئ — زه یوازې ستاسو د موجود معلوماتو په اړه پوښتنو ته ځواب ورکولی شم.",
+
+
+  "aiassist.help": "زه کولی شم د ګټې او زیان، بیلانس پاڼې، د نغدو او بانک حالت، او ستاسو د ساحې د پیرودنې/پلور/پاتې/ذخیرې لنډیز په اړه ځواب ورکړم۔ دا وازمویئ: \"زموږ خالص ګټه پدې کال کومه ده؟\"",
+
+
+  "aiassist.error": "بښنه غواړم، زه اوس دې ته ځواب نشم ورکولی.",
+
+
+  "aiassist.clear": "چیټ پاکول",
+
+
+  "aiassist.close": "بندول",
+
+
+  "aiassist.minimize": "کوچنی کول",
+
+
+  "aiassist.restore": "بیرته راوستل",
+
+
+  "aiassist.examples_title": "دا وپوښتئ",
+
+
+  "aiassist.ans_profit_loss": "د {from} نه تر {to} پورې ({scope}): ټول عاید {income}، ټول لګښت {expense}، خالص ګټه/(زیان) {net}.",
+
+
+  "aiassist.ans_balance_sheet": "تر {date} پورې ({scope}): ټول شتمنۍ {assets}، ټول پورونه {liabilities}، ټوله پانګه {equity}.",
+
+
+  "aiassist.ans_cash_flow": "د {from} نه تر {to} پورې ({scope}): پرانستی {opening}، پای {closing}، خالص حرکت {net}.",
+
+
+  "aiassist.ans_business_summary": "د {scope} لپاره: پیرودنه {purchase} (پاتې {purchaseOut})، پلور {sales} (پاتې {salesOut})، لګښتونه {expenses}، اټکل شوی ناخالص ګټه {grossProfit}، د ذخیرې ارزښت {stock}، د پیرودونکو بیلانس {customerBalance}.",
   "finstmt.title": "مالي بیانونه",
 
 
