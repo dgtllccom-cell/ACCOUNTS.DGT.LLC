@@ -58,3 +58,4 @@ uat-samples/
 
 # Local verification scratch space (never commit — may contain session cookies / DB dumps)
 scratch/
+supabase/backups/.env*
