@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Upload, FileText, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+
+const translate = (_lang: SupportedLanguage, _key: string, fallback: string) => fallback;
 
 type BulkImportStatus = "idle" | "uploading" | "extracting" | "reviewing" | "confirming" | "complete" | "error";
 
@@ -60,7 +61,7 @@ export function BulkAccountImport({
       });
 
       if (!response.ok) {
-        throw new Error(t(activeLang, "account.bulk_import_failed", "Failed to extract accounts from document"));
+        throw new Error(translate(activeLang, "account.bulk_import_failed", "Failed to extract accounts from document"));
       }
 
       const result = await response.json();
@@ -79,7 +80,7 @@ export function BulkAccountImport({
       setExtractedAccounts(accounts);
       setStatus("reviewing");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t(activeLang, "common.error_occurred", "An error occurred"));
+      setError(err instanceof Error ? err.message : translate(activeLang, "common.error_occurred", "An error occurred"));
       setStatus("error");
     } finally {
       setLoading(false);
@@ -111,14 +112,14 @@ export function BulkAccountImport({
       });
 
       if (!response.ok) {
-        throw new Error(t(activeLang, "account.bulk_create_failed", "Failed to create accounts"));
+        throw new Error(translate(activeLang, "account.bulk_create_failed", "Failed to create accounts"));
       }
 
       const result = await response.json();
       setStatus("complete");
       onComplete(result.createdCount || 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t(activeLang, "common.error_occurred", "An error occurred"));
+      setError(err instanceof Error ? err.message : translate(activeLang, "common.error_occurred", "An error occurred"));
       setStatus("error");
     } finally {
       setLoading(false);
@@ -133,10 +134,10 @@ export function BulkAccountImport({
             <CheckCircle2 className="h-6 w-6 text-emerald-600" />
             <div>
               <p className="font-semibold text-emerald-900 dark:text-emerald-100">
-                {t(activeLang, "account.bulk_import_complete", "Bulk import complete")}
+                {translate(activeLang, "account.bulk_import_complete", "Bulk import complete")}
               </p>
               <p className="text-sm text-emerald-700 dark:text-emerald-200">
-                {extractedAccounts.filter(a => a.status === "valid").length} {t(activeLang, "account.accounts_created", "accounts created")}
+                {extractedAccounts.filter(a => a.status === "valid").length} {translate(activeLang, "account.accounts_created", "accounts created")}
               </p>
             </div>
           </div>
@@ -150,7 +151,7 @@ export function BulkAccountImport({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          {t(activeLang, "account.bulk_import", "Bulk Account Import")}
+          {translate(activeLang, "account.bulk_import", "Bulk Account Import")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -158,10 +159,10 @@ export function BulkAccountImport({
         <div className="rounded-lg border-2 border-dashed border-slate-300 p-6 text-center dark:border-slate-700">
           <Upload className="mx-auto h-8 w-8 text-slate-400" />
           <p className="mt-2 font-medium text-slate-700 dark:text-slate-300">
-            {t(activeLang, "account.upload_pdf_excel", "Upload PDF, Excel, or Document")}
+            {translate(activeLang, "account.upload_pdf_excel", "Upload PDF, Excel, or Document")}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {t(activeLang, "account.bulk_import_desc", "Contains 10-20+ account records from another system")}
+            {translate(activeLang, "account.bulk_import_desc", "Contains 10-20+ account records from another system")}
           </p>
           <input
             type="file"
@@ -176,17 +177,17 @@ export function BulkAccountImport({
         {extractedAccounts.length > 0 && (
           <div className="space-y-3">
             <h3 className="font-semibold">
-              {t(activeLang, "account.review_extracted", "Review Extracted Accounts")} ({extractedAccounts.length})
+              {translate(activeLang, "account.review_extracted", "Review Extracted Accounts")} ({extractedAccounts.length})
             </h3>
             <div className="max-h-64 overflow-y-auto rounded border border-slate-200 dark:border-slate-700">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800">
                   <tr>
                     <th className="px-3 py-2 text-left">Row</th>
-                    <th className="px-3 py-2 text-left">{t(activeLang, "account.code", "Code")}</th>
-                    <th className="px-3 py-2 text-left">{t(activeLang, "account.name", "Name")}</th>
-                    <th className="px-3 py-2 text-left">{t(activeLang, "account.currency", "Currency")}</th>
-                    <th className="px-3 py-2 text-left">{t(activeLang, "account.status", "Status")}</th>
+                    <th className="px-3 py-2 text-left">{translate(activeLang, "account.code", "Code")}</th>
+                    <th className="px-3 py-2 text-left">{translate(activeLang, "account.name", "Name")}</th>
+                    <th className="px-3 py-2 text-left">{translate(activeLang, "account.currency", "Currency")}</th>
+                    <th className="px-3 py-2 text-left">{translate(activeLang, "account.status", "Status")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -228,7 +229,7 @@ export function BulkAccountImport({
                 }}
                 variant="outline"
               >
-                {t(activeLang, "common.cancel", "Cancel")}
+                {translate(activeLang, "common.cancel", "Cancel")}
               </Button>
               <Button
                 onClick={handleConfirmImport}
@@ -236,7 +237,7 @@ export function BulkAccountImport({
                 className="ml-auto"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t(activeLang, "account.confirm_and_create", "Confirm & Create")} ({extractedAccounts.filter(a => a.status === "valid").length})
+                {translate(activeLang, "account.confirm_and_create", "Confirm & Create")} ({extractedAccounts.filter(a => a.status === "valid").length})
               </Button>
             </>
           )}
