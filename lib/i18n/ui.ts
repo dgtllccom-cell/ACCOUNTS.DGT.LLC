@@ -6039,6 +6039,9 @@ export type UiKey =
   // Sales Order Payment Journal (sopj.*)
   | "sopj_advance_payment" | "sopj_remaining_payment" | "sopj_credit_payment" | "sopj_payment_history"
   | "sopj_advance_completed" | "sopj_payment_date" | "sopj_payment_summary" | "sopj_payment_receipt" | "sopj_advance_cleared"
+  // Purchase Order Dashboard (pomd.*)
+  | "pomd_loading_records" | "pomd_load_details" | "pomd_receive_goods" | "pomd_purchase_details"
+  | "pomd_payment_status" | "pomd_container_status" | "pomd_goods_received" | "pomd_outstanding_balance"
   // Location Management Wizard (loc.*)
   | "loc.title" | "loc.subtitle" | "loc.description" | "loc.view_complete_list" | "loc.hierarchy_active"
   | "loc.countries" | "loc.states_provinces" | "loc.cities_districts" | "loc.districts_tehsils"
@@ -16569,6 +16572,15 @@ const en: Dict = {
   "sopj_payment_summary": "Payment Summary",
   "sopj_payment_receipt": "Payment Receipt",
   "sopj_advance_cleared": "Advance Cleared",
+  // Purchase Order Dashboard (pomd.*)
+  "pomd_loading_records": "Loading Records",
+  "pomd_load_details": "Load Details",
+  "pomd_receive_goods": "Receive Goods",
+  "pomd_purchase_details": "Purchase Details",
+  "pomd_payment_status": "Payment Status",
+  "pomd_container_status": "Container Status",
+  "pomd_goods_received": "Goods Received",
+  "pomd_outstanding_balance": "Outstanding Balance",
   "hrm.departments": "Departments",
   "hrm.designations": "Designations",
   "hrm.department": "Department",
@@ -33343,6 +33355,15 @@ const ur: Dict = {
   "sopj_payment_summary": "ادائیگی کا خلاصہ",
   "sopj_payment_receipt": "ادائیگی کی رسید",
   "sopj_advance_cleared": "ایڈوانس صاف",
+  // Purchase Order Dashboard (pomd.*)
+  "pomd_loading_records": "لوڈنگ ریکارڈز",
+  "pomd_load_details": "لوڈ تفصیلات",
+  "pomd_receive_goods": "سامان وصول کریں",
+  "pomd_purchase_details": "خریداری کی تفصیلات",
+  "pomd_payment_status": "ادائیگی کی حالت",
+  "pomd_container_status": "کنٹینر کی حالت",
+  "pomd_goods_received": "سامان وصول",
+  "pomd_outstanding_balance": "باقی بیلنس",
   "hrm.departments": "شعبہ جات",
   "hrm.designations": "عہدے",
   "hrm.department": "شعبہ",
@@ -50119,6 +50140,15 @@ const ar: Dict = {
   "sopj_payment_summary": "ملخص الدفع",
   "sopj_payment_receipt": "إيصال الدفع",
   "sopj_advance_cleared": "الدفعة المقدمة محررة",
+  // Purchase Order Dashboard (pomd.*)
+  "pomd_loading_records": "سجلات التحميل",
+  "pomd_load_details": "تفاصيل التحميل",
+  "pomd_receive_goods": "استلام البضائع",
+  "pomd_purchase_details": "تفاصيل الشراء",
+  "pomd_payment_status": "حالة الدفع",
+  "pomd_container_status": "حالة الحاوية",
+  "pomd_goods_received": "البضائع المستلمة",
+  "pomd_outstanding_balance": "الرصيد المستحق",
   "hrm.departments": "الأقسام",
   "hrm.designations": "المسميات الوظيفية",
   "hrm.department": "القسم",
@@ -66894,6 +66924,15 @@ const fa: Dict = {
   "sopj_payment_summary": "خلاصه پرداخت",
   "sopj_payment_receipt": "رسید پرداخت",
   "sopj_advance_cleared": "پیشکی پاک شده",
+  // Purchase Order Dashboard (pomd.*)
+  "pomd_loading_records": "سوابق بارگیری",
+  "pomd_load_details": "جزئیات بارگیری",
+  "pomd_receive_goods": "دریافت کالا",
+  "pomd_purchase_details": "جزئیات خرید",
+  "pomd_payment_status": "وضعیت پرداخت",
+  "pomd_container_status": "وضعیت کانتینر",
+  "pomd_goods_received": "کالای دریافت‌شده",
+  "pomd_outstanding_balance": "موجودی باقی",
   "hrm.departments": "دپارتمان‌ها",
   "hrm.designations": "عناوین شغلی",
   "hrm.department": "دپارتمان",
@@ -83675,6 +83714,15 @@ const ps: Dict = {
   "sopj_payment_summary": "د تادیې خلاصه",
   "sopj_payment_receipt": "د تادیې رسید",
   "sopj_advance_cleared": "مقدما صاف شوه",
+  // Purchase Order Dashboard (pomd.*)
+  "pomd_loading_records": "د بار د ریکارډونو",
+  "pomd_load_details": "د بار تفصیلات",
+  "pomd_receive_goods": "سامان اخلي",
+  "pomd_purchase_details": "د خریداري تفصیلات",
+  "pomd_payment_status": "د تادیې حالت",
+  "pomd_container_status": "د کانتینر حالت",
+  "pomd_goods_received": "سامان وړل شوي",
+  "pomd_outstanding_balance": "پاتې بیلانس",
   "hrm.departments": "څانګې",
   "hrm.designations": "دندې",
   "hrm.department": "څانګه",
