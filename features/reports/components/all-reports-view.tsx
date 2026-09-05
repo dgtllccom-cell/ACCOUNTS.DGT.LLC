@@ -79,6 +79,15 @@ export const ALL_REPORTS_CATALOG: ReportItem[] = [
     allowedRoles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "auditor_viewer"]
   },
   {
+    id: "financial-statements",
+    title: "Financial Statements (P&L, Balance Sheet, Cash Flow)",
+    description: "Profit & Loss, Balance Sheet, and Cash & Bank Position for the selected scope and period",
+    category: "Financial & Ledger",
+    href: "/dashboard/reports/financial-statements",
+    icon: BookOpen,
+    allowedRoles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "auditor_viewer"]
+  },
+  {
     id: "exchange-rates",
     title: "Global & Pakistan Exchange Rates",
     description: "Daily USD conversion rates, buying & selling logs",
@@ -189,6 +198,7 @@ export const ALL_REPORTS_CATALOG: ReportItem[] = [
 
 export function AllReportsView() {
   const lang = useActiveLanguage();
+  const tr = (label: string) => translateHeader(lang, label);
   const [userRole, setUserRole] = useState<string>("super_admin");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -225,7 +235,6 @@ export function AllReportsView() {
   });
 
   const handlePrintCatalog = () => {
-    const tr = (label: string) => translateHeader(lang, label);
     openUniversalPrintReport({
       title: tr("ERP Reports & Analytics Catalog Directory"),
       subtitle: `${tr("Total Reports")}: ${filteredReports.length}`,
@@ -348,13 +357,13 @@ export function AllReportsView() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 border text-slate-600">
-                    {report.category}
+                    {tr(report.category)}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900">{report.title}</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">{report.description}</p>
+                  <h3 className="font-bold text-sm text-slate-900">{tr(report.title)}</h3>
+                  <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">{tr(report.description)}</p>
                 </div>
               </div>
 

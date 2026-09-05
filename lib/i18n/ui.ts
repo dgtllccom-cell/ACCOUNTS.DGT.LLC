@@ -927,6 +927,46 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "finstmt.title"
+  | "finstmt.stmt_pl"
+  | "finstmt.stmt_bs"
+  | "finstmt.stmt_cf"
+  | "finstmt.run"
+  | "finstmt.print"
+  | "finstmt.load_failed"
+  | "finstmt.scope_label"
+  | "finstmt.as_of_date"
+  | "finstmt.col_period"
+  | "finstmt.apply"
+  | "finstmt.cf_methodology_note"
+  | "finstmt.bs_out_of_balance"
+  | "finstmt.loading"
+  | "finstmt.no_rows"
+  | "finstmt.sec_income"
+  | "finstmt.sec_expense"
+  | "finstmt.sec_assets"
+  | "finstmt.sec_liabilities"
+  | "finstmt.sec_equity"
+  | "finstmt.sec_bank"
+  | "finstmt.sec_cash"
+  | "finstmt.col_code"
+  | "finstmt.col_name"
+  | "finstmt.col_currency"
+  | "finstmt.col_amount"
+  | "finstmt.col_scope"
+  | "finstmt.row_subtotal"
+  | "finstmt.sum_total_income"
+  | "finstmt.sum_total_expense"
+  | "finstmt.sum_net_profit"
+  | "finstmt.sum_total_assets"
+  | "finstmt.sum_total_liabilities"
+  | "finstmt.sum_total_equity"
+  | "finstmt.sum_difference"
+  | "finstmt.sum_opening"
+  | "finstmt.sum_closing"
+  | "finstmt.sum_net_movement"
+  | "finstmt.report_subtitle"
+  | "finstmt.as_of"
   | "calc.open"
   | "calc.title"
   | "calc.restore"
@@ -19084,6 +19124,126 @@ const en: Dict = {
 
 
 
+
+
+  "finstmt.title": "Financial Statements",
+
+
+  "finstmt.stmt_pl": "Profit & Loss",
+
+
+  "finstmt.stmt_bs": "Balance Sheet",
+
+
+  "finstmt.stmt_cf": "Cash & Bank Position",
+
+
+  "finstmt.run": "Run",
+
+
+  "finstmt.print": "Print / PDF",
+
+
+  "finstmt.load_failed": "Failed to load",
+
+
+  "finstmt.scope_label": "Scope",
+
+
+  "finstmt.as_of_date": "As of Date",
+
+
+  "finstmt.col_period": "Period",
+
+
+  "finstmt.apply": "Apply",
+
+
+  "finstmt.cf_methodology_note": "Direct method: real opening vs closing balance of every bank-linked and cash-named ledger. Not an indirect-method Operating/Investing/Financing statement — the ERP does not yet tag accounts by activity type.",
+
+
+  "finstmt.bs_out_of_balance": "Assets do not equal Liabilities + Equity for this scope (difference: {amount}). This reflects the underlying ledger data — the same discrepancy appears in the existing Trial Balance report for this scope — and is not something this screen can silently correct.",
+
+
+  "finstmt.loading": "Loading…",
+
+
+  "finstmt.no_rows": "No data for the selected period / scope.",
+
+
+  "finstmt.sec_income": "Income",
+
+
+  "finstmt.sec_expense": "Expense",
+
+
+  "finstmt.sec_assets": "Assets",
+
+
+  "finstmt.sec_liabilities": "Liabilities",
+
+
+  "finstmt.sec_equity": "Equity",
+
+
+  "finstmt.sec_bank": "Bank Accounts",
+
+
+  "finstmt.sec_cash": "Cash Accounts",
+
+
+  "finstmt.col_code": "Code",
+
+
+  "finstmt.col_name": "Ledger",
+
+
+  "finstmt.col_currency": "Currency",
+
+
+  "finstmt.col_amount": "Amount",
+
+
+  "finstmt.col_scope": "Scope",
+
+
+  "finstmt.row_subtotal": "Subtotal",
+
+
+  "finstmt.sum_total_income": "Total Income",
+
+
+  "finstmt.sum_total_expense": "Total Expense",
+
+
+  "finstmt.sum_net_profit": "Net Profit / (Loss)",
+
+
+  "finstmt.sum_total_assets": "Total Assets",
+
+
+  "finstmt.sum_total_liabilities": "Total Liabilities",
+
+
+  "finstmt.sum_total_equity": "Total Equity",
+
+
+  "finstmt.sum_difference": "Difference (Assets − Liab − Equity)",
+
+
+  "finstmt.sum_opening": "Opening Balance",
+
+
+  "finstmt.sum_closing": "Closing Balance",
+
+
+  "finstmt.sum_net_movement": "Net Movement",
+
+
+  "finstmt.report_subtitle": "Financial Statements",
+
+
+  "finstmt.as_of": "As of {date}",
   "calc.open": "Calculator",
 
 
@@ -35579,6 +35739,126 @@ const ur: Dict = {
 
 
 
+
+
+  "finstmt.title": "مالیاتی گوشوارے",
+
+
+  "finstmt.stmt_pl": "منافع و نقصان",
+
+
+  "finstmt.stmt_bs": "بیلنس شیٹ",
+
+
+  "finstmt.stmt_cf": "کیش اینڈ بینک پوزیشن",
+
+
+  "finstmt.run": "چلائیں",
+
+
+  "finstmt.print": "پرنٹ / پی ڈی ایف",
+
+
+  "finstmt.load_failed": "لوڈ کرنے میں ناکامی",
+
+
+  "finstmt.scope_label": "دائرہ کار",
+
+
+  "finstmt.as_of_date": "تاریخ تک",
+
+
+  "finstmt.col_period": "مدت",
+
+
+  "finstmt.apply": "لاگو کریں",
+
+
+  "finstmt.cf_methodology_note": "براہ راست طریقہ: ہر بینک سے منسلک اور کیش کے نام والے لیجر کا حقیقی ابتدائی بمقابلہ اختتامی بیلنس۔ یہ بالواسطہ طریقہ کار آپریٹنگ/انویسٹنگ/فنانسنگ بیان نہیں ہے — ای آر پی ابھی تک اکاؤنٹس کو سرگرمی کی قسم کے مطابق ٹیگ نہیں کرتا۔",
+
+
+  "finstmt.bs_out_of_balance": "اس دائرہ کار کے لیے اثاثے واجبات + ایکویٹی کے برابر نہیں ہیں (فرق: {amount})۔ یہ بنیادی لیجر ڈیٹا کی عکاسی کرتا ہے — یہی فرق اس دائرہ کار کی موجودہ ٹرائل بیلنس رپورٹ میں بھی ظاہر ہوتا ہے — اور یہ اسکرین خاموشی سے درست نہیں کر سکتی۔",
+
+
+  "finstmt.loading": "لوڈ ہو رہا ہے…",
+
+
+  "finstmt.no_rows": "منتخب مدت / دائرہ کار کے لیے کوئی ڈیٹا نہیں۔",
+
+
+  "finstmt.sec_income": "آمدنی",
+
+
+  "finstmt.sec_expense": "خرچہ",
+
+
+  "finstmt.sec_assets": "اثاثے",
+
+
+  "finstmt.sec_liabilities": "واجبات",
+
+
+  "finstmt.sec_equity": "ایکویٹی",
+
+
+  "finstmt.sec_bank": "بینک اکاؤنٹس",
+
+
+  "finstmt.sec_cash": "کیش اکاؤنٹس",
+
+
+  "finstmt.col_code": "کوڈ",
+
+
+  "finstmt.col_name": "لیجر",
+
+
+  "finstmt.col_currency": "کرنسی",
+
+
+  "finstmt.col_amount": "رقم",
+
+
+  "finstmt.col_scope": "دائرہ کار",
+
+
+  "finstmt.row_subtotal": "ذیلی مجموعہ",
+
+
+  "finstmt.sum_total_income": "کل آمدنی",
+
+
+  "finstmt.sum_total_expense": "کل خرچہ",
+
+
+  "finstmt.sum_net_profit": "خالص منافع / (نقصان)",
+
+
+  "finstmt.sum_total_assets": "کل اثاثے",
+
+
+  "finstmt.sum_total_liabilities": "کل واجبات",
+
+
+  "finstmt.sum_total_equity": "کل ایکویٹی",
+
+
+  "finstmt.sum_difference": "فرق (اثاثے − واجبات − ایکویٹی)",
+
+
+  "finstmt.sum_opening": "ابتدائی بیلنس",
+
+
+  "finstmt.sum_closing": "اختتامی بیلنس",
+
+
+  "finstmt.sum_net_movement": "خالص نقل و حرکت",
+
+
+  "finstmt.report_subtitle": "مالیاتی گوشوارے",
+
+
+  "finstmt.as_of": "بمطابق {date}",
   "calc.open": "کیلکولیٹر",
 
 
@@ -52076,6 +52356,126 @@ const ar: Dict = {
 
 
 
+
+
+  "finstmt.title": "البيانات المالية",
+
+
+  "finstmt.stmt_pl": "الأرباح والخسائر",
+
+
+  "finstmt.stmt_bs": "الميزانية العمومية",
+
+
+  "finstmt.stmt_cf": "وضع النقد والبنك",
+
+
+  "finstmt.run": "تشغيل",
+
+
+  "finstmt.print": "طباعة / PDF",
+
+
+  "finstmt.load_failed": "فشل التحميل",
+
+
+  "finstmt.scope_label": "النطاق",
+
+
+  "finstmt.as_of_date": "حتى تاريخ",
+
+
+  "finstmt.col_period": "الفترة",
+
+
+  "finstmt.apply": "تطبيق",
+
+
+  "finstmt.cf_methodology_note": "الطريقة المباشرة: الرصيد الافتتاحي مقابل الختامي الحقيقي لكل دفتر مرتبط بالبنك أو باسم النقد. ليس بيانًا غير مباشر للتشغيل/الاستثمار/التمويل — لا يقوم النظام بعد بوسم الحسابات حسب نوع النشاط.",
+
+
+  "finstmt.bs_out_of_balance": "الأصول لا تساوي الخصوم + حقوق الملكية لهذا النطاق (الفرق: {amount}). يعكس هذا بيانات دفتر الأستاذ الأساسية — يظهر نفس التباين في تقرير ميزان المراجعة الحالي لهذا النطاق — وليس شيئًا يمكن لهذه الشاشة تصحيحه بصمت.",
+
+
+  "finstmt.loading": "جارٍ التحميل…",
+
+
+  "finstmt.no_rows": "لا توجد بيانات للفترة / النطاق المحدد.",
+
+
+  "finstmt.sec_income": "الدخل",
+
+
+  "finstmt.sec_expense": "المصروفات",
+
+
+  "finstmt.sec_assets": "الأصول",
+
+
+  "finstmt.sec_liabilities": "الخصوم",
+
+
+  "finstmt.sec_equity": "حقوق الملكية",
+
+
+  "finstmt.sec_bank": "الحسابات البنكية",
+
+
+  "finstmt.sec_cash": "الحسابات النقدية",
+
+
+  "finstmt.col_code": "الرمز",
+
+
+  "finstmt.col_name": "دفتر الأستاذ",
+
+
+  "finstmt.col_currency": "العملة",
+
+
+  "finstmt.col_amount": "المبلغ",
+
+
+  "finstmt.col_scope": "النطاق",
+
+
+  "finstmt.row_subtotal": "المجموع الفرعي",
+
+
+  "finstmt.sum_total_income": "إجمالي الدخل",
+
+
+  "finstmt.sum_total_expense": "إجمالي المصروفات",
+
+
+  "finstmt.sum_net_profit": "صافي الربح / (الخسارة)",
+
+
+  "finstmt.sum_total_assets": "إجمالي الأصول",
+
+
+  "finstmt.sum_total_liabilities": "إجمالي الخصوم",
+
+
+  "finstmt.sum_total_equity": "إجمالي حقوق الملكية",
+
+
+  "finstmt.sum_difference": "الفرق (الأصول − الخصوم − حقوق الملكية)",
+
+
+  "finstmt.sum_opening": "الرصيد الافتتاحي",
+
+
+  "finstmt.sum_closing": "الرصيد الختامي",
+
+
+  "finstmt.sum_net_movement": "صافي الحركة",
+
+
+  "finstmt.report_subtitle": "البيانات المالية",
+
+
+  "finstmt.as_of": "حتى {date}",
   "calc.open": "الآلة الحاسبة",
 
 
@@ -68572,6 +68972,126 @@ const fa: Dict = {
 
 
 
+
+
+  "finstmt.title": "صورت‌های مالی",
+
+
+  "finstmt.stmt_pl": "سود و زیان",
+
+
+  "finstmt.stmt_bs": "ترازنامه",
+
+
+  "finstmt.stmt_cf": "وضعیت نقد و بانک",
+
+
+  "finstmt.run": "اجرا",
+
+
+  "finstmt.print": "چاپ / PDF",
+
+
+  "finstmt.load_failed": "بارگذاری ناموفق بود",
+
+
+  "finstmt.scope_label": "محدوده",
+
+
+  "finstmt.as_of_date": "تا تاریخ",
+
+
+  "finstmt.col_period": "دوره",
+
+
+  "finstmt.apply": "اعمال",
+
+
+  "finstmt.cf_methodology_note": "روش مستقیم: مانده ابتدایی در برابر پایانی واقعی هر دفتر مرتبط با بانک و دارای نام نقدی. این یک صورت غیرمستقیم عملیاتی/سرمایه‌گذاری/تأمین مالی نیست — سیستم هنوز حساب‌ها را بر اساس نوع فعالیت برچسب‌گذاری نمی‌کند.",
+
+
+  "finstmt.bs_out_of_balance": "دارایی‌ها برابر با بدهی‌ها + حقوق صاحبان سهام برای این محدوده نیست (تفاوت: {amount}). این نشان‌دهنده داده‌های دفتر کل زیرین است — همین اختلاف در گزارش تراز آزمایشی موجود برای این محدوده نیز دیده می‌شود — و چیزی نیست که این صفحه بتواند به‌طور خاموش اصلاح کند.",
+
+
+  "finstmt.loading": "در حال بارگذاری…",
+
+
+  "finstmt.no_rows": "داده‌ای برای دوره / محدوده انتخاب‌شده موجود نیست.",
+
+
+  "finstmt.sec_income": "درآمد",
+
+
+  "finstmt.sec_expense": "هزینه",
+
+
+  "finstmt.sec_assets": "دارایی‌ها",
+
+
+  "finstmt.sec_liabilities": "بدهی‌ها",
+
+
+  "finstmt.sec_equity": "حقوق صاحبان سهام",
+
+
+  "finstmt.sec_bank": "حساب‌های بانکی",
+
+
+  "finstmt.sec_cash": "حساب‌های نقدی",
+
+
+  "finstmt.col_code": "کد",
+
+
+  "finstmt.col_name": "دفتر کل",
+
+
+  "finstmt.col_currency": "ارز",
+
+
+  "finstmt.col_amount": "مبلغ",
+
+
+  "finstmt.col_scope": "محدوده",
+
+
+  "finstmt.row_subtotal": "جمع فرعی",
+
+
+  "finstmt.sum_total_income": "کل درآمد",
+
+
+  "finstmt.sum_total_expense": "کل هزینه",
+
+
+  "finstmt.sum_net_profit": "سود / (زیان) خالص",
+
+
+  "finstmt.sum_total_assets": "کل دارایی‌ها",
+
+
+  "finstmt.sum_total_liabilities": "کل بدهی‌ها",
+
+
+  "finstmt.sum_total_equity": "کل حقوق صاحبان سهام",
+
+
+  "finstmt.sum_difference": "تفاوت (دارایی − بدهی − حقوق صاحبان سهام)",
+
+
+  "finstmt.sum_opening": "مانده اولیه",
+
+
+  "finstmt.sum_closing": "مانده پایانی",
+
+
+  "finstmt.sum_net_movement": "حرکت خالص",
+
+
+  "finstmt.report_subtitle": "صورت‌های مالی",
+
+
+  "finstmt.as_of": "تا {date}",
   "calc.open": "ماشین‌حساب",
 
 
@@ -85074,6 +85594,126 @@ const ps: Dict = {
 
 
 
+
+
+  "finstmt.title": "مالي بیانونه",
+
+
+  "finstmt.stmt_pl": "ګټه او زیان",
+
+
+  "finstmt.stmt_bs": "د بیلانس پاڼه",
+
+
+  "finstmt.stmt_cf": "د پیسو او بانک حالت",
+
+
+  "finstmt.run": "چلول",
+
+
+  "finstmt.print": "چاپ / PDF",
+
+
+  "finstmt.load_failed": "پورته کول ناکام شول",
+
+
+  "finstmt.scope_label": "ساحه",
+
+
+  "finstmt.as_of_date": "تر نېټې پورې",
+
+
+  "finstmt.col_period": "موده",
+
+
+  "finstmt.apply": "پلي کول",
+
+
+  "finstmt.cf_methodology_note": "مستقیم میتود: د هر بانک پورې تړلي او نغدو نومونو لیجر ریښتینی پرانستی په وړاندې پای بیلانس. دا غیرمستقیم میتود عملیاتي/پانګونې/تمویل بیان نه دی — ERP لا تر اوسه حسابونه د فعالیت ډول له مخې نښه نه کوي.",
+
+
+  "finstmt.bs_out_of_balance": "شتمنۍ د دې ساحې لپاره د پورونو + پانګې سره برابرې نه دي (توپیر: {amount})۔ دا د اصلي لیجر معلوماتو انځوروي — ورته توپیر د دې ساحې په موجوده Trial Balance راپور کې هم ښکاري — او دا داسې شی نه دی چې دا سکرین یې په چوپه توګه سمولی شي.",
+
+
+  "finstmt.loading": "پورته کیږي…",
+
+
+  "finstmt.no_rows": "د ټاکل شوي مودې / ساحې لپاره هیڅ معلومات نشته.",
+
+
+  "finstmt.sec_income": "عاید",
+
+
+  "finstmt.sec_expense": "لګښت",
+
+
+  "finstmt.sec_assets": "شتمنۍ",
+
+
+  "finstmt.sec_liabilities": "پورونه",
+
+
+  "finstmt.sec_equity": "پانګه",
+
+
+  "finstmt.sec_bank": "بانکي حسابونه",
+
+
+  "finstmt.sec_cash": "نغدي حسابونه",
+
+
+  "finstmt.col_code": "کوډ",
+
+
+  "finstmt.col_name": "لېجر",
+
+
+  "finstmt.col_currency": "اسعار",
+
+
+  "finstmt.col_amount": "مقدار",
+
+
+  "finstmt.col_scope": "ساحه",
+
+
+  "finstmt.row_subtotal": "فرعي جمع",
+
+
+  "finstmt.sum_total_income": "ټول عاید",
+
+
+  "finstmt.sum_total_expense": "ټول لګښت",
+
+
+  "finstmt.sum_net_profit": "خالص ګټه / (زیان)",
+
+
+  "finstmt.sum_total_assets": "ټول شتمنۍ",
+
+
+  "finstmt.sum_total_liabilities": "ټول پورونه",
+
+
+  "finstmt.sum_total_equity": "ټوله پانګه",
+
+
+  "finstmt.sum_difference": "توپیر (شتمنۍ − پورونه − پانګه)",
+
+
+  "finstmt.sum_opening": "پرانستی بیلانس",
+
+
+  "finstmt.sum_closing": "پای بیلانس",
+
+
+  "finstmt.sum_net_movement": "خالص حرکت",
+
+
+  "finstmt.report_subtitle": "مالي بیانونه",
+
+
+  "finstmt.as_of": "تر {date} پورې",
   "calc.open": "محاسبونکی",
 
 

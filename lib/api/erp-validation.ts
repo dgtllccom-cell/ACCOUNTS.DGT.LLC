@@ -233,6 +233,12 @@ export const trialBalanceQuerySchema = scopeSchema.extend({
   asOfDate: z.string().date()
 });
 
+export const financialStatementQuerySchema = scopeSchema.extend({
+  scope: ledgerScopeSchema,
+  fromDate: z.string().date(),
+  toDate: z.string().date()
+});
+
 export const purchaseOrderStatusSchema = z.enum(["pending", "partial", "completed", "cancelled"]);
 export const purchaseOrderPaymentKindSchema = z.enum(["advance", "remaining", "credit", "booking"]);
 
