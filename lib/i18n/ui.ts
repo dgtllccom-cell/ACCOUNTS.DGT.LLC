@@ -6036,6 +6036,9 @@ export type UiKey =
   | "hi_pol" | "hi_pod" | "hi_vessel" | "hi_incoterm" | "hi_containers" | "hi_goods"
   | "hi_request_opened" | "hi_privacy" | "hi_accept" | "hi_reject" | "hi_title" | "hi_blurb"
   | "hi_c_action" | "hi_c_ref" | "hi_c_containers" | "hi_c_status" | "hi_empty" | "hi_st_all"
+  // Sales Order Payment Journal (sopj.*)
+  | "sopj_advance_payment" | "sopj_remaining_payment" | "sopj_credit_payment" | "sopj_payment_history"
+  | "sopj_advance_completed" | "sopj_payment_date" | "sopj_payment_summary" | "sopj_payment_receipt" | "sopj_advance_cleared"
   // Location Management Wizard (loc.*)
   | "loc.title" | "loc.subtitle" | "loc.description" | "loc.view_complete_list" | "loc.hierarchy_active"
   | "loc.countries" | "loc.states_provinces" | "loc.cities_districts" | "loc.districts_tehsils"
@@ -16556,6 +16559,16 @@ const en: Dict = {
   "hi_c_status": "Status",
   "hi_empty": "No handovers in this view.",
   "hi_st_all": "All",
+  // Sales Order Payment Journal (sopj.*)
+  "sopj_advance_payment": "Advance Payment",
+  "sopj_remaining_payment": "Remaining Payment",
+  "sopj_credit_payment": "Credit Payment",
+  "sopj_payment_history": "Payment History",
+  "sopj_advance_completed": "Advance Completed",
+  "sopj_payment_date": "Payment Date",
+  "sopj_payment_summary": "Payment Summary",
+  "sopj_payment_receipt": "Payment Receipt",
+  "sopj_advance_cleared": "Advance Cleared",
   "hrm.departments": "Departments",
   "hrm.designations": "Designations",
   "hrm.department": "Department",
@@ -33320,6 +33333,16 @@ const ur: Dict = {
   "hi_c_status": "حالت",
   "hi_empty": "اس نمائندگی میں کوئی ہینڈوور نہیں۔",
   "hi_st_all": "تمام",
+  // Sales Order Payment Journal (sopj.*)
+  "sopj_advance_payment": "ایڈوانس ادائیگی",
+  "sopj_remaining_payment": "باقی ادائیگی",
+  "sopj_credit_payment": "کریڈٹ ادائیگی",
+  "sopj_payment_history": "ادائیگی کی تاریخ",
+  "sopj_advance_completed": "ایڈوانس مکمل",
+  "sopj_payment_date": "ادائیگی کی تاریخ",
+  "sopj_payment_summary": "ادائیگی کا خلاصہ",
+  "sopj_payment_receipt": "ادائیگی کی رسید",
+  "sopj_advance_cleared": "ایڈوانس صاف",
   "hrm.departments": "شعبہ جات",
   "hrm.designations": "عہدے",
   "hrm.department": "شعبہ",
@@ -50086,6 +50109,16 @@ const ar: Dict = {
   "hi_c_status": "الحالة",
   "hi_empty": "لا توجد تسليمات في هذا العرض.",
   "hi_st_all": "الكل",
+  // Sales Order Payment Journal (sopj.*)
+  "sopj_advance_payment": "دفعة مقدمة",
+  "sopj_remaining_payment": "الدفعة المتبقية",
+  "sopj_credit_payment": "دفعة ائتمانية",
+  "sopj_payment_history": "سجل الدفع",
+  "sopj_advance_completed": "الدفعة المقدمة مكتملة",
+  "sopj_payment_date": "تاريخ الدفع",
+  "sopj_payment_summary": "ملخص الدفع",
+  "sopj_payment_receipt": "إيصال الدفع",
+  "sopj_advance_cleared": "الدفعة المقدمة محررة",
   "hrm.departments": "الأقسام",
   "hrm.designations": "المسميات الوظيفية",
   "hrm.department": "القسم",
@@ -66851,6 +66884,16 @@ const fa: Dict = {
   "hi_c_status": "وضعیت",
   "hi_empty": "در این نمایش تحویل وجود ندارد.",
   "hi_st_all": "همه",
+  // Sales Order Payment Journal (sopj.*)
+  "sopj_advance_payment": "پرداخت پیشکی",
+  "sopj_remaining_payment": "پرداخت باقی‌مانده",
+  "sopj_credit_payment": "پرداخت اعتباری",
+  "sopj_payment_history": "سابقه پرداخت",
+  "sopj_advance_completed": "پیشکی کامل‌شده",
+  "sopj_payment_date": "تاریخ پرداخت",
+  "sopj_payment_summary": "خلاصه پرداخت",
+  "sopj_payment_receipt": "رسید پرداخت",
+  "sopj_advance_cleared": "پیشکی پاک شده",
   "hrm.departments": "دپارتمان‌ها",
   "hrm.designations": "عناوین شغلی",
   "hrm.department": "دپارتمان",
@@ -83622,6 +83665,16 @@ const ps: Dict = {
   "hi_c_status": "حالت",
   "hi_empty": "د دې نمایش کې کوم تحویل نشته.",
   "hi_st_all": "ټول",
+  // Sales Order Payment Journal (sopj.*)
+  "sopj_advance_payment": "د مقدماتو تادیه",
+  "sopj_remaining_payment": "پاتې تادیه",
+  "sopj_credit_payment": "د کریډٹ تادیه",
+  "sopj_payment_history": "د تادیې تاریخ",
+  "sopj_advance_completed": "مقدما بشپره شوه",
+  "sopj_payment_date": "د تادیې نېټه",
+  "sopj_payment_summary": "د تادیې خلاصه",
+  "sopj_payment_receipt": "د تادیې رسید",
+  "sopj_advance_cleared": "مقدما صاف شوه",
   "hrm.departments": "څانګې",
   "hrm.designations": "دندې",
   "hrm.department": "څانګه",
