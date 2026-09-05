@@ -104,8 +104,29 @@ export function PdfPreviewModal() {
     }
   };
 
-  const handleDownloadPdf = () => {
-    handlePrint();
+  const handleDownloadPdf = async () => {
+    // Use native browser print-to-PDF capability with improved filename
+    const safeName = (title || "ERP-Report").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "erp-report";
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const originalTitle = window.document.title;
+
+    // Temporarily set document title for PDF filename (browser uses this when saving PDF)
+    window.document.title = `${safeName}-${timestamp}`;
+
+    // Small delay to ensure title update, then print
+    setTimeout(() => {
+      if (iframeRef.current?.contentWindow) {
+        try {
+          iframeRef.current.contentWindow.print();
+        } catch (err) {
+          console.error("Print failed:", err);
+        }
+      }
+      // Restore original title after print dialog closes
+      setTimeout(() => {
+        window.document.title = originalTitle;
+      }, 1000);
+    }, 50);
   };
 
   const handleDownloadHtml = () => {
