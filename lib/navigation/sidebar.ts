@@ -1012,6 +1012,13 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "check-square",
         href: "/dashboard/ai-entry/approvals" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "ai-messages",
+        labelKey: "nav.ai_messages" as any,
+        iconKey: "message-square",
+        href: "/dashboard/ai-entry/messages" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
       }
     ]
   },

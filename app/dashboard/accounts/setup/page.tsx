@@ -1,4 +1,4 @@
-import { NewAccountSetup } from "@/features/accounts/components/new-account-setup";
+import { NewAccountWithEntryMethods } from "@/features/accounts/components/new-account-with-entry-methods";
 import { getRequestLanguage } from "@/lib/i18n/server";
 
 export const metadata = { title: "New Account Entry" };
@@ -11,5 +11,5 @@ export default async function NewAccountPage({
 }) {
   const lang = await getRequestLanguage();
   const params = searchParams ? await searchParams : undefined;
-  return <NewAccountSetup lang={lang} initialAccountId={params?.accountId} />;
+  return <NewAccountWithEntryMethods lang={lang} initialAccountId={params?.accountId} />;
 }

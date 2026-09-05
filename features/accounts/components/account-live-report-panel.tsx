@@ -110,11 +110,6 @@ export function AccountLiveReportPanel({
     return localizeTerm(val, lang);
   };
 
-  // Metrics
-  const openingBalance = "0.00";
-  const totalDebit = "0.00";
-  const totalCredit = "79,000.00";
-  const netBalance = "79,000.00";
 
   function compactCode(id: string, prefix: string) {
     if (!id) return "-";
@@ -341,25 +336,6 @@ export function AccountLiveReportPanel({
           </div>
         </div>
 
-        {/* Balance KPI ribbon */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-center">
-          <div>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("openingBalance", "Opening Balance")}</div>
-            <div className="text-sm font-black mt-1 text-slate-800 dark:text-white font-mono">{openingBalance}</div>
-          </div>
-          <div>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("debitAmount", "Debit Amount")}</div>
-            <div className="text-sm font-black mt-1 text-slate-800 dark:text-white font-mono">{totalDebit}</div>
-          </div>
-          <div>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("creditAmount", "Credit Amount")}</div>
-            <div className="text-sm font-black mt-1 text-slate-800 dark:text-white font-mono">{totalCredit}</div>
-          </div>
-          <div>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("netBalance", "Net Balance")}</div>
-            <div className="text-sm font-black mt-1 text-blue-600 dark:text-blue-400 font-mono">{netBalance}</div>
-          </div>
-        </div>
       </div>
 
       {/* ── Detail Cards Grid ── */}

@@ -105,28 +105,48 @@ export function PdfPreviewModal() {
   };
 
   const handleDownloadPdf = async () => {
-    // Use native browser print-to-PDF capability with improved filename
+    // Generate PDF from iframe content and automatically download
     const safeName = (title || "ERP-Report").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "erp-report";
     const timestamp = new Date().toISOString().slice(0, 10);
-    const originalTitle = window.document.title;
+    const filename = `${safeName}-${timestamp}.pdf`;
 
-    // Temporarily set document title for PDF filename (browser uses this when saving PDF)
-    window.document.title = `${safeName}-${timestamp}`;
+    try {
+      // Use html2pdf.js via CDN for client-side PDF generation
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
 
-    // Small delay to ensure title update, then print
-    setTimeout(() => {
-      if (iframeRef.current?.contentWindow) {
-        try {
-          iframeRef.current.contentWindow.print();
-        } catch (err) {
-          console.error("Print failed:", err);
+      script.onload = () => {
+        if (iframeRef.current?.contentDocument) {
+          const element = iframeRef.current.contentDocument.body;
+          const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { orientation: "portrait", unit: "mm", format: "a4" }
+          };
+
+          // Generate PDF and download automatically
+          (window as any).html2pdf().set(opt).from(element).save();
         }
+      };
+
+      script.onerror = () => {
+        // Fallback to print dialog if library fails to load
+        console.warn("html2pdf failed to load, using print dialog");
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.print();
+        }
+      };
+
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error("PDF download error:", error);
+      // Fallback to print dialog
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.print();
       }
-      // Restore original title after print dialog closes
-      setTimeout(() => {
-        window.document.title = originalTitle;
-      }, 1000);
-    }, 50);
+    }
   };
 
   const handleDownloadHtml = () => {
