@@ -987,6 +987,35 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "ai-intelligence-tools",
+    labelKey: "nav.ai_intelligence_tools" as any,
+    iconKey: "message-square",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"],
+    children: [
+      {
+        key: "ai-voice-text-entry",
+        labelKey: "nav.ai_voice_text_entry" as any,
+        iconKey: "phone",
+        href: "/dashboard/ai-entry/voice-text" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "ai-document-intake",
+        labelKey: "nav.ai_document_intake" as any,
+        iconKey: "file-text",
+        href: "/dashboard/document-intelligence" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "ai-approval-queue",
+        labelKey: "nav.ai_approval_queue" as any,
+        iconKey: "check-square",
+        href: "/dashboard/ai-entry/approvals" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      }
+    ]
+  },
+  {
     key: "document-intelligence-group",
     labelKey: "dintake.nav_group" as any,
     iconKey: "file-text",

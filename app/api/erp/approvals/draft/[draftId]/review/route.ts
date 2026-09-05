@@ -25,10 +25,11 @@ const reviewSchema = z.object({
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { draftId: string } },
+  { params }: { params: Promise<{ draftId: string }> },
 ) {
   try {
-    const { scope, session } = await guardIntake("update");
+    const { draftId } = await params;
+    const { scope, session } = await guardIntake("write");
     const body = reviewSchema.parse(await request.json());
 
     const workflowId = params.draftId;

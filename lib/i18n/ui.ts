@@ -7033,6 +7033,30 @@ export type UiKey =
   | "bei.edit"
   | "bei.setup_pending"
   | "bei.access_denied"
+  | "ait.title"
+  | "ait.domain_required"
+  | "ait.domain_business"
+  | "ait.domain_shipping"
+  | "ait.source_type"
+  | "ait.type_voice"
+  | "ait.type_text"
+  | "ait.recording"
+  | "ait.click_record"
+  | "ait.stop"
+  | "ait.duration"
+  | "ait.transcription"
+  | "ait.text_instruction"
+  | "ait.placeholder_voice"
+  | "ait.placeholder_text"
+  | "ait.submit"
+  | "ait.processing"
+  | "ait.submitted_ok"
+  | "ait.job_no"
+  | "ait.status"
+  | "ait.error_msg"
+  | "ait.error_enter_text"
+  | "ait.approval_title"
+  | "ait.approval_desc"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -23922,6 +23946,31 @@ const en: Dict = {
   "slstage.tracking_updated_ok": "Tracking details updated successfully!",
 
   "slstage.update_tracking_matrix": "Update Tracking Matrix",
+
+  "ait.title": "Voice or Text Entry",
+  "ait.domain_required": "Operational Domain (Required)",
+  "ait.domain_business": "Business",
+  "ait.domain_shipping": "Shipping",
+  "ait.source_type": "Type",
+  "ait.type_voice": "Voice",
+  "ait.type_text": "Text",
+  "ait.recording": "Recording...",
+  "ait.click_record": "Click Record to start",
+  "ait.stop": "Stop",
+  "ait.duration": "Duration:",
+  "ait.transcription": "Transcription",
+  "ait.text_instruction": "Text Instruction",
+  "ait.placeholder_voice": "Transcription will appear here after recording",
+  "ait.placeholder_text": "Enter your instruction here",
+  "ait.submit": "Submit for AI Processing",
+  "ait.processing": "Processing...",
+  "ait.submitted_ok": "Submitted Successfully",
+  "ait.job_no": "Job:",
+  "ait.status": "Status:",
+  "ait.error_msg": "Error:",
+  "ait.error_enter_text": "Please enter transcript or record audio",
+  "ait.approval_title": "Approval Queue",
+  "ait.approval_desc": "Approval queue will show pending AI drafts awaiting your review.",
 };
 
 const ur: Dict = {
@@ -40788,6 +40837,31 @@ const ur: Dict = {
   "slstage.tracking_updated_ok": "ٹریکنگ تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں!",
 
   "slstage.update_tracking_matrix": "ٹریکنگ میٹرکس اپ ڈیٹ کریں",
+
+  "ait.title": "وائس یا ٹیکسٹ درج کریں",
+  "ait.domain_required": "آپریشنل ڈومین (لازمی)",
+  "ait.domain_business": "بزنس",
+  "ait.domain_shipping": "شپنگ",
+  "ait.source_type": "قسم",
+  "ait.type_voice": "وائس",
+  "ait.type_text": "ٹیکسٹ",
+  "ait.recording": "ریکارڈنگ جاری ہے...",
+  "ait.click_record": "ریکارڈ کرنے کے لیے کلک کریں",
+  "ait.stop": "رکیں",
+  "ait.duration": "مدت:",
+  "ait.transcription": "ٹرانسکرپشن",
+  "ait.text_instruction": "ٹیکسٹ ہدایت",
+  "ait.placeholder_voice": "ریکارڈنگ کے بعد ٹرانسکرپشن یہاں ظاہر ہوگی",
+  "ait.placeholder_text": "اپنی ہدایت یہاں درج کریں",
+  "ait.submit": "AI پروسیسنگ کے لیے جمع کریں",
+  "ait.processing": "پروسیسنگ جاری ہے...",
+  "ait.submitted_ok": "کامیابی سے جمع ہو گیا",
+  "ait.job_no": "جاب:",
+  "ait.status": "حالت:",
+  "ait.error_msg": "خرابی:",
+  "ait.error_enter_text": "براہ کرم ٹرانسکرپشن درج کریں یا آڈیو ریکارڈ کریں",
+  "ait.approval_title": "منظوری کی قطار",
+  "ait.approval_desc": "منظوری کی قطار آپ کے جائزے کے منتظر AI ڈرافٹس کو دکھائے گی۔",
 };
 
 const ar: Dict = {
@@ -57656,6 +57730,31 @@ const ar: Dict = {
   "slstage.tracking_updated_ok": "تم تحديث تفاصيل التتبع بنجاح!",
 
   "slstage.update_tracking_matrix": "تحديث مصفوفة التتبع",
+
+  "ait.title": "إدخال صوتي أو نصي",
+  "ait.domain_required": "المجال التشغيلي (مطلوب)",
+  "ait.domain_business": "عمل تجاري",
+  "ait.domain_shipping": "شحن",
+  "ait.source_type": "النوع",
+  "ait.type_voice": "صوتي",
+  "ait.type_text": "نص",
+  "ait.recording": "جاري التسجيل...",
+  "ait.click_record": "انقر على تسجيل للبدء",
+  "ait.stop": "إيقاف",
+  "ait.duration": "المدة:",
+  "ait.transcription": "النص المنقول",
+  "ait.text_instruction": "تعليمات نصية",
+  "ait.placeholder_voice": "سيظهر النص المنقول هنا بعد التسجيل",
+  "ait.placeholder_text": "أدخل التعليمات الخاصة بك هنا",
+  "ait.submit": "إرسال للمعالجة بواسطة الذكاء الاصطناعي",
+  "ait.processing": "جاري المعالجة...",
+  "ait.submitted_ok": "تم الإرسال بنجاح",
+  "ait.job_no": "الوظيفة:",
+  "ait.status": "الحالة:",
+  "ait.error_msg": "خطأ:",
+  "ait.error_enter_text": "يرجى إدخال النص أو تسجيل الصوت",
+  "ait.approval_title": "قائمة الموافقة",
+  "ait.approval_desc": "ستعرض قائمة الموافقة مسودات الذكاء الاصطناعي المعلقة في انتظار مراجعتك.",
 };
 
 const fa: Dict = {
@@ -74523,6 +74622,31 @@ const fa: Dict = {
   "slstage.tracking_updated_ok": "جزئیات ردیابی با موفقیت به‌روزرسانی شد!",
 
   "slstage.update_tracking_matrix": "به‌روزرسانی ماتریس ردیابی",
+
+  "ait.title": "ورود صوتی یا متنی",
+  "ait.domain_required": "حوزه عملیاتی (ضروری)",
+  "ait.domain_business": "تجارت",
+  "ait.domain_shipping": "حمل و نقل",
+  "ait.source_type": "نوع",
+  "ait.type_voice": "صوتی",
+  "ait.type_text": "متن",
+  "ait.recording": "ضبط‌الآن...",
+  "ait.click_record": "برای شروع ضبط کلیک کنید",
+  "ait.stop": "توقف",
+  "ait.duration": "مدت:",
+  "ait.transcription": "رونویسی",
+  "ait.text_instruction": "دستورالعمل متنی",
+  "ait.placeholder_voice": "رونویسی پس از ضبط در اینجا ظاهر خواهد شد",
+  "ait.placeholder_text": "دستورالعمل خود را در اینجا وارد کنید",
+  "ait.submit": "ارسال برای پردازش هوش مصنوعی",
+  "ait.processing": "پردازش جاری است...",
+  "ait.submitted_ok": "با موفقیت ارسال شد",
+  "ait.job_no": "کار:",
+  "ait.status": "وضعیت:",
+  "ait.error_msg": "خطا:",
+  "ait.error_enter_text": "لطفاً متن را وارد کنید یا صوت را ضبط کنید",
+  "ait.approval_title": "صف تایید",
+  "ait.approval_desc": "صف تایید پیش‌نویس‌های هوش مصنوعی منتظر بررسی را نمایش می‌دهد.",
 };
 
 const ps: Dict = {
@@ -91396,6 +91520,31 @@ const ps: Dict = {
   "slstage.tracking_updated_ok": "د تعقیب جزئیات په بریالیتوب سره تازه شول!",
 
   "slstage.update_tracking_matrix": "د تعقیب جدول تازه کړئ",
+
+  "ait.title": "صوت یا متن درج کړئ",
+  "ait.domain_required": "د کاري حوزه (اړین)",
+  "ait.domain_business": "کسب و کار",
+  "ait.domain_shipping": "د لېږد",
+  "ait.source_type": "ډول",
+  "ait.type_voice": "صوت",
+  "ait.type_text": "متن",
+  "ait.recording": "ریکارډ کیدو...",
+  "ait.click_record": "ریکارډ کول پیل کولو لپاره کلیک کړئ",
+  "ait.stop": "بند کول",
+  "ait.duration": "مودت:",
+  "ait.transcription": "نقل شوی متن",
+  "ait.text_instruction": "متن لارښونه",
+  "ait.placeholder_voice": "نقل شوی متن ریکارډ کولو وروسته دلته ظاهر کیږي",
+  "ait.placeholder_text": "خپل لارښونه دلته درج کړئ",
+  "ait.submit": "د AI پروسیسنگ لپاره سپارئ",
+  "ait.processing": "پروسیس کیدو...",
+  "ait.submitted_ok": "په بریالیتوب سره سپارل شو",
+  "ait.job_no": "کار:",
+  "ait.status": "حالت:",
+  "ait.error_msg": "خرابی:",
+  "ait.error_enter_text": "براہ کرم نقل شوی متن درج کړئ یا صوت ریکارډ کړئ",
+  "ait.approval_title": "د تصویب رف",
+  "ait.approval_desc": "د تصویب رف د تعقیب لاندې AI مسودې ښکاره کوي چې د ستاسو مرورې په انتظار دي۔",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

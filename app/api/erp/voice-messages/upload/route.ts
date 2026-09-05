@@ -34,7 +34,7 @@ const uploadSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const { scope, session } = await guardIntake("create");
+    const { scope, session } = await guardIntake("write");
 
     // Parse form data (for file) or JSON (for text-only)
     const contentType = request.headers.get("content-type") || "";
