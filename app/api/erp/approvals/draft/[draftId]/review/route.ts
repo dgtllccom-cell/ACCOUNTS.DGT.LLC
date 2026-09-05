@@ -32,7 +32,7 @@ export async function POST(
     const { scope, session } = await guardIntake("write");
     const body = reviewSchema.parse(await request.json());
 
-    const workflowId = params.draftId;
+    const workflowId = draftId;
 
     switch (body.action) {
       case "approve":
@@ -71,7 +71,7 @@ export async function POST(
         });
 
       default:
-        return apiOk({ error: "Unknown action" }, 400);
+        return apiOk({ error: "Unknown action" }, { status: 400 });
     }
   } catch (error) {
     return handleApiError(error);

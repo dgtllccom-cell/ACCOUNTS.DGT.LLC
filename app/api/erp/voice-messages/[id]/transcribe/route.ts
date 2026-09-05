@@ -15,7 +15,7 @@ export async function POST(
     const voiceMsg = await withLocalPg(async (sql) =>
       sql`SELECT audio_storage_key, original_language_code FROM voice_messages WHERE id=${id}`.then(r => r?.[0])
     );
-    if (!voiceMsg) return apiOk({ error: "Not found" }, 404);
+    if (!voiceMsg) return apiOk({ error: "Not found" }, { status: 404 });
 
     const result = await processTranscriptionJob({
       voiceMessageId: id,

@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+﻿import crypto from "node:crypto";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import type { IntakeScope, OperationalDomain } from "@/lib/document-intelligence/scope";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -80,7 +80,7 @@ export class AiVoiceTextEntryService {
     countryBranchId?: string | null,
     cityBranchId?: string | null,
     clearingAgentId?: string | null,
-  ): Promise<VoiceSession> {
+  ): Promise<VoiceSession | null> {
     const sessionToken = crypto.randomBytes(32).toString("hex");
 
     return withLocalPg(async (sql) => {
@@ -140,7 +140,7 @@ export class AiVoiceTextEntryService {
     userId: string,
     userName: string | null,
     scope: IntakeScope,
-  ): Promise<{ jobId: string; jobNo: string }> {
+  ): Promise<{ jobId: string; jobNo: string } | null> {
     // Validate scope
     if (scope.domain && scope.domain !== input.operationalDomain) {
       throw new DocumentValidationError(
@@ -239,7 +239,7 @@ export class AiVoiceTextEntryService {
    * Create an approval workflow for a document intake job.
    * The job must be in 'draft_ready' status.
    */
-  async createApprovalWorkflow(jobId: string, userId: string): Promise<ApprovalWorkflow> {
+  async createApprovalWorkflow(jobId: string, userId: string): Promise<ApprovalWorkflow | null> {
     return withLocalPg(async (sql) => {
       // Verify job exists and is draft-ready
       const job = await sql`
@@ -290,7 +290,7 @@ export class AiVoiceTextEntryService {
     workflowId: string,
     approverId: string,
     approverNotes?: string,
-  ): Promise<ApprovalWorkflow> {
+  ): Promise<ApprovalWorkflow | null> {
     return withLocalPg(async (sql) => {
       const [workflow] = await sql`
         UPDATE public.approval_workflows
@@ -335,7 +335,7 @@ export class AiVoiceTextEntryService {
   async rejectWorkflow(
     workflowId: string,
     rejectionReason: string,
-  ): Promise<ApprovalWorkflow> {
+  ): Promise<ApprovalWorkflow | null> {
     return withLocalPg(async (sql) => {
       const [workflow] = await sql`
         UPDATE public.approval_workflows
@@ -380,7 +380,7 @@ export class AiVoiceTextEntryService {
   async returnForReview(
     workflowId: string,
     returnReason: string,
-  ): Promise<ApprovalWorkflow> {
+  ): Promise<ApprovalWorkflow | null> {
     return withLocalPg(async (sql) => {
       const [workflow] = await sql`
         UPDATE public.approval_workflows
@@ -421,3 +421,5 @@ export class AiVoiceTextEntryService {
 }
 
 export const aiVoiceTextEntryService = new AiVoiceTextEntryService();
+
+

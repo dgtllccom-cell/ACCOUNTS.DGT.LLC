@@ -50,7 +50,7 @@ async function transcribeWithWhisper(
 
   try {
     const formData = new FormData();
-    formData.append("file", new Blob([audioBuffer], { type: "audio/wav" }), filename);
+    formData.append("file", new Blob([new Uint8Array(audioBuffer)], { type: "audio/wav" }), filename);
     formData.append("model", "whisper-1");
     formData.append("language", LANGUAGE_CODES[languageHint]);
     formData.append("temperature", "0");

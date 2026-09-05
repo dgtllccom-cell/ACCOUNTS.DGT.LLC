@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!audioFile) {
-        return apiOk({ error: "Audio file is required for voice messages" }, 400);
+        return apiOk({ error: "Audio file is required for voice messages" }, { status: 400 });
       }
 
       audioBuffer = Buffer.from(await audioFile.arrayBuffer());
@@ -90,23 +90,27 @@ export async function POST(request: NextRequest) {
         countryBranchId: input.countryBranchId,
         cityBranchId: input.cityBranchId,
         clearingAgentId: input.clearingAgentId,
-        companyId: session?.companyId,
+        companyId: (session as any)?.companyId,
         sourceModuleHint: input.sourceModuleHint,
         idempotencyKey: input.idempotencyKey,
       },
       session.userId,
-      session.userName || null,
+      (session as any)?.userName || null,
       scope,
     );
 
     // Queue transcription (if voice)
-    if (input.sourceType === "voice") {
+    if (input.sourceType === "voice" && result) {
       await queueTranscription(
         result.jobId,
         `voice/${result.jobNo}/${crypto.randomBytes(8).toString("hex")}.webm`,
         input.originalLanguage,
         "audio/webm",
       );
+    }
+
+    if (!result) {
+      return apiOk({ error: "Failed to create document intake job" }, { status: 500 });
     }
 
     return apiOk({
