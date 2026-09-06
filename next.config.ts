@@ -184,6 +184,13 @@ const nextConfig: NextConfig = {
     preloadEntriesOnStart: true,
     webpackBuildWorker: false,
     workerThreads: false,
+    serverActions: {
+      bodySizeLimit: "100mb",
+    },
+    // Valid runtime keys in Next 15.5 (raise the proxy/middleware body limit for
+    // large scan/PDF uploads) but absent from the shipped ExperimentalConfig
+    // type — spread an untyped object so `tsc --noEmit` stays green.
+    ...({ middlewareClientMaxBodySize: "100mb", proxyClientMaxBodySize: "100mb" } as Record<string, unknown>),
   },
   webpack: (config, { dev }) => {
     // Extend Webpack chunk loading timeout from default 12s to 60s to prevent script timeout errors

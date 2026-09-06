@@ -24107,6 +24107,16 @@ const en: Dict = {
   "roz.cef_party": "Party",
   "roz.cef_direction": "Direction",
   "roz.cef_voice_source": "entered by voice",
+  "xlr.title": "Cross-language review",
+  "xlr.spoken_in": "Original language",
+  "xlr.original": "Original (unchanged)",
+  "xlr.read_as": "Read as",
+  "xlr.same_lang": "The original is already in this language.",
+  "xlr.translating": "Preparing reading…",
+  "xlr.engine": "Reading source",
+  "xlr.unavailable": "Translation is temporarily unavailable — read the original.",
+  "xlr.verify_note": "Numbers, dates and reference IDs are taken from the original and are never changed by translation — verify each against the original above.",
+  "xlr.one_entry_note": "This is one business entry. The translated reading is for understanding only — it does not create a separate record and nothing is posted from here.",
 };
 
 const ur: Dict = {
@@ -41134,6 +41144,16 @@ const ur: Dict = {
   "roz.cef_party": "فریق",
   "roz.cef_direction": "سمت",
   "roz.cef_voice_source": "آواز سے درج",
+  "xlr.title": "کثیر لسانی جائزہ",
+  "xlr.spoken_in": "اصل زبان",
+  "xlr.original": "اصل (غیر تبدیل شدہ)",
+  "xlr.read_as": "اس زبان میں پڑھیں",
+  "xlr.same_lang": "اصل متن پہلے ہی اسی زبان میں ہے۔",
+  "xlr.translating": "پڑھائی تیار کی جا رہی ہے…",
+  "xlr.engine": "پڑھائی کا ذریعہ",
+  "xlr.unavailable": "ترجمہ عارضی طور پر دستیاب نہیں — اصل متن پڑھیں۔",
+  "xlr.verify_note": "اعداد، تاریخیں اور حوالہ نمبر اصل متن سے لیے گئے ہیں اور ترجمے سے کبھی تبدیل نہیں ہوتے — ہر ایک کو اوپر دیے گئے اصل متن سے ملا کر تصدیق کریں۔",
+  "xlr.one_entry_note": "یہ ایک کاروباری اندراج ہے۔ ترجمہ شدہ متن صرف سمجھنے کے لیے ہے — اس سے الگ ریکارڈ نہیں بنتا اور یہاں سے کچھ پوسٹ نہیں ہوتا۔",
 };
 
 const ar: Dict = {
@@ -58163,6 +58183,16 @@ const ar: Dict = {
   "roz.cef_party": "الطرف",
   "roz.cef_direction": "الاتجاه",
   "roz.cef_voice_source": "مُدخل صوتيًا",
+  "xlr.title": "مراجعة متعددة اللغات",
+  "xlr.spoken_in": "اللغة الأصلية",
+  "xlr.original": "الأصل (غير معدَّل)",
+  "xlr.read_as": "اقرأ باللغة",
+  "xlr.same_lang": "النص الأصلي بهذه اللغة بالفعل.",
+  "xlr.translating": "جارٍ تجهيز القراءة…",
+  "xlr.engine": "مصدر القراءة",
+  "xlr.unavailable": "الترجمة غير متاحة مؤقتًا — اقرأ النص الأصلي.",
+  "xlr.verify_note": "الأرقام والتواريخ وأرقام المراجع مأخوذة من النص الأصلي ولا تتغير أبدًا بالترجمة — تحقق من كل منها مقابل الأصل أعلاه.",
+  "xlr.one_entry_note": "هذا قيد تجاري واحد. القراءة المترجمة للفهم فقط — لا تنشئ سجلًا منفصلًا ولا يتم ترحيل أي شيء من هنا.",
 };
 
 const fa: Dict = {
@@ -75191,6 +75221,16 @@ const fa: Dict = {
   "roz.cef_party": "طرف",
   "roz.cef_direction": "جهت",
   "roz.cef_voice_source": "واردشده با صدا",
+  "xlr.title": "بازبینی چندزبانه",
+  "xlr.spoken_in": "زبان اصلی",
+  "xlr.original": "اصل (بدون تغییر)",
+  "xlr.read_as": "خواندن به زبان",
+  "xlr.same_lang": "متن اصلی از قبل به همین زبان است.",
+  "xlr.translating": "در حال آماده‌سازی خوانش…",
+  "xlr.engine": "منبع خوانش",
+  "xlr.unavailable": "ترجمه موقتاً در دسترس نیست — متن اصلی را بخوانید.",
+  "xlr.verify_note": "اعداد، تاریخ‌ها و شماره‌های مرجع از متن اصلی گرفته شده‌اند و هرگز با ترجمه تغییر نمی‌کنند — هر کدام را با اصل بالا مطابقت دهید.",
+  "xlr.one_entry_note": "این یک ثبت تجاری واحد است. خوانش ترجمه‌شده فقط برای درک است — رکورد جداگانه‌ای ایجاد نمی‌کند و چیزی از اینجا ثبت نمی‌شود.",
 };
 
 const ps: Dict = {
@@ -92225,6 +92265,16 @@ const ps: Dict = {
   "roz.cef_party": "خوا",
   "roz.cef_direction": "لوري",
   "roz.cef_voice_source": "په غږ ننوت",
+  "xlr.title": "څو ژبنۍ بیاکتنه",
+  "xlr.spoken_in": "اصلي ژبه",
+  "xlr.original": "اصل (بې بدلونه)",
+  "xlr.read_as": "په دې ژبه ولولئ",
+  "xlr.same_lang": "اصلي متن دمخه په همدې ژبه دی.",
+  "xlr.translating": "لوستل چمتو کیږي…",
+  "xlr.engine": "د لوستلو سرچینه",
+  "xlr.unavailable": "ژباړه لنډمهاله شتون نلري — اصلي متن ولولئ.",
+  "xlr.verify_note": "شمیرې، نیټې او د حوالې شمیرې د اصلي متن څخه اخیستل شوي او د ژباړې له لارې هیڅکله نه بدلیږي — هر یو د پورته اصل سره پرتله کړئ.",
+  "xlr.one_entry_note": "دا یو سوداګریز ننوت دی. ژباړل شوی لوست یوازې د پوهیدو لپاره دی — جلا ریکارډ نه جوړوي او له دې ځایه هیڅ شی نه پوسټ کیږي.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
