@@ -24255,6 +24255,7 @@ const en: Dict = {
   "payrep.opt_pending": "Pending Payments",
   "payrep.opt_user_wise": "User-wise Payment Report",
 
+  "nav.payment_report": "Payment Report",
 };
 
 const ur: Dict = {
@@ -41430,6 +41431,7 @@ const ur: Dict = {
   "payrep.opt_pending": "زیر التواء ادائیگیاں",
   "payrep.opt_user_wise": "صارف کے لحاظ سے ادائیگی رپورٹ",
 
+  "nav.payment_report": "ادائیگی رپورٹ",
 };
 
 const ar: Dict = {
@@ -58607,6 +58609,7 @@ const ar: Dict = {
   "payrep.opt_pending": "المدفوعات المعلّقة",
   "payrep.opt_user_wise": "تقرير المدفوعات حسب المستخدم",
 
+  "nav.payment_report": "تقرير المدفوعات",
 };
 
 const fa: Dict = {
@@ -75783,6 +75786,7 @@ const fa: Dict = {
   "payrep.opt_pending": "پرداخت‌های در انتظار",
   "payrep.opt_user_wise": "گزارش پرداخت بر اساس کاربر",
 
+  "nav.payment_report": "گزارش پرداخت",
 };
 
 const ps: Dict = {
@@ -92965,6 +92969,7 @@ const ps: Dict = {
   "payrep.opt_pending": "پاتې تادیات",
   "payrep.opt_user_wise": "د کاروونکي له مخې د تادیاتو راپور",
 
+  "nav.payment_report": "د تادیاتو راپور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

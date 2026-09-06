@@ -266,6 +266,13 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "banknote",
     children: [
       {
+        key: "payment-report",
+        labelKey: "nav.payment_report" as any,
+        href: "/dashboard/reports/payments" as Route,
+        iconKey: "banknote",
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "auditor_viewer"],
+      },
+      {
         key: "purchase-order-payment",
         labelKey: "nav.purchase_order_payment",
         iconKey: "banknote",
