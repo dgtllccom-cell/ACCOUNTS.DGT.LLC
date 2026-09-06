@@ -409,7 +409,7 @@ export function BulkAccountImport({
             {(scopeLevel === "main_branch" || scopeLevel === "city_branch") && (
               <>
                 <label className="text-xs font-semibold">
-                  {s.t("branch_kind", "Branch type")}
+                  {s.t("branch_kind", "Branch Category")}
                   <select
                     value={branchKind}
                     onChange={(e) => {
@@ -420,8 +420,8 @@ export function BulkAccountImport({
                     }}
                     className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900 cursor-pointer shadow-2xs"
                   >
-                    <option value="city">{s.t("city_branch", "City Branch")}</option>
-                    <option value="main">{s.t("main_branch", "Main / Country Branch")}</option>
+                    <option value="business">🏢 {s.t("business_branch", "Business Branch")}</option>
+                    <option value="agent">🚢 {s.t("clearing_agent_branch", "Clearing Agent")}</option>
                   </select>
                 </label>
                 <label className="text-xs font-semibold">
@@ -433,17 +433,17 @@ export function BulkAccountImport({
                       setBranchId(bid);
                       onScopeChange?.({ scopeLevel, countryId, branchKind, branchId: bid });
                     }}
-                    disabled={!countryId || (branchKind === "main" ? mainBranches.length === 0 : cityBranches.length === 0)}
+                    disabled={!countryId || (cityBranches.length === 0 && mainBranches.length === 0)}
                     className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900 disabled:opacity-50 cursor-pointer shadow-2xs"
                   >
                     {!countryId ? (
                       <option value="">{s.t("choose_country_first", "— Choose country first —")}</option>
-                    ) : (branchKind === "main" ? mainBranches : cityBranches).length === 0 ? (
+                    ) : (cityBranches.length === 0 && mainBranches.length === 0) ? (
                       <option value="">{s.t("no_branches", "No branches found")}</option>
                     ) : (
                       <>
                         <option value="">{s.t("choose", "— choose —")}</option>
-                        {(branchKind === "main" ? mainBranches : cityBranches).map((b) => {
+                        {(cityBranches.length > 0 ? cityBranches : mainBranches).map((b) => {
                           const label = b.name || b.cityName || b.city_name || b.branch_name || b.code || b.id;
                           const codeSuffix = b.code ? ` (${b.code})` : "";
                           return (

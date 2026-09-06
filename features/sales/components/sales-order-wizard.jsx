@@ -601,7 +601,8 @@ export function SalesOrderWizard({ session }) {
   const [dbReceivedPorts, setDbReceivedPorts] = useState([]);
   const [mainBranches, setMainBranches] = useState([]);
   const [cityBranches, setCityBranches] = useState([]);
-  const [scopeConfirmed, setScopeConfirmed] = useState(false);
+  const [scopeConfirmed, setScopeConfirmed] = useState(true);
+  const [showScopeModal, setShowScopeModal] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
   const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
   const [customQtyNames, setCustomQtyNames] = useState([]);
@@ -2572,10 +2573,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   };
   return (
     <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
-      {isSuperAdmin && (!form.countryId || !form.countryBranchId || !scopeConfirmed) ? (
+      {isSuperAdmin && showScopeModal ? (
         <SimpleModal
           isOpen={true}
-          onClose={() => {}} // Cannot close without selecting
+          onClose={() => setShowScopeModal(false)}
           title={t(lang, "sales.super_admin_select_scope_title", "Super Admin: Select Working Scope")}
           width="md"
         >
@@ -2637,9 +2638,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   ))}
                 </select>
               </div>
-              <div className="pt-4 flex justify-end">
+              <div className="pt-4 flex justify-end gap-2">
                 <Button
-                  onClick={() => setScopeConfirmed(true)}
+                  variant="outline"
+                  onClick={() => setShowScopeModal(false)}
+                  className="h-9 text-xs px-4"
+                >
+                  {t(lang, "common.cancel", "Cancel")}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setScopeConfirmed(true);
+                    setShowScopeModal(false);
+                  }}
                   disabled={!form.countryId || !form.countryBranchId}
                   className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
                 >

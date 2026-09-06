@@ -41,12 +41,12 @@ export function NewAccountWithEntryMethods({
   // Scoping state
   const [scopeLevel, setScopeLevel] = useState<ScopeLevel>("city_branch");
   const [countryId, setCountryId] = useState("");
-  const [branchKind, setBranchKind] = useState<BranchKind>("city");
-  const [branchId, setBranchId] = useState("");
+  const [branchKind, setBranchKind] = useState<BranchKind>("business");
+  const [branchId, setBranchId] = useState<string>("");
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [mainBranches, setMainBranches] = useState<BranchOption[]>([]);
   const [cityBranches, setCityBranches] = useState<BranchOption[]>([]);
-  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState<boolean>(false);
 
   // Load countries
   useEffect(() => {
@@ -61,7 +61,7 @@ export function NewAccountWithEntryMethods({
     };
   }, []);
 
-  // Load branches when country changes
+  // Load branches when country or branchKind (business vs clearing agent) changes
   useEffect(() => {
     if (!countryId) {
       setMainBranches([]);
@@ -73,7 +73,7 @@ export function NewAccountWithEntryMethods({
     let cancelled = false;
     setLoadingBranches(true);
 
-    const loadMain = fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(countryId)}`)
+    const loadMain = fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(countryId)}&scope=${branchKind}`)
       .then((r) => r.json())
       .then((j) => {
         if (!cancelled) {
@@ -83,7 +83,7 @@ export function NewAccountWithEntryMethods({
       })
       .catch(() => {});
 
-    const loadCity = fetch(`/api/erp/locations/branches/city?countryId=${encodeURIComponent(countryId)}`)
+    const loadCity = fetch(`/api/erp/locations/branches/city?countryId=${encodeURIComponent(countryId)}&scope=${branchKind}`)
       .then((r) => r.json())
       .then((j) => {
         if (!cancelled) {
@@ -100,15 +100,15 @@ export function NewAccountWithEntryMethods({
     return () => {
       cancelled = true;
     };
-  }, [countryId]);
+  }, [countryId, branchKind]);
 
   // Auto-select branch when branch options load
   useEffect(() => {
-    const list = branchKind === "main" ? mainBranches : cityBranches;
+    const list = cityBranches.length > 0 ? cityBranches : mainBranches;
     if (list.length > 0 && (!branchId || !list.some((b) => b.id === branchId))) {
       setBranchId(list[0].id);
     }
-  }, [branchKind, mainBranches, cityBranches, branchId]);
+  }, [cityBranches, mainBranches, branchId]);
 
   const selectedCountryName = useMemo(() => {
     if (!countryId) return "all";
@@ -117,14 +117,14 @@ export function NewAccountWithEntryMethods({
 
   const selectedBranchName = useMemo(() => {
     if (!branchId) return "all";
-    const list = branchKind === "main" ? mainBranches : cityBranches;
+    const list = cityBranches.length > 0 ? cityBranches : mainBranches;
     return list.find((b) => b.id === branchId)?.name || "all";
-  }, [branchKind, mainBranches, cityBranches, branchId]);
+  }, [cityBranches, mainBranches, branchId]);
 
   // Dynamic location backdrop (updates the instant country / branch changes)
   const backdropSelection = useMemo(() => {
     const country = countries.find((c) => c.id === countryId);
-    const list = branchKind === "main" ? mainBranches : cityBranches;
+    const list = cityBranches.length > 0 ? cityBranches : mainBranches;
     const branch = list.find((b) => b.id === branchId) as
       | { name?: string; city_name?: string; cityName?: string; branch_name?: string }
       | undefined;
@@ -138,8 +138,6 @@ export function NewAccountWithEntryMethods({
 
   const handleScopeLevelChange = (lvl: ScopeLevel) => {
     setScopeLevel(lvl);
-    if (lvl === "main_branch") setBranchKind("main");
-    else if (lvl === "city_branch") setBranchKind("city");
   };
 
   const handleCountryChange = (cid: string) => {
@@ -153,80 +151,36 @@ export function NewAccountWithEntryMethods({
   };
 
   return (
-    <div className="space-y-4" dir={s.dir}>
-      {/* ── Dynamic location backdrop — reflects the selected country / branch ── */}
-      <LocationBackdrop
-        selection={backdropSelection}
-        title={s.t("account_hub_title", "Account Management & Setup")}
-        subtitle={s.t("account_hub_subtitle", "Scoped to your authorized country and branch")}
-        className="min-h-[104px]"
-      />
-
-      {/* ── Top Header Actions Bar Portal (Scope / Country / Branch Dropdowns + Actions) ── */}
-      <AccountsHeaderScopeBar
-        lang={activeLang}
-        scopeLevel={scopeLevel}
-        onScopeLevelChange={handleScopeLevelChange}
-        countryId={countryId}
-        onCountryChange={handleCountryChange}
-        branchKind={branchKind}
-        onBranchKindChange={handleBranchKindChange}
-        branchId={branchId}
-        onBranchChange={setBranchId}
-        countries={countries}
-        mainBranches={mainBranches}
-        cityBranches={cityBranches}
-        loadingBranches={loadingBranches}
-        view={view}
-        onNewAccount={() => {
-          setCurrentAccountId(undefined);
-          setView("form");
-        }}
-        onBulkImport={() => setView("bulk")}
-        onBackToTable={() => setView("table")}
-      />
+    <div className="space-y-3" dir={s.dir}>
+      {/* When in Form or Bulk view, render the scope bar with back-to-table navigation */}
+      {view !== "table" && (
+        <AccountsHeaderScopeBar
+          lang={activeLang}
+          scopeLevel={scopeLevel}
+          onScopeLevelChange={handleScopeLevelChange}
+          countryId={countryId}
+          onCountryChange={handleCountryChange}
+          branchKind={branchKind}
+          onBranchKindChange={handleBranchKindChange}
+          branchId={branchId}
+          onBranchChange={setBranchId}
+          countries={countries}
+          mainBranches={mainBranches}
+          cityBranches={cityBranches}
+          loadingBranches={loadingBranches}
+          view={view}
+          onNewAccount={() => {
+            setCurrentAccountId(undefined);
+            setView("form");
+          }}
+          onBulkImport={() => setView("bulk")}
+          onBackToTable={() => setView("table")}
+        />
+      )}
 
       {/* ── View 1: Scoped Accounts Table (Default View) ── */}
       {view === "table" && (
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500">{s.t("registry_view", "Accounts Registry:")}</span>
-              {countryId && (
-                <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">
-                  {selectedCountryName}
-                </span>
-              )}
-              {branchId && (
-                <span className="rounded bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-indigo-700 border border-indigo-200">
-                  {selectedBranchName}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentAccountId(undefined);
-                  setView("form");
-                }}
-                className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>{s.t("new_account", "New Account Entry")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setView("bulk")}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors"
-              >
-                <FileText className="h-3.5 w-3.5 text-indigo-500" />
-                <span>{s.t("bulk_import", "Bulk Document Import")}</span>
-              </button>
-            </div>
-          </div>
-
           <AccountSetupReport
             lang={activeLang}
             onNewAccount={() => {

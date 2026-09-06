@@ -7,7 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 export type ScopeLevel = "super_admin" | "country" | "main_branch" | "city_branch";
-export type BranchKind = "main" | "city";
+export type BranchKind = "business" | "agent";
 
 export interface BranchOption {
   id: string;
@@ -175,28 +175,28 @@ export function AccountsHeaderScopeBar({
         </div>
       )}
 
-      {/* 4. Branch Type dropdown */}
-      {(scopeLevel === "main_branch" || scopeLevel === "city_branch") && (
+      {/* 4. Branch Category dropdown (Business Branch vs Clearing Agent) */}
+      {scopeLevel !== "super_admin" && (
         <div className="relative inline-flex items-center">
           <select
             value={branchKind}
             onChange={(e) => onBranchKindChange(e.target.value as BranchKind)}
             className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
-            title={s.t("branch_kind", "Branch Type")}
+            title={s.t("branch_kind", "Branch Category")}
           >
-            <option value="city">{s.t("city_branch", "City Branch")}</option>
-            <option value="main">{s.t("main_branch", "Main Branch")}</option>
+            <option value="business">🏢 {s.t("business_branch", "Business Branch")}</option>
+            <option value="agent">🚢 {s.t("clearing_agent_branch", "Clearing Agent")}</option>
           </select>
         </div>
       )}
 
       {/* 5. Branch dropdown */}
-      {(scopeLevel === "main_branch" || scopeLevel === "city_branch") && (
+      {scopeLevel !== "super_admin" && (
         <div className="relative inline-flex items-center">
           <select
             value={branchId}
             onChange={(e) => onBranchChange(e.target.value)}
-            disabled={!countryId || loadingBranches || activeBranches.length === 0}
+            disabled={!countryId || loadingBranches || cityBranches.length === 0}
             className="h-7 max-w-[155px] truncate rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer disabled:opacity-40"
             title={s.t("branch", "Branch")}
           >
@@ -204,12 +204,12 @@ export function AccountsHeaderScopeBar({
               <option value="">{s.t("choose_country_first", "— Choose Country —")}</option>
             ) : loadingBranches ? (
               <option value="">{s.t("loading_branches", "Loading branches...")}</option>
-            ) : activeBranches.length === 0 ? (
+            ) : cityBranches.length === 0 ? (
               <option value="">{s.t("no_branches", "No branches found")}</option>
             ) : (
               <>
                 <option value="">{s.t("choose_branch", "— Choose Branch —")}</option>
-                {activeBranches.map((b) => {
+                {cityBranches.map((b) => {
                   const label = b.name || b.cityName || b.city_name || b.branch_name || b.code || b.id;
                   const codeSuffix = b.code ? ` (${b.code})` : "";
                   return (

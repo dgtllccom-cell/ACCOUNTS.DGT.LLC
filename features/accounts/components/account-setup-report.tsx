@@ -438,11 +438,14 @@ export function AccountSetupReport({
       {/* Portals to main page header */}
       {titlePortalNode && createPortal(
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xs font-black text-slate-900 dark:text-slate-100 whitespace-nowrap">{tr("Account Setup Report")}</h1>
+          <h1 className="text-xs font-black text-slate-900 dark:text-slate-100 whitespace-nowrap">{tr("Account Management & Setup")}</h1>
           <span className="asr-badge text-[9px] px-1.5 py-0.5">{loading ? "..." : filtered.length} {tr("accounts")}</span>
           {hasActiveFilters && (
             <span className="asr-badge asr-badge-orange text-[9px] px-1.5 py-0.5">{activeFilterCount} {tr("active")}</span>
           )}
+          <span className="rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[9.5px] font-bold px-2 py-0.5">
+            {reportContext.countryName === "All Countries" ? "🌍 Global - All Countries" : `${reportContext.countryName} • ${reportContext.branchName}`}
+          </span>
           
           <div className="hidden lg:flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
             <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />

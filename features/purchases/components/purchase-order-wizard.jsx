@@ -611,7 +611,8 @@ export function PurchaseOrderWizard({ session }) {
   // but keyed off form.destCountryId/destCountryBranchId instead of the source scope.
   const [destMainBranches, setDestMainBranches] = useState([]);
   const [destCityBranches, setDestCityBranches] = useState([]);
-  const [scopeConfirmed, setScopeConfirmed] = useState(false);
+  const [scopeConfirmed, setScopeConfirmed] = useState(true);
+  const [showScopeModal, setShowScopeModal] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
   const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
   const [customQtyNames, setCustomQtyNames] = useState([]);
@@ -646,7 +647,7 @@ export function PurchaseOrderWizard({ session }) {
         const list = res?.countries || res?.data?.countries || [];
         setCountries(list);
         setAllCountries(list);
-        if (list.length > 0 && !form.countryId && !isSuperAdmin) {
+        if (list.length > 0 && !form.countryId) {
           const first = list[0];
           setForm((p) => ({
             ...p,
@@ -3616,10 +3617,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {draftPrefillRef}. {t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
         </div>
       )}
-      {isSuperAdmin && (!form.countryId || !form.countryBranchId || !scopeConfirmed) && (
+      {isSuperAdmin && showScopeModal && (
         <SimpleModal
           isOpen={true}
-          onClose={() => {}} // Cannot close without selecting
+          onClose={() => setShowScopeModal(false)}
           title={t(lang, "purchase.working_scope_title", "Super Admin: Select Working Scope")}
           width="sm"
         >
@@ -3714,10 +3715,21 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               </div>
             </div>
 
-            <div className="pt-3 flex justify-end">
+            <div className="pt-3 flex justify-end gap-2">
               <Button
                 type="button"
-                onClick={() => setScopeConfirmed(true)}
+                variant="outline"
+                onClick={() => setShowScopeModal(false)}
+                className="h-9 text-xs px-4"
+              >
+                {t(lang, "common.cancel", "Cancel")}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setScopeConfirmed(true);
+                  setShowScopeModal(false);
+                }}
                 disabled={!form.countryId || !form.countryBranchId}
                 className="bg-primary text-primary-foreground font-bold h-9 text-xs px-5 rounded-lg shadow-sm hover:opacity-90 disabled:opacity-50 cursor-pointer"
               >
@@ -3954,9 +3966,20 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           <span className="h-5 w-5 rounded bg-blue-600 text-white text-[11px] font-black flex items-center justify-center">1</span>
                           <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">{t(lang, "purchase.branch_user_info_title", "Branch & User Information")}</h4>
                         </div>
-                        <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                          {t(lang, "purchase.active_word", "Active")}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {isSuperAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => setShowScopeModal(true)}
+                              className="text-[9.5px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 transition"
+                            >
+                              {t(lang, "purchase.change_scope", "Scope ⚙")}
+                            </button>
+                          )}
+                          <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                            {t(lang, "purchase.active_word", "Active")}
+                          </span>
+                        </div>
                       </div>
                       <div className="space-y-1.5 text-xs">
                         <div className="flex justify-between py-0.5">

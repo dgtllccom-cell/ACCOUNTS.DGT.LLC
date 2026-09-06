@@ -263,8 +263,10 @@ export function CashEntryForm({
   const [loadingCountries, setLoadingCountries] = useState(false);
 
   const [countryId, setCountryId] = useState("");
+  const [branchCategory, setBranchCategory] = useState<"business" | "agent">("business");
   const [countryBranchId, setCountryBranchId] = useState("");
   const [cityBranchId, setCityBranchId] = useState("");
+  const [showScopeModal, setShowScopeModal] = useState(false);
 
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
@@ -303,7 +305,7 @@ export function CashEntryForm({
         if (cancelled) return;
         const list = res?.data?.branches || res?.branches || [];
         setMainBranches(list);
-        if (list.length === 1 && !countryBranchId) {
+        if (list.length > 0 && !countryBranchId) {
           setCountryBranchId(list[0].id);
         }
       })
@@ -311,14 +313,14 @@ export function CashEntryForm({
     return () => { cancelled = true; };
   }, [countryId]);
 
-  // Load City Branches when Country or Main Branch changes
+  // Load City Branches when Country, Main Branch, or Category changes
   useEffect(() => {
     if (!countryId) {
       setCityBranches([]);
       return;
     }
     let cancelled = false;
-    const qp = new URLSearchParams({ countryId });
+    const qp = new URLSearchParams({ countryId, scope: branchCategory });
     if (countryBranchId) qp.set("countryBranchId", countryBranchId);
     fetch(`/api/erp/locations/branches/city?${qp.toString()}`)
       .then((r) => r.json())
@@ -326,13 +328,13 @@ export function CashEntryForm({
         if (cancelled) return;
         const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
         setCityBranches(list);
-        if (list.length === 1 && !cityBranchId) {
+        if (list.length > 0 && (!cityBranchId || !list.some((b: any) => b.id === cityBranchId))) {
           setCityBranchId(list[0].id);
         }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [countryId, countryBranchId]);
+  }, [countryId, countryBranchId, branchCategory]);
 
   const [ledgers, setLedgers] = useState<LedgerLookupRow[]>([]);
   const [loadingLedgers, setLoadingLedgers] = useState(false);
@@ -2237,9 +2239,9 @@ export function CashEntryForm({
       {portalNode ? createPortal(actionButtons, portalNode) : null}
 
       {/* Super Admin Scope Modal */}
-      {isSuperAdmin && (!countryId || !countryBranchId) && (
+      {isSuperAdmin && showScopeModal && (
         <SimpleModal
-          onClose={() => {}} // Cannot close without selecting
+          onClose={() => setShowScopeModal(false)}
           title={t(lang, "roz.select_working_scope_title", "Super Admin: Select Working Scope")}
           className="max-w-md"
         >
@@ -2262,6 +2264,20 @@ export function CashEntryForm({
                 </select>
               </div>
               <div>
+                <Label className="text-xs font-black">{t(lang, "roz.branch_category", "Branch Category")}</Label>
+                <select
+                  value={branchCategory}
+                  onChange={(e) => {
+                    setBranchCategory(e.target.value as "business" | "agent");
+                    setCityBranchId("");
+                  }}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                >
+                  <option value="business">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
+                  <option value="agent">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
+                </select>
+              </div>
+              <div>
                 <Label className="text-xs font-black">{t(lang, "common.branch", "Branch")}</Label>
                 <select
                   value={countryBranchId}
@@ -2270,8 +2286,8 @@ export function CashEntryForm({
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
                   <option value="">{t(lang, "roz.select_branch_placeholder", "Select Branch...")}</option>
-                  {mainBranches.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                  {(cityBranches.length > 0 ? cityBranches : mainBranches).map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} ({(b as any).code || ""})</option>
                   ))}
                 </select>
               </div>
@@ -2312,6 +2328,21 @@ export function CashEntryForm({
                   {countries.map((c) => (
                     <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>
                   ))}
+                </select>
+              </div>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_category", "Category")}</span>
+              <div className="relative flex items-center">
+                <select
+                  value={branchCategory}
+                  onChange={(e) => {
+                    setBranchCategory(e.target.value as "business" | "agent");
+                    setCityBranchId("");
+                  }}
+                  className="bg-transparent border-none p-0 outline-none font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer appearance-none text-xs hover:underline"
+                >
+                  <option value="business" className="text-slate-900">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
+                  <option value="agent" className="text-slate-900">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
                 </select>
               </div>
 
