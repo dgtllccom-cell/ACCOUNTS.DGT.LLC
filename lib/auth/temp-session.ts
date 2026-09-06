@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 
-export const ERP_SESSION_COOKIE = "erp_session";
+export { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
+import { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
 const TEMP_USER_UUIDS: Record<string, string> = {
   "temp-super-admin": "00000000-0000-4000-8000-000000000001",
   "temp-pakistan-country-admin": "00000000-0000-4000-8000-000000000002",

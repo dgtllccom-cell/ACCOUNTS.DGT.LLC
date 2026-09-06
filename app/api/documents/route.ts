@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -13,6 +14,47 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 const BUCKET_NAME = "erp-documents";
+
+/**
+ * Write an audit_logs row inside the same direct-Postgres transaction as the
+ * document mutation, so the actor is recorded even under the temp-session
+ * bootstrap login (auth.uid() is NULL there, which makes the shared
+ * writeAuditLog() helper skip on non-prod). Never throws — a logging failure
+ * must not roll back a committed document write.
+ */
+async function auditDocument(
+  sql: any,
+  input: {
+    actorId: string;
+    action: "office_document.upload" | "office_document.update" | "office_document.delete" | "office_document.version";
+    entityId: string | null;
+    companyId?: string | null;
+    before?: unknown;
+    after?: unknown;
+    ipAddress?: string | null;
+  }
+) {
+  try {
+    await sql`
+      insert into public.audit_logs (company_id, actor_id, action, entity_table, entity_id, before, after, ip_address)
+      values (
+        ${input.companyId ?? null}, ${input.actorId}, ${input.action}, 'office_documents',
+        ${input.entityId}, ${input.before ? sql.json(input.before) : null},
+        ${input.after ? sql.json(input.after) : null}, ${input.ipAddress ?? null}
+      )
+    `;
+  } catch (err) {
+    console.warn("[documents] audit write skipped:", err instanceof Error ? err.message : String(err));
+  }
+}
+
+function requestIp(request: NextRequest) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    null
+  );
+}
 
 function isMultipart(request: NextRequest) {
   return request.headers.get("content-type")?.includes("multipart/form-data") ?? false;
@@ -346,9 +388,13 @@ export async function POST(request: NextRequest) {
     const resolvedStorageKey = normalizedStorageKey || (generatedPath ? `${generatedPath}/${generatedFileName}` : generatedFileName);
     let resolvedFileUrl = typeof rawFileUrl === "string" && rawFileUrl.trim() ? rawFileUrl.trim() : null;
     let storageProvider: "supabase" | "local" | null = null;
+    let checksum: string | null = null;
+    let actualFileSize = normalizedFileSize;
 
     if (file) {
       const buffer = Buffer.from(await file.arrayBuffer());
+      checksum = createHash("sha256").update(buffer).digest("hex");
+      actualFileSize = buffer.length;
       const uploadResult = await saveDocumentBlob({
         storageKey: resolvedStorageKey,
         buffer,
@@ -373,19 +419,44 @@ export async function POST(request: NextRequest) {
           person_account_id, person_account_code, person_account_name, person_account_type,
           module_type, document_type, source_module, source_record_id, source_record_no,
           document_path, storage_key, category, tags, metadata,
-          scanned_at, created_by, scanner_device_name, scanner_bridge
+          scanned_at, created_by, scanner_device_name, scanner_bridge,
+          checksum_sha256, uploaded_by_id, version
         ) values (
-          ${title}, ${generatedFileName}, ${resolvedFileUrl}, ${file_type}, ${normalizedFileSize},
+          ${title}, ${generatedFileName}, ${resolvedFileUrl}, ${file_type}, ${actualFileSize},
           ${normalizedCountryId}, ${normalizedCountryName}, ${normalizedCountryBranchId}, ${normalizedMainBranchName},
           ${normalizedCityBranchId}, ${normalizedCityBranchName}, ${normalizedCompanyId}, ${normalizedCompanyCode}, ${normalizedCompanyName}, ${normalizedAccountId}, ${normalizedAccountCode}, ${normalizedAccountName},
           ${normalizedPersonAccountId}, ${normalizedPersonAccountCode}, ${normalizedPersonAccountName}, ${normalizedPersonAccountType},
           ${normalizedModuleType}, ${normalizedDocumentType}, ${normalizedSourceModule}, ${normalizedSourceRecordId}, ${normalizedSourceRecordNo},
           ${generatedPath}, ${resolvedStorageKey}, ${normalizedCategory}, ${sql.json(parsedTags)}, ${sql.json({ ...parsedMetadata, storageProvider })},
-          ${scannedAt}, ${normalizedCreatedBy}, ${normalizedScannerDeviceName}, ${normalizedScannerBridge}
+          ${scannedAt}, ${normalizedCreatedBy}, ${normalizedScannerDeviceName}, ${normalizedScannerBridge},
+          ${checksum}, ${session.userId}, 1
         )
         returning *
       `;
-        return rows[0];
+        const doc = rows[0];
+        await auditDocument(sql, {
+          actorId: session.userId,
+          action: "office_document.upload",
+          entityId: doc.id,
+          companyId: normalizedCompanyId,
+          ipAddress: requestIp(request),
+          after: {
+            title: doc.title,
+            file_name: doc.file_name,
+            file_size: doc.file_size,
+            storage_key: doc.storage_key,
+            document_path: doc.document_path,
+            checksum_sha256: doc.checksum_sha256,
+            storage_provider: storageProvider,
+            country_name: doc.country_name,
+            main_branch_name: doc.main_branch_name,
+            city_branch_name: doc.city_branch_name,
+            module_type: doc.module_type,
+            document_type: doc.document_type,
+            scanner_device_name: doc.scanner_device_name
+          }
+        });
+        return doc;
       });
     } catch {
       viaPg = null;
@@ -483,6 +554,7 @@ export async function PATCH(request: NextRequest) {
     let viaPg: any = null;
     try {
       viaPg = await withDocumentSession(session, async (sql) => {
+        const beforeRow = (await sql`select title, module_type, document_type, category, tags, account_name, company_name, document_path, storage_key from public.office_documents where id = ${id} limit 1`)[0] ?? null;
         const rows = await sql`
         update public.office_documents
         set updated_at = ${updatedAt},
@@ -508,7 +580,29 @@ export async function PATCH(request: NextRequest) {
         where id = ${id}
         returning *
       `;
-        return rows[0] ?? null;
+        const doc = rows[0] ?? null;
+        if (doc) {
+          await auditDocument(sql, {
+            actorId: session.userId,
+            action: "office_document.update",
+            entityId: doc.id,
+            companyId: doc.company_id ?? null,
+            ipAddress: requestIp(request),
+            before: beforeRow,
+            after: {
+              title: doc.title,
+              module_type: doc.module_type,
+              document_type: doc.document_type,
+              category: doc.category,
+              tags: doc.tags,
+              account_name: doc.account_name,
+              company_name: doc.company_name,
+              document_path: doc.document_path,
+              storage_key: doc.storage_key
+            }
+          });
+        }
+        return doc;
       });
     } catch {
       viaPg = null;
@@ -567,16 +661,18 @@ export async function DELETE(request: NextRequest) {
 
     const deletedAt = new Date().toISOString();
     let storageKey = null as string | null;
+    let beforeDoc: any = null;
     try {
-      storageKey = await withDocumentSession(session, async (sql) => {
+      beforeDoc = await withDocumentSession(session, async (sql) => {
         const rows = await sql`
-        select storage_key
+        select id, storage_key, title, file_name, file_size, document_path, company_id, module_type, document_type
         from public.office_documents
         where id = ${id}
         limit 1
       `;
-        return rows[0]?.storage_key ?? null;
+        return rows[0] ?? null;
       });
+      storageKey = beforeDoc?.storage_key ?? null;
     } catch {
       storageKey = null;
     }
@@ -587,6 +683,14 @@ export async function DELETE(request: NextRequest) {
     try {
       const viaPgResult = await withDocumentSession(session, async (sql) => {
         await sql`update public.office_documents set deleted_at = ${deletedAt} where id = ${id}`;
+        await auditDocument(sql, {
+          actorId: session.userId,
+          action: "office_document.delete",
+          entityId: id,
+          companyId: beforeDoc?.company_id ?? null,
+          ipAddress: requestIp(request),
+          before: beforeDoc
+        });
         return true;
       });
       viaPg = Boolean(viaPgResult);

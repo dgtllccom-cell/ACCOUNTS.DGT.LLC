@@ -1,30 +1,28 @@
 import type { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
-import { withLocalPg } from "@/lib/db/local-postgres";
-import { processTranscriptionJob } from "@/lib/services/transcription-service";
+import { guardIntake } from "@/lib/services/document-intake-api";
+import { retranscribeJob, serverTranscriptionAvailable } from "@/lib/services/transcription-service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+/**
+ * POST /api/erp/voice-messages/[id]/transcribe
+ * Re-run server transcription on a stored voice job's audio (accuracy pass).
+ * Requires OPENAI_API_KEY — otherwise returns the existing browser transcript
+ * and reports that no server provider is configured.
+ */
+export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await guardIntake("write");
     const { id } = await params;
-    const voiceMsg = await withLocalPg(async (sql) =>
-      sql`SELECT audio_storage_key, original_language_code FROM voice_messages WHERE id=${id}`.then(r => r?.[0])
-    );
-    if (!voiceMsg) return apiOk({ error: "Not found" }, { status: 404 });
-
-    const result = await processTranscriptionJob({
-      voiceMessageId: id,
-      audioStorageKey: voiceMsg.audio_storage_key,
-      originalLanguage: voiceMsg.original_language_code,
-      audioMimeType: "audio/webm",
+    const result = await retranscribeJob(id);
+    return apiOk({
+      transcript: result.transcript,
+      source: result.source,
+      serverProviderConfigured: serverTranscriptionAvailable(),
     });
-
-    return apiOk({ transcript: result.transcript, processingTimeMs: result.processingTimeMs });
   } catch (error) {
     return handleApiError(error);
   }

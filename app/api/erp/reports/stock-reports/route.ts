@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize } from "@/lib/permissions/middleware";
+import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const querySchema = z.object({
@@ -62,11 +62,18 @@ export async function GET(request: NextRequest) {
       .eq("ledger_posting_status", "posted")
       .is("deleted_at", null);
 
-    if (parsed.countryId && parsed.countryId !== "all") {
-      query = query.eq("country_id", parsed.countryId);
+    const reportScope = resolveReportScope(session);
+    const { effectiveCountryId, effectiveBranchId } = enforceScopeFilters(
+      reportScope,
+      parsed.countryId && parsed.countryId !== "all" ? parsed.countryId : null,
+      parsed.branchId && parsed.branchId !== "all" ? parsed.branchId : null
+    );
+
+    if (effectiveCountryId) {
+      query = query.eq("country_id", effectiveCountryId);
     }
-    if (parsed.branchId && parsed.branchId !== "all") {
-      query = query.eq("city_branch_id", parsed.branchId);
+    if (effectiveBranchId) {
+      query = query.eq("city_branch_id", effectiveBranchId);
     }
     if (parsed.salesmanId && parsed.salesmanId !== "all") {
       query = query.eq("created_by", parsed.salesmanId);

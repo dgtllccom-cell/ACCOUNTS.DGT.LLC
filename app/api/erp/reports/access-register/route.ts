@@ -9,6 +9,9 @@ export async function GET() {
   try {
     const session = await requireErpSession();
     authorize(session, { resource: "reports", action: "read" });
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ error: "Access denied. Super admin only.", rows: [] }, { status: 403 });
+    }
     const rows = await getAccessRegisterData();
     return NextResponse.json({ rows, generatedAt: new Date().toISOString() });
   } catch (error: any) {

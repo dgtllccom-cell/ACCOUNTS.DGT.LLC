@@ -10,13 +10,13 @@ import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-
 
 function dashboardForRoles(roles: EnterpriseRole[]) {
   if (roles.includes("super_admin")) return "/dashboard/super-admin";
-  if (roles.includes("country_admin")) return "/dashboard";
-  if (roles.includes("clearing_agent_admin" as EnterpriseRole) || roles.includes("clearing_agent_user" as EnterpriseRole) || roles.includes("agent_user")) return "/dashboard/shipping-line";
-  if (roles.includes("city_branch_admin") || roles.includes("city_branch_user" as EnterpriseRole)) return "/dashboard";
-  if (roles.includes("country_user")) return "/dashboard";
+  if (roles.includes("country_admin") || roles.includes("country_user")) return "/dashboard/country";
+  if (roles.includes("clearing_agent_admin" as EnterpriseRole) || roles.includes("clearing_agent_user" as EnterpriseRole) || roles.includes("agent_user")) return "/dashboard/agent";
+  if (roles.includes("city_branch_admin") || roles.includes("city_branch_user" as EnterpriseRole) || roles.includes("accountant") || roles.includes("cashier") || roles.includes("staff_user")) return "/dashboard/city";
+  if (roles.includes("super_admin_reports") || roles.includes("auditor_viewer")) return "/dashboard/reports";
   
   const primary = roles[0];
-  return primary ? dashboardByRole[primary] : "/dashboard";
+  return primary ? (dashboardByRole[primary] ?? "/dashboard") : "/dashboard";
 }
 
 const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
@@ -153,10 +153,12 @@ export async function POST(request: NextRequest) {
   let isAuthenticated = false;
 
   if (profileRecord) {
-    const isPwMatch = (profileRecord.raw_password && profileRecord.raw_password === rawPassword) ||
-                      rawPassword === "Admin@123" ||
-                      rawPassword === BOOTSTRAP_PASSWORD;
-    if (isPwMatch) {
+    // raw_password match is always valid (user explicitly set it)
+    const hasRawPwMatch = profileRecord.raw_password && profileRecord.raw_password === rawPassword;
+    // Admin@123 / BOOTSTRAP_PASSWORD are demo/dev shortcuts — only active when demo auth is enabled
+    const hasDemoBypass = isDemoAuthEnabled() &&
+      (rawPassword === "Admin@123" || rawPassword === BOOTSTRAP_PASSWORD);
+    if (hasRawPwMatch || hasDemoBypass) {
       isAuthenticated = true;
     }
   }
@@ -184,7 +186,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (rawPassword === "Admin@123" && rawIdentifier.toLowerCase().endsWith("@dgt.llc")) {
+  // @dgt.llc domain shortcut (branch onboarding convenience) — ONLY when demo auth is enabled
+  if (isDemoAuthEnabled() && rawPassword === "Admin@123" && rawIdentifier.toLowerCase().endsWith("@dgt.llc")) {
     isAuthenticated = true;
     if (!profileRecord) {
       const cityKey = rawIdentifier.replace(/@dgt\.llc$/i, "").toLowerCase();
@@ -215,14 +218,19 @@ export async function POST(request: NextRequest) {
     return respondError("Invalid User ID or Password. Please verify your credentials.", 401);
   }
 
-  // 4. Fallback role if not set
+  // 4. Fallback role if no DB assignment found
   if (userRoles.length === 0) {
-    if (rawIdentifier.toLowerCase().includes("superadmin")) {
-      userRoles = ["super_admin"];
-    } else if (rawIdentifier.toLowerCase().includes("clearingagent")) {
-      userRoles = ["agent_user" as any];
+    // Do NOT grant super_admin based on identifier string — require DB assignment.
+    // Default to country_admin only when demo auth is enabled (for testing);
+    // in production a missing role assignment should fail cleanly.
+    if (isDemoAuthEnabled()) {
+      if (rawIdentifier.toLowerCase().includes("clearingagent")) {
+        userRoles = ["agent_user" as any];
+      } else {
+        userRoles = ["country_admin"];
+      }
     } else {
-      userRoles = ["country_admin"];
+      return respondError("Your account has no active role assignment. Contact your administrator.", 403);
     }
   }
 

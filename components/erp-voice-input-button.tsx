@@ -69,7 +69,7 @@ export function ErpVoiceInputButton({
 
   function toggleListen() {
     if (!supported) {
-      onError?.(s.t("voice.not_supported", "Voice input not supported in your browser"));
+      onError?.(s.t("not_supported", "Voice input not supported in your browser"));
       return;
     }
 
@@ -108,7 +108,7 @@ export function ErpVoiceInputButton({
     };
 
     rec.onerror = (e: any) => {
-      onError?.(s.t("voice.error", "Voice input error: {error}", { error: e?.error || "unknown" }));
+      onError?.(`${s.t("error", "Voice input error")}: ${e?.error || "unknown"}`);
       setListening(false);
     };
 
@@ -140,7 +140,7 @@ export function ErpVoiceInputButton({
       onClick={toggleListen}
       disabled={disabled || processing || !supported}
       className={`gap-2 ${className}`}
-      title={supported ? s.t("voice.tooltip", "Click to speak") : s.t("voice.not_supported", "Voice not supported")}
+      title={supported ? s.t("tooltip", "Click to speak") : s.t("not_supported", "Voice not supported")}
     >
       {processing ? (
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -149,7 +149,7 @@ export function ErpVoiceInputButton({
       ) : (
         <Mic className="h-4 w-4" />
       )}
-      {s.t("voice.label", "Voice")}
+      {s.t("label", "Voice")}
     </Button>
   );
 }

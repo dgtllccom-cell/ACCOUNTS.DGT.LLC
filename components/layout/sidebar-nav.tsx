@@ -90,9 +90,9 @@ function SidebarNodeItem({
     <div>
       <div
         className={cn(
-          "group flex items-center justify-between rounded-lg text-[12.5px] transition-all duration-200 py-0.5",
+          "group flex min-h-9 items-center justify-between rounded-xl text-[12.5px] transition-all duration-200 py-0.5",
           isActive
-            ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black shadow-md shadow-blue-500/20 active-nav-item"
+            ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black shadow-md shadow-blue-500/20 active-nav-item ring-1 ring-blue-300/30"
             : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
         )}
       >
@@ -100,7 +100,8 @@ function SidebarNodeItem({
           <Link
             href={href}
             onClick={onNavigate}
-            className="flex min-w-0 flex-1 items-center gap-2.5 py-1.5 pe-2 ps-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"
+            aria-current={isActive ? "page" : undefined}
+            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-1.5 pe-2 ps-3.5 outline-none transition-transform duration-200 group-hover:translate-x-0.5 focus-visible:ring-2 focus-visible:ring-blue-400/70 rtl:group-hover:-translate-x-0.5"
             style={{ paddingInlineStart: depth > 0 ? `${14 + depth * 12}px` : undefined }}
           >
             <SidebarIcon name={node.iconKey} className={cn("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200")} />
@@ -115,7 +116,7 @@ function SidebarNodeItem({
           <button
             type="button"
             onClick={() => (hasChildren ? onToggle(node.key) : undefined)}
-            className="flex min-w-0 flex-1 items-center gap-2.5 py-1.5 pe-2 ps-3.5 text-start transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5"
+            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-1.5 pe-2 ps-3.5 text-start outline-none transition-transform duration-200 group-hover:translate-x-0.5 focus-visible:ring-2 focus-visible:ring-blue-400/70 rtl:group-hover:-translate-x-0.5"
             style={{ paddingInlineStart: depth > 0 ? `${14 + depth * 12}px` : undefined }}
           >
             <SidebarIcon name={node.iconKey} className={cn("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200")} />
@@ -132,7 +133,7 @@ function SidebarNodeItem({
           <button
             type="button"
             onClick={() => onToggle(node.key)}
-            className="me-2 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700/60 hover:text-foreground transition-colors"
+            className="me-2 inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground outline-none hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-400/70 dark:hover:bg-slate-700/60 hover:text-foreground transition-colors"
             aria-label={t(lang, "nav.toggle_submenu", "Toggle submenu")}
             aria-expanded={isOpen}
           >

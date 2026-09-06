@@ -42,7 +42,7 @@ export function useErpVoiceInput(
         // Check confidence - warn if too low
         if (interpretation.confidence < 0.6) {
           setError(
-            s.t("voice.low_confidence", "Low confidence in interpretation. Please review the extracted fields."),
+            s.t("low_confidence", "Low confidence in interpretation. Please review the extracted fields."),
           );
         }
 
@@ -54,7 +54,7 @@ export function useErpVoiceInput(
           console.warn("Voice interpretation warnings:", interpretation.warnings);
         }
       } catch (e) {
-        setError(s.t("voice.interpretation_error", "Could not interpret voice input. Please try again."));
+        setError(s.t("interpretation_error", "Could not interpret voice input. Please try again."));
         console.error("Voice interpretation error:", e);
       } finally {
         setIsProcessing(false);

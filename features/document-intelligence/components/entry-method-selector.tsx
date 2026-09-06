@@ -50,6 +50,7 @@ export function EntryMethodSelector({
   title,
   children,
   onDraftChosen,
+  onScanClick,
   skipGate = false,
 }: {
   targetModule: string;
@@ -58,6 +59,9 @@ export function EntryMethodSelector({
   title?: string;
   children: ReactNode;
   onDraftChosen?: (draft: EntryDraft) => void;
+  /** Override the "Scan / Upload Document" card — e.g. account_master shows an
+   *  in-page multi-account bulk importer instead of the single-doc intake center. */
+  onScanClick?: () => void;
   /** Render the form directly, no method gate (e.g. editing an existing record). */
   skipGate?: boolean;
 }) {
@@ -261,7 +265,7 @@ export function EntryMethodSelector({
           {/* Card 2: AI Document Intake / Scan */}
           <button
             type="button"
-            onClick={() => router.push(`/dashboard/document-intelligence?domain=${domain}&module=${encodeURIComponent(targetModule)}`)}
+            onClick={() => onScanClick ? onScanClick() : router.push(`/dashboard/document-intelligence?domain=${domain}&module=${encodeURIComponent(targetModule)}`)}
             className="group relative flex h-full flex-col justify-between rounded-2xl border border-slate-200/90 bg-gradient-to-b from-slate-50/60 to-white p-6 text-start shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 dark:border-slate-800 dark:from-slate-900/60 dark:to-slate-900 dark:hover:border-blue-500/70"
           >
             <div>

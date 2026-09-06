@@ -128,7 +128,23 @@ export async function GET(request: Request) {
     authorize(session, { resource: "reports", action: "read" });
     authorize(session, { resource: "kyc", action: "read" });
     const reportScope = resolveReportScope(session);
+
+    // Audit trail: log KYC report access (fire-and-forget, non-blocking)
+    auditApiAction(request as any, {
+      action: "kyc.report.view",
+      entityTable: "kyc_reports",
+      entityId: session.userId,
+      after: {
+        scopeLevel: reportScope.level,
+        countryId: reportScope.countryId,
+        branchId: reportScope.branchId,
+        viewedBy: session.userId,
+        roles: session.roles
+      }
+    }).catch(() => { /* non-blocking */ });
+
     const sourceData = await withLocalPg(async (sql) => {
+
       async function timedQuery<T>(label: string, query: Promise<T>) {
         return await query;
       }
@@ -343,8 +359,14 @@ export async function GET(request: Request) {
         ));
       if (!assignmentMatches) return;
       const missing: string[] = [];
+      // Check real DB fields — only flag missing if column actually absent
       if (!u.full_name) missing.push("Missing Official Full Name Verification");
-      missing.push("Missing Identity CNIC / Passport Copy");
+      // cnic_doc_url / passport_doc_url — flag only if the column exists and is null
+      if (u.hasOwnProperty("cnic_doc_url") && !u.cnic_doc_url) {
+        missing.push("Missing Identity CNIC / Passport Copy");
+      } else if (u.hasOwnProperty("kyc_document_count") && !u.kyc_document_count) {
+        missing.push("Missing Identity CNIC / Passport Copy");
+      }
 
       const grace = calculateGraceStatus(u.created_at, missing);
 
@@ -373,8 +395,14 @@ export async function GET(request: Request) {
       if (!rowMatchesScope(acc, reportScope)) return;
       const missing: string[] = [];
       if (!acc.name) missing.push("Missing Account Title");
-      missing.push("Missing Commercial Tax / NTN Registration");
-      missing.push("Missing Owner ID Proof");
+      // Only flag NTN/tax registration if the column exists and is empty
+      if (acc.hasOwnProperty("ntn_number") && !acc.ntn_number) {
+        missing.push("Missing Commercial Tax / NTN Registration");
+      }
+      // Only flag owner ID proof if the column exists and is empty
+      if (acc.hasOwnProperty("owner_id_proof_url") && !acc.owner_id_proof_url) {
+        missing.push("Missing Owner ID Proof");
+      }
 
       const countryName = countriesMap.get(acc.country_id) || "General Ledger";
       const grace = calculateGraceStatus(acc.created_at, missing);

@@ -277,13 +277,14 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
 
     let roles = [...new Set(assignments.map((assignment) => assignment.role))];
 
-    const isKnownSuperAdminEmail =
+    // Bootstrap super admin: allow the two known bootstrap accounts to always have super_admin
+    // even if their DB row hasn't been created yet. DO NOT extend this to any other email pattern.
+    const isBootstrapEmail =
       user.email &&
       (user.email.toLowerCase() === "superadmin@damaan.com" ||
-       user.email.toLowerCase() === "asmatdgtllc@users.damaan.local" ||
-       user.email.toLowerCase().startsWith("superadmin"));
+       user.email.toLowerCase() === "asmatdgtllc@users.damaan.local");
 
-    if ((!roles.length || !roles.includes("super_admin")) && isKnownSuperAdminEmail) {
+    if ((!roles.length || !roles.includes("super_admin")) && isBootstrapEmail) {
       roles = Array.from(new Set(["super_admin", ...roles]));
     }
 
@@ -307,7 +308,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     }
 
     const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(assignments);
-    const isSuperAdmin = roles.includes("super_admin") || Boolean(isKnownSuperAdminEmail);
+    const isSuperAdmin = roles.includes("super_admin") || Boolean(isBootstrapEmail);
 
     const resolvedScopes = await resolveHierarchyScopes(
       supabase,

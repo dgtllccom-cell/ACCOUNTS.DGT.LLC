@@ -1,8 +1,29 @@
-﻿import crypto from "node:crypto";
+import crypto from "node:crypto";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import type { IntakeScope, OperationalDomain } from "@/lib/document-intelligence/scope";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { DocumentValidationError } from "@/lib/document-intelligence/storage";
+import { validateAudio, saveVoiceAudio } from "@/lib/services/voice-audio-storage";
+
+function audioExt(mime?: string | null): string {
+  if (!mime) return "webm";
+  if (mime.includes("webm")) return "webm";
+  if (mime.includes("ogg")) return "ogg";
+  if (mime.includes("mp4") || mime.includes("m4a")) return "m4a";
+  if (mime.includes("wav")) return "wav";
+  if (mime.includes("mpeg") || mime.includes("mp3")) return "mp3";
+  return "webm";
+}
+
+/** withLocalPg resolves to null when DATABASE_URL is not configured. These
+ *  workflow mutations must never silently no-op, so surface that as an error. */
+async function unwrapDb<T>(p: Promise<T | null>): Promise<T> {
+  const value = await p;
+  if (value == null) {
+    throw new DocumentValidationError("Database connection is not configured on the server.");
+  }
+  return value;
+}
 
 /**
  * AI Voice & Text Entry Service
@@ -21,6 +42,7 @@ export type VoiceTextInput = {
   originalLanguage: SupportedLanguage;
   transcript: string;
   audioBuffer?: Buffer; // Voice only
+  audioMimeType?: string | null;
   audioDurationSeconds?: number;
   countryId?: string | null;
   countryBranchId?: string | null;
@@ -140,7 +162,7 @@ export class AiVoiceTextEntryService {
     userId: string,
     userName: string | null,
     scope: IntakeScope,
-  ): Promise<{ jobId: string; jobNo: string } | null> {
+  ): Promise<{ jobId: string; jobNo: string; audioStorageKey?: string | null } | null> {
     // Validate scope
     if (scope.domain && scope.domain !== input.operationalDomain) {
       throw new DocumentValidationError(
@@ -192,20 +214,12 @@ export class AiVoiceTextEntryService {
       const seq = (await sql`SELECT count(*)::int n FROM public.document_intake_jobs`)?.[0]?.n ?? 0;
       const jobNo = `AI-${new Date().getUTCFullYear()}-${String(seq + 1).padStart(5, "0")}`;
 
-      // Prepare audio storage (if voice)
-      let audioStorageKey: string | null = null;
-      if (input.sourceType === "voice" && input.audioBuffer) {
-        // Store audio file (similar to document storage)
-        const audioHash = crypto
-          .createHash("sha256")
-          .update(input.audioBuffer)
-          .digest("hex");
-        audioStorageKey = `voice/${jobNo}/${audioHash}.wav`;
-        // In production, save to S3/cloud storage
-        // For now, assume saveIntakeFile handles this
-      }
+      const audioMime = input.audioMimeType ?? (input.sourceType === "voice" ? "audio/webm" : null);
+      const originalFilename =
+        input.sourceType === "voice" ? `voice-message.${audioExt(audioMime)}` : "text-instruction.txt";
 
-      // Create document intake job with voice/text source
+      // Create document intake job with voice/text source. audio_storage_key is
+      // filled in immediately after, once we have the real job id.
       const [result] = await sql`
         INSERT INTO public.document_intake_jobs
           (job_no, operational_domain, company_id, country_id, country_branch_id, city_branch_id,
@@ -219,19 +233,41 @@ export class AiVoiceTextEntryService {
            ${input.clearingAgentId ?? null}, ${input.sourceModuleHint ?? null},
            ${input.sourceType}, ${input.originalLanguage},
            ${input.transcript}, ${input.audioDurationSeconds ?? null},
-           ${input.sourceType === "voice" ? "audio/wav" : null}, ${audioStorageKey},
+           ${audioMime}, ${"__pending__"},
            ${userId}, ${userName},
-           ${input.sourceType === "voice" ? "voice_entry" : "text_entry"},
-           ${input.sourceType === "voice" ? "voice-message.wav" : "text-instruction.txt"},
-           ${input.sourceType === "voice" ? "audio/wav" : "text/plain"},
+           ${"web"},
+           ${originalFilename},
+           ${input.sourceType === "voice" ? (audioMime ?? "audio/webm") : "text/plain"},
            ${input.audioBuffer?.length ?? input.transcript.length},
-           ${audioStorageKey || "__pending__"},
+           ${"__pending__"},
            ${crypto.createHash("sha256").update(input.transcript).digest("hex")},
            'review', ${input.idempotencyKey ?? null})
         RETURNING id, job_no
       `;
 
-      return { jobId: result.id, jobNo: result.job_no };
+      // Persist the real audio blob to private storage, keyed by the job id.
+      let audioStorageKey: string | null = null;
+      if (input.sourceType === "voice" && input.audioBuffer?.length) {
+        const validated = validateAudio(input.audioBuffer, audioMime);
+        audioStorageKey = await saveVoiceAudio(result.id, validated);
+        await sql`
+          UPDATE public.document_intake_jobs
+          SET audio_storage_key = ${audioStorageKey},
+              storage_key = ${audioStorageKey},
+              audio_mime_type = ${validated.mime},
+              file_size = ${validated.size},
+              updated_at = now()
+          WHERE id = ${result.id}
+        `;
+      } else {
+        await sql`
+          UPDATE public.document_intake_jobs
+          SET audio_storage_key = NULL, storage_key = ${`text/${result.id}.txt`}, updated_at = now()
+          WHERE id = ${result.id}
+        `;
+      }
+
+      return { jobId: result.id, jobNo: result.job_no, audioStorageKey };
     });
   }
 
@@ -290,8 +326,8 @@ export class AiVoiceTextEntryService {
     workflowId: string,
     approverId: string,
     approverNotes?: string,
-  ): Promise<ApprovalWorkflow | null> {
-    return withLocalPg(async (sql) => {
+  ): Promise<ApprovalWorkflow> {
+    const result = await withLocalPg(async (sql): Promise<ApprovalWorkflow | null> => {
       const [workflow] = await sql`
         UPDATE public.approval_workflows
         SET status = 'approved', approver_id = ${approverId}, approved_at = now(),
@@ -304,9 +340,7 @@ export class AiVoiceTextEntryService {
           final_erp_transaction_id, final_voucher_no, final_serial_references
       `;
 
-      if (!workflow) {
-        throw new DocumentValidationError("Workflow not found or cannot be approved in current state.");
-      }
+      if (!workflow) return null;
 
       return {
         id: workflow.id,
@@ -325,8 +359,10 @@ export class AiVoiceTextEntryService {
         finalErpTransactionId: workflow.final_erp_transaction_id,
         finalVoucherNo: workflow.final_voucher_no,
         finalSerialReferences: workflow.final_serial_references,
-      };
+      } satisfies ApprovalWorkflow;
     });
+    if (!result) throw new DocumentValidationError("Workflow not found or cannot be approved in current state.");
+    return result;
   }
 
   /**
@@ -335,8 +371,8 @@ export class AiVoiceTextEntryService {
   async rejectWorkflow(
     workflowId: string,
     rejectionReason: string,
-  ): Promise<ApprovalWorkflow | null> {
-    return withLocalPg(async (sql) => {
+  ): Promise<ApprovalWorkflow> {
+    const result = await withLocalPg(async (sql): Promise<ApprovalWorkflow | null> => {
       const [workflow] = await sql`
         UPDATE public.approval_workflows
         SET status = 'rejected', rejection_reason = ${rejectionReason},
@@ -349,9 +385,7 @@ export class AiVoiceTextEntryService {
           final_erp_transaction_id, final_voucher_no, final_serial_references
       `;
 
-      if (!workflow) {
-        throw new DocumentValidationError("Workflow not found or cannot be rejected in current state.");
-      }
+      if (!workflow) return null;
 
       return {
         id: workflow.id,
@@ -370,8 +404,10 @@ export class AiVoiceTextEntryService {
         finalErpTransactionId: workflow.final_erp_transaction_id,
         finalVoucherNo: workflow.final_voucher_no,
         finalSerialReferences: workflow.final_serial_references,
-      };
+      } satisfies ApprovalWorkflow;
     });
+    if (!result) throw new DocumentValidationError("Workflow not found or cannot be rejected in current state.");
+    return result;
   }
 
   /**
@@ -380,8 +416,8 @@ export class AiVoiceTextEntryService {
   async returnForReview(
     workflowId: string,
     returnReason: string,
-  ): Promise<ApprovalWorkflow | null> {
-    return withLocalPg(async (sql) => {
+  ): Promise<ApprovalWorkflow> {
+    const result = await withLocalPg(async (sql): Promise<ApprovalWorkflow | null> => {
       const [workflow] = await sql`
         UPDATE public.approval_workflows
         SET status = 'returned_for_review', returned_reason = ${returnReason},
@@ -394,9 +430,7 @@ export class AiVoiceTextEntryService {
           final_erp_transaction_id, final_voucher_no, final_serial_references
       `;
 
-      if (!workflow) {
-        throw new DocumentValidationError("Workflow not found or cannot be returned in current state.");
-      }
+      if (!workflow) return null;
 
       return {
         id: workflow.id,
@@ -415,11 +449,11 @@ export class AiVoiceTextEntryService {
         finalErpTransactionId: workflow.final_erp_transaction_id,
         finalVoucherNo: workflow.final_voucher_no,
         finalSerialReferences: workflow.final_serial_references,
-      };
+      } satisfies ApprovalWorkflow;
     });
+    if (!result) throw new DocumentValidationError("Workflow not found or cannot be returned in current state.");
+    return result;
   }
 }
 
 export const aiVoiceTextEntryService = new AiVoiceTextEntryService();
-
-

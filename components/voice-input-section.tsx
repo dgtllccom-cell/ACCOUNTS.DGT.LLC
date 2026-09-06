@@ -3,12 +3,18 @@
 import { useState } from "react";
 import { ErpVoiceInputButton, type VoiceTranscriptionResult } from "@/components/erp-voice-input-button";
 import { VoiceContextInterpreter, type VoiceContext, type VoiceInterpretationResult } from "@/lib/services/voice-context-interpreter";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { AlertCircle, CheckCircle2, Lightbulb } from "lucide-react";
+
+function Alert({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return <div className={`flex gap-2 rounded-lg border p-3 text-sm ${className}`}>{children}</div>;
+}
+function AlertDescription({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return <div className={className}>{children}</div>;
+}
 
 /**
  * Voice Input Section Component
@@ -44,10 +50,10 @@ export function VoiceInputSection({
       setInterpretation(interp);
 
       if (interp.confidence < 0.6) {
-        setError(s.t("voice.low_confidence", "Low confidence interpretation. Please review extracted fields."));
+        setError(s.t("low_confidence", "Low confidence interpretation. Please review extracted fields."));
       }
     } catch (e) {
-      setError(s.t("voice.error", "Could not interpret voice input."));
+      setError(s.t("error", "Could not interpret voice input."));
     }
   };
 
@@ -70,7 +76,7 @@ export function VoiceInputSection({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <Lightbulb className="h-4 w-4 text-blue-600" />
-          {s.t("voice.section_title", "AI Voice Input")}
+          {s.t("section_title", "AI Voice Input")}
         </CardTitle>
       </CardHeader>
 
@@ -80,7 +86,7 @@ export function VoiceInputSection({
           <ErpVoiceInputButton context={context} onTranscribed={handleTranscribed} onError={setError} lang={langProp} />
           {transcript && (
             <Button variant="outline" size="sm" onClick={handleClear}>
-              {s.t("voice.clear", "Clear")}
+              {s.t("clear", "Clear")}
             </Button>
           )}
         </div>
@@ -89,7 +95,7 @@ export function VoiceInputSection({
         {transcript && (
           <div className="rounded-lg bg-white p-3 dark:bg-slate-900">
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-              {s.t("voice.transcript", "Transcript")}
+              {s.t("transcript", "Transcript")}
             </p>
             <p className="mt-1 text-sm text-slate-900 dark:text-slate-100">{transcript}</p>
           </div>
@@ -113,7 +119,7 @@ export function VoiceInputSection({
               />
               <div className="flex-1">
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  {s.t("voice.confidence", "Confidence")}
+                  {s.t("confidence", "Confidence")}
                 </p>
                 <p className="text-sm text-slate-900 dark:text-slate-100">{(interpretation.confidence * 100).toFixed(0)}%</p>
               </div>
@@ -123,7 +129,7 @@ export function VoiceInputSection({
             {Object.keys(interpretation.extractedFields).length > 0 && (
               <div className="rounded-lg bg-white p-3 dark:bg-slate-900">
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  {s.t("voice.extracted_fields", "Extracted Fields")}
+                  {s.t("extracted_fields", "Extracted Fields")}
                 </p>
                 <div className="mt-2 space-y-1">
                   {Object.entries(interpretation.extractedFields).map(([key, value]) => (
@@ -152,7 +158,7 @@ export function VoiceInputSection({
 
             {/* Apply Button */}
             <Button onClick={handleApply} className="w-full" variant="default">
-              {s.t("voice.apply_fields", "Apply Extracted Fields to Form")}
+              {s.t("apply_fields", "Apply Extracted Fields to Form")}
             </Button>
           </>
         )}

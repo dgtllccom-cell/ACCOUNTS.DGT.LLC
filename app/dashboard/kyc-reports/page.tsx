@@ -261,7 +261,7 @@ export default function KycReportsPage() {
           userEmail: json.user.email || "",
           userId: json.user.id || "",
           countryName: json.scopes?.summary?.countryName || "",
-          branchName: json.scopes?.summary?.branchDisplayName || "DUBAI HEAD OFFICE",
+          branchName: json.scopes?.summary?.branchDisplayName || json.scopes?.summary?.cityBranchName || "",
           isSuperAdmin: !!json.scopes?.isSuperAdmin,
           roles: json.roles || []
         });

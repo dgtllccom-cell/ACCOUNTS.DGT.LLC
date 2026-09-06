@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireErpSession } from "@/lib/auth/session";
+import { authorize } from "@/lib/permissions/middleware";
 import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorize(session, { resource: "reports", action: "read" });
+    // Access register contains credential data — restrict to super_admin
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ error: "Super Admin access required for Access Register export" }, { status: 403 });
+    }
     const COUNTRY_BRANCH_ACCESS_REGISTER = await getAccessRegisterData();
     const headers = [
       "Country",

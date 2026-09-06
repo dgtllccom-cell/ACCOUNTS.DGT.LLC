@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VoiceInputSection } from "@/components/voice-input-section";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
@@ -880,6 +881,22 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
 
       {/* ── Mandatory Logged-in Scope banner (server-resolved, not frontend-selected) ── */}
       {!initialAccountId && <LoginScopeBanner scope={erpScope} />}
+
+      {/* Voice AI — speak the account details; fields prefill as a DRAFT for review */}
+      {!initialAccountId && (
+        <VoiceInputSection
+          context="accounts"
+          lang={lang}
+          onApplyFields={(f) => {
+            if (f.accountName && !accountName) setAccountName(String(f.accountName));
+            if (f.category && !category) {
+              const c = String(f.category).toLowerCase();
+              if (c.includes("expense")) setCategory("EX");
+              else if (c.includes("income")) setCategory("P/S");
+            }
+          }}
+        />
+      )}
 
       {/* ── Steps Indicator Bar ────────────────────────────────────────────── */}
       <div className={`grid grid-cols-2 gap-2 text-xs font-semibold text-slate-500 md:grid-cols-${activeSteps.length}`}>

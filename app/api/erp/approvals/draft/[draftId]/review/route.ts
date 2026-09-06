@@ -35,7 +35,7 @@ export async function POST(
     const workflowId = draftId;
 
     switch (body.action) {
-      case "approve":
+      case "approve": {
         const approved = await aiVoiceTextEntryService.approveWorkflow(
           workflowId,
           session.userId,
@@ -46,8 +46,9 @@ export async function POST(
           status: "approved",
           nextStep: "awaiting_final_approval",
         });
+      }
 
-      case "reject":
+      case "reject": {
         const rejected = await aiVoiceTextEntryService.rejectWorkflow(
           workflowId,
           body.rejectionReason || "No reason provided",
@@ -57,8 +58,9 @@ export async function POST(
           status: "rejected",
           message: "Draft has been rejected and cannot be posted",
         });
+      }
 
-      case "return":
+      case "return": {
         const returned = await aiVoiceTextEntryService.returnForReview(
           workflowId,
           body.returnReason || "Corrections needed",
@@ -69,6 +71,7 @@ export async function POST(
           corrections: body.corrections,
           nextStep: "awaiting_submitter_corrections",
         });
+      }
 
       default:
         return apiOk({ error: "Unknown action" }, { status: 400 });

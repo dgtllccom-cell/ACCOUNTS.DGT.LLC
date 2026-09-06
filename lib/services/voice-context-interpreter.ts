@@ -106,9 +106,9 @@ export class VoiceContextInterpreter {
     fields: Record<string, any>,
     warnings: string[],
     confidence: number,
-    amounts: RegExpMatchArray | null,
+    amounts: readonly string[],
     parties: string[],
-    currencies: RegExpMatchArray | null,
+    currencies: readonly string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
     if (parties.length > 0) {
@@ -145,9 +145,9 @@ export class VoiceContextInterpreter {
     fields: Record<string, any>,
     warnings: string[],
     confidence: number,
-    amounts: RegExpMatchArray | null,
+    amounts: readonly string[],
     parties: string[],
-    currencies: RegExpMatchArray | null,
+    currencies: readonly string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
     if (parties.length > 0) {
@@ -225,9 +225,9 @@ export class VoiceContextInterpreter {
     fields: Record<string, any>,
     warnings: string[],
     confidence: number,
-    amounts: RegExpMatchArray | null,
+    amounts: readonly string[],
     parties: string[],
-    currencies: RegExpMatchArray | null,
+    currencies: readonly string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
     if (parties.length > 0) {
@@ -265,9 +265,9 @@ export class VoiceContextInterpreter {
     fields: Record<string, any>,
     warnings: string[],
     confidence: number,
-    amounts: RegExpMatchArray | null,
+    amounts: readonly string[],
     parties: string[],
-    currencies: RegExpMatchArray | null,
+    currencies: readonly string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
     if (parties.length > 0) {

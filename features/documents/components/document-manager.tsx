@@ -272,8 +272,8 @@ export function DocumentManager() {
           userName: json.user.fullName || json.user.email || "—",
           userEmail: json.user.email || "",
           userId: json.user.id || "",
-          countryName: json.scopes?.summary?.countryName || "United Arab Emirates",
-          branchName: json.scopes?.summary?.branchDisplayName || "DUBAI HEAD OFFICE",
+          countryName: json.scopes?.summary?.countryName || "",
+          branchName: json.scopes?.summary?.branchDisplayName || "",
           isSuperAdmin: !!json.scopes?.isSuperAdmin,
           roles: json.roles || []
         });
@@ -341,9 +341,9 @@ export function DocumentManager() {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
   const [scanStatus, setScanStatus] = useState<string>("");
-  const [scannerDevice, setScannerDevice] = useState<string>("Fujitsu fi-7160 Enterprise TWAIN");
-  const [scannerDpi, setScannerDpi] = useState<string>("300");
-  const [scannerColor, setScannerColor] = useState<string>("color");
+  const [scanError, setScanError] = useState<string>("");
+  const [cameraReady, setCameraReady] = useState<boolean>(false);
+  const [capturedShots, setCapturedShots] = useState<string[]>([]); // data URLs
 
   const [isNewFolderOpen, setIsNewFolderOpen] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>("");
@@ -356,7 +356,17 @@ export function DocumentManager() {
   const [editCompany, setEditCompany] = useState<string>("");
   const [editAccount, setEditAccount] = useState<string>("");
 
+  // Audit history modal
+  const [auditDoc, setAuditDoc] = useState<OfficeDocument | null>(null);
+  const [auditEvents, setAuditEvents] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState<boolean>(false);
+  const versionInputRef = useRef<HTMLInputElement>(null);
+  const [versioningDoc, setVersioningDoc] = useState<OfficeDocument | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
 
   // Close popovers on outside click
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -544,11 +554,11 @@ export function DocumentManager() {
     const totalDocs = documents.length;
     const totalBytes = documents.reduce((acc, d) => acc + (Number(d.file_size) || 0), 0);
     const scannedCount = documents.filter((d) => d.category === "Scanned" || d.scanner_device_name).length;
-    const totalCountriesCount = countries.length || 4;
+    const totalCountriesCount = countries.length;
     const totalBranchesCount = countries.reduce(
       (acc, c) => acc + (c.mainBranches?.length || 0) + (c.mainBranches?.reduce((a: number, m: any) => a + (m.cityBranches?.length || 0), 0) || 0),
       0
-    ) || 8;
+    );
     const linkedCompaniesCount = new Set(documents.map((d) => d.company_code || d.company_name).filter(Boolean)).size;
 
     return {
@@ -557,7 +567,7 @@ export function DocumentManager() {
       scannedCount,
       totalCountriesCount,
       totalBranchesCount,
-      linkedCompaniesCount: linkedCompaniesCount || 3
+      linkedCompaniesCount
     };
   }, [documents, countries]);
 
@@ -644,20 +654,77 @@ export function DocumentManager() {
     }
   }
 
-  // Direct Hardware Scan
-  async function handleDirectScanExecute() {
-    setScanStatus(t("scanner_status_init", `Connecting to hardware scanner (${scannerDevice})...`));
+  // ── Real device-camera document capture (webcam / phone rear camera) ──
+  const startCamera = useCallback(async () => {
+    setScanError("");
+    setCameraReady(false);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setScanError(t("camera_unsupported", "This browser/device does not expose a camera. Use Upload File instead."));
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      cameraStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+      setCameraReady(true);
+    } catch (err: any) {
+      setScanError(
+        err?.name === "NotAllowedError"
+          ? t("camera_denied", "Camera permission was denied. Allow camera access and retry, or use Upload File.")
+          : t("camera_error", "Could not open the camera: ") + (err?.message || String(err))
+      );
+    }
+  }, [t]);
 
-    setTimeout(() => {
-      setScanStatus(t("scanner_status_scanning", `Scanning page at ${scannerDpi} DPI (${scannerColor})...`));
-    }, 1200);
+  const stopCamera = useCallback(() => {
+    cameraStreamRef.current?.getTracks().forEach((tr) => tr.stop());
+    cameraStreamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraReady(false);
+  }, []);
 
-    setTimeout(async () => {
-      setScanStatus(t("scanner_status_saving", "Processing OCR & uploading to cloud storage..."));
-      try {
-        const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
-        const docTypeValue = selectedDocumentType || "Document";
-        const generatedFileName = `SCAN_${Date.now()}_300DPI.pdf`;
+  const captureShot = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !video.videoWidth) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setCapturedShots((prev) => [...prev, canvas.toDataURL("image/jpeg", 0.92)]);
+  }, []);
+
+  function dataUrlToBlob(dataUrl: string): Blob {
+    const [head, b64] = dataUrl.split(",");
+    const mime = head.match(/:(.*?);/)?.[1] || "image/jpeg";
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
+  async function handleSaveCapturedScan() {
+    if (capturedShots.length === 0) {
+      setScanError(t("capture_first", "Capture at least one page before saving."));
+      return;
+    }
+    setScanStatus(t("scan_saving", "Uploading captured page(s) to secure storage…"));
+    try {
+      const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const docTypeValue = selectedDocumentType || "Document";
+      const ts = Date.now();
+
+      for (let i = 0; i < capturedShots.length; i++) {
+        const blob = dataUrlToBlob(capturedShots[i]);
+        const pageSuffix = capturedShots.length > 1 ? `_p${i + 1}` : "";
+        const fileName = `CAMERA_SCAN_${ts}${pageSuffix}.jpg`;
         const destinationPath = buildDocumentFolderPath({
           countryName: activeCountry?.name || sessionCtx?.countryName,
           branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
@@ -672,58 +739,107 @@ export function DocumentManager() {
           documentType: docTypeValue
         });
 
-        const scanBlob = new Blob([`%PDF-1.4\n% Hardware scan generated from ${scannerDevice}\n`], {
-          type: "application/pdf"
-        });
-        const scanFile = new File([scanBlob], generatedFileName, { type: "application/pdf" });
+        const payload = new FormData();
+        payload.append("title", `Camera Scan — ${new Date().toLocaleDateString()}${pageSuffix ? ` (page ${i + 1})` : ""}`);
+        payload.append("file_name", fileName);
+        payload.append("file_type", "jpg");
+        payload.append("country_id", selectedCountryId || "");
+        payload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
+        payload.append("country_branch_id", selectedMainBranchId || "");
+        payload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
+        payload.append("city_branch_id", selectedCityBranchId || "");
+        payload.append("city_branch_name", activeCityBranch?.name || "");
+        payload.append("company_id", selectedCompanyId || "");
+        payload.append("company_code", selectedCompanyCode || "");
+        payload.append("company_name", selectedCompanyName || "");
+        payload.append("account_id", selectedAccountId || "");
+        payload.append("account_code", selectedAccountCode || "");
+        payload.append("account_name", selectedAccountName || "");
+        payload.append("person_account_id", selectedPersonId || "");
+        payload.append("person_account_code", selectedPersonCode || "");
+        payload.append("person_account_name", selectedPersonName || "");
+        payload.append("person_account_type", selectedPersonType || "");
+        payload.append("module_type", moduleLabel);
+        payload.append("document_type", docTypeValue);
+        payload.append("source_module", moduleLabel);
+        payload.append("category", "Scanned");
+        payload.append("tags", JSON.stringify(["CameraScan", docTypeValue]));
+        payload.append("metadata", JSON.stringify({ captureMethod: "device_camera", page: i + 1, totalPages: capturedShots.length }));
+        payload.append("document_path", destinationPath);
+        payload.append("created_by", sessionCtx?.userName || "");
+        payload.append("scanner_device_name", "Device Camera");
+        payload.append("scanner_bridge", "getUserMedia");
+        payload.append("file", new File([blob], fileName, { type: "image/jpeg" }), fileName);
 
-        const scanPayload = new FormData();
-        scanPayload.append("title", `Direct Scan — ${new Date().toLocaleDateString()}`);
-        scanPayload.append("file_name", generatedFileName);
-        scanPayload.append("file_type", "pdf");
-        scanPayload.append("file_size", "452000");
-        scanPayload.append("country_id", selectedCountryId || "");
-        scanPayload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
-        scanPayload.append("country_branch_id", selectedMainBranchId || "");
-        scanPayload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
-        scanPayload.append("city_branch_id", selectedCityBranchId || "");
-        scanPayload.append("city_branch_name", activeCityBranch?.name || "");
-        scanPayload.append("company_id", selectedCompanyId || "");
-        scanPayload.append("company_code", selectedCompanyCode || "");
-        scanPayload.append("company_name", selectedCompanyName || "");
-        scanPayload.append("account_id", selectedAccountId || "");
-        scanPayload.append("account_code", selectedAccountCode || "");
-        scanPayload.append("account_name", selectedAccountName || "");
-        scanPayload.append("person_account_id", selectedPersonId || "");
-        scanPayload.append("person_account_code", selectedPersonCode || "");
-        scanPayload.append("person_account_name", selectedPersonName || "");
-        scanPayload.append("person_account_type", selectedPersonType || "");
-        scanPayload.append("module_type", moduleLabel);
-        scanPayload.append("document_type", docTypeValue);
-        scanPayload.append("source_module", moduleLabel);
-        scanPayload.append("category", "Scanned");
-        scanPayload.append("tags", JSON.stringify(["HardwareScan", "TWAIN", scannerDpi + "DPI", docTypeValue]));
-        scanPayload.append("metadata", JSON.stringify({ scannerDevice, dpi: scannerDpi, colorMode: scannerColor }));
-        scanPayload.append("document_path", destinationPath);
-        scanPayload.append("storage_key", `${destinationPath}/${generatedFileName}`);
-        scanPayload.append("created_by", sessionCtx?.userName || "Scanner Operator");
-        scanPayload.append("scanner_device_name", scannerDevice);
-        scanPayload.append("scanner_bridge", "DGT-TWAIN-v2.1");
-        scanPayload.append("file", scanFile, scanFile.name);
-
-        await fetch("/api/documents", {
-          method: "POST",
-          body: scanPayload
-        });
-
-        await fetchDocs();
-      } catch (err) {
-        console.error("Direct scan error:", err);
-      } finally {
-        setIsScannerOpen(false);
-        setScanStatus("");
+        const res = await fetch("/api/documents", { method: "POST", body: payload });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error || `Upload failed for page ${i + 1}`);
+        }
       }
-    }, 2800);
+
+      stopCamera();
+      setCapturedShots([]);
+      setIsScannerOpen(false);
+      await fetchDocs();
+    } catch (err: any) {
+      console.error("Camera scan save error:", err);
+      setScanError(err?.message || t("scan_save_failed", "Failed to save the captured document."));
+    } finally {
+      setScanStatus("");
+    }
+  }
+
+  // Auto start/stop camera with the modal.
+  useEffect(() => {
+    if (isScannerOpen) {
+      void startCamera();
+    } else {
+      stopCamera();
+      setCapturedShots([]);
+      setScanError("");
+    }
+    return () => stopCamera();
+  }, [isScannerOpen, startCamera, stopCamera]);
+
+  // ── Version upload + audit history ──
+  async function handleUploadNewVersion(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const doc = versioningDoc;
+    if (!file || !doc) return;
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      const res = await fetch(`/api/documents/${doc.id}/version`, { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json?.error || t("version_failed", "New version upload failed."));
+      } else {
+        await fetchDocs();
+        if (auditDoc?.id === doc.id) void openAuditHistory(doc);
+      }
+    } catch (err) {
+      console.error("Version upload error:", err);
+      alert(t("version_failed", "New version upload failed."));
+    } finally {
+      setVersioningDoc(null);
+      if (versionInputRef.current) versionInputRef.current.value = "";
+    }
+  }
+
+  async function openAuditHistory(doc: OfficeDocument) {
+    setAuditDoc(doc);
+    setAuditLoading(true);
+    setAuditEvents([]);
+    try {
+      const res = await fetch(`/api/documents/${doc.id}/audit`, { credentials: "include" });
+      const json = await res.json();
+      if (res.ok) setAuditEvents(Array.isArray(json.events) ? json.events : []);
+    } catch (err) {
+      console.error("Audit history error:", err);
+    } finally {
+      setAuditLoading(false);
+    }
   }
 
   // Create Custom Folder
@@ -746,35 +862,37 @@ export function DocumentManager() {
     setSelectedModule(newFld.name);
   };
 
-  function handleDownloadDoc(doc: OfficeDocument) {
-    if (doc.file_url && !doc.file_url.startsWith("/api/erp/documents/view")) {
-      window.open(doc.file_url, "_blank");
-      return;
+  async function handleDownloadDoc(doc: OfficeDocument) {
+    // Always fetch the REAL stored blob through the API, which resolves it from
+    // Supabase Storage or the local uploads fallback and streams it with the
+    // correct filename. Never fabricate placeholder content.
+    try {
+      const res = await fetch(`/api/documents/download?id=${encodeURIComponent(doc.id)}`, {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error || t("download_failed", "The stored file could not be downloaded."));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.file_name || `${doc.id}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Download error:", e);
+      alert(t("download_failed", "The stored file could not be downloaded."));
     }
-    const content = `================================================================================
-DIGITAL DOCK ERP — OFFICIAL DOCUMENT ARCHIVE
-================================================================================
-Document Title:    ${doc.title}
-File Name:         ${doc.file_name}
-Document Type:     ${doc.document_type || doc.module_type || "Document"}
-Module Category:   ${doc.module_type}
-Category:          ${doc.category || "General"}
-Date:              ${new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
-Country:           ${doc.country_name || "United Arab Emirates"}
-Branch:            ${doc.city_branch_name || doc.main_branch_name || "Dubai Branch"}
-Account:           ${doc.account_code || ""} — ${doc.account_name || ""}
-Company:           ${doc.company_name || "—"}
-Source Module:     ${doc.source_module || "purchase_order"}
-Source Ref No:     ${doc.source_record_no || "DSA-25087"}
-Verification:      Digitally verified and sealed in Digital Dock ERP cloud storage repository.
-================================================================================`;
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = doc.file_name.endsWith(".txt") || doc.file_name.endsWith(".pdf") ? doc.file_name : `${doc.file_name}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  }
+
+  function handlePreviewDoc(doc: OfficeDocument) {
+    // Open the real file inline in a new tab (PDF/image viewer).
+    window.open(`/api/documents/download?id=${encodeURIComponent(doc.id)}&disposition=inline`, "_blank", "noopener");
   }
 
   // Edit / Move Document
@@ -2071,96 +2189,94 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
 
       {/* ── Modal 1: Direct Hardware Scanner Studio ── */}
       <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-5 font-sans">
+        <DialogContent className="max-w-lg rounded-2xl p-5 font-sans">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900">
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
               <Camera className="h-5 w-5 text-emerald-600" />
-              {t("scanner_studio", "Direct Hardware Scanner Studio")}
+              {t("camera_scan_title", "Camera Document Capture")}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">
-                {t("select_device", "Hardware Scanner Device")}
-              </label>
-              <select
-                value={scannerDevice}
-                onChange={(e) => setScannerDevice(e.target.value)}
-                className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
-              >
-                <option value="Fujitsu fi-7160 Enterprise TWAIN">Fujitsu fi-7160 Enterprise (TWAIN USB/LAN)</option>
-                <option value="Canon imageFORMULA DR-C225 II">Canon imageFORMULA DR-C225 II (Fast Feeder)</option>
-                <option value="Epson WorkForce DS-530 II">Epson WorkForce DS-530 II (Duplex)</option>
-                <option value="HP ScanJet Pro 3000 s4">HP ScanJet Pro 3000 s4</option>
-                <option value="Direct WebCamera Document Capture">{th("Direct WebCam / Mobile Camera")}</option>
-              </select>
-            </div>
+          <div className="space-y-3 py-2 text-xs">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {t("camera_scan_hint", "Uses your device camera (rear camera on phones/tablets). Capture one or more pages, then save them to the selected filing path.")}
+            </p>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">{t("dpi", "Resolution")}</label>
-                <select
-                  value={scannerDpi}
-                  onChange={(e) => setScannerDpi(e.target.value)}
-                  className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
-                >
-                  <option value="150">150 DPI (Fast)</option>
-                  <option value="300">300 DPI (Recommended)</option>
-                  <option value="600">600 DPI (High Quality)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">{t("color", "Color Mode")}</label>
-                <select
-                  value={scannerColor}
-                  onChange={(e) => setScannerColor(e.target.value)}
-                  className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
-                >
-                  <option value="color">{th("24-Bit Color")}</option>
-                  <option value="grayscale">{th("Grayscale")}</option>
-                  <option value="bw">{th("Black & White (Text)")}</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 border border-slate-200 dark:border-slate-700 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{th("Destination Filing Path")}</span>
-              <div className="text-[11px] font-mono text-slate-700 truncate">
+              <div className="text-[11px] font-mono text-slate-700 dark:text-slate-300 truncate">
                 {activeCountry?.name || th("Super Admin Storage")} › {activeMainBranch?.name || th("All Branches")} › {selectedModule}
               </div>
             </div>
 
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+              <video ref={videoRef} playsInline muted className="w-full h-full object-contain" />
+              {!cameraReady && !scanError && (
+                <div className="absolute inset-0 flex items-center justify-center text-white/80 text-xs gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin" /> {t("camera_starting", "Starting camera…")}
+                </div>
+              )}
+            </div>
+            <canvas ref={canvasRef} className="hidden" />
+
+            {scanError && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 p-2.5 text-red-700 dark:text-red-300 text-[11px] font-semibold">
+                {scanError}
+                <button type="button" onClick={() => startCamera()} className="ml-2 underline">{t("retry", "Retry")}</button>
+              </div>
+            )}
+
+            {capturedShots.length > 0 && (
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {t("captured_pages", "Captured pages")} ({capturedShots.length})
+                </span>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  {capturedShots.map((src, i) => (
+                    <div key={i} className="relative h-16 w-12 rounded-md overflow-hidden border border-slate-300 dark:border-slate-600">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`page ${i + 1}`} className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCapturedShots((p) => p.filter((_, idx) => idx !== i))}
+                        className="absolute top-0 right-0 bg-red-600 text-white h-4 w-4 flex items-center justify-center text-[10px] leading-none"
+                        aria-label={t("remove", "Remove")}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {scanStatus && (
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800 space-y-1.5">
-                <div className="flex items-center gap-2 font-bold">
-                  <RefreshCw className="h-4 w-4 animate-spin text-emerald-600" />
-                  {scanStatus}
-                </div>
-                <div className="w-full bg-emerald-200 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-emerald-600 h-full w-2/3 animate-pulse rounded-full" />
-                </div>
+              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 p-2.5 text-emerald-800 dark:text-emerald-300 flex items-center gap-2 font-bold text-[11px]">
+                <RefreshCw className="h-4 w-4 animate-spin" /> {scanStatus}
               </div>
             )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setIsScannerOpen(false)}
-              disabled={!!scanStatus}
-              className="rounded-xl text-xs"
-            >
+            <Button variant="outline" onClick={() => setIsScannerOpen(false)} disabled={!!scanStatus} className="rounded-xl text-xs">
               {t("cancel", "Cancel")}
             </Button>
             <Button
-              onClick={handleDirectScanExecute}
-              disabled={!!scanStatus}
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+              type="button"
+              variant="outline"
+              onClick={captureShot}
+              disabled={!cameraReady || !!scanStatus}
+              className="rounded-xl text-xs font-bold"
             >
               <Camera className="h-3.5 w-3.5 mr-1" />
-              {scanStatus ? t("scanning", "Scanning...") : t("start_scan", "Start Direct Scan")}
+              {t("capture_page", "Capture Page")}
+            </Button>
+            <Button
+              onClick={handleSaveCapturedScan}
+              disabled={capturedShots.length === 0 || !!scanStatus}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+            >
+              {t("save_scan", "Save")} ({capturedShots.length})
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2327,38 +2443,107 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
               </div>
 
               {previewDoc.document_path && (
-                <div className="rounded-xl bg-slate-100/70 p-2 text-[11px] font-mono text-slate-600 truncate">
+                <div className="rounded-xl bg-slate-100/70 dark:bg-slate-800 p-2 text-[11px] font-mono text-slate-600 dark:text-slate-300 truncate">
                   📂 {previewDoc.document_path}
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                {previewDoc.file_url && (
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(previewDoc.file_url, "_blank")}
-                    className="rounded-xl text-xs font-bold gap-1"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    {t("open_fullscreen", "Open Full Screen")}
-                  </Button>
-                )}
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">{th("Version")}</span>
+                  <p className="font-bold font-mono text-slate-800 dark:text-slate-200">v{(previewDoc as any).version ?? 1}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">{th("Checksum")}</span>
+                  <p className="font-mono text-slate-600 dark:text-slate-300 truncate">{((previewDoc as any).checksum_sha256 || "—").slice(0, 16)}</p>
+                </div>
+              </div>
 
-                {previewDoc.file_url && (
-                  <a
-                    href={previewDoc.file_url}
-                    download={previewDoc.file_name}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    {t("download", "Download")}
-                  </a>
-                )}
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => openAuditHistory(previewDoc)}
+                  className="rounded-xl text-xs font-bold gap-1"
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                  {t("history", "History")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setVersioningDoc(previewDoc); versionInputRef.current?.click(); }}
+                  className="rounded-xl text-xs font-bold gap-1"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {t("new_version", "New Version")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handlePreviewDoc(previewDoc)}
+                  className="rounded-xl text-xs font-bold gap-1"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {t("open_fullscreen", "Open Full Screen")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadDoc(previewDoc)}
+                  className="inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t("download", "Download")}
+                </button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden input for "New Version" upload */}
+      <input
+        type="file"
+        ref={versionInputRef}
+        onChange={handleUploadNewVersion}
+        className="hidden"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+      />
+
+      {/* ── Audit History Modal ── */}
+      <Dialog open={!!auditDoc} onOpenChange={(open) => !open && setAuditDoc(null)}>
+        <DialogContent className="max-w-2xl rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
+              <Activity className="h-5 w-5 text-indigo-600" />
+              {t("audit_history", "Audit History")} — <span className="font-mono text-xs truncate">{auditDoc?.file_name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto py-2">
+            {auditLoading ? (
+              <div className="flex items-center justify-center gap-2 py-8 text-xs text-slate-500">
+                <RefreshCw className="h-4 w-4 animate-spin" /> {t("loading", "Loading…")}
+              </div>
+            ) : auditEvents.length === 0 ? (
+              <p className="py-8 text-center text-xs text-slate-400">{t("no_audit", "No audit events recorded for this document.")}</p>
+            ) : (
+              <ol className="relative border-s border-slate-200 dark:border-slate-700 ms-3 space-y-4">
+                {auditEvents.map((ev) => (
+                  <li key={ev.id} className="ms-4">
+                    <span className="absolute -start-1.5 mt-1 h-3 w-3 rounded-full bg-indigo-500 border border-white dark:border-slate-900" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-black text-slate-800 dark:text-slate-200">{th(ev.action.replace("office_document.", "").toUpperCase())}</span>
+                      <span className="text-[10px] text-slate-400">{new Date(ev.created_at).toLocaleString(lang)}</span>
+                      {ev.actor_name && <span className="text-[10px] text-slate-500 font-semibold">· {ev.actor_name}</span>}
+                      {ev.ip_address && <span className="text-[10px] font-mono text-slate-400">· {ev.ip_address}</span>}
+                    </div>
+                    {(ev.before || ev.after) && (
+                      <pre className="mt-1 text-[10px] bg-slate-50 dark:bg-slate-800 rounded-lg p-2 overflow-x-auto text-slate-600 dark:text-slate-300 max-h-40">
+                        {JSON.stringify(ev.after ?? ev.before, null, 2)}
+                      </pre>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

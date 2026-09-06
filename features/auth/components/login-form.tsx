@@ -334,7 +334,7 @@ export function LoginForm({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full rounded-[2rem] border border-slate-200/80 bg-white/95 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-sm sm:p-6 dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-black/20">
       {/* ── Server Connection Status Badge ── */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3 py-2 text-[11px] font-bold">
         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">

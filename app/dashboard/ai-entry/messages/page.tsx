@@ -15,8 +15,8 @@ type Message = {
   language: SupportedLanguage;
 };
 
-export default function AIMessagesPage({ lang: initialLang }: { lang?: SupportedLanguage }) {
-  const s = useErpScreen("ait", initialLang);
+export default function AIMessagesPage() {
+  const s = useErpScreen("ait");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

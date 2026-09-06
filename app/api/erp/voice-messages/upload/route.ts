@@ -3,8 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { guardIntake } from "@/lib/services/document-intake-api";
 import { aiVoiceTextEntryService } from "@/lib/services/ai-voice-text-entry";
-import { queueTranscription } from "@/lib/services/transcription-service";
-import crypto from "node:crypto";
+import { maybeServerTranscribe } from "@/lib/services/transcription-service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,38 +25,35 @@ const uploadSchema = z.object({
 /**
  * POST /api/erp/voice-messages/upload
  *
- * Submit a voice message or text instruction for AI processing.
- * - Voice: multipart file + transcript
- * - Text: freeform text instruction
+ * Submit a voice message or typed instruction for AI processing.
+ * - Voice: multipart { audio, transcript (from browser Web Speech API), durationSeconds, ... }
+ * - Text:  JSON { transcript, ... }
  *
- * Returns: { jobId, jobNo, status }
+ * The browser performs speech-to-text (Web Speech API) and sends the transcript.
+ * If a server transcription provider is configured (OPENAI_API_KEY /
+ * SPEECH_TO_TEXT_PROVIDER) it re-transcribes for higher accuracy; otherwise the
+ * browser transcript stands. No mock transcription is ever used here.
  */
 export async function POST(request: NextRequest) {
   try {
     const { scope, session } = await guardIntake("write");
 
-    // Parse form data (for file) or JSON (for text-only)
     const contentType = request.headers.get("content-type") || "";
     let input: z.infer<typeof uploadSchema>;
     let audioBuffer: Buffer | undefined;
+    let audioMimeType: string | undefined;
     let audioDurationSeconds: number | undefined;
 
     if (contentType.includes("multipart/form-data")) {
-      // Voice message with audio file
       const formData = await request.formData();
-
-      const sourceType = formData.get("sourceType") as string;
-      const transcript = formData.get("transcript") as string;
-      const originalLanguage = formData.get("originalLanguage") as string;
-      const operationalDomain = formData.get("operationalDomain") as string;
-      const audioFile = formData.get("audio") as File | null;
-      const duration = formData.get("durationSeconds") as string;
+      const audioFile = formData.get("audio");
+      const duration = formData.get("durationSeconds");
 
       input = uploadSchema.parse({
-        sourceType,
-        transcript,
-        originalLanguage,
-        operationalDomain,
+        sourceType: formData.get("sourceType"),
+        transcript: formData.get("transcript"),
+        originalLanguage: formData.get("originalLanguage"),
+        operationalDomain: formData.get("operationalDomain"),
         countryId: formData.get("countryId") || undefined,
         countryBranchId: formData.get("countryBranchId") || undefined,
         cityBranchId: formData.get("cityBranchId") || undefined,
@@ -66,18 +62,18 @@ export async function POST(request: NextRequest) {
         idempotencyKey: formData.get("idempotencyKey") || undefined,
       });
 
-      if (!audioFile) {
-        return apiOk({ error: "Audio file is required for voice messages" }, { status: 400 });
+      if (input.sourceType === "voice") {
+        if (!(audioFile instanceof File)) {
+          return apiOk({ error: "Audio file is required for voice messages" }, { status: 400 });
+        }
+        audioBuffer = Buffer.from(await audioFile.arrayBuffer());
+        audioMimeType = audioFile.type || "audio/webm";
+        audioDurationSeconds = duration ? parseInt(String(duration), 10) : undefined;
       }
-
-      audioBuffer = Buffer.from(await audioFile.arrayBuffer());
-      audioDurationSeconds = duration ? parseInt(duration) : undefined;
     } else {
-      // Text instruction (JSON body)
       input = uploadSchema.parse(await request.json());
     }
 
-    // Submit to AI service
     const result = await aiVoiceTextEntryService.submitVoiceTextInput(
       {
         sourceType: input.sourceType,
@@ -85,39 +81,43 @@ export async function POST(request: NextRequest) {
         operationalDomain: input.operationalDomain,
         transcript: input.transcript,
         audioBuffer,
+        audioMimeType,
         audioDurationSeconds,
         countryId: input.countryId,
         countryBranchId: input.countryBranchId,
         cityBranchId: input.cityBranchId,
         clearingAgentId: input.clearingAgentId,
-        companyId: (session as any)?.companyId,
+        companyId: (session as { companyId?: string }).companyId,
         sourceModuleHint: input.sourceModuleHint,
         idempotencyKey: input.idempotencyKey,
       },
       session.userId,
-      (session as any)?.userName || null,
+      (session as { userName?: string }).userName || null,
       scope,
     );
 
-    // Queue transcription (if voice)
-    if (input.sourceType === "voice" && result) {
-      await queueTranscription(
-        result.jobId,
-        `voice/${result.jobNo}/${crypto.randomBytes(8).toString("hex")}.webm`,
-        input.originalLanguage,
-        "audio/webm",
-      );
+    if (!result) {
+      return apiOk({ error: "Failed to create AI intake job" }, { status: 500 });
     }
 
-    if (!result) {
-      return apiOk({ error: "Failed to create document intake job" }, { status: 500 });
+    // Optional server-side re-transcription for accuracy — only runs when a real
+    // provider is configured. Never blocks; never fabricates.
+    let serverTranscript: string | null = null;
+    if (input.sourceType === "voice" && audioBuffer && result.audioStorageKey) {
+      serverTranscript = await maybeServerTranscribe({
+        jobId: result.jobId,
+        audioBuffer,
+        originalLanguage: input.originalLanguage,
+      }).catch(() => null);
     }
 
     return apiOk({
       jobId: result.jobId,
       jobNo: result.jobNo,
       status: "submitted",
-      nextStep: input.sourceType === "voice" ? "transcribing" : "intent_analysis",
+      transcript: serverTranscript || input.transcript,
+      transcriptSource: serverTranscript ? "server" : "browser",
+      nextStep: "intent_analysis",
     });
   } catch (error) {
     return handleApiError(error);

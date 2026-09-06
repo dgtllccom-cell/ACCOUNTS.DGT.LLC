@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize } from "@/lib/permissions/middleware";
+import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -19,16 +19,44 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorize(session, { resource: "reports", action: "read" });
 
+    const reportScope = resolveReportScope(session);
+    const { searchParams } = request.nextUrl;
+    const { effectiveCountryId, effectiveBranchId } = enforceScopeFilters(
+      reportScope,
+      searchParams.get("countryId") && searchParams.get("countryId") !== "all" ? searchParams.get("countryId") : null,
+      searchParams.get("branchId") && searchParams.get("branchId") !== "all" ? searchParams.get("branchId") : null
+    );
+
     const admin = createSupabaseAdminClient();
 
-    // 1. Get all branches (country_branches) with their country
-    const { data: branches, error: brErr } = await admin
+    // 1. Get branches (country_branches) scoped to user permissions
+    let branchQuery = admin
       .from("country_branches")
       .select("id, name, code, country_id, countries!country_branches_country_id_fkey(name)")
       .is("deleted_at", null)
       .order("name");
 
+    if (effectiveCountryId) {
+      branchQuery = branchQuery.eq("country_id", effectiveCountryId);
+    }
+    if (effectiveBranchId) {
+      branchQuery = branchQuery.eq("id", effectiveBranchId);
+    }
+
+    const { data: branches, error: brErr } = await branchQuery;
     if (brErr) throw brErr;
+
+    // Helper to conditionally apply scope to Supabase queries
+    function applyScope(query: any, branchField = "country_branch_id") {
+      let q = query;
+      if (effectiveCountryId) {
+        q = q.eq("country_id", effectiveCountryId);
+      }
+      if (effectiveBranchId) {
+        q = q.eq(branchField, effectiveBranchId);
+      }
+      return q;
+    }
 
     // 2. Parallel queries for all module counts
     const [
@@ -41,46 +69,60 @@ export async function GET(request: NextRequest) {
       shippingRows,
     ] = await Promise.all([
       // Purchase Orders
-      admin
-        .from("purchase_orders")
-        .select("id, country_branch_id, country_id, status, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        admin
+          .from("purchase_orders")
+          .select("id, country_branch_id, country_id, status, created_at")
+          .is("deleted_at", null)
+      ),
 
       // Sales Orders
-      admin
-        .from("sales_orders")
-        .select("id, country_branch_id, country_id, sales_status, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        admin
+          .from("sales_orders")
+          .select("id, country_branch_id, country_id, sales_status, created_at")
+          .is("deleted_at", null)
+      ),
 
       // Roznamcha Entries (cash entries, payments, journal entries)
-      admin
-        .from("roznamcha_entries")
-        .select("id, country_branch_id, city_branch_id, country_id, type, status, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        admin
+          .from("roznamcha_entries")
+          .select("id, country_branch_id, city_branch_id, country_id, type, status, created_at")
+          .is("deleted_at", null)
+      ),
 
       // Ledgers
-      admin
-        .from("ledgers")
-        .select("id, country_branch_id, country_id, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        admin
+          .from("ledgers")
+          .select("id, country_branch_id, country_id, created_at")
+          .is("deleted_at", null)
+      ),
 
       // Loading Records
-      (admin as any)
-        .from("purchase_loading_records")
-        .select("id, country_branch_id, country_id, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        (admin as any)
+          .from("purchase_loading_records")
+          .select("id, country_branch_id, country_id, created_at")
+          .is("deleted_at", null)
+      ),
 
       // Enterprise Accounts
-      admin
-        .from("enterprise_accounts")
-        .select("id, country_branch_id, country_id, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        admin
+          .from("enterprise_accounts")
+          .select("id, country_branch_id, country_id, created_at")
+          .is("deleted_at", null)
+      ),
 
       // Shipping Line Records
-      (admin as any)
-        .from("shipping_line_records")
-        .select("id, country_branch_id, country_id, created_at")
-        .is("deleted_at", null),
+      applyScope(
+        (admin as any)
+          .from("shipping_line_records")
+          .select("id, country_branch_id, country_id, created_at")
+          .is("deleted_at", null)
+      ),
     ]);
 
     const purchases = purchaseRows.data ?? [];

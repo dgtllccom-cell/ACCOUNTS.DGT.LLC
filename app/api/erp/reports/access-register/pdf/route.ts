@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
+import { requireErpSession } from "@/lib/auth/session";
+import { authorize } from "@/lib/permissions/middleware";
 import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorize(session, { resource: "reports", action: "read" });
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ error: "Super Admin access required for Access Register PDF" }, { status: 403 });
+    }
     const COUNTRY_BRANCH_ACCESS_REGISTER = await getAccessRegisterData();
     const candidatePaths = [
       path.join(process.cwd(), "public", "reports", "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf"),
