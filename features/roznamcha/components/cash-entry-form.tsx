@@ -49,6 +49,7 @@ import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
@@ -405,6 +406,37 @@ export function CashEntryForm({
   } | null>(null);
 
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
+
+  // ── AI Document Intake → Cash Entry bridge ──
+  // When the reviewer chose "Continue Saved Draft" for a roznamcha document, the
+  // reviewed values arrive here. We prefill only the safe scalar fields; the
+  // human still picks the counter ledger and confirms before the form's own
+  // save posts the balanced DR/CR through /api/erp/roznamcha. AI never posts.
+  const intakeDraft = useIntakeDraft("roznamcha_entries");
+  const [intakeApplied, setIntakeApplied] = useState(false);
+  const [intakeBannerDismissed, setIntakeBannerDismissed] = useState(false);
+  const intakeSuggestedParty = (intakeDraft.payload?.counterpartyName as string) || null;
+
+  useEffect(() => {
+    if (!intakeDraft.draft || intakeApplied) return;
+    const p = intakeDraft.payload || {};
+    if (p.finalAmount != null && p.finalAmount !== "") setCalcAmount(String(p.finalAmount));
+    if (typeof p.originalCurrency === "string" && p.originalCurrency) setCurrency(String(p.originalCurrency).toUpperCase());
+    if (p.exchangeRate != null && Number(p.exchangeRate) > 0) setExchangeRate(String(p.exchangeRate));
+    if (typeof p.entryDate === "string" && /^\d{4}-\d{2}-\d{2}/.test(p.entryDate)) setEntryDate(p.entryDate.slice(0, 10));
+    const ref = (p.billNumber || p.manualBillNumber || p.sourceReference) as string | undefined;
+    if (ref) setReferenceNo(String(ref));
+    const narrationBits = [
+      p.counterpartyName ? `Party: ${p.counterpartyName}` : null,
+      ref ? `Ref: ${ref}` : null,
+      intakeDraft.draftNo ? `(from document ${intakeDraft.draftNo})` : null,
+    ].filter(Boolean);
+    if (narrationBits.length) setNarration((prev) => prev || narrationBits.join(" · "));
+    // direction: "debit" (cash received) → Receipt = DEBIT ; "credit" (cash paid) → Payment = CREDIT
+    if (p.transactionType === "debit") setPaymentMode("DEBIT");
+    else if (p.transactionType === "credit") setPaymentMode("CREDIT");
+    setIntakeApplied(true);
+  }, [intakeDraft.draft, intakeDraft.payload, intakeDraft.draftNo, intakeApplied]);
 
   // Branch-wise cash summary (Total Credit / Debit / Balance / Entry count) for the
   // selected country + branch + date. Sourced from the DB function get_branch_cash_summary
@@ -1974,6 +2006,13 @@ export function CashEntryForm({
         })
       );
       onSaved?.(res.entryId ?? null);
+      // Link the AI intake document to the real roznamcha entry it produced
+      // (job → 'linked', draft → 'consumed'). Never fails the user's save.
+      if (intakeDraft.draft && res.entryId) {
+        void intakeDraft.consume(res.entryId);
+        setIntakeApplied(false);
+        setIntakeBannerDismissed(true);
+      }
       fetchRecentEntries();
       fetchCashSummary();
       // Auto-clear form fields for next entry and close modal
@@ -2543,11 +2582,38 @@ export function CashEntryForm({
         </div>
 
       <div className="space-y-4 px-4 pb-4">
+        {intakeDraft.draft && !intakeBannerDismissed ? (
+          <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-xs dark:border-violet-800 dark:bg-violet-950/20">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="font-bold text-violet-900 dark:text-violet-300">
+                  {t(lang, "roz.cef_intake_banner_title", "Prefilled from reviewed document")} {intakeDraft.draftNo ? `· ${intakeDraft.draftNo}` : ""}
+                </p>
+                <p className="text-violet-700 dark:text-violet-400">
+                  {t(lang, "roz.cef_intake_banner_body", "Amount, currency, date and reference were carried over from the AI document review. Verify every field and choose the counter ledger before saving — nothing posts until you confirm.")}
+                </p>
+                {intakeSuggestedParty ? (
+                  <p className="font-semibold text-violet-800 dark:text-violet-300">
+                    {t(lang, "roz.cef_intake_suggested_party", "Suggested party")}: {intakeSuggestedParty}
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIntakeBannerDismissed(true)}
+                className="shrink-0 rounded p-1 text-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900"
+                aria-label={t(lang, "roz.cef_dismiss", "Dismiss")}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        ) : null}
         {message ? (
           <div className={cn(
             "rounded-lg border px-4 py-2.5 text-xs font-semibold flex items-center gap-2",
-            message.toLowerCase().includes("fail") || message.toLowerCase().includes("error") 
-              ? "border-rose-200 bg-rose-50 text-rose-900 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400" 
+            message.toLowerCase().includes("fail") || message.toLowerCase().includes("error")
+              ? "border-rose-200 bg-rose-50 text-rose-900 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
               : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400"
           )}>
             <CheckCircle className={cn(

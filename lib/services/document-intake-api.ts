@@ -1,6 +1,7 @@
-import { requireErpSession } from "@/lib/auth/session";
+import { getCurrentErpSession } from "@/lib/auth/session";
 import type { ErpSession } from "@/lib/auth/session";
 import { ErpPermissionError } from "@/lib/permissions/middleware";
+import { ApiClientError } from "@/lib/api/response";
 import { intakeScopeFromSession, type IntakeScope, type OperationalDomain } from "@/lib/document-intelligence/scope";
 
 /**
@@ -24,7 +25,10 @@ export async function guardIntake(
   action: "read" | "write",
   domain?: OperationalDomain | null,
 ): Promise<{ session: ErpSession; scope: IntakeScope }> {
-  const session = await requireErpSession();
+  const session = await getCurrentErpSession();
+  if (!session) {
+    throw new ApiClientError("Authentication is required. Please log in.", { status: 401, code: "UNAUTHORIZED" });
+  }
   if (action === "write") {
     const roles: string[] = session.roles ?? [];
     if (!session.isSuperAdmin && !roles.some((r) => WRITE_ROLES.has(r))) {

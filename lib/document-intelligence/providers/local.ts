@@ -101,9 +101,9 @@ async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: 
       const embedded = embeddedByPage.get(pageNo);
       let imgBuf = embedded?.buf ?? null;
       // A large embedded image comes straight from a scanner app that already
-      // binarised / de-skewed it — OCR it as-is and only fall back to our own
-      // preprocessing if that comes back sparse.
-      const preferRaw = Boolean(embedded && embedded.width >= 1500);
+      // binarised / de-skewed it — OCR it as-is only if within optimal width (1500-2200px).
+      // Oversized canvas/scans (>2200px) must pass through preprocessImage to be resized.
+      const preferRaw = Boolean(embedded && embedded.width >= 1500 && embedded.width <= 2200);
       if (!imgBuf) {
         try {
           const shot: any = await (parser as any).getScreenshot({ pages: [pageNo], scale: 3.0 });
@@ -147,8 +147,12 @@ async function preprocessImage(buffer: Buffer, mime: string): Promise<Buffer> {
     const sharp = (await import("sharp")).default;
     let img = sharp(buffer, { failOn: "none" }).rotate(); // auto-orient from EXIF
     const meta = await img.metadata();
-    // Upscale genuinely small captures; never downscale a good scan.
-    if ((meta.width ?? 0) < 1600) img = img.resize({ width: 2000, withoutEnlargement: false });
+    // Upscale genuinely small captures; downscale oversized captures to optimal 1800px.
+    if ((meta.width ?? 0) < 1600) {
+      img = img.resize({ width: 2000, withoutEnlargement: false });
+    } else if ((meta.width ?? 0) > 2200) {
+      img = img.resize({ width: 1800, withoutEnlargement: true });
+    }
     // Grayscale + gentle contrast only. `sharpen()` / heavy `normalise()` on a
     // photo-scanned document eats thin strokes and can leave OCR with nothing but
     // crisp overlaid watermarks — see the CamScanner proforma-invoice UAT.

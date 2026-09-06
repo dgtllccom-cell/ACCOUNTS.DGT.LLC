@@ -42,6 +42,11 @@ export async function POST(request: NextRequest) {
     const file = form.get("file");
     if (!(file instanceof File)) return apiError("VALIDATION", "Missing 'file' part.", 400);
 
+    const MAX_EXTRACT_BYTES = 100 * 1024 * 1024; // 100 MB
+    if (file.size > MAX_EXTRACT_BYTES) {
+      return apiError("PAYLOAD_TOO_LARGE", `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the 100 MB limit.`, 413);
+    }
+
     const rawMeta: Record<string, unknown> = {};
     for (const [k, v] of form.entries()) if (k !== "file" && typeof v === "string" && v !== "") rawMeta[k] = v;
     const meta = metaSchema.parse(rawMeta);

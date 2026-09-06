@@ -156,6 +156,19 @@ export function BulkAccountImport({
     setStatus("extracting");
     setFileName(file.name);
 
+    // Client-side file size check (100MB limit)
+    const MAX_MB = 100;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(
+        s.t(
+          "err_file_size",
+          `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the ${MAX_MB} MB limit. Please upload a smaller file or export as CSV.`
+        )
+      );
+      setStatus("error");
+      return;
+    }
+
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -164,8 +177,30 @@ export function BulkAccountImport({
       if (branchKind === "main" && branchId) fd.append("countryBranchId", branchId);
       if (branchKind === "city" && branchId) fd.append("cityBranchId", branchId);
 
-      const res = await fetch("/api/erp/document-intelligence/extract", { method: "POST", body: fd });
-      const json = await res.json();
+      const res = await fetch("/api/erp/document-intelligence/extract", {
+        method: "POST",
+        body: fd,
+        credentials: "same-origin",
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      let json: any = null;
+      if (contentType.includes("application/json")) {
+        json = await res.json();
+      } else {
+        const text = await res.text().catch(() => "");
+        if (res.status === 413) {
+          throw new Error(s.t("err_413", "The file is too large for the server. Please export as CSV / Excel or use a smaller PDF."));
+        }
+        if (res.status === 401 || res.status === 403 || text.includes("/auth/login")) {
+          throw new Error(s.t("err_auth", "Your session has expired. Please refresh the page and log in again."));
+        }
+        if (res.status === 504 || res.status === 502) {
+          throw new Error(s.t("err_timeout", "Document processing timed out on the server. For large datasets, please export as CSV / Excel."));
+        }
+        throw new Error(s.t("err_extract", "Server returned an unexpected response. Please try again or use a CSV file."));
+      }
+
       if (!res.ok || json?.error) {
         throw new Error(json?.error?.message || json?.error || s.t("err_extract", "Could not extract accounts from the document."));
       }
@@ -210,6 +245,7 @@ export function BulkAccountImport({
       const res = await fetch("/api/erp/accounting/accounts/bulk-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           scope: scopeLevel,
           countryId: scopeLevel === "super_admin" ? null : countryId || null,
@@ -223,7 +259,13 @@ export function BulkAccountImport({
           })),
         }),
       });
-      const json = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      let json: any = null;
+      if (contentType.includes("application/json")) {
+        json = await res.json();
+      } else {
+        throw new Error(s.t("err_create", "Could not create accounts due to unexpected server response."));
+      }
       if (!res.ok || json?.error) throw new Error(json?.error?.message || json?.error || s.t("err_create", "Could not create accounts."));
       const data = json.data ?? json;
       setResult({ created: data.createdCount ?? 0, skipped: data.skippedCount ?? 0, failed: data.failedCount ?? 0 });

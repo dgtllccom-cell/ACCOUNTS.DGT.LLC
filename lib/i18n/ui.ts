@@ -24083,6 +24083,10 @@ const en: Dict = {
   "ait.mic_error": "Could not access the microphone: ",
   "ait.stt_error": "Speech recognition error: ",
   "ait.submit_failed": "Submission failed.",
+  "roz.cef_intake_banner_title": "Prefilled from reviewed document",
+  "roz.cef_intake_banner_body": "Amount, currency, date and reference were carried over from the AI document review. Verify every field and choose the counter ledger before saving — nothing posts until you confirm.",
+  "roz.cef_intake_suggested_party": "Suggested party",
+  "roz.cef_dismiss": "Dismiss",
 };
 
 const ur: Dict = {
@@ -41086,6 +41090,10 @@ const ur: Dict = {
   "ait.mic_error": "مائیکروفون تک رسائی نہیں ہو سکی: ",
   "ait.stt_error": "تقریر شناخت میں خرابی: ",
   "ait.submit_failed": "جمع کرانے میں ناکامی۔",
+  "roz.cef_intake_banner_title": "جائزہ شدہ دستاویز سے پہلے سے بھرا گیا",
+  "roz.cef_intake_banner_body": "رقم، کرنسی، تاریخ اور حوالہ AI دستاویز جائزے سے منتقل کیے گئے۔ محفوظ کرنے سے پہلے ہر فیلڈ کی تصدیق کریں اور مقابل لیجر منتخب کریں — تصدیق تک کچھ پوسٹ نہیں ہوگا۔",
+  "roz.cef_intake_suggested_party": "تجویز کردہ فریق",
+  "roz.cef_dismiss": "بند کریں",
 };
 
 const ar: Dict = {
@@ -58091,6 +58099,10 @@ const ar: Dict = {
   "ait.mic_error": "تعذّر الوصول إلى الميكروفون: ",
   "ait.stt_error": "خطأ في التعرف على الكلام: ",
   "ait.submit_failed": "فشل الإرسال.",
+  "roz.cef_intake_banner_title": "معبأ مسبقًا من مستند تمت مراجعته",
+  "roz.cef_intake_banner_body": "تم نقل المبلغ والعملة والتاريخ والمرجع من مراجعة مستند الذكاء الاصطناعي. تحقق من كل حقل واختر دفتر الأستاذ المقابل قبل الحفظ — لا يُرحَّل شيء حتى تؤكد.",
+  "roz.cef_intake_suggested_party": "الطرف المقترح",
+  "roz.cef_dismiss": "إغلاق",
 };
 
 const fa: Dict = {
@@ -75095,6 +75107,10 @@ const fa: Dict = {
   "ait.mic_error": "دسترسی به میکروفون ممکن نشد: ",
   "ait.stt_error": "خطای تشخیص گفتار: ",
   "ait.submit_failed": "ارسال ناموفق بود.",
+  "roz.cef_intake_banner_title": "از سند بازبینی‌شده پیش‌پر شده",
+  "roz.cef_intake_banner_body": "مبلغ، ارز، تاریخ و مرجع از بازبینی سند هوش مصنوعی منتقل شد. پیش از ذخیره هر فیلد را بررسی و دفتر مقابل را انتخاب کنید — تا تأیید شما چیزی ثبت نمی‌شود.",
+  "roz.cef_intake_suggested_party": "طرف پیشنهادی",
+  "roz.cef_dismiss": "بستن",
 };
 
 const ps: Dict = {
@@ -92105,6 +92121,10 @@ const ps: Dict = {
   "ait.mic_error": "مایکروفون ته لاسرسی ونشو: ",
   "ait.stt_error": "د وینا پیژندنې تېروتنه: ",
   "ait.submit_failed": "سپارل ناکام شو.",
+  "roz.cef_intake_banner_title": "د بیاکتل شوي سند څخه دمخه ډک شوی",
+  "roz.cef_intake_banner_body": "اندازه، اسعار، نېټه او حواله د AI سند بیاکتنې څخه راوړل شوي. د خوندي کولو مخکې هره ساحه تایید کړئ او مقابل لیجر وټاکئ — تر ستاسو تایید پورې هیڅ نه ثبتیږي.",
+  "roz.cef_intake_suggested_party": "وړاندیز شوې خوا",
+  "roz.cef_dismiss": "بندول",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

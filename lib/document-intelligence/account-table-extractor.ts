@@ -59,11 +59,13 @@ const nullIfEmpty = (s: string): string | null => (s && s.length ? s : null);
 /** map a header cell to our canonical field key */
 function headerToKey(h: string): keyof ExtractedAccountRow | null {
   const t = h.toLowerCase().replace(/[^a-z\s/]/g, "").trim();
+  if (/\b(status)\b/.test(t)) return null;
+  if (/\b(super\s*admin|country\s*serial|branch\s*serial)\b/.test(t)) return null;
   if (/\b(a\/c\s*code|acc(?:ount)?\s*code|gl\s*code|ledger\s*code|^code$|account\s*(?:no|number))\b/.test(t)) return "accountCode";
-  if (/\b(account\s*(?:name|title)|^name$|^title$|khaata\s*name)\b/.test(t)) return "accountName";
-  if (/\b(category|type|class(?:ification)?|group)\b/.test(t)) return "category";
-  if (/\b(branch|division|office|location)\b/.test(t)) return "branch";
-  if (/\b(company(?:\s*name)?|parent\s*company)\b/.test(t)) return "companyName";
+  if (/\b(account\s*(?:name|title)|^name$|^title$|khaata\s*name|customer\s*(?:name)?\s*\/\s*account|customer\s*\/\s*account|party\s*name)\b/.test(t)) return "accountName";
+  if (/\b(category|account\s*type|type|class(?:ification)?|group)\b/.test(t)) return "category";
+  if (/\b(branch\s*name|branch|division|office|location)\b/.test(t)) return "branch";
+  if (/\b(company\s*name|parent\s*company)\b/.test(t) || (/company/.test(t) && !/status/.test(t))) return "companyName";
   if (/\b(business(?:\s*name)?|firm|trade\s*name)\b/.test(t)) return "businessName";
   if (/\b(city|town)\b/.test(t)) return "city";
   if (/\b(address|addr)\b/.test(t)) return "address";

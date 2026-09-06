@@ -123,9 +123,9 @@ export function PdfPreviewModal() {
           const opt = {
             margin: 10,
             filename: filename,
-            image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { orientation: "portrait", unit: "mm", format: "a4" }
+            image: { type: "jpeg", quality: 0.85 },
+            html2canvas: { scale: 1.5, useCORS: true, logging: false },
+            jsPDF: { orientation: "portrait", unit: "mm", format: "a4", compress: true }
           };
 
           // Generate PDF and download automatically
