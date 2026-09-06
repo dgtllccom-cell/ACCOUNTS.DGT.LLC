@@ -313,22 +313,22 @@ export function PdfPreviewModal() {
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="fixed inset-0 z-[9999] flex flex-col bg-[#1e293b] text-slate-100 font-sans">
-      {/* Top Navigation Bar */}
-      <div className="h-14 bg-[#0f172a] border-b border-slate-700 flex items-center justify-between px-4">
+      {/* Top Navigation Bar — wraps on narrow screens so the Download action is never clipped */}
+      <div className="min-h-14 shrink-0 bg-[#0f172a] border-b border-slate-700 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 py-1.5 sm:px-4 overflow-x-auto">
 
         {/* Left: Brand & Menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white" onClick={closePrint} title={tt("common.close", "Close")}>
             <X className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2 text-white font-semibold">
-            <Menu className="w-5 h-5 text-slate-400" />
-            <span className="hidden sm:inline">{title || tt("pdfprev.doc_title_fallback", "Document")}</span>
+            <Menu className="hidden w-5 h-5 text-slate-400 sm:inline" />
+            <span className="hidden md:inline">{title || tt("pdfprev.doc_title_fallback", "Document")}</span>
           </div>
         </div>
 
         {/* Center: Controls */}
-        <div className="flex items-center gap-2 sm:gap-4 bg-[#1e293b] p-1.5 rounded-lg border border-slate-700">
+        <div className="flex items-center gap-2 sm:gap-4 bg-[#1e293b] p-1.5 rounded-lg border border-slate-700 shrink-0">
           <button
             onClick={() => {
               const next = orientation === "portrait" ? "landscape" : "portrait";
@@ -352,22 +352,22 @@ export function PdfPreviewModal() {
             </select>
           )}
 
-          <div className="text-xs font-medium text-slate-300 px-2 border-x border-slate-700">
+          <div className="hidden text-xs font-medium text-slate-300 px-2 border-x border-slate-700 sm:block">
             {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(pages.length))}
           </div>
 
-          <span className="text-[11px] font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 select-none">
+          <span className="hidden text-[11px] font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 select-none sm:inline">
             A4
           </span>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-green-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareWhatsApp} title={tt("pdfprev.share_whatsapp", "Share via WhatsApp")}>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button variant="ghost" size="sm" className="hidden text-slate-300 hover:text-green-400 hover:bg-slate-800 gap-1 text-xs sm:inline-flex" onClick={handleShareWhatsApp} title={tt("pdfprev.share_whatsapp", "Share via WhatsApp")}>
             <Share2 className="w-3.5 h-3.5" />
             <span className="hidden md:inline">WhatsApp</span>
           </Button>
-          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-blue-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareEmail} title={tt("pdfprev.email_document", "Email Document")}>
+          <Button variant="ghost" size="sm" className="hidden text-slate-300 hover:text-blue-400 hover:bg-slate-800 gap-1 text-xs sm:inline-flex" onClick={handleShareEmail} title={tt("pdfprev.email_document", "Email Document")}>
             <Mail className="w-3.5 h-3.5" />
             <span className="hidden md:inline">{tt("pdfprev.email", "Email")}</span>
           </Button>
