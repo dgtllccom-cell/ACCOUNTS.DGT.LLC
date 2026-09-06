@@ -823,6 +823,34 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 {job.status === "review" ? (
                   <button type="button" disabled={busy} onClick={() => { const r = window.prompt(s.t("qvc_reason", "QVC reason:")); if (r) void act("qvc", r); }} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900"><ShieldAlert className="h-3.5 w-3.5" />{s.t("send_qvc", "Send to QVC")}</button>
                 ) : null}
+                {["review", "qvc", "draft_ready"].includes(job.status) ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={async () => {
+                      const note = window.prompt(s.t("submit_approval_note", "Note for the approver (optional):")) || undefined;
+                      setBusy(true);
+                      try {
+                        const r = await fetch("/api/erp/approvals/submit", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ jobId, submitterNotes: note }),
+                        });
+                        const j = await r.json().catch(() => ({}));
+                        if (!r.ok) throw new Error(j?.error?.message || j?.error || `HTTP ${r.status}`);
+                        setToast({ show: true, draftNo: j.data?.reused ? s.t("submit_approval_reused", "Already in the approval queue") : s.t("submit_approval_done", "Sent to the approval queue"), targetModule: "" });
+                        void load();
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : String(e));
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-violet-300 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300"
+                  >
+                    <ShieldAlert className="h-3.5 w-3.5" />{s.t("submit_for_approval", "Send for Approval")}
+                  </button>
+                ) : null}
                 {!["linked", "cancelled"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => { if (window.confirm(s.t("cancel_confirm", "Cancel this job?"))) void act("cancel"); }} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 dark:border-slate-700"><Ban className="h-3.5 w-3.5" /></button>
                 ) : null}
