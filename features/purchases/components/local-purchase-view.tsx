@@ -11,7 +11,7 @@ import {
   Pin, X, Layers, Tag, Globe, Pencil, ShieldAlert,
   CreditCard, Truck, Flag, UserCheck, ChevronDown,
   ArrowRight, ArrowLeft, Percent, Warehouse, MapPin, ListPlus,
-  Printer, Send, FileSpreadsheet, Eye, MoreVertical, Edit3
+  Printer, Send, FileSpreadsheet, Eye, MoreVertical, Edit3, Clock
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1360,83 +1360,241 @@ export function LocalPurchaseView({
         </div>
       </div>
 
-      {/* 5-Card Summary Report Header (Visible while creating/editing a purchase) */}
+      {/* Local Purchase Voucher Header & 4-Column Cards matching Screenshot 5 */}
       {isFormOpen && (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        {/* Card 1 */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
-            <Building2 className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_branch_details", "Branch Details")}</h4>
-          </div>
-          <div className="space-y-1 text-[9px]">
-            <div className="border-b border-slate-100 pb-1">
-              <span className="font-black text-blue-600 block truncate text-[11px]">{activeBranch?.name || ""}</span>
+        <div className="space-y-4">
+          {/* Breadcrumb & Top Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+              <span>{t(lang, "purchase.crumb_home", "Home")}</span>
+              <span>&gt;</span>
+              <span>{t(lang, "purchase.crumb_purchase", "Purchase")}</span>
+              <span>&gt;</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">{t(lang, "lp.crumb_local_purchase", "Local Purchase Booking")}</span>
             </div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono">{activeBranch?.code || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_user", "User:")}</span> <span className="font-black text-emerald-600 uppercase truncate">{session.fullName || session.email || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_country", "Country:")}</span> <span className="font-semibold text-slate-700 truncate">{activeBranch?.countryName || "—"}</span></div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsFormOpen(false)}
+                className="h-8 text-xs font-bold px-3.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg"
+              >
+                &larr; {t(lang, "lp.back_to_registry", "Back to Registry")}
+              </Button>
+            </div>
+          </div>
+
+          {/* Top Navy Voucher Banner */}
+          <div className="bg-[#0B1528] text-white rounded-xl p-4 md:px-6 md:py-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-base sm:text-lg font-black uppercase tracking-wider text-white">
+                  {t(lang, "lp.voucher_title", "Local Purchase Booking Voucher")}
+                </h1>
+                <p className="text-[11px] text-slate-300 font-medium">
+                  {t(lang, "purchase.voucher_subtitle", "Official Bill / Confirmation — document backing for Goods, Shipping & Payment")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
+              <div>
+                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "lp.serial_no", "Serial No")}</span>
+                <span className="font-mono font-black text-white">LP-{serialNo}</span>
+              </div>
+              <div>
+                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.booking_date_colon", "Booking Date:")}</span>
+                <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px]">
+                  {new Date().toISOString().slice(0, 10)}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.branch_word", "Branch")}</span>
+                <span className="font-bold text-white">{activeBranch?.name || "\u2014"}</span>
+              </div>
+              <div>
+                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.system_word", "System")}</span>
+                <span className="font-bold text-white">Global System</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 1: 4 Segmented Detail Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Card 1: Branch & User Information */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-5 rounded bg-blue-600 text-white text-[11px] font-black flex items-center justify-center">1</span>
+                  <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
+                    {t(lang, "purchase.branch_user_info_title", "Branch & User Information")}
+                  </h4>
+                </div>
+                <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  {t(lang, "purchase.active_word", "Active")}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.branch_name", "Branch Name")}</span>
+                  <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">{activeBranch?.name || "\u2014"}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.branch_code", "Branch Code")}</span>
+                  <span className="text-[11px] font-mono font-bold text-blue-600">{activeBranch?.code || "\u2014"}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.country", "Country")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{activeBranch?.countryName || "\u2014"}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.city", "City")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{activeBranch?.cityName || "\u2014"}</span>
+                </div>
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-slate-500 flex items-center gap-1 font-semibold">
+                      <User className="h-3 w-3 text-slate-400" /> {t(lang, "purchase.user_name", "User Name")}
+                    </span>
+                    <span className="text-[11px] font-bold uppercase text-slate-900 dark:text-slate-100 truncate max-w-[140px]">{session?.fullName || session?.email || "\u2014"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-slate-500 flex items-center gap-1 font-semibold">
+                      <Clock className="h-3 w-3 text-slate-400" /> {t(lang, "purchase.role_word", "Role")}
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{(session?.roles && session.roles[0]) || "Administrator"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Bill Details */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-5 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">2</span>
+                  <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
+                    {t(lang, "purchase.bill_details_title", "Bill Details")}
+                  </h4>
+                </div>
+                <span className="text-[9.5px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                  {t(lang, "purchase.draft_badge", "DRAFT")}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.booking_date", "Booking Date")}</span>
+                  <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{new Date().toISOString().slice(0, 10)}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.fiscal_year", "Fiscal Year")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{activeBranch?.fiscalYear || activeBranch?.fiscal_year || "2025-26"}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.booking_branch", "Booking Branch")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">{activeBranch?.name || "\u2014"}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.bill_contract_no", "Bill / Serial No.")}</span>
+                  <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100">LP-{serialNo}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.payment_type", "Payment Type")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{paymentMode}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.ship_type", "Ship Type")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{shipmentType}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.origin_country_lbl", "Origin Country")}</span>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{selectedOriginCountryName}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Purchase Account Details */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="h-5 w-5 rounded bg-purple-600 text-white text-[11px] font-black flex items-center justify-center">3</span>
+                  <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
+                    {t(lang, "purchase.purchase_account_details_title", "Purchase Account Details")}
+                  </h4>
+                </div>
+                <div className="space-y-1.5 text-xs mt-3">
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.account_name", "Account Name")}</span>
+                    <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">{selectedPurchaseAccount?.name || "\u2014"}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.account_code", "Account Code")}</span>
+                    <span className="text-[11px] font-mono font-bold text-blue-600">{selectedPurchaseAccount?.code || "\u2014"}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.currency", "Currency")}</span>
+                    <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200">{selectedPurchaseAccount?.currency || purchaseCurrency}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.country", "Country")}</span>
+                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{activeBranch?.countryName || "\u2014"}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.branch_word", "Branch")}</span>
+                    <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">{activeBranch?.name || "\u2014"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                <button type="button" onClick={() => setSelectedRowForVoucher(selectedPurchaseAccount)} className="text-[11px] font-bold text-slate-600 hover:text-blue-600 flex items-center justify-center gap-1 mx-auto">
+                  <Eye className="h-3.5 w-3.5" /> {t(lang, "purchase.view_account_details", "View Account Details")}
+                </button>
+              </div>
+            </div>
+
+            {/* Card 4: Sales / Broker Account Details */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="h-5 w-5 rounded bg-amber-600 text-white text-[11px] font-black flex items-center justify-center">4</span>
+                  <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
+                    {t(lang, "purchase.sales_account_details_title", "Sales Account Details")}
+                  </h4>
+                </div>
+                <div className="space-y-1.5 text-xs mt-3">
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.account_name", "Account Name")}</span>
+                    <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">{selectedSalesAccount?.name || selectedBrokerAccount?.name || "\u2014"}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.account_code", "Account Code")}</span>
+                    <span className="text-[11px] font-mono font-bold text-emerald-600">{selectedSalesAccount?.code || selectedBrokerAccount?.code || "\u2014"}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.currency", "Currency")}</span>
+                    <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200">{selectedSalesAccount?.currency || purchaseCurrency}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.country", "Country")}</span>
+                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{activeBranch?.countryName || "\u2014"}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.branch_word", "Branch")}</span>
+                    <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">{activeBranch?.name || "\u2014"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                <button type="button" onClick={() => setSelectedRowForVoucher(selectedSalesAccount || selectedBrokerAccount)} className="text-[11px] font-bold text-slate-600 hover:text-blue-600 flex items-center justify-center gap-1 mx-auto">
+                  <Eye className="h-3.5 w-3.5" /> {t(lang, "purchase.view_account_details", "View Account Details")}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Card 2 */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
-            <FileText className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_bill_details", "Bill Details")}</h4>
-          </div>
-          <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_booking_date", "Booking Date:")}</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{new Date().toISOString().slice(0, 10)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_fiscal_year", "Fiscal Year:")}</span> <span className="font-bold text-slate-800 font-mono">{activeBranch?.fiscalYear || activeBranch?.fiscal_year || ""}</span></div>
-            <div className="flex justify-between items-center"><span className="text-slate-400">{t(lang, "lp.f_status", "Status:")}</span> <span className="bg-amber-100 text-amber-800 font-bold px-1 py-0.2 rounded text-[7px] uppercase">{th("DRAFT")}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_serial", "Serial:")}</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{serialNo}</span></div>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
-            <ArrowDownLeft className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_purchase_acc_dr", "Purchase Acc (DR)")}</h4>
-          </div>
-          <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedPurchaseAccount?.code || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_name", "Name:")}</span> <span className="font-bold text-blue-600 truncate">{selectedPurchaseAccount?.name || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_currency", "Currency:")}</span> <span className="font-bold text-slate-900 font-mono">{selectedPurchaseAccount?.currency || purchaseCurrency}</span></div>
-          </div>
-        </div>
-
-        {/* Card 4 */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
-            <ArrowUpRight className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_sales_acc_cr", "Sales Acc (CR)")}</h4>
-          </div>
-          <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedSalesAccount?.code || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_name", "Name:")}</span> <span className="font-bold text-blue-600 truncate">{selectedSalesAccount?.name || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_currency", "Currency:")}</span> <span className="font-bold text-slate-900 font-mono">{selectedSalesAccount?.currency || purchaseCurrency}</span></div>
-          </div>
-        </div>
-
-        {/* Card 5 */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
-            <UserCheck className="h-3.5 w-3.5 text-purple-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_broker_agent_acc", "Broker / Agent Acc")}</h4>
-          </div>
-          <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedBrokerAccount?.code || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_name", "Name:")}</span> <span className="font-bold text-purple-600 truncate">{selectedBrokerAccount?.name || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_currency", "Currency:")}</span> <span className="font-bold text-slate-900 font-mono">{selectedBrokerAccount?.currency || purchaseCurrency}</span></div>
-          </div>
-        </div>
-      </div>
-
-
-
-
-
       )}
 
       {!isFormOpen && (
