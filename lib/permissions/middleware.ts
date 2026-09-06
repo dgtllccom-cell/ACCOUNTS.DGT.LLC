@@ -58,7 +58,47 @@ export function canApprove(session: ErpSession, countryId?: string | null, cityB
   return canAccessCountry(session, countryId);
 }
 
+/**
+ * Confidential domain of a resource. A session that is bound only to the OTHER
+ * operational domain is refused access — regardless of role permissions — so a
+ * Business login never touches Clearing/Shipping data and vice-versa.
+ * Resources not listed here are shared (documents, reports, dashboard, users…).
+ */
+const RESOURCE_DOMAIN: Record<string, "business" | "shipping"> = {
+  purchase_orders: "business", purchases: "business", purchase: "business",
+  sales_orders: "business", sales: "business",
+  roznamcha: "business", cash_entry: "business", daily_payment: "business",
+  ledgers: "business", ledger: "business", accounting: "business", journal: "business",
+  expenses: "business", bill_expenses: "business", bank_roznamcha: "business",
+  shipping_records: "shipping", shipping: "shipping", bl_records: "shipping",
+  clearing_agents: "shipping", clearing_agent: "shipping", clearing: "shipping",
+  clearing_agent_branches: "shipping", customs_entries: "shipping",
+};
+
+export function assertResourceDomain(session: ErpSession, resource: string) {
+  if (session.isSuperAdmin) return;
+  const needed = RESOURCE_DOMAIN[resource] ?? RESOURCE_DOMAIN[resource === "goods" ? "products" : resource];
+  if (!needed) return; // shared resource
+  const domains = session.operationalDomains ?? ["business"];
+  if (domains.includes("both") || domains.includes(needed)) return;
+
+  // A Clearing Agent / Shipping-only login must NEVER reach Business-confidential
+  // data (purchase prices, margins, ledger). This is the confidentiality the
+  // owner requires. The reverse direction (a Business login reading shipping
+  // records) stays governed by role permissions only, so existing Business
+  // admins that legitimately manage shipping keep working — create such a user
+  // with operational_domain='both' to make it explicit.
+  const shippingOnly = domains.length === 1 && domains[0] === "shipping";
+  if (needed === "business" && shippingOnly) {
+    throw new ErpPermissionError(
+      "This is Business data and your login is a Clearing Agent / Shipping Line account."
+    );
+  }
+}
+
 export function authorize(session: ErpSession, check: PermissionCheck) {
+  assertResourceDomain(session, check.resource);
+
   if (!hasRolePermission(session, check.resource, check.action)) {
     throw new ErpPermissionError(`Missing permission: ${check.resource}:${check.action}`);
   }

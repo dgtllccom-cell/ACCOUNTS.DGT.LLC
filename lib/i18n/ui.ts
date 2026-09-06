@@ -8371,6 +8371,7 @@ const en: Dict = {
   "purchase.th_action": "Action",
   "purchase.goods_table_empty": "No goods added yet. Add an item above to see it here.",
   "purchase.booking_bill_info_title": "Purchase Booking / Bill Info",
+  "purchase.change_scope": "Scope",
   "purchase.purchase_account_dr_star": "Purchase Account (DR)*",
   "purchase.sales_account_cr_star": "Sales Account (CR)*",
   "purchase.search_code_name_branch": "Search Code, Name, Branch, Manual A/C...",
@@ -24117,6 +24118,12 @@ const en: Dict = {
   "xlr.unavailable": "Translation is temporarily unavailable — read the original.",
   "xlr.verify_note": "Numbers, dates and reference IDs are taken from the original and are never changed by translation — verify each against the original above.",
   "xlr.one_entry_note": "This is one business entry. The translated reading is for understanding only — it does not create a separate record and nothing is posted from here.",
+  "urw2.domain_question": "What is this user being created for?",
+  "urw2.domain_business": "Business",
+  "urw2.domain_shipping": "Clearing Agent / Shipping Line",
+  "urw2.domain_hint": "Business users see Purchase / Sales / Ledger. Clearing / Shipping users see only their own clearing/shipping data.",
+  "urw2.clearing_agent": "Clearing Agent / Shipping Line *",
+  "urw2.select_clearing_agent": "Select clearing agent / shipping line",
 };
 
 const ur: Dict = {
@@ -26410,6 +26417,7 @@ const ur: Dict = {
   "purchase.th_action": "عمل",
   "purchase.goods_table_empty": "ابھی تک کوئی مال شامل نہیں کیا گیا۔ یہاں دیکھنے کے لیے اوپر ایک آئٹم شامل کریں۔",
   "purchase.booking_bill_info_title": "خریداری بکنگ / بل کی معلومات",
+  "purchase.change_scope": "دائرہ کار",
   "purchase.purchase_account_dr_star": "خریداری اکاؤنٹ (بنام)*",
   "purchase.sales_account_cr_star": "فروخت اکاؤنٹ (جمع)*",
   "purchase.search_code_name_branch": "کوڈ، نام، برانچ، مینوئل اکاؤنٹ تلاش کریں...",
@@ -41154,6 +41162,12 @@ const ur: Dict = {
   "xlr.unavailable": "ترجمہ عارضی طور پر دستیاب نہیں — اصل متن پڑھیں۔",
   "xlr.verify_note": "اعداد، تاریخیں اور حوالہ نمبر اصل متن سے لیے گئے ہیں اور ترجمے سے کبھی تبدیل نہیں ہوتے — ہر ایک کو اوپر دیے گئے اصل متن سے ملا کر تصدیق کریں۔",
   "xlr.one_entry_note": "یہ ایک کاروباری اندراج ہے۔ ترجمہ شدہ متن صرف سمجھنے کے لیے ہے — اس سے الگ ریکارڈ نہیں بنتا اور یہاں سے کچھ پوسٹ نہیں ہوتا۔",
+  "urw2.domain_question": "یہ صارف کس مقصد کے لیے بنایا جا رہا ہے؟",
+  "urw2.domain_business": "کاروبار",
+  "urw2.domain_shipping": "کلیئرنگ ایجنٹ / شپنگ لائن",
+  "urw2.domain_hint": "کاروباری صارفین خرید و فروخت اور لیجر دیکھتے ہیں۔ کلیئرنگ / شپنگ صارفین صرف اپنا کلیئرنگ/شپنگ ڈیٹا دیکھتے ہیں۔",
+  "urw2.clearing_agent": "کلیئرنگ ایجنٹ / شپنگ لائن *",
+  "urw2.select_clearing_agent": "کلیئرنگ ایجنٹ / شپنگ لائن منتخب کریں",
 };
 
 const ar: Dict = {
@@ -43447,6 +43461,7 @@ const ar: Dict = {
   "purchase.th_action": "إجراء",
   "purchase.goods_table_empty": "لم تتم إضافة أي بضائع بعد. أضف عنصرًا أعلاه لرؤيته هنا.",
   "purchase.booking_bill_info_title": "معلومات حجز الشراء / الفاتورة",
+  "purchase.change_scope": "النطاق",
   "purchase.purchase_account_dr_star": "حساب الشراء (مدين)*",
   "purchase.sales_account_cr_star": "حساب المبيعات (دائن)*",
   "purchase.search_code_name_branch": "ابحث عن الرمز، الاسم، الفرع، الحساب اليدوي...",
@@ -58193,6 +58208,12 @@ const ar: Dict = {
   "xlr.unavailable": "الترجمة غير متاحة مؤقتًا — اقرأ النص الأصلي.",
   "xlr.verify_note": "الأرقام والتواريخ وأرقام المراجع مأخوذة من النص الأصلي ولا تتغير أبدًا بالترجمة — تحقق من كل منها مقابل الأصل أعلاه.",
   "xlr.one_entry_note": "هذا قيد تجاري واحد. القراءة المترجمة للفهم فقط — لا تنشئ سجلًا منفصلًا ولا يتم ترحيل أي شيء من هنا.",
+  "urw2.domain_question": "لأي غرض يتم إنشاء هذا المستخدم؟",
+  "urw2.domain_business": "الأعمال",
+  "urw2.domain_shipping": "وكيل التخليص / خط الشحن",
+  "urw2.domain_hint": "مستخدمو الأعمال يرون المشتريات والمبيعات ودفتر الأستاذ. مستخدمو التخليص / الشحن يرون بيانات التخليص/الشحن الخاصة بهم فقط.",
+  "urw2.clearing_agent": "وكيل التخليص / خط الشحن *",
+  "urw2.select_clearing_agent": "اختر وكيل التخليص / خط الشحن",
 };
 
 const fa: Dict = {
@@ -60487,6 +60508,7 @@ const fa: Dict = {
   "purchase.th_action": "اقدام",
   "purchase.goods_table_empty": "هنوز کالایی افزوده نشده است. یک قلم در بالا اضافه کنید تا اینجا نمایش داده شود.",
   "purchase.booking_bill_info_title": "اطلاعات رزرو خرید / بیلتی",
+  "purchase.change_scope": "محدوده",
   "purchase.purchase_account_dr_star": "حساب خرید (بدهکار)*",
   "purchase.sales_account_cr_star": "حساب فروش (بستانکار)*",
   "purchase.search_code_name_branch": "جستجوی کد، نام، شعبه، حساب دستی...",
@@ -75231,6 +75253,12 @@ const fa: Dict = {
   "xlr.unavailable": "ترجمه موقتاً در دسترس نیست — متن اصلی را بخوانید.",
   "xlr.verify_note": "اعداد، تاریخ‌ها و شماره‌های مرجع از متن اصلی گرفته شده‌اند و هرگز با ترجمه تغییر نمی‌کنند — هر کدام را با اصل بالا مطابقت دهید.",
   "xlr.one_entry_note": "این یک ثبت تجاری واحد است. خوانش ترجمه‌شده فقط برای درک است — رکورد جداگانه‌ای ایجاد نمی‌کند و چیزی از اینجا ثبت نمی‌شود.",
+  "urw2.domain_question": "این کاربر برای چه هدفی ایجاد می‌شود؟",
+  "urw2.domain_business": "کسب‌وکار",
+  "urw2.domain_shipping": "نماینده ترخیص / خط کشتیرانی",
+  "urw2.domain_hint": "کاربران کسب‌وکار خرید / فروش / دفتر کل را می‌بینند. کاربران ترخیص / کشتیرانی فقط داده‌های ترخیص/کشتیرانی خود را می‌بینند.",
+  "urw2.clearing_agent": "نماینده ترخیص / خط کشتیرانی *",
+  "urw2.select_clearing_agent": "نماینده ترخیص / خط کشتیرانی را انتخاب کنید",
 };
 
 const ps: Dict = {
@@ -77524,6 +77552,7 @@ const ps: Dict = {
   "purchase.th_action": "کړنه",
   "purchase.goods_table_empty": "لاهم هیڅ مال نه دی اضافه شوی. پورته یو توکی اضافه کړئ ترڅو دلته یې وګورئ.",
   "purchase.booking_bill_info_title": "د پیرودلو بکینګ / بل معلومات",
+  "purchase.change_scope": "ساحه",
   "purchase.purchase_account_dr_star": "د پیرودلو حساب (بدهکار)*",
   "purchase.sales_account_cr_star": "د پلورلو حساب (بستانکار)*",
   "purchase.search_code_name_branch": "کوډ، نوم، څانګه، لاسي حساب وپلټئ...",
@@ -92275,6 +92304,12 @@ const ps: Dict = {
   "xlr.unavailable": "ژباړه لنډمهاله شتون نلري — اصلي متن ولولئ.",
   "xlr.verify_note": "شمیرې، نیټې او د حوالې شمیرې د اصلي متن څخه اخیستل شوي او د ژباړې له لارې هیڅکله نه بدلیږي — هر یو د پورته اصل سره پرتله کړئ.",
   "xlr.one_entry_note": "دا یو سوداګریز ننوت دی. ژباړل شوی لوست یوازې د پوهیدو لپاره دی — جلا ریکارډ نه جوړوي او له دې ځایه هیڅ شی نه پوسټ کیږي.",
+  "urw2.domain_question": "دا کارن د کوم هدف لپاره جوړیږي؟",
+  "urw2.domain_business": "سوداګري",
+  "urw2.domain_shipping": "د کلیرنس اجنټ / د بار وړلو کرښه",
+  "urw2.domain_hint": "سوداګریز کاروونکي پیرود / پلور / لیجر ویني. د کلیرنس / بار وړلو کاروونکي یوازې خپل کلیرنس/بار وړلو معلومات ویني.",
+  "urw2.clearing_agent": "د کلیرنس اجنټ / د بار وړلو کرښه *",
+  "urw2.select_clearing_agent": "د کلیرنس اجنټ / د بار وړلو کرښه وټاکئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

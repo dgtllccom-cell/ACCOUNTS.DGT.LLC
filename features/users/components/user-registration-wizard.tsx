@@ -70,6 +70,7 @@ import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { UserProfileReportModal, UserProfileData } from "./user-profile-report-modal";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string; country_branch_id: string };
@@ -82,6 +83,13 @@ const branchTypeOptions = [
   { value: "main", label: "Main Branch", labelKey: "urw2.bt_main" },
   { value: "city", label: "City Branch", labelKey: "urw2.bt_city" }
 ] as const;
+
+// Which roles are offered per operational domain. A role name can serve both
+// worlds — the domain + ledger_visibility on the assignment keeps the data apart.
+const DOMAIN_ROLES: Record<"business" | "shipping", EnterpriseRole[]> = {
+  business: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "auditor_viewer"],
+  shipping: ["country_admin", "city_branch_admin", "agent_user", "staff_user", "auditor_viewer"],
+};
 
 const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string; labelKey: string; helpKey: string }> = [
   { value: "super_admin", label: "Super Admin", labelKey: "urw2.role_super_admin", help: "Global Scope — Full root control across all countries and branches.", helpKey: "urw2.help_super_admin" },
@@ -246,6 +254,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [cityBranchId, setCityBranchId] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [role, setRole] = useState<EnterpriseRole>("staff_user");
+  // Mandatory operational domain — decides which role set + data world the user belongs to.
+  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
+  const [clearingAgentId, setClearingAgentId] = useState("");
 
   // Step 3: KYC & Security
   const [cnicPassportNo, setCnicPassportNo] = useState("");
@@ -717,6 +728,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         role: role,
         fullName: fullName.trim(),
         userCode: issuedCode,
+        operationalDomain,
+        clearingAgentId: operationalDomain === "shipping" ? (clearingAgentId || null) : null,
         countryId: resolvedCountryId,
         countryBranchId: resolvedCountryBranchId,
         cityBranchId: resolvedCityBranchId,
@@ -1307,6 +1320,51 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 2: Employee & Branch Access */}
               {step === 2 && (
                 <div className="space-y-3">
+                  {/* MANDATORY operational domain — "What is this user being created for?" */}
+                  <div className="space-y-1.5 rounded-xl border border-teal-200 bg-teal-50/60 p-3 dark:border-teal-900 dark:bg-teal-950/20">
+                    <Label className="text-xs font-black uppercase tracking-wide text-teal-800 dark:text-teal-300">
+                      {centralT(activeLang, "urw2.domain_question" as never, "What is this user being created for?")} *
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["business", "shipping"] as const).map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => {
+                            setOperationalDomain(d);
+                            if (d === "business") setClearingAgentId("");
+                            if (!DOMAIN_ROLES[d].includes(role)) setRole(DOMAIN_ROLES[d][DOMAIN_ROLES[d].length - 1]);
+                          }}
+                          className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
+                            operationalDomain === d
+                              ? "border-teal-500 bg-teal-600 text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          {d === "business"
+                            ? centralT(activeLang, "urw2.domain_business" as never, "Business")
+                            : centralT(activeLang, "urw2.domain_shipping" as never, "Clearing Agent / Shipping Line")}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-teal-700/80 dark:text-teal-400/80">
+                      {centralT(activeLang, "urw2.domain_hint" as never, "Business users see Purchase / Sales / Ledger. Clearing / Shipping users see only their own clearing/shipping data.")}
+                    </p>
+                  </div>
+
+                  {operationalDomain === "shipping" && (
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {centralT(activeLang, "urw2.clearing_agent" as never, "Clearing Agent / Shipping Line *")}
+                      </Label>
+                      <ClearingAgentPicker
+                        value={clearingAgentId}
+                        onValueChange={(v: string) => setClearingAgentId(v)}
+                        placeholder={centralT(activeLang, "urw2.select_clearing_agent" as never, "Select clearing agent / shipping line")}
+                      />
+                    </div>
+                  )}
+
                   <div className="space-y-1">
                     <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("role")}</Label>
                     <select
@@ -1314,7 +1372,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       onChange={(e) => setRole(e.target.value as EnterpriseRole)}
                       className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
                     >
-                      {roleOptions.map((r) => (
+                      {roleOptions.filter((r) => DOMAIN_ROLES[operationalDomain].includes(r.value)).map((r) => (
                         <option key={r.value} value={r.value}>
                           {centralT(activeLang, r.labelKey as never, r.label)} — {centralT(activeLang, r.helpKey as never, r.help)}
                         </option>

@@ -42,7 +42,10 @@ export async function POST(request: Request) {
         countryId: (typeof body.countryId === "string" && body.countryId) || null,
         countryBranchId: (typeof body.countryBranchId === "string" && body.countryBranchId) || null,
         cityBranchId: (typeof body.cityBranchId === "string" && body.cityBranchId) || null,
-      },
+        clearingAgentId: (typeof body.clearingAgentId === "string" && body.clearingAgentId) || null,
+        ledgerVisibility: (typeof body.ledgerVisibility === "string" && body.ledgerVisibility) || undefined,
+        operationalDomain: (typeof body.operationalDomain === "string" && body.operationalDomain) || undefined,
+      } as never,
     ],
     remember: false,
   });

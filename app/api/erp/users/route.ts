@@ -130,6 +130,29 @@ export async function POST(request: NextRequest) {
       cityBranchId: body.cityBranchId ?? null
     });
 
+    // ── Operational domain consistency ──────────────────────────────────────
+    // A creator can only create users in a domain they themselves belong to
+    // (unless super admin). Shipping users must be bound to a clearing agent;
+    // ledger visibility defaults to the domain norm.
+    const domain = body.operationalDomain ?? "business";
+    if (!session.isSuperAdmin) {
+      const creatorDomains = new Set(
+        (session.assignments ?? []).map((a: any) => a.operationalDomain ?? "business")
+      );
+      const creatorHasBoth = creatorDomains.has("both");
+      if (!creatorHasBoth && !creatorDomains.has(domain) && domain !== "both") {
+        throw new Error(`You cannot create a ${domain === "shipping" ? "Clearing Agent / Shipping" : "Business"} user — it is outside your operational domain.`);
+      }
+    }
+    if (domain === "shipping" && !body.clearingAgentId) {
+      throw new Error("A Clearing Agent / Shipping Line user must be bound to a clearing agent.");
+    }
+    if (domain === "business" && body.clearingAgentId) {
+      throw new Error("A Business-domain user cannot be bound to a clearing agent.");
+    }
+    const ledgerVisibility =
+      body.ledgerVisibility ?? (domain === "shipping" ? "shipping_only" : "scoped");
+
     const admin = createSupabaseAdminClient() as any;
 
     const issuedUserCode = normalizeUserCode(
@@ -262,19 +285,29 @@ export async function POST(request: NextRequest) {
       );
     if (permError) throw new Error(permError.message);
 
-    const assignmentPayload = {
+    const assignmentPayload: Record<string, unknown> = {
       user_id: newUserId,
       role: toAppRole(body.role),
       country_id: body.countryId ?? null,
       country_branch_id: body.countryBranchId ?? null,
       city_branch_id: body.cityBranchId ?? null,
       is_active: true,
+      operational_domain: domain,
+      clearing_agent_id: body.clearingAgentId ?? null,
+      ledger_visibility: ledgerVisibility,
       created_by: isUuid(session.userId) ? session.userId : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    const { error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload);
+    let { error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload);
+    if (assignmentError && /operational_domain|clearing_agent_id|ledger_visibility/.test(assignmentError.message)) {
+      // DB predates the shipping/clearing RBAC columns — insert the core row.
+      delete assignmentPayload.operational_domain;
+      delete assignmentPayload.clearing_agent_id;
+      delete assignmentPayload.ledger_visibility;
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
     if (assignmentError) throw new Error(assignmentError.message);
 
     await auditApiAction(request, {
@@ -289,11 +322,14 @@ export async function POST(request: NextRequest) {
         countryId: body.countryId ?? null,
         countryBranchId: body.countryBranchId ?? null,
         cityBranchId: body.cityBranchId ?? null,
-        companyId: body.companyId ?? null
+        companyId: body.companyId ?? null,
+        operationalDomain: domain,
+        clearingAgentId: body.clearingAgentId ?? null,
+        ledgerVisibility
       }
     });
 
-    return apiCreated({ userId: newUserId, userCode: issuedUserCode });
+    return apiCreated({ userId: newUserId, userCode: issuedUserCode, operationalDomain: domain });
   } catch (error) {
     return handleApiError(error);
   }

@@ -9,6 +9,8 @@ import { readTempSession } from "@/lib/auth/temp-session";
 
 export type LedgerVisibility = "scoped" | "shipping_only" | "full";
 
+export type OperationalDomain = "business" | "shipping" | "both";
+
 export type RoleAssignmentScope = {
   role: EnterpriseRole;
   countryId: string | null;
@@ -16,6 +18,7 @@ export type RoleAssignmentScope = {
   cityBranchId: string | null;
   clearingAgentId: string | null;
   ledgerVisibility: LedgerVisibility;
+  operationalDomain: OperationalDomain;
 };
 
 export type ErpSession = {
@@ -36,7 +39,16 @@ export type ErpSession = {
   clearingAgentIds: string[];
   ledgerVisibility: LedgerVisibility;
   isShippingScoped: boolean;
+  // Operational domains this login belongs to, derived from its active assignments.
+  // "business" → Purchase/Sales/Ledger/Accounting; "shipping" → Clearing Agent / Shipping Line.
+  operationalDomains: OperationalDomain[];
 };
+
+/** True when this session may see data in the given operational domain. */
+export function sessionInDomain(session: ErpSession, domain: OperationalDomain): boolean {
+  if (session.isSuperAdmin) return true;
+  return session.operationalDomains.includes("both") || session.operationalDomains.includes(domain);
+}
 
 type ProfileRow = {
   full_name: string | null;
@@ -54,6 +66,7 @@ type AssignmentRow = {
   city_branch_id: string | null;
   clearing_agent_id?: string | null;
   ledger_visibility?: string | null;
+  operational_domain?: string | null;
 };
 
 /** Derive the shipping/clearing scope fields from a user's active assignments. */
@@ -61,13 +74,19 @@ export function resolveShippingScope(assignments: RoleAssignmentScope[], isSuper
   clearingAgentIds: string[];
   ledgerVisibility: LedgerVisibility;
   isShippingScoped: boolean;
+  operationalDomains: OperationalDomain[];
 } {
   const clearingAgentIds = [...new Set(assignments.map((a) => a.clearingAgentId).filter((v): v is string => Boolean(v)))];
   const hasFull = assignments.some((a) => a.ledgerVisibility === "full");
   const hasShippingOnly = assignments.some((a) => a.clearingAgentId && a.ledgerVisibility === "shipping_only");
   const ledgerVisibility: LedgerVisibility = hasFull ? "full" : hasShippingOnly ? "shipping_only" : "scoped";
   const isShippingScoped = !isSuperAdmin && !hasFull && hasShippingOnly && clearingAgentIds.length > 0;
-  return { clearingAgentIds, ledgerVisibility, isShippingScoped };
+  const domainSet = new Set<OperationalDomain>(
+    assignments.map((a) => a.operationalDomain ?? "business")
+  );
+  if (isSuperAdmin) { domainSet.add("business"); domainSet.add("shipping"); }
+  const operationalDomains = domainSet.size ? [...domainSet] : (["business"] as OperationalDomain[]);
+  return { clearingAgentIds, ledgerVisibility, isShippingScoped, operationalDomains };
 }
 
 type LooseQueryBuilder = {
@@ -182,14 +201,18 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       const adminSupabase: any = null;
 
       const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
-      const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => ({
-        role: a.role,
-        countryId: a.countryId,
-        countryBranchId: a.countryBranchId,
-        cityBranchId: a.cityBranchId,
-        clearingAgentId: (a as any).clearingAgentId ?? null,
-        ledgerVisibility: ((a as any).ledgerVisibility as LedgerVisibility) ?? "scoped"
-      }));
+      const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => {
+        const d = (a as any).operationalDomain;
+        return {
+          role: a.role,
+          countryId: a.countryId,
+          countryBranchId: a.countryBranchId,
+          cityBranchId: a.cityBranchId,
+          clearingAgentId: (a as any).clearingAgentId ?? null,
+          ledgerVisibility: ((a as any).ledgerVisibility as LedgerVisibility) ?? "scoped",
+          operationalDomain: (d === "shipping" || d === "both" ? d : "business") as OperationalDomain
+        };
+      });
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
 
@@ -241,10 +264,18 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     // otherwise an unknown-column error here would return null and break authentication.
     let assignmentsResult = await db
       .from("user_role_assignments")
-      .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
+      .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain")
       .eq("user_id", user.id)
       .eq("is_active", true)
       .is("deleted_at", null);
+    if (assignmentsResult.error) {
+      assignmentsResult = await db
+        .from("user_role_assignments")
+        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .is("deleted_at", null);
+    }
     if (assignmentsResult.error) {
       assignmentsResult = await db
         .from("user_role_assignments")
@@ -264,13 +295,17 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         const role = normalizeRole(assignment.role);
         if (!role) return null;
 
+        const rawDomain = (assignment as AssignmentRow).operational_domain;
+        const operationalDomain: OperationalDomain =
+          rawDomain === "shipping" || rawDomain === "both" ? rawDomain : "business";
         return {
           role,
           countryId: assignment.country_id,
           countryBranchId: assignment.country_branch_id,
           cityBranchId: assignment.city_branch_id,
           clearingAgentId: assignment.clearing_agent_id ?? null,
-          ledgerVisibility: (assignment.ledger_visibility as LedgerVisibility) ?? "scoped"
+          ledgerVisibility: (assignment.ledger_visibility as LedgerVisibility) ?? "scoped",
+          operationalDomain
         };
       })
       .filter((assignment): assignment is RoleAssignmentScope => Boolean(assignment));

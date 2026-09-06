@@ -25,6 +25,7 @@ export type TempSessionPayloadV1 = {
     cityBranchId: string | null;
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
+    operationalDomain?: string;
   }>;
   createdAt: number;
 };
@@ -99,6 +100,7 @@ export async function setDirectUserSession(user: {
     cityBranchId: string | null;
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
+    operationalDomain?: string;
   }>;
   remember?: boolean;
 }) {
@@ -143,6 +145,7 @@ export async function readTempSession(): Promise<
         cityBranchId: string | null;
         clearingAgentId?: string | null;
         ledgerVisibility?: string;
+    operationalDomain?: string;
       }>;
       preferredLanguage: SupportedLanguage;
     }
@@ -200,6 +203,7 @@ export function buildTempAgentToken(options: {
     cityBranchId: string | null;
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
+    operationalDomain?: string;
   }>;
 }): string {
   const payload: TempSessionPayloadV1 = {
