@@ -6,6 +6,7 @@ import { BulkAccountImport } from "./bulk-account-import";
 import { AccountSetupReport } from "./account-setup-report";
 import { AccountsHeaderScopeBar, type ScopeLevel, type BranchKind, type BranchOption, type CountryOption } from "./accounts-header-scope-bar";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
+import { LocationBackdrop } from "@/components/location-backdrop";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -120,6 +121,21 @@ export function NewAccountWithEntryMethods({
     return list.find((b) => b.id === branchId)?.name || "all";
   }, [branchKind, mainBranches, cityBranches, branchId]);
 
+  // Dynamic location backdrop (updates the instant country / branch changes)
+  const backdropSelection = useMemo(() => {
+    const country = countries.find((c) => c.id === countryId);
+    const list = branchKind === "main" ? mainBranches : cityBranches;
+    const branch = list.find((b) => b.id === branchId) as
+      | { name?: string; city_name?: string; cityName?: string; branch_name?: string }
+      | undefined;
+    return {
+      iso2: (country as { iso2?: string } | undefined)?.iso2 ?? null,
+      countryName: country?.name ?? null,
+      cityName: branch?.city_name ?? branch?.cityName ?? (branchKind === "city" ? branch?.name : null) ?? null,
+      branchName: branch?.branch_name ?? branch?.name ?? null,
+    };
+  }, [countries, countryId, branchKind, branchId, mainBranches, cityBranches]);
+
   const handleScopeLevelChange = (lvl: ScopeLevel) => {
     setScopeLevel(lvl);
     if (lvl === "main_branch") setBranchKind("main");
@@ -138,6 +154,14 @@ export function NewAccountWithEntryMethods({
 
   return (
     <div className="space-y-4" dir={s.dir}>
+      {/* ── Dynamic location backdrop — reflects the selected country / branch ── */}
+      <LocationBackdrop
+        selection={backdropSelection}
+        title={s.t("account_hub_title", "Account Management & Setup")}
+        subtitle={s.t("account_hub_subtitle", "Scoped to your authorized country and branch")}
+        className="min-h-[104px]"
+      />
+
       {/* ── Top Header Actions Bar Portal (Scope / Country / Branch Dropdowns + Actions) ── */}
       <AccountsHeaderScopeBar
         lang={activeLang}

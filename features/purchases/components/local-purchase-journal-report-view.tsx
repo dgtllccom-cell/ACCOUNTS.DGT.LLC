@@ -18,6 +18,7 @@ import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report"
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { UnifiedErpRegisterBar, type UnifiedRegisterKpiData } from "@/components/reports/unified-erp-register-bar";
 
 const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
 
@@ -154,10 +155,14 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedBranch, setSelectedBranch] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [showCountryDetails, setShowCountryDetails] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseRecord | null>(null);
   const [transferringId, setTransferringId] = useState<string | null>(null);
+
+  const countries = useMemo(() => Array.from(new Set(purchases.map(p => p.countryName || p.country_name).filter(Boolean))) as string[], [purchases]);
+  const branches = useMemo(() => Array.from(new Set(purchases.map(p => p.branchName || p.branch_name).filter(Boolean))) as string[], [purchases]);
 
   // Fetch local purchases
   const loadReports = async () => {
@@ -203,8 +208,11 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
         (p.countryName || p.country_name || "").toLowerCase().includes(q)
       );
     }
+    if (selectedStatus) {
+      result = result.filter(p => (p.status || "posted").toLowerCase() === selectedStatus.toLowerCase());
+    }
     return result;
-  }, [purchases, searchQuery]);
+  }, [purchases, searchQuery, selectedStatus]);
 
   // Filter only posted records for the main report table
   const postedPurchases = useMemo(() => {
@@ -279,203 +287,64 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
   const postedBillsCount = postedPurchases.length;
   const acceptedBillsCount = acceptedPurchases.length;
 
+  const kpiSummary: UnifiedRegisterKpiData = useMemo(() => ({
+    totalRecords: purchases.length,
+    draftCount: purchases.filter(p => p.status === "draft" || p.status === "Draft" || p.status === "open").length,
+    acceptedCount: acceptedBillsCount,
+    transferredCount: postedBillsCount,
+    completedCount: purchases.filter(p => p.status === "completed" || p.status === "posted" || !p.status).length,
+    currency: "AED",
+    totalAmount: grandTotalPurchase,
+    acceptedAmount: acceptedPurchases.reduce((acc, p) => acc + Number(p.finalCost || p.final_cost || 0), 0),
+    transferredAmount: grandTotalPurchase,
+    completedAmount: grandTotalPurchase,
+    totalBranches: Math.max(branches.length, 1),
+    activeBranches: Math.max(branches.length, 1),
+    inactiveBranches: 0,
+    thisMonthCreated: grandTotalEntries,
+    thisMonthAmount: grandTotalPurchase,
+    thisMonthTransferred: postedBillsCount,
+    thisMonthCompleted: postedBillsCount,
+    quickInfo: {
+      currency: "AED",
+      exchangeRate: "3.6725",
+      company: "DGT LLC",
+      financialYear: "2026",
+      userName: session?.fullName || session?.email || "—",
+      branchName: session?.branchName || "—"
+    }
+  }), [purchases, grandTotalPurchase, acceptedPurchases, branches, grandTotalEntries, postedBillsCount, session]);
+
   return (
-    <div className="space-y-6 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
-
-      {/* Top Banner: Branch, User & Date Time Bar */}
-      <div className="flex flex-wrap items-center justify-between text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-xs gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400">{th("BRANCH NAME")}:</span>
-          <span className="text-blue-600 dark:text-blue-400 font-extrabold">{session.branchName || "—"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400">{th("USER NAME")}:</span>
-          <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "—"}</span>
-        </div>
-        <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
-          <div>{th("DATE")}: <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
-          <div>{th("TIME")}: <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
-        </div>
-      </div>
-
-      {/* Page Header & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-blue-600" />
-            <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
-              {tt("lpjr.journal_title", "Local Purchase Journal Report")}
-            </h1>
-          </div>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            {tt("lpjr.subtitle", "ERP Master Console — Multi-Country Reporting")}
-          </p>
-        </div>
-
-        {/* Global Quick Search & Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48 sm:w-60">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={tt("lpjr.search_ph", "Search serial, item, vendor...")}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-8 pr-3 text-xs outline-none focus:border-blue-500 font-medium"
-            />
-          </div>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => void loadReports()}
-            className="h-9 text-xs font-bold border-slate-200 dark:border-slate-800"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            {th("REFRESH")}
-          </Button>
-
-          <JournalPrintButton
-            title={tt("lpjr.journal_title", "Local Purchase Journal Report")}
-            subtitle={tt("lpjr.journal_subtitle", "Local Branch Purchase & Transfer Registry")}
-            columns={[
-              { key: "journal_serial_no", label: tt("lpjr.col_journal_sn", "Journal S/N"), align: "center" },
-              { key: "bill_no", label: tt("lpjr.col_bill_no", "Bill No"), align: "center" },
-              { key: "created_at", label: tt("common.date", "Date"), align: "center", format: "date" },
-              { key: "countryName", label: tt("common.country", "Country"), align: "left" },
-              { key: "branchName", label: tt("common.branch", "Branch"), align: "left" },
-              { key: "supplierName", label: tt("lpjr.col_supplier_vendor", "Supplier / Vendor"), align: "left" },
-              { key: "goodsName", label: tt("lpjr.col_goods", "Goods / Product"), align: "left" },
-              { key: "quantityKgs", label: tt("lpjr.col_qty_kgs", "Qty (Kgs)"), align: "right", format: "number" },
-              { key: "netWeight", label: tt("lpjr.col_net_wt", "Net Wt"), align: "right", format: "number" },
-              { key: "localCurrency", label: tt("lpjr.col_cur", "Cur"), align: "center" },
-              { key: "purchaseRate", label: tt("lpjr.col_rate", "Rate"), align: "right", format: "number" },
-              { key: "finalCost", label: tt("lpjr.col_final_amount", "Final Amount"), align: "right", format: "currency" },
-              { key: "status", label: tt("common.status", "Status"), align: "center", format: "status" }
-            ]}
-            rows={filteredPurchases.map((p, idx) => ({
-              ...p,
-              journal_serial_no: p.journal_serial_no || p.serialNo || p.serial_no || `LP-${String(idx + 1).padStart(5, "0")}`,
-              countryName: p.countryName || p.country_name || session.countryName || "—",
-              branchName: p.branchName || p.branch_name || session.branchName || "—",
-              supplierName: p.supplierName || p.supplier_name || "-",
-              goodsName: p.goodsName || p.goods_name || "-",
-              quantityKgs: p.quantityKgs || p.quantity_kgs || 0,
-              netWeight: p.netWeight || p.net_weight || 0,
-              localCurrency: p.localCurrency || p.local_currency || "AED",
-              purchaseRate: p.purchaseRate || p.purchase_rate || 0,
-              finalCost: p.finalCost || p.final_cost || 0,
-              status: p.status || "Posted"
-            }))}
-            summary={{
-              totalEntries: grandTotalEntries,
-              totalPurchase: grandTotalPurchase,
-              totalTax: grandTotalTax,
-              postedBills: postedBillsCount,
-              acceptedBills: acceptedBillsCount
-            }}
-            orientation="landscape"
-          />
-
-          <Button
-            size="sm"
-            onClick={() => router.push("/dashboard/purchase/local-purchase")}
-            className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-200"
-          >
-            + {tt("lpjr.new_local_purchase", "New Local Purchase")}
-          </Button>
-        </div>
-      </div>
-
-      {/* Top Admin Dashboard: 4 Executive Summary KPI Panels */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        {/* Panel 1: Branch & User Details */}
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-          <CardHeader className="p-3.5 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-            <Building2 className="h-4 w-4 text-blue-600" />
-            <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              1. {th("BRANCH & USER DETAILS")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">{th("COUNTRY")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{session.countryName || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("BRANCH NAME")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{session.branchName || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("CITY BRANCH")}:</span> <span className="font-bold text-blue-600">{(session as any).cityBranchName || session.branchName || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("USER NAME")}:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("ROLE")}:</span> <span className="font-black text-purple-600 uppercase">{session.role || "—"}</span></div>
-            <div className="flex justify-between" suppressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">{new Date().toLocaleString(`${activeLang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span></div>
-            <div className="flex justify-between items-center"><span className="text-slate-400">{th("STATUS")}:</span> <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase">{th("ACTIVE")}</span></div>
-          </CardContent>
-        </Card>
-
-        {/* Panel 2: Global Financial Summary */}
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-          <CardHeader className="p-3.5 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-            <Coins className="h-4 w-4 text-emerald-600" />
-            <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              2. {th("GLOBAL FINANCIAL SUMMARY")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3.5 space-y-2 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL LOCAL PURCHASE BILLS")}:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{grandTotalEntries}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL LOCAL PURCHASE AMOUNT")}:</span> <span className="font-mono font-black text-slate-800 dark:text-slate-100">{grandTotalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL TAX AMOUNT")}:</span> <span className="font-mono font-bold text-amber-500">{grandTotalTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL FINAL AMOUNT")}:</span> <span className="font-mono font-black text-emerald-600">{grandTotalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5"><span className="text-slate-400">{th("REMAINING BALANCE")}:</span> <span className="font-mono font-bold text-slate-800 dark:text-slate-200">0.00</span></div>
-          </CardContent>
-        </Card>
-
-        {/* Panel 3: Bill Entry Summary */}
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-          <CardHeader className="p-3.5 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-            <FileText className="h-4 w-4 text-purple-600" />
-            <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              3. {th("BILL ENTRY SUMMARY")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL BILLS")}:</span> <span className="font-mono font-bold text-purple-600">{grandTotalEntries + acceptedBillsCount}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("POSTED (TRANSFERRED)")}:</span> <span className="font-mono font-bold text-emerald-600">{postedBillsCount}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("PENDING GL TRANSFER")}:</span> <span className="font-mono font-bold text-amber-600">{acceptedBillsCount}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("PENDING BILLS")}:</span> <span className="font-mono font-bold text-slate-400">0</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("CANCELLED BILLS")}:</span> <span className="font-mono font-bold text-slate-400">0</span></div>
-          </CardContent>
-        </Card>
-
-        {/* Panel 4: All Countries Report Header Accordion */}
-        <Card className="border-amber-200 dark:border-amber-900/60 bg-amber-50/20 dark:bg-amber-950/20 shadow-xs rounded-2xl">
-          <CardHeader className="p-3.5 border-b border-amber-200/60 dark:border-amber-900/40 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-amber-600" />
-              <CardTitle className="text-xs font-black uppercase text-amber-900 dark:text-amber-300">
-                4. {th("ALL COUNTRIES REPORT")}
-              </CardTitle>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowCountryDetails(prev => !prev)}
-              className="text-[9px] font-black uppercase text-amber-700 hover:text-amber-900 dark:text-amber-400 underline"
-            >
-              {showCountryDetails ? `${th("HIDE DETAILS")} -` : `${th("SHOW DETAILS")} +`}
-            </button>
-          </CardHeader>
-          <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
-            {countryGroups.length > 0 ? (
-              countryGroups.map(cg => (
-                <div key={cg.countryName} className="flex justify-between items-center py-1 border-b border-amber-200/30 last:border-b-0">
-                  <span className="font-black text-slate-800 dark:text-slate-200 text-[10px] uppercase">{cg.countryName}</span>
-                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">
-                    {cg.branches.length} {th("BRANCHES")}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="py-2 text-center text-[10px] text-slate-400">{th("No records found.")}</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-5 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+      <UnifiedErpRegisterBar
+        title={tt("lpjr.journal_title", "Local Purchase Journal Report")}
+        subtitle={tt("lpjr.subtitle", "ERP Master Console — Multi-Country Reporting")}
+        countries={countries}
+        branches={branches}
+        selectedCountry={selectedCountry}
+        selectedBranch={selectedBranch}
+        selectedStatus={selectedStatus}
+        onCountryChange={setSelectedCountry}
+        onBranchChange={setSelectedBranch}
+        onStatusChange={setSelectedStatus}
+        searchText={searchQuery}
+        onSearchChange={setSearchQuery}
+        onPrint={() => window.print()}
+        onResetRefresh={() => {
+          setSelectedCountry("");
+          setSelectedBranch("");
+          setSelectedStatus("");
+          setSearchQuery("");
+          void loadReports();
+        }}
+        primaryAction={{
+          label: tt("lpjr.new_local_purchase", "New Local Purchase"),
+          onClick: () => router.push("/dashboard/purchase/local-purchase")
+        }}
+        kpiSummary={kpiSummary}
+        recordTypeName={th("TOTAL LOCAL BILLS")}
+      />
 
       {/* Country Specific Cards Grid (Matching Purchase Transfer Payment) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -542,28 +411,28 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
         <CardContent className="p-0">
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]">
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-              <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
+              <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <Th className="p-2.5 text-center border-r border-slate-700"></Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("SUPER S/N")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("CTY S/N")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("BR S/N")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("VOUCHER NO")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("DATE")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("BRANCH NAME")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("COUNTRY")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">PURCHASE ACC (DR)</Th>
-                  <Th className="p-2.5 border-r border-slate-700">SALES ACC (CR)</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("GOODS NAME")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("BRAND")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("ORIGIN")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("QTY")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{th("UNIT")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("GROSS WT")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("NET WT")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("PRICE")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">{th("TOTAL COST")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("PAY MODE")}</Th>
+                  <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700"></Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("SUPER S/N")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("CTY S/N")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("BR S/N")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("VOUCHER NO")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("DATE")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("BRANCH NAME")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("COUNTRY")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">PURCHASE ACC (DR)</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">SALES ACC (CR)</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("GOODS NAME")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("BRAND")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("ORIGIN")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("QTY")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("UNIT")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("GROSS WT")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("NET WT")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("PRICE")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right font-black">{th("TOTAL COST")}</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("PAY MODE")}</Th>
                   <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
                 </tr>
               </thead>

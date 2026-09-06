@@ -13,7 +13,39 @@
 
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type VoiceContext = "purchase" | "sales" | "accounts" | "roznamcha" | "expenses" | "customer" | "company" | "bank" | "goods" | "shipping" | "clearing" | "document_intake" | "search";
+export type VoiceContext = "purchase" | "sales" | "accounts" | "roznamcha" | "expenses" | "customer" | "company" | "bank" | "employee" | "goods" | "loading" | "receiving" | "shipping" | "clearing" | "document_intake" | "search";
+
+/** Eastern-Arabic (٠-٩) + Persian (۰-۹) digits → ASCII, so amounts/dates parse
+ *  regardless of the spoken language / keyboard. */
+function normalizeDigits(s: string): string {
+  return s
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06F0));
+}
+
+/** "three thousand five hundred" → 3500 (English written numbers, best-effort). */
+function parseWrittenNumber(text: string): number | null {
+  const words: Record<string, number> = {
+    zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+    seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50,
+    sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+  };
+  const scales: Record<string, number> = { hundred: 100, thousand: 1000, lakh: 100000, lac: 100000, million: 1000000, crore: 10000000 };
+  const toks = text.toLowerCase().replace(/[,-]/g, " ").split(/\s+/).filter((t) => t in words || t in scales || t === "and");
+  if (toks.length < 2) return null;
+  let total = 0, current = 0;
+  for (const t of toks) {
+    if (t === "and") continue;
+    if (t in words) current += words[t];
+    else if (t in scales) {
+      if (scales[t] >= 1000) { total += (current || 1) * scales[t]; current = 0; }
+      else current *= scales[t];
+    }
+  }
+  const n = total + current;
+  return n > 0 ? n : null;
+}
 
 export interface VoiceInterpretationResult {
   context: VoiceContext;
@@ -41,18 +73,24 @@ export class VoiceContextInterpreter {
     context: VoiceContext,
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
-    const cleaned = transcript.toLowerCase().trim();
+    const cleaned = normalizeDigits(transcript).toLowerCase().trim();
     const warnings: string[] = [];
     const fields: Record<string, string | number | null> = {};
     let confidence = 0.5;
     let interpretedAction = "";
 
     // Extract common fields that apply to all contexts
-    const amounts = cleaned.match(AMOUNT_PATTERN) || [];
+    let amounts = cleaned.match(AMOUNT_PATTERN) || [];
+    if (amounts.length === 0) {
+      const written = parseWrittenNumber(cleaned);
+      if (written != null) amounts = [String(written)];
+    }
     const currencies = cleaned.match(CURRENCY_PATTERN) || [];
     const parties = this.extractParties(cleaned);
 
-    if (amounts.length === 0) warnings.push("No amount detected. Please specify an amount.");
+    if (amounts.length === 0 && !["search", "goods", "customer", "company", "bank", "employee"].includes(context)) {
+      warnings.push("No amount detected. Please specify an amount.");
+    }
     if (parties.length === 0 && !["search", "goods"].includes(context)) {
       warnings.push("No party/customer name detected. Please specify who or what you're referring to.");
     }
@@ -83,8 +121,19 @@ export class VoiceContextInterpreter {
       case "bank":
         return this.interpretBank(cleaned, fields, warnings, confidence, parties, language);
 
+      case "employee":
+        return this.interpretPerson(cleaned, fields, warnings, confidence, parties, "employee", "create_employee_draft");
+
       case "goods":
         return this.interpretGoods(cleaned, fields, warnings, confidence, language);
+
+      case "loading":
+      case "receiving":
+        return this.interpretLogistics(cleaned, fields, warnings, confidence, parties, currencies, context);
+
+      case "shipping":
+      case "clearing":
+        return this.interpretLogistics(cleaned, fields, warnings, confidence, parties, currencies, context);
 
       case "search":
         return this.interpretSearch(cleaned, fields, warnings, confidence);
@@ -377,6 +426,60 @@ export class VoiceContextInterpreter {
     };
   }
 
+  private static interpretPerson(
+    cleaned: string,
+    fields: Record<string, any>,
+    warnings: string[],
+    confidence: number,
+    parties: string[],
+    context: VoiceContext,
+    action: string,
+  ): VoiceInterpretationResult {
+    const nameKey = context === "employee" ? "fullName" : "customerName";
+    if (parties.length > 0) { fields[nameKey] = parties[0]; confidence += 0.25; }
+    const phone = cleaned.match(/(?:\+?\d[\d\s-]{7,}\d)/)?.[0];
+    if (phone) { fields.phone = phone.replace(/\s+/g, ""); confidence += 0.1; }
+    const email = cleaned.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i)?.[0];
+    if (email) { fields.email = email; confidence += 0.1; }
+    const nid = cleaned.match(/\b\d{5}[- ]?\d{7}[- ]?\d\b/)?.[0];
+    if (nid) { fields.nationalId = nid.replace(/[- ]/g, ""); confidence += 0.1; }
+    return {
+      context,
+      confidence: Math.min(1, confidence + 0.05),
+      extractedFields: fields,
+      interpretedAction: action,
+      warnings: parties.length === 0 ? [...warnings, "No name detected — please state the person / entity name."] : warnings,
+      originalTranscript: cleaned,
+    };
+  }
+
+  private static interpretLogistics(
+    cleaned: string,
+    fields: Record<string, any>,
+    warnings: string[],
+    confidence: number,
+    parties: string[],
+    currencies: readonly string[],
+    context: VoiceContext,
+  ): VoiceInterpretationResult {
+    if (parties.length > 0) { fields.partyName = parties[0]; confidence += 0.15; }
+    const container = cleaned.match(/\b[a-z]{4}\s?\d{7}\b/i)?.[0]?.toUpperCase().replace(/\s/g, "");
+    if (container) { fields.containerNumbers = container; confidence += 0.2; }
+    const bl = cleaned.match(/\b(?:b\/?l|bill of lading|awb)\s*(?:no\.?|number|#)?\s*[:.]?\s*([a-z0-9-]{4,20})/i)?.[1];
+    if (bl) { fields.blNumber = bl.toUpperCase(); confidence += 0.15; }
+    const vessel = cleaned.match(/(?:vessel|ship)\s+(?:name\s+)?([a-z][a-z0-9 .-]{2,30})/i)?.[1];
+    if (vessel) { fields.vesselName = vessel.trim(); confidence += 0.1; }
+    if (currencies.length > 0) fields.currencyCode = String(currencies[0]).toUpperCase();
+    return {
+      context,
+      confidence: Math.min(1, confidence + 0.05),
+      extractedFields: fields,
+      interpretedAction: `create_${context}_draft`,
+      warnings: Object.keys(fields).length === 0 ? [...warnings, "Please state a container / BL / vessel reference."] : warnings,
+      originalTranscript: cleaned,
+    };
+  }
+
   private static interpretSearch(cleaned: string, fields: Record<string, any>, warnings: string[], confidence: number): VoiceInterpretationResult {
     fields.searchQuery = cleaned;
     return {
@@ -395,9 +498,10 @@ export class VoiceContextInterpreter {
   }
 
   private static parseAmount(amountStr: string): number | null {
-    const num = amountStr.replace(/[^0-9.]/g, "");
+    const num = normalizeDigits(amountStr).replace(/[^0-9.]/g, "");
     const parsed = parseFloat(num);
-    return Number.isFinite(parsed) ? parsed : null;
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    return parseWrittenNumber(amountStr);
   }
 
   private static detectAccountType(text: string): string | null {
@@ -415,9 +519,13 @@ export class VoiceContextInterpreter {
   }
 
   private static detectTransactionType(text: string): string | null {
-    if (text.includes("received") || text.includes("cash in")) return "debit";
-    if (text.includes("paid") || text.includes("cash out")) return "credit";
-    if (text.includes("transfer")) return "transfer";
+    // multilingual: received / وصول / ملیدل / دریافت / استلام   → debit (money in)
+    //               paid / ادائیگی / ورکړل / پرداخت / دفع        → credit (money out)
+    const receiveWords = ["received", "receive", "cash in", "وصول", "ملي", "دریافت", "استلام", "آمد", "جمع"];
+    const payWords = ["paid", "pay", "cash out", "ادائیگی", "ورکړ", "پرداخت", "دفع", "خرچ"];
+    if (receiveWords.some((w) => text.includes(w))) return "debit";
+    if (payWords.some((w) => text.includes(w))) return "credit";
+    if (text.includes("transfer") || text.includes("منتقلی") || text.includes("حواله")) return "transfer";
     return null;
   }
 }

@@ -50,6 +50,8 @@ import { cn } from "@/lib/utils";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { LocationBackdrop } from "@/components/location-backdrop";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
@@ -540,6 +542,15 @@ export function CashEntryForm({
     () => cityBranches.find((b) => b.id === cityBranchId) ?? null,
     [cityBranchId, cityBranches]
   );
+
+  const backdropSelection = useMemo(() => ({
+    iso2: (selectedCountry as { iso2?: string } | null)?.iso2 ?? null,
+    countryName: (selectedCountry as { name?: string } | null)?.name ?? null,
+    cityName: (selectedCityBranch as { city_name?: string; name?: string } | null)?.city_name
+      ?? (selectedCityBranch as { name?: string } | null)?.name ?? null,
+    branchName: (selectedCityBranch as { branch_name?: string; name?: string } | null)?.branch_name
+      ?? (selectedMainBranch as { name?: string } | null)?.name ?? null,
+  }), [selectedCountry, selectedCityBranch, selectedMainBranch]);
 
   const liveSerials = useMemo(() => {
     const nextSeq = recentEntries.length + 1;
@@ -2582,6 +2593,35 @@ export function CashEntryForm({
         </div>
 
       <div className="space-y-4 px-4 pb-4">
+        <LocationBackdrop
+          selection={backdropSelection}
+          title={t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry")}
+          subtitle={pageTitle}
+          className="min-h-[92px]"
+        />
+
+        <VoiceFormFill
+          context="roznamcha"
+          lang={lang}
+          fieldLabels={{
+            finalAmount: t(lang, "roz.cef_amount", "Amount"),
+            originalCurrency: t(lang, "roz.cef_currency", "Currency"),
+            counterpartyName: t(lang, "roz.cef_party", "Party"),
+            transactionType: t(lang, "roz.cef_direction", "Direction"),
+          }}
+          onApply={(f) => {
+            if (f.finalAmount != null && f.finalAmount !== "") setCalcAmount(String(f.finalAmount));
+            if (typeof f.originalCurrency === "string" && f.originalCurrency) setCurrency(f.originalCurrency.toUpperCase());
+            if (f.transactionType === "debit") setPaymentMode("DEBIT");
+            else if (f.transactionType === "credit") setPaymentMode("CREDIT");
+            const bits = [
+              f.counterpartyName ? `${t(lang, "roz.cef_party", "Party")}: ${f.counterpartyName}` : null,
+              `(${t(lang, "roz.cef_voice_source", "entered by voice")})`,
+            ].filter(Boolean);
+            setNarration((prev) => prev || bits.join(" · "));
+          }}
+        />
+
         {intakeDraft.draft && !intakeBannerDismissed ? (
           <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-xs dark:border-violet-800 dark:bg-violet-950/20">
             <div className="flex items-start justify-between gap-3">

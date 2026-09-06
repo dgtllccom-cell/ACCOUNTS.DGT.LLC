@@ -5,6 +5,7 @@ import { Mic, MicOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import type { VoiceContext } from "@/lib/services/voice-context-interpreter";
 
 const SPEECH_LANG_MAP: Record<SupportedLanguage, string> = {
   en: "en-US",
@@ -47,7 +48,7 @@ export function ErpVoiceInputButton({
   disabled = false,
   className = "",
 }: {
-  context: "purchase" | "sales" | "accounts" | "roznamcha" | "expenses" | "customer" | "company" | "bank" | "goods" | "shipping" | "clearing" | "document_intake" | "search";
+  context: VoiceContext;
   onTranscribed: (result: VoiceTranscriptionResult) => void;
   onError?: (error: string) => void;
   lang?: SupportedLanguage;
