@@ -463,10 +463,15 @@ function AccountRowActionsMenu({
   }
 
   return (
-    <div ref={rootRef} className="relative">
-      <Button type="button" variant="outline" size="icon" disabled={disabled} onClick={() => setOpen((value) => !value)}>
-        <MoreVertical className="h-4 w-4" aria-hidden />
-      </Button>
+    <div ref={rootRef} className="relative inline-flex items-center justify-center">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((value) => !value)}
+        className="h-7 w-7 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-2xs transition hover:scale-105 cursor-pointer disabled:opacity-50"
+      >
+        <MoreVertical className="h-3.5 w-3.5" aria-hidden />
+      </button>
 
       {open ? (
         <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border bg-background shadow-lg">
@@ -1832,38 +1837,93 @@ export function AccountGeneralReportView({
         ) : null}
 
         <div className={cn("grid gap-6 items-start", showProfilePanel ? "xl:grid-cols-[minmax(0,1fr)_420px]" : "xl:grid-cols-1")}>
-          <div className="overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-            <div className="overflow-auto max-h-[calc(100vh-320px)] min-h-[350px]">
-              <table className="min-w-[1550px] w-full text-xs text-left border-collapse">
-                <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 shadow-sm">
+            {/* Table Header Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                    {tr("ACCOUNT MASTER REGISTRY")}
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("ACCOUNTS")}
+                    </span>
+                  </h2>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                    {tr("Enterprise Multi-Country General Ledger Directory & Live Balances")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setExpandedView((prev) => !prev)}
+                  className="h-7 rounded-lg border-slate-200 dark:border-slate-700 text-[10.5px] font-bold px-2.5 gap-1.5 shadow-2xs cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  <Expand className="h-3 w-3 text-slate-500" />
+                  <span>{expandedView ? tr("COLLAPSE VIEW") : tr("EXPAND VIEW")}</span>
+                </Button>
+              </div>
+            </div>
+
+            <div className={cn("overflow-auto", expandedView ? "max-h-[85vh]" : "max-h-[calc(100vh-340px)] min-h-[380px]")}>
+              <table className="min-w-[1700px] w-full text-xs text-left border-collapse">
+                <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-xs">
                   <tr>
                     {[
-                      { label: tr("MASTER REFERENCE & ACCOUNT OVERVIEW"), span: 9, cls: "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-t-2 border-t-slate-400" },
-                      { label: tr("CONTACT DETAILS"), span: 1, cls: "bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border-t-2 border-t-emerald-500" },
-                      { label: tr("BRANCH & LOCATION"), span: 3, cls: "bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-400 border-t-2 border-t-indigo-500" },
-                      { label: tr("FINANCIAL INFORMATION"), span: 4, cls: "bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border-t-2 border-t-blue-500" },
-                      { label: tr("START & STATUS"), span: 2, cls: "bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border-t-2 border-t-amber-500" },
-                      { label: tr("ACTIONS"), span: 1, cls: "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-t-2 border-t-slate-300" },
+                      { label: "MASTER REFERENCE & ACCOUNT OVERVIEW", span: 9, cls: "bg-slate-900 text-white dark:bg-slate-950 dark:text-slate-100 border-r border-slate-700 dark:border-slate-800" },
+                      { label: "CONTACT DETAILS", span: 1, cls: "bg-emerald-800 text-white dark:bg-emerald-950 dark:text-emerald-200 border-r border-emerald-700 dark:border-emerald-800" },
+                      { label: "BRANCH & LOCATION", span: 3, cls: "bg-indigo-900 text-white dark:bg-indigo-950 dark:text-indigo-200 border-r border-indigo-800 dark:border-indigo-800" },
+                      { label: "FINANCIAL INFORMATION", span: 4, cls: "bg-blue-900 text-white dark:bg-blue-950 dark:text-blue-200 border-r border-blue-800 dark:border-blue-800" },
+                      { label: "START & STATUS", span: 2, cls: "bg-amber-800 text-white dark:bg-amber-950 dark:text-amber-200 border-r border-amber-700 dark:border-amber-800" },
+                      { label: "ACTIONS", span: 1, cls: "bg-slate-800 text-white dark:bg-slate-900 dark:text-slate-200" },
                     ].map((group) => (
                       <Th
                         key={group.label}
                         colSpan={group.span}
-                        className={`${group.cls} px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0`}
+                        className={`${group.cls} px-3 py-2 text-[11px] font-black uppercase tracking-wider text-center`}
                       >
                         {group.label}
                       </Th>
                     ))}
                   </tr>
-                  <tr className="bg-white dark:bg-slate-950 text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-slate-800">
+                  <tr className="bg-slate-100/90 dark:bg-slate-900 text-[10.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 border-b-2 border-slate-300 dark:border-slate-700">
                     {[
-                      "MANUAL REF", "ACCOUNT CODE", "ACCOUNT NAME", "CATEGORY", "ACCOUNT TYPE", "COMPANY NAME",
-                      "BANK NAME", "WAREHOUSE NAME", "OWNER NAME", "CONTACTS",
-                      "COUNTRY", "MAIN BRANCH", "CITY BRANCH", "CURRENCY",
-                      "DEBIT", "CREDIT", "BALANCE", "START DATE",
-                      "STATUS", "ACTIONS"
-                    ].map((header, i) => (
-                      <Th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
-                        {tr(header)}
+                      { label: "MANUAL REF", align: "text-center", width: "min-w-[100px]" },
+                      { label: "ACCOUNT CODE", align: "text-center", width: "min-w-[130px]" },
+                      { label: "ACCOUNT NAME", align: "text-left", width: "min-w-[210px]" },
+                      { label: "CATEGORY", align: "text-center", width: "min-w-[105px]" },
+                      { label: "ACCOUNT TYPE", align: "text-center", width: "min-w-[110px]" },
+                      { label: "COMPANY NAME", align: "text-left", width: "min-w-[160px]" },
+                      { label: "BANK NAME", align: "text-left", width: "min-w-[140px]" },
+                      { label: "WAREHOUSE NAME", align: "text-left", width: "min-w-[140px]" },
+                      { label: "OWNER NAME", align: "text-left", width: "min-w-[150px]" },
+                      { label: "CONTACTS", align: "text-center", width: "min-w-[95px]" },
+                      { label: "COUNTRY", align: "text-center", width: "min-w-[140px]" },
+                      { label: "MAIN BRANCH", align: "text-left", width: "min-w-[150px]" },
+                      { label: "CITY BRANCH", align: "text-left", width: "min-w-[140px]" },
+                      { label: "CURRENCY", align: "text-center", width: "min-w-[85px]" },
+                      { label: "DEBIT", align: "text-right", width: "min-w-[115px]" },
+                      { label: "CREDIT", align: "text-right", width: "min-w-[115px]" },
+                      { label: "BALANCE", align: "text-right", width: "min-w-[125px]" },
+                      { label: "START DATE", align: "text-center", width: "min-w-[100px]" },
+                      { label: "STATUS", align: "text-center", width: "min-w-[95px]" },
+                      { label: "ACTIONS", align: "text-center", width: "min-w-[65px]" }
+                    ].map((col, i) => (
+                      <Th
+                        key={i}
+                        className={cn(
+                          "px-3 py-2.5 border-r border-slate-200 dark:border-slate-800 last:border-r-0 whitespace-nowrap align-middle",
+                          col.align,
+                          col.width
+                        )}
+                      >
+                        {col.label}
                       </Th>
                     ))}
                   </tr>
@@ -1871,60 +1931,214 @@ export function AccountGeneralReportView({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                   {loading ? (
                     <tr>
-                      <td colSpan={20} className="px-5 py-10 text-center text-sm text-slate-500 font-medium">
-                        <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-blue-500" />
+                      <td colSpan={20} className="px-5 py-12 text-center text-sm text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
                         {t(lang, "acct.agrv_loading_accounts_registry", "Loading accounts registry...")}
                       </td>
                     </tr>
                   ) : sortedRows.length ? (
-                    sortedRows.map((row) => {
+                    sortedRows.map((row, idx) => {
                       const active = row.accountId === selectedRow?.accountId;
                       const highlighted = row.accountId === highlightedAccountId;
-                      
+
                       return (
                         <tr
                           key={row.accountId}
                           onClick={() => setSelectedAccountId(row.accountId)}
                           className={cn(
-                            "cursor-pointer transition hover:bg-blue-50/30 dark:hover:bg-blue-950/10 text-center text-[10px] font-semibold text-slate-800 dark:text-slate-350",
-                            active && "bg-blue-50/40 dark:bg-blue-950/10",
-                            highlighted && "bg-emerald-50 dark:bg-emerald-950/30"
+                            "cursor-pointer transition-colors duration-150 text-[11px] font-medium border-b border-slate-200/70 dark:border-slate-800/70 group",
+                            idx % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-50/50 dark:bg-slate-900/30",
+                            "hover:bg-blue-50/60 dark:hover:bg-blue-950/25",
+                            active && "!bg-blue-50 dark:!bg-blue-950/40 ring-1 ring-inset ring-blue-500/30",
+                            highlighted && "!bg-emerald-50 dark:!bg-emerald-950/30"
                           )}
                         >
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-slate-600 dark:text-slate-400">{row.manualReferenceNumber || "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono font-bold text-blue-700 dark:text-blue-400">{row.accountCode}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-left">{localizeTerm(row.accountName, lang)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-purple-700 dark:text-purple-400 text-[9px] uppercase">{localizeTerm(row.accountCategory || "Asset", lang)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-slate-600 dark:text-slate-300 text-[9px]">{localizeTerm(row.subType || "Normal Account", lang)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium">{row.companyName ? localizeTerm(row.companyName, lang) : "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-emerald-700 dark:text-emerald-400">{row.bankName ? localizeTerm(row.bankName, lang) : "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-amber-700 dark:text-amber-400">{row.warehouseName ? localizeTerm(row.warehouseName, lang) : "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-slate-900 dark:text-slate-100">
-                            {transliterateProperNoun(
-                              (row.ownerName && row.ownerName !== "-" && !row.ownerName.toLowerCase().includes("import export") ? row.ownerName : "") ||
-                              ((row as any).customerName && (row as any).customerName !== "-" ? (row as any).customerName : "") ||
-                              (row.companyOwner && row.companyOwner !== "-" && !row.companyOwner.toLowerCase().includes("import export") ? row.companyOwner : "") ||
-                              "-",
-                              lang
+                          {/* 1. Manual Ref */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center font-mono align-middle">
+                            {row.manualReferenceNumber ? (
+                              <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                                {row.manualReferenceNumber}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
                             )}
                           </td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 text-center align-middle">
+
+                          {/* 2. Account Code */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors">
+                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+                              <span>{row.accountCode}</span>
+                            </div>
+                          </td>
+
+                          {/* 3. Account Name */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
+                                {localizeTerm(row.accountName, lang)}
+                              </span>
+                              {row.journalCode && row.journalCode !== "-" ? (
+                                <span className="text-[9.5px] font-mono font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                                  {row.journalCode}
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+
+                          {/* 4. Category */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            {(() => {
+                              const cat = (row.accountCategory || "Asset").toLowerCase();
+                              let badgeCls = "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+                              if (cat.includes("asset")) badgeCls = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
+                              else if (cat.includes("liability")) badgeCls = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
+                              else if (cat.includes("equity")) badgeCls = "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800";
+                              else if (cat.includes("income") || cat.includes("revenue")) badgeCls = "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800";
+                              else if (cat.includes("expense")) badgeCls = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800";
+
+                              return (
+                                <span className={cn("inline-block px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider border shadow-2xs", badgeCls)}>
+                                  {localizeTerm(row.accountCategory || "Asset", lang)}
+                                </span>
+                              );
+                            })()}
+                          </td>
+
+                          {/* 5. Account Type */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 text-[10px] font-bold border border-slate-200/70 dark:border-slate-700">
+                              {localizeTerm(row.subType || "Normal Account", lang)}
+                            </span>
+                          </td>
+
+                          {/* 6. Company Name */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] block">
+                              {row.companyName ? localizeTerm(row.companyName, lang) : "—"}
+                            </span>
+                          </td>
+
+                          {/* 7. Bank Name */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            {row.bankName && row.bankName !== "-" ? (
+                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[10px] font-bold">
+                                <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span className="truncate max-w-[120px]">{localizeTerm(row.bankName, lang)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
+                            )}
+                          </td>
+
+                          {/* 8. Warehouse Name */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            {row.warehouseName && row.warehouseName !== "-" ? (
+                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800 text-[10px] font-bold">
+                                <Building className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span className="truncate max-w-[120px]">{localizeTerm(row.warehouseName, lang)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
+                            )}
+                          </td>
+
+                          {/* 9. Owner Name */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            <div className="flex items-center gap-1 text-left font-bold text-slate-900 dark:text-slate-100 text-[11px]">
+                              <User className="h-3 w-3 text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[130px]">
+                                {transliterateProperNoun(
+                                  (row.ownerName && row.ownerName !== "-" && !row.ownerName.toLowerCase().includes("import export") ? row.ownerName : "") ||
+                                  ((row as any).customerName && (row as any).customerName !== "-" ? (row as any).customerName : "") ||
+                                  (row.companyOwner && row.companyOwner !== "-" && !row.companyOwner.toLowerCase().includes("import export") ? row.companyOwner : "") ||
+                                  "—",
+                                  lang
+                                )}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* 10. Contacts */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <ContactIconPopup row={row} />
                           </td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{localizeTerm(row.countryName, lang)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{localizeTerm(row.mainBranchName ?? (row.branchType === "Main Branch" ? row.branchName : "-"), lang)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{localizeTerm(row.cityBranchName ?? (row.branchType === "City Branch" ? row.branchName : "-"), lang)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-black">{row.currency}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-rose-600 dark:text-rose-400 text-right">{fmtNumber(row.debitTotal)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-emerald-600 dark:text-emerald-400 text-right">{fmtNumber(row.creditTotal)}</td>
-                          <td className={cn("px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono font-black text-right", rowTone(row.currentBalance))}>{fmtNumber(row.currentBalance)}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-[9px] text-slate-500">{row.createdAt ? row.createdAt.slice(0, 10) : "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">
-                            <span className={cn("inline-block px-1.5 py-0.5 rounded text-[8px] font-black uppercase text-white tracking-widest", row.status === "active" ? "bg-emerald-600" : "bg-slate-500")}>
+
+                          {/* 11. Country */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[10.5px] font-bold shadow-2xs">
+                              <span>{getFlag(row.countryName)}</span>
+                              <span>{localizeTerm(row.countryName, lang)}</span>
+                            </div>
+                          </td>
+
+                          {/* 12. Main Branch */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] block">
+                              {localizeTerm(row.mainBranchName ?? (row.branchType === "Main Branch" ? row.branchName : "-"), lang)}
+                            </span>
+                          </td>
+
+                          {/* 13. City Branch */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            <span className="font-medium text-slate-600 dark:text-slate-400 text-[10.5px] block">
+                              {localizeTerm(row.cityBranchName ?? (row.branchType === "City Branch" ? row.branchName : "-"), lang)}
+                            </span>
+                          </td>
+
+                          {/* 14. Currency */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[10.5px] text-slate-700 dark:text-slate-300">
+                              {row.currency}
+                            </span>
+                          </td>
+
+                          {/* 15. Debit */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-850 text-right font-mono font-bold text-[11px] text-rose-600 dark:text-rose-400 tabular-nums align-middle">
+                            {row.debitTotal > 0 ? fmtNumber(row.debitTotal) : <span className="text-slate-300 dark:text-slate-600 font-normal">0.00</span>}
+                          </td>
+
+                          {/* 16. Credit */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-850 text-right font-mono font-bold text-[11px] text-emerald-600 dark:text-emerald-400 tabular-nums align-middle">
+                            {row.creditTotal > 0 ? fmtNumber(row.creditTotal) : <span className="text-slate-300 dark:text-slate-600 font-normal">0.00</span>}
+                          </td>
+
+                          {/* 17. Balance */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-850 text-right font-mono font-black text-[11px] tabular-nums align-middle">
+                            <span className={cn(
+                              "inline-block px-2 py-0.5 rounded font-black",
+                              row.currentBalance < 0
+                                ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900"
+                                : row.currentBalance > 0
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900"
+                                : "text-slate-400 dark:text-slate-500 font-normal"
+                            )}>
+                              {fmtNumber(row.currentBalance)}
+                            </span>
+                          </td>
+
+                          {/* 18. Start Date */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <span className="font-mono text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                              {row.createdAt ? row.createdAt.slice(0, 10) : "—"}
+                            </span>
+                          </td>
+
+                          {/* 19. Status */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <span className={cn(
+                              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wide border shadow-2xs",
+                              row.status === "active"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                            )}>
+                              <span className={cn("h-1.5 w-1.5 rounded-full", row.status === "active" ? "bg-emerald-500 animate-pulse" : "bg-slate-400")} />
                               {row.status === "active" ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-center align-middle">
+
+                          {/* 20. Actions */}
+                          <td className="px-3 py-2.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                             <AccountRowActionsMenu
                               row={row}
                               disabled={loadingDeleting}
@@ -1952,12 +2166,50 @@ export function AccountGeneralReportView({
                     })
                   ) : (
                     <tr>
-                      <td colSpan={20} className="px-5 py-10 text-center text-sm text-slate-500">
+                      <td colSpan={20} className="px-5 py-12 text-center text-sm text-slate-500">
                         {tr("NO ACCOUNTS MATCH THE SELECTED FILTERS")}
                       </td>
                     </tr>
                   )}
                 </tbody>
+                <tfoot className="sticky bottom-0 z-10 bg-slate-100/95 dark:bg-slate-900/95 border-t-2 border-slate-300 dark:border-slate-700 backdrop-blur-xs font-bold text-[11px] text-slate-800 dark:text-slate-200 shadow-md">
+                  <tr>
+                    <td colSpan={14} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-black">
+                          {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("TOTAL ACCOUNTS")}
+                        </span>
+                        <span className="text-[10.5px] text-slate-600 dark:text-slate-300 font-extrabold">
+                          {tr("GRAND FINANCIAL SUMMARY (ALL VISIBLE ACCOUNTS)")}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono font-black text-rose-600 dark:text-rose-400 border-r border-slate-200 dark:border-slate-800 text-[11.5px] tabular-nums">
+                      {fmtNumber(sortedRows.reduce((sum, r) => sum + r.debitTotal, 0))}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-800 text-[11.5px] tabular-nums">
+                      {fmtNumber(sortedRows.reduce((sum, r) => sum + r.creditTotal, 0))}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono font-black border-r border-slate-200 dark:border-slate-800 text-[11.5px] tabular-nums">
+                      {(() => {
+                        const net = sortedRows.reduce((sum, r) => sum + r.currentBalance, 0);
+                        return (
+                          <span className={cn(
+                            "inline-block px-2 py-0.5 rounded font-black",
+                            net < 0
+                              ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                              : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          )}>
+                            {fmtNumber(net)}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td colSpan={3} className="px-3 py-2.5 text-center text-[10px] text-slate-400 font-medium">
+                      {/* Empty space for status & actions */}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>
