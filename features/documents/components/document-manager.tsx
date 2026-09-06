@@ -140,11 +140,11 @@ const DOCUMENT_TYPES = [
 
 const TRANSLATIONS: Record<string, Record<string, string>> = {
   page_tag: {
-    ur: "دستاویزات کا انتظام اور ہارڈویئر اسکینر",
-    ar: "إدارة المستندات والماسح الضوئي",
-    ps: "د اسنادو مدیریت او هارډویر سکینر",
-    fa: "مدیریت اسناد و اسکنر سخت‌افزار",
-    en: "Document Management & Hardware Scanner"
+    ur: "دستاویزات کا انتظام اور کیمرہ کیپچر",
+    ar: "إدارة المستندات والالتقاط بالكاميرا",
+    ps: "د اسنادو مدیریت او د کامرې اخیستنه",
+    fa: "مدیریت اسناد و ثبت با دوربین",
+    en: "Document Management & Camera Capture"
   },
   page_title: {
     ur: "سپر ایڈمن دستاویزات اسٹوریج ڈائریکٹری",
@@ -168,11 +168,11 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     en: "Uploading..."
   },
   start_scan: {
-    ur: "ڈائریکٹ اسکین شروع کریں",
-    ar: "بدء المسح المباشر",
-    ps: "مستقیم سکین پیل کړئ",
-    fa: "شروع اسکن مستقیم",
-    en: "Start Direct Scan"
+    ur: "کیمرہ سے کیپچر کریں",
+    ar: "الالتقاط بالكاميرا",
+    ps: "د کامرې اخیستنه",
+    fa: "ثبت با دوربین",
+    en: "Camera Capture"
   },
   new_folder: {
     ur: "نیا فولڈر بنائیں",
@@ -991,7 +991,7 @@ export function DocumentManager() {
                 {filteredDocuments.length} {t("active_docs", "Active")}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">{th("Hardware Scanner & Cloud Storage")}</p>
+            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">{th("Camera Capture & Cloud Storage")}</p>
           </div>
         </div>
 
@@ -1165,7 +1165,7 @@ export function DocumentManager() {
 
             {isActionsMenuOpen && (
               <div className="absolute right-0 mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 text-xs font-semibold space-y-1">
-                {/* 1. Start Direct Scan */}
+                {/* 1. Camera Capture */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1178,8 +1178,8 @@ export function DocumentManager() {
                     <Camera className="h-3.5 w-3.5" />
                   </div>
                   <div>
-                    <p className="font-bold text-xs">{t("start_scan", "Start Direct Scan")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">{th("Hardware TWAIN Scanner")}</p>
+                    <p className="font-bold text-xs">{t("start_scan", "Camera Capture")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("Device camera (webcam / phone)")}</p>
                   </div>
                 </button>
 
@@ -1552,7 +1552,7 @@ export function DocumentManager() {
             </div>
             <div className="flex justify-between text-purple-600 font-bold">
               <span>{t("direct_scan_bridge", "Scanner Bridge")}:</span>
-              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">{th("TWAIN Ready")}</span>
+              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">{th("Camera Ready")}</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
               <span>{t("cloud_bucket", "Cloud Bucket")}:</span>
@@ -1601,7 +1601,7 @@ export function DocumentManager() {
               onClick={() => setIsScannerOpen(true)}
               className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-emerald-600 cursor-pointer"
             >
-              <span>{t("direct_scan_studio", "Direct Scan Studio")}</span>
+              <span>{t("direct_scan_studio", "Camera Capture")}</span>
               <span className="text-emerald-600 font-bold">📷 {t("open", "Open")}</span>
             </div>
             <div
@@ -1985,7 +1985,7 @@ export function DocumentManager() {
                     className="rounded-xl border-emerald-300 text-emerald-700 bg-emerald-50 text-xs font-bold"
                   >
                     <Camera className="h-3.5 w-3.5 mr-1" />
-                    {t("start_scan", "Start Direct Scan")}
+                    {t("start_scan", "Camera Capture")}
                   </Button>
                 </div>
               </div>
@@ -2187,7 +2187,7 @@ export function DocumentManager() {
         </div>
       </div>
 
-      {/* ── Modal 1: Direct Hardware Scanner Studio ── */}
+      {/* ── Modal 1: Camera Document Capture ── */}
       <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
         <DialogContent className="max-w-lg rounded-2xl p-5 font-sans">
           <DialogHeader>

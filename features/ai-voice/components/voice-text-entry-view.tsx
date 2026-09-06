@@ -4,17 +4,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Mic, Square, Play, Pause, Loader2, Send, Volume2, History, Trash2, Languages, RefreshCw } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
-
-const LANG_CODES = supportedLanguages.map((l) => l.code) as SupportedLanguage[];
 import { Button } from "@/components/ui/button";
 
-const SPEECH_LANG: Record<SupportedLanguage, string> = {
-  en: "en-US", ur: "ur-PK", ps: "ps-AF", fa: "fa-IR", ar: "ar-SA",
-};
-const LANG_LABEL: Record<SupportedLanguage, string> = {
-  en: "English", ur: "اردو", ps: "پښتو", fa: "فارسی", ar: "العربية",
-};
-const RTL = new Set<SupportedLanguage>(["ur", "ar", "fa", "ps"]);
+// All derived from the central language registry — NOT a parallel UI dictionary.
+const LANG_CODES = supportedLanguages.map((l) => l.code) as SupportedLanguage[];
+const LANG_LABEL = Object.fromEntries(
+  supportedLanguages.map((l) => [l.code, l.nativeName]),
+) as Record<SupportedLanguage, string>;
+const LANG_DIR = Object.fromEntries(
+  supportedLanguages.map((l) => [l.code, l.direction]),
+) as Record<SupportedLanguage, "ltr" | "rtl">;
+const SPEECH_REGION: Partial<Record<SupportedLanguage, string>> = { ur: "PK", ps: "AF", fa: "IR", ar: "SA", en: "US" };
+const speechTag = (code: SupportedLanguage) => `${code}-${SPEECH_REGION[code] || code.toUpperCase()}`;
+const isRtlLang = (code: SupportedLanguage) => LANG_DIR[code] === "rtl";
 
 type HistoryItem = {
   id: string;
@@ -60,7 +62,7 @@ export function VoiceTextEntryView({ lang: langProp }: { lang?: SupportedLanguag
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const finalisedRef = useRef<string>("");
 
-  const spokenRtl = RTL.has(spokenLang);
+  const spokenRtl = isRtlLang(spokenLang);
   const spokenDir = spokenRtl ? "rtl" : "ltr";
 
   useEffect(() => {
@@ -124,7 +126,7 @@ export function VoiceTextEntryView({ lang: langProp }: { lang?: SupportedLanguag
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SR) {
       const recog = new SR();
-      recog.lang = SPEECH_LANG[spokenLang] || "en-US";
+      recog.lang = speechTag(spokenLang);
       recog.continuous = true;
       recog.interimResults = true;
       recog.onresult = (e: any) => {
@@ -181,7 +183,7 @@ export function VoiceTextEntryView({ lang: langProp }: { lang?: SupportedLanguag
     if (!ttsSupported || !text.trim()) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = SPEECH_LANG[langCode] || "en-US";
+    u.lang = speechTag(langCode);
     u.rate = 0.95;
     window.speechSynthesis.speak(u);
   };
@@ -418,7 +420,7 @@ export function VoiceTextEntryView({ lang: langProp }: { lang?: SupportedLanguag
                 <span className="text-[10px] rounded px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">{h.status}</span>
                 <span className="text-[10px] text-slate-400">{new Date(h.created_at).toLocaleString(s.lang)}</span>
               </div>
-              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 line-clamp-2" dir={RTL.has(h.original_language) ? "rtl" : "ltr"}>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 line-clamp-2" dir={isRtlLang(h.original_language) ? "rtl" : "ltr"}>
                 {h.transcript}
               </p>
               <div className="mt-1 flex items-center gap-3">

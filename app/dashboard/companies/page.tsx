@@ -1,8 +1,8 @@
+import { CompanyRegistry } from "@/features/companies/components/company-registry";
 import { OrganizationFoundation } from "@/features/companies/components/organization-foundation";
 import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
 
 export const metadata = { title: "Companies & Branches" };
-
 
 export default function CompaniesPage() {
   return (
@@ -13,6 +13,7 @@ export default function CompaniesPage() {
         descKey="dph.companies_desc"
         descFallback="Workspace entities, branch structure, and membership boundaries."
       />
+      <CompanyRegistry />
       <OrganizationFoundation />
     </div>
   );
