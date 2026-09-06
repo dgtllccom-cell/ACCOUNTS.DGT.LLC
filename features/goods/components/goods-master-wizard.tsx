@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 export function GoodsMasterWizard({
   onClose,
@@ -72,6 +73,16 @@ export function GoodsMasterWizard({
               {error}
             </div>
           )}
+          <VoiceFormFill
+            context="goods"
+            lang={lang}
+            compact
+            onApply={(f) => setForm((p) => ({
+              ...p,
+              goodsName: f.goodsName ? String(f.goodsName).toUpperCase() : p.goodsName,
+              chsCode: f.chsCode ? String(f.chsCode) : p.chsCode,
+            }))}
+          />
           <div className="grid gap-3">
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{tr("goods_wizard.goods_name", "Goods Name")} *</label>

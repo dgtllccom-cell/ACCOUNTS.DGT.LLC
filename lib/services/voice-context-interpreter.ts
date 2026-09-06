@@ -417,13 +417,22 @@ export class VoiceContextInterpreter {
     confidence: number,
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
-    // Goods: look for item names, quantities, descriptions
+    // Goods / product master: pull a name and (if spoken) an HS / CHS code.
+    const nameM =
+      cleaned.match(/(?:goods?|item|product|material|commodity)\s+(?:name(?:d| is)?\s+)?([a-z][a-z0-9 .\-&()/]{2,60}?)(?=\s+(?:hs|chs|code|quantity|unit|price|category)\b|[.,;]|$)/i) ||
+      cleaned.match(/\b(?:add|register|create|new)\s+([a-z][a-z0-9 .\-&()/]{2,60}?)(?=\s+(?:hs|chs|code|to goods|as goods)\b|[.,;]|$)/i);
+    if (nameM?.[1]) { fields.goodsName = nameM[1].trim(); confidence += 0.2; }
+    const codeM = cleaned.match(/\b(?:hs|chs|hs\s*code|tariff)\s*(?:code|no\.?|number)?\s*[:.\-]?\s*(\d{4}\.?\d{2}(?:\.?\d{2,4})?|\d{6,10})/i);
+    if (codeM?.[1]) { fields.chsCode = codeM[1].replace(/\./g, ""); confidence += 0.15; }
+    const missing: string[] = [];
+    if (!fields.goodsName) missing.push("item name");
+    if (!fields.chsCode) missing.push("HS / CHS code");
     return {
       context: "goods",
-      confidence: Math.min(1, confidence + 0.15),
+      confidence: Math.min(1, confidence + 0.1),
       extractedFields: fields,
       interpretedAction: "search_or_create_goods_draft",
-      warnings: ["Please specify item details (name, quantity, unit)."],
+      warnings: missing.length ? [...warnings, `Please add the ${missing.join(" and ")} before saving.`] : warnings,
       originalTranscript: cleaned,
     };
   }
