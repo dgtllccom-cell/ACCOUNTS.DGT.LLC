@@ -70,6 +70,13 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Deep link: /dashboard/document-intelligence?job=<id> (e.g. from the Approval Queue)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const j = new URLSearchParams(window.location.search).get("job");
+    if (j) setOpenId(j);
+  }, []);
+
   if (openId) {
     return <ReviewPanel s={s} jobId={openId} onBack={() => { setOpenId(null); void load(); }} />;
   }
