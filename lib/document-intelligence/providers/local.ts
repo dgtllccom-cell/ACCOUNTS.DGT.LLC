@@ -219,6 +219,34 @@ export class LocalDocumentAiProvider implements DocumentAiProvider {
   }
 
   async classify(text: string, registry: RegistryDocType[], domainHint?: OperationalDomain | null): Promise<ClassificationResult> {
+    // Pre-check for account master PDF: look for table-like structure + account keywords
+    const lc = text.toLowerCase();
+    const accountKeywords = [
+      "account code", "account no", "account number", "gl code", "ledger code",
+      "account name", "account title", "account type", "category", "branch",
+      "chart of accounts", "gl directory", "account directory", "accounts ledger"
+    ];
+
+    const hasTablePattern = /[0-9]{3,10}\s+[A-Za-z][A-Za-z0-9 ]{3,30}\s+(?:Asset|Liability|Expense|Income|Receivable|Payable)/mi.test(text);
+    const accountKeywordMatches = accountKeywords.filter(kw => lc.includes(kw)).length;
+
+    // If we detect account master patterns, boost it in classification
+    if ((hasTablePattern || accountKeywordMatches >= 2) && lc.includes("account")) {
+      const accountMasterDef = registry.find((d) => d.code === "account_master");
+      if (accountMasterDef) {
+        return {
+          code: "account_master",
+          name: accountMasterDef.name,
+          confidence: Math.min(0.95, 0.5 + accountKeywordMatches * 0.15),
+          domain: accountMasterDef.operational_domain,
+          category: accountMasterDef.category,
+          targetModule: accountMasterDef.target_module,
+          requiresQvc: accountMasterDef.requires_qvc,
+          scores: [{ code: "account_master", score: 0.75 }]
+        };
+      }
+    }
+
     return classifyByKeywords(text, registry, domainHint ?? null);
   }
 

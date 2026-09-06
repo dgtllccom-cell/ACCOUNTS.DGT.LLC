@@ -46,14 +46,12 @@ export function PdfPreviewModal() {
       updateHtml(html, nextLang);
     } catch { /* keep current preview on failure */ }
   };
-  const [paperSize, setPaperSize] = useState("A4");
+  const paperSize = "A4";
   const [pages, setPages] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
 
-  // Scale the A4 sheet down to fit narrow screens (phone / small tablet) instead
-  // of shrinking its width — shrinking reflows the report and crushes wide
-  // tables to one character per line. transform: scale keeps the layout intact.
+  // Scale the A4 sheet down to fit screen dimensions gracefully
   const previewAreaRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
   const paperWidthPx = orientation === "portrait" ? 794 : 1123; // 210mm / 297mm @ ~96dpi
@@ -61,13 +59,17 @@ export function PdfPreviewModal() {
   useEffect(() => {
     if (!isOpen) return;
     const recompute = () => {
-      const avail = (previewAreaRef.current?.clientWidth ?? window.innerWidth) - 24;
-      setFitScale(Math.min(1, Math.max(0.28, avail / paperWidthPx)));
+      const availWidth = (previewAreaRef.current?.clientWidth ?? window.innerWidth) - 32;
+      const availHeight = (previewAreaRef.current?.clientHeight ?? (window.innerHeight - 80)) - 32;
+      const scaleX = availWidth / paperWidthPx;
+      const scaleY = availHeight / paperHeightPx;
+      const bestScale = Math.min(1, Math.max(0.3, Math.min(scaleX, scaleY)));
+      setFitScale(bestScale);
     };
     recompute();
     window.addEventListener("resize", recompute);
     return () => window.removeEventListener("resize", recompute);
-  }, [isOpen, orientation, paperWidthPx]);
+  }, [isOpen, orientation, paperWidthPx, paperHeightPx, pages.length]);
 
   useEffect(() => {
     if (isOpen && htmlContent) {
@@ -232,17 +234,74 @@ export function PdfPreviewModal() {
     ${sanitizedHtml}
     <style>
       @page {
-        size: ${paperSize} ${orientation} !important;
+        size: A4 ${orientation} !important;
+        margin: 0 !important;
       }
       @media print {
-        body {
-          margin: 0;
-          padding: 0;
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
+        }
+        .no-print-toolbar, .screen-only { display: none !important; }
+        .wrap {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
         }
       }
       @media screen {
+        * {
+          box-sizing: border-box !important;
+        }
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
+          overflow: hidden !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
         .no-print-toolbar { display: none !important; }
-        .wrap, body { padding-top: 0 !important; }
+        .wrap {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
+          min-height: 0 !important;
+          height: 100% !important;
+          width: 100% !important;
+          gap: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          box-sizing: border-box !important;
+        }
+        .sheet-scalable-viewport {
+          transform: none !important;
+          max-width: 100% !important;
+          width: 100% !important;
+          height: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .sheet {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-height: ${orientation === "portrait" ? "297mm" : "210mm"} !important;
+          height: ${orientation === "portrait" ? "297mm" : "210mm"} !important;
+          border: none !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          margin: 0 !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
       }
     </style>
   `;
@@ -292,15 +351,9 @@ export function PdfPreviewModal() {
             {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(pages.length))}
           </div>
 
-          <select 
-            value={paperSize} 
-            onChange={(e) => setPaperSize(e.target.value)}
-            className="bg-slate-800 text-slate-200 text-xs px-2 py-1 rounded outline-none border-none cursor-pointer"
-          >
-            <option value="A4">A4 (8.27 × 11.69 in)</option>
-            <option value="Legal">Legal (8.5 × 14 in)</option>
-            <option value="Letter">Letter (8.5 × 11 in)</option>
-          </select>
+          <span className="text-[11px] font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 select-none">
+            A4
+          </span>
         </div>
 
         {/* Right: Actions */}
@@ -386,45 +439,38 @@ export function PdfPreviewModal() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar: Thumbnails */}
-        <div className="w-48 bg-[#0f172a] border-r border-slate-700 flex flex-col hidden md:flex overflow-y-auto custom-scrollbar">
-          <div className="p-4 flex flex-col gap-4">
-            {pages.map((pageNum) => (
-              <div 
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`flex flex-col items-center gap-2 cursor-pointer group`}
-              >
-                <div className={`w-28 h-40 bg-white rounded shadow-sm relative overflow-hidden transition-all duration-200 ${currentPage === pageNum ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-[#0f172a]" : "opacity-70 group-hover:opacity-100"}`}> 
-                  {/* Thumbnail Placeholder - we use an icon to represent the page for performance */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
-                    <FileText className="w-8 h-8" />
+        {/* Left Sidebar: Thumbnails (only shown if multi-page) */}
+        {pages.length > 1 && (
+          <div className="w-48 bg-[#0f172a] border-r border-slate-700 flex flex-col hidden md:flex overflow-y-auto custom-scrollbar">
+            <div className="p-4 flex flex-col gap-4">
+              {pages.map((pageNum) => (
+                <div 
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`flex flex-col items-center gap-2 cursor-pointer group`}
+                >
+                  <div className={`w-28 h-40 bg-white rounded shadow-sm relative overflow-hidden transition-all duration-200 ${currentPage === pageNum ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-[#0f172a]" : "opacity-70 group-hover:opacity-100"}`}> 
+                    {/* Thumbnail Placeholder */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
+                      <FileText className="w-8 h-8" />
+                    </div>
+                    {/* Faux Watermark for aesthetic */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-5">
+                      <span className="text-black font-bold text-xs rotate-[-45deg]">DGT LLC</span>
+                    </div>
                   </div>
-                  {/* Faux Watermark for aesthetic */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-5">
-                    <span className="text-black font-bold text-xs rotate-[-45deg]">DGT LLC</span>
-                  </div>
+                  <span className={`text-xs font-medium ${currentPage === pageNum ? "text-blue-400" : "text-slate-400"}`}> 
+                    {pageNum}
+                  </span>
                 </div>
-                <span className={`text-xs font-medium ${currentPage === pageNum ? "text-blue-400" : "text-slate-400"}`}> 
-                  {pageNum}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Preview Area */}
-        <div ref={previewAreaRef} className="flex-1 bg-[#1e293b] p-4 sm:p-8 overflow-auto flex justify-center custom-scrollbar">
-          {/* 
-            FIX: Previously the parent div only had `minHeight` with the iframe using
-            `absolute inset-0 h-full`. Per CSS spec, absolutely-positioned children
-            cannot resolve percentage heights from min-height — only from an explicit
-            height. This caused the iframe to collapse to 0px and appear blank.
-            Solution: remove absolute positioning; give the iframe an explicit height.
-          */}
-          {/* Outer box reserves the *scaled* footprint so there is no dead space
-              below the sheet on small screens; inner box is the true-size sheet
-              that gets transform-scaled to fit. */}
+        <div ref={previewAreaRef} className="flex-1 bg-[#1e293b] p-4 sm:p-8 overflow-auto flex items-center justify-center custom-scrollbar">
+          {/* Outer box reserves the *scaled* footprint */}
           <div
             style={{
               width: paperWidthPx * fitScale,
@@ -436,6 +482,7 @@ export function PdfPreviewModal() {
               className="shadow-2xl rounded-sm transition-all duration-300 ease-in-out overflow-hidden"
               style={{
                 width: orientation === "portrait" ? "210mm" : "297mm",
+                height: orientation === "portrait" ? "297mm" : "210mm",
                 transform: `scale(${fitScale})`,
                 transformOrigin: "top left",
               }}
@@ -443,8 +490,13 @@ export function PdfPreviewModal() {
                <iframe
                   ref={iframeRef}
                   srcDoc={injectedHtml}
-                  className="w-full border-none block"
-                  style={{ height: orientation === "portrait" ? "297mm" : "210mm" }}
+                  scrolling="no"
+                  className="w-full h-full border-none block"
+                  style={{
+                    width: orientation === "portrait" ? "210mm" : "297mm",
+                    height: orientation === "portrait" ? "297mm" : "210mm",
+                    overflow: "hidden",
+                  }}
                   title={tt("pdfprev.preview_title", "PDF Preview")}
                />
             </div>

@@ -140,6 +140,33 @@ const RULES: Rule[] = [
   { key: "contract_start_date", label: "Contract Start / Effective Date", kind: "date", patterns: [/(?:effective\s*(?:date|from)|commencement\s*date|start\s*date|valid\s*from|w\.?e\.?f\.?|agreement\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
   { key: "contract_end_date", label: "Contract End / Expiry Date", kind: "date", patterns: [/(?:expiry\s*date|expiration|end\s*date|valid\s*(?:to|until|till)|termination\s*date|renewal\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
   { key: "contract_parties", label: "Contract Parties", kind: "text", patterns: [/(?:between)\s+([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,60})\s+(?:and|&)\s+([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,60})/i] },
+
+  // ── Account Master / Chart of Accounts fields ──
+  { key: "account_code", label: "Account Code", kind: "text", patterns: [
+      /(?:account\s*code|a\/c\s*code|code|gl\s*code|ledger\s*code)\s*[:.\-]?\s*([0-9][0-9\-\.]{1,10}[0-9]|[0-9]{3,8})/i,
+    ] },
+  { key: "account_name", label: "Account Name", kind: "text", patterns: [
+      /(?:account\s*(?:name|title)|account)\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,60})/i,
+    ] },
+  { key: "category", label: "Account Category / Type", kind: "text", patterns: [
+      /(?:category|type|account\s*type|classification|account\s*class|group)\s*[:.\-]?\s*([A-Za-z][A-Za-z ]{3,25})/i,
+      /\b(Asset|Liability|Capital|Expense|Income|Equity|Receivable|Payable)\b/i,
+    ] },
+  { key: "company_name", label: "Company / Related Entity", kind: "text", patterns: [
+      /(?:company|entity|related\s*(?:company|entity)|parent\s*company)\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{2,50})/i,
+    ], onlyDocTypes: ["account_master"] },
+  { key: "branch", label: "Branch / Division", kind: "text", patterns: [
+      /(?:branch|division|office|location)\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{2,40})/i,
+    ], onlyDocTypes: ["account_master"] },
+  { key: "mobile", label: "Mobile Number", kind: "text", patterns: [
+      /(?:mobile|cell|whats\s*app|wa)\s*[:.\-]?\s*(\+?[0-9][0-9()\s\-]{6,20}[0-9])/i,
+    ], onlyDocTypes: ["account_master"] },
+  { key: "city", label: "City / Location", kind: "text", patterns: [
+      /(?:city|town|location|place|area)\s*[:.\-]?\s*([A-Za-z][A-Za-z .\-]{2,35})/i,
+    ], onlyDocTypes: ["account_master"] },
+  { key: "contact", label: "Contact / Representative", kind: "text", patterns: [
+      /(?:contact|representative|person|contact\s*person|attn|attention)\s*[:.\-]?\s*([A-Za-z][A-Za-z .'\-]{3,50})/i,
+    ], onlyDocTypes: ["account_master"] },
 ];
 
 const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;

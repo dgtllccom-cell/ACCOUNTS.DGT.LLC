@@ -172,6 +172,28 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     currency: "currency",
     address: "address",
   },
+  // Account Master — GL account directory / chart of accounts from PDF/Excel
+  // The AI extracts rows (account code, name, category, etc.) as line items.
+  // The human reviews, selects country/branch scope, detects duplicates, and
+  // creates all approved accounts via bulk-create.
+  account_master: {
+    account_code: "code",
+    account_number: "code",
+    account_name: "name",
+    account_title: "name",
+    category: "category",
+    account_type: "category",
+    account_category: "category",
+    currency: "currency",
+    branch: "branch",
+    company_name: "company",
+    contact: "contact",
+    phone: "phone",
+    email: "email",
+    address: "address",
+    mobile: "mobile",
+    city: "city",
+  },
   // "Contract / Agreement" documents route to the Purchase or Sales workflow
   // (this ERP has no standalone contract entity — the Contract Control Center is
   // a read-only projection of purchase_orders / sales_orders / employees). The

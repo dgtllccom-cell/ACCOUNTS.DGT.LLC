@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, Mic } from "lucide-react";
+import { ErpVoiceInputButton, type VoiceTranscriptionResult } from "@/components/erp-voice-input-button";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 type Message = {
@@ -29,6 +30,10 @@ export default function AIMessagesPage({ lang: initialLang }: { lang?: Supported
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleVoiceTranscribed = (result: VoiceTranscriptionResult) => {
+    setInput(result.transcript);
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -158,13 +163,11 @@ export default function AIMessagesPage({ lang: initialLang }: { lang?: Supported
             >
               <Send className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsRecording(!isRecording)}
-              className={isRecording ? "bg-red-50" : ""}
-            >
-              <Mic className="h-4 w-4" />
-            </Button>
+            <ErpVoiceInputButton
+              context="search"
+              onTranscribed={handleVoiceTranscribed}
+              lang={s.lang as SupportedLanguage}
+            />
           </div>
         </div>
         <p className="text-xs text-slate-500">
