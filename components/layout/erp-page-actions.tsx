@@ -238,8 +238,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <div id="erp-page-actions-slot" className="flex items-center gap-1.5 empty:hidden" />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <div id="erp-page-actions-slot" className="flex flex-wrap items-center gap-1.5 empty:hidden" />
         <div ref={menuRef} className="relative">
           <Button
             type="button"

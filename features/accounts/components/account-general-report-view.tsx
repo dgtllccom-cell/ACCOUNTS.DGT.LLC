@@ -536,12 +536,22 @@ export function AccountGeneralReportView({
   const [dashboardScope, setDashboardScope] = useState<AccountDashboardScope>("super_admin");
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(initialAccountId ?? null);
   const [accountToDelete, setAccountToDelete] = useState<AccountGeneralReportRow | null>(null);
-  const [titlePortal, setTitlePortal] = useState<HTMLElement | null>(null);
   const [actionsPortal, setActionsPortal] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    setTitlePortal(document.getElementById("erp-page-title-slot"));
-    setActionsPortal(document.getElementById("erp-page-actions-slot"));
+    const el = document.getElementById("erp-page-actions-slot");
+    if (el) {
+      setActionsPortal(el);
+      return;
+    }
+    const timer = setInterval(() => {
+      const target = document.getElementById("erp-page-actions-slot");
+      if (target) {
+        setActionsPortal(target);
+        clearInterval(timer);
+      }
+    }, 50);
+    return () => clearInterval(timer);
   }, []);
 
   // Close date picker on outside click
@@ -1157,17 +1167,8 @@ export function AccountGeneralReportView({
 
   const containerClassName = expandedView ? "fixed inset-0 z-50 overflow-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-6" : "space-y-4 text-slate-900 dark:text-slate-100 max-w-none mx-auto p-4 bg-slate-50/30 dark:bg-slate-900/30 rounded-2xl";
 
-  const pageHeaderContent = (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4">
-      <div>
-        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">{tr(pageTitle)}</h1>
-        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">{tr(subtitle ?? "Enterprise Registry & Financial Ledger Details")}</p>
-      </div>
-    </div>
-  );
-
   const pageActionsContent = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-1.5">
       {/* Scope Selector */}
       <select
         value={dashboardScope}
@@ -1179,7 +1180,7 @@ export function AccountGeneralReportView({
           setBranchCode("all");
           setDraftBranchCode("all");
         }}
-        className="h-9 min-w-[150px] rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-350 cursor-pointer shadow-sm"
+        className="h-7 min-w-[125px] rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer shadow-2xs"
       >
         <option value="super_admin" disabled={!isSuperAdmin}>{tr("SUPER ADMIN")}</option>
         <option value="country">{tr("COUNTRY SCOPE")}</option>
@@ -1187,13 +1188,13 @@ export function AccountGeneralReportView({
       </select>
 
       {/* Search Input */}
-      <div className="relative min-w-[200px]">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-450" />
+      <div className="relative min-w-[160px] sm:min-w-[190px]">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
         <input
           value={draftQuery}
           onChange={(e) => { setDraftQuery(e.target.value); setQuery(e.target.value); }}
           placeholder={tr("Search account, name, branch...")}
-          className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 shadow-sm"
+          className="h-7 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[11px] text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 shadow-2xs"
         />
       </div>
 
@@ -1203,27 +1204,27 @@ export function AccountGeneralReportView({
         variant="outline"
         onClick={() => setFiltersOpen(true)}
         className={cn(
-          "h-9 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer",
+          "h-7 rounded-lg font-bold text-[10.5px] px-2 shadow-2xs transition-all flex items-center gap-1 cursor-pointer",
           activeFilterCount > 0
             ? "bg-indigo-50 border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300"
-            : "border-slate-200 hover:bg-slate-50 dark:border-slate-800"
+            : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         )}
       >
-        <SlidersHorizontal className="h-3.5 w-3.5" />
+        <SlidersHorizontal className="h-3 w-3" />
         <span>{tr("FILTER")}</span>
         {activeFilterCount > 0 && (
-          <span className="ml-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-extrabold text-white">
+          <span className="ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-extrabold text-white">
             {activeFilterCount}
           </span>
         )}
       </Button>
 
-      <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm cursor-pointer hover:bg-slate-50">
-        <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} /> {tr("RESET")}
+      <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs cursor-pointer hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+        <RefreshCw className={loading ? "mr-1 h-3 w-3 animate-spin" : "mr-1 h-3 w-3"} /> {tr("RESET")}
       </Button>
 
       {/* Universal date-range picker */}
-      <div className="w-[15rem]">
+      <div className="w-[12.5rem] sm:w-[13.5rem]">
         <ErpDatePicker
           mode="range"
           lang={lang}
@@ -1242,9 +1243,9 @@ export function AccountGeneralReportView({
         type="button"
         size="sm"
         onClick={() => router.push("/dashboard/accounts/setup")}
-        className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm px-4 gap-1.5 shrink-0 cursor-pointer"
+        className="h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10.5px] shadow-xs px-2.5 gap-1 shrink-0 cursor-pointer"
       >
-        <Plus className="h-3.5 w-3.5" /> {tr("NEW ACCOUNT")}
+        <Plus className="h-3 w-3" /> {tr("NEW ACCOUNT")}
       </Button>
 
       <Button
@@ -1252,9 +1253,9 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => exportCsv("filtered")}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+        className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs gap-1 cursor-pointer text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-emerald-950/40"
       >
-        <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> {tr("EXPORT EXCEL / CSV")}
+        <FileSpreadsheet className="h-3 w-3 text-emerald-600" /> {tr("EXPORT EXCEL / CSV")}
       </Button>
 
       <Button
@@ -1262,9 +1263,9 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => openPrint(true)}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer"
+        className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       >
-        <Printer className="h-3.5 w-3.5" /> {tr("PRINT")}
+        <Printer className="h-3 w-3" /> {tr("PRINT")}
       </Button>
 
       <Button
@@ -1272,24 +1273,16 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => openPrint(false)}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer"
+        className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       >
-        <Download className="h-3.5 w-3.5" /> {tr("EXPORT PDF")}
+        <Download className="h-3 w-3" /> {tr("EXPORT PDF")}
       </Button>
     </div>
   );
 
   return (
     <div className={containerClassName}>
-      {titlePortal && createPortal(pageHeaderContent, titlePortal)}
       {actionsPortal && createPortal(pageActionsContent, actionsPortal)}
-      
-      {(!titlePortal || !actionsPortal) && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
-          {pageHeaderContent}
-          {pageActionsContent}
-        </div>
-      )}
 
       {/* 5 Primary Reports & Scopes Navigation Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
