@@ -3353,7 +3353,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
                     <div className="overflow-x-auto rounded-xl border border-border">
                       <table className="w-full text-[10px] text-foreground border-collapse text-left whitespace-nowrap">
-                        <thead className="bg-slate-950 text-white">
+                        <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                           <tr className="font-bold uppercase tracking-wider text-[9px]">
                             <Th className="px-3 py-2.5 text-left">{t(lang, "sales.lot_no_label", "Lot No")}</Th>
                             <Th className="px-3 py-2.5 text-left">{t(lang, "sales.goods_brand_label", "Goods / Brand")}</Th>
@@ -5630,15 +5630,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       {isLotModalOpen && (
         <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl border border-border overflow-hidden w-full max-w-md animate-in zoom-in-95 duration-200 text-slate-800">
-            <div className="bg-slate-950 text-white p-4 flex items-center justify-between">
+            <div className="bg-slate-50 border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700 text-slate-900 dark:text-white p-4 flex items-center justify-between">
               <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-2">
-                <Package className="h-4 w-4 text-sky-400" />
+                <Package className="h-4 w-4 text-blue-600 dark:text-sky-400" />
                 {form.saleSource === "in_transit" ? t(lang, "sales.transit_cargo_details_title", "Transit Cargo Details") : t(lang, "sales.lot_details_title", "Lot Details")}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsLotModalOpen(false)}
-                className="text-white/60 hover:text-white transition"
+                className="text-slate-400 hover:text-slate-700 dark:text-white/60 dark:hover:text-white transition"
               >
                 <X className="h-5 w-5" />
               </button>

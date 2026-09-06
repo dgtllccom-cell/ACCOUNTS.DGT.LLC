@@ -882,8 +882,8 @@ export function UserJournalReport() {
 
       {/* View Details Modal Overlay */}
       {viewUser && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
-          <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 md:p-8">
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800">
             <UserLiveReportPanel
               fullName={viewUser.fullName}
               gender={(viewUser as any).gender || "—"}

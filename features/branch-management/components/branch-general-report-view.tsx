@@ -1394,18 +1394,18 @@ export function BranchGeneralReportView({
           <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
               <thead>
-                <tr className="sticky top-0 z-10 bg-slate-950 text-white font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
-                  <Th className="p-2.5 border-r border-slate-200 text-left">Super Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Main Branch</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Company</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Owner</Th>
-                  <Th className="p-2.5 border-r border-slate-700/70">Countries</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Curr</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Main Acc</Th>
-                  <Th className="p-2.5 border-r border-slate-700/70">Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200">City</Th>
-                  <Th className="p-2.5 border-r border-slate-200">User</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Contacts</Th>
+                <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Super Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Company</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Owner</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Countries</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Curr</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Acc</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">City</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">User</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Contacts</Th>
                   <Th className="p-2.5">Action</Th>
                 </tr>
               </thead>
@@ -1542,20 +1542,20 @@ export function BranchGeneralReportView({
           <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
               <thead>
-                <tr className="sticky top-0 z-10 bg-slate-950 text-white font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
-                  <Th className="p-2.5 border-r border-slate-700/70">Main Branch Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200 text-left">Country Name</Th>
-                  <Th className="p-2.5 border-r border-slate-200">SA Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Branch Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200 text-left">Branch Name</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Company Name</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Owner Name</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Currency</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Main Branch Acc</Th>
-                  <Th className="p-2.5 border-r border-slate-200">City Branches</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Users</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Email / WhatsApp</Th>
-                  <Th className="p-2.5 border-r border-slate-200">Status</Th>
+                <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Country Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">SA Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Branch Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Branch Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Company Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Owner Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Currency</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch Acc</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">City Branches</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Users</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Email / WhatsApp</Th>
+                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Status</Th>
                   <Th className="p-2.5">Actions</Th>
                 </tr>
               </thead>

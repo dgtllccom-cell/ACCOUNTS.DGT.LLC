@@ -621,7 +621,7 @@ export function RoznamchaReportView({
           <CardContent className="pt-0">
             <div className="overflow-x-auto rounded-md border">
               <table className="w-full min-w-[820px] border-collapse text-xs">
-                <thead className="bg-slate-900 text-white">
+                <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider">
                   <tr>
                     <ReportTh>{t(lang, "roz.date")}</ReportTh>
                     <ReportTh>{t(lang, "roz.voucher_no")}</ReportTh>
@@ -729,7 +729,7 @@ export function RoznamchaReportView({
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{th("Transaction Ledger Postings")}</h3>
               <div className="overflow-x-auto rounded-lg border dark:border-slate-800">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-900 text-white dark:bg-slate-800">
+                  <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       <Th className="px-3 py-2">Type</Th>
                       <Th className="px-3 py-2">Account Code & Name</Th>

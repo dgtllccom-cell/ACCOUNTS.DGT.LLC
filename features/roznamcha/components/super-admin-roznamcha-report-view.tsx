@@ -2297,7 +2297,7 @@ function SuperAdminRoznamchaReportViewContent({
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{th("Transaction Ledger Postings")}</h3>
               <div className="overflow-x-auto rounded-lg border dark:border-slate-800">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-900 text-white dark:bg-slate-800">
+                  <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       <th className="px-3 py-2">{th("Type")}</th>
                       <th className="px-3 py-2">{th("Account Code & Name")}</th>

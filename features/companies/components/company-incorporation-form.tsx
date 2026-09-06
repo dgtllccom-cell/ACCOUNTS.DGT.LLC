@@ -48,6 +48,7 @@ import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteratio
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 export type CompanyRegistrationEntry = {
   type: string;
@@ -792,6 +793,17 @@ export function CompanyIncorporationForm({
                 </CardHeader>
 
                 <CardContent className="p-4 space-y-4">
+                  <VoiceFormFill
+                    context="company"
+                    lang={lang}
+                    compact
+                    onApply={(f) => {
+                      if (f.companyName) {
+                        setCompanyName(String(f.companyName));
+                        try { setCompanyNameUrdu(transliterateProperNoun(String(f.companyName), "ur")); } catch { /* noop */ }
+                      }
+                    }}
+                  />
                   {/* Avatar + Main Names */}
                   <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xs">

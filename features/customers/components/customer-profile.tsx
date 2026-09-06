@@ -659,24 +659,24 @@ export function CustomerProfile({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-800 text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
+    <div className="flex flex-col min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
       {/* Dynamic Top Toolbar */}
-      <header className="pdf-preview-toolbar bg-slate-900 h-12 flex items-center justify-between px-4 border-b border-slate-950 text-xs font-medium sticky top-0 z-50 select-none shadow-sm">
+      <header className="pdf-preview-toolbar bg-white dark:bg-slate-900 h-12 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800 text-xs font-medium sticky top-0 z-50 select-none shadow-2xs">
         {/* Left Side: Document Navigation */}
         <div className="flex items-center gap-3">
           <Button
             type="button"
             variant="ghost"
             onClick={() => router.push("/dashboard/settings/customers" as Route)}
-            className="h-8 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md gap-1.5 px-2.5"
+            className="h-8 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 rounded-md gap-1.5 px-2.5"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{getLabel("backButton", lang)}</span>
           </Button>
-          <div className="h-4 w-px bg-slate-700" />
-          <div className="flex items-center gap-2 text-slate-200">
-            <FileText className="h-4 w-4 text-teal-500" />
-            <span className="font-semibold text-slate-200">{getLabel("documentPreview", lang)}</span>
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+          <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
+            <FileText className="h-4 w-4 text-teal-600 dark:text-teal-500" />
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{getLabel("documentPreview", lang)}</span>
           </div>
         </div>
 
@@ -684,13 +684,13 @@ export function CustomerProfile({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-md font-semibold text-[10px] uppercase flex items-center gap-1.5"
+            className="h-7 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-semibold text-[10px] uppercase flex items-center gap-1.5 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
           >
             <Columns className="h-3 w-3" />
             {t(lang, "pv.portrait", "Portrait")}
           </button>
           <span className="text-slate-500">{getLabel("pageOneOfOne", lang)}</span>
-          <span className="bg-slate-800 border border-slate-700 text-slate-300 text-[10px] px-2.5 py-0.5 rounded font-bold uppercase">
+          <span className="bg-slate-50 border border-slate-200 text-slate-700 text-[10px] px-2.5 py-0.5 rounded font-bold uppercase dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
             A4
           </span>
         </div>
@@ -701,7 +701,7 @@ export function CustomerProfile({
           <button
             onClick={shareWhatsApp}
             title={getLabel("openWhatsAppChatTitle", lang)}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-teal-400 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-teal-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-teal-400 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <MessageSquare className="h-4 w-4" />
           </button>
@@ -709,7 +709,7 @@ export function CustomerProfile({
           <button
             onClick={shareEmail}
             title={getLabel("composeEmailTitle", lang)}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-blue-400 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Mail className="h-4 w-4" />
           </button>
@@ -717,7 +717,7 @@ export function CustomerProfile({
           <button
             onClick={handleDownloadScan}
             title={getLabel("downloadDocumentScanTitle", lang)}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-emerald-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-emerald-400 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <DownloadActionIcon className="h-4 w-4" />
           </button>

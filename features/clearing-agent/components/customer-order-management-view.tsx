@@ -1672,21 +1672,70 @@ export function CustomerOrderManagementView() {
         <div className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 xl:self-start h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
           {/* Top KPI Cards */}
           <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-              {[
-                { label: tt("kpi_total_orders", "Total Orders"), value: orderCounts.total, icon: FileText, color: "text-blue-600 dark:text-blue-400" },
-                { label: tt("mv_import", "Import"), value: orderCounts.import, icon: ArrowRight, color: "text-emerald-600 dark:text-emerald-400" },
-                { label: tt("mv_export", "Export"), value: orderCounts.export, icon: Route, color: "text-purple-600 dark:text-purple-400" },
-                { label: tt("kpi_domestic_transit", "Domestic / Transit"), value: `${orderCounts.domestic} / ${orderCounts.transit}`, icon: Boxes, color: "text-amber-600 dark:text-amber-400" }
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
-                    {item.label}
-                  </div>
-                  <div className="mt-1 text-xl font-black text-slate-900 dark:text-white">{item.value}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {/* 1. Order Summary */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>{tt("kpi_order_summary", "Order Summary")}</span>
                 </div>
-              ))}
+                <div className="mt-1 text-lg font-black text-slate-900 dark:text-white">{orderCounts.total}</div>
+                <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
+                  <span className="text-slate-500">Draft: {orders.filter(o => !o.status || o.status === "draft").length}</span>
+                  <span className="text-red-500">Active: {orders.filter(o => o.status === "confirmed" || o.status === "accepted" || o.status === "in_progress").length}</span>
+                  <span className="text-emerald-600">Done: {orders.filter(o => o.status === "completed").length}</span>
+                </div>
+              </div>
+
+              {/* 2. Movements */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <Route className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  <span>{tt("kpi_movements", "Movements")}</span>
+                </div>
+                <div className="mt-1 text-lg font-black text-purple-600 dark:text-purple-400">{orderCounts.total}</div>
+                <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
+                  <span className="text-emerald-600">Imp: {orderCounts.import}</span>
+                  <span className="text-purple-600">Exp: {orderCounts.export}</span>
+                  <span className="text-amber-600">Dom/Tr: {orderCounts.domestic + orderCounts.transit}</span>
+                </div>
+              </div>
+
+              {/* 3. Locations & Ports */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <Anchor className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>{tt("kpi_locations", "Locations & Ports")}</span>
+                </div>
+                <div className="mt-1 text-lg font-black text-slate-900 dark:text-white">{countries.length} <span className="text-[10px] font-normal text-slate-500">Countries</span></div>
+                <div className="mt-1 text-[9px] font-bold text-slate-500">
+                  <span>{ports.length} Active Ports</span>
+                </div>
+              </div>
+
+              {/* 4. This Month */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <Boxes className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>{tt("kpi_this_month", "This Month")}</span>
+                </div>
+                <div className="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400">{orders.length}</div>
+                <div className="mt-1 text-[9px] font-bold text-slate-500">
+                  <span>Orders Logged</span>
+                </div>
+              </div>
+
+              {/* 5. Quick Info */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between col-span-2 sm:col-span-1">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <BadgeInfo className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                  <span>{tt("kpi_quick_info", "Quick Info")}</span>
+                </div>
+                <div className="mt-1 text-[11px] font-black text-slate-800 dark:text-slate-200 truncate">DGT LLC</div>
+                <div className="mt-0.5 text-[9px] font-medium text-slate-500">
+                  Clearing • FY 2026
+                </div>
+              </div>
             </div>
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between pt-1">
               <div>

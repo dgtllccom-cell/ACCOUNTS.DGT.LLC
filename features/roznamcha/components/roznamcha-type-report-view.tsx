@@ -915,11 +915,11 @@ export function RoznamchaTypeReportView({
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1400px] border-collapse text-xs">
-              <thead className="bg-slate-900 text-white">
+              <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <ReportTh className="text-center">{tt("rozrep.sno", "S.No")}</ReportTh>
                   <th
-                    className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800 whitespace-nowrap"
+                    className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-200 dark:hover:bg-slate-700 whitespace-nowrap"
                     onClick={() => toggleSort("entry_date")}
                   >
                     {tt("rozrep.date", "Date")}{sortBy === "entry_date" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}

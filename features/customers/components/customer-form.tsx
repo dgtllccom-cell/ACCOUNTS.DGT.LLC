@@ -22,6 +22,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 import { PersonDuplicateWarningModal, type PersonDuplicateCandidate } from "@/components/erp/person-duplicate-warning-modal";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 type CustomerRow = {
   id: string;
@@ -645,6 +646,28 @@ export function CustomerForm({
                 <h2 className="font-semibold text-slate-800 text-sm">{getLabel("personalInfo", lang)}</h2>
               </div>
               <CardContent className="p-5 space-y-4">
+                <VoiceFormFill
+                  context="customer"
+                  lang={lang}
+                  compact
+                  onApply={(f) => {
+                    const full = (f.customerName || f.fullName || "") as string;
+                    if (full) {
+                      setFirstName(full.split(" ")[0] || "");
+                      setLastName(full.split(" ").slice(1).join(" "));
+                    }
+                    if (f.address) setAddress(String(f.address));
+                    const add: Array<{ type: string; value: string }> = [];
+                    if (f.phone) add.push({ type: "Phone", value: String(f.phone) });
+                    if (f.email) add.push({ type: "Email", value: String(f.email) });
+                    if (add.length) {
+                      setContacts((prev) => {
+                        const kept = prev.filter((c) => c.value.trim());
+                        return [...kept, ...add.filter((a) => !kept.some((c) => c.value === a.value))];
+                      });
+                    }
+                  }}
+                />
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700">{getLabel("customerType", lang)} *</Label>
                   <select

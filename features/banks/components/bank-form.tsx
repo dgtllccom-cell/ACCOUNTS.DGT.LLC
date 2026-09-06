@@ -21,6 +21,7 @@ import {
 } from "@/features/locations/components/location-hierarchy-select";
 import { createBank, type BankRecord } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { PersonPicker } from "@/components/erp/person-picker";
@@ -356,6 +357,15 @@ export function BankForm({
           ✨ {tr("dintake.wizard_prefilled" as any, "Pre-filled from reviewed document draft")} — {intake.draftNo}. {tr("dintake.wizard_prefilled_hint" as any, "Review every field, then save.")}
         </div>
       ) : null}
+      <VoiceFormFill
+        context="bank"
+        lang={lang}
+        compact
+        onApply={(f) => {
+          if (f.bankName) setForm((prev) => ({ ...prev, bankName: String(f.bankName) }));
+        }}
+      />
+
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">

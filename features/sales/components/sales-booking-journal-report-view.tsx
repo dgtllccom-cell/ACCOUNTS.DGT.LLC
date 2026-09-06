@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Download, Mail, MoreVertical, Printer, RefreshCcw, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
-import { ReportKpiCards } from "@/features/reports/components/report-kpi-cards";
+import { UnifiedErpRegisterBar, UnifiedRegisterKpiData } from "@/components/reports/unified-erp-register-bar";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { Th } from "@/components/ui/translated-th";
@@ -49,6 +50,7 @@ type SalesReport = {
 };
 
 export function SalesBookingJournalReportView() {
+  const router = useRouter();
   const activeLang = useActiveLanguage();
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +128,58 @@ export function SalesBookingJournalReportView() {
       containers: reports.reduce((sum, r) => sum + Number(r.containerCount || 0), 0)
     };
   }, [reports]);
+
+  const draftReports = useMemo(() => reports.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "draft" || s === "open";
+  }), [reports]);
+
+  const acceptedReports = useMemo(() => reports.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "accepted" || s === "confirmed";
+  }), [reports]);
+
+  const transferredReports = useMemo(() => reports.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "transferred" || s === "posted";
+  }), [reports]);
+
+  const completedReports = useMemo(() => reports.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "completed" || s === "finalized";
+  }), [reports]);
+
+  const acceptedAmount = useMemo(() => acceptedReports.reduce((sum, r) => sum + Number(r.totalSalesAmount || 0), 0), [acceptedReports]);
+  const transferredAmount = useMemo(() => transferredReports.reduce((sum, r) => sum + Number(r.totalSalesAmount || 0), 0), [transferredReports]);
+  const completedAmount = useMemo(() => completedReports.reduce((sum, r) => sum + Number(r.totalSalesAmount || 0), 0), [completedReports]);
+
+  const kpiSummary: UnifiedRegisterKpiData = useMemo(() => ({
+    totalRecords: reports.length,
+    draftCount: draftReports.length,
+    acceptedCount: acceptedReports.length,
+    transferredCount: transferredReports.length,
+    completedCount: completedReports.length,
+    currency: reports[0]?.currency || "USD",
+    totalAmount: summary.amount,
+    acceptedAmount,
+    transferredAmount,
+    completedAmount,
+    totalBranches: Math.max(branches.length, 1),
+    activeBranches: Math.max(branches.length, 1),
+    inactiveBranches: 0,
+    thisMonthCreated: reports.length,
+    thisMonthAmount: summary.amount,
+    thisMonthTransferred: transferredReports.length,
+    thisMonthCompleted: completedReports.length,
+    quickInfo: {
+      currency: reports[0]?.currency || "USD",
+      exchangeRate: "1.0000",
+      company: "DGT LLC",
+      financialYear: "2026",
+      userName: reports[0]?.audit?.userName || "Sales User",
+      branchName: reports[0]?.branchName || "Main Branch",
+    }
+  }), [reports, draftReports, acceptedReports, transferredReports, completedReports, summary.amount, acceptedAmount, transferredAmount, completedAmount, branches]);
 
   const localized = (row: SalesReport, field: string, fallback: string) =>
     resolveVerifiedTranslation(row.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
@@ -214,111 +268,48 @@ export function SalesBookingJournalReportView() {
     });
   }
 
-
   return (
     <div className="space-y-6 text-foreground">
-      
-      {/* Search & Filters */}
-      <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[240px]">
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">{t(activeLang, "sales.sbjr_search_records", "Search Records")}</label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void loadReports(query);
-              }}
-              placeholder={t(activeLang, "sales.sbjr_search_ph", "Search sales order #, customer, brand...")}
-              className="bg-background border-input pl-9 text-xs text-foreground placeholder:text-muted-foreground h-10 shadow-sm"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">{t(activeLang, "report.country", "Country")}</label>
-          <select
-            value={countryId}
-            onChange={(e) => setCountryId(e.target.value)}
-            className="bg-background border border-input rounded-lg px-3 h-10 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring shadow-sm"
-          >
-            <option value="">{t(activeLang, "common.all_countries", "All Countries")}</option>
-            {countries.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">{t(activeLang, "sales.sbjr_branch_scope", "Branch Scope")}</label>
-          <select
-            value={branchId}
-            onChange={(e) => setBranchId(e.target.value)}
-            disabled={!countryId}
-            className="bg-background border border-input rounded-lg px-3 h-10 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring shadow-sm disabled:opacity-50"
-          >
-            <option value="">{t(activeLang, "common.all_branches", "All Branches")}</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            onClick={() => void loadReports(query)}
-            disabled={loading}
-            variant="outline"
-            className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground h-10 px-3 shadow-sm"
-          >
-            <RefreshCcw className={loading ? "animate-spin h-4 w-4" : "h-4 w-4"} />
-          </Button>
-
-          <Button
-            onClick={printSalesRegister}
-            disabled={reports.length === 0}
-            variant="outline"
-            className="border-input bg-background text-foreground font-bold h-10 text-xs px-4 shadow-sm gap-1.5"
-          >
-            <Printer className="h-4 w-4 text-blue-600" /> {t(activeLang, "common.print", "Print Report")}
-          </Button>
-
-          <Button
-            onClick={exportCsv}
-            disabled={reports.length === 0}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 text-xs px-4 shadow-sm"
-          >
-            <Download className="h-4 w-4 mr-2" /> {t(activeLang, "sales.sbjr_export_csv", "Export CSV")}
-          </Button>
-        </div>
-      </div>
-
-
-      {/* Top 5 KPI Summary Cards Grid */}
-      <ReportKpiCards
-        lang="en"
-        reportType="sales"
-        currency="USD"
-        isLoading={loading}
-        summary={{
-          records: summary.total,
-          totalSales: summary.amount,
-          totalAmount: summary.amount,
-          draft: reports.filter(r => r.status === "Draft" || r.status === "Open").length,
-          accepted: reports.filter(r => r.status === "Accepted" || r.status === "Confirmed").length,
-          transferred: reports.filter(r => r.status === "Transferred" || r.status === "Posted").length,
-          completed: reports.filter(r => r.status === "Completed" || r.status === "Finalized").length,
-          totalBranches: countries.length > 0 ? countries.length * 2 : 10,
-          activeBranches: countries.length > 0 ? countries.length * 2 : 10,
-          quickInfo: { currency: "USD", exchangeRate: "1.0000", company: "DGT LLC", financialYear: "2025-26" }
+      <UnifiedErpRegisterBar
+        title={t(activeLang, "sales.sbjr_title", "Sales Booking Journal Report")}
+        subtitle={t(activeLang, "sales.sbjr_subtitle", "Master Sales Register & Country Scope Overview")}
+        countries={countries}
+        branches={branches}
+        selectedCountry={countryId}
+        selectedBranch={branchId}
+        selectedStatus={status}
+        onCountryChange={setCountryId}
+        onBranchChange={setBranchId}
+        onStatusChange={setStatus}
+        searchText={query}
+        onSearchChange={setQuery}
+        searchPlaceholder={t(activeLang, "sales.sbjr_search_ph", "Search sales order #, customer, brand...")}
+        onPrint={printSalesRegister}
+        onResetRefresh={() => {
+          setCountryId("");
+          setBranchId("");
+          setStatus("");
+          setQuery("");
+          void loadReports("");
         }}
+        primaryAction={{
+          label: t(activeLang, "sales.new_sales_booking", "+ New Sales Booking"),
+          onClick: () => router.push("/dashboard/sales/new-sales-booking-order"),
+        }}
+        extraActions={[
+          {
+            label: t(activeLang, "sales.sbjr_export_csv", "Export CSV"),
+            onClick: exportCsv,
+          },
+        ]}
+        kpiSummary={kpiSummary}
+        recordTypeName="Sales Orders"
       />
 
       {/* Report Table */}
       <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
         <table className="min-w-full text-xs text-left">
-          <thead className="bg-muted/70 text-muted-foreground border-b border-border uppercase text-[11px] font-bold tracking-wider">
+          <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 uppercase text-[11px] font-bold tracking-wider">
             <tr>
               <Th className="px-6 py-3.5">SO Number</Th>
               <Th className="px-6 py-3.5">Date</Th>

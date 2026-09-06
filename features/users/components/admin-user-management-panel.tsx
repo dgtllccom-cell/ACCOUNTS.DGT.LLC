@@ -431,8 +431,8 @@ export function AdminUserManagementPanel() {
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Live Report Modal */}
       {selectedReportUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800">
             <UserLiveReportPanel
               fullName={selectedReportUser.name}
               gender={(selectedReportUser as any).gender || "—"}

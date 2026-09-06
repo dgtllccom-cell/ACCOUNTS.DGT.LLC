@@ -238,18 +238,18 @@ function PurchaseTransferErpReportViewContent({
 
   if (error || !d) {
     return (
-      <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between shadow-xl">
+      <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans">
+        <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
-            <Button onClick={() => router.back()} variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+            <Button onClick={() => router.back()} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
               <ArrowLeft className="h-4 w-4 mr-1" /> {tt("common.back", "Back")}
             </Button>
-            <div className="h-4 w-px bg-slate-700" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
             <div>
-              <h1 className="text-sm font-black text-white uppercase tracking-tight">
+              <h1 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 {tt("pterv2.page_title", "Purchase Transfer Verification")}
               </h1>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {tt("pterv2.breadcrumb", "Dashboard > Purchase > Transfer Verification")}
               </p>
             </div>
@@ -257,24 +257,24 @@ function PurchaseTransferErpReportViewContent({
         </header>
 
         <main className="max-w-4xl mx-auto p-6 mt-12">
-          <div className="rounded-2xl border border-rose-800/80 bg-slate-900/90 p-8 text-center shadow-2xl space-y-4">
-            <div className="p-3 rounded-full bg-rose-950/60 border border-rose-800/60 text-rose-400 w-fit mx-auto">
+          <div className="rounded-2xl border border-rose-200 bg-white dark:border-rose-900 dark:bg-slate-900 p-8 text-center shadow-md space-y-4">
+            <div className="p-3 rounded-full bg-rose-50 border border-rose-200 text-rose-600 dark:bg-rose-950/60 dark:border-rose-800/60 dark:text-rose-400 w-fit mx-auto">
               <AlertTriangle className="h-8 w-8" />
             </div>
-            <h2 className="text-lg font-bold text-white tracking-tight">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
               {error || tt("pterv2.record_not_found", "Purchase Transfer Record Not Found")}
             </h2>
-            <p className="text-sm text-slate-400 max-w-md mx-auto">
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
               {tt("pterv2.record_not_found_desc", "The requested purchase transfer verification record could not be located or has been deleted. Please select a valid record from the purchase registry.")}
             </p>
-            <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-slate-800">
+            <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button onClick={() => router.push("/dashboard/purchase/purchase-confirm")} variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
                 {tt("pterv2.return_registry", "Return to Purchase Registry")}
               </Button>
-              <Button onClick={() => router.push("/dashboard/purchase/local-goods-received")} variant="outline" size="sm" className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700">
+              <Button onClick={() => router.push("/dashboard/purchase/local-goods-received")} variant="outline" size="sm" className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 {tt("pterv2.view_goods_received", "View Local Goods Received")}
               </Button>
-              <Button onClick={() => window.location.reload()} variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+              <Button onClick={() => window.location.reload()} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                 {tt("common.refresh", "Refresh Page")}
               </Button>
             </div>
@@ -285,23 +285,23 @@ function PurchaseTransferErpReportViewContent({
   }
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-600 selection:text-white">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-blue-600 selection:text-white">
 
       {/* ───────────── TOP ENTERPRISE STICKY BAR ───────────── */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between shadow-xl print:hidden">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shadow-xs print:hidden">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400">
+          <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 dark:bg-blue-600/20 dark:border-blue-500/30 dark:text-blue-400">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-sm font-black text-white tracking-tight uppercase flex items-center gap-2">
+            <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-tight uppercase flex items-center gap-2">
               {tt("pterv2.page_title","Inter-Country Purchase Verification & Settlement Audit Sheet")}
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30 font-mono">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30 font-mono">
                 {tt("pterv2.double_entry_verified", "DOUBLE-ENTRY VERIFIED")}
               </span>
             </h1>
-            <p className="text-[10px] font-bold text-slate-400 font-mono mt-0.5">
-              {tt("pterv2.booking_ref", "Booking Ref")}: <span className="text-blue-400 font-extrabold">{bookingRef}</span> | {tt("pterv2.roznamcha_sn", "Roznamcha S/N")}: <span className="text-emerald-400 font-extrabold">{roznamchaSerial}</span>
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+              {tt("pterv2.booking_ref", "Booking Ref")}: <span className="text-blue-600 dark:text-blue-400 font-extrabold">{bookingRef}</span> | {tt("pterv2.roznamcha_sn", "Roznamcha S/N")}: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{roznamchaSerial}</span>
             </p>
           </div>
         </div>
@@ -315,9 +315,9 @@ function PurchaseTransferErpReportViewContent({
             variant="outline"
             size="sm"
             onClick={handlePrint}
-            className="h-9 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border-slate-700 px-4 rounded-xl gap-2 shadow-xs"
+            className="h-9 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white dark:border-slate-700 px-4 rounded-xl gap-2 shadow-xs"
           >
-            <Printer className="h-4 w-4 text-blue-400" />
+            <Printer className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             {tt("pterv2.print_a4","Print A4 Verification Document")}
           </Button>
 
@@ -327,13 +327,13 @@ function PurchaseTransferErpReportViewContent({
             size="sm"
             onClick={handleTransferPayment}
             disabled={transferring || d.ledger_posting_status === "posted"}
-            className="h-9 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-5 rounded-xl shadow-lg gap-2"
+            className="h-9 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-5 rounded-xl shadow-md gap-2"
           >
             <Send className="h-4 w-4" />
             {transferring ? tt("pterv2.posting_btn","POSTING TO ROZNAMCHA...") : tt("pterv2.post_to_roznamcha","Post to Business Roznamcha")}
           </Button>
 
-          <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl">
+          <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 rounded-xl">
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -345,74 +345,74 @@ function PurchaseTransferErpReportViewContent({
         {/* LEFT AUDIT CONTROL PANEL (3.5 COLS) */}
         <aside className="lg:col-span-4 space-y-4 print:hidden">
           
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
             
             {/* Control Panel Header */}
-            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
               <div>
-                <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest block">{tt("pterv2.control_panel","CONTROL PANEL")}</span>
-                <h2 className="text-sm font-black text-white uppercase tracking-tight">{tt("pterv2.audit_form","Audit Verification Form")}</h2>
+                <span className="text-[9px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-widest block">{tt("pterv2.control_panel","CONTROL PANEL")}</span>
+                <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{tt("pterv2.audit_form","Audit Verification Form")}</h2>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${isPosted ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"}`}>
+              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${isPosted ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30" : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30"}`}>
                 {isPosted ? tt("pterv2.posted_to_gl","POSTED TO GL") : tt("pterv2.pending_posting","PENDING POSTING")}
               </span>
             </div>
 
             {/* Audit Flow Steps Indicator */}
-            <div className="space-y-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-[10px]">
-              <div className="font-extrabold uppercase text-slate-400 text-[9px] tracking-wider mb-1 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-blue-400" /> {tt("pterv2.audit_pipeline","Transaction Audit Pipeline")}
+            <div className="space-y-2 bg-slate-50 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-[10px]">
+              <div className="font-extrabold uppercase text-slate-500 dark:text-slate-400 text-[9px] tracking-wider mb-1 flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> {tt("pterv2.audit_pipeline","Transaction Audit Pipeline")}
               </div>
-              <div className="flex items-center gap-2 text-emerald-400 font-bold">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
                 <CheckCircle2 className="h-3.5 w-3.5" /> {tt("pterv2.step1_done","1. Booking Created & Validated")}
               </div>
-              <div className="flex items-center gap-2 text-emerald-400 font-bold">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
                 <CheckCircle2 className="h-3.5 w-3.5" /> {tt("pterv2.step2_done","2. Super Admin & Branch Scope Verified")}
               </div>
-              <div className="flex items-center gap-2 text-blue-400 font-bold">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold">
                 <BadgeCheck className="h-3.5 w-3.5" /> {tt("pterv2.step3_done","3. Double-Entry GL Impact Calculated")}
               </div>
-              <div className="flex items-center gap-2 text-amber-400 font-bold">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
                 <Lock className="h-3.5 w-3.5" /> {tt("pterv2.step4_ready","4. Business Roznamcha Transfer Ready")}
               </div>
             </div>
 
             {/* Account Verification Summary */}
             <div className="space-y-3">
-              <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{tt("pterv2.verified_postings","VERIFIED LEDGER POSTINGS")}</div>
+              <div className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{tt("pterv2.verified_postings","VERIFIED LEDGER POSTINGS")}</div>
 
               {/* Purchase Account DR Card */}
-              <div className="border border-blue-500/30 rounded-xl bg-blue-950/40 p-3.5 space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-black text-blue-400 uppercase">
+              <div className="border border-blue-200 rounded-xl bg-blue-50/60 dark:border-blue-500/30 dark:bg-blue-950/40 p-3.5 space-y-1">
+                <div className="flex justify-between items-center text-[9px] font-black text-blue-700 dark:text-blue-400 uppercase">
                   <span>{tt("pterv2.debit_account_dr","DEBIT ACCOUNT (DR)")}</span>
-                  <span className="font-mono bg-blue-900/60 px-1.5 py-0.5 rounded text-blue-300">{purchaseAccCode}</span>
+                  <span className="font-mono bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.5 rounded text-blue-800 dark:text-blue-300">{purchaseAccCode}</span>
                 </div>
-                <div className="text-xs font-black text-white uppercase">{purchaseAccName}</div>
-                <div className="text-[9.5px] text-slate-400 font-mono flex justify-between pt-1">
+                <div className="text-xs font-black text-slate-900 dark:text-white uppercase">{purchaseAccName}</div>
+                <div className="text-[9.5px] text-slate-500 dark:text-slate-400 font-mono flex justify-between pt-1">
                   <span>S/N: {debitSerial}</span>
-                  <span className="font-bold text-blue-300">{money(totalAmountLc)} {currencyLc}</span>
+                  <span className="font-bold text-blue-700 dark:text-blue-300">{money(totalAmountLc)} {currencyLc}</span>
                 </div>
               </div>
 
               {/* Sales Account CR Card */}
-              <div className="border border-emerald-500/30 rounded-xl bg-emerald-950/40 p-3.5 space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-black text-emerald-400 uppercase">
+              <div className="border border-emerald-200 rounded-xl bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-950/40 p-3.5 space-y-1">
+                <div className="flex justify-between items-center text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase">
                   <span>{tt("pterv2.credit_account_cr","CREDIT ACCOUNT (CR)")}</span>
-                  <span className="font-mono bg-emerald-900/60 px-1.5 py-0.5 rounded text-emerald-300">{salesAccCode}</span>
+                  <span className="font-mono bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded text-emerald-800 dark:text-emerald-300">{salesAccCode}</span>
                 </div>
-                <div className="text-xs font-black text-white uppercase">{salesAccName}</div>
-                <div className="text-[9.5px] text-slate-400 font-mono flex justify-between pt-1">
+                <div className="text-xs font-black text-slate-900 dark:text-white uppercase">{salesAccName}</div>
+                <div className="text-[9.5px] text-slate-500 dark:text-slate-400 font-mono flex justify-between pt-1">
                   <span>S/N: {creditSerial}</span>
-                  <span className="font-bold text-emerald-300">{money(totalAmountLc)} {currencyLc}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300">{money(totalAmountLc)} {currencyLc}</span>
                 </div>
               </div>
             </div>
 
             {/* Transfer Amount Total Banner Box */}
-            <div className="rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-4 text-center border border-slate-800 space-y-1 shadow-inner">
-              <div className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">{tt("pterv2.total_value","TOTAL TRANSACTION VALUE")}</div>
-              <div className="text-2xl font-black text-emerald-400 font-mono">{money(totalAmountLc)} {currencyLc}</div>
-              <div className="text-[10px] text-blue-400 font-mono font-bold">${money(totalAmountFc)} {currencyFc} @ Ex. Rate {exchangeRate}</div>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 text-center border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
+              <div className="text-[9px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">{tt("pterv2.total_value","TOTAL TRANSACTION VALUE")}</div>
+              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{money(totalAmountLc)} {currencyLc}</div>
+              <div className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-bold">${money(totalAmountFc)} {currencyFc} @ Ex. Rate {exchangeRate}</div>
             </div>
 
             {/* Primary Action Button */}
@@ -420,19 +420,19 @@ function PurchaseTransferErpReportViewContent({
               type="button"
               onClick={handleTransferPayment}
               disabled={transferring || d.ledger_posting_status === "posted"}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xl gap-2 flex items-center justify-center"
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md gap-2 flex items-center justify-center"
             >
               <Send className="h-4 w-4" />
               {transferring ? tt("pterv2.posting_btn","POSTING TO ROZNAMCHA...") : tt("pterv2.post_btn","POST TRANSACTION TO ROZNAMCHA")}
             </Button>
 
             {transferSuccess && (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/60 p-3 text-xs font-bold text-emerald-300">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-950/60 p-3 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                 {transferSuccess}
               </div>
             )}
             {transferError && (
-              <div className="rounded-xl border border-rose-500/40 bg-rose-950/60 p-3 text-xs font-bold text-rose-300">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-500/40 dark:bg-rose-950/60 p-3 text-xs font-bold text-rose-800 dark:text-rose-300">
                 {transferError}
               </div>
             )}

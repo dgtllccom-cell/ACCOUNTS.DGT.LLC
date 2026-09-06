@@ -24104,6 +24104,9 @@ const en: Dict = {
   "roz.cef_party": "Party",
   "roz.cef_direction": "Direction",
   "roz.cef_voice_source": "entered by voice",
+  "sales.sbjr_title": "Sales Booking Journal Report",
+  "sales.sbjr_subtitle": "Master Sales Register & Country Scope Overview",
+  "sales.new_sales_booking": "+ New Sales Booking",
 };
 
 const ur: Dict = {
@@ -41128,6 +41131,9 @@ const ur: Dict = {
   "roz.cef_party": "فریق",
   "roz.cef_direction": "سمت",
   "roz.cef_voice_source": "آواز سے درج",
+  "sales.sbjr_title": "سیلز بکنگ جرنل رپورٹ",
+  "sales.sbjr_subtitle": "ماسٹر سیلز رجسٹر اور ملکی دائرہ کار کا جائزہ",
+  "sales.new_sales_booking": "+ نئی سیلز بکنگ",
 };
 
 const ar: Dict = {
@@ -58154,6 +58160,9 @@ const ar: Dict = {
   "roz.cef_party": "الطرف",
   "roz.cef_direction": "الاتجاه",
   "roz.cef_voice_source": "مُدخل صوتيًا",
+  "sales.sbjr_title": "تقرير يومية حجز المبيعات",
+  "sales.sbjr_subtitle": "سجل المبيعات الرئيسي ونظرة عامة على نطاق الدولة",
+  "sales.new_sales_booking": "+ حجز مبيعات جديد",
 };
 
 const fa: Dict = {
@@ -75179,6 +75188,9 @@ const fa: Dict = {
   "roz.cef_party": "طرف",
   "roz.cef_direction": "جهت",
   "roz.cef_voice_source": "واردشده با صدا",
+  "sales.sbjr_title": "گزارش دفتر روزنامه ثبت فروش",
+  "sales.sbjr_subtitle": "دفتر اصلی فروش و نمای کلی محدوده کشور",
+  "sales.new_sales_booking": "+ ثبت فروش جدید",
 };
 
 const ps: Dict = {
@@ -92210,6 +92222,9 @@ const ps: Dict = {
   "roz.cef_party": "خوا",
   "roz.cef_direction": "لوري",
   "roz.cef_voice_source": "په غږ ننوت",
+  "sales.sbjr_title": "د پلور بکنګ ژورنال راپور",
+  "sales.sbjr_subtitle": "ماسټر پلور راجستر او د هېواد ساحې کتنه",
+  "sales.new_sales_booking": "+ نوې پلور بکنګ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
