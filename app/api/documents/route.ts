@@ -34,18 +34,17 @@ async function auditDocument(
     ipAddress?: string | null;
   }
 ) {
-  try {
-    await sql`
-      insert into public.audit_logs (company_id, actor_id, action, entity_table, entity_id, before, after, ip_address)
-      values (
-        ${input.companyId ?? null}, ${input.actorId}, ${input.action}, 'office_documents',
-        ${input.entityId}, ${input.before ? sql.json(input.before) : null},
-        ${input.after ? sql.json(input.after) : null}, ${input.ipAddress ?? null}
-      )
-    `;
-  } catch (err) {
-    console.warn("[documents] audit write skipped:", err instanceof Error ? err.message : String(err));
-  }
+  // Runs inside the same transaction as the document mutation. A failure here
+  // (rare pooler hiccup) must roll the whole thing back so the operation is
+  // retried cleanly rather than committing a document change with no audit row.
+  await sql`
+    insert into public.audit_logs (company_id, actor_id, action, entity_table, entity_id, before, after, ip_address)
+    values (
+      ${input.companyId ?? null}, ${input.actorId}, ${input.action}, 'office_documents',
+      ${input.entityId}, ${input.before ? sql.json(input.before) : null},
+      ${input.after ? sql.json(input.after) : null}, ${input.ipAddress ?? null}
+    )
+  `;
 }
 
 function requestIp(request: NextRequest) {
@@ -661,39 +660,38 @@ export async function DELETE(request: NextRequest) {
 
     const deletedAt = new Date().toISOString();
     let storageKey = null as string | null;
-    let beforeDoc: any = null;
-    try {
-      beforeDoc = await withDocumentSession(session, async (sql) => {
-        const rows = await sql`
-        select id, storage_key, title, file_name, file_size, document_path, company_id, module_type, document_type
-        from public.office_documents
-        where id = ${id}
-        limit 1
-      `;
-        return rows[0] ?? null;
-      });
-      storageKey = beforeDoc?.storage_key ?? null;
-    } catch {
-      storageKey = null;
-    }
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
-    // the same way, so a direct-Postgres write is tried first.
+    // the same way, so a direct-Postgres write is tried first. Read the prior
+    // state, soft-delete, and write the audit row in ONE transaction so the
+    // audit trail can never be missing its "before" snapshot.
     let viaPg = false;
     try {
       const viaPgResult = await withDocumentSession(session, async (sql) => {
+        const beforeRows = await sql`
+          select id, storage_key, title, file_name, file_size, document_path, company_id, module_type, document_type
+          from public.office_documents
+          where id = ${id}
+          limit 1
+        `;
+        const beforeDoc = beforeRows[0] ?? null;
+        if (!beforeDoc) return { notFound: true } as const;
+        storageKey = beforeDoc.storage_key ?? null;
         await sql`update public.office_documents set deleted_at = ${deletedAt} where id = ${id}`;
         await auditDocument(sql, {
           actorId: session.userId,
           action: "office_document.delete",
           entityId: id,
-          companyId: beforeDoc?.company_id ?? null,
+          companyId: beforeDoc.company_id ?? null,
           ipAddress: requestIp(request),
           before: beforeDoc
         });
-        return true;
+        return { ok: true } as const;
       });
-      viaPg = Boolean(viaPgResult);
+      if (viaPgResult && "notFound" in viaPgResult) {
+        return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      }
+      viaPg = Boolean(viaPgResult && "ok" in viaPgResult);
     } catch {
       viaPg = false;
     }
