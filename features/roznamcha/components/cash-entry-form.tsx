@@ -2722,61 +2722,99 @@ export function CashEntryForm({
                         <span className="font-semibold text-[10px] text-blue-600 bg-blue-100/70 dark:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1">
                           <span>{getCountryFlag(selectedCountry.name)}</span>
                           <span>{selectedCountry.name}</span>
+                          {(selectedCityBranch?.name || selectedMainBranch?.name) && (
+                            <>
+                              <span className="opacity-50">•</span>
+                              <span>{selectedCityBranch?.name || selectedMainBranch?.name}</span>
+                            </>
+                          )}
                         </span>
                       )}
                     </h3>
                   </div>
               <CardContent className="p-4 space-y-4">
-                {/* Super Admin / Country Switcher Bar inside Modal */}
-                {isSuperAdmin && (
-                  <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-500 px-1">
-                      {t(lang, "roz.scope_selector", "WORKING SCOPE:")}
+                {/* Entry Scope & Branch Selector (Country ➔ Main Branch ➔ Category ➔ City Branch) */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                      <Building2 className="h-3 w-3 text-blue-600" />
+                      <span>{t(lang, "roz.entry_scope_branch", "ENTRY BRANCH SCOPE")}</span>
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCountryId("");
-                        setCountryBranchId("");
-                        setCityBranchId("");
-                        setCounterLedgerId("");
-                        setSelectedLookupLedger(null);
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded text-[10px] font-bold transition cursor-pointer flex items-center gap-1",
-                        !countryId
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                      )}
-                    >
-                      <Globe className="h-3 w-3" />
-                      <span>{t(lang, "roz.super_admin_global", "Super Admin / All")}</span>
-                    </button>
-                    {countries.map((c) => {
-                      const isSelected = countryId === c.id;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => {
-                            setCountryId(c.id);
-                            setCounterLedgerId("");
-                            setSelectedLookupLedger(null);
-                          }}
-                          className={cn(
-                            "px-2.5 py-1 rounded text-[10px] font-bold transition cursor-pointer flex items-center gap-1",
-                            isSelected
-                              ? "bg-blue-600 text-white shadow-xs"
-                              : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                          )}
-                        >
-                          <span>{getCountryFlag(c.name)}</span>
-                          <span>{c.name}</span>
-                        </button>
-                      );
-                    })}
+                    <span className="text-[10px] font-bold text-slate-500 font-mono">
+                      {selectedCityBranch?.code ? `Code: ${selectedCityBranch.code}` : selectedMainBranch?.code ? `Code: ${selectedMainBranch.code}` : ""}
+                    </span>
                   </div>
-                )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div>
+                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "common.country", "Country")}</label>
+                      <select
+                        value={countryId}
+                        disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
+                        onChange={(e) => {
+                          setCountryId(e.target.value);
+                          setCountryBranchId("");
+                          setCityBranchId("");
+                          setCounterLedgerId("");
+                          setSelectedLookupLedger(null);
+                        }}
+                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none"
+                      >
+                        <option value="">{t(lang, "roz.all_countries", "All Countries")}</option>
+                        {countries.map((c) => (
+                          <option key={c.id} value={c.id}>{getCountryFlag(c.name)} {c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "roz.main_branch", "Main Branch")}</label>
+                      <select
+                        value={countryBranchId}
+                        disabled={!countryId}
+                        onChange={(e) => {
+                          setCountryBranchId(e.target.value);
+                          setCityBranchId("");
+                        }}
+                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none"
+                      >
+                        <option value="">{t(lang, "roz.select_main_branch", "Select Main Branch")}</option>
+                        {mainBranches.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "roz.branch_category", "Category")}</label>
+                      <select
+                        value={branchCategory}
+                        onChange={(e) => {
+                          setBranchCategory(e.target.value as "business" | "agent");
+                          setCityBranchId("");
+                        }}
+                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none"
+                      >
+                        <option value="business">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
+                        <option value="agent">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "roz.city_branch", "City Branch")}</label>
+                      <select
+                        value={cityBranchId}
+                        disabled={!countryBranchId}
+                        onChange={(e) => setCityBranchId(e.target.value)}
+                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none truncate"
+                      >
+                        <option value="">{t(lang, "roz.select_city_branch", "Select City Branch")}</option>
+                        {cityBranches.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Row 1: Search Account & Daily Payment Date */}
                 <div className="grid gap-4 grid-cols-2">
