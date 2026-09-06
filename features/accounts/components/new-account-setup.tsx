@@ -217,7 +217,19 @@ function localizedOption(value: string, lang: SupportedLanguage) {
   const res = autoTranslate5Languages(value);
   return res[lang] || value;
 }
-export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: SupportedLanguage; initialAccountId?: string }) {
+export function NewAccountSetup({
+  lang: propLang,
+  initialAccountId,
+  initialCountryId,
+  initialBranchType,
+  initialBranchId,
+}: {
+  lang?: SupportedLanguage;
+  initialAccountId?: string;
+  initialCountryId?: string;
+  initialBranchType?: "Main" | "City";
+  initialBranchId?: string;
+}) {
   const router = useRouter();
 
   // Reactive language: prefer the live client-selected language (localStorage-backed store,
@@ -556,7 +568,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
     return () => { cancelled = true; };
   }, []);
 
-  // Pre-select + lock country / branch from the authenticated scope (create mode only).
+  // Pre-select + lock country / branch from the authenticated scope or passed initial props (create mode only).
   useEffect(() => {
     if (initialAccountId || erpScope.loading || scopePrefilled) return;
     if (!erpScope.isSuperAdmin) {
@@ -568,9 +580,13 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
         setBranchType("Main");
         setBranch(erpScope.lockedCountryBranchId);
       }
+    } else {
+      if (initialCountryId) setCountry(initialCountryId);
+      if (initialBranchType) setBranchType(initialBranchType);
+      if (initialBranchId) setBranch(initialBranchId);
     }
     setScopePrefilled(true);
-  }, [initialAccountId, erpScope.loading, erpScope.isSuperAdmin, erpScope.mode, erpScope.lockedCountryId, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, scopePrefilled]);
+  }, [initialAccountId, erpScope.loading, erpScope.isSuperAdmin, erpScope.mode, erpScope.lockedCountryId, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, scopePrefilled, initialCountryId, initialBranchType, initialBranchId]);
 
   // Resolve the operating company for the selected country from the branding
   // master (country_company_profiles) — never a hard-coded "Damaan …".

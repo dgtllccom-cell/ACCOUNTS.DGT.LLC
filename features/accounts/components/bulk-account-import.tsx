@@ -34,15 +34,33 @@ interface Row {
   _selected: boolean;
 }
 
-interface BranchOpt { id: string; name?: string; city_name?: string; branch_name?: string }
+interface BranchOpt { id: string; name?: string; code?: string; city_name?: string; cityName?: string; branch_name?: string }
+
+export interface BulkAccountImportProps {
+  onComplete?: (createdCount: number) => void;
+  lang?: SupportedLanguage;
+  onBackToTable?: () => void;
+  externalScope?: {
+    scopeLevel: "super_admin" | "country" | "main_branch" | "city_branch";
+    countryId: string;
+    branchKind: "main" | "city";
+    branchId: string;
+  };
+  onScopeChange?: (scope: {
+    scopeLevel: "super_admin" | "country" | "main_branch" | "city_branch";
+    countryId: string;
+    branchKind: "main" | "city";
+    branchId: string;
+  }) => void;
+}
 
 export function BulkAccountImport({
   onComplete,
   lang: initialLang,
-}: {
-  onComplete?: (createdCount: number) => void;
-  lang?: SupportedLanguage;
-}) {
+  onBackToTable,
+  externalScope,
+  onScopeChange,
+}: BulkAccountImportProps) {
   const s = useErpScreen("acctimp", initialLang);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -54,12 +72,24 @@ export function BulkAccountImport({
 
   // scope
   const [countries, setCountries] = useState<LocationCountry[]>([]);
-  const [scopeLevel, setScopeLevel] = useState<"super_admin" | "country" | "main_branch" | "city_branch">("city_branch");
-  const [countryId, setCountryId] = useState("");
-  const [branchKind, setBranchKind] = useState<"main" | "city">("city");
-  const [branchId, setBranchId] = useState("");
+  const [scopeLevel, setScopeLevel] = useState<"super_admin" | "country" | "main_branch" | "city_branch">(
+    externalScope?.scopeLevel || "city_branch"
+  );
+  const [countryId, setCountryId] = useState(externalScope?.countryId || "");
+  const [branchKind, setBranchKind] = useState<"main" | "city">(externalScope?.branchKind || "city");
+  const [branchId, setBranchId] = useState(externalScope?.branchId || "");
   const [mainBranches, setMainBranches] = useState<BranchOpt[]>([]);
   const [cityBranches, setCityBranches] = useState<BranchOpt[]>([]);
+
+  // Sync with external scope when provided
+  useEffect(() => {
+    if (externalScope) {
+      if (externalScope.scopeLevel && externalScope.scopeLevel !== scopeLevel) setScopeLevel(externalScope.scopeLevel);
+      if (externalScope.countryId !== undefined && externalScope.countryId !== countryId) setCountryId(externalScope.countryId);
+      if (externalScope.branchKind && externalScope.branchKind !== branchKind) setBranchKind(externalScope.branchKind);
+      if (externalScope.branchId !== undefined && externalScope.branchId !== branchId) setBranchId(externalScope.branchId);
+    }
+  }, [externalScope]);
 
   const [editing, setEditing] = useState<number | null>(null);
 
@@ -69,15 +99,37 @@ export function BulkAccountImport({
 
   useEffect(() => {
     if (!countryId) { setMainBranches([]); setCityBranches([]); return; }
+    let cancelled = false;
     fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(countryId)}`)
       .then((r) => r.json())
-      .then((j) => setMainBranches(j?.data?.branches || j?.branches || j?.countryBranches || []))
+      .then((j) => {
+        if (!cancelled) {
+          const list = j?.data?.branches || j?.branches || j?.countryBranches || [];
+          setMainBranches(Array.isArray(list) ? list : []);
+        }
+      })
       .catch(() => {});
     fetch(`/api/erp/locations/branches/city?countryId=${encodeURIComponent(countryId)}`)
       .then((r) => r.json())
-      .then((j) => setCityBranches(j?.data?.cityBranches || j?.data?.branches || j?.cityBranches || []))
+      .then((j) => {
+        if (!cancelled) {
+          const list = j?.data?.cityBranches || j?.data?.branches || j?.cityBranches || [];
+          setCityBranches(Array.isArray(list) ? list : []);
+        }
+      })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [countryId]);
+
+  // Auto-select first branch if none selected
+  useEffect(() => {
+    const list = branchKind === "main" ? mainBranches : cityBranches;
+    if (list.length > 0 && (!branchId || !list.some((b) => b.id === branchId))) {
+      const nextId = list[0].id;
+      setBranchId(nextId);
+      onScopeChange?.({ scopeLevel, countryId, branchKind, branchId: nextId });
+    }
+  }, [branchKind, mainBranches, cityBranches, branchId, countryId, scopeLevel, onScopeChange]);
 
   const scopeReady = useMemo(() => {
     if (scopeLevel === "super_admin") return true;
@@ -221,15 +273,30 @@ export function BulkAccountImport({
 
       <CardContent className="space-y-4">
         {/* Step 1 — scope */}
-        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/20">
-          <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-            {s.t("step1", "1. Where should these accounts be created?")}
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-3.5 dark:border-blue-900 dark:bg-blue-950/20">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <p className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+              {s.t("step1", "1. Target Account Scope Destination")}
+            </p>
+            <span className="text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400">
+              {s.t("sync_header_hint", "Also selectable in the top action bar ↗")}
+            </span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
             <label className="text-xs font-semibold">
               {s.t("scope_level", "Scope")}
-              <select value={scopeLevel} onChange={(e) => { setScopeLevel(e.target.value as any); setBranchId(""); }}
-                className="mt-0.5 h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900">
+              <select
+                value={scopeLevel}
+                onChange={(e) => {
+                  const val = e.target.value as any;
+                  setScopeLevel(val);
+                  const nextKind = val === "main_branch" ? "main" : "city";
+                  setBranchKind(nextKind);
+                  setBranchId("");
+                  onScopeChange?.({ scopeLevel: val, countryId, branchKind: nextKind, branchId: "" });
+                }}
+                className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900 cursor-pointer shadow-2xs"
+              >
                 <option value="super_admin">{s.t("scope_super", "Global (Super Admin)")}</option>
                 <option value="country">{s.t("scope_country", "Country")}</option>
                 <option value="main_branch">{s.t("scope_main", "Main Branch")}</option>
@@ -239,10 +306,22 @@ export function BulkAccountImport({
             {scopeLevel !== "super_admin" && (
               <label className="text-xs font-semibold">
                 {s.t("country", "Country")}
-                <select value={countryId} onChange={(e) => { setCountryId(e.target.value); setBranchId(""); }}
-                  className="mt-0.5 h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900">
-                  <option value="">{s.t("choose", "— choose —")}</option>
-                  {countries.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <select
+                  value={countryId}
+                  onChange={(e) => {
+                    const cid = e.target.value;
+                    setCountryId(cid);
+                    setBranchId("");
+                    onScopeChange?.({ scopeLevel, countryId: cid, branchKind, branchId: "" });
+                  }}
+                  className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900 cursor-pointer shadow-2xs"
+                >
+                  <option value="">{s.t("choose_country", "— choose country —")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </label>
             )}
@@ -250,20 +329,50 @@ export function BulkAccountImport({
               <>
                 <label className="text-xs font-semibold">
                   {s.t("branch_kind", "Branch type")}
-                  <select value={branchKind} onChange={(e) => { setBranchKind(e.target.value as any); setBranchId(""); }}
-                    className="mt-0.5 h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900">
-                    <option value="main">{s.t("main_branch", "Main / Country Branch")}</option>
+                  <select
+                    value={branchKind}
+                    onChange={(e) => {
+                      const bk = e.target.value as any;
+                      setBranchKind(bk);
+                      setBranchId("");
+                      onScopeChange?.({ scopeLevel, countryId, branchKind: bk, branchId: "" });
+                    }}
+                    className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900 cursor-pointer shadow-2xs"
+                  >
                     <option value="city">{s.t("city_branch", "City Branch")}</option>
+                    <option value="main">{s.t("main_branch", "Main / Country Branch")}</option>
                   </select>
                 </label>
                 <label className="text-xs font-semibold">
                   {s.t("branch", "Branch")}
-                  <select value={branchId} onChange={(e) => setBranchId(e.target.value)} disabled={!countryId}
-                    className="mt-0.5 h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900 disabled:opacity-50">
-                    <option value="">{s.t("choose", "— choose —")}</option>
-                    {(branchKind === "main" ? mainBranches : cityBranches).map((b) => (
-                      <option key={b.id} value={b.id}>{b.name || b.branch_name || b.city_name || b.id}</option>
-                    ))}
+                  <select
+                    value={branchId}
+                    onChange={(e) => {
+                      const bid = e.target.value;
+                      setBranchId(bid);
+                      onScopeChange?.({ scopeLevel, countryId, branchKind, branchId: bid });
+                    }}
+                    disabled={!countryId || (branchKind === "main" ? mainBranches.length === 0 : cityBranches.length === 0)}
+                    className="mt-1 h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900 disabled:opacity-50 cursor-pointer shadow-2xs"
+                  >
+                    {!countryId ? (
+                      <option value="">{s.t("choose_country_first", "— Choose country first —")}</option>
+                    ) : (branchKind === "main" ? mainBranches : cityBranches).length === 0 ? (
+                      <option value="">{s.t("no_branches", "No branches found")}</option>
+                    ) : (
+                      <>
+                        <option value="">{s.t("choose", "— choose —")}</option>
+                        {(branchKind === "main" ? mainBranches : cityBranches).map((b) => {
+                          const label = b.name || b.cityName || b.city_name || b.branch_name || b.code || b.id;
+                          const codeSuffix = b.code ? ` (${b.code})` : "";
+                          return (
+                            <option key={b.id} value={b.id}>
+                              {label}{codeSuffix}
+                            </option>
+                          );
+                        })}
+                      </>
+                    )}
                   </select>
                 </label>
               </>

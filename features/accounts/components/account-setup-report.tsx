@@ -8,7 +8,7 @@ import {
   Phone, Mail, MoreVertical, FileSpreadsheet,
   FileText, Send, MessageCircle, Printer, RefreshCw,
   Eye, Edit3, Filter, X, ChevronDown, CheckCircle2,
-  XCircle, Loader2, LayoutList,
+  XCircle, Loader2, LayoutList, Plus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
@@ -115,8 +115,24 @@ function exportCSV(rows: AccountRow[]) {
   URL.revokeObjectURL(url);
 }
 
+export interface AccountSetupReportProps {
+  lang?: SupportedLanguage;
+  onNewAccount?: () => void;
+  onBulkImport?: () => void;
+  onEditAccount?: (accountId: string) => void;
+  selectedCountry?: string;
+  selectedBranch?: string;
+}
+
 /* Component */
-export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguage }) {
+export function AccountSetupReport({
+  lang: propLang,
+  onNewAccount,
+  onBulkImport,
+  onEditAccount,
+  selectedCountry,
+  selectedBranch,
+}: AccountSetupReportProps) {
   const router = useRouter();
 
   const activeLang = useActiveLanguage();
@@ -230,6 +246,21 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
   const uniqueTypes     = useMemo(() => [...new Set(rows.map(r => r.accountCategory).filter(Boolean))].sort(), [rows]);
   const uniqueSubs      = useMemo(() => [...new Set(rows.map(r => r.subType).filter(Boolean))].sort(), [rows]);
 
+  // Sync external filters when provided
+  useEffect(() => {
+    if (selectedCountry !== undefined && selectedCountry !== country) {
+      setCountry(selectedCountry);
+      setDraftCountry(selectedCountry);
+    }
+  }, [selectedCountry, country]);
+
+  useEffect(() => {
+    if (selectedBranch !== undefined && selectedBranch !== branch) {
+      setBranch(selectedBranch);
+      setDraftBranch(selectedBranch);
+    }
+  }, [selectedBranch, branch]);
+
   // Sync draft states when active states change
   useEffect(() => {
     setDraftCountry(country);
@@ -252,25 +283,29 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
       const q = accNo.toLowerCase();
       if (searchField === "all") {
         const matchCode = r.accountCode.toLowerCase().includes(q) || (r.manualReferenceNumber ?? "").toLowerCase().includes(q);
-        const matchName = r.accountName.toLowerCase().includes(q);
+        const matchName = r.accountName.toLowerCase().includes(q) || r.customerName.toLowerCase().includes(q);
         const matchCountry = r.countryName.toLowerCase().includes(q);
-        const matchBranch = [r.branchName, r.mainBranchName, r.cityBranchName, r.branchCode].some((part) => part.toLowerCase().includes(q));
+        const matchBranch = branchMatches(r, q);
         if (!matchCode && !matchName && !matchCountry && !matchBranch) return false;
       } else if (searchField === "code") {
-        if (!r.accountCode.toLowerCase().includes(q) && !(r.manualReferenceNumber ?? "").toLowerCase().includes(q)) return false;
+        const matchCode = r.accountCode.toLowerCase().includes(q) || (r.manualReferenceNumber ?? "").toLowerCase().includes(q);
+        if (!matchCode) return false;
       } else if (searchField === "name") {
-        if (!r.accountName.toLowerCase().includes(q)) return false;
+        const matchName = r.accountName.toLowerCase().includes(q) || r.customerName.toLowerCase().includes(q);
+        if (!matchName) return false;
       } else if (searchField === "country") {
         if (!r.countryName.toLowerCase().includes(q)) return false;
       } else if (searchField === "branch") {
-        if (![r.branchName, r.mainBranchName, r.cityBranchName, r.branchCode].some((part) => part.toLowerCase().includes(q))) return false;
+        if (!branchMatches(r, q)) return false;
       }
     }
-    if (accName && !r.accountName.toLowerCase().includes(accName.toLowerCase())) return false;
-    if (country !== "all" && r.countryName !== country) return false;
+
+    if (accName && !r.accountName.toLowerCase().includes(accName.toLowerCase()) && !r.customerName.toLowerCase().includes(accName.toLowerCase())) return false;
+    if (country !== "all" && r.countryName.toLowerCase() !== country.toLowerCase()) return false;
     if (branch !== "all" && !branchMatches(r, branch)) return false;
-    if (accType !== "all" && r.accountCategory !== accType) return false;
-    if (subType !== "all" && r.subType !== subType) return false;
+    if (accType !== "all" && r.accountCategory.toLowerCase() !== accType.toLowerCase()) return false;
+    if (subType !== "all" && r.subType.toLowerCase() !== subType.toLowerCase()) return false;
+
     return true;
   }), [rows, accNo, searchField, accName, country, branch, accType, subType]);
 
@@ -432,6 +467,32 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
 
       {portalNode && createPortal(
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Create New Account Button */}
+          {onNewAccount && (
+            <button
+              type="button"
+              onClick={onNewAccount}
+              className="flex h-7 items-center gap-1 rounded-lg bg-indigo-600 px-2.5 text-[10px] font-black text-white shadow-2xs transition-colors hover:bg-indigo-700 shrink-0"
+              title={tr("Create New Account Entry")}
+            >
+              <Plus className="h-3 w-3" />
+              <span>{tr("New Account")}</span>
+            </button>
+          )}
+
+          {/* Bulk Import Button */}
+          {onBulkImport && (
+            <button
+              type="button"
+              onClick={onBulkImport}
+              className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shrink-0"
+              title={tr("Bulk Document Import / AI Scan")}
+            >
+              <FileText className="h-3 w-3 text-indigo-500" />
+              <span>{tr("Bulk Import")}</span>
+            </button>
+          )}
+
           {/* Instant Search with Dropdown select */}
           <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900 h-7 shadow-sm">
             <select
@@ -753,9 +814,21 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
 
                       {/* Account Number */}
                       <td className="asr-td">
-                        <div className="font-mono font-bold text-[#1455ff] text-[11px] leading-tight whitespace-nowrap">
-                          {row.accountCode}
-                        </div>
+                        {onEditAccount ? (
+                          <button
+                            type="button"
+                            onClick={() => onEditAccount(row.accountId)}
+                            className="font-mono font-bold text-[#1455ff] text-[11px] leading-tight whitespace-nowrap hover:underline text-left cursor-pointer flex items-center gap-1 group"
+                            title={tr("Click to view or edit account")}
+                          >
+                            <span>{row.accountCode}</span>
+                            <Edit3 className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500" />
+                          </button>
+                        ) : (
+                          <div className="font-mono font-bold text-[#1455ff] text-[11px] leading-tight whitespace-nowrap">
+                            {row.accountCode}
+                          </div>
+                        )}
                         {row.journalCode && row.journalCode !== row.accountCode && (
                           <div className="text-[9px] text-[var(--asr-muted)] font-mono mt-0.5">{row.journalCode}</div>
                         )}
