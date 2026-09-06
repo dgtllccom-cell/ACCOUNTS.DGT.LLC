@@ -81,6 +81,10 @@ export function generateReportHtml(input: {
   const { title, orientation, companyInfo = {}, filters = [], kpis = [], mainTableHtml, footerNotesHtml, legendHtml, lang = "en", csvData = "", reportKind = "generic" } = input;
   const isAccounting = reportKind === "accounting";
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  // Keep every generated report on the central dictionary.  Report builders pass
+  // English source keys; translateHeader returns the selected locale while
+  // preserving technical values (IDs, codes, dates and amounts).
+  const label = (value: string) => translateHeader(lang, value);
 
   // Treat configuration placeholder strings ("Configured contact", "Configured email",
   // "N/A", "None", "-", "TBD", "TODO") that occasionally get typed into the company
@@ -273,7 +277,7 @@ export function generateReportHtml(input: {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 2.5px solid #0f172a;
+      border-bottom: 3px solid #2563eb;
       padding-bottom: 8px;
     }
 
@@ -338,7 +342,7 @@ export function generateReportHtml(input: {
       letter-spacing: 0.8px;
       margin: 0;
       padding: 4px 12px;
-      border-bottom: 2px solid #0284c7;
+      border-bottom: 3px solid #2563eb;
       display: inline-block;
     }
 
@@ -359,7 +363,7 @@ export function generateReportHtml(input: {
       gap: 4px 14px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-inline-start: 3px solid #3b82f6;
+      border-inline-start: 4px solid #2563eb;
       border-radius: 4px;
       padding: 5px 10px;
       width: 100%;
@@ -402,7 +406,9 @@ export function generateReportHtml(input: {
       border-radius: 6px;
       padding: 6px;
       text-align: center;
-      background: #ffffff;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      break-inside: avoid;
     }
 
     .kpi-card.blue { border-color: #93c5fd; background: #eff6ff; }
@@ -454,7 +460,7 @@ export function generateReportHtml(input: {
     .report-table-wrapper.density-normal table.data-table td { padding: 5px 4px; }
 
     table.data-table th {
-      background: #0f172a;
+      background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 100%);
       color: #ffffff;
       font-weight: 800;
       text-transform: uppercase;
@@ -558,15 +564,30 @@ export function generateReportHtml(input: {
     }
 
     .bottom-bar {
-      background: #0f172a;
+      background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 100%);
       color: #ffffff;
       text-align: center;
       padding: 4px;
       font-size: 7px;
       font-weight: 700;
       border-radius: 4px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.25px;
       width: 100%;
+    }
+
+    .page-number::after { content: counter(page) " / " counter(pages); }
+    .report-scope-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      padding: 3px 7px;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 7px;
+      font-weight: 800;
     }
 
     /* Modal for Column Customization */
@@ -932,10 +953,11 @@ export function generateReportHtml(input: {
           </div>
 
           <div class="meta-col">
-            ${printedBy ? `<div>Printed By: <b>${escapeHtml(printedBy)}</b></div>` : ""}
-            <div>Printed Date: <b>${escapeHtml(printedDate)}</b></div>
-            ${isAccounting && financialYear ? `<div>Financial Year: <b>${escapeHtml(financialYear)}</b></div>` : ""}
-            <div>Report Period: <b>${escapeHtml(reportPeriod)}</b></div>
+            ${printedBy ? `<div>${label("Printed By")}: <b>${escapeHtml(printedBy)}</b></div>` : ""}
+            <div>${label("Printed Date")}: <b>${escapeHtml(printedDate)}</b></div>
+            ${isAccounting && financialYear ? `<div>${label("Financial Year")}: <b>${escapeHtml(financialYear)}</b></div>` : ""}
+            <div>${label("Report Period")}: <b>${escapeHtml(reportPeriod)}</b></div>
+            ${(companyInfo.country || companyInfo.branch || companyInfo.currency) ? `<div class="report-scope-chip">${label("Scope")}: ${escapeHtml([companyInfo.country, companyInfo.branch, companyInfo.currency].filter(Boolean).join(" / "))}</div>` : ""}
           </div>
         </div>
 
@@ -993,14 +1015,14 @@ export function generateReportHtml(input: {
             <!-- Right Legend -->
             <div class="footer-box text-right">
               ${legendHtml || `
-                <b>REPORT STATUS:</b><br />
-                Official ERP System Generated Sheet
+                <b>${label("REPORT STATUS")}:</b><br />
+                ${label("Official ERP System Generated Sheet")}
               `}
             </div>
           </div>
 
           <div class="bottom-bar">
-            ${escapeHtml(compName)} &mdash; Official ERP System Generated Document
+            ${escapeHtml(compName)} &mdash; ${label("Official ERP System Generated Document")} <span class="page-number" aria-label="page number"></span>
           </div>
         </div>
 

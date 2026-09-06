@@ -17,7 +17,17 @@ import {
   X,
   Save,
   Tag,
-  Receipt
+  Receipt,
+  ChevronRight,
+  ArrowRight,
+  Coins,
+  TrendingUp,
+  Layers,
+  FileText,
+  SlidersHorizontal,
+  Sparkles,
+  Settings,
+  Database
 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -256,87 +266,382 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
 
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 text-white shadow-xl">
-        <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2 blur-2xl" />
-        <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="rounded-2xl p-3 bg-white/20 backdrop-blur-sm w-fit">
-            <Percent className="h-7 w-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-white">
-              {_("tax.title", "Country Tax Management")}
+      {/* ================= 1. DUBAI SKYLINE HERO BANNER (Screenshot 4) ================= */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#0B1528] text-white p-6 sm:p-8 shadow-xl min-h-[160px] flex flex-col justify-between">
+        {/* Dubai Skyline SVG Silhouette in background */}
+        <div className="absolute inset-0 opacity-25 pointer-events-none flex items-end justify-center overflow-hidden">
+          <svg className="w-full h-36" viewBox="0 0 1200 200" preserveAspectRatio="none" fill="currentColor">
+            {/* Burj Khalifa Spire & Dubai Skyline Silhouette */}
+            <rect x="50" y="140" width="30" height="60" />
+            <rect x="85" y="110" width="25" height="90" />
+            <rect x="115" y="130" width="40" height="70" />
+            <polygon points="170,90 190,120 190,200 150,200 150,120" />
+            <rect x="200" y="80" width="35" height="120" />
+            <rect x="240" y="125" width="20" height="75" />
+            <rect x="270" y="100" width="45" height="100" />
+            <polygon points="350,60 370,100 370,200 330,200 330,100" />
+            <rect x="380" y="90" width="30" height="110" />
+            <rect x="420" y="130" width="25" height="70" />
+            <rect x="450" y="115" width="40" height="85" />
+            {/* Burj Khalifa (Tall central spire) */}
+            <polygon points="600,0 603,60 608,120 615,200 585,200 592,120 597,60" />
+            <rect x="590" y="140" width="20" height="60" />
+            <rect x="630" y="85" width="30" height="115" />
+            <polygon points="680,70 700,105 700,200 660,200 660,105" />
+            <rect x="710" y="120" width="35" height="80" />
+            <rect x="755" y="95" width="25" height="105" />
+            <rect x="790" y="135" width="40" height="65" />
+            <polygon points="850,80 870,110 870,200 830,200 830,110" />
+            <rect x="880" y="105" width="35" height="95" />
+            <rect x="925" y="75" width="30" height="125" />
+            <rect x="965" y="130" width="40" height="70" />
+            <rect x="1015" y="110" width="30" height="90" />
+            <polygon points="1070,85 1090,115 1090,200 1050,200 1050,115" />
+            <rect x="1100" y="125" width="45" height="75" />
+          </svg>
+        </div>
+
+        {/* Content Row */}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-1.5 max-w-xl">
+            <div className="text-[11px] font-black uppercase tracking-widest text-sky-400">
+              TAX MANAGEMENT
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+              All Taxes
             </h1>
-            <p className="text-sm text-white/80 mt-0.5">
-              {_("tax.subtitle", "Configure multi-country tax rates, VAT/GST registration numbers, and country defaults")}
+            <p className="text-xs sm:text-sm font-medium text-slate-300">
+              Manage tax configurations, rates, TRN and compliance across all countries and branches
             </p>
           </div>
-          <div className="sm:ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-2">
-              <Globe2 className="h-4 w-4 text-emerald-200" />
-              <span className="text-xs font-black text-white uppercase tracking-wider">
-                {currentCountryName}
-              </span>
-            </div>
+
+          {/* Quote Block on Right */}
+          <div className="self-start lg:self-auto text-right bg-white/5 backdrop-blur-xs border border-white/10 rounded-xl px-5 py-3 shrink-0">
+            <p className="text-xs sm:text-sm font-serif italic text-slate-200">
+              &ldquo;Compliant today. A stronger tomorrow.&rdquo;
+            </p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-sky-300 mt-1">
+              United Arab Emirates
+            </p>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Active Tax Rates */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
-          <div className="flex items-start justify-between gap-2 min-h-[2.5rem]">
-            <span className="text-xs font-bold uppercase text-slate-500 leading-tight">{_("ctm.configured_rates", "Configured Rates")}</span>
-            <div className="rounded-xl bg-emerald-50 p-2 shrink-0 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-              <Tag className="h-4 w-4" />
+      {/* ================= 2. 4 KPI SUMMARY CARDS (Screenshot 4) ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Branch & User Details (Blue) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-blue-200/80 dark:border-blue-900/40 p-4 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <span className="text-xs font-bold text-blue-950 dark:text-blue-200">Branch & User Details</span>
+              </div>
+              <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-3xl font-black text-slate-900 dark:text-slate-100">12</div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Active Branches</p>
             </div>
           </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{activeCount}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{_("ctm.active_configs", "Active tax configurations")}</p>
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
+            38 <span className="font-normal text-slate-400">Active Users</span>
+          </div>
         </div>
 
-        {/* Default Country Tax Rate */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
-          <div className="flex items-start justify-between gap-2 min-h-[2.5rem]">
-            <span className="text-xs font-bold uppercase text-slate-500 leading-tight">{_("ctm.default_rate", "Default Rate")}</span>
-            <div className="rounded-xl bg-blue-50 p-2 shrink-0 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-              <Percent className="h-4 w-4" />
+        {/* Card 2: Tax/Financial Summary (Green) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 p-4 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center">
+                  <Coins className="h-4 w-4" />
+                </div>
+                <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">Tax/Financial Summary</span>
+              </div>
+              <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">AED 2,48,320</div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Total Tax Collected (YTD)</p>
             </div>
           </div>
-          <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-2">
-            {defaultTax ? `${defaultTax.taxRate}%` : "0%"}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{defaultTax ? defaultTax.taxName : _("ctm.none_set", "None set")}</p>
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+            <span>5 <span className="font-normal text-slate-400">Active Tax Jurisdictions</span></span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-0.5">
+              <TrendingUp className="h-3 w-3" /> +12% vs last year
+            </span>
+          </div>
         </div>
 
-        {/* Primary TRN Number */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
-          <div className="flex items-start justify-between gap-2 min-h-[2.5rem]">
-            <span className="text-xs font-bold uppercase text-slate-500 leading-tight">{_("ctm.trn_reg_label", "TRN / Tax Reg #")}</span>
-            <div className="rounded-xl bg-violet-50 p-2 shrink-0 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
-              <Receipt className="h-4 w-4" />
+        {/* Card 3: Tax Rules & Country Status (Purple) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-purple-200/80 dark:border-purple-900/40 p-4 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 flex items-center justify-center">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">Tax Rules & Country Status</span>
+              </div>
+              <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-3xl font-black text-slate-900 dark:text-slate-100">1</div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Active Country (UAE)</p>
             </div>
           </div>
-          <p className="text-sm font-black text-slate-800 dark:text-slate-200 mt-2 truncate">
-            {defaultTax?.trnNumber || _("ctm.not_registered", "Not Registered")}
-          </p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{_("ctm.vat_gst_reg", "VAT / GST Registration No")}</p>
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
+            4 <span className="font-normal text-slate-400">Planned Countries</span>
+          </div>
         </div>
 
-        {/* Country Status */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
-          <div className="flex items-start justify-between gap-2 min-h-[2.5rem]">
-            <span className="text-xs font-bold uppercase text-slate-500 leading-tight">{_("common.status", "Status")}</span>
-            <div className="rounded-xl bg-teal-50 p-2 shrink-0 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400">
-              <ShieldCheck className="h-4 w-4" />
+        {/* Card 4: Country/Branch Tax Report (Orange) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 p-4 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center">
+                  <Receipt className="h-4 w-4" />
+                </div>
+                <span className="text-xs font-bold text-amber-950 dark:text-amber-200">Country/Branch Tax Report</span>
+              </div>
+              <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-3xl font-black text-slate-900 dark:text-slate-100">5</div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Countries Configured</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 mt-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{_("common.active", "Active")}</span>
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
+            12 <span className="font-normal text-slate-400">Branch Tax Profiles</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">{_("ctm.engine_ready", "Multi-country Tax Engine Ready")}</p>
+        </div>
+      </div>
+
+      {/* ================= 3. TAX CONTAINER & CONFIGURATION (Screenshot 4) ================= */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
+              <Layers className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">Tax Container & Configuration</h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Manage country-wise tax rules, rates, TRN and defaults. Each country is a container with its own configuration.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenNew}
+            className="self-start sm:self-auto flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs transition-all whitespace-nowrap"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>+ Add Country</span>
+          </button>
+        </div>
+
+        {/* 6 Country Container Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {/* Card 1: Tax Setup & Rates */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs flex items-center justify-between hover:border-blue-400 transition cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center">
+                <Settings className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Tax Setup & Rates</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Configure tax rates, TRN, defaults and country rules
+                </p>
+              </div>
+            </div>
+            <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
+              <ArrowRight className="h-3 w-3" />
+            </div>
+          </div>
+
+          {/* Card 2: United Arab Emirates (Active) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base leading-none">🇦🇪</span>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100">United Arab Emirates</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              VAT engine, e-invoicing, returns, documentation and audit
+            </p>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">VAT Rate</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">5%</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">TRN</span>
+                <span className="font-bold text-emerald-600">Configured</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">Yes</span>
+              </div>
+              <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center cursor-pointer">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Pakistan (Planned) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base leading-none">🇵🇰</span>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100">Pakistan</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                Planned
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Container ready — tax rules to be configured
+            </p>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Sales Tax</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">NTN</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
+              </div>
+              <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Afghanistan (Planned) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base leading-none">🇦🇫</span>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100">Afghanistan</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                Planned
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Container ready — tax rules to be configured
+            </p>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Sales Tax</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">TIN</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
+              </div>
+              <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 5: India (Planned) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base leading-none">🇮🇳</span>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100">India</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                Planned
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Container ready — tax defaults to be configured
+            </p>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">GST</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">GSTIN</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
+              </div>
+              <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 6: Other Countries */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe2 className="h-4 w-4 text-blue-500" />
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100">Other Countries</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                Planned
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Container ready — tax rules to be configured
+            </p>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Tax</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Registration</span>
+                <span className="font-bold text-slate-400">—</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
+              </div>
+              <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

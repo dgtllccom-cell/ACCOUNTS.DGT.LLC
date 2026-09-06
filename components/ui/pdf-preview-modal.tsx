@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import html2pdf from "html2pdf.js";
 
 const DOC_LANGS: Array<{ code: string; label: string }> = [
   { code: "en", label: "English" }, { code: "ur", label: "اردو" }, { code: "ps", label: "پښتو" },
@@ -107,46 +108,31 @@ export function PdfPreviewModal() {
   };
 
   const handleDownloadPdf = async () => {
-    // Generate PDF from iframe content and automatically download
+    // Generate PDF from the bundled html2pdf.js dependency. Keeping this local
+    // avoids a CDN/network dependency in offline/VPS environments.
     const safeName = (title || "ERP-Report").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "erp-report";
     const timestamp = new Date().toISOString().slice(0, 10);
     const filename = `${safeName}-${timestamp}.pdf`;
 
     try {
-      // Use html2pdf.js via CDN for client-side PDF generation
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-
-      script.onload = () => {
-        if (iframeRef.current?.contentDocument) {
+      if (iframeRef.current?.contentDocument) {
           const element = iframeRef.current.contentDocument.body;
           // Match the PDF page orientation to the report's own @page rule so wide
           // (landscape) ledger/journal reports are not squashed into portrait.
           const docHtml = iframeRef.current.contentDocument.documentElement?.outerHTML || "";
           const isLandscape = /@page[^}]*size:\s*A4\s+landscape/i.test(docHtml);
+          const pdfOrientation: "portrait" | "landscape" = isLandscape ? "landscape" : "portrait";
           const opt = {
             margin: 10,
             filename: filename,
-            image: { type: "jpeg", quality: 0.85 },
+            image: { type: "jpeg" as const, quality: 0.85 },
             html2canvas: { scale: 1.5, useCORS: true, logging: false },
             pagebreak: { mode: ["css", "legacy"] },
-            jsPDF: { orientation: isLandscape ? "landscape" : "portrait", unit: "mm", format: "a4", compress: true }
+            jsPDF: { orientation: pdfOrientation, unit: "mm" as const, format: "a4" as const, compress: true }
           };
 
-          // Generate PDF and download automatically
-          (window as any).html2pdf().set(opt).from(element).save();
-        }
-      };
-
-      script.onerror = () => {
-        // Fallback to print dialog if library fails to load
-        console.warn("html2pdf failed to load, using print dialog");
-        if (iframeRef.current?.contentWindow) {
-          iframeRef.current.contentWindow.print();
-        }
-      };
-
-      document.head.appendChild(script);
+          await html2pdf().set(opt).from(element).save();
+      }
     } catch (error) {
       console.error("PDF download error:", error);
       // Fallback to print dialog

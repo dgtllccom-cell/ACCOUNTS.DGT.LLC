@@ -205,8 +205,11 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
 
   // Dynamic Hierarchy Branding Resolution: Selected Ledger -> Company -> Country -> Main Branch / City Branch
   const resolvedCompanyName = ledgerSummary?.companyName || scope.company || companyInfo.name || generalBrand.name;
-  const resolvedCountry = ledgerSummary?.countryName || scope.country || "Global Scope";
-  const resolvedBranch = ledgerSummary?.cityBranch || ledgerSummary?.mainBranch || scope.branch || "Main Branch";
+  // Never invent an operating location when a report has no scoped record.
+  // Empty values render as an explicit dash in the print layout instead of
+  // looking like real global/branch data.
+  const resolvedCountry = ledgerSummary?.countryName || scope.country || "";
+  const resolvedBranch = ledgerSummary?.cityBranch || ledgerSummary?.mainBranch || scope.branch || "";
   // Tax / registration number comes ONLY from the entity's branding record — never fabricated per country.
   const resolvedTaxNo = String(ledgerSummary?.taxNo || (companyInfo as any).taxNo || generalBrand.taxNo || "").trim();
   // Ignore configuration-placeholder strings ("Configured contact", "N/A", "None", "-", …)
@@ -216,14 +219,14 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
     if (!s || /^(configured\b|n\/?a$|none$|null$|undefined$|-+$|tbd$|todo$|placeholder\b|not\s+set$|not\s+configured$)/i.test(s)) return "";
     return s;
   };
-  const resolvedAddress = realOrEmpty(ledgerSummary?.address) || realOrEmpty(companyInfo.address) || realOrEmpty(generalBrand.address) || `${resolvedBranch}, ${resolvedCountry}`;
+  const resolvedAddress = realOrEmpty(ledgerSummary?.address) || realOrEmpty(companyInfo.address) || realOrEmpty(generalBrand.address) || "";
   const resolvedContact = realOrEmpty(companyInfo.email) || realOrEmpty((companyInfo as any).phone) || realOrEmpty(generalBrand.contact) || "";
 
   const brandName = resolvedCompanyName
-    || (resolvedCountry !== "Global Scope" ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : (isFinancial ? "ERP ACCOUNTING STATEMENT" : "DIGITAL DOCK ERP"));
-  const brandTagline = generalBrand.tagline || `${resolvedBranch.toUpperCase()} NETWORK • ${resolvedCountry.toUpperCase()}`;
+    || (resolvedCountry ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : (isFinancial ? "ERP ACCOUNTING STATEMENT" : "DIGITAL DOCK ERP"));
+  const brandTagline = generalBrand.tagline || (resolvedBranch && resolvedCountry ? `${resolvedBranch.toUpperCase()} NETWORK - ${resolvedCountry.toUpperCase()}` : "ERP Reporting System");
   const entityName = resolvedCompanyName || brandName;
-  const baseCurrency = ledgerSummary?.currency || scope.currency || "AED";
+  const baseCurrency = ledgerSummary?.currency || scope.currency || "";
   const dateRange = ledgerSummary?.datePeriod || scope.dateRange || "All Available Records";
 
   const printDate = new Date();
@@ -662,6 +665,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       font-size: 6.2pt;
       color: #64748b;
     }
+    .page-footer .page-counter::after { content: counter(page) " / " counter(pages); }
   </style>
 </head>
 <body>
@@ -714,8 +718,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
             ${(ledgerSummary?.accountCode || partyDetails?.code || documentNo)
               ? `<strong>${tr(isFinancial ? "Account Code" : "Reference")}:</strong> ${escapeHtml(ledgerSummary?.accountCode || partyDetails?.code || documentNo || "")}<br />`
               : ""}
-            <strong>${tr("Country / Branch")}:</strong> ${escapeHtml(resolvedCountry)} • ${escapeHtml(resolvedBranch)}<br />
-            <strong>${tr("Currency / Period")}:</strong> ${escapeHtml(baseCurrency)} | ${escapeHtml(dateRange)}<br />
+            <strong>${tr("Country / Branch")}:</strong> ${escapeHtml([resolvedCountry, resolvedBranch].filter(Boolean).join(" / ") || "-")}<br />
+            <strong>${tr("Currency / Period")}:</strong> ${escapeHtml([baseCurrency, dateRange].filter(Boolean).join(" | ") || "-")}<br />
             <strong>${tr("Generated")}:</strong> ${escapeHtml(fullDateTime)}${userName ? ` (${escapeHtml(userName)})` : ""}
           </div>
         </td>
@@ -747,10 +751,10 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
         <div class="meta-item"><strong>${tr("Account Name")}:</strong> <span>${escapeHtml(ledgerSummary?.accountName || partyDetails?.name || "-")}</span></div>
         <div class="meta-item"><strong>${tr("Open Date")}:</strong> <span>${escapeHtml(ledgerSummary?.accountOpenDate || "-")}</span></div>
         <div class="meta-item"><strong>${tr("Currency")}:</strong> <span>${escapeHtml(baseCurrency)}</span></div>
-        <div class="meta-item"><strong>${tr("Status")}:</strong> <span style="color:#059669;">${escapeHtml(ledgerSummary?.status || "Active")}</span></div>
+        <div class="meta-item"><strong>${tr("Status")}:</strong> <span style="color:#059669;">${escapeHtml(ledgerSummary?.status || "-")}</span></div>
         <div class="meta-item"><strong>${tr("Manual Ref")}:</strong> <span>${escapeHtml(ledgerSummary?.manualReference || "-")}</span></div>
         <div class="meta-item"><strong>${tr("Customer / Party Ref")}:</strong> <span>${escapeHtml(ledgerSummary?.customerReference || partyDetails?.code || "-")}</span></div>
-        <div class="meta-item"><strong>${tr("Account Type")}:</strong> <span>${escapeHtml(ledgerSummary?.accountType || "Standard Ledger")}</span></div>
+        <div class="meta-item"><strong>${tr("Account Type")}:</strong> <span>${escapeHtml(ledgerSummary?.accountType || "-")}</span></div>
         <div class="meta-item"><strong>${tr("Country")}:</strong> <span>${escapeHtml(resolvedCountry)}</span></div>
         <div class="meta-item"><strong>${tr("Main Branch")}:</strong> <span>${escapeHtml(ledgerSummary?.mainBranch || resolvedBranch)}</span></div>
         <div class="meta-item"><strong>${tr("City Branch")}:</strong> <span>${escapeHtml(ledgerSummary?.cityBranch || resolvedBranch)}</span></div>
@@ -889,7 +893,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
 
     <!-- ── 7. COMPACT PAGE FOOTER ────────────────────────── -->
     <div class="page-footer">
-      <div>${escapeHtml(brandName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)}${(documentNo || ledgerSummary?.accountCode) ? ` • ${tr("Ref")}: ${escapeHtml(documentNo || ledgerSummary?.accountCode || "")}` : ""}</div>
+      <div>${escapeHtml(brandName)} - ${escapeHtml(title)} - ${escapeHtml(fullDateTime)}${(documentNo || ledgerSummary?.accountCode) ? ` - ${tr("Ref")}: ${escapeHtml(documentNo || ledgerSummary?.accountCode || "")}` : ""} <span class="page-counter" aria-label="${tr("Page")} ${tr("of")}"></span></div>
       <div><strong>${tr(isFinancial ? "Confidential Enterprise Statement" : "Confidential")}</strong></div>
     </div>
 

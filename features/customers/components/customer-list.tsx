@@ -33,7 +33,8 @@ import {
   Globe,
   MapPin,
   Check,
-  PhoneCall
+  PhoneCall,
+  TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -382,169 +383,214 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
   return (
     <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
-      {/* ================= TOP APPLICATION HEADER STRIP ================= */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          
-          {/* Left: Title & Subtitle */}
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-              {getLabel("customersTitle", lang) || "Leads"}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-              {t(lang, "cl.subtitle", "Manage and track your leads, from inquiry to close.")}
+      {/* ================= BREADCRUMB ================= */}
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+        <span>{t(lang, "nav.dashboard", "Dashboard")}</span>
+        <ChevronRight className="h-3 w-3 text-slate-400" />
+        <span>{t(lang, "cl.customers_group", "Customers")}</span>
+        <ChevronRight className="h-3 w-3 text-slate-400" />
+        <span className="text-slate-800 dark:text-slate-200 font-semibold">{t(lang, "cl.customer_management", "Customer Management")}</span>
+      </div>
+
+      {/* ================= HERO SECTION ================= */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        {/* Left Title & Subtitle */}
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            {t(lang, "cl.customer_management", "Customer Management")}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            {t(lang, "cl.subtitle", "Manage and track your leads, from inquiry to close.")}
+          </p>
+        </div>
+
+        {/* Right Gradient Banner Card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/90 via-sky-100/60 to-indigo-100/70 dark:from-slate-800/90 dark:via-blue-950/40 dark:to-indigo-950/40 border border-blue-100/90 dark:border-blue-900/40 p-4 sm:px-6 sm:py-3.5 shadow-xs flex flex-wrap items-center justify-between gap-6">
+          <div className="space-y-0.5">
+            <h2 className="text-base sm:text-lg font-black text-blue-950 dark:text-blue-100 tracking-tight">
+              {t(lang, "cl.hero_banner_title", "Build Stronger Relationships")}
+            </h2>
+            <p className="text-xs font-semibold text-blue-700/90 dark:text-blue-300">
+              {t(lang, "cl.hero_banner_sub", "Convert leads into lasting customers")}
             </p>
           </div>
 
-          {/* Right: Search, Filter Dropdowns, Export, Add Lead */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Search Input */}
-            <div className="relative min-w-[240px] flex-1 sm:flex-initial">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder={t(lang, "cl.search_ph", "Search leads, contacts, companies...")}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 font-medium"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-
-            {/* Status Dropdown */}
-            <div className="relative">
-              <select
-                value={selectedStatusTab}
-                onChange={(e) => {
-                  setSelectedStatusTab(e.target.value);
-                  setCurrentPage(1);
-                }}
-                aria-label={t(lang, "cl.filter_by_status", "Filter by status")}
-                className="h-9 px-3 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-8 shadow-2xs"
-              >
-                <option value="all">{t(lang, "cl.all_status", "All Status")}</option>
-                <option value="New">{t(lang, "cl.status_new", "New")}</option>
-                <option value="Contacted">{t(lang, "cl.status_contacted", "Contacted")}</option>
-                <option value="Qualified">{t(lang, "cl.status_qualified", "Qualified")}</option>
-                <option value="Proposal">{t(lang, "cl.status_proposal", "Proposal")}</option>
-                <option value="Negotiation">{t(lang, "cl.status_negotiation", "Negotiation")}</option>
-                <option value="Closed">{t(lang, "cl.status_closed", "Closed")}</option>
-                <option value="Lost">{t(lang, "cl.status_lost", "Lost")}</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-            </div>
-
-            {/* Filters Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedStatusTab("all");
-                setSelectedCountryFilter("all");
-              }}
-              title={t(lang, "cl.reset_all_filters", "Reset all filters")}
-              className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
-              <span>{t(lang, "cl.filters", "Filters")}</span>
-            </Button>
-
-            {/* Export Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleExportCSV}
-              className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
-            >
-              <Download className="h-3.5 w-3.5 text-slate-500" />
-              <span>{t(lang, "common.export", "Export")}</span>
-            </Button>
-
-            {/* Primary "+ Add Lead" / "+ Add Customer" Button */}
-            <Button
-              type="button"
-              onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
-              className="h-9 px-4 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>{t(lang, "cl.add_lead", "Add Lead")}</span>
-            </Button>
-
-            {/* More Menu Dropdown */}
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuId(activeMenuId === "top_more" ? null : "top_more");
-                }}
-                className="h-9 w-9 p-0 border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-
-              {activeMenuId === "top_more" && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute right-0 mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveMenuId(null);
-                      setShowUniversalDirectory(true);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
-                  >
-                    <Layers className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>{t(lang, "cl.universal_directory", "360° Universal Directory")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveMenuId(null);
-                      setShowReport(true);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
-                  >
-                    <Printer className="h-3.5 w-3.5 text-cyan-600" />
-                    <span>{t(lang, "cl.print_master_report", "Print Master Report")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveMenuId(null);
-                      setShowSendModal(true);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
-                  >
-                    <Send className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>{t(lang, "cl.send_form_link", "Send Form Link")}</span>
-                  </button>
+          <div className="flex items-center gap-5">
+            {/* Trend & Avatar Graphic */}
+            <div className="relative flex items-center">
+              <div className="flex -space-x-2 overflow-hidden items-end">
+                <div className="h-7 w-7 rounded-full bg-blue-500/80 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[10px] text-white font-bold">
+                  <Users className="h-3.5 w-3.5" />
                 </div>
-              )}
+                <div className="h-9 w-9 rounded-full bg-blue-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs text-white font-bold shadow-xs">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="ml-2.5 h-7 w-7 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+            </div>
+
+            {/* Slogan Text */}
+            <div className="border-l border-blue-200/80 dark:border-blue-800/80 pl-4 text-[11px] font-bold text-blue-900/80 dark:text-blue-200 leading-snug">
+              <div>More Leads.</div>
+              <div>Stronger Customers.</div>
+              <div>Greater Growth.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= 4 KPI SUMMARY CARDS ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Branch & User Details (Purple) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="h-8 w-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
+              <Building2 className="h-4 w-4" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+              {t(lang, "cl.kpi_branch_user", "Branch & User Details")}
+            </h3>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_branch", "Branch")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{t(lang, "cl.head_office", "Head Office")}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_total_users", "Total Users")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">12</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_active_users", "Active Users")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">10</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_inactive_users", "Inactive Users")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">2</span>
             </div>
           </div>
         </div>
 
-        {/* ================= STATUS SEGMENT FILTER PILLS ================= */}
-        <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 overflow-x-auto pb-1 scrollbar-none">
+        {/* Card 2: Customer Summary (Green) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="h-8 w-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+              <Users className="h-4 w-4" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+              {t(lang, "cl.kpi_customer_summary", "Customer Summary")}
+            </h3>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_total_customers", "Total Customers")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length || 4}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_active_customers", "Active Customers")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">
+                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "active" || (c.meta.leadStatus || "").toLowerCase() === "closed").length || 1}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_new_this_month", "New This Month")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">
+                {parsedCustomers.filter(c => {
+                  const d = new Date(c.created_at);
+                  const now = new Date();
+                  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                }).length || 3}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_inactive_customers", "Inactive Customers")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">
+                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "inactive" || (c.meta.leadStatus || "").toLowerCase() === "lost").length}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Customer Pipeline / Status Summary (Orange) */}
+        <div className="bg-[#FFFDF9] dark:bg-slate-900 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 p-4 shadow-xs">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="h-8 w-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+              <SlidersHorizontal className="h-4 w-4" />
+            </div>
+            <h3 className="text-xs font-bold text-amber-900 dark:text-amber-300">
+              {t(lang, "cl.kpi_pipeline_summary", "Customer Pipeline / Status Summary")}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_new", "New")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["New"] ?? 1}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_negotiation", "Negotiation")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Negotiation"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_contacted", "Contacted")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Contacted"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_closed", "Closed")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Closed"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_qualified", "Qualified")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Qualified"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_lost", "Lost")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Lost"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.tab_proposal", "Proposal")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Proposal"] ?? 0}</span>
+            </div>
+            <div></div>
+          </div>
+        </div>
+
+        {/* Card 4: Country / Branch Customer Report (Blue) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+              <Globe className="h-4 w-4" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+              {t(lang, "cl.kpi_country_branch", "Country / Branch Customer Report")}
+            </h3>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_total_countries", "Total Countries")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">4</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_total_branches", "Total Branches")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">2</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_customers_this_branch", "Customers (This Branch)")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length || 4}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{t(lang, "cl.f_top_country", "Top Country")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">Afghanistan (2)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= STATUS PILLS + TOOLBAR BAR ================= */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+        {/* Status Segment Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {STATUS_TABS.map((tab) => {
             const isSelected = selectedStatusTab.toLowerCase() === tab.id.toLowerCase();
             const count = statusCounts[tab.id] ?? 0;
@@ -557,19 +603,19 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   setCurrentPage(1);
                 }}
                 className={cn(
-                  "flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs",
                   isSelected
                     ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60"
+                    : "bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60"
                 )}
               >
                 <span>{t(lang, `cl.tab_${tab.id.toLowerCase()}`, tab.en)}</span>
                 <span
                   className={cn(
-                    "text-[10px] font-black px-1.5 py-0.2 rounded-md",
+                    "text-[10px] font-black px-1.5 py-0.2 rounded-full",
                     isSelected
-                      ? "bg-blue-500/80 text-white"
-                      : "bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                      ? "bg-blue-500 text-white"
+                      : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                   )}
                 >
                   {count}
@@ -577,6 +623,72 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               </button>
             );
           })}
+        </div>
+
+        {/* Right: Search, Filter, Export, Add Lead */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search Input */}
+          <div className="relative min-w-[240px] flex-1 sm:flex-initial">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder={t(lang, "cl.search_ph_short", "Search name, company, country...")}
+              className="w-full h-9 pl-9 pr-3 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 font-medium shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Filters Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedStatusTab("all");
+              setSelectedCountryFilter("all");
+            }}
+            title={t(lang, "cl.reset_all_filters", "Reset all filters")}
+            className="h-9 px-3 gap-1.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+            <span>{t(lang, "cl.filters", "Filters")}</span>
+          </Button>
+
+          {/* Export Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="h-9 px-3 gap-1.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs"
+          >
+            <Download className="h-3.5 w-3.5 text-slate-500" />
+            <span>{t(lang, "common.export", "Export")}</span>
+          </Button>
+
+          {/* Primary "+ Add Lead" Button */}
+          <Button
+            type="button"
+            onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
+            className="h-9 px-4 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{t(lang, "cl.add_lead", "Add Lead")}</span>
+          </Button>
         </div>
       </div>
 

@@ -143,7 +143,9 @@ export function buildGenericErpReportHtml(input: {
   const translatedSubtitle = subtitle ? translateHeader(lang, subtitle) : undefined;
   const translatedFilters = filters.map(f => ({
     label: translateHeader(lang, f.label),
-    value: translateHeader(lang, f.value)
+    // Filter values are business/technical data (IDs, names, dates, codes).
+    // Translate labels only; never run values through the dictionary.
+    value: f.value
   }));
 
   const tableHtml = `
@@ -197,7 +199,7 @@ export function buildGenericErpReportHtml(input: {
   const currency =
     companyInfo.currency ||
     columns.find((column) => column.format === "currency")?.currency ||
-    "AED";
+    "";
 
   const html = generateReportHtml({
     title: translatedTitle,

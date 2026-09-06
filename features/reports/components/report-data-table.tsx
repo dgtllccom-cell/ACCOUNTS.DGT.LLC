@@ -217,18 +217,8 @@ export function ReportDataTable({
       {/* Table */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-auto shadow-sm">
         {paged.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center">
-            <div className="mb-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-850/60 text-slate-400 border border-slate-200/60 dark:border-slate-800">
-              <svg className="h-10 w-10 stroke-current text-slate-400" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                <path d="m3.3 7 8.7 5 8.7-5" />
-                <path d="M12 22V12" />
-              </svg>
-            </div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">No data found</h4>
-            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 max-w-sm">
-              Try adjusting your filters or select a different time period.
-            </p>
+          <div className="py-16 text-center">
+            <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">{_("report.no_data")}</p>
           </div>
         ) : (
           <table className="w-full text-xs border-collapse">
