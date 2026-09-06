@@ -1,13 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt, Camera,
+  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt, Camera, ExternalLink, FileClock,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { isNativeApp, captureDocumentPhoto } from "@/lib/mobile/native-bridge";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { DRAFT_PREFILL_KEY } from "@/features/document-intelligence/components/entry-method-selector";
 
 type Row = Record<string, any>;
 
@@ -306,6 +308,7 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
 // the reviewed draft to one of the existing ERP module workflows. target keys
 // must match lib/document-intelligence/draft-mapping.ts DRAFTABLE_MODULES.
 const DOC_PURPOSES: Array<{ target: string; labelKey: string; fallback: string; group: string }> = [
+  { target: "account_master", labelKey: "purpose_account_master", fallback: "Chart of Accounts / New Account Entry", group: "Masters" },
   { target: "purchase_orders", labelKey: "purpose_purchase", fallback: "Purchase (New / Existing)", group: "Trade" },
   { target: "sales_orders", labelKey: "purpose_sales", fallback: "Sales (New / Existing)", group: "Trade" },
   { target: "purchase_loading_records", labelKey: "purpose_loading", fallback: "Purchase Loading / Receiving", group: "Trade" },
@@ -323,12 +326,87 @@ const DOC_PURPOSES: Array<{ target: string; labelKey: string; fallback: string; 
   { target: "sales_orders", labelKey: "purpose_contract_sales", fallback: "Contract / Agreement (Sales side)", group: "Masters" },
 ];
 
+function getModuleEntryUrl(targetModule?: string | null): string {
+  switch (targetModule) {
+    case "account_master":
+    case "accounts":
+    case "banks":
+      return "/dashboard/accounts/setup";
+    case "purchase_orders":
+      return "/dashboard/purchase/new-purchase-booking-order";
+    case "sales_orders":
+      return "/dashboard/sales/new-sale-order-booking";
+    case "purchase_loading_records":
+      return "/dashboard/purchase-loading-records";
+    case "roznamcha_entries":
+      return "/dashboard/roznamcha/cash-entry";
+    case "expenses":
+    case "bill_expense_line":
+      return "/dashboard/expenses";
+    case "shipping_bl_records":
+      return "/dashboard/shipping-line";
+    case "clearing_agent_custom_entries":
+      return "/dashboard/clearing-agent";
+    case "customers":
+      return "/dashboard/crm/customers/new";
+    case "companies":
+      return "/dashboard/companies/new";
+    case "employees":
+      return "/dashboard/employees";
+    default:
+      return "/dashboard/accounts/setup";
+  }
+}
+
+function getTargetModuleName(targetModule: string | undefined | null, s: ReturnType<typeof useErpScreen>): string {
+  switch (targetModule) {
+    case "account_master":
+    case "accounts":
+      return s.t("purpose_account_master", "Chart of Accounts / New Account Entry");
+    case "banks":
+      return s.t("purpose_bank", "Bank Account");
+    case "purchase_orders":
+      return s.t("purpose_purchase", "Purchase (New / Existing)");
+    case "sales_orders":
+      return s.t("purpose_sales", "Sales (New / Existing)");
+    case "purchase_loading_records":
+      return s.t("purpose_loading", "Purchase Loading / Receiving");
+    case "roznamcha_entries":
+      return s.t("purpose_payment", "Payment / Cash / Bank Roznamcha");
+    case "expenses":
+    case "bill_expense_line":
+      return s.t("purpose_expense", "Expense Bill");
+    case "shipping_bl_records":
+      return s.t("purpose_shipping", "Shipping / Bill of Lading");
+    case "clearing_agent_custom_entries":
+      return s.t("purpose_clearing", "Clearing / Customs Entry");
+    case "customers":
+      return s.t("purpose_customer", "Customer / Person KYC");
+    case "companies":
+      return s.t("purpose_company", "Company / Entity");
+    case "employees":
+      return s.t("purpose_employee", "Employee / HR Record");
+    default:
+      return targetModule || s.t("purpose_title", "Target Module");
+  }
+}
+
 function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>; jobId: string; onBack: () => void }) {
+  const router = useRouter();
   const [data, setData] = useState<{ job: Row; fields: Row[]; lineItems: Row[]; matches: Row[]; events: Row[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [purpose, setPurpose] = useState<string>("");
+  const [toast, setToast] = useState<{ show: boolean; draftNo: string; targetModule: string } | null>(null);
+
+  useEffect(() => {
+    if (!toast?.show) return;
+    const timer = setTimeout(() => {
+      setToast((prev) => (prev ? { ...prev, show: false } : null));
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [toast?.show]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -346,6 +424,32 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     const tm = data?.job?.target_module;
     if (tm && !purpose) setPurpose(tm);
   }, [data?.job?.target_module, purpose]);
+
+  const openDraftInForm = async (targetMod?: string) => {
+    const mod = targetMod || purpose || data?.job?.target_module || "account_master";
+    try {
+      const draftsRes = await apiGet<{ rows: any[] }>(`/api/erp/document-intelligence/drafts?jobId=${jobId}`);
+      const d = draftsRes?.rows?.[0];
+      if (d) {
+        sessionStorage.setItem(
+          DRAFT_PREFILL_KEY,
+          JSON.stringify({
+            targetModule: d.target_module || mod,
+            draftId: d.id,
+            draftNo: d.draft_no,
+            payload: d.draft_payload,
+            goodsEntries: d.line_items,
+            linkMode: d.link_mode,
+            linkedSourceId: d.linked_source_id,
+          })
+        );
+      }
+    } catch (err) {
+      console.warn("Failed to stash draft for form:", err);
+    }
+    const url = getModuleEntryUrl(mod);
+    router.push(url as any);
+  };
 
   const act = async (action: string, reason?: string) => {
     setBusy(true);
@@ -366,7 +470,39 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     setBusy(true);
     setError(null);
     const targetModule = purpose || data?.job?.target_module || undefined;
-    try { await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "confirm", linkMode, targetModule }); await load(); }
+    try {
+      const res = await apiPatch<Row>(`/api/erp/document-intelligence/${jobId}`, { action: "confirm", linkMode, targetModule });
+      const draftNo = res?.result?.draftNo || res?.draftNo || data?.job?.draft_reference || "DID";
+      const mod = targetModule || "account_master";
+
+      try {
+        const draftsRes = await apiGet<{ rows: any[] }>(`/api/erp/document-intelligence/drafts?jobId=${jobId}`);
+        const d = draftsRes?.rows?.[0];
+        if (d) {
+          sessionStorage.setItem(
+            DRAFT_PREFILL_KEY,
+            JSON.stringify({
+              targetModule: d.target_module || mod,
+              draftId: d.id,
+              draftNo: d.draft_no,
+              payload: d.draft_payload,
+              goodsEntries: d.line_items,
+              linkMode: d.link_mode,
+              linkedSourceId: d.linked_source_id,
+            })
+          );
+        }
+      } catch {
+        /* ignore */
+      }
+
+      setToast({
+        show: true,
+        draftNo: draftNo,
+        targetModule: mod,
+      });
+      await load();
+    }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
@@ -619,10 +755,51 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
               </div>
             ) : null}
             {job.status === "draft_ready" && job.draft_reference ? (
-              <div className="rounded-xl bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-                <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
-                <span className="font-bold">{s.t("draft_ready_banner", "Reviewed draft prepared")} — {job.draft_reference}</span>
-                <span className="ms-1">{s.t("draft_open_hint", "Open the target module's New Entry screen and choose “Continue Saved Draft” to complete and post it. The AI has not created or posted anything.")}</span>
+              <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50 via-teal-50/70 to-emerald-50 p-4 shadow-sm dark:border-emerald-500/30 dark:from-emerald-950/40 dark:via-slate-900/50 dark:to-emerald-950/40">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-xl bg-emerald-600/10 p-2 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-sm font-black text-emerald-900 dark:text-emerald-100">
+                          {job.draft_reference}
+                        </span>
+                        <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                          {s.t("draft_ready_banner", "Reviewed draft prepared")}
+                        </span>
+                        <span className="rounded-full border border-emerald-300 bg-white/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-slate-900/80 dark:text-emerald-300">
+                          {getTargetModuleName(job.target_module || purpose, s)}
+                        </span>
+                      </div>
+                      <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200">
+                        {s.t("draft_open_hint", "Open the target module's New Entry screen and choose “Continue Saved Draft” to complete and post it. The AI has not created or posted anything.")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void openDraftInForm(job.target_module)}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition-all hover:scale-[1.02]"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      {s.t("draft_open_btn", "Open in New Entry Form")} →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = getModuleEntryUrl(job.target_module || purpose);
+                        router.push(url as any);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white/90 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"
+                    >
+                      <FileClock className="h-3.5 w-3.5" />
+                      {s.t("draft_view_drafts", "View Saved Drafts")}
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : null}
 
@@ -691,6 +868,78 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
           </>
         )}
       </div>
+
+      {/* Prominent Multilingual Side Toast Notification */}
+      {toast?.show ? (
+        <div
+          dir={s.dir}
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 end-6 z-50 w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300 pointer-events-auto shadow-2xl"
+        >
+          <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/60 bg-white/95 p-4 backdrop-blur-xl shadow-2xl dark:border-emerald-500/40 dark:bg-slate-900/95 dark:text-slate-100">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+            
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400">
+                  <CheckCircle2 className="h-5 w-5 animate-pulse" />
+                </span>
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                    {s.t("draft_saved_toast_title", "Reviewed Draft Saved")}
+                  </h4>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="font-mono">{toast.draftNo}</span>
+                    <span>·</span>
+                    <span>{getTargetModuleName(toast.targetModule, s)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setToast(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                aria-label="Close notification"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {s.t("draft_saved_toast_body", "Your reviewed draft has been saved. Click below to open directly in the entry form or find it under 'Continue Saved Draft'.")}
+            </p>
+
+            <div className="mt-2 rounded-xl bg-emerald-50/80 p-2.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40">
+              📌 {s.t("draft_where_hint", "Saved in target module under “Continue Saved Draft”")}:{" "}
+              <span className="font-bold underline">{getTargetModuleName(toast.targetModule, s)}</span>
+            </div>
+
+            <div className="mt-3.5 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void openDraftInForm(toast.targetModule)}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                {s.t("draft_open_btn", "Open in New Entry Form")} →
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = getModuleEntryUrl(toast.targetModule);
+                  router.push(url as any);
+                }}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              >
+                <FileClock className="h-3.5 w-3.5" />
+                {s.t("draft_view_drafts", "View Saved Drafts")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

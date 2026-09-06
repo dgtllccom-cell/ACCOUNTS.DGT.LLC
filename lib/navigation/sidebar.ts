@@ -1001,7 +1001,7 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "ai-document-intake",
-        labelKey: "nav.ai_document_intake" as any,
+        labelKey: "dintake.nav_center" as any,
         iconKey: "file-text",
         href: "/dashboard/document-intelligence" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
