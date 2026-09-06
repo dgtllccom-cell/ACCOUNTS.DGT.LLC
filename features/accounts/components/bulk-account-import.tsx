@@ -43,13 +43,13 @@ export interface BulkAccountImportProps {
   externalScope?: {
     scopeLevel: "super_admin" | "country" | "main_branch" | "city_branch";
     countryId: string;
-    branchKind: "main" | "city";
+    branchKind: "business" | "agent" | "main" | "city";
     branchId: string;
   };
   onScopeChange?: (scope: {
     scopeLevel: "super_admin" | "country" | "main_branch" | "city_branch";
     countryId: string;
-    branchKind: "main" | "city";
+    branchKind: "business" | "agent" | "main" | "city";
     branchId: string;
   }) => void;
 }
@@ -76,7 +76,9 @@ export function BulkAccountImport({
     externalScope?.scopeLevel || "city_branch"
   );
   const [countryId, setCountryId] = useState(externalScope?.countryId || "");
-  const [branchKind, setBranchKind] = useState<"main" | "city">(externalScope?.branchKind || "city");
+  const [branchKind, setBranchKind] = useState<"business" | "agent" | "main" | "city">(
+    externalScope?.branchKind || "business"
+  );
   const [branchId, setBranchId] = useState(externalScope?.branchId || "");
   const [mainBranches, setMainBranches] = useState<BranchOpt[]>([]);
   const [cityBranches, setCityBranches] = useState<BranchOpt[]>([]);

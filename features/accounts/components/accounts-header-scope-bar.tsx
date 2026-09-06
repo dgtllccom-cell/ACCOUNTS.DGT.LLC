@@ -95,7 +95,7 @@ export function AccountsHeaderScopeBar({
     return () => observer.disconnect();
   }, [portalTarget]);
 
-  const activeBranches = branchKind === "main" ? mainBranches : cityBranches;
+  const activeBranches = cityBranches.length > 0 ? cityBranches : mainBranches;
 
   const content = (
     <div className="flex flex-wrap items-center gap-1.5" dir={s.dir}>

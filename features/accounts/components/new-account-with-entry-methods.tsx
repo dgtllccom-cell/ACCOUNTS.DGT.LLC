@@ -121,21 +121,6 @@ export function NewAccountWithEntryMethods({
     return list.find((b) => b.id === branchId)?.name || "all";
   }, [cityBranches, mainBranches, branchId]);
 
-  // Dynamic location backdrop (updates the instant country / branch changes)
-  const backdropSelection = useMemo(() => {
-    const country = countries.find((c) => c.id === countryId);
-    const list = cityBranches.length > 0 ? cityBranches : mainBranches;
-    const branch = list.find((b) => b.id === branchId) as
-      | { name?: string; city_name?: string; cityName?: string; branch_name?: string }
-      | undefined;
-    return {
-      iso2: (country as { iso2?: string } | undefined)?.iso2 ?? null,
-      countryName: country?.name ?? null,
-      cityName: branch?.city_name ?? branch?.cityName ?? (branchKind === "city" ? branch?.name : null) ?? null,
-      branchName: branch?.branch_name ?? branch?.name ?? null,
-    };
-  }, [countries, countryId, branchKind, branchId, mainBranches, cityBranches]);
-
   const handleScopeLevelChange = (lvl: ScopeLevel) => {
     setScopeLevel(lvl);
   };
@@ -235,7 +220,7 @@ export function NewAccountWithEntryMethods({
             onScopeChange={(scope) => {
               setScopeLevel(scope.scopeLevel);
               setCountryId(scope.countryId);
-              setBranchKind(scope.branchKind);
+              setBranchKind(scope.branchKind as BranchKind);
               setBranchId(scope.branchId);
             }}
           />
@@ -268,7 +253,7 @@ export function NewAccountWithEntryMethods({
               lang={activeLang}
               initialAccountId={currentAccountId}
               initialCountryId={countryId || undefined}
-              initialBranchType={branchKind === "main" ? "Main" : "City"}
+              initialBranchType="City"
               initialBranchId={branchId || undefined}
             />
           </EntryMethodSelector>
