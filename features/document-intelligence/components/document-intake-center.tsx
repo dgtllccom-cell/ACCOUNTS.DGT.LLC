@@ -10,6 +10,7 @@ import { isNativeApp, captureDocumentPhoto } from "@/lib/mobile/native-bridge";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { DRAFT_PREFILL_KEY } from "@/features/document-intelligence/components/entry-method-selector";
+import { CrossLanguageReviewer } from "@/components/cross-language-reviewer";
 
 type Row = Record<string, any>;
 
@@ -830,6 +831,14 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
 
             {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
             {job.qvc_reason ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><ShieldAlert className="mr-1 inline h-3.5 w-3.5" />{job.qvc_reason}</p> : null}
+
+            {job.transcript ? (
+              <CrossLanguageReviewer
+                originalText={job.transcript as string}
+                originalLanguage={(job.original_language as string) || null}
+                domain={job.operational_domain === "clearing" ? "clearing" : job.operational_domain === "shipping" ? "shipping" : "general"}
+              />
+            ) : null}
 
             {/* STEP 1, 2, 3: Routing & Location Scope Box */}
             {["review", "qvc", "draft_ready", "uploaded"].includes(job.status) ? (

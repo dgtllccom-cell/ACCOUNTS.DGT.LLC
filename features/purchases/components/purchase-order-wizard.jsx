@@ -66,6 +66,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { readDraftPrefill, clearDraftPrefill } from "@/features/document-intelligence/components/entry-method-selector";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -4512,6 +4513,18 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               {t(lang, "purchase.booking_bill_info_title", "Purchase Booking / Bill Info")}
                             </h3>
                           </div>
+
+                          <VoiceFormFill
+                            context="purchase"
+                            lang={lang}
+                            compact
+                            onApply={(f) => setForm((prev) => {
+                              const next = { ...prev };
+                              if (f.supplierName && "supplierName" in prev) next.supplierName = String(f.supplierName);
+                              if (f.purchaseCurrency && "purchaseCurrency" in prev) next.purchaseCurrency = String(f.purchaseCurrency).toUpperCase().slice(0, 3);
+                              return next;
+                            })}
+                          />
 
                           <div className="space-y-3">
                             {/* Purchase Account (DR) */}

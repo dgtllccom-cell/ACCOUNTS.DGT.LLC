@@ -113,7 +113,7 @@ export class VoiceContextInterpreter {
         return this.interpretExpenses(cleaned, fields, warnings, confidence, amounts, parties, currencies, language);
 
       case "customer":
-        return this.interpretCustomer(cleaned, fields, warnings, confidence, parties, language);
+        return this.interpretPerson(cleaned, fields, warnings, confidence, parties, "customer", "create_customer_draft");
 
       case "company":
         return this.interpretCompany(cleaned, fields, warnings, confidence, parties, language);
@@ -331,6 +331,8 @@ export class VoiceContextInterpreter {
       fields.currency = (currencies[0] || "aed").toUpperCase();
       confidence += 0.1;
     }
+    // Free-text expense note — the spoken description, verbatim, for the reviewer to keep or trim.
+    fields.details = cleaned;
 
     return {
       context: "expenses",
@@ -494,7 +496,18 @@ export class VoiceContextInterpreter {
 
   private static extractParties(text: string): string[] {
     const matches = Array.from(text.matchAll(PARTY_PATTERN));
-    return matches.map((m) => m[1]?.trim()).filter((p) => p && p.length > 2) as string[];
+    const found = matches.map((m) => m[1]?.trim()).filter((p) => p && p.length > 2) as string[];
+    // also: "new customer <name>", "register company <name>", "add employee <name>"
+    const stop = "phone|mobile|email|cnic|nic|passport|address|account|number|name|for|with";
+    const trig = text.match(
+      new RegExp(`(?:new |add |register |create )?(?:customer|company|supplier|vendor|employee|person|firm|business|client)\\s+(?:name(?:d| is)?\\s+)?((?!(?:${stop})\\b)[a-z][a-z0-9 .'&()-]{2,50}?)(?=\\s+(?:${stop})\\b|[.,;]|$)`, "i"),
+    );
+    if (trig?.[1]) found.unshift(trig[1].trim());
+    // "with <bank>" / "at <bank>" → bank name
+    const bankM = text.match(/\b(?:with|at)\s+([a-z][a-z .'&-]{2,40}?\s+bank(?:\s+(?:ltd|limited|plc))?)\b/i)
+      || text.match(/\bbank\s*(?:name)?\s*[:.]?\s*([a-z][a-z .'&-]{2,40})\b/i);
+    if (bankM?.[1]) found.unshift(bankM[1].trim());
+    return Array.from(new Set(found));
   }
 
   private static parseAmount(amountStr: string): number | null {

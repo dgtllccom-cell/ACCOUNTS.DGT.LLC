@@ -53,6 +53,7 @@ import { SalesBookingJournalReportView } from "./sales-booking-journal-report-vi
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import { t } from "@/lib/i18n/ui";
 
 // --- Non-location constants (static values, not from master forms) ---
@@ -3593,6 +3594,18 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="border-b border-border pb-2">
                     <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
                   </div>
+
+                  <VoiceFormFill
+                    context="sales"
+                    lang={lang}
+                    compact
+                    onApply={(f) => setForm((prev) => {
+                      const next = { ...prev };
+                      if (f.customerName && "customerName" in prev) next.customerName = String(f.customerName);
+                      if (f.currencyCode && "salesCurrency" in prev) next.salesCurrency = String(f.currencyCode).toUpperCase().slice(0, 3);
+                      return next;
+                    })}
+                  />
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="relative" ref={customerDropdownRef}>

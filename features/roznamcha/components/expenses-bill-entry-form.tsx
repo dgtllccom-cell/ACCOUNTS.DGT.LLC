@@ -21,6 +21,7 @@ import { ExpensesInvoicePrintStyle2 } from "@/components/reports/expenses-invoic
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import { Sparkles } from "lucide-react";
 
 type TaxCodeRow = {
@@ -1248,8 +1249,20 @@ export function ExpensesBillEntryForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
+          <div className="mb-3">
+            <VoiceFormFill
+              context="expenses"
+              lang={lang}
+              compact
+              onApply={(f) => {
+                if (f.details) setDetails(String(f.details));
+                if (f.expenseAmount != null && f.expenseAmount !== "") { setQty(1); setUnitPrice(Number(f.expenseAmount)); }
+                if (f.currency) setCurrency(String(f.currency).toUpperCase().slice(0, 3));
+              }}
+            />
+          </div>
           <div className="flex flex-wrap items-end gap-3">
-            
+
             {/* Details */}
             <div className="flex-1 min-w-[200px] space-y-1">
               <Label className="text-xs">{tt("exp.details_label", "Details")}</Label>

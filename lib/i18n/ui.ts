@@ -9147,6 +9147,9 @@ const en: Dict = {
   "pb_register.status_accepted": "Accepted",
   "pb_register.status_transferred": "Transferred",
   "pb_register.status_completed": "Completed",
+  "sales.sbjr_title": "Sales Booking Journal Report",
+  "sales.sbjr_subtitle": "Master Sales Register & Country Scope Overview",
+  "sales.new_sales_booking": "+ New Sales Booking",
   "pb_register.search_placeholder": "Search booking, supplier, branch...",
   "pb_register.reset_refresh": "Reset & Refresh",
   "pb_register.new_booking": "New Booking",
@@ -24104,9 +24107,6 @@ const en: Dict = {
   "roz.cef_party": "Party",
   "roz.cef_direction": "Direction",
   "roz.cef_voice_source": "entered by voice",
-  "sales.sbjr_title": "Sales Booking Journal Report",
-  "sales.sbjr_subtitle": "Master Sales Register & Country Scope Overview",
-  "sales.new_sales_booking": "+ New Sales Booking",
 };
 
 const ur: Dict = {
@@ -27175,6 +27175,9 @@ const ur: Dict = {
   "pb_register.status_accepted": "منظور شدہ",
   "pb_register.status_transferred": "منتقل شدہ",
   "pb_register.status_completed": "مکمل",
+  "sales.sbjr_title": "سیلز بکنگ جرنل رپورٹ",
+  "sales.sbjr_subtitle": "ماسٹر سیلز رجسٹر اور ملکی دائرہ کار کا جائزہ",
+  "sales.new_sales_booking": "+ نئی سیلز بکنگ",
   "pb_register.search_placeholder": "بکنگ، سپلائر، برانچ تلاش کریں...",
   "pb_register.reset_refresh": "دوبارہ ترتیب اور تازہ کریں",
   "pb_register.new_booking": "نئی بکنگ",
@@ -41131,9 +41134,6 @@ const ur: Dict = {
   "roz.cef_party": "فریق",
   "roz.cef_direction": "سمت",
   "roz.cef_voice_source": "آواز سے درج",
-  "sales.sbjr_title": "سیلز بکنگ جرنل رپورٹ",
-  "sales.sbjr_subtitle": "ماسٹر سیلز رجسٹر اور ملکی دائرہ کار کا جائزہ",
-  "sales.new_sales_booking": "+ نئی سیلز بکنگ",
 };
 
 const ar: Dict = {
@@ -44202,6 +44202,9 @@ const ar: Dict = {
   "pb_register.status_accepted": "مقبول",
   "pb_register.status_transferred": "محوّل",
   "pb_register.status_completed": "مكتمل",
+  "sales.sbjr_title": "تقرير دفتر حجز المبيعات",
+  "sales.sbjr_subtitle": "سجل المبيعات الرئيسي ونظرة عامة على نطاق البلد",
+  "sales.new_sales_booking": "+ حجز مبيعات جديد",
   "pb_register.search_placeholder": "ابحث عن الحجز، المورد، الفرع...",
   "pb_register.reset_refresh": "إعادة تعيين وتحديث",
   "pb_register.new_booking": "حجز جديد",
@@ -58160,9 +58163,6 @@ const ar: Dict = {
   "roz.cef_party": "الطرف",
   "roz.cef_direction": "الاتجاه",
   "roz.cef_voice_source": "مُدخل صوتيًا",
-  "sales.sbjr_title": "تقرير يومية حجز المبيعات",
-  "sales.sbjr_subtitle": "سجل المبيعات الرئيسي ونظرة عامة على نطاق الدولة",
-  "sales.new_sales_booking": "+ حجز مبيعات جديد",
 };
 
 const fa: Dict = {
@@ -61236,6 +61236,9 @@ const fa: Dict = {
   "pb_register.status_accepted": "پذیرفته شده",
   "pb_register.status_transferred": "منتقل شده",
   "pb_register.status_completed": "تکمیل شده",
+  "sales.sbjr_title": "گزارش دفتر ثبت فروش",
+  "sales.sbjr_subtitle": "دفتر ثبت اصلی فروش و بررسی کلی دامنه کشور",
+  "sales.new_sales_booking": "+ ثبت فروش جدید",
   "pb_register.search_placeholder": "جستجوی رزرو، تأمین‌کننده، شعبه...",
   "pb_register.reset_refresh": "بازنشانی و بروزرسانی",
   "pb_register.new_booking": "رزرو جدید",
@@ -75188,9 +75191,6 @@ const fa: Dict = {
   "roz.cef_party": "طرف",
   "roz.cef_direction": "جهت",
   "roz.cef_voice_source": "واردشده با صدا",
-  "sales.sbjr_title": "گزارش دفتر روزنامه ثبت فروش",
-  "sales.sbjr_subtitle": "دفتر اصلی فروش و نمای کلی محدوده کشور",
-  "sales.new_sales_booking": "+ ثبت فروش جدید",
 };
 
 const ps: Dict = {
@@ -78259,6 +78259,9 @@ const ps: Dict = {
   "pb_register.status_accepted": "منل شوی",
   "pb_register.status_transferred": "لیږدول شوی",
   "pb_register.status_completed": "بشپړ شوی",
+  "sales.sbjr_title": "د پلور بکینګ ژورنال راپور",
+  "sales.sbjr_subtitle": "د پلور اصلي راجستر او د هیواد د ساحې عمومي کتنه",
+  "sales.new_sales_booking": "+ نوی پلور بکینګ",
   "pb_register.search_placeholder": "بکنګ، عرضه کوونکی، څانګه ولټوئ...",
   "pb_register.reset_refresh": "بیا تنظیم او تازه کول",
   "pb_register.new_booking": "نوی بکنګ",
@@ -92222,9 +92225,6 @@ const ps: Dict = {
   "roz.cef_party": "خوا",
   "roz.cef_direction": "لوري",
   "roz.cef_voice_source": "په غږ ننوت",
-  "sales.sbjr_title": "د پلور بکنګ ژورنال راپور",
-  "sales.sbjr_subtitle": "ماسټر پلور راجستر او د هېواد ساحې کتنه",
-  "sales.new_sales_booking": "+ نوې پلور بکنګ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
