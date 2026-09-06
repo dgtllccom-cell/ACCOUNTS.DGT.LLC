@@ -267,7 +267,21 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     };
 
-    const { error: profileError } = await admin.from("profiles").upsert(profilePayload, { onConflict: "id" });
+    // Schema-drift tolerant: some deployments' `profiles` table is missing an
+    // optional column this API writes (employee_id, person_master_id, …). Strip
+    // the offending column and retry, up to a few times, then fall to core-only.
+    let profileError: { message: string } | null = null;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      ({ error: profileError } = await admin.from("profiles").upsert(profilePayload, { onConflict: "id" }));
+      if (!profileError) break;
+      const col = profileError.message.match(/'([a-z_]+)' column|column ["']?([a-z_]+)["']? of 'profiles'/i);
+      const name = col?.[1] || col?.[2];
+      if (name && name in profilePayload && name !== "id") {
+        delete profilePayload[name];
+        continue;
+      }
+      break;
+    }
     if (profileError) throw new Error(profileError.message);
 
     // Store effective permissions for this user (role defaults + optional overrides from UI).
@@ -493,11 +507,15 @@ export async function PATCH(request: NextRequest) {
       if (body.lastName !== undefined) profileUpdates.last_name = body.lastName;
       if (body.photoUrl !== undefined) profileUpdates.photo_url = body.photoUrl;
 
-      const { error: profileError } = await admin
-        .from("profiles")
-        .update(profileUpdates)
-        .eq("id", body.userId);
-
+      let profileError: { message: string } | null = null;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        ({ error: profileError } = await admin.from("profiles").update(profileUpdates).eq("id", body.userId));
+        if (!profileError) break;
+        const col = profileError.message.match(/'([a-z_]+)' column|column ["']?([a-z_]+)["']? of 'profiles'/i);
+        const name = col?.[1] || col?.[2];
+        if (name && name in profileUpdates) { delete profileUpdates[name]; continue; }
+        break;
+      }
       if (profileError) throw new Error(profileError.message);
     }
 
