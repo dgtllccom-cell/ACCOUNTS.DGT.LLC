@@ -24124,6 +24124,10 @@ const en: Dict = {
   "urw2.domain_hint": "Business users see Purchase / Sales / Ledger. Clearing / Shipping users see only their own clearing/shipping data.",
   "urw2.clearing_agent": "Clearing Agent / Shipping Line *",
   "urw2.select_clearing_agent": "Select clearing agent / shipping line",
+  "nav.ai_intelligence_tools": "AI Intelligence Tools",
+  "nav.ai_messages": "AI Messages",
+  "nav.ai_voice_text_entry": "Voice / Text Entry",
+  "nav.ai_approval_queue": "AI Approval Queue",
 };
 
 const ur: Dict = {
@@ -41168,6 +41172,10 @@ const ur: Dict = {
   "urw2.domain_hint": "کاروباری صارفین خرید و فروخت اور لیجر دیکھتے ہیں۔ کلیئرنگ / شپنگ صارفین صرف اپنا کلیئرنگ/شپنگ ڈیٹا دیکھتے ہیں۔",
   "urw2.clearing_agent": "کلیئرنگ ایجنٹ / شپنگ لائن *",
   "urw2.select_clearing_agent": "کلیئرنگ ایجنٹ / شپنگ لائن منتخب کریں",
+  "nav.ai_intelligence_tools": "AI ذہانت کے آلات",
+  "nav.ai_messages": "AI پیغامات",
+  "nav.ai_voice_text_entry": "صوتی / متنی اندراج",
+  "nav.ai_approval_queue": "AI منظوری قطار",
 };
 
 const ar: Dict = {
@@ -58214,6 +58222,10 @@ const ar: Dict = {
   "urw2.domain_hint": "مستخدمو الأعمال يرون المشتريات والمبيعات ودفتر الأستاذ. مستخدمو التخليص / الشحن يرون بيانات التخليص/الشحن الخاصة بهم فقط.",
   "urw2.clearing_agent": "وكيل التخليص / خط الشحن *",
   "urw2.select_clearing_agent": "اختر وكيل التخليص / خط الشحن",
+  "nav.ai_intelligence_tools": "أدوات الذكاء الاصطناعي",
+  "nav.ai_messages": "رسائل الذكاء الاصطناعي",
+  "nav.ai_voice_text_entry": "إدخال صوتي / نصي",
+  "nav.ai_approval_queue": "قائمة موافقة الذكاء الاصطناعي",
 };
 
 const fa: Dict = {
@@ -75259,6 +75271,10 @@ const fa: Dict = {
   "urw2.domain_hint": "کاربران کسب‌وکار خرید / فروش / دفتر کل را می‌بینند. کاربران ترخیص / کشتیرانی فقط داده‌های ترخیص/کشتیرانی خود را می‌بینند.",
   "urw2.clearing_agent": "نماینده ترخیص / خط کشتیرانی *",
   "urw2.select_clearing_agent": "نماینده ترخیص / خط کشتیرانی را انتخاب کنید",
+  "nav.ai_intelligence_tools": "ابزارهای هوش مصنوعی",
+  "nav.ai_messages": "پیام‌های هوش مصنوعی",
+  "nav.ai_voice_text_entry": "ورود صوتی / متنی",
+  "nav.ai_approval_queue": "صف تایید هوش مصنوعی",
 };
 
 const ps: Dict = {
@@ -92310,6 +92326,10 @@ const ps: Dict = {
   "urw2.domain_hint": "سوداګریز کاروونکي پیرود / پلور / لیجر ویني. د کلیرنس / بار وړلو کاروونکي یوازې خپل کلیرنس/بار وړلو معلومات ویني.",
   "urw2.clearing_agent": "د کلیرنس اجنټ / د بار وړلو کرښه *",
   "urw2.select_clearing_agent": "د کلیرنس اجنټ / د بار وړلو کرښه وټاکئ",
+  "nav.ai_intelligence_tools": "د AI ذکاوت وسایل",
+  "nav.ai_messages": "د AI پیغامونه",
+  "nav.ai_voice_text_entry": "غږیز / متن ننوت",
+  "nav.ai_approval_queue": "د AI منظورۍ کتار",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

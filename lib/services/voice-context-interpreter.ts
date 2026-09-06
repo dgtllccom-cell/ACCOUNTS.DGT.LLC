@@ -247,6 +247,16 @@ export class VoiceContextInterpreter {
       fields.accountName = parties[0];
       confidence += 0.2;
     }
+    if (!fields.accountName) {
+      // "new account Quetta Traders", "account Al Noor", "khaata for Bilal Khan"
+      const nameM = cleaned.match(
+        /(?:new |open |create |add )?(?:account|khaata|khata)\s+(?:for\s+|named?\s+|titled?\s+|of\s+)?([a-z][a-z0-9 .'&()\-\/]{2,60}?)(?=\s+(?:expense|income|revenue|asset|liability|capital|equity|bank|cash|receivable|payable|code|number|as an?|is an?)\b|[.,;]|$)/i,
+      );
+      if (nameM?.[1]) {
+        const n = nameM[1].trim();
+        if (!/^(is|an?|the|for)$/i.test(n)) { fields.accountName = n; confidence += 0.15; }
+      }
+    }
 
     // Detect account type from keywords
     const accountType = this.detectAccountType(cleaned);
@@ -502,7 +512,11 @@ export class VoiceContextInterpreter {
       if (gd) { fields.customsDeclarationNo = gd.toUpperCase(); confidence += 0.2; }
       const hs = cleaned.match(/\bhs\s*(?:code|no\.?)?\s*[:.]?\s*(\d{4}\.?\d{2}(?:\.?\d{2,4})?|\d{6,10})/i)?.[1];
       if (hs) { fields.hsCode = hs.replace(/\./g, ""); confidence += 0.15; }
-      const station = cleaned.match(/(?:customs station|customs office|port|border|dry port)\s*[:.]?\s*([a-z][a-z .\-]{2,40}?)(?=\s+(?:gd|hs|declaration|assessed|duty)\b|[.,;]|$)/i)?.[1];
+      const station =
+        // "at Karachi Port", "via Torkham Border", "Chaman dry port"
+        cleaned.match(/\b(?:at|via|through|from)\s+([a-z][a-z .\-]{2,40}?)\s+(?:sea\s+)?(?:port|border|dry\s*port|customs)\b/i)?.[1]
+        // "customs station: Karachi", "customs office Karachi", "port of Karachi"
+        || cleaned.match(/(?:customs station|customs office|port of|border of|clearance at)\s*[:.]?\s*([a-z][a-z .\-]{2,40}?)(?=\s+(?:gd|hs|declaration|assessed|duty|customs)\b|[.,;]|$)/i)?.[1];
       if (station) { fields.customsStation = station.trim(); confidence += 0.1; }
       const assessed = cleaned.match(/(?:assessed value|customs value|value)\s*[:.]?\s*(?:[a-z]{3}\s*)?([\d٠-٩۰-۹][\d٠-٩۰-۹,]*(?:\.\d{1,2})?)/i)?.[1];
       if (assessed) {
@@ -556,15 +570,18 @@ export class VoiceContextInterpreter {
   }
 
   private static detectAccountType(text: string): string | null {
-    const types: Record<string, string[]> = {
-      Asset: ["asset", "bank", "cash", "receivable", "account"],
-      Liability: ["liability", "payable", "loan", "debt"],
-      Expense: ["expense", "cost", "bill"],
-      Income: ["income", "revenue", "sales"],
-      Capital: ["capital", "equity"],
-    };
-    for (const [type, keywords] of Object.entries(types)) {
-      if (keywords.some((kw) => text.includes(kw))) return type;
+    // Ordered most-specific first — Asset is the fallback, so it is checked LAST
+    // and its keywords must not include generic words like "account" (every
+    // account-creation phrase contains it).
+    const types: Array<[string, string[]]> = [
+      ["Expense", ["expense", "expenses", "cost", "costs"]],
+      ["Income", ["income", "revenue", "profit", "gain"]],
+      ["Liability", ["liability", "payable", "loan", "debt", "creditor"]],
+      ["Capital", ["capital", "equity", "owner"]],
+      ["Asset", ["asset", "receivable", "debtor", "bank", "cash", "stock", "deposit"]],
+    ];
+    for (const [type, keywords] of types) {
+      if (keywords.some((kw) => new RegExp(`\\b${kw}\\b`, "i").test(text))) return type;
     }
     return null;
   }
