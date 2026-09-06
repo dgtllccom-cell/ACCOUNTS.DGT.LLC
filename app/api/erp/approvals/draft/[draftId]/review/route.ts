@@ -43,6 +43,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
     if (!guard) return apiError("NOT_FOUND", "Approval workflow not found.", 404);
     assertRowInScope(scope, guard);
+    if (!["pending", "returned_for_review"].includes(guard.status)) {
+      return apiError("CONFLICT", `This draft is already ${guard.status}.`, 409);
+    }
 
     if (body.action === "approve") {
       const approved = await aiVoiceTextEntryService.approveWorkflow(workflowId, session.userId, body.reviewerNotes);
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (body.action === "reject") {
       const rejected = await aiVoiceTextEntryService.rejectWorkflow(workflowId, body.rejectionReason || "No reason provided");
       await withLocalPg(async (sql) => {
-        await sql`INSERT INTO public.document_intake_events (job_id, action, payload, actor_id, actor_name)
+        await sql`INSERT INTO public.document_intake_events (job_id, action, detail, actor_id, actor_name)
           VALUES (${guard.job_id}, 'approval_rejected', ${sql.json({ workflowId, reason: body.rejectionReason ?? null })}, ${session.userId}, ${session.fullName ?? null})`;
       });
       await auditApiAction(request, { action: "approval.workflow.reject", entityTable: "approval_workflows", entityId: rejected.id, after: { jobNo: guard.job_no, reason: body.rejectionReason ?? null } });
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     await withLocalPg(async (sql) => {
       await sql`UPDATE public.document_intake_jobs SET status = 'review', updated_at = now()
         WHERE id = ${guard.job_id} AND status IN ('draft_ready', 'qvc')`;
-      await sql`INSERT INTO public.document_intake_events (job_id, action, payload, actor_id, actor_name)
+      await sql`INSERT INTO public.document_intake_events (job_id, action, detail, actor_id, actor_name)
         VALUES (${guard.job_id}, 'approval_returned', ${sql.json({ workflowId, reason: body.returnReason ?? null })}, ${session.userId}, ${session.fullName ?? null})`;
     });
     await auditApiAction(request, { action: "approval.workflow.return", entityTable: "approval_workflows", entityId: returned.id, after: { jobNo: guard.job_no, reason: body.returnReason ?? null } });

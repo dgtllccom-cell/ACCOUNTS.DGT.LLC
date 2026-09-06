@@ -38,6 +38,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
     if (!guard) return apiError("NOT_FOUND", "Approval workflow not found.", 404);
     assertRowInScope(scope, guard);
+    if (!["pending", "returned_for_review"].includes(guard.status)) {
+      return apiError("CONFLICT", `This draft is already ${guard.status} and cannot be approved.`, 409);
+    }
 
     const body = bodySchema.parse(await request.json());
     const workflow = await aiVoiceTextEntryService.approveWorkflow(id, session.userId, body.approverNotes);

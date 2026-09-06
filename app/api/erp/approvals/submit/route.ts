@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         RETURNING id, status, submitted_at
       `;
       await sql`
-        INSERT INTO public.document_intake_events (job_id, action, payload, actor_id, actor_name)
+        INSERT INTO public.document_intake_events (job_id, action, detail, actor_id, actor_name)
         VALUES (${jobId}, 'approval_submitted',
           ${sql.json({ workflowId: wf.id })}, ${session.userId}, ${session.fullName ?? null})
       `;
