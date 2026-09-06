@@ -273,9 +273,40 @@ export function extractAccountTable(fullText: string): AccountTableExtractionRes
             unclaimed.push(norm(cell));
           }
         }
-        // first unclaimed alpha token → name, longest → address
-        const alphaTokens = unclaimed.filter((t) => /[A-Za-z]{3,}/.test(t));
-        if (!row.accountName && alphaTokens.length) row.accountName = alphaTokens[0];
+        // filter alphaTokens: exclude emails, phone numbers, and code patterns
+        const alphaTokens = unclaimed.filter((t) => !EMAIL_RE.test(t) && !PHONE_RE.test(t) && !CODE_RE.test(t) && /[A-Za-z]{2,}/.test(t));
+        if (!row.accountName && alphaTokens.length) {
+          row.accountName = alphaTokens.join(" ");
+        }
+        // If still no account name but an email exists, use username part formatted as name
+        if (!row.accountName && row.email) {
+          const userPart = row.email.split("@")[0].replace(/[._-]+/g, " ").trim();
+          if (userPart.length >= 2) {
+            row.accountName = userPart.charAt(0).toUpperCase() + userPart.slice(1);
+          }
+        }
+        // If still no account name but code exists, generate clean placeholder
+        if (!row.accountName && row.accountCode) {
+          row.accountName = `Account ${row.accountCode.toUpperCase()}`;
+        }
+        // If no category determined, infer from line content or default to Asset
+        if (!row.category) {
+          const lower = line.toLowerCase();
+          if (/(receivable|debtor|customer|clearing|bank|cash|stock|deposit)/.test(lower)) {
+            row.category = "Asset";
+          } else if (/(payable|creditor|supplier|vendor|loan|liabilit)/.test(lower)) {
+            row.category = "Liability";
+          } else if (/(capital|equity|owner)/.test(lower)) {
+            row.category = "Equity";
+          } else if (/(income|revenue|sales|gain)/.test(lower)) {
+            row.category = "Income";
+          } else if (/(expense|purchase|cost|salary|rent|fee|freight|charge)/.test(lower)) {
+            row.category = "Expense";
+          } else {
+            row.category = "Asset"; // Default to Asset with review flag
+            row.uncertainFields.push("category");
+          }
+        }
         if (!row.address && alphaTokens.length > 1) {
           const longest = alphaTokens.slice().sort((a, b) => b.length - a.length)[0];
           if (longest && longest.length > 15) row.address = longest;

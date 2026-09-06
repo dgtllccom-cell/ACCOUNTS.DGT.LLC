@@ -17,6 +17,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/api/erp/document-intelligence")) {
+    return NextResponse.next();
+  }
+
   return updateSession(request);
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Upload, FileText, AlertCircle, CheckCircle2, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { Upload, FileText, AlertCircle, CheckCircle2, Loader2, Pencil, Trash2, X, MoreVertical, Eye, Check, SlidersHorizontal, CheckSquare, Square, Building2, Globe, MapPin, User, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
@@ -92,6 +92,45 @@ export function BulkAccountImport({
   }, [externalScope]);
 
   const [editing, setEditing] = useState<number | null>(null);
+  const [viewingRow, setViewingRow] = useState<Row | null>(null);
+  const [openMenuRow, setOpenMenuRow] = useState<number | null>(null);
+  const [batchCategory, setBatchCategory] = useState<string>("");
+
+  function toggleRowSelected(idx: number) {
+    setRows((prev) => prev.map((r) => r.rowIndex === idx ? { ...r, _selected: !r._selected } : r));
+  }
+
+  function handleBatchSetCategory(cat: Kind) {
+    if (!cat) return;
+    const catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
+    setRows((prev) => prev.map((r) => {
+      if (!r._selected) return r;
+      const merged = { ...r, kind: cat, category: catLabel };
+      const missing: string[] = [];
+      if (!merged.account_name) missing.push("name");
+      if (merged.status !== "duplicate") merged.status = missing.length ? "invalid" : "valid";
+      merged.message = missing.length ? s.t("needs_review", "Needs review: missing {f}").replace("{f}", missing.join(", ")) : null;
+      return merged;
+    }));
+  }
+
+  function handleAutoValidateAll() {
+    setRows((prev) => prev.map((r) => {
+      if (r.status === "duplicate") return r;
+      const kind = r.kind || "asset";
+      const cat = r.category || "Asset";
+      const name = r.account_name || (r.account_code ? `Account ${r.account_code}` : `Account #${r.rowIndex}`);
+      return {
+        ...r,
+        account_name: name,
+        kind,
+        category: cat,
+        status: "valid",
+        message: null,
+        _selected: true
+      };
+    }));
+  }
 
   useEffect(() => {
     listCountries().then(setCountries).catch(() => setError(s.t("err_countries", "Could not load countries.")));
