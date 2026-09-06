@@ -60,7 +60,10 @@ export interface VoiceInterpretationResult {
 const AMOUNT_PATTERN = /(?:(?:aed|usd|pkr|afn|inr|sar|eur|gbp)\s+)?[\d,]+(?:\.\d{2})?/gi;
 const CURRENCY_PATTERN = /\b(aed|usd|pkr|afn|inr|sar|eur|gbp|inr|jpy)\b/gi;
 const PARTY_PATTERN = /(?:from|to|by|with|received from|paid to|sent to)\s+([A-Za-z][A-Za-z\s.]{2,50}?)(?:\s+aed|\s+usd|\s+pkr|$)/gi;
-const ACCOUNT_PATTERN = /(?:account|khaata|gl|ledger)\s+(?:code|no|number)?\s*:?\s*([A-Z0-9\-]{2,15})/gi;
+// Require an explicit "code/no/number/#" keyword AND a code-shaped token (at least
+// one digit) so plain phrases like "new account Quetta Traders" are NOT mistaken
+// for an account code.
+const ACCOUNT_PATTERN = /(?:account|khaata|gl|ledger)\s+(?:code|no\.?|number|#)\s*:?\s*([A-Za-z0-9][A-Za-z0-9\-]{1,14})/gi;
 const DATE_PATTERN = /\b(?:today|tomorrow|yesterday|(\d{1,2})[-/](\d{1,2})[-/](\d{2,4}))\b/gi;
 
 export class VoiceContextInterpreter {
@@ -235,10 +238,10 @@ export class VoiceContextInterpreter {
     parties: string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
-    // Try to extract account code
-    const codeMatch = cleaned.match(ACCOUNT_PATTERN);
-    if (codeMatch) {
-      fields.accountCode = codeMatch[1] || codeMatch[0];
+    // Try to extract an explicit account code (must look like a code — has a digit)
+    const codeMatch = new RegExp(ACCOUNT_PATTERN.source, "i").exec(cleaned);
+    if (codeMatch?.[1] && /\d/.test(codeMatch[1])) {
+      fields.accountCode = codeMatch[1];
       confidence += 0.2;
     }
 
@@ -250,11 +253,15 @@ export class VoiceContextInterpreter {
     if (!fields.accountName) {
       // "new account Quetta Traders", "account Al Noor", "khaata for Bilal Khan"
       const nameM = cleaned.match(
-        /(?:new |open |create |add )?(?:account|khaata|khata)\s+(?:for\s+|named?\s+|titled?\s+|of\s+)?([a-z][a-z0-9 .'&()\-\/]{2,60}?)(?=\s+(?:expense|income|revenue|asset|liability|capital|equity|bank|cash|receivable|payable|code|number|as an?|is an?)\b|[.,;]|$)/i,
+        /(?:new |open |create |add )?(?:account|khaata|khata)\s+(?:for\s+|named?\s+|titled?\s+|of\s+)?(?!code\b|number\b|no\.?\b|#)([a-z][a-z0-9 .'&()\-\/]{2,60}?)(?=\s+(?:expense|income|revenue|asset|liability|capital|equity|bank|cash|receivable|payable|code|number|as an?|is an?)\b|[.,;]|$)/i,
       );
       if (nameM?.[1]) {
         const n = nameM[1].trim();
-        if (!/^(is|an?|the|for)$/i.test(n)) { fields.accountName = n; confidence += 0.15; }
+        // reject junk (bare stop-words, a lone "khaata", anything with a digit run that is really a code)
+        if (!/^(is|an?|the|for|code|number|no|khaata|khata|account)$/i.test(n) && !/^\S*\d{3,}\S*$/.test(n)) {
+          fields.accountName = n;
+          confidence += 0.15;
+        }
       }
     }
 
