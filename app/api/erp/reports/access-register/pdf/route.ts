@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
+import { handleApiError } from "@/lib/api/response";
 import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
 import { buildSimpleTablePdf } from "@/lib/reports/simple-pdf";
 
@@ -109,8 +110,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to build the Access Register";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Let Next.js control-flow signals (redirect from an expired session) propagate
+    // instead of turning them into a bogus HTTP 500.
+    return handleApiError(error);
   }
 }
 
