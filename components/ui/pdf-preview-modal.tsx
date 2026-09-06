@@ -120,12 +120,17 @@ export function PdfPreviewModal() {
       script.onload = () => {
         if (iframeRef.current?.contentDocument) {
           const element = iframeRef.current.contentDocument.body;
+          // Match the PDF page orientation to the report's own @page rule so wide
+          // (landscape) ledger/journal reports are not squashed into portrait.
+          const docHtml = iframeRef.current.contentDocument.documentElement?.outerHTML || "";
+          const isLandscape = /@page[^}]*size:\s*A4\s+landscape/i.test(docHtml);
           const opt = {
             margin: 10,
             filename: filename,
             image: { type: "jpeg", quality: 0.85 },
             html2canvas: { scale: 1.5, useCORS: true, logging: false },
-            jsPDF: { orientation: "portrait", unit: "mm", format: "a4", compress: true }
+            pagebreak: { mode: ["css", "legacy"] },
+            jsPDF: { orientation: isLandscape ? "landscape" : "portrait", unit: "mm", format: "a4", compress: true }
           };
 
           // Generate PDF and download automatically
