@@ -183,7 +183,7 @@ const nextConfig: NextConfig = {
   experimental: {
     preloadEntriesOnStart: true,
     webpackBuildWorker: false,
-    workerThreads: true,
+    workerThreads: false,
   },
   webpack: (config, { dev }) => {
     // Extend Webpack chunk loading timeout from default 12s to 60s to prevent script timeout errors

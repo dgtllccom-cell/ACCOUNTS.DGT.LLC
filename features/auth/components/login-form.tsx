@@ -336,7 +336,7 @@ export function LoginForm({
   return (
     <div className="w-full rounded-[2rem] border border-slate-200/80 bg-white/95 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-sm sm:p-6 dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-black/20">
       {/* ── Server Connection Status Badge ── */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3 py-2 text-[11px] font-bold">
+      <div className="mb-3 hidden flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3 py-2 text-[11px] font-bold">
         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -355,7 +355,7 @@ export function LoginForm({
         <h2 className="text-xl sm:text-2xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
           {tt("login.welcome_title", "Welcome to Digital Dock ERP")}
         </h2>
-        <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+        <p className="mt-1 hidden text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
           {tt("login.welcome_sub", "Authorized Multi-Country Enterprise Management System")}
         </p>
       </div>
@@ -621,7 +621,7 @@ export function LoginForm({
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 px-4 text-xs font-black tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(30,64,175,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-800 hover:via-indigo-800 hover:to-blue-900 hover:shadow-[0_16px_36px_rgba(30,64,175,0.28)] sm:text-sm cursor-pointer"
+          className="h-12 w-full rounded-xl bg-gradient-to-r from-[#e95435] via-[#ed5b3d] to-[#df4b2d] px-4 text-xs font-black tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(223,75,45,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:from-[#d94a2d] hover:via-[#e95435] hover:to-[#c94027] hover:shadow-[0_16px_36px_rgba(223,75,45,0.3)] sm:text-sm cursor-pointer"
         >
           {loading ? (
             <>
@@ -638,7 +638,7 @@ export function LoginForm({
       </form>
 
       {/* Security footer note */}
-      <div className="mt-5 flex items-center justify-center gap-2 border-t border-slate-100 pt-4 text-[10.5px] font-bold text-slate-400 dark:border-slate-800">
+      <div className="mt-4 hidden items-center justify-center gap-2 border-t border-slate-100 pt-4 text-[10.5px] font-bold text-slate-400 dark:border-slate-800">
         <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
         <span>{tt("login.footer", "Private ERP System • 256-Bit SSL Encrypted Access Only")}</span>
       </div>

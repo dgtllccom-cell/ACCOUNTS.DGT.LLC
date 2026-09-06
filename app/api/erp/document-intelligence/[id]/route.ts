@@ -11,10 +11,13 @@ export const revalidate = 0;
 
 const idSchema = z.object({ id: z.string().uuid() });
 const patchSchema = z.object({
-  action: z.enum(["process", "cancel", "qvc", "confirm"]),
+  action: z.enum(["process", "cancel", "qvc", "confirm", "update_scope"]),
   reason: z.string().trim().max(2000).optional(),
   linkMode: z.enum(["new_record", "append_existing"]).optional(),
   targetModule: z.string().trim().max(120).optional(),
+  countryId: z.string().uuid().nullish(),
+  countryBranchId: z.string().uuid().nullish(),
+  cityBranchId: z.string().uuid().nullish(),
 });
 
 export async function GET(_r: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -46,10 +49,26 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       const res = await documentIntakeService.cancelJob(id, session.userId, actorName, scope);
       return apiOk({ result: res });
     }
+    if (body.action === "update_scope") {
+      const res = await documentIntakeService.updateJobScope(
+        id,
+        { countryId: body.countryId, countryBranchId: body.countryBranchId, cityBranchId: body.cityBranchId },
+        session.userId,
+        actorName,
+        scope,
+      );
+      return apiOk({ result: res });
+    }
     if (body.action === "confirm") {
       const res = await documentIntakeService.confirmDraft(
         id,
-        { linkMode: body.linkMode, targetModuleOverride: body.targetModule ?? null },
+        {
+          linkMode: body.linkMode,
+          targetModuleOverride: body.targetModule ?? null,
+          countryId: body.countryId,
+          countryBranchId: body.countryBranchId,
+          cityBranchId: body.cityBranchId,
+        },
         session.userId, actorName, scope,
       );
       return apiOk({ result: res });

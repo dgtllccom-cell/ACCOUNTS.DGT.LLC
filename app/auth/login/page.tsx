@@ -65,9 +65,9 @@ export default async function LoginPage({
               {t(lang, "login.org_erp", "Business Group ERP")}
             </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">
-              {t(lang, "login.choose_path", "Choose the right access path")}
+              {t(lang, "login.choose_path", "Select access")}
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 font-medium text-slate-600 lg:text-base">
+            <p className="mt-3 hidden max-w-xl text-sm leading-6 font-medium text-slate-600 lg:text-base">
               {t(lang, "login.choose_path_sub", "Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.")}
             </p>
           </div>
@@ -102,7 +102,7 @@ export default async function LoginPage({
                   </div>
                   <ArrowRight className="mt-1 h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-600" />
                 </div>
-                <p className="mt-3 text-xs leading-5 font-medium text-slate-600 dark:text-slate-400">
+                <p className="mt-3 hidden text-xs leading-5 font-medium text-slate-600 dark:text-slate-400">
                   {t(lang, card.descKey as never, card.description)}
                 </p>
               </Link>
@@ -110,7 +110,7 @@ export default async function LoginPage({
           })}
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 hidden grid gap-3 sm:grid-cols-3">
           <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <Server className="h-3.5 w-3.5 text-blue-600" />
@@ -145,7 +145,7 @@ export default async function LoginPage({
       <InstallAppBanner />
       <AuthPortalShell lang={lang} rightPanel={rightPanel}>
         <LoginErrorBoundary>
-          <div className="mb-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 shadow-xs dark:border-blue-900/40 dark:from-slate-900 dark:to-slate-950">
+          <div className="mb-3 hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 shadow-xs dark:border-blue-900/40 dark:from-slate-900 dark:to-slate-950">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
               {t(lang, "login.access_portal", "ERP Access Portal")}
             </p>

@@ -43,6 +43,10 @@ vi.mock("@/lib/api/record-change-history", () => ({
   writeRecordChangeHistory: vi.fn(async () => {})
 }));
 
+vi.mock("@/lib/services/translation-trigger-service", () => ({
+  translateMasterRecord: vi.fn(async () => {})
+}));
+
 describe("Goods variations service layer", () => {
   it("prevents registering duplicate CHS codes", async () => {
     vi.mocked(goodsRepository.checkChsCodeExists).mockResolvedValueOnce(true);

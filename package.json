@@ -8,7 +8,7 @@
     "dev:detach": "node --max-old-space-size=4096 scripts/dev-detached.cjs",
     "dev:stop": "node scripts/dev-stop.cjs",
     "dev:next": "next dev",
-    "build": "node -r ./scripts/build-worker-sanitizer.cjs ./node_modules/next/dist/bin/next build",
+    "build": "next build",
     "start": "next start",
     "mobile:prepare": "next build && npx cap sync",
     "mobile:android": "next build && npx cap sync android && npx cap open android",

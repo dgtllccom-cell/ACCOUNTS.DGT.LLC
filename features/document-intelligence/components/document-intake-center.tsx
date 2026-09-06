@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt, Camera, ExternalLink, FileClock,
+  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt, Camera, ExternalLink, FileClock, Globe, Building2, MapPin, Compass, ArrowRight, Download
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { isNativeApp, captureDocumentPhoto } from "@/lib/mobile/native-bridge";
@@ -167,7 +167,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                   <tr key={r.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40" onClick={() => setOpenId(r.id)}>
                     <td className="px-3 py-2 font-mono font-bold text-slate-700 dark:text-slate-200">{r.job_no}</td>
                     <td className="px-3 py-2 text-slate-500">{s.t(`domain_${r.operational_domain}`, r.operational_domain)}</td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.original_filename}<div className="text-[10px] text-slate-400">{(r.file_size / 1024).toFixed(0)} KB · {r.page_count || "?"} pg</div></td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                      {r.original_filename}
+                      <div className="text-[10px] text-slate-400">{(r.file_size / 1024).toFixed(0)} KB · {r.page_count || "?"} pg</div>
+                    </td>
                     <td className="px-3 py-2 text-slate-500">{r.doc_type_code ? `${s.t(`dt_${r.doc_type_code}`, r.doc_type_code)} (${Math.round((r.doc_type_confidence || 0) * 100)}%)` : "—"}</td>
                     <td className="px-3 py-2 text-slate-500">{[r.country_name, r.city_branch_name || r.country_branch_name, r.clearing_agent_name].filter(Boolean).join(" / ") || "—"}</td>
                     <td className="px-3 py-2">
@@ -175,7 +178,18 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                         {s.t(`ms_${r.match_status}`, r.match_status)}
                       </span>
                     </td>
-                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.uploaded}`}>{s.t(`st_${r.status}`, r.status)}</span></td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.uploaded}`}>
+                          {s.t(`st_${r.status}`, r.status)}
+                        </span>
+                        {r.status === "draft_ready" ? (
+                          <span className="text-[10px] font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                            {r.draft_reference || "DID"}
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -220,6 +234,63 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
   const [autoProcess, setAutoProcess] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // Scope state
+  const [sessionData, setSessionData] = useState<any>(null);
+  const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([]);
+  const [branches, setBranches] = useState<Array<{ id: string; name: string; code?: string }>>([]);
+  const [countryId, setCountryId] = useState<string>("");
+  const [branchId, setBranchId] = useState<string>("");
+
+  useEffect(() => {
+    async function initScope() {
+      try {
+        const [sess, cList] = await Promise.all([
+          apiGet<any>("/api/erp/auth/session").catch(() => null),
+          apiGet<{ countries: Array<{ id: string; name: string }> }>("/api/branch-management/countries").catch(() => ({ countries: [] })),
+        ]);
+        setSessionData(sess);
+        const cl = cList?.countries ?? [];
+        setCountries(cl);
+
+        const isSuper = sess?.scopes?.isSuperAdmin || sess?.roles?.includes("super_admin") || sess?.scopes?.summary?.level === "global";
+        const assignedCountryId = sess?.scopes?.summary?.countryId || (sess?.scopes?.countryIds && sess.scopes.countryIds[0]);
+        const assignedBranchId = sess?.scopes?.summary?.countryBranchId || sess?.scopes?.summary?.cityBranchId || (sess?.scopes?.countryBranchIds && sess.scopes.countryBranchIds[0]);
+
+        const initCid = assignedCountryId || (isSuper && cl[0]?.id) || "";
+        if (initCid) {
+          setCountryId(initCid);
+          const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${initCid}`).catch(() => ({ countryBranches: [] }));
+          setBranches(brRes?.countryBranches ?? []);
+        }
+        if (assignedBranchId) {
+          setBranchId(assignedBranchId);
+        }
+      } catch (e) {
+        console.warn("UploadDrawer initScope err:", e);
+      }
+    }
+    void initScope();
+  }, []);
+
+  const handleCountryChange = async (cid: string) => {
+    setCountryId(cid);
+    setBranchId("");
+    if (!cid) {
+      setBranches([]);
+      return;
+    }
+    try {
+      const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${cid}`).catch(() => ({ countryBranches: [] }));
+      setBranches(brRes?.countryBranches ?? []);
+    } catch {
+      setBranches([]);
+    }
+  };
+
+  const isSuperAdmin = sessionData?.scopes?.isSuperAdmin || sessionData?.roles?.includes("super_admin") || sessionData?.scopes?.summary?.level === "global";
+  const isCountryAdmin = sessionData?.roles?.includes("country_admin") || sessionData?.scopes?.summary?.level === "country";
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
+
   const submit = async () => {
     if (!file) { setErr(s.t("pick_file", "Choose a document first.")); return; }
     setBusy(true);
@@ -228,6 +299,8 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
       const fd = new FormData();
       fd.append("file", file);
       fd.append("operationalDomain", domain);
+      if (countryId) fd.append("countryId", countryId);
+      if (branchId) fd.append("countryBranchId", branchId);
       if (contractRef) fd.append("contractReference", contractRef);
       if (blRef) fd.append("blReference", blRef);
       if (containerRef) fd.append("containerReference", containerRef);
@@ -248,20 +321,20 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs" onClick={onClose}>
       <div dir={s.dir} className="h-full w-full max-w-md overflow-y-auto bg-white p-5 shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b pb-3 dark:border-slate-800">
           <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">{s.t("upload", "Upload Document")}</h3>
           <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
         </div>
         {err ? <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{err}</p> : null}
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3.5">
           <div
             onClick={() => fileRef.current?.click()}
-            className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 p-6 text-center text-xs text-slate-500 hover:border-emerald-400 dark:border-slate-700"
+            className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 p-6 text-center text-xs text-slate-500 hover:border-emerald-400 dark:border-slate-700 transition-colors"
           >
             <UploadCloud className="mx-auto mb-2 h-6 w-6 text-slate-400" />
-            {file ? <span className="font-bold text-slate-700 dark:text-slate-200">{file.name}</span> : s.t("drop", "Click to choose a PDF / JPG / PNG (max 25 MB, 60 pages)")}
+            {file ? <span className="font-bold text-emerald-700 dark:text-emerald-400">{file.name}</span> : s.t("drop", "Click to choose a PDF / JPG / PNG (max 25 MB, 60 pages)")}
             <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.tif,.tiff,application/pdf,image/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </div>
           {native ? (
@@ -274,12 +347,53 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
               {s.t("take_photo", "Take / choose a photo")}
             </button>
           ) : null}
+
+          {/* Operational Domain */}
           <L label={s.t("domain", "Operational Domain")}>
             <select value={domain} onChange={(e) => setDomain(e.target.value as never)} className={INP}>
               <option value="business">{s.t("domain_business", "Business ERP")}</option>
               <option value="shipping">{s.t("domain_shipping", "Shipping / Clearing")}</option>
             </select>
           </L>
+
+          {/* Role-aware Country & Branch Scope */}
+          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3 dark:border-blue-950/50 dark:bg-blue-950/20 space-y-2.5">
+            <p className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+              <Compass className="h-3.5 w-3.5" />
+              {s.t("scope_step_title", "Routing & Location Scope")}
+            </p>
+
+            <L label={s.t("scope_country_label", "Country / Entity")}>
+              {isSuperAdmin ? (
+                <select value={countryId} onChange={(e) => void handleCountryChange(e.target.value)} className={INP}>
+                  <option value="">{s.t("scope_country_choose", "— Select Country —")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                  {sessionData?.scopes?.summary?.countryName || "Assigned Country"}
+                </div>
+              )}
+            </L>
+
+            <L label={s.t("scope_branch_label", "Branch / Office")}>
+              {(isSuperAdmin || isCountryAdmin) ? (
+                <select value={branchId} onChange={(e) => setBranchId(e.target.value)} disabled={!countryId && isSuperAdmin} className={INP}>
+                  <option value="">{s.t("scope_all_branches", "All Branches / Main Office")}</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                  {sessionData?.scopes?.summary?.branchDisplayName || sessionData?.scopes?.summary?.countryBranchName || "Assigned Branch"}
+                </div>
+              )}
+            </L>
+          </div>
+
           <L label={s.t("contract_ref", "Contract Reference (optional hint)")}><input value={contractRef} onChange={(e) => setContractRef(e.target.value)} className={INP} /></L>
           {domain === "shipping" ? (
             <>
@@ -326,68 +440,101 @@ const DOC_PURPOSES: Array<{ target: string; labelKey: string; fallback: string; 
   { target: "sales_orders", labelKey: "purpose_contract_sales", fallback: "Contract / Agreement (Sales side)", group: "Masters" },
 ];
 
-function getModuleEntryUrl(targetModule?: string | null): string {
+export function getDestinationInfo(targetModule?: string | null, s?: ReturnType<typeof useErpScreen>) {
   switch (targetModule) {
     case "account_master":
     case "accounts":
-    case "banks":
-      return "/dashboard/accounts/setup";
+      return {
+        moduleName: s ? s.t("purpose_account_master", "Chart of Accounts / New Account Entry") : "Chart of Accounts / New Account Entry",
+        menuPath: "Sidebar → New Entry → Accounts → New Account Setup",
+        routeUrl: "/dashboard/accounts/setup",
+        category: "Masters & Setup",
+      };
     case "purchase_orders":
-      return "/dashboard/purchase/new-purchase-booking-order";
+      return {
+        moduleName: s ? s.t("purpose_purchase", "Purchase (New / Existing)") : "Purchase Booking Order",
+        menuPath: "Sidebar → Trade → New Purchase Booking Order",
+        routeUrl: "/dashboard/purchase/new-purchase-booking-order",
+        category: "Trade",
+      };
     case "sales_orders":
-      return "/dashboard/sales/new-sale-order-booking";
+      return {
+        moduleName: s ? s.t("purpose_sales", "Sales (New / Existing)") : "Sale Order Booking",
+        menuPath: "Sidebar → Trade → New Sale Order Booking",
+        routeUrl: "/dashboard/sales/new-sale-order-booking",
+        category: "Trade",
+      };
     case "purchase_loading_records":
-      return "/dashboard/purchase-loading-records";
+      return {
+        moduleName: s ? s.t("purpose_loading", "Purchase Loading / Receiving") : "Purchase Loading Records",
+        menuPath: "Sidebar → Trade → Purchase Loading",
+        routeUrl: "/dashboard/purchase-loading-records",
+        category: "Trade",
+      };
     case "roznamcha_entries":
-      return "/dashboard/roznamcha/cash-entry";
+      return {
+        moduleName: s ? s.t("purpose_payment", "Payment / Cash / Bank Roznamcha") : "Cash / Bank Roznamcha",
+        menuPath: "Sidebar → Finance → Roznamcha Cash Entry",
+        routeUrl: "/dashboard/roznamcha/cash-entry",
+        category: "Finance",
+      };
     case "expenses":
     case "bill_expense_line":
-      return "/dashboard/expenses";
+      return {
+        moduleName: s ? s.t("purpose_expense", "Expense Bill") : "Expense Bill Entry",
+        menuPath: "Sidebar → Finance → Expenses",
+        routeUrl: "/dashboard/expenses",
+        category: "Finance",
+      };
     case "shipping_bl_records":
-      return "/dashboard/shipping-line";
+      return {
+        moduleName: s ? s.t("purpose_shipping", "Shipping / Bill of Lading") : "Shipping Line / Bill of Lading",
+        menuPath: "Sidebar → Logistics → Shipping Line",
+        routeUrl: "/dashboard/shipping-line",
+        category: "Logistics",
+      };
     case "clearing_agent_custom_entries":
-      return "/dashboard/clearing-agent";
-    case "customers":
-      return "/dashboard/crm/customers/new";
+      return {
+        moduleName: s ? s.t("purpose_clearing", "Clearing / Customs Entry") : "Clearing Agent / Customs Entry",
+        menuPath: "Sidebar → Logistics → Clearing Agent",
+        routeUrl: "/dashboard/clearing-agent",
+        category: "Logistics",
+      };
     case "companies":
-      return "/dashboard/companies/new";
+      return {
+        moduleName: s ? s.t("purpose_company", "Company / Entity") : "Company / Entity Setup",
+        menuPath: "Sidebar → Masters → Companies",
+        routeUrl: "/dashboard/companies/new",
+        category: "Masters",
+      };
+    case "customers":
+      return {
+        moduleName: s ? s.t("purpose_customer", "Customer / Person KYC") : "Customer / Person KYC Setup",
+        menuPath: "Sidebar → Masters → Customers",
+        routeUrl: "/dashboard/crm/customers/new",
+        category: "Masters",
+      };
     case "employees":
-      return "/dashboard/employees";
-    default:
-      return "/dashboard/accounts/setup";
-  }
-}
-
-function getTargetModuleName(targetModule: string | undefined | null, s: ReturnType<typeof useErpScreen>): string {
-  switch (targetModule) {
-    case "account_master":
-    case "accounts":
-      return s.t("purpose_account_master", "Chart of Accounts / New Account Entry");
+      return {
+        moduleName: s ? s.t("purpose_employee", "Employee / HR Record") : "Employee / HR Record",
+        menuPath: "Sidebar → HR & Payroll → Employees",
+        routeUrl: "/dashboard/employees",
+        category: "HR & Payroll",
+      };
     case "banks":
-      return s.t("purpose_bank", "Bank Account");
-    case "purchase_orders":
-      return s.t("purpose_purchase", "Purchase (New / Existing)");
-    case "sales_orders":
-      return s.t("purpose_sales", "Sales (New / Existing)");
-    case "purchase_loading_records":
-      return s.t("purpose_loading", "Purchase Loading / Receiving");
-    case "roznamcha_entries":
-      return s.t("purpose_payment", "Payment / Cash / Bank Roznamcha");
-    case "expenses":
-    case "bill_expense_line":
-      return s.t("purpose_expense", "Expense Bill");
-    case "shipping_bl_records":
-      return s.t("purpose_shipping", "Shipping / Bill of Lading");
-    case "clearing_agent_custom_entries":
-      return s.t("purpose_clearing", "Clearing / Customs Entry");
-    case "customers":
-      return s.t("purpose_customer", "Customer / Person KYC");
-    case "companies":
-      return s.t("purpose_company", "Company / Entity");
-    case "employees":
-      return s.t("purpose_employee", "Employee / HR Record");
+      return {
+        moduleName: s ? s.t("purpose_bank", "Bank Account") : "Bank Account Setup",
+        menuPath: "Sidebar → Masters → Chart of Accounts",
+        routeUrl: "/dashboard/accounts/setup",
+        category: "Masters",
+      };
     default:
-      return targetModule || s.t("purpose_title", "Target Module");
+      return {
+        moduleName: targetModule || "Target Module",
+        menuPath: "Sidebar → Masters → Chart of Accounts",
+        routeUrl: "/dashboard/accounts/setup",
+        category: "General",
+      };
   }
 }
 
@@ -400,30 +547,87 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
   const [purpose, setPurpose] = useState<string>("");
   const [toast, setToast] = useState<{ show: boolean; draftNo: string; targetModule: string } | null>(null);
 
+  // Scopes and routing state
+  const [sessionData, setSessionData] = useState<any>(null);
+  const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([]);
+  const [branches, setBranches] = useState<Array<{ id: string; name: string; code?: string }>>([]);
+  const [countryId, setCountryId] = useState<string>("");
+  const [branchId, setBranchId] = useState<string>("");
+
   useEffect(() => {
     if (!toast?.show) return;
     const timer = setTimeout(() => {
       setToast((prev) => (prev ? { ...prev, show: false } : null));
-    }, 10000);
+    }, 12000);
     return () => clearTimeout(timer);
   }, [toast?.show]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const d = await apiGet<{ job: Row; fields: Row[]; lineItems: Row[]; matches: Row[]; events: Row[] }>(`/api/erp/document-intelligence/${jobId}`);
+      const [d, sess, cList] = await Promise.all([
+        apiGet<{ job: Row; fields: Row[]; lineItems: Row[]; matches: Row[]; events: Row[] }>(`/api/erp/document-intelligence/${jobId}`),
+        apiGet<any>("/api/erp/auth/session").catch(() => null),
+        apiGet<{ countries: Array<{ id: string; name: string }> }>("/api/branch-management/countries").catch(() => ({ countries: [] })),
+      ]);
       setData(d);
+      setSessionData(sess);
+      const cl = cList?.countries ?? [];
+      setCountries(cl);
+
+      const jobCid = d?.job?.country_id || sess?.scopes?.summary?.countryId || (cl[0]?.id ?? "");
+      const jobBid = d?.job?.country_branch_id || d?.job?.city_branch_id || sess?.scopes?.summary?.countryBranchId || sess?.scopes?.summary?.cityBranchId || "";
+
+      setCountryId(jobCid);
+      setBranchId(jobBid);
+
+      if (jobCid) {
+        const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${jobCid}`).catch(() => ({ countryBranches: [] }));
+        setBranches(brRes?.countryBranches ?? []);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
   }, [jobId]);
+
   useEffect(() => { void load(); }, [load]);
+
   useEffect(() => {
     const tm = data?.job?.target_module;
     if (tm && !purpose) setPurpose(tm);
   }, [data?.job?.target_module, purpose]);
+
+  const isSuperAdmin = sessionData?.scopes?.isSuperAdmin || sessionData?.roles?.includes("super_admin") || sessionData?.scopes?.summary?.level === "global";
+  const isCountryAdmin = sessionData?.roles?.includes("country_admin") || sessionData?.scopes?.summary?.level === "country";
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
+
+  const onCountryChange = async (newCid: string) => {
+    setCountryId(newCid);
+    setBranchId("");
+    if (!newCid) {
+      setBranches([]);
+      await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "update_scope", countryId: null, countryBranchId: null }).catch(() => {});
+      return;
+    }
+    try {
+      const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${newCid}`).catch(() => ({ countryBranches: [] }));
+      setBranches(brRes?.countryBranches ?? []);
+      await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "update_scope", countryId: newCid, countryBranchId: null }).catch(() => {});
+    } catch (e) {
+      console.warn("Error updating country scope:", e);
+    }
+  };
+
+  const onBranchChange = async (newBid: string) => {
+    setBranchId(newBid);
+    try {
+      await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "update_scope", countryId, countryBranchId: newBid || null }).catch(() => {});
+    } catch (e) {
+      console.warn("Error updating branch scope:", e);
+    }
+  };
 
   const openDraftInForm = async (targetMod?: string) => {
     const mod = targetMod || purpose || data?.job?.target_module || "account_master";
@@ -437,7 +641,13 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
             targetModule: d.target_module || mod,
             draftId: d.id,
             draftNo: d.draft_no,
-            payload: d.draft_payload,
+            payload: {
+              ...d.draft_payload,
+              countryId: countryId || d.country_id,
+              countryBranchId: branchId || d.country_branch_id,
+              cityBranchId: d.city_branch_id,
+              branchId: branchId || d.country_branch_id || d.city_branch_id,
+            },
             goodsEntries: d.line_items,
             linkMode: d.link_mode,
             linkedSourceId: d.linked_source_id,
@@ -447,8 +657,8 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     } catch (err) {
       console.warn("Failed to stash draft for form:", err);
     }
-    const url = getModuleEntryUrl(mod);
-    router.push(url as any);
+    const dest = getDestinationInfo(mod, s);
+    router.push(dest.routeUrl as any);
   };
 
   const act = async (action: string, reason?: string) => {
@@ -458,20 +668,29 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+
   const saveField = async (fieldKey: string, correctedValue: string, verified: boolean) => {
     try { await apiPatch(`/api/erp/document-intelligence/${jobId}/fields`, { fieldKey, correctedValue, verified }); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
+
   const pickMatch = async (matchId: string) => {
     try { await apiPost(`/api/erp/document-intelligence/${jobId}/match`, { matchId }); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
+
   const prepareDraft = async (linkMode?: "new_record" | "append_existing") => {
     setBusy(true);
     setError(null);
     const targetModule = purpose || data?.job?.target_module || undefined;
     try {
-      const res = await apiPatch<Row>(`/api/erp/document-intelligence/${jobId}`, { action: "confirm", linkMode, targetModule });
+      const res = await apiPatch<Row>(`/api/erp/document-intelligence/${jobId}`, {
+        action: "confirm",
+        linkMode,
+        targetModule,
+        countryId: countryId || null,
+        countryBranchId: branchId || null,
+      });
       const draftNo = res?.result?.draftNo || res?.draftNo || data?.job?.draft_reference || "DID";
       const mod = targetModule || "account_master";
 
@@ -485,7 +704,13 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
               targetModule: d.target_module || mod,
               draftId: d.id,
               draftNo: d.draft_no,
-              payload: d.draft_payload,
+              payload: {
+                ...d.draft_payload,
+                countryId: countryId || d.country_id,
+                countryBranchId: branchId || d.country_branch_id,
+                cityBranchId: d.city_branch_id,
+                branchId: branchId || d.country_branch_id || d.city_branch_id,
+              },
               goodsEntries: d.line_items,
               linkMode: d.link_mode,
               linkedSourceId: d.linked_source_id,
@@ -506,6 +731,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+
   const [batchInfo, setBatchInfo] = useState<Row | null>(null);
   const proposeBatch = async () => {
     setBusy(true);
@@ -518,6 +744,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+
   const [rozPreview, setRozPreview] = useState<Row | null>(null);
   const loadRozPreview = async () => {
     setBusy(true);
@@ -526,6 +753,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+
   const [acctPreview, setAcctPreview] = useState<Row | null>(null);
   const [drAcct, setDrAcct] = useState("");
   const [crAcct, setCrAcct] = useState("");
@@ -544,10 +772,12 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
 
   const job = data?.job;
   const isImage = (job?.mime_type || "").startsWith("image/");
+  const activeTargetMod = purpose || job?.target_module || "account_master";
+  const destInfo = getDestinationInfo(activeTargetMod, s);
 
   return (
     <section dir={s.dir} className="min-h-screen bg-slate-50/50 dark:bg-slate-950/50 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-screen-2xl space-y-4">
+      <div className="mx-auto max-w-[1920px] space-y-4">
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
           <ChevronLeft className="h-3.5 w-3.5" />{s.t("back", "Intake Queue")}
         </button>
@@ -576,7 +806,9 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                   <button type="button" disabled={busy} onClick={() => void act("process")} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"><RefreshCw className="h-3.5 w-3.5" />{s.t("reprocess", "Re-run")}</button>
                 ) : null}
                 {["review", "qvc", "draft_ready"].includes(job.status) ? (
-                  <button type="button" disabled={busy || !(purpose || job.target_module)} onClick={() => void prepareDraft()} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"><CheckCircle2 className="h-3.5 w-3.5" />{s.t("prepare_draft", "Prepare Reviewed Draft")}</button>
+                  <button type="button" disabled={busy || !(purpose || job.target_module)} onClick={() => void prepareDraft()} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20 disabled:opacity-50 transition-all hover:scale-[1.02]">
+                    <CheckCircle2 className="h-4 w-4" />{s.t("prepare_draft", "Prepare Reviewed Draft")}
+                  </button>
                 ) : null}
                 {["auto", "user"].includes(job.match_status) && job.matched_source_module === "purchase_orders" && !["linked", "cancelled"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void proposeBatch()} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300"><Package className="h-3.5 w-3.5" />{s.t("propose_batch", "Propose Loading Batch")}</button>
@@ -599,38 +831,110 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
             {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
             {job.qvc_reason ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><ShieldAlert className="mr-1 inline h-3.5 w-3.5" />{job.qvc_reason}</p> : null}
 
-            {["review", "qvc", "draft_ready"].includes(job.status) ? (
-              <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/20">
-                <p className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">{s.t("purpose_title", "What is this document for?")}</p>
-                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{s.t("purpose_hint", "The AI never decides where a document is posted. Choose the ERP workflow this document should prepare a reviewed draft for — you complete and post it in that module.")}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <select
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
-                    className="h-9 min-w-[16rem] rounded-lg border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                  >
-                    <option value="">{s.t("purpose_choose", "— Select document purpose —")}</option>
-                    {["Trade", "Finance", "Logistics", "Masters"].map((grp) => (
-                      <optgroup key={grp} label={grp}>
-                        {DOC_PURPOSES.filter((p) => p.group === grp).map((p) => (
-                          <option key={p.labelKey} value={p.target}>{s.t(p.labelKey, p.fallback)}</option>
+            {/* STEP 1, 2, 3: Routing & Location Scope Box */}
+            {["review", "qvc", "draft_ready", "uploaded"].includes(job.status) ? (
+              <div className="rounded-2xl border border-blue-200/90 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-blue-50/70 p-4 shadow-xs dark:border-blue-900/50 dark:from-blue-950/20 dark:via-slate-900/40 dark:to-blue-950/20">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Compass className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <p className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                        {s.t("scope_step_title", "Routing & Location Scope")}
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      {s.t("scope_step_desc", "Choose the target workflow and specify which Country and Branch this document belongs to. The prepared draft will be pre-filled with these selections.")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {/* STEP 1: Form / Target Workflow */}
+                  <div>
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {s.t("purpose_title", "What is this document for?")}
+                    </label>
+                    <select
+                      value={purpose}
+                      onChange={(e) => setPurpose(e.target.value)}
+                      className="h-9 w-full rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">{s.t("purpose_choose", "— Select document purpose —")}</option>
+                      {["Trade", "Finance", "Logistics", "Masters"].map((grp) => (
+                        <optgroup key={grp} label={grp}>
+                          {DOC_PURPOSES.filter((p) => p.group === grp).map((p) => (
+                            <option key={p.labelKey} value={p.target}>{s.t(p.labelKey, p.fallback)}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    {job.doc_type_code ? (
+                      <p className="mt-1 text-[10px] text-slate-500">
+                        {s.t("purpose_ai_suggest", "AI suggested")}: <span className="font-bold">{s.t(`dt_${job.doc_type_code}`, job.doc_type_code)}</span> ({Math.round((job.doc_type_confidence || 0) * 100)}%)
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {/* STEP 2: Country Selection (Super Admin can change; others locked) */}
+                  <div>
+                    <label className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <span className="flex items-center gap-1"><Globe className="h-3 w-3 text-slate-400" />{s.t("scope_country_label", "Country / Entity")}</span>
+                      {!isSuperAdmin ? <span className="text-[9px] text-amber-600 font-bold">{s.t("scope_assigned_fixed", "Fixed by your role")}</span> : null}
+                    </label>
+                    {isSuperAdmin ? (
+                      <select
+                        value={countryId}
+                        onChange={(e) => void onCountryChange(e.target.value)}
+                        className="h-9 w-full rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">{s.t("scope_country_choose", "— Select Country —")}</option>
+                        {countries.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  {job.doc_type_code && job.target_module ? (
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                      {s.t("purpose_ai_suggest", "AI suggested")}: {s.t(`dt_${job.doc_type_code}`, job.doc_type_code)} ({Math.round((job.doc_type_confidence || 0) * 100)}%)
-                    </span>
-                  ) : null}
-                  {[job.country_name, job.city_branch_name || job.country_branch_name].filter(Boolean).length ? (
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                      · {[job.country_name, job.city_branch_name || job.country_branch_name].filter(Boolean).join(" / ")}
-                    </span>
-                  ) : null}
+                      </select>
+                    ) : (
+                      <div className="flex h-9 items-center justify-between rounded-xl border border-slate-200 bg-slate-100/80 px-3 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200">
+                        <span>{job.country_name || sessionData?.scopes?.summary?.countryName || "Assigned Country"}</span>
+                        <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-mono dark:bg-slate-700">LOCKED</span>
+                      </div>
+                    )}
+                    <p className="mt-1 text-[10px] font-mono text-slate-400 truncate">
+                      {destInfo.menuPath}
+                    </p>
+                  </div>
+
+                  {/* STEP 3: Branch Selection (Super Admin & Country Admin can select; Branch user locked) */}
+                  <div>
+                    <label className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <span className="flex items-center gap-1"><Building2 className="h-3 w-3 text-slate-400" />{s.t("scope_branch_label", "Branch / Office")}</span>
+                      {isBranchUser ? <span className="text-[9px] text-amber-600 font-bold">{s.t("scope_assigned_fixed", "Fixed by your role")}</span> : null}
+                    </label>
+                    {(isSuperAdmin || isCountryAdmin) ? (
+                      <select
+                        value={branchId}
+                        onChange={(e) => void onBranchChange(e.target.value)}
+                        disabled={!countryId && isSuperAdmin}
+                        className="h-9 w-full rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">{s.t("scope_all_branches", "All Branches / Main Office")}</option>
+                        {branches.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="flex h-9 items-center justify-between rounded-xl border border-slate-200 bg-slate-100/80 px-3 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200">
+                        <span>{job.city_branch_name || job.country_branch_name || sessionData?.scopes?.summary?.branchDisplayName || "Assigned Branch"}</span>
+                        <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-mono dark:bg-slate-700">LOCKED</span>
+                      </div>
+                    )}
+                    <p className="mt-1 text-[10px] text-slate-400 truncate">
+                      {[job.country_name, job.city_branch_name || job.country_branch_name].filter(Boolean).join(" / ") || "—"}
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : null}
+
             {acctPreview?.preview ? (
               <div className="rounded-2xl border border-amber-300 bg-amber-50/40 p-4 text-xs dark:border-amber-800 dark:bg-amber-950/20">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
@@ -699,6 +1003,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 ) : null}
               </div>
             ) : null}
+
             {rozPreview?.preview ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("roz_preview_title", "Before Posting — Cash / Bank Roznamcha")}</p>
@@ -738,6 +1043,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 <p className="mt-2 text-[10px] text-slate-400">{s.t("roz_note", "Serial numbers are allocated only when you post from the Cash / Bank Roznamcha screen. The AI does not post.")}</p>
               </div>
             ) : null}
+
             {batchInfo?.batchNo ? (
               <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
                 <Package className="mr-1 inline h-3.5 w-3.5" />
@@ -754,117 +1060,239 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 ) : null}
               </div>
             ) : null}
+
+            {/* PROMINENT DRAFT DESTINATION CARD */}
             {job.status === "draft_ready" && job.draft_reference ? (
-              <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50 via-teal-50/70 to-emerald-50 p-4 shadow-sm dark:border-emerald-500/30 dark:from-emerald-950/40 dark:via-slate-900/50 dark:to-emerald-950/40">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 rounded-xl bg-emerald-600/10 p-2 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                      <CheckCircle2 className="h-5 w-5" />
+              <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50/90 via-teal-50/70 to-emerald-50/90 p-5 shadow-sm dark:border-emerald-500/30 dark:from-emerald-950/40 dark:via-slate-900/50 dark:to-emerald-950/40">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex items-start gap-3.5">
+                    <div className="mt-0.5 rounded-2xl bg-emerald-600 p-2.5 text-white shadow-md shadow-emerald-600/20">
+                      <CheckCircle2 className="h-6 w-6" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-sm font-black text-emerald-900 dark:text-emerald-100">
+                        <span className="font-mono text-base font-black text-emerald-950 dark:text-emerald-100">
                           {job.draft_reference}
                         </span>
-                        <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                        <span className="rounded-full bg-emerald-600 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-white">
                           {s.t("draft_ready_banner", "Reviewed draft prepared")}
                         </span>
-                        <span className="rounded-full border border-emerald-300 bg-white/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-slate-900/80 dark:text-emerald-300">
-                          {getTargetModuleName(job.target_module || purpose, s)}
+                        <span className="rounded-full border border-emerald-300 bg-white px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">
+                          {destInfo.moduleName}
                         </span>
                       </div>
-                      <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200">
-                        {s.t("draft_open_hint", "Open the target module's New Entry screen and choose “Continue Saved Draft” to complete and post it. The AI has not created or posted anything.")}
-                      </p>
+
+                      <div className="rounded-xl border border-emerald-200/80 bg-white/90 p-3 text-xs shadow-xs dark:border-emerald-900/50 dark:bg-slate-900/90 space-y-2">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700 dark:text-slate-200">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <Compass className="h-4 w-4 text-emerald-600" />
+                            <span>{s.t("dest_menu_path", "Sidebar Menu Location")}:</span>
+                            <code className="rounded-md bg-emerald-100/70 px-2 py-0.5 font-mono text-[11px] font-black text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                              {destInfo.menuPath}
+                            </code>
+                          </div>
+                          {(job.country_name || job.country_branch_name || job.city_branch_name) ? (
+                            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                              <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                              <span>{[job.country_name, job.country_branch_name || job.city_branch_name].filter(Boolean).join(" → ")}</span>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="border-t border-slate-100 dark:border-slate-800 pt-2 text-[11.5px] text-slate-600 dark:text-slate-300 space-y-1">
+                          <p className="font-bold text-slate-800 dark:text-slate-200">
+                            {s.t("dest_instructions_title", "Where did this draft go & how to continue?")}
+                          </p>
+                          <ul className="list-none space-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                            <li>{s.t("dest_step_1", "1. Click the button below to jump directly into the target form, or open it from the sidebar path shown above.")}</li>
+                            <li>{s.t("dest_step_2", "2. The form will load with 'Continue Saved Draft' already selected, pre-filling the OCR data into your selected Country and Branch.")}</li>
+                            <li>{s.t("dest_step_3", "3. Verify the final details and post/save within the module. The AI never posts directly.")}</li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-end sm:self-center">
                     <button
                       type="button"
                       onClick={() => void openDraftInForm(job.target_module)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition-all hover:scale-[1.02]"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 transition-all hover:scale-[1.02]"
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      {s.t("draft_open_btn", "Open in New Entry Form")} →
+                      <ExternalLink className="h-4 w-4" />
+                      <span>{s.t("draft_open_btn", "Open in New Entry Form")}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        const url = getModuleEntryUrl(job.target_module || purpose);
+                        const url = destInfo.routeUrl;
                         router.push(url as any);
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white/90 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-3.5 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"
                     >
                       <FileClock className="h-3.5 w-3.5" />
-                      {s.t("draft_view_drafts", "View Saved Drafts")}
+                      <span>{s.t("draft_view_drafts", "View Saved Drafts")}</span>
                     </button>
                   </div>
                 </div>
               </div>
             ) : null}
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* original document */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                <p className="mb-2 px-1 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("original", "Original Document")}</p>
-                {isImage ? (
-                  <img src={`/api/erp/document-intelligence/${jobId}/file`} alt={job.original_filename} className="max-h-[70vh] w-full rounded-lg object-contain" />
-                ) : (
-                  <iframe src={`/api/erp/document-intelligence/${jobId}/file`} title={job.original_filename} className="h-[70vh] w-full rounded-lg border-0" />
-                )}
-              </div>
-
-              {/* extracted fields */}
-              <div className="space-y-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                  <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("extracted", "Extracted Fields")} ({data?.fields.length ?? 0})</p>
-                  <div className="space-y-2">
-                    {(data?.fields ?? []).map((f) => <FieldRow key={f.id} s={s} f={f} editable={["review", "qvc"].includes(job.status)} onSave={saveField} />)}
-                    {(data?.fields ?? []).length === 0 ? <p className="text-xs text-slate-400">{s.t("no_fields", "No fields extracted yet — run OCR + Extract.")}</p> : null}
+            {/* SIDE-BY-SIDE BALANCED SPLIT LAYOUT */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* LEFT: ORIGINAL DOCUMENT PREVIEW (Wide, Sticky, Full Height) */}
+              <div className="lg:col-span-6 xl:col-span-7 sticky top-4 self-start rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex items-center justify-between border-b pb-2.5 mb-2.5 dark:border-slate-800">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="truncate text-xs font-black text-slate-800 dark:text-slate-200" title={job.original_filename}>
+                      {job.original_filename}
+                    </span>
+                    <span className="text-[10px] text-slate-400 shrink-0">
+                      ({(job.file_size / 1024).toFixed(0)} KB {job.page_count ? `· ${job.page_count} pg` : ""})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <a
+                      href={`/api/erp/document-intelligence/${jobId}/file`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                      title={s.t("btn_open_external", "Open Original in New Tab")}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      <span>{s.t("btn_open_external", "Open Original in New Tab")}</span>
+                    </a>
+                    <a
+                      href={`/api/erp/document-intelligence/${jobId}/file?download=1`}
+                      download={job.original_filename}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                      title={s.t("btn_download_file", "Download File")}
+                    >
+                      <Download className="h-3 w-3" />
+                      <span>{s.t("btn_download_file", "Download File")}</span>
+                    </a>
                   </div>
                 </div>
 
+                <div className="relative w-full h-[82vh] min-h-[640px] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-inner">
+                  {isImage ? (
+                    <div className="w-full h-full flex items-center justify-center p-2 bg-slate-950">
+                      <img
+                        src={`/api/erp/document-intelligence/${jobId}/file`}
+                        alt={job.original_filename}
+                        className="max-h-full max-w-full object-contain rounded-lg shadow-md"
+                      />
+                    </div>
+                  ) : (
+                    <iframe
+                      src={`/api/erp/document-intelligence/${jobId}/file#toolbar=1&navpanes=1`}
+                      title={job.original_filename}
+                      className="w-full h-full border-0 rounded-xl"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT: EXTRACTED FIELDS, GOODS LINES, MATCHING & AUDIT */}
+              <div className="lg:col-span-6 xl:col-span-5 space-y-4">
+                {/* Extracted Fields */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                      {s.t("extracted", "Extracted Fields")} ({data?.fields.length ?? 0})
+                    </p>
+                    <span className="text-[10px] text-slate-400">
+                      {["review", "qvc"].includes(job.status) ? "Editable & Verifiable" : "Read-only"}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {(data?.fields ?? []).map((f) => (
+                      <FieldRow key={f.id} s={s} f={f} editable={["review", "qvc"].includes(job.status)} onSave={saveField} />
+                    ))}
+                    {(data?.fields ?? []).length === 0 ? (
+                      <p className="py-6 text-center text-xs text-slate-400">
+                        {s.t("no_fields", "No fields extracted yet — run OCR + Extract.")}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Goods Lines */}
                 {(data?.lineItems ?? []).length ? (
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                    <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("goods", "Goods Lines")} ({data!.lineItems.length})</p>
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                      {s.t("goods", "Goods Lines")} ({data!.lineItems.length})
+                    </p>
                     <table className="w-full text-[11px]">
-                      <thead className="text-left text-slate-400"><tr><Th className="py-1">#</Th><Th className="py-1">{s.t("li_desc", "Description")}</Th><Th className="py-1 text-right">{s.t("li_qty", "Qty")}</Th><Th className="py-1 text-right">{s.t("li_price", "Price")}</Th><Th className="py-1 text-right">{s.t("li_amount", "Amount")}</Th></tr></thead>
-                      <tbody>{data!.lineItems.map((li) => <tr key={li.id} className="border-t border-slate-100 dark:border-slate-800"><td className="py-1">{li.line_no}</td><td className="py-1">{li.description}{li.hs_code ? ` · HS ${li.hs_code}` : ""}</td><td className="py-1 text-right tabular-nums">{li.quantity} {li.unit || ""}</td><td className="py-1 text-right tabular-nums">{li.unit_price}</td><td className="py-1 text-right tabular-nums">{li.amount}</td></tr>)}</tbody>
+                      <thead className="text-left text-slate-400 border-b dark:border-slate-800">
+                        <tr>
+                          <Th className="py-1.5">#</Th>
+                          <Th className="py-1.5">{s.t("li_desc", "Description")}</Th>
+                          <Th className="py-1.5 text-right">{s.t("li_qty", "Qty")}</Th>
+                          <Th className="py-1.5 text-right">{s.t("li_price", "Price")}</Th>
+                          <Th className="py-1.5 text-right">{s.t("li_amount", "Amount")}</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data!.lineItems.map((li) => (
+                          <tr key={li.id} className="border-t border-slate-100 dark:border-slate-800">
+                            <td className="py-1.5 font-mono text-slate-400">{li.line_no}</td>
+                            <td className="py-1.5 font-medium text-slate-700 dark:text-slate-200">{li.description}{li.hs_code ? ` · HS ${li.hs_code}` : ""}</td>
+                            <td className="py-1.5 text-right tabular-nums">{li.quantity} {li.unit || ""}</td>
+                            <td className="py-1.5 text-right tabular-nums">{li.unit_price}</td>
+                            <td className="py-1.5 text-right tabular-nums font-bold">{li.amount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
                     </table>
                   </div>
                 ) : null}
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                  <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("matching", "Source Record Match")} — <span className={job.match_status === "out_of_scope" ? "text-rose-600" : "text-slate-500"}>{s.t(`ms_${job.match_status}`, job.match_status)}</span></p>
+                {/* Source Record Match */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                    {s.t("matching", "Source Record Match")} —{" "}
+                    <span className={job.match_status === "out_of_scope" ? "text-rose-600" : "text-slate-500"}>
+                      {s.t(`ms_${job.match_status}`, job.match_status)}
+                    </span>
+                  </p>
                   {job.match_status === "out_of_scope" ? (
                     <p className="text-xs font-semibold text-rose-600">{s.t("no_match", "No authorized matching record was found in your country/branch scope.")}</p>
                   ) : null}
                   {(data?.matches ?? []).filter((m) => m.match_kind === "source_record").map((m) => (
-                    <div key={m.id} className="mt-1 flex items-center justify-between rounded-lg border border-slate-200 p-2 text-xs dark:border-slate-700">
+                    <div key={m.id} className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-200 p-2.5 text-xs dark:border-slate-700">
                       <div>
-                        <span className="font-bold text-slate-700 dark:text-slate-200">{m.label}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{m.label}</span>
                         <div className="text-[10px] text-slate-400">{m.reason} · {Math.round((m.score || 0) * 100)}%{m.scope_ok ? "" : ` · ${s.t("out_of_scope", "out of scope")}`}</div>
                       </div>
                       {m.scope_ok && !m.is_selected && ["review", "qvc", "ambiguous"].includes(job.match_status === "ambiguous" ? "ambiguous" : job.status) ? (
-                        <button type="button" onClick={() => void pickMatch(m.id)} className="rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700">{s.t("select", "Select")}</button>
+                        <button type="button" onClick={() => void pickMatch(m.id)} className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-emerald-700">{s.t("select", "Select")}</button>
                       ) : m.is_selected ? <span className="text-[10px] font-bold text-emerald-600">{s.t("selected", "Selected")}</span> : null}
                     </div>
                   ))}
-                  {(data?.matches ?? []).length === 0 && job.match_status !== "out_of_scope" ? <p className="text-xs text-slate-400">{s.t("no_candidates", "No candidate records — the document will be reviewed and can be linked manually from its source module.")}</p> : null}
+                  {(data?.matches ?? []).length === 0 && job.match_status !== "out_of_scope" ? (
+                    <p className="text-xs text-slate-400">{s.t("no_candidates", "No candidate records — the document will be reviewed and can be linked manually from its source module.")}</p>
+                  ) : null}
                 </div>
+
+                {/* Audit Trail */}
+                {data?.events?.length ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">{s.t("audit", "Audit Trail")}</p>
+                    <ul className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {data.events.map((e) => (
+                        <li key={e.id} className="text-[11px] text-slate-500 flex items-start gap-1.5">
+                          <span className="font-mono text-[10px] text-slate-400 shrink-0">{new Date(e.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                          <span>— <span className="font-bold text-slate-700 dark:text-slate-300">{s.t(`ev_${e.action}`, e.action)}</span>{e.actor_name ? ` · ${e.actor_name}` : ""}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </div>
-
-            {data?.events?.length ? (
-              <div>
-                <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("audit", "Audit Trail")}</p>
-                <ul className="space-y-1">
-                  {data.events.map((e) => (
-                    <li key={e.id} className="text-[10px] text-slate-500">{new Date(e.created_at).toLocaleString()} — <span className="font-bold">{s.t(`ev_${e.action}`, e.action)}</span>{e.actor_name ? ` · ${e.actor_name}` : ""}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
           </>
         )}
       </div>
@@ -892,7 +1320,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                   <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                     <span className="font-mono">{toast.draftNo}</span>
                     <span>·</span>
-                    <span>{getTargetModuleName(toast.targetModule, s)}</span>
+                    <span>{getDestinationInfo(toast.targetModule, s).moduleName}</span>
                   </div>
                 </div>
               </div>
@@ -907,20 +1335,21 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
               </button>
             </div>
 
-            <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              {s.t("draft_saved_toast_body", "Your reviewed draft has been saved. Click below to open directly in the entry form or find it under 'Continue Saved Draft'.")}
-            </p>
-
-            <div className="mt-2 rounded-xl bg-emerald-50/80 p-2.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40">
-              📌 {s.t("draft_where_hint", "Saved in target module under “Continue Saved Draft”")}:{" "}
-              <span className="font-bold underline">{getTargetModuleName(toast.targetModule, s)}</span>
+            <div className="mt-2.5 rounded-xl bg-emerald-50/90 p-2.5 text-[11px] font-semibold text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 border border-emerald-200/70 dark:border-emerald-900/50 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Compass className="h-3.5 w-3.5 text-emerald-600" />
+                <span>{s.t("dest_menu_path", "Sidebar Menu Location")}:</span>
+              </div>
+              <code className="block rounded bg-white/80 p-1 font-mono text-[10.5px] font-black text-emerald-950 dark:bg-slate-900/90 dark:text-emerald-300">
+                {getDestinationInfo(toast.targetModule, s).menuPath}
+              </code>
             </div>
 
             <div className="mt-3.5 flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => void openDraftInForm(toast.targetModule)}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 transition-colors"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 {s.t("draft_open_btn", "Open in New Entry Form")} →
@@ -928,7 +1357,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
               <button
                 type="button"
                 onClick={() => {
-                  const url = getModuleEntryUrl(toast.targetModule);
+                  const url = getDestinationInfo(toast.targetModule, s).routeUrl;
                   router.push(url as any);
                 }}
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -948,20 +1377,22 @@ function FieldRow({ s, f, editable, onSave }: { s: ReturnType<typeof useErpScree
   const [val, setVal] = useState<string>(f.corrected_value ?? f.normalized_value ?? f.raw_value ?? "");
   useEffect(() => { setVal(f.corrected_value ?? f.normalized_value ?? f.raw_value ?? ""); }, [f.corrected_value, f.normalized_value, f.raw_value]);
   return (
-    <div className={`rounded-lg border p-2 ${FIELD_TONE[f.validation_status] || FIELD_TONE.amber}`}>
+    <div className={`rounded-xl border p-2.5 ${FIELD_TONE[f.validation_status] || FIELD_TONE.amber}`}>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{s.t(`f_${f.field_key}`, f.field_label)}</span>
+        <span className="text-[10px] font-black uppercase tracking-wide text-slate-600 dark:text-slate-300">{s.t(`f_${f.field_key}`, f.field_label)}</span>
         <span className="text-[10px] text-slate-400">{Math.round((f.confidence || 0) * 100)}%{f.page_number ? ` · p${f.page_number}` : ""}{f.verified ? " · ✓" : ""}</span>
       </div>
-      <div className="mt-1 flex items-center gap-1">
+      <div className="mt-1 flex items-center gap-1.5">
         <input
           value={val}
           onChange={(e) => setVal(e.target.value)}
           disabled={!editable}
-          className="flex-1 rounded border border-slate-200 bg-white/70 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800/70"
+          className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900 outline-none focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100"
         />
         {editable ? (
-          <button type="button" onClick={() => onSave(f.field_key, val, true)} className="rounded bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700">{s.t("verify", "Verify")}</button>
+          <button type="button" onClick={() => onSave(f.field_key, val, true)} className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-emerald-700 transition-colors">
+            {s.t("verify", "Verify")}
+          </button>
         ) : null}
       </div>
       {f.validation_message ? <p className="mt-0.5 text-[10px] text-slate-400">{f.validation_message}</p> : null}
@@ -973,7 +1404,7 @@ function FieldRow({ s, f, editable, onSave }: { s: ReturnType<typeof useErpScree
 function L({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</label>
       {children}
     </div>
   );

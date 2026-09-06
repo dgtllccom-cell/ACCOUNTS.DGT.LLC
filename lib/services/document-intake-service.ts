@@ -405,10 +405,48 @@ export class DocumentIntakeService {
     });
   }
 
+  async updateJobScope(
+    jobId: string,
+    scopeUpdate: { countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null },
+    actorId: string,
+    actorName: string | null,
+    scope: IntakeScope,
+  ) {
+    return withLocalPg(async (sql) => {
+      const job = (await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0];
+      if (!job) throw new Error("Job not found.");
+      assertRowInScope(scope, job);
+
+      const countryId = scopeUpdate.countryId !== undefined ? scopeUpdate.countryId : job.country_id;
+      const countryBranchId = scopeUpdate.countryBranchId !== undefined ? scopeUpdate.countryBranchId : job.country_branch_id;
+      const cityBranchId = scopeUpdate.cityBranchId !== undefined ? scopeUpdate.cityBranchId : job.city_branch_id;
+
+      if (scope.countryIds && countryId && !scope.countryIds.includes(countryId)) {
+        throw new Error("Selected country is outside your assigned scope.");
+      }
+
+      await sql`UPDATE public.document_intake_jobs SET
+        country_id = ${countryId ?? null},
+        country_branch_id = ${countryBranchId ?? null},
+        city_branch_id = ${cityBranchId ?? null},
+        updated_at = now()
+        WHERE id = ${jobId}`;
+
+      await event(sql, jobId, "scope_updated", { countryId, countryBranchId, cityBranchId }, actorId, actorName);
+      return { jobId, countryId, countryBranchId, cityBranchId };
+    });
+  }
+
   // ── confirm draft (AI prepares a reviewed draft — never a posting) ────
   async confirmDraft(
     jobId: string,
-    opts: { linkMode?: "new_record" | "append_existing"; targetModuleOverride?: string | null },
+    opts: {
+      linkMode?: "new_record" | "append_existing";
+      targetModuleOverride?: string | null;
+      countryId?: string | null;
+      countryBranchId?: string | null;
+      cityBranchId?: string | null;
+    },
     actorId: string,
     actorName: string | null,
     scope: IntakeScope,
@@ -426,6 +464,10 @@ export class DocumentIntakeService {
       if (!DRAFTABLE_MODULES.includes(targetModule)) {
         throw new Error(`Automatic draft preparation is not available for ${targetModule} yet — use manual entry.`);
       }
+
+      const effectiveCountryId = opts.countryId !== undefined ? opts.countryId : job.country_id;
+      const effectiveCountryBranchId = opts.countryBranchId !== undefined ? opts.countryBranchId : job.country_branch_id;
+      const effectiveCityBranchId = opts.cityBranchId !== undefined ? opts.cityBranchId : job.city_branch_id;
 
       const fields = await sql`SELECT field_key, corrected_value, normalized_value, raw_value, confidence, page_number, verified, validation_status
         FROM public.document_intake_fields WHERE job_id = ${jobId}`;
@@ -467,6 +509,19 @@ export class DocumentIntakeService {
         prepared.payload.containerNumbers = job.container_reference;
       }
 
+      if (effectiveCountryId && !prepared.payload.countryId) {
+        prepared.payload.countryId = effectiveCountryId;
+      }
+      if (effectiveCountryBranchId && !prepared.payload.countryBranchId) {
+        prepared.payload.countryBranchId = effectiveCountryBranchId;
+      }
+      if (effectiveCityBranchId && !prepared.payload.cityBranchId) {
+        prepared.payload.cityBranchId = effectiveCityBranchId;
+      }
+      if ((effectiveCountryBranchId || effectiveCityBranchId) && !prepared.payload.branchId) {
+        prepared.payload.branchId = effectiveCountryBranchId || effectiveCityBranchId;
+      }
+
       // supersede any earlier live draft for this job
       await sql`UPDATE public.document_intake_drafts SET status = 'superseded', updated_at = now()
         WHERE job_id = ${jobId} AND status = 'prepared' AND deleted_at IS NULL`;
@@ -483,7 +538,7 @@ export class DocumentIntakeService {
            status, created_by, created_by_name)
         VALUES
           (${jobId}, ${draftNo}, ${job.operational_domain}, ${targetModule}, ${job.doc_type_code},
-           ${job.company_id}, ${job.country_id}, ${job.country_branch_id}, ${job.city_branch_id}, ${job.clearing_agent_id}, ${job.scope_composite_id},
+           ${job.company_id}, ${effectiveCountryId ?? null}, ${effectiveCountryBranchId ?? null}, ${effectiveCityBranchId ?? null}, ${job.clearing_agent_id}, ${job.scope_composite_id},
            ${linkMode}, ${linkMode === "append_existing" ? job.matched_source_module : null}, ${linkMode === "append_existing" ? job.matched_source_id : null},
            ${sql.json(prepared.payload as never)}, ${sql.json(prepared.goodsEntries as never)}, ${sql.json(prepared.provenance as never)}, ${prepared.currency},
            'prepared', ${actorId}, ${actorName})
@@ -491,9 +546,13 @@ export class DocumentIntakeService {
 
       await sql`UPDATE public.document_intake_jobs SET
         status = 'draft_ready', draft_id = ${row.id}, draft_reference = ${row.draft_no},
-        target_module = ${targetModule}, reviewed_by = ${actorId}, reviewed_at = now(), qvc_reason = NULL, updated_at = now()
+        target_module = ${targetModule},
+        country_id = ${effectiveCountryId ?? null},
+        country_branch_id = ${effectiveCountryBranchId ?? null},
+        city_branch_id = ${effectiveCityBranchId ?? null},
+        reviewed_by = ${actorId}, reviewed_at = now(), qvc_reason = NULL, updated_at = now()
         WHERE id = ${jobId}`;
-      await event(sql, jobId, "draft_prepared", { draftNo: row.draft_no, targetModule, linkMode, unresolved: prepared.unresolved }, actorId, actorName);
+      await event(sql, jobId, "draft_prepared", { draftNo: row.draft_no, targetModule, linkMode, countryId: effectiveCountryId, countryBranchId: effectiveCountryBranchId, cityBranchId: effectiveCityBranchId, unresolved: prepared.unresolved }, actorId, actorName);
       return { jobId, draftId: row.id, draftNo: row.draft_no, targetModule, linkMode, unresolved: prepared.unresolved };
     });
   }
