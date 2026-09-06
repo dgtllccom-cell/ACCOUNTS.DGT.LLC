@@ -130,21 +130,21 @@ export function ProfessionalReportViewer<T>({
   return (
     <div dir={dir} className="flex flex-col h-full bg-[#323639] overflow-hidden rounded-md border shadow-lg font-sans">
 
-      {/* TOOLBAR */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#202124] text-white border-b border-gray-700 shadow-sm z-10 shrink-0">
+      {/* TOOLBAR — wraps on narrow screens so PDF / Close are never clipped */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 py-1.5 sm:px-4 bg-[#202124] text-white border-b border-gray-700 shadow-sm z-10 shrink-0 overflow-x-auto">
 
         {/* Left: Title & Menu */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white hover:bg-white/10">
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="ghost" size="icon" className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <LayoutList className="w-5 h-5" />
           </Button>
-          <div className={cn("font-medium text-sm hidden md:block", dir === "rtl" ? "border-r border-gray-600 pr-3" : "border-l border-gray-600 pl-3")}>
+          <div className={cn("font-medium text-sm hidden lg:block", dir === "rtl" ? "border-r border-gray-600 pr-3" : "border-l border-gray-600 pl-3")}>
             {title}
           </div>
         </div>
 
-        {/* Center: View Controls */}
-        <div className="flex items-center gap-1 bg-[#323639] rounded-md px-1 py-1">
+        {/* Center: View Controls (wraps to its own line on narrow screens) */}
+        <div className="flex items-center gap-1 bg-[#323639] rounded-md px-1 py-1 shrink-0">
           <Button
             variant="ghost"
             size="sm"
@@ -154,23 +154,23 @@ export function ProfessionalReportViewer<T>({
             <Monitor className="w-3 h-3 me-2" />
             {t(lang, "pv.landscape", "Landscape")}
           </Button>
-          <div className="h-4 w-px bg-gray-600 mx-1" />
+          <div className="hidden h-4 w-px bg-gray-600 mx-1 sm:block" />
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-gray-300 hover:text-white"
+            className="hidden h-7 w-7 text-gray-300 hover:text-white sm:inline-flex"
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
             {dir === "rtl" ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
-          <span className="text-xs text-gray-300 px-2 min-w-[80px] text-center">
+          <span className="hidden text-xs text-gray-300 px-2 min-w-[80px] text-center sm:inline">
             {t(lang, "pv.page_of", "Page {page} of {total}").replace("{page}", String(currentPage)).replace("{total}", String(totalPages))}
           </span>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-gray-300 hover:text-white"
+            className="hidden h-7 w-7 text-gray-300 hover:text-white sm:inline-flex"
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >
@@ -178,29 +178,29 @@ export function ProfessionalReportViewer<T>({
           </Button>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={handleWhatsApp} title={t(lang, "pv.whatsapp_tooltip", "Share on WhatsApp")} className="text-gray-300 hover:text-white hover:bg-white/10">
+        {/* Right: Actions — PDF + Close always visible; secondary icons collapse under sm */}
+        <div className="flex items-center gap-1 shrink-0">
+          <Button variant="ghost" size="icon" onClick={handleWhatsApp} title={t(lang, "pv.whatsapp_tooltip", "Share on WhatsApp")} className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <MessageCircle className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" title={t(lang, "pv.email_tooltip", "Email")} className="text-gray-300 hover:text-white hover:bg-white/10">
+          <Button variant="ghost" size="icon" title={t(lang, "pv.email_tooltip", "Email")} className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <Mail className="w-4 h-4" />
           </Button>
-          <div className="h-5 w-px bg-gray-600 mx-1" />
-          <Button variant="ghost" size="icon" onClick={handleExportCSV} title={t(lang, "pv.download_csv", "Download CSV")} className="text-gray-300 hover:text-white hover:bg-white/10">
+          <div className="hidden h-5 w-px bg-gray-600 mx-1 sm:block" />
+          <Button variant="ghost" size="icon" onClick={handleExportCSV} title={t(lang, "pv.download_csv", "Download CSV")} className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <FileText className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleExportCSV} title={t(lang, "pv.download_excel", "Download Excel")} className="text-gray-300 hover:text-white hover:bg-white/10">
+          <Button variant="ghost" size="icon" onClick={handleExportCSV} title={t(lang, "pv.download_excel", "Download Excel")} className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <FileSpreadsheet className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={handlePrint} title={t(lang, "pv.print_download_pdf", "Print / Download PDF")} className="text-gray-300 hover:text-white hover:bg-white/10">
             <Printer className="w-4 h-4" />
           </Button>
-          <div className="h-5 w-px bg-gray-600 mx-1" />
-          <Button variant="ghost" size="icon" onClick={handleZoomOut} title={t(lang, "pv.zoom_out", "Zoom Out")} className="text-gray-300 hover:text-white hover:bg-white/10">
+          <div className="hidden h-5 w-px bg-gray-600 mx-1 sm:block" />
+          <Button variant="ghost" size="icon" onClick={handleZoomOut} title={t(lang, "pv.zoom_out", "Zoom Out")} className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <ZoomOut className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleZoomIn} title={t(lang, "pv.zoom_in", "Zoom In")} className="text-gray-300 hover:text-white hover:bg-white/10">
+          <Button variant="ghost" size="icon" onClick={handleZoomIn} title={t(lang, "pv.zoom_in", "Zoom In")} className="hidden text-gray-300 hover:text-white hover:bg-white/10 sm:inline-flex">
             <ZoomIn className="w-4 h-4" />
           </Button>
           {onClose && (
