@@ -13,6 +13,7 @@ import { derivePurchaseStockLifecycle, normalizePurchaseStockDestination, purcha
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { LoadingBatchPanel } from "./loading-batch-panel";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
@@ -547,6 +548,17 @@ export function PurchaseLoadingFormView() {
 
               {activeTab === "load" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
+                  <VoiceFormFill
+                    context="loading"
+                    lang={lang}
+                    compact
+                    onApply={(f) => setLoadForm(prev => ({
+                      ...prev,
+                      containerNumber: f.containerNumbers ? String(f.containerNumbers).toUpperCase() : prev.containerNumber,
+                      loadingQuantity: f.quantity != null && f.quantity !== "" ? String(f.quantity) : prev.loadingQuantity,
+                      loadingNote: f.vesselName ? `Vessel: ${f.vesselName}${prev.loadingNote ? " · " + prev.loadingNote : ""}` : prev.loadingNote,
+                    }))}
+                  />
                   <LoadingBatchPanel
                     purchaseOrderId={selectedPO?.id}
                     loadedContainerNos={poRecords.map((r: any) => r.container_number).filter(Boolean)}

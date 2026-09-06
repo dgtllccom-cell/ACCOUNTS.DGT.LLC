@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { VoiceInputSection } from "@/components/voice-input-section";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
@@ -898,17 +898,27 @@ export function NewAccountSetup({
       {/* ── Mandatory Logged-in Scope banner (server-resolved, not frontend-selected) ── */}
       {!initialAccountId && <LoginScopeBanner scope={erpScope} />}
 
-      {/* Voice AI — speak the account details; fields prefill as a DRAFT for review */}
+      {/* Voice — speak the account details; each proposed value is shown for review
+          and correction before it fills the form. Nothing is submitted. */}
       {!initialAccountId && (
-        <VoiceInputSection
+        <VoiceFormFill
           context="accounts"
           lang={lang}
-          onApplyFields={(f) => {
+          compact
+          fieldLabels={{
+            accountName: getLabel("accountName", lang),
+            category: getLabel("category", lang),
+            accountCode: getLabel("manualReference", lang),
+          }}
+          onApply={(f) => {
+            // Never overwrite a value the user already typed.
             if (f.accountName && !accountName) setAccountName(String(f.accountName));
             if (f.category && !category) {
               const c = String(f.category).toLowerCase();
-              if (c.includes("expense")) setCategory("EX");
-              else if (c.includes("income")) setCategory("P/S");
+              if (c.includes("expense") || c.includes("cost")) setCategory("EX");
+              else if (c.includes("income") || c.includes("revenue") || c.includes("sales")) setCategory("P/S");
+              // Asset / Liability / Capital have no single category code here — left for
+              // the user to choose on the form so nothing is guessed.
             }
           }}
         />

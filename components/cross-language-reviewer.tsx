@@ -129,11 +129,11 @@ export function CrossLanguageReviewer({
 
       {/* Reviewer reading */}
       <div className="mt-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             {s.t("read_as", "Read as")}:
           </span>
-          {(["en", "ur"] as SupportedLanguage[]).map((l) => (
+          {(supportedLanguages.map((l) => l.code) as SupportedLanguage[]).map((l) => (
             <button
               key={l}
               type="button"

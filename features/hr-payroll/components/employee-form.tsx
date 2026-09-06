@@ -26,6 +26,7 @@ import {
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -1062,6 +1063,20 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   </h3>
                   <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
                 </div>
+
+                {!employeeId && (
+                  <VoiceFormFill
+                    context="employee"
+                    lang={lang}
+                    compact
+                    onApply={(f) => {
+                      // Editable role fields only. The person's NAME/ID must still be
+                      // matched or added through the Person picker below — voice never
+                      // creates the person or overwrites a chosen one.
+                      if (f.designation) setDesignation(String(f.designation));
+                    }}
+                  />
+                )}
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 font-sans">

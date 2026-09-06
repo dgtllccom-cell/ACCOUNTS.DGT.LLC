@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import {
@@ -12,6 +12,7 @@ import { Th } from "@/components/ui/translated-th";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 type LocalGoodsReceiptType = "warehouse" | "loading" | "export";
@@ -59,6 +60,7 @@ export function LocalGoodsReceivedView({
   const [goodsReceivedTab, setGoodsReceivedTab] = useState<LocalGoodsReceiptType>("warehouse");
   const [activeGoodsReceipt, setActiveGoodsReceipt] = useState<{ type: LocalGoodsReceiptType; row: any } | null>(null);
   const [savingGoodsReceipt, setSavingGoodsReceipt] = useState(false);
+  const goodsReceiptFormRef = useRef<HTMLFormElement>(null);
 
   // Scoping location select states
   const [selectedCountryId, setSelectedCountryId] = useState("");
@@ -552,7 +554,25 @@ export function LocalGoodsReceivedView({
               </button>
             </div>
 
-            <form onSubmit={saveLocalGoodsReceipt} className="space-y-4">
+            <form ref={goodsReceiptFormRef} onSubmit={saveLocalGoodsReceipt} className="space-y-4">
+              <VoiceFormFill
+                context="receiving"
+                lang={lang}
+                compact
+                onApply={(f) => {
+                  const form = goodsReceiptFormRef.current;
+                  if (!form) return;
+                  const set = (name: string, val: string) => {
+                    const el = form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null;
+                    if (el && !el.value) el.value = val;
+                  };
+                  if (f.truckNo) set("truckNo", String(f.truckNo));
+                  if (f.driverName) set("driverName", String(f.driverName));
+                  if (f.blNumber) set("exportRef", String(f.blNumber));
+                  const noteBits = [f.containerNumbers && `Container ${f.containerNumbers}`, f.vesselName && `Vessel ${f.vesselName}`, f.quantity && `Qty ${f.quantity}`, f.partyName && String(f.partyName)].filter(Boolean).join(" · ");
+                  if (noteBits) set("remarks", noteBits);
+                }}
+              />
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1 font-semibold">
                 <p><span className="text-slate-400 uppercase">{t(lang, "purchase.lgr_bill_no", "Bill No:")}</span> {activeGoodsReceipt.row.serialNo || activeGoodsReceipt.row.serial_no || `#PO-${activeGoodsReceipt.row.id.slice(0, 6)}`}</p>
                 <p><span className="text-slate-400 uppercase">{t(lang, "purchase.lgr_supplier_label", "Supplier:")}</span> {activeGoodsReceipt.row.supplierName || activeGoodsReceipt.row.supplier_name}</p>

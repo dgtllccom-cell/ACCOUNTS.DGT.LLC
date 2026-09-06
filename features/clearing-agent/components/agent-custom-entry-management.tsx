@@ -9,6 +9,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { PersonPicker } from "@/components/erp/person-picker";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 type AgentCustomEntryRow = {
   id: string;
@@ -193,6 +194,22 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
               {isEditing ? tt("ace.edit_title", "Edit Custom Declaration Entry") : tt("ace.new_title", "New Custom Declaration Entry")}
             </h2>
           </div>
+
+          {!isEditing && (
+            <VoiceFormFill
+              context="clearing"
+              lang={lang}
+              compact
+              onApply={(f) => setForm((prev: any) => ({
+                ...prev,
+                customs_declaration_no: f.customsDeclarationNo && !prev.customs_declaration_no ? String(f.customsDeclarationNo) : prev.customs_declaration_no,
+                customs_station: f.customsStation && !prev.customs_station ? String(f.customsStation) : prev.customs_station,
+                hscode: f.hsCode && !prev.hscode ? String(f.hsCode) : prev.hscode,
+                assessed_value: f.assessedValue != null && f.assessedValue !== "" && !prev.assessed_value ? String(f.assessedValue) : prev.assessed_value,
+                remarks: [f.containerNumbers && `Container ${f.containerNumbers}`, f.blNumber && `BL ${f.blNumber}`, f.vesselName && `Vessel ${f.vesselName}`, prev.remarks].filter(Boolean).join(" · "),
+              }))}
+            />
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>

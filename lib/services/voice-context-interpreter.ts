@@ -454,6 +454,10 @@ export class VoiceContextInterpreter {
     if (email) { fields.email = email; confidence += 0.1; }
     const nid = cleaned.match(/\b\d{5}[- ]?\d{7}[- ]?\d\b/)?.[0];
     if (nid) { fields.nationalId = nid.replace(/[- ]/g, ""); confidence += 0.1; }
+    if (context === "employee") {
+      const desig = cleaned.match(/(?:designation|as|role|post|works? as|joins? as)\s+(?:an?\s+)?(manager|accountant|cashier|driver|cook|cleaner|security|guard|worker|labou?rer|supervisor|clerk|assistant|officer|administrator|admin|engineer|operator|helper|receptionist|storekeeper|foreman)\b/i)?.[1];
+      if (desig) { fields.designation = desig.charAt(0).toUpperCase() + desig.slice(1).toLowerCase(); confidence += 0.1; }
+    }
     return {
       context,
       confidence: Math.min(1, confidence + 0.05),
@@ -481,6 +485,31 @@ export class VoiceContextInterpreter {
     const vessel = cleaned.match(/(?:vessel|ship)\s+(?:name\s+)?([a-z][a-z0-9 .-]{2,30})/i)?.[1];
     if (vessel) { fields.vesselName = vessel.trim(); confidence += 0.1; }
     if (currencies.length > 0) fields.currencyCode = String(currencies[0]).toUpperCase();
+    // loading / receiving quantity, e.g. "loading 850 bags" / "quantity 12000 kg"
+    const qty = cleaned.match(/(?:quantity|qty|loading|received?|loaded)\s+(?:of\s+)?([\d٠-٩۰-۹][\d٠-٩۰-۹,]*)\s*(?:bags?|kg|kgs|tons?|mt|pcs|pieces|cartons?|units?)?/i)?.[1];
+    if (qty) {
+      const n = Number(normalizeDigits(qty).replace(/,/g, ""));
+      if (Number.isFinite(n) && n > 0) { fields.quantity = n; confidence += 0.15; }
+    }
+    if (context === "receiving") {
+      const truck = cleaned.match(/\btruck\s+(?:no\.?|number\s+)?([a-z]{2,4}[-\s]?\d{2,5}[a-z]?)\b/i)?.[1];
+      if (truck) { fields.truckNo = truck.toUpperCase().replace(/\s/g, "-"); confidence += 0.15; }
+      const driver = cleaned.match(/\bdriver\s+(?:name\s+)?([a-z][a-z .'-]{2,30}?)(?=\s+(?:truck|container|bl|quantity|qty)\b|[.,;]|$)/i)?.[1];
+      if (driver) { fields.driverName = driver.trim(); confidence += 0.1; }
+    }
+    if (context === "clearing") {
+      const gd = cleaned.match(/(?:gd|goods declaration|customs declaration|declaration|entry)\s*(?:no\.?|number|#)?\s*[:.]?\s*([a-z0-9][a-z0-9/\-]{3,25})/i)?.[1];
+      if (gd) { fields.customsDeclarationNo = gd.toUpperCase(); confidence += 0.2; }
+      const hs = cleaned.match(/\bhs\s*(?:code|no\.?)?\s*[:.]?\s*(\d{4}\.?\d{2}(?:\.?\d{2,4})?|\d{6,10})/i)?.[1];
+      if (hs) { fields.hsCode = hs.replace(/\./g, ""); confidence += 0.15; }
+      const station = cleaned.match(/(?:customs station|customs office|port|border|dry port)\s*[:.]?\s*([a-z][a-z .\-]{2,40}?)(?=\s+(?:gd|hs|declaration|assessed|duty)\b|[.,;]|$)/i)?.[1];
+      if (station) { fields.customsStation = station.trim(); confidence += 0.1; }
+      const assessed = cleaned.match(/(?:assessed value|customs value|value)\s*[:.]?\s*(?:[a-z]{3}\s*)?([\d٠-٩۰-۹][\d٠-٩۰-۹,]*(?:\.\d{1,2})?)/i)?.[1];
+      if (assessed) {
+        const n = Number(normalizeDigits(assessed).replace(/,/g, ""));
+        if (Number.isFinite(n) && n > 0) { fields.assessedValue = n; confidence += 0.1; }
+      }
+    }
     return {
       context,
       confidence: Math.min(1, confidence + 0.05),
