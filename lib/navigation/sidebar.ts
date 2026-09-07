@@ -1390,6 +1390,30 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-inventory-panel",
+        labelKey: "nav.inventory_report_shell" as any,
+        iconKey: "package",
+        href: "/dashboard/reports/inventory" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-settlement-panel",
+        labelKey: "nav.settlement_report_shell" as any,
+        iconKey: "scale",
+        href: "/dashboard/reports/settlement" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-fx-rates-panel",
+        labelKey: "nav.fx_report_shell" as any,
+        iconKey: "bar-chart",
+        href: "/dashboard/reports/fx-rates" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
