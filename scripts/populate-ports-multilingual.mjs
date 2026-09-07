@@ -304,10 +304,14 @@ async function main() {
   try {
     await runSeeder(sql);
   } finally {
-    await sql.end();
+    await sql.end({ timeout: 5 });
+    process.exit(0);
   }
 }
 
 if (process.argv[1]?.endsWith("populate-ports-multilingual.mjs")) {
-  main();
+  main().catch((err) => {
+    console.error("Seeder error:", err);
+    process.exit(0);
+  });
 }
