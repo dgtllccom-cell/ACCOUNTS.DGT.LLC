@@ -88,7 +88,6 @@ export async function GET(
 
     if (link.status === "revoked") return err("This link has been revoked", 410);
     if (link.status === "expired") return err("This link has expired", 410);
-    if (link.status === "used" || link.status === "submitted") return err("This link has already been used", 410);
 
     const payload = {
       token: link.token,
@@ -96,6 +95,9 @@ export async function GET(
       status: link.status,
       createdByName: link.created_by_name ?? null,
       expiresAt: link.expires_at ?? null,
+      submittedAt: link.submitted_at ?? null,
+      submittedRecordId: link.submitted_record_id ?? null,
+      submissionData: link.submission_data ?? null,
       notes: link.notes ?? null,
     };
 
@@ -128,7 +130,16 @@ export async function POST(
       if (!link) return err("Link not found", 404);
       if (link.status === "revoked") return err("This link has been revoked", 410);
       if (link.status === "expired") return err("This link has expired", 410);
-      if (link.status === "used")    return err("This link has already been used", 410);
+      if (link.status === "used" || link.status === "submitted") {
+        // Idempotent: Form was already recorded and customer created in ERP
+        return ok({
+          submittedRecordId: link.submitted_record_id,
+          formType: link.form_type,
+          alreadySubmitted: true,
+          submittedAt: link.submitted_at,
+          message: "Your submission has already been received successfully."
+        }, 200);
+      }
     } else {
       link = {
         token,

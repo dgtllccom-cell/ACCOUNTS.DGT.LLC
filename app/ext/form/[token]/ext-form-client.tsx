@@ -615,7 +615,28 @@ export function ExtFormClient({ token }: { token: string }) {
         if (data?.ok && linkInfo) {
           setLinkMeta(linkInfo);
           if (linkInfo.status === "used" || linkInfo.status === "submitted") {
-            setPageError("This form link has already been used and submitted.");
+            // Restore submission data if available and display the Digital Receipt Card
+            if (linkInfo.submissionData) {
+              const sub = linkInfo.submissionData;
+              if (sub.firstName) setFirstName(sub.firstName);
+              if (sub.lastName) setLastName(sub.lastName);
+              if (sub.fatherName) setFatherName(sub.fatherName);
+              if (sub.customerName && !sub.firstName) setFirstName(sub.customerName);
+              if (sub.email) setEmail(sub.email);
+              if (sub.mobile) setMobile(sub.mobile);
+              if (sub.whatsapp) setWhatsapp(sub.whatsapp);
+              if (sub.country) setCountry(sub.country);
+              if (sub.stateProvince) setStateProvince(sub.stateProvince);
+              if (sub.city) setCity(sub.city);
+              if (sub.postalCode) setPostalCode(sub.postalCode);
+              if (sub.address) setFullAddress(sub.address);
+              if (sub.photo) setPhotoPreview(sub.photo);
+              if (sub.contacts && Array.isArray(sub.contacts)) {
+                setContactsList(sub.contacts.map((c: any, i: number) => ({ id: `c_${i}`, type: c.type, value: c.value })));
+              }
+            }
+            setSubmitted(true);
+            setSubmittedTimestamp(linkInfo.submittedAt ? new Date(linkInfo.submittedAt).toLocaleString() : new Date().toLocaleString());
           } else if (linkInfo.status === "expired") {
             setPageError("This form link has expired. Please request a new link.");
           } else if (linkInfo.status === "revoked") {
@@ -1076,8 +1097,9 @@ export function ExtFormClient({ token }: { token: string }) {
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (json.ok) {
+      if (json.ok || (json.error && json.error.toLowerCase().includes("already been used"))) {
         setSubmitted(true);
+        setSubmitError(null);
         setSubmittedTimestamp(new Date().toLocaleString());
       } else {
         setSubmitError(json.error ?? "Submission failed. Please check inputs.");
