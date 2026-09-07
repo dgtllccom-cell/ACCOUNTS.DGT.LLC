@@ -28,7 +28,8 @@ Separately, pre-existing code:
   - **compared** as a valid login path in `app/api/erp/auth/login/route.ts` (plaintext == submitted password), unconditionally;
   - **displayed** (with reveal/copy) in `features/branch-management/components/branch-general-report-view.tsx`, `features/users/components/user-journal-report.tsx`, `app/dashboard/new-entry/users/all/page.tsx`;
 - an `Admin@123` + `<city>@dgt.llc` login shortcut existed in `login/route.ts`;
-- ~15 seed/provisioning scripts hardcode admin/superadmin passwords (`Password123!`, `Admin@123`, `TestUser@1234`, `DevTest@12345`, `Dgt<City>123`) and several SSH to Production.
+- ~20 seed/provisioning scripts hardcode admin/superadmin passwords (`Password123!`, `Admin@123`, `TestUser@1234`, `DevTest@12345`, `Dgt<City>123`) and several SSH to Production;
+- **`scripts/vps-db-probe.mjs` and `scripts/test-db-dns.mjs` hardcoded a Supabase Postgres password** (a real DB credential, project ref `csesvyxqjivnkkozgopt`). `scripts/sync-supabase-db.mjs` used it as a fallback. **This DB password must be rotated in the Supabase dashboard (Settings → Database → Reset database password) and every consumer's connection string / env updated.**
 
 ## 2. What this branch fixes (code — done, no secrets in the diff)
 
@@ -42,7 +43,7 @@ Separately, pre-existing code:
 | `GET /api/erp/users/login-management` | Same. |
 | UI (`branch-general-report-view`, `user-journal-report`, `users/all`, `admin-user-management-panel`, `user-live-report-panel`, `user-profile-report-modal`, `user-registration-wizard`, `open-user-a4-report-window`) | Removed plaintext-password columns / reveal / copy / audit-reason text. |
 | `features/branch-management/services/hierarchy-service.ts` | `"ChangeMe123!"` → random one-time password. |
-| Scripts | Deleted `change-superadmin-password.mjs`, `generate-pdf.mjs` (credential list), and the Production-targeting seeders `create-vps-superadmins.mjs`, `vps_create_admins.mjs`, `vps-stable-seed.mjs`, `seed-vps-core.mjs`, `vps-deep-audit-and-clean.mjs`, plus `tmp-browser-qa.mjs`, `tmp-kyc-fetch.mjs`. `seed-superadmin.mjs` / `setup-admins.mjs` / `db-ensure-country-branch-users.mjs` now **require an env var** and stop writing/printing plaintext. |
+| Scripts | Deleted 21 obsolete scripts that carried credentials or targeted Production: `change-superadmin-password.mjs`, `generate-pdf.mjs` (credential list), the VPS superadmin seeders (`create-vps-superadmins.mjs`, `vps_create_admins.mjs`, `vps-stable-seed.mjs`, `vps_seed_stable.mjs`, `seed-vps-core.mjs`, `vps_seed_core.mjs`, `vps-deep-audit-and-clean.mjs`, `vps_deep_clean.mjs`), the DB-password probes (`vps-db-probe.mjs`, `test-db-dns.mjs`, `find-local-postgres-password.mjs`, `check-local-postgres.mjs`, `migrate-data-from-remote-to-local.mjs`), `clean-purchase-vps.mjs`, `db-standardize-branches-users.mjs`, `tmp-browser-qa.mjs`, `tmp-kyc-fetch.mjs`. `seed-superadmin.mjs` / `setup-admins.mjs` / `db-ensure-country-branch-users.mjs` / `sync-supabase-db.mjs` now **require an env var** and stop writing/printing plaintext. |
 | `supabase/migrations/20261111_scrub_superadmin_raw_password.sql` | Nulls `profiles.raw_password` for the bootstrap Super Admin (non-destructive). |
 
 ## 3. What the owner must still do (cannot be automated safely)
@@ -65,7 +66,8 @@ Separately, pre-existing code:
    - If a history rewrite of `main` is too disruptive: treat the credential as permanently compromised (step 1 already does), and at minimum `git commit` a follow-up that removes the literals (this branch) so `HEAD` is clean going forward.
    - Either way: enable GitHub secret scanning / push protection on the repo.
 5. **Set env on Production** (`/var/www/dgt-nextjs/.env`): ensure `ALLOW_DEMO_AUTH=false`, do **not** set `BOOTSTRAP_SUPERADMIN_PASSWORD` or `ALLOW_LEGACY_RAW_PASSWORD_LOGIN` unless actively recovering a lockout.
-6. **Finish the seed-script sweep**: `db-standardize-branches-users.mjs`, `seed-dev-test-master-data.mjs`, `seed-database-users-accounts-employees.mjs`, `setup-all-upcountry-logins.mjs`, `verify-cash-entry-date-filter.mjs` still contain dev password literals (env-ify or delete).
+6. **Rotate the Supabase DB password** (see §1) and update every connection string / `DATABASE_URL` that used it.
+7. **Finish the seed-script sweep** — ~35 dev QA / seed scripts still contain dev-domain password literals (`Admin@123`, `DevTest@12345`, `TestUser@1234`, `AdminPassword123!`): `seed-dev-test-master-data.mjs`, `seed-database-users-accounts-employees.mjs`, `setup-all-upcountry-logins.mjs`, `setup-standardized-users.mjs`, `master-seed-everything.mjs`, `verify-*`, `e2e-*`, `capture-*`. Lower risk (dev domains, run against a local/dev server), but env-ify or delete them in a follow-up. None write to Production.
 
 ## 4. Release sequencing
 

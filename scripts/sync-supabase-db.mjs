@@ -30,9 +30,12 @@ function updateEnvFilesWithWorkingUrl(workingUrl) {
 }
 
 async function connectWithAutoDiscovery(initialUrl) {
-  const projectRef = "csesvyxqjivnkkozgopt";
+  const projectRef = process.env.SUPABASE_PROJECT_REF || "";
   const passMatch = initialUrl.match(/:([^:@]+)@/);
-  const password = passMatch ? passMatch[1] : "Gulistan%409090";
+  const password = passMatch ? passMatch[1] : (process.env.SUPABASE_DB_PASSWORD || "");
+  if (!password) {
+    throw new Error("No DB password: pass a full connection URL or set SUPABASE_DB_PASSWORD. No hardcoded default.");
+  }
 
   const candidateHosts = [
     "aws-0-ap-southeast-1.pooler.supabase.com",
