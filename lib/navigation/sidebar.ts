@@ -1454,6 +1454,22 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-account-master-panel",
+        labelKey: "nav.account_master_report_shell" as any,
+        iconKey: "banknote",
+        href: "/dashboard/reports/account-master" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-branch-org-panel",
+        labelKey: "nav.branch_org_report_shell" as any,
+        iconKey: "building-2",
+        href: "/dashboard/reports/branch-org" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
