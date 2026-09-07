@@ -36,6 +36,7 @@ export function CompanySetupManager({
     queryAction === "new" || Boolean(queryCompanyId) ? "form" : "table"
   );
   const [activeCompanyId, setActiveCompanyId] = useState<string | undefined>(queryCompanyId || undefined);
+  const [activeOwnerPersonId, setActiveOwnerPersonId] = useState<string | undefined>(undefined);
 
   // Sync state if URL query params change
   useEffect(() => {
@@ -48,18 +49,21 @@ export function CompanySetupManager({
     }
   }, [queryCompanyId, queryAction]);
 
-  const handleSwitchToNew = () => {
+  const handleSwitchToNew = (ownerPersonId?: string) => {
     setActiveCompanyId(undefined);
+    setActiveOwnerPersonId(ownerPersonId);
     setViewMode("form");
   };
 
   const handleSwitchToEdit = (companyId: string) => {
     setActiveCompanyId(companyId);
+    setActiveOwnerPersonId(undefined);
     setViewMode("form");
   };
 
   const handleSwitchToTable = () => {
     setActiveCompanyId(undefined);
+    setActiveOwnerPersonId(undefined);
     setViewMode("table");
     router.replace("/dashboard/settings/company-setup" as Route);
   };
@@ -165,6 +169,7 @@ export function CompanySetupManager({
           >
             <CompanyIncorporationForm
               initialCompanyId={activeCompanyId}
+              initialOwnerPersonId={activeOwnerPersonId}
               onClose={handleSwitchToTable}
               onSave={() => {
                 handleSwitchToTable();

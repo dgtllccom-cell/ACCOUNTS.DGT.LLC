@@ -97,11 +97,13 @@ export type CompanyIncorporationData = {
 export function CompanyIncorporationForm({
   mode = "standalone",
   initialCompanyId,
+  initialOwnerPersonId,
   onSave,
   onClose
 }: {
   mode?: "standalone" | "embedded";
   initialCompanyId?: string;
+  initialOwnerPersonId?: string;
   onSave?: (data: CompanyIncorporationData) => void;
   onClose?: () => void;
 }) {
@@ -123,7 +125,7 @@ export function CompanyIncorporationForm({
   const [registrationMode, setRegistrationMode] = useState<"owner_portfolio" | "branch_operative">("owner_portfolio");
 
   // --- Mode A: Owner Portfolio State ---
-  const [ownerPersonId, setOwnerPersonId] = useState("");
+  const [ownerPersonId, setOwnerPersonId] = useState(initialOwnerPersonId || "");
   const [managerPersonId, setManagerPersonId] = useState("");
   const [ownerProfile, setOwnerProfile] = useState<any>(null);
   const [managerProfile, setManagerProfile] = useState<any>(null);

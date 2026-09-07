@@ -38,6 +38,11 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
+import {
+  Group360ProfileModal,
+  GroupProfileData,
+  GroupCompanyItem
+} from "@/features/companies/components/group-360-profile-modal";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -53,6 +58,8 @@ export type CompanyRegistryItem = {
   state: string;
   city: string;
   address: string;
+  companies: GroupCompanyItem[];
+  groupData: GroupProfileData;
   raw?: CompanyRow;
 };
 
@@ -176,6 +183,7 @@ export function CompanyRegistry({
   const [branchFilter, setBranchFilter] = useState("all");
 
   const [previewCompany, setPreviewCompany] = useState<CompanyRegistryItem | null>(null);
+  const [selectedGroupProfile, setSelectedGroupProfile] = useState<GroupProfileData | null>(null);
   const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [openCreateModal, setOpenCreateModal] = useState(false);
@@ -194,37 +202,134 @@ export function CompanyRegistry({
         : [];
 
       if (rawList.length > 0) {
-        const mapped: CompanyRegistryItem[] = rawList.map((c: any, i: number) => {
-          const contactEmail = Array.isArray(c.contacts)
-            ? c.contacts.find((x: any) => (x.type || "").toLowerCase().includes("email") && x.value)?.value
-            : null;
-          const safeSlug = (c.raw?.name || c.name || "info").toLowerCase().replace(/[^a-z0-9]/g, "") || "company";
-          const email = contactEmail || (c.email || `${safeSlug}@company.dgt.llc`);
-          const contactPhone = (Array.isArray(c.contacts) && c.contacts[0]?.value) || c.mobile || "—";
+        // Group raw companies by Owner / Consortium
+        const groupsMap = new Map<string, {
+          id: string;
+          ownerPersonId?: string;
+          ownerName: string;
+          managerPersonId?: string;
+          managerName?: string;
+          consortiumName: string;
+          branchRules: string;
+          companies: GroupCompanyItem[];
+        }>();
 
-          const rawConsortium = c.owner_name ? `${c.owner_name} Group` : "Standard Consortium";
-          const rawRules = "Multi Branch Allowed";
-          const rawAccountName = c.name || "Company Account";
-          const compCount = Array.isArray(c.owner_companies) ? c.owner_companies.length : 1;
-          const contractsCount = Array.isArray(c.registrations) ? c.registrations.length : 0;
+        for (const c of rawList) {
+          const ownerId = c.owner_person_id || "";
+          const ownerName = (c.owner_name || "").trim() || "Standard Consortium";
+          const groupKey = ownerId ? `owner_${ownerId}` : `name_${ownerName.toLowerCase()}`;
+
+          if (!groupsMap.has(groupKey)) {
+            const cleanConsortium = ownerName.toLowerCase().endsWith("group")
+              ? ownerName
+              : `${ownerName} Group`;
+            groupsMap.set(groupKey, {
+              id: ownerId || c.id,
+              ownerPersonId: ownerId || undefined,
+              ownerName,
+              managerPersonId: c.manager_person_id || undefined,
+              managerName: c.manager_name || undefined,
+              consortiumName: cleanConsortium,
+              branchRules: "Multi Branch Allowed",
+              companies: []
+            });
+          }
+
+          const grp = groupsMap.get(groupKey)!;
+          grp.companies.push({
+            id: c.id,
+            name: c.name,
+            legal_name: c.legal_name,
+            name_ur: c.name_ur,
+            company_code: c.company_code,
+            business_type: c.business_type || "LLC",
+            base_currency: c.base_currency || "USD",
+            address: c.address,
+            city: c.city_name || c.city,
+            state: c.state_name || c.state,
+            country: c.country_name || c.country,
+            contacts: Array.isArray(c.contacts) ? c.contacts : [],
+            registrations: Array.isArray(c.registrations) ? c.registrations : [],
+            is_active: c.is_active !== false,
+            created_at: c.created_at,
+            raw: c
+          });
+        }
+
+        const mapped: CompanyRegistryItem[] = Array.from(groupsMap.values()).map((g, i) => {
+          const firstWithPhone = g.companies.find((c) =>
+            c.contacts?.some(
+              (x: any) =>
+                (x.type || "").toLowerCase().includes("mobile") ||
+                (x.type || "").toLowerCase().includes("phone")
+            )
+          );
+          const contactPhone =
+            firstWithPhone?.contacts?.find(
+              (x: any) =>
+                (x.type || "").toLowerCase().includes("mobile") ||
+                (x.type || "").toLowerCase().includes("phone")
+            )?.value || (g.companies[0]?.raw?.mobile || "—");
+
+          const firstWithEmail = g.companies.find((c) =>
+            c.contacts?.some((x: any) =>
+              (x.type || "").toLowerCase().includes("email")
+            )
+          );
+          const emailVal =
+            firstWithEmail?.contacts?.find((x: any) =>
+              (x.type || "").toLowerCase().includes("email")
+            )?.value ||
+            g.companies[0]?.raw?.email ||
+            `${g.ownerName.toLowerCase().replace(/[^a-z0-9]/g, "") || "group"}@company.dgt.llc`;
+
+          const totalContracts = g.companies.reduce(
+            (acc, c) => acc + (c.registrations?.length || 0),
+            0
+          );
+          const primaryComp = g.companies[0];
+
+          const groupData: GroupProfileData = {
+            id: g.id,
+            groupAccountNo: `10010${String(i + 1).padStart(2, "0")}`,
+            consortiumName: g.consortiumName,
+            branchRules: g.branchRules,
+            ownerPersonId: g.ownerPersonId,
+            ownerName: g.ownerName,
+            managerPersonId: g.managerPersonId,
+            managerName: g.managerName,
+            primaryContact: contactPhone,
+            email: emailVal,
+            country: primaryComp?.country || "United Arab Emirates",
+            state: primaryComp?.state || "Dubai",
+            city: primaryComp?.city || "Dubai",
+            address: primaryComp?.address || "—",
+            companies: g.companies,
+            totalCompaniesCount: g.companies.length,
+            totalContractsCount: totalContracts,
+            raw: primaryComp?.raw
+          };
 
           return {
-            id: c.id,
-            accountNo: `10010${String(i + 1).padStart(2, "0")}`,
-            consortium: rawConsortium,
-            branchRules: rawRules,
-            accountName: rawAccountName,
-            companiesCount: compCount,
-            contractsCount: contractsCount,
+            id: g.id,
+            accountNo: groupData.groupAccountNo,
+            consortium: g.consortiumName,
+            branchRules: g.branchRules,
+            accountName: primaryComp?.name || g.consortiumName,
+            companiesCount: g.companies.length,
+            contractsCount: totalContracts,
             primaryContact: contactPhone,
-            email,
-            country: c.country_name || c.country || "—",
-            state: c.state_name || c.state || "—",
-            city: c.city_name || c.city || "—",
-            address: c.address || "—",
-            raw: c
+            email: emailVal,
+            country: primaryComp?.country || "United Arab Emirates",
+            state: primaryComp?.state || "Dubai",
+            city: primaryComp?.city || "Dubai",
+            address: primaryComp?.address || "—",
+            companies: g.companies,
+            groupData,
+            raw: primaryComp?.raw
           };
         });
+
         setCompanies(mapped);
       } else {
         setCompanies([]);
@@ -252,7 +357,12 @@ export function CompanyRegistry({
         c.accountName.toLowerCase().includes(term) ||
         c.email.toLowerCase().includes(term) ||
         c.primaryContact.includes(term) ||
-        c.city.toLowerCase().includes(term);
+        c.city.toLowerCase().includes(term) ||
+        c.companies?.some(
+          (comp) =>
+            comp.name.toLowerCase().includes(term) ||
+            (comp.company_code || "").toLowerCase().includes(term)
+        );
 
       const matchCountry = countryFilter === "all" || c.country.toLowerCase() === countryFilter.toLowerCase();
 
@@ -268,12 +378,13 @@ export function CompanyRegistry({
 
   // Statistics for 5 KPI Cards driven by real live database data
   const stats = useMemo(() => {
-    const totalCompanies = companies.length;
-    const totalBranches = totalDbBranches || (companies.length > 0 ? companies.length : 0);
-    const totalAccounts = new Set(companies.map((c) => c.consortium)).size;
+    const totalGroups = companies.length;
+    const totalCompanies = companies.reduce((acc, c) => acc + (c.companiesCount || 1), 0);
+    const totalBranches = totalDbBranches || (totalCompanies > 0 ? totalCompanies : 0);
+    const totalAccounts = totalGroups;
     const totalContracts = companies.reduce((acc, c) => acc + (c.contractsCount || 0), 0);
-    const totalInAccounts = companies.reduce((acc, c) => acc + (c.companiesCount || 1), 0);
-    return { totalCompanies, totalBranches, totalAccounts, totalContracts, totalInAccounts };
+    const totalInAccounts = totalCompanies;
+    return { totalGroups, totalCompanies, totalBranches, totalAccounts, totalContracts, totalInAccounts };
   }, [companies, totalDbBranches]);
 
   // Professional A4 Company Master Profile via the shared master-profile engine
@@ -565,27 +676,27 @@ export function CompanyRegistry({
 
       {/* ── 5 STAT SUMMARY CARDS MATCHING SCREENSHOT 1 ── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* Card 1: TOTAL COMPANIES */}
+        {/* Card 1: TOTAL CONSORTIUMS */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
           <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 shrink-0">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_companies", "Total Companies")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalCompanies}</div>
-            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_companies_sub", "All Registered Companies")}</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_accounts", "Total Consortiums")}</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalGroups}</div>
+            <div className="text-[10px] text-muted-foreground">{stats.totalCompanies} {tt("creg.companies_word", "Companies")}</div>
           </div>
         </div>
 
-        {/* Card 2: TOTAL BRANCHES */}
+        {/* Card 2: TOTAL SISTER COMPANIES */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
           <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 shrink-0">
-            <Building2 className="h-5 w-5" />
+            <Layers className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_branches", "Total Branches")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalBranches}</div>
-            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_branches_sub", "All Company Branches")}</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_companies", "Total Sister Companies")}</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalCompanies}</div>
+            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_companies_sub", "All Registered Companies")}</div>
           </div>
         </div>
 
@@ -634,9 +745,9 @@ export function CompanyRegistry({
               <tr>
                 <th className="p-3.5 text-center w-12">#</th>
                 <th className="p-3.5">{tt("creg.col_account_no", "Account No. & Serials")}</th>
-                <th className="p-3.5">{tt("creg.col_consortium", "Consortium")}</th>
+                <th className="p-3.5">{tt("creg.col_consortium", "Consortium / Group")}</th>
                 <th className="p-3.5">{tt("creg.col_branch_rules", "Branch Rules")}</th>
-                <th className="p-3.5">{tt("creg.col_account_name", "Account Name")}</th>
+                <th className="p-3.5">{tt("creg.col_account_name", "Sister Companies & Accounts")}</th>
                 <th className="p-3.5 text-center">{tt("creg.col_companies_count", "Companies Count")}</th>
                 <th className="p-3.5 text-center">{tt("creg.col_contracts", "Contracts")}</th>
                 <th className="p-3.5 text-center">{tt("creg.col_contacts_combined", "Contacts")}</th>
@@ -670,19 +781,17 @@ export function CompanyRegistry({
                       <div className="flex flex-col gap-0.5">
                         <span
                           className="font-bold font-mono text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-xs"
-                          onClick={() => setSelected360Party({ id: c.id, name: c.accountName })}
-                          title={tt("cusm.view_360", "View 360 Profile")}
+                          onClick={() => setSelectedGroupProfile(c.groupData)}
+                          title="Open Group 360° Profile"
                         >
                           {c.accountNo}
                         </span>
                         <div className="flex items-center gap-1 flex-wrap text-[9px] font-mono">
-                          {c.raw?.company_code && (
-                            <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold" title={tt("creg.company_code_label", "Company Serial")}>
-                              {c.raw.company_code}
-                            </span>
-                          )}
+                          <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 font-bold" title="Corporate Group Master Serial">
+                            GRP-{String(idx + 1).padStart(3, "0")}
+                          </span>
                           {c.raw?.owner_person_id && (
-                            <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 font-bold" title={tt("cusm.customer_master_serial", "Customer Master Serial")}>
+                            <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 font-bold" title="Customer Master Serial">
                               CUST-LINK
                             </span>
                           )}
@@ -690,31 +799,64 @@ export function CompanyRegistry({
                       </div>
                     </td>
 
-                    {/* Consortium */}
-                    <td className="p-3.5 font-bold text-slate-800 dark:text-slate-200">
-                      {localizeTerm(c.consortium, lang)}
+                    {/* Consortium / Group Name */}
+                    <td className="p-3.5">
+                      <div
+                        className="font-black text-xs text-slate-900 dark:text-slate-100 hover:text-blue-600 transition cursor-pointer"
+                        onClick={() => setSelectedGroupProfile(c.groupData)}
+                      >
+                        {localizeTerm(c.consortium, lang)}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground block mt-0.5">
+                        Owner: <strong className="text-slate-700 dark:text-slate-300">{localizeTerm(c.groupData.ownerName, lang)}</strong>
+                      </span>
                     </td>
 
                     {/* Branch Rules */}
                     <td className="p-3.5 text-slate-600 dark:text-slate-400 font-medium">
-                      {localizeTerm(c.branchRules, lang)}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold">
+                        {localizeTerm(c.branchRules, lang)}
+                      </span>
                     </td>
 
-                    {/* Account Name */}
-                    <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100">
-                      {localizeTerm(c.accountName, lang)}
+                    {/* Sister Companies Pills / Preview */}
+                    <td className="p-3.5">
+                      <div className="space-y-1.5 max-w-md">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {c.companies?.map((comp) => (
+                            <span
+                              key={comp.id}
+                              onClick={() => setSelectedGroupProfile(c.groupData)}
+                              className="inline-flex items-center gap-1 text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950 text-slate-800 dark:text-slate-200 hover:text-blue-700 transition cursor-pointer border border-slate-200/80 dark:border-slate-700 shadow-2xs"
+                              title={`View ${comp.name} details`}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+                              <span className="font-bold">{comp.name}</span>
+                              <span className="text-[9px] font-mono text-slate-500 font-semibold">({comp.base_currency || "USD"})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Companies Count Badge */}
                     <td className="p-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900">
+                      <span
+                        onClick={() => setSelectedGroupProfile(c.groupData)}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900 cursor-pointer transition shadow-2xs"
+                        title="Click to view all sister companies"
+                      >
                         <span className="font-mono font-black">{String(c.companiesCount).padStart(2, "0")}</span> {tt("creg.companies_suffix", "Companies")}
                       </span>
                     </td>
 
                     {/* Contracts Badge */}
                     <td className="p-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900">
+                      <span
+                        onClick={() => setSelectedGroupProfile(c.groupData)}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900 cursor-pointer transition shadow-2xs"
+                        title="Click to view all contracts and licenses"
+                      >
                         <span className="font-mono font-black">{String(c.contractsCount).padStart(2, "0")}</span> {tt("creg.contracts_suffix", "Contracts")}
                       </span>
                     </td>
@@ -759,9 +901,9 @@ export function CompanyRegistry({
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
-                          onClick={() => setPreviewCompany(c)}
-                          className="h-7 w-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 inline-flex items-center justify-center cursor-pointer transition"
-                          title={tt("creg.crtr_preview_details", "Preview Details")}
+                          onClick={() => setSelectedGroupProfile(c.groupData)}
+                          className="h-7 w-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 inline-flex items-center justify-center cursor-pointer transition border border-blue-200/50"
+                          title="View Group 360° Profile"
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </button>
@@ -782,34 +924,34 @@ export function CompanyRegistry({
                             onClick={() => setOpenActionMenuId(null)}
                           />
                           <div className={cn(
-                            "absolute right-3 w-48 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-1.5 text-left animate-in fade-in zoom-in-95 duration-150",
+                            "absolute right-3 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-1.5 text-left animate-in fade-in zoom-in-95 duration-150",
                             idx >= Math.max(paginatedCompanies.length - 2, 1) ? "bottom-8 mb-1" : "top-10"
                           )}>
                             <button
                               type="button"
                               onClick={() => {
                                 setOpenActionMenuId(null);
+                                setSelectedGroupProfile(c.groupData);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                              <Globe className="h-3.5 w-3.5 text-indigo-500" />
+                              <span>View Group Profile (360°)</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
                                 if (onEditCompany) {
-                                  onEditCompany(c.id);
+                                  onEditCompany(c.companies[0]?.id || c.id);
                                 } else {
-                                  router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route);
+                                  router.push(`/dashboard/settings/company-setup?companyId=${c.companies[0]?.id || c.id}` as Route);
                                 }
                               }}
                               className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                             >
                               <PencilLine className="h-3.5 w-3.5 text-blue-500" />
                               <span>{tt("branch.edit", "Edit Master")}</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                handleMasterProfile(c);
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                            >
-                              <Printer className="h-3.5 w-3.5 text-blue-500" />
-                              <span>{tt("pdoc.company_report_title", "Company Master Profile")}</span>
                             </button>
                             <button
                               type="button"
@@ -826,8 +968,7 @@ export function CompanyRegistry({
                               type="button"
                               onClick={() => {
                                 setOpenActionMenuId(null);
-                                handlePrint(c);
-                                setSelected360Party({ id: c.id, name: c.accountName });
+                                setSelectedGroupProfile(c.groupData);
                               }}
                               className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                             >
@@ -938,6 +1079,31 @@ export function CompanyRegistry({
             }}
           />
         </SimpleModal>
+      )}
+
+      {/* ── GROUP 360 PROFILE MODAL ── */}
+      {selectedGroupProfile && (
+        <Group360ProfileModal
+          group={selectedGroupProfile}
+          lang={lang}
+          onClose={() => setSelectedGroupProfile(null)}
+          onEditCompany={(compCompanyId) => {
+            setSelectedGroupProfile(null);
+            if (onEditCompany) {
+              onEditCompany(compCompanyId);
+            } else {
+              router.push(`/dashboard/settings/company-setup?companyId=${compCompanyId}` as Route);
+            }
+          }}
+          onRegisterSisterCompany={(ownerPersonId) => {
+            setSelectedGroupProfile(null);
+            if (onRegisterNew) {
+              onRegisterNew(ownerPersonId);
+            } else {
+              router.push(`/dashboard/settings/company-setup?action=new` as Route);
+            }
+          }}
+        />
       )}
 
       {/* ── PARTY 360 MODAL ── */}
