@@ -128,12 +128,10 @@ export function openConsignmentReport(report: ConsignmentReport, lang: string) {
       [t(lang, "cns.col_containers", "Containers")]: T.containerCount,
       [t(lang, "cns.total_cartons", "Total Cartons")]: T.totalCartons,
       [t(lang, "cns.remaining_cartons", "Remaining Cartons")]: T.remainingCartons,
-      [t(lang, "cns.remaining_stock", "Remaining Qty")]: T.remainingStockQty,
       [t(lang, "cns.reference_value", "Reference Value")]: money(T.referenceValue, ccy),
       [t(lang, "cns.total_sales", "Total Sales Value")]: money(T.totalSales, ccy),
       [t(lang, "cns.total_expenses", "Total Expenses")]: money(T.totalExpenses, ccy),
       [t(lang, "cns.net_receivable", "Net Receivable")]: money(T.netReceivable, ccy),
-      [t(lang, "cns.amount_received", "Amount Received")]: money(T.amountReceived, ccy),
       [t(lang, "cns.balance_receivable", "Balance Receivable")]: money(T.balanceReceivable, ccy),
     },
     filters: [
