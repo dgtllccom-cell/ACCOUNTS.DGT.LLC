@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import html2pdf from "html2pdf.js";
 
 const DOC_LANGS: Array<{ code: string; label: string }> = [
   { code: "en", label: "English" }, { code: "ur", label: "اردو" }, { code: "ps", label: "پښتو" },
@@ -131,6 +130,8 @@ export function PdfPreviewModal() {
             jsPDF: { orientation: pdfOrientation, unit: "mm" as const, format: "a4" as const, compress: true }
           };
 
+          const html2pdfModule: any = await import("html2pdf.js");
+          const html2pdf = html2pdfModule.default || html2pdfModule;
           await html2pdf().set(opt).from(element).save();
       }
     } catch (error) {
