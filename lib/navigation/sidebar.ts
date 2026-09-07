@@ -1318,6 +1318,22 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-payment-panel",
+        labelKey: "nav.payment_report" as any,
+        iconKey: "banknote",
+        href: "/dashboard/reports/payments" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-access-register-panel",
+        labelKey: "nav.access_register_report" as any,
+        iconKey: "shield",
+        href: "/dashboard/reports/access-register" as Route,
+        roles: ["super_admin", "super_admin_reports"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
