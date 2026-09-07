@@ -1342,6 +1342,22 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-roznamcha-panel",
+        labelKey: "nav.roznamcha_cash_report" as any,
+        iconKey: "scroll-text",
+        href: "/dashboard/reports/roznamcha" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-purchase-register-panel",
+        labelKey: "nav.purchase_register_report" as any,
+        iconKey: "shopping-bag",
+        href: "/dashboard/reports/purchase-register" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
