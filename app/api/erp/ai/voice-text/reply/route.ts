@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
       console.warn("ERP Assistant Query error, falling back to intelligent knowledge base:", dbErr);
     }
 
+    // 3. Intelligent multilingual operations / knowledge-base responder
+    const reply = generateSmartOperationsReply(userMessage, language, session);
+
     return NextResponse.json({
       ok: true,
       reply,

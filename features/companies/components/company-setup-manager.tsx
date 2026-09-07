@@ -96,7 +96,7 @@ export function CompanySetupManager({
 
           <button
             type="button"
-            onClick={handleSwitchToNew}
+            onClick={() => handleSwitchToNew()}
             className={cn(
               "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
               viewMode === "form" && !activeCompanyId
@@ -137,7 +137,7 @@ export function CompanySetupManager({
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              onClick={handleSwitchToNew}
+              onClick={() => handleSwitchToNew()}
               className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />

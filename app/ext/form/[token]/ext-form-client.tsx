@@ -623,16 +623,20 @@ export function ExtFormClient({ token }: { token: string }) {
               if (sub.fatherName) setFatherName(sub.fatherName);
               if (sub.customerName && !sub.firstName) setFirstName(sub.customerName);
               if (sub.email) setEmail(sub.email);
-              if (sub.mobile) setMobile(sub.mobile);
-              if (sub.whatsapp) setWhatsapp(sub.whatsapp);
               if (sub.country) setCountry(sub.country);
               if (sub.stateProvince) setStateProvince(sub.stateProvince);
               if (sub.city) setCity(sub.city);
               if (sub.postalCode) setPostalCode(sub.postalCode);
               if (sub.address) setFullAddress(sub.address);
               if (sub.photo) setPhotoPreview(sub.photo);
-              if (sub.contacts && Array.isArray(sub.contacts)) {
+              if (sub.contacts && Array.isArray(sub.contacts) && sub.contacts.length > 0) {
                 setContactsList(sub.contacts.map((c: any, i: number) => ({ id: `c_${i}`, type: c.type, value: c.value })));
+              } else if (sub.mobile || sub.whatsapp) {
+                // Older submissions stored flat mobile/whatsapp instead of a contacts array.
+                const restored: ContactEntry[] = [];
+                if (sub.mobile) restored.push({ id: "c_m", type: "Mobile", value: String(sub.mobile) });
+                if (sub.whatsapp) restored.push({ id: "c_w", type: "WhatsApp", value: String(sub.whatsapp) });
+                setContactsList(restored);
               }
             }
             setSubmitted(true);

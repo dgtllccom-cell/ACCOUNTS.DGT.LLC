@@ -5,15 +5,17 @@ import { useSearchParams } from "next/navigation";
 import { VipRegisterEmployeeView } from "@/features/general-office/components/vip-register-employee-view";
 import { ShareFormsTab } from "@/features/general-office/components/share-forms-tab";
 import { GeneralOfficeLoadingSkeleton } from "@/features/general-office/components/general-office-skeleton";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 function GeneralOfficeEmployeeContent() {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
+  const lang = useActiveLanguage();
 
   if (tab === "share-forms") {
     return (
       <div className="space-y-6">
-        <ShareFormsTab />
+        <ShareFormsTab lang={lang} />
       </div>
     );
   }
