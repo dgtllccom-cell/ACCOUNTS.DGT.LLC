@@ -40,8 +40,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as { countryId: string; name: string; code?: string | null };
-    if (!body.countryId || !body.name?.trim()) {
-      throw new Error("countryId and name are required");
+    if (!body.countryId || typeof body.countryId !== "string" || !body.countryId.trim()) {
+      throw new Error("Unable to create state. The selected country could not be verified. Please re-select the country and try again.");
+    }
+
+    if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
+      throw new Error("State name is required.");
     }
 
     const resolvedCountryId = await locationsRepository.resolveCountryUuid(body.countryId);

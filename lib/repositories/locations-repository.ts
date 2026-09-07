@@ -132,10 +132,27 @@ export class LocationsRepository {
     return scoped;
   }
 
+  async resolveValidProfileUserId(userId?: string | null): Promise<string | null> {
+    if (!userId || typeof userId !== "string" || !isUuid(userId.trim())) return null;
+    const cleanId = userId.trim();
+    const supabase = createSupabaseAdminClient() as any;
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", cleanId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    return data?.id ?? null;
+  }
+
   async resolveCountryUuid(countryInput: string): Promise<string> {
-    if (!countryInput || typeof countryInput !== "string") return countryInput;
+    if (!countryInput || typeof countryInput !== "string") {
+      throw new Error("Unable to create state. The selected country could not be verified. Please re-select the country and try again.");
+    }
     const clean = countryInput.trim();
-    if (isUuid(clean)) return clean;
+    if (!clean) {
+      throw new Error("Unable to create state. The selected country could not be verified. Please re-select the country and try again.");
+    }
 
     const supabase = createSupabaseAdminClient() as any;
     const { data: allCountries } = await supabase
@@ -143,9 +160,15 @@ export class LocationsRepository {
       .select("id, name, iso2, iso3")
       .is("deleted_at", null);
 
-    const lower = clean.toLowerCase();
-
     if (allCountries && Array.isArray(allCountries) && allCountries.length > 0) {
+      // 1. If it's a UUID, verify it actually exists in the countries table
+      if (isUuid(clean)) {
+        const found = allCountries.find((c: any) => c.id === clean);
+        if (found?.id) return found.id;
+      }
+
+      // 2. Try match by name, iso2, iso3
+      const lower = clean.toLowerCase();
       const match = allCountries.find((c: any) => {
         const cName = (c.name || "").toLowerCase();
         const iso2 = (c.iso2 || "").toLowerCase();
@@ -163,6 +186,7 @@ export class LocationsRepository {
       if (match?.id && isUuid(match.id)) return match.id;
     }
 
+    const lower = clean.toLowerCase();
     if (lower.includes("pakistan") || lower === "pk" || lower === "pak") {
       const created = await this.createCountry({
         name: "Pakistan",
@@ -185,7 +209,7 @@ export class LocationsRepository {
       if (created?.id && isUuid(created.id)) return created.id;
     }
 
-    throw new Error(`Country not found in database: ${clean}`);
+    throw new Error("Unable to create state. The selected country could not be verified. Please re-select the country and try again.");
   }
 
   async resolveStateUuid(stateInput: string, countryIdResolved?: string): Promise<string> {
@@ -754,10 +778,16 @@ export class LocationsRepository {
     const normalizedName = input.name.trim();
     const normalizedCode = input.code ? input.code.trim() : null;
 
+    // 1. Resolve and verify country
+    const resolvedCountryId = await this.resolveCountryUuid(input.countryId);
+
+    // 2. Resolve safe profile user reference
+    const safeCreatedBy = await this.resolveValidProfileUserId(input.createdBy);
+
     const { data: existingState, error: existingStateError } = await supabase
       .from("states_provinces")
       .select("id, country_id, name, code, postal_code, phone_area_code, is_active")
-      .eq("country_id", input.countryId)
+      .eq("country_id", resolvedCountryId)
       .is("deleted_at", null)
       .ilike("name", normalizedName)
       .maybeSingle();
@@ -780,10 +810,10 @@ export class LocationsRepository {
     const { data, error } = await supabase
       .from("states_provinces")
       .insert({
-        country_id: input.countryId,
+        country_id: resolvedCountryId,
         name: normalizedName,
         code: normalizedCode,
-        created_by: input.createdBy ?? null,
+        created_by: safeCreatedBy,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -794,7 +824,7 @@ export class LocationsRepository {
         const { data: duplicateState, error: duplicateError } = await supabase
           .from("states_provinces")
           .select("id, country_id, name, code, postal_code, phone_area_code, is_active")
-          .eq("country_id", input.countryId)
+          .eq("country_id", resolvedCountryId)
           .is("deleted_at", null)
           .ilike("name", normalizedName)
           .single();
@@ -837,10 +867,14 @@ export class LocationsRepository {
     const normalizedName = input.name.trim();
     const normalizedCode = input.code ? input.code.trim() : null;
 
+    const resolvedCountryId = await this.resolveCountryUuid(input.countryId);
+    const resolvedStateId = await this.resolveStateUuid(input.stateProvinceId, resolvedCountryId);
+    const safeCreatedBy = await this.resolveValidProfileUserId(input.createdBy);
+
     const { data: existingDistrict, error: existingDistrictError } = await supabase
       .from("districts")
       .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
-      .eq("state_province_id", input.stateProvinceId)
+      .eq("state_province_id", resolvedStateId)
       .is("deleted_at", null)
       .ilike("name", normalizedName)
       .maybeSingle();
@@ -864,11 +898,11 @@ export class LocationsRepository {
     const { data, error } = await supabase
       .from("districts")
       .insert({
-        country_id: input.countryId,
-        state_province_id: input.stateProvinceId,
+        country_id: resolvedCountryId,
+        state_province_id: resolvedStateId,
         name: normalizedName,
         code: normalizedCode,
-        created_by: input.createdBy ?? null,
+        created_by: safeCreatedBy,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -880,7 +914,7 @@ export class LocationsRepository {
         const { data: duplicateDistrict, error: duplicateError } = await supabase
           .from("districts")
           .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
-          .eq("state_province_id", input.stateProvinceId)
+          .eq("state_province_id", resolvedStateId)
           .is("deleted_at", null)
           .ilike("name", normalizedName)
           .single();
@@ -901,12 +935,6 @@ export class LocationsRepository {
       .is("deleted_at", null)
       .single();
     if (error) throw new Error(error.message);
-    // No translateMasterRecord call here: this is a hot read path (called on every
-    // district GET/PATCH lookup), the write already synced translations at
-    // create/update time, and this call's result was never even used in the response
-    // below — it was a per-request write attempt with zero effect on what the caller
-    // gets back. Old rows that predate the create/update fix are backfilled via
-    // scripts/backfill-master-translations.ts, not opportunistically on every read.
     return data as DistrictRow;
   }
 
@@ -942,19 +970,25 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const normalizedCode = input.code ? input.code.trim().toUpperCase() : null;
     const normalizedName = input.name.trim();
-    const normalizedZipCode = await this.normalizeZipCodeForCountry(input.countryId, input.zipCode);
+
+    const resolvedCountryId = await this.resolveCountryUuid(input.countryId);
+    const resolvedStateId = input.stateProvinceId ? await this.resolveStateUuid(input.stateProvinceId, resolvedCountryId) : null;
+    const resolvedDistrictId = input.districtId ? await this.resolveDistrictUuid(input.districtId, resolvedStateId ?? undefined) : null;
+    const safeCreatedBy = await this.resolveValidProfileUserId(input.createdBy);
+
+    const normalizedZipCode = await this.normalizeZipCodeForCountry(resolvedCountryId, input.zipCode);
 
     if (normalizedCode) {
       let duplicateCodeQuery = supabase
         .from("cities")
         .select("id, name, code, state_province_id, district_id, zip_code, phone_area_code")
-        .eq("country_id", input.countryId)
+        .eq("country_id", resolvedCountryId)
         .is("deleted_at", null)
         .eq("code", normalizedCode);
 
-      if (input.districtId) duplicateCodeQuery = duplicateCodeQuery.eq("district_id", input.districtId);
-      else if (input.stateProvinceId === null) duplicateCodeQuery = duplicateCodeQuery.is("state_province_id", null);
-      else if (input.stateProvinceId) duplicateCodeQuery = duplicateCodeQuery.eq("state_province_id", input.stateProvinceId);
+      if (resolvedDistrictId) duplicateCodeQuery = duplicateCodeQuery.eq("district_id", resolvedDistrictId);
+      else if (resolvedStateId === null) duplicateCodeQuery = duplicateCodeQuery.is("state_province_id", null);
+      else if (resolvedStateId) duplicateCodeQuery = duplicateCodeQuery.eq("state_province_id", resolvedStateId);
 
       const { data: duplicateCode } = await duplicateCodeQuery.maybeSingle();
       if (duplicateCode?.id) {
@@ -965,13 +999,13 @@ export class LocationsRepository {
     let duplicateNameQuery = supabase
         .from("cities")
         .select("id, name, code, state_province_id, district_id, zip_code, phone_area_code")
-        .eq("country_id", input.countryId)
+        .eq("country_id", resolvedCountryId)
         .is("deleted_at", null)
         .eq("name", normalizedName);
 
-    if (input.districtId) duplicateNameQuery = duplicateNameQuery.eq("district_id", input.districtId);
-    else if (input.stateProvinceId === null) duplicateNameQuery = duplicateNameQuery.is("state_province_id", null);
-    else if (input.stateProvinceId) duplicateNameQuery = duplicateNameQuery.eq("state_province_id", input.stateProvinceId);
+    if (resolvedDistrictId) duplicateNameQuery = duplicateNameQuery.eq("district_id", resolvedDistrictId);
+    else if (resolvedStateId === null) duplicateNameQuery = duplicateNameQuery.is("state_province_id", null);
+    else if (resolvedStateId) duplicateNameQuery = duplicateNameQuery.eq("state_province_id", resolvedStateId);
 
     const { data: duplicateName } = await duplicateNameQuery.maybeSingle();
     if (duplicateName?.id) {
@@ -981,13 +1015,13 @@ export class LocationsRepository {
     const { data, error } = await supabase
       .from("cities")
       .insert({
-        country_id: input.countryId,
-        state_province_id: input.stateProvinceId ?? null,
-        district_id: input.districtId ?? null,
+        country_id: resolvedCountryId,
+        state_province_id: resolvedStateId ?? null,
+        district_id: resolvedDistrictId ?? null,
         name: normalizedName,
         code: normalizedCode,
         zip_code: normalizedZipCode,
-        created_by: input.createdBy ?? null,
+        created_by: safeCreatedBy,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })

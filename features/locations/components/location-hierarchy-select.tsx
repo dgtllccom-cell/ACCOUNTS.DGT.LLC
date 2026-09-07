@@ -670,6 +670,9 @@ export function LocationQuickCreateModal({
         });
         onCreated(res.country.id, res.country);
       } else if (type === "state") {
+        if (!countryId) {
+          throw new Error("Unable to create state. The selected country could not be verified. Please re-select the country and try again.");
+        }
         const res = await apiPost<{ state: LocationState }>("/api/erp/locations/states", {
           countryId,
           name: name.trim(),

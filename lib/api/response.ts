@@ -36,6 +36,21 @@ export function translateToUrdu(message: string): string {
   if (msg.includes("does not exist in the referenced users table") || msg.includes("requires a valid user reference")) {
     return "یوزر آئی ڈی متعلقہ users table میں موجود نہیں ہے۔ اس عمل کے لیے درست یوزر reference ضروری ہے۔";
   }
+  if (
+    msg.includes("unable to create state. the selected country could not be verified") ||
+    msg.includes("states_provinces_country_id_fkey") ||
+    msg.includes("districts_country_id_fkey") ||
+    msg.includes("cities_country_id_fkey")
+  ) {
+    return "صوبہ/مقام شامل نہیں کیا جا سکا۔ منتخب ملک کی تصدیق نہیں ہو سکی، براہِ کرم ملک دوبارہ منتخب کر کے کوشش کریں۔";
+  }
+  if (
+    msg.includes("states_provinces_created_by_fkey") ||
+    msg.includes("districts_created_by_fkey") ||
+    msg.includes("cities_created_by_fkey")
+  ) {
+    return "مقام بنانے کے لیے متعلقہ یوزر پروفائل کی تصدیق نہیں ہو سکی۔";
+  }
   if (msg.includes("violates foreign key constraint")) {
     if (msg.includes("city_branches_created_by_fkey")) {
       return "City Branch record میں created_by user reference موجود نہیں ہے۔ پہلے درست user/profile بنائیں یا session user درست کریں۔";
