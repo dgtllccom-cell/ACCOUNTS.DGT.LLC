@@ -496,9 +496,12 @@ function isPathActive(href: string | undefined, currentPath: string): boolean {
   return false;
 }
 
-function hasActiveDescendant(item: SidebarMenuItem | SidebarSubItem, currentPath: string): boolean {
+function hasActiveDescendant(
+  item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild,
+  currentPath: string,
+): boolean {
   if (item.href && isPathActive(item.href, currentPath)) return true;
-  if (item.children) {
+  if ("children" in item && item.children) {
     return item.children.some((c) => hasActiveDescendant(c, currentPath));
   }
   return false;

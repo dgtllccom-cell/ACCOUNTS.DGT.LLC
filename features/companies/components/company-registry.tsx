@@ -165,7 +165,7 @@ export function CompanyRegistry({
   onRegisterNew,
   onEditCompany,
 }: {
-  onRegisterNew?: () => void;
+  onRegisterNew?: (ownerPersonId?: string) => void;
   onEditCompany?: (companyId: string) => void;
 } = {}) {
   const router = useRouter();

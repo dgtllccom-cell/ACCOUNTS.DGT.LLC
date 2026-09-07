@@ -62,7 +62,8 @@ export interface EmployeeRecord {
 }
 
 export function VipRegisterEmployeeView() {
-  const { lang, dir } = useActiveLanguage();
+  const lang = useActiveLanguage();
+  const dir: "rtl" | "ltr" = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps" ? "rtl" : "ltr";
 
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [loading, setLoading] = useState(true);
