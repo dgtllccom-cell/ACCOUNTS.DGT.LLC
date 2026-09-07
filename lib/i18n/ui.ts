@@ -1,6 +1,7 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "cns.total"
   | "cns.tender_no"
   | "cns.loading_from"
   | "cns.loading_to"
@@ -24360,6 +24361,7 @@ const en: Dict = {
   "cns.search_master": "Search or type a name…",
   "cns.linked_master": "Linked to master record",
   "cns.searching": "Searching…",
+  "cns.total": "TOTAL",
 };
 
 const ur: Dict = {
@@ -41576,6 +41578,7 @@ const ur: Dict = {
   "cns.search_master": "تلاش کریں یا نام لکھیں…",
   "cns.linked_master": "ماسٹر ریکارڈ سے منسلک",
   "cns.searching": "تلاش جاری…",
+  "cns.total": "کل میزان",
 };
 
 const ar: Dict = {
@@ -58794,6 +58797,7 @@ const ar: Dict = {
   "cns.search_master": "ابحث أو اكتب اسمًا…",
   "cns.linked_master": "مرتبط بسجل رئيسي",
   "cns.searching": "جارٍ البحث…",
+  "cns.total": "الإجمالي",
 };
 
 const fa: Dict = {
@@ -76011,6 +76015,7 @@ const fa: Dict = {
   "cns.search_master": "جستجو کنید یا نامی بنویسید…",
   "cns.linked_master": "به رکورد اصلی پیوند شده",
   "cns.searching": "در حال جستجو…",
+  "cns.total": "جمع کل",
 };
 
 const ps: Dict = {
@@ -93234,6 +93239,7 @@ const ps: Dict = {
   "cns.search_master": "لټون وکړئ یا نوم ولیکئ…",
   "cns.linked_master": "له ماسټر ریکارډ سره تړلی",
   "cns.searching": "لټون روان…",
+  "cns.total": "ټول",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

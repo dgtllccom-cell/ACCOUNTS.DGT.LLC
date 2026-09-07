@@ -326,6 +326,12 @@ export function ConsignmentDetailView({ id, lang: langProp }: { id: string; lang
                 </div>
               </div>
             ))}
+            <div className="flex flex-wrap items-center justify-end gap-4 rounded-lg border-2 border-border bg-muted/40 px-3 py-2 text-sm font-black">
+              <span>{s.t("total", "TOTAL")}</span>
+              <span>{s.t("cartons", "Cartons")}: {num(T.totalCartons).toLocaleString()}</span>
+              <span>{s.t("net_weight", "Weight")}: {num(T.totalNetWeight).toLocaleString()}</span>
+              <span>{s.t("reference_value", "Reference Value")}: {money(T.referenceValue)}</span>
+            </div>
           </div>
         )}
       </Panel>
@@ -355,6 +361,7 @@ export function ConsignmentDetailView({ id, lang: langProp }: { id: string; lang
             num(e.amount).toLocaleString(undefined, { minimumFractionDigits: 2 }),
             <RowActions key="a" locked={locked} onEdit={() => setEditRow({ kind: "expense", row: e })} onDelete={() => removeEntry("expense", e.id)} t={s.t} />,
           ])}
+          foot={["", "", "", s.t("total_expenses", "TOTAL EXPENSES"), money(T.totalExpenses), ""]}
           empty={s.t("empty_children", "Nothing added yet.")}
         />
       </Panel>
@@ -388,6 +395,15 @@ export function ConsignmentDetailView({ id, lang: langProp }: { id: string; lang
           ])}
           empty={s.t("empty_children", "Nothing added yet.")}
         />
+        {/* auto-calculated settlement strip (spec §4) */}
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <StatChip label={s.t("total_sales", "Total Sales Value")} value={money(T.totalSales)} tone="emerald" />
+          <StatChip label={s.t("total_expenses", "Total Expenses")} value={money(T.totalExpenses)} tone="amber" />
+          <StatChip label={s.t("net_receivable", "Net Receivable")} value={money(T.netReceivable)} />
+          <StatChip label={s.t("amount_received", "Amount Received")} value={money(T.amountReceived)} tone="emerald" />
+          <StatChip label={s.t("balance_receivable", "Balance Receivable")} value={money(T.balanceReceivable)} tone="red" />
+          <StatChip label={s.t("remaining_cartons", "Remaining Cartons")} value={num(T.remainingCartons).toLocaleString()} tone="blue" />
+        </div>
       </Panel>
 
       {/* Receipts */}
@@ -492,6 +508,17 @@ function Kpi({ label, value, accent }: { label: string; value: string; accent?: 
   );
 }
 
+function StatChip({ label, value, tone }: { label: string; value: string; tone?: "emerald" | "amber" | "red" | "blue" }) {
+  const bar =
+    tone === "emerald" ? "border-s-emerald-500" : tone === "amber" ? "border-s-amber-500" : tone === "red" ? "border-s-red-500" : tone === "blue" ? "border-s-blue-500" : "border-s-slate-400";
+  return (
+    <div className={`rounded-lg border border-border bg-background px-3 py-1.5 border-s-4 ${bar}`}>
+      <div className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-sm font-black text-foreground">{value}</div>
+    </div>
+  );
+}
+
 function Panel({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -514,12 +541,14 @@ function SimpleTable({
   empty,
   dir,
   dense,
+  foot,
 }: {
   head: React.ReactNode[];
   rows: React.ReactNode[][];
   empty: string;
   dir: "rtl" | "ltr";
   dense?: boolean;
+  foot?: React.ReactNode[];
 }) {
   const start = dir === "rtl" ? "text-right" : "text-left";
   return (
@@ -553,6 +582,17 @@ function SimpleTable({
             ))
           )}
         </tbody>
+        {foot && rows.length > 0 && (
+          <tfoot>
+            <tr className="border-t-2 border-border bg-muted/40 font-black">
+              {foot.map((cell, j) => (
+                <td key={j} className={`px-2.5 py-1.5 ${start}`}>
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );
