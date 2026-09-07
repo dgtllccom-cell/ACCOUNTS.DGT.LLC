@@ -114,7 +114,7 @@ export function CompanyIncorporationForm({
       onClose();
       return;
     }
-    router.push("/dashboard/settings/company" as Route);
+    router.push("/dashboard/settings/company-setup" as Route);
   }
 
   // --- Registration Modes ---
@@ -523,18 +523,20 @@ export function CompanyIncorporationForm({
         await intake.consume(String(savedCompanyId));
       }
 
-      if (mode === "embedded") {
-        onSave?.({
-          id: savedCompanyId,
-          name: payload.name,
-          legalName: payload.legalName,
-          baseCurrency: payload.baseCurrency
-        } as any);
+      if (onSave) {
+        setTimeout(() => {
+          onSave({
+            id: savedCompanyId,
+            name: payload.name,
+            legalName: payload.legalName,
+            baseCurrency: payload.baseCurrency
+          } as any);
+        }, 800);
         return;
       }
 
       setTimeout(() => {
-        router.push("/dashboard/settings/company" as Route);
+        router.push("/dashboard/settings/company-setup" as Route);
       }, 1200);
     } catch (err: any) {
       setMessage(err?.message || "Failed to save company.");
@@ -577,6 +579,21 @@ export function CompanyIncorporationForm({
       {/* ── TOP BAR: Header, Mode Toggle, Step Tracker, Close ── */}
       <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
+          {onClose && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="h-9.5 px-3 rounded-xl border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs shrink-0"
+              title={lang === "ur" ? "کمپنیوں کے ٹیبل پر واپس جائیں" : "Back to Companies Table"}
+            >
+              <ArrowLeft className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`} />
+              <span className="hidden sm:inline">
+                {lang === "ur" ? "واپس لسٹ" : "Back to Table"}
+              </span>
+            </Button>
+          )}
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
             <Building2 className="h-6 w-6" />
           </div>

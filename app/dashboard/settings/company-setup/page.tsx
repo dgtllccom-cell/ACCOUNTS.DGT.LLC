@@ -1,5 +1,4 @@
-import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
-import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
+import { CompanySetupManager } from "@/features/companies/components/company-setup-manager";
 import { getCurrentErpSession } from "@/lib/auth/session";
 
 export const metadata = { title: "Settings — Company Setup" };
@@ -7,18 +6,16 @@ export const metadata = { title: "Settings — Company Setup" };
 export default async function CompanySetupPage({
   searchParams
 }: {
-  searchParams?: Promise<{ companyId?: string }>;
+  searchParams?: Promise<{ companyId?: string; action?: string }>;
 }) {
   const params = searchParams ? await searchParams : undefined;
   const session = await getCurrentErpSession();
   return (
-    <EntryMethodSelector
-      targetModule="companies"
-      domain="business"
+    <CompanySetupManager
+      initialCompanyId={params?.companyId}
+      initialAction={params?.action}
       lang={session?.preferredLanguage ?? "en"}
-      skipGate={Boolean(params?.companyId)}
-    >
-      <CompanyIncorporationForm initialCompanyId={params?.companyId} />
-    </EntryMethodSelector>
+    />
   );
 }
+
