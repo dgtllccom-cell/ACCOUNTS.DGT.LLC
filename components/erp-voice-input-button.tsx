@@ -109,7 +109,16 @@ export function ErpVoiceInputButton({
     };
 
     rec.onerror = (e: any) => {
-      onError?.(`${s.t("error", "Voice input error")}: ${e?.error || "unknown"}`);
+      const errType = e?.error || "unknown";
+      let msg = `${s.t("error", "Voice input error")}: ${errType}`;
+      if (errType === "not-allowed" || errType === "service-not-allowed") {
+        msg = s.t("mic_denied", "Microphone access denied. Please click the camera/mic icon in the browser address bar to allow microphone access.");
+      } else if (errType === "no-speech") {
+        msg = s.t("mic_no_speech", "No speech detected. Please speak clearly into your microphone.");
+      } else if (errType === "network") {
+        msg = s.t("mic_network", "Speech recognition network error. Please verify your connection or use secure HTTPS (https://new.dgt.llc).");
+      }
+      onError?.(msg);
       setListening(false);
     };
 
@@ -125,13 +134,18 @@ export function ErpVoiceInputButton({
             durationSeconds,
           });
           setProcessing(false);
-        }, 500);
+        }, 300);
       }
       setListening(false);
     };
 
     recRef.current = rec;
-    rec.start();
+    try {
+      rec.start();
+    } catch (err: any) {
+      onError?.(err?.message || "Could not start voice recognition");
+      setListening(false);
+    }
   }
 
   return (

@@ -6,18 +6,16 @@ import { Button } from "@/components/ui/button";
 import {
   Send,
   Loader2,
-  Mic,
   Sparkles,
   Bot,
   User,
   Volume2,
   Globe2,
   ShieldCheck,
-  CheckCircle2,
-  CornerDownLeft,
-  Flame,
-  HelpCircle,
-  Clock
+  AlertTriangle,
+  Clock,
+  ExternalLink,
+  RotateCcw
 } from "lucide-react";
 import { ErpVoiceInputButton, type VoiceTranscriptionResult } from "@/components/erp-voice-input-button";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -44,8 +42,22 @@ export default function AIMessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activePrompt, setActivePrompt] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isInsecureHttp, setIsInsecureHttp] = useState(false);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check if browsing via insecure HTTP (which blocks microphones in browsers)
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.location.protocol === "http:" &&
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1"
+    ) {
+      setIsInsecureHttp(true);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,10 +65,41 @@ export default function AIMessagesPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleVoiceTranscribed = (result: VoiceTranscriptionResult) => {
-    setInput(result.transcript);
+    setVoiceError(null);
+    if (result.transcript?.trim()) {
+      setInput(result.transcript);
+      // Automatically send voice query for a true hands-free voice experience
+      handleSendMessage(result.transcript);
+    }
+  };
+
+  const handleSpeak = (text: string, msgId: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    if (speakingId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const langMap: Record<string, string> = {
+      en: "en-US",
+      ur: "ur-PK",
+      ar: "ar-SA",
+      fa: "fa-IR",
+      ps: "ps-AF"
+    };
+    utterance.lang = langMap[s.lang] || "en-US";
+    utterance.rate = 1.0;
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(msgId);
+    window.speechSynthesis.speak(utterance);
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -74,6 +117,7 @@ export default function AIMessagesPage() {
     setMessages(prev => [...prev, userMessage]);
     if (!textToSend) setInput("");
     setLoading(true);
+    setVoiceError(null);
 
     try {
       const response = await fetch("/api/erp/ai/voice-text/reply", {
@@ -82,7 +126,7 @@ export default function AIMessagesPage() {
         body: JSON.stringify({
           userMessage: text,
           language: s.lang,
-          conversationHistory: messages
+          conversationHistory: messages.slice(-6)
         })
       });
 
@@ -105,7 +149,10 @@ export default function AIMessagesPage() {
       const errorMessage: Message = {
         id: Date.now().toString() + "error",
         type: "ai",
-        content: s.t("error_getting_reply", "Sorry, I couldn't process that query against the ERP database. Please verify your connection or try again."),
+        content: s.t(
+          "error_getting_reply",
+          "Sorry, I couldn't process that query against the ERP database. Please verify your connection or try again."
+        ),
         timestamp: new Date(),
         language: s.lang as SupportedLanguage
       };
@@ -116,8 +163,27 @@ export default function AIMessagesPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#070f21] text-slate-100 font-sans" dir={s.dir}>
-      {/* 1. Cybernetic Hero Header */}
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#070f21] text-slate-100 font-sans" dir={s.dir}>
+      {/* 1. Insecure HTTP Warning Banner */}
+      {isInsecureHttp && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-2.5 flex items-center justify-between gap-4 text-xs shrink-0">
+          <div className="flex items-center gap-2 text-amber-300">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400 animate-pulse" />
+            <span>
+              <strong>Microphone & Voice Note:</strong> Web Speech recognition requires a secure HTTPS connection. You are currently on HTTP IP.
+            </span>
+          </div>
+          <a
+            href="https://new.dgt.llc/dashboard/ai-entry/messages"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition"
+          >
+            <span>Switch to HTTPS (new.dgt.llc)</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      )}
+
+      {/* 2. Cybernetic Hero Header */}
       <div className="relative border-b border-blue-900/40 bg-gradient-to-r from-[#071329] via-[#0c1f42] to-[#08152e] px-6 py-4 shadow-lg shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -151,6 +217,18 @@ export default function AIMessagesPage() {
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>LIVE AI SYNC</span>
             </div>
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMessages([])}
+                className="h-7 px-2 text-[11px] text-slate-400 hover:text-white"
+                title="Clear Chat"
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                Clear
+              </Button>
+            )}
           </div>
         </div>
 
@@ -176,8 +254,17 @@ export default function AIMessagesPage() {
         </div>
       </div>
 
-      {/* 2. Messages Stream */}
+      {/* 3. Messages Stream */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-radial from-[#0c1b3b]/40 via-[#070f21] to-[#050b18]">
+        {voiceError && (
+          <div className="max-w-xl mx-auto p-3 rounded-xl border border-rose-900/50 bg-rose-950/40 text-xs text-rose-300 flex items-center justify-between gap-2">
+            <span>{voiceError}</span>
+            <button onClick={() => setVoiceError(null)} className="text-rose-400 hover:text-white font-bold text-xs">
+              ✕
+            </button>
+          </div>
+        )}
+
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center max-w-lg mx-auto p-6 space-y-4">
             <div className="relative">
@@ -211,14 +298,14 @@ export default function AIMessagesPage() {
               className={cn("flex gap-3", msg.type === "user" ? "justify-end" : "justify-start")}
             >
               {msg.type === "ai" && (
-                <div className="h-8 w-8 rounded-lg bg-blue-950 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-lg bg-blue-950 border border-cyan-500/30 flex items-center justify-center shrink-0 mt-0.5">
                   <Bot className="h-4 w-4 text-cyan-400" />
                 </div>
               )}
 
               <div
                 className={cn(
-                  "max-w-xl rounded-2xl px-4 py-3 shadow-md text-xs leading-relaxed",
+                  "max-w-xl rounded-2xl px-4 py-3 shadow-md text-xs leading-relaxed group relative",
                   msg.type === "user"
                     ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none shadow-blue-600/20 font-medium"
                     : "bg-[#0c1a38] border border-blue-900/50 text-slate-200 rounded-bl-none shadow-black/40"
@@ -226,16 +313,28 @@ export default function AIMessagesPage() {
               >
                 <div className="flex items-center justify-between gap-4 mb-1.5 opacity-60 text-[10px] font-bold">
                   <span>{msg.type === "user" ? "You" : "ERP Assistant"}</span>
-                  <span className="flex items-center gap-1 font-mono">
-                    <Clock className="h-2.5 w-2.5" />
-                    {msg.timestamp.toLocaleTimeString(s.lang, { hour: "2-digit", minute: "2-digit" })}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {msg.type === "ai" && (
+                      <button
+                        type="button"
+                        onClick={() => handleSpeak(msg.content, msg.id)}
+                        className="opacity-70 hover:opacity-100 transition p-0.5 rounded text-cyan-400"
+                        title="Listen to this reply"
+                      >
+                        <Volume2 className={cn("h-3 w-3", speakingId === msg.id && "text-emerald-400 animate-pulse")} />
+                      </button>
+                    )}
+                    <span className="flex items-center gap-1 font-mono">
+                      <Clock className="h-2.5 w-2.5" />
+                      {msg.timestamp.toLocaleTimeString(s.lang, { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
                 </div>
                 <p className="whitespace-pre-wrap font-sans">{msg.content}</p>
               </div>
 
               {msg.type === "user" && (
-                <div className="h-8 w-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0 mt-0.5">
                   <User className="h-4 w-4 text-blue-400" />
                 </div>
               )}
@@ -257,7 +356,7 @@ export default function AIMessagesPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 3. Floating Bottom Command Deck */}
+      {/* 4. Floating Bottom Command Deck */}
       <div className="p-4 sm:p-5 border-t border-blue-900/40 bg-[#071228] shrink-0">
         <div className="max-w-4xl mx-auto flex items-center gap-3 rounded-2xl border border-blue-800/40 bg-[#091733] p-2 shadow-xl focus-within:border-cyan-500/60 transition">
           {/* Voice Input Button */}
@@ -265,6 +364,7 @@ export default function AIMessagesPage() {
             <ErpVoiceInputButton
               context="search"
               onTranscribed={handleVoiceTranscribed}
+              onError={(err) => setVoiceError(err)}
               lang={s.lang as SupportedLanguage}
             />
           </div>
