@@ -374,7 +374,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     async function loadEmployee() {
       setLoading(true);
       try {
-        const res = await apiGet<{ employee: any }>(`/api/erp/hr-payroll/employees/${employeeId}`);
+        // raw=1 → load the untranslated original person/employee record (an edit
+        // form must not populate its name inputs from a display translation).
+        const res = await apiGet<{ employee: any }>(`/api/erp/hr-payroll/employees/${employeeId}?raw=1`);
         if (res.employee) {
           const emp = res.employee;
           setPersonMasterId(emp.person_master_id);

@@ -115,7 +115,7 @@ export function CustomerPicker({
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${encodeURIComponent(value)}`);
+        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${encodeURIComponent(value)}?lang=${encodeURIComponent(lang || "en")}`);
         if (cancelled) return;
         if (res.customer) {
           setCustomers((current) => {

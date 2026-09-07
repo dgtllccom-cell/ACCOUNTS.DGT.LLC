@@ -384,7 +384,9 @@ export function CompanyIncorporationForm({
   // Load initial company if editing (or if a reviewed draft is linked to one)
   useEffect(() => {
     if (effectiveCompanyId) {
-      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}`)
+      // raw=1 → load the untranslated original; an edit form must never populate
+      // its inputs from a display translation.
+      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}?raw=1`)
         .then((res) => {
           const comp = res.company;
           if (comp) {

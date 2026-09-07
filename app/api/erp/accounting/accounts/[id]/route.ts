@@ -5,7 +5,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
 
 function isUuid(value: string | null | undefined) {
@@ -115,13 +115,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // Resolve the account name through the single central 3-tier resolver (record-specific
     // approved translation → central system_dictionary → honest original) — the same policy
     // every other ERP screen uses. Replaces the old resolveText path that ignored the dictionary.
-    const [resolvedAccount] = await localizeRecordNames(
-      [{ id: account.id, name: account.name }],
-      "enterprise_accounts",
-      "name",
-      language,
-      { phraseFallback: true }
-    );
+    const [resolvedAccount] = wantsRawRecord(request)
+      ? [{ id: account.id, name: account.name }]
+      : await localizeRecordNames(
+          [{ id: account.id, name: account.name }],
+          "enterprise_accounts",
+          "name",
+          language,
+          { phraseFallback: true }
+        );
     const localizedName = resolvedAccount?.name ?? account.name;
     const localizedAccount = {
       ...account,

@@ -182,7 +182,10 @@ export function CustomerForm({
     if (!effectiveCustomerId) return;
     (async () => {
       try {
-        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${effectiveCustomerId}?lang=${encodeURIComponent(lang || "en")}`);
+        // raw=1: load the ORIGINAL untranslated record — an edit form must never
+        // populate its inputs from a display translation (saving would overwrite
+        // the source text).
+        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${effectiveCustomerId}?raw=1`);
         const c = res.customer;
         if (!c) return;
 
@@ -461,7 +464,10 @@ export function CustomerForm({
       email: firstEmail || null,
       address: address || (city ? `${city}, ${country || ""}`.trim() : "-"),
       notes: JSON.stringify(notesJson),
-      originalLanguage: lang,
+      // Only stamp the entry language when CREATING. On edit we must not relabel
+      // an existing record's original language (or overwrite its source text) just
+      // because the person editing it is viewing the ERP in another language.
+      ...(effectiveCustomerId ? {} : { originalLanguage: lang }),
       contacts: [],
       registrations: []
     };

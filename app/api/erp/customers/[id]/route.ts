@@ -6,7 +6,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { customerUpdateSchema } from "@/lib/api/erp-validation";
 import { customersService } from "@/lib/services/customers-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +29,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // script the record was originally typed in. If that was Urdu/Arabic/etc, skipping
     // resolution for English would leak the raw source-language text into the English view
     // (the exact bug reported: "English selected but Urdu name shows").
-    if (data?.customer) {
+    // EXCEPT `?raw=1` — an edit form must load the untranslated original so saving it
+    // back never overwrites the source text with a display translation.
+    if (data?.customer && !wantsRawRecord(request)) {
       const [resolved] = await localizeRecordNames([data.customer as any], "customers", "customer_name", lang);
       const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
       (data as any).customer = resolved2;

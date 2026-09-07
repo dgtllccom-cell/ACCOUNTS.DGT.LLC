@@ -4,7 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 // Resolve name/legal_name/owner_name into the requested language — always, regardless of
 // which language was requested (see customers/[id]/route.ts for why skipping lang === "en"
@@ -35,7 +35,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     let company = await companiesService.getById(id);
-    company = await localizeCompany(company, lang);
+    // ?raw=1 → edit form: return the untranslated original (never overwrite source text).
+    if (!wantsRawRecord(request)) company = await localizeCompany(company, lang);
     return apiOk({ company });
   } catch (error) {
     return handleApiError(error);
@@ -58,7 +59,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     await companiesService.update(id, body, session?.userId ?? null);
     let company = await companiesService.getById(id);
-    company = await localizeCompany(company, lang);
+    // ?raw=1 → edit form: return the untranslated original (never overwrite source text).
+    if (!wantsRawRecord(request)) company = await localizeCompany(company, lang);
     return apiOk({ company });
   } catch (error) {
     return handleApiError(error);

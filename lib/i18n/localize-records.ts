@@ -1,6 +1,8 @@
 import postgres from "postgres";
 import { getSharedPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { transliterateToLatin } from "@/lib/i18n/transliteration";
+import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translatable-fields";
 
 /**
  * Central Per-Language Master Data Resolver — the ONE translation source for the whole ERP.
@@ -32,7 +34,90 @@ const PROPER_NAME_TABLES = new Set([
   "states_provinces", "countries", "areas_locations"
 ]);
 
-type DictRow = { english_text: string | null; urdu_text: string | null; arabic_text: string | null; persian_text: string | null; pashto_text: string | null };
+type DictRow = {
+  english_text: string | null; urdu_text: string | null; arabic_text: string | null;
+  persian_text: string | null; pashto_text: string | null;
+  translation_status?: string | null; translated_by_engine?: string | null;
+};
+
+// Engines whose stored output is a curated/human source we trust as-is. Anything
+// else (local_multilingual / local_transliteration / auto_unverified / machine_*)
+// is a raw machine guess — for PROPER NAMES we prefer a fresh on-the-fly script
+// render over a stale unverified guess (e.g. old "Hamd Shryf" for "حامد شریف").
+const TRUSTED_TRANSLATION_ENGINES = new Set(["manual", "local_dictionary", "dictionary", "glossary", "human", "verified"]);
+function isTrustedStoredTranslation(row: { translation_status?: string | null; translated_by_engine?: string | null } | undefined): boolean {
+  if (!row) return true; // no metadata (dictionary rows) → trust
+  const status = (row.translation_status || "").toLowerCase();
+  if (status === "human_verified" || status === "verified") return true;
+  const eng = (row.translated_by_engine || "").toLowerCase();
+  return eng === "" || TRUSTED_TRANSLATION_ENGINES.has(eng);
+}
+
+// ── Display-only proper-name script rendering ─────────────────────────────────
+// When a record has NO genuine approved translation for the viewer's language, a
+// proper name (person / company / place / bank / vessel) must still be shown in
+// the VIEWER'S script — an English viewer should never see a name in Perso-Arabic
+// script and vice-versa. This is a DISPLAY fallback only: it is never written to
+// the database, and it is applied *after* every genuine-translation tier. Free
+// text (mode "translate": categories, descriptions, notes, narration) is NEVER
+// transliterated — it stays exactly as entered until a real translation exists.
+const ARABIC_SCRIPT_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+const LATIN_LETTER_RE = /[A-Za-z]/;
+
+// (table, field) -> mode. "transliterate" = proper noun (script-render on display).
+const FIELD_MODE = new Map<string, "translate" | "transliterate">();
+for (const [table, defs] of Object.entries(TRANSLATABLE_FIELDS)) {
+  for (const d of defs) FIELD_MODE.set(`${table}::${d.field}`, d.mode);
+}
+
+/** True when a (table, field) holds a proper noun that should be rendered in the
+ *  viewer's script when no approved translation exists. */
+function isProperNounField(table: string, field: string): boolean {
+  const m = FIELD_MODE.get(`${table}::${field}`);
+  if (m) return m === "transliterate";
+  // Not in the registry: proper-name master tables default to script-rendering,
+  // everything else is treated as free text (no transliteration guess).
+  return PROPER_NAME_TABLES.has(table);
+}
+
+/** A value we must NEVER transliterate — codes, refs, account/bill numbers,
+ *  emails, digit-heavy strings. Names (letters + spaces) pass through. */
+function isBusinessIdentifier(v: string): boolean {
+  if (!v) return true;
+  if (!/\p{L}/u.test(v)) return true;                 // no letters → pure number/code
+  if (/[@#]/.test(v) || /https?:\/\//i.test(v)) return true;
+  const digits = (v.match(/\d/g) || []).length;
+  if (digits > 0 && digits / v.replace(/\s/g, "").length >= 0.3) return true;
+  // Dashed/underscored/slashed code with digits: UAE-DUB-AC-0001, PER-000087
+  if (/[-_/]/.test(v) && /^[A-Za-z0-9][A-Za-z0-9\s._/-]*$/.test(v) && /\d/.test(v)) return true;
+  // Dashed all-caps code without digits: SO-DD-VERIFY, BL/NO, CN-REF
+  if (/^[A-Z][A-Z0-9]*([-_/][A-Z][A-Z0-9]*){2,}$/.test(v.replace(/\s/g, ""))) return true;
+  return false;
+}
+
+/** DISPLAY-ONLY: render a proper-name value in `lang`'s script when there is no
+ *  approved translation. Returns null when no safe rendering applies.
+ *
+ *  Policy (deliberately conservative — the write side stays the source of truth):
+ *   - EN viewer + a Perso-Arabic-script name -> transliterate to Latin. An English
+ *     reader genuinely cannot read the Arabic script; Latin is universal, and a
+ *     transliterated identifier fragment stays legible.
+ *   - UR / AR / FA / PS viewer -> NEVER re-spell. The four Perso-Arabic scripts
+ *     are mutually legible, so a name in any of them shows as-is; a Latin name is
+ *     kept verbatim (rule: original text is the fallback when no translation
+ *     exists — and phonetically re-spelling "[DEVTEST-20260813]" into Arabic
+ *     letters would corrupt an embedded identifier). A genuine curated UR/AR/FA/PS
+ *     translation still wins via Tier 1. */
+function properNameForDisplay(raw: string, lang: SupportedLanguage): string | null {
+  if (lang !== "en") return null;
+  const v = (raw || "").trim();
+  if (!v || isBusinessIdentifier(v)) return null;
+  if (!ARABIC_SCRIPT_RE.test(v)) return null;          // already Latin
+  const out = transliterateToLatin(v).trim();
+  if (!out || out.toLowerCase() === v.toLowerCase()) return null;
+  if (ARABIC_SCRIPT_RE.test(out) || !LATIN_LETTER_RE.test(out)) return null;  // incomplete render
+  return out;
+}
 
 // ── system_dictionary cache (approved terms only) ──────────────────────────
 let dictCache: Map<string, DictRow> | null = null;
@@ -190,6 +275,20 @@ export async function lookupApprovedDictionary(
   return genuine(d[targetCol as keyof DictRow] as string, raw, (d.english_text || "").trim(), lang === "en");
 }
 
+/**
+ * True when the caller wants the ORIGINAL, untranslated record — i.e. an EDIT
+ * FORM, which must always load the source-of-truth text so saving it back never
+ * overwrites the original with a display translation. Detail/profile VIEWS and
+ * lists/reports omit this and get the localized display value.
+ * Recognises `?raw=1`, `?raw=true`, `?localize=0`, `?localize=false`.
+ */
+export function wantsRawRecord(request: { nextUrl: { searchParams: URLSearchParams } } | URLSearchParams): boolean {
+  const sp = request instanceof URLSearchParams ? request : request.nextUrl.searchParams;
+  const raw = (sp.get("raw") || "").toLowerCase();
+  const loc = (sp.get("localize") ?? "").toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes" || loc === "0" || loc === "false" || loc === "no";
+}
+
 export async function localizeRecordNames<T extends { id: string }>(
   records: T[],
   table: string,
@@ -220,7 +319,8 @@ export async function localizeRecordNames<T extends { id: string }>(
   try {
     // Tier 1: this record's own translations.
     const rows = await sql.unsafe(
-      `select record_id, english_text, urdu_text, arabic_text, persian_text, pashto_text
+      `select record_id, english_text, urdu_text, arabic_text, persian_text, pashto_text,
+              translation_status, translated_by_engine
        from record_translations
        where record_table = $1 and field_name = $2 and deleted_at is null
          and record_id = any($3::uuid[])`,
@@ -230,6 +330,7 @@ export async function localizeRecordNames<T extends { id: string }>(
 
     // Tier 2: central approved dictionary (cached), only when needed & allowed.
     const dict = useDictionary ? await loadDictionary(sql) : null;
+    const properNoun = isProperNounField(table, field);
 
     return records.map((record) => {
       const rawValue = String(record[field] ?? "").trim();
@@ -237,8 +338,11 @@ export async function localizeRecordNames<T extends { id: string }>(
       const trans = recMap.get(record.id) as DictRow | undefined;
       const englishVal = (trans?.english_text || "").trim();
 
-      // Tier 1 — record-specific approved translation.
-      const targetText = trans ? (trans[targetCol as keyof DictRow] as string) : null;
+      // Tier 1 — record-specific approved translation. For a proper name, an
+      // unverified machine transliteration is NOT trusted — fall through to the
+      // fresh Tier-4 render instead of shipping the stale guess.
+      const trustStored = !properNoun || isTrustedStoredTranslation(trans);
+      const targetText = trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null;
       const recVal = genuine(targetText, rawValue, englishVal, isEn);
       if (recVal) return { ...record, [field]: recVal };
 
@@ -259,8 +363,16 @@ export async function localizeRecordNames<T extends { id: string }>(
         }
       }
 
-      // Tier 3 — honest original value (English preferred when viewing in English), no guessed spelling.
-      if (isEn && englishVal && englishVal !== rawValue) return { ...record, [field]: englishVal };
+      // Tier 3 — English source text when viewing in English (no guessed spelling).
+      if (isEn && trustStored && englishVal && englishVal !== rawValue) return { ...record, [field]: englishVal };
+
+      // Tier 4 — DISPLAY-ONLY: render a proper name in the viewer's script when
+      // there is no approved translation, so an EN viewer never sees Perso-Arabic
+      // script (and vice-versa). Never written back; free text is untouched.
+      if (properNoun) {
+        const disp = properNameForDisplay(rawValue, lang);
+        if (disp) return { ...record, [field]: disp };
+      }
       return record;
     });
   } finally {
@@ -304,7 +416,8 @@ export async function localizeRecordFields<T extends { id: string }>(
   const sql = getSharedPg()!;
   try {
     const rows = await sql.unsafe(
-      `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+      `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text,
+              translation_status, translated_by_engine
        from record_translations
        where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
          and record_id = any($3::uuid[])`,
@@ -322,9 +435,11 @@ export async function localizeRecordFields<T extends { id: string }>(
         if (!rawValue) continue;
         const trans = byIdField.get(`${record.id}::${field}`);
         const englishVal = (trans?.english_text || "").trim();
+        const proper = isProperNounField(table, field);
+        const trustStored = !proper || isTrustedStoredTranslation(trans);
         let resolved: string | null = null;
 
-        const targetText = trans ? (trans[targetCol as keyof DictRow] as string) : null;
+        const targetText = trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null;
         resolved = genuine(targetText, rawValue, englishVal, isEn);
 
         if (!resolved && dict) {
@@ -335,7 +450,13 @@ export async function localizeRecordFields<T extends { id: string }>(
             if (phrase) resolved = phrase;
           }
         }
-        if (!resolved && isEn && englishVal && englishVal !== rawValue) resolved = englishVal;
+        if (!resolved && isEn && trustStored && englishVal && englishVal !== rawValue) resolved = englishVal;
+
+        // Tier 4 — DISPLAY-ONLY proper-name script rendering (see localizeRecordNames).
+        if (!resolved && !options?.noPhrase && proper) {
+          const disp = properNameForDisplay(rawValue, lang);
+          if (disp) resolved = disp;
+        }
 
         if (resolved && resolved !== rawValue) {
           next = { ...(next ?? record), [field]: resolved };
@@ -395,7 +516,8 @@ export async function localizeRecordGroups(
       const useDictionary = !PROPER_NAME_TABLES.has(g.table) || Boolean(g.phraseFallback);
       const rows = await sql
         .unsafe(
-          `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+          `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text,
+                  translation_status, translated_by_engine
            from record_translations
            where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
              and record_id = any($3::uuid[])`,
@@ -413,8 +535,10 @@ export async function localizeRecordGroups(
             if (!rawValue) continue;
             const trans = byIdField.get(`${record.id}::${field}`);
             const englishVal = (trans?.english_text || "").trim();
+            const proper = isProperNounField(g.table, field);
+            const trustStored = !proper || isTrustedStoredTranslation(trans);
             let resolved: string | null = genuine(
-              trans ? (trans[targetCol as keyof DictRow] as string) : null,
+              trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null,
               rawValue,
               englishVal,
               isEn
@@ -427,7 +551,12 @@ export async function localizeRecordGroups(
                 if (phrase) resolved = phrase;
               }
             }
-            if (!resolved && isEn && englishVal && englishVal !== rawValue) resolved = englishVal;
+            if (!resolved && isEn && trustStored && englishVal && englishVal !== rawValue) resolved = englishVal;
+            // Tier 4 — DISPLAY-ONLY proper-name script rendering (see localizeRecordNames).
+            if (!resolved && proper) {
+              const disp = properNameForDisplay(rawValue, lang);
+              if (disp) resolved = disp;
+            }
             if (resolved && resolved !== rawValue) next = { ...(next ?? record), [field]: resolved };
           }
           return next ?? record;

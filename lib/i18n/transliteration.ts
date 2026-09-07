@@ -370,15 +370,20 @@ const REVERSE_SINGLES: Record<string, string> = {
   "ج": "j", "چ": "ch", "ح": "h", "خ": "kh", "د": "d", "ڈ": "d", "ذ": "z",
   "ر": "r", "ڑ": "r", "ز": "z", "ژ": "zh", "س": "s", "ش": "sh", "ص": "s",
   "ض": "z", "ط": "t", "ظ": "z", "ع": "a", "غ": "gh", "ف": "f", "ق": "q",
-  "ک": "k", "گ": "g", "ل": "l", "م": "m", "ن": "n", "ں": "n", "و": "w",
-  "ہ": "h", "ۃ": "h", "ة": "h", "ء": "", "ی": "y", "ے": "e", "ئ": "y",
+  "ک": "k", "ك": "k", "گ": "g", "ل": "l", "م": "m", "ن": "n", "ں": "n", "و": "w",
+  "ہ": "h", "ه": "h", "ۀ": "h", "ۃ": "h", "ة": "h", "ء": "", "ی": "y", "ے": "e", "ئ": "y",
   // Pashto-specific
   "ټ": "t", "ډ": "d", "ړ": "r", "ږ": "g", "ښ": "kh", "ځ": "z", "څ": "ts",
-  "ڼ": "n", "ۍ": "ai", "ې": "e",
+  "ڼ": "n", "ۍ": "ai", "ې": "e", "ۂ": "h", "ګ": "g", "ڲ": "g", "ڳ": "g", "ڱ": "ng",
   // Persian-specific / diacritics
-  "أ": "a", "إ": "e", "ؤ": "o", "ي": "y",
-  // Digits (Eastern Arabic-Indic) -> Latin
-  "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9"
+  "أ": "a", "إ": "e", "ؤ": "o", "ي": "y", "ٱ": "a", "ﻻ": "la",
+  // Tanween / harakat -> dropped
+  "ً": "", "ٌ": "", "ٍ": "", "َ": "", "ُ": "", "ِ": "", "ّ": "", "ْ": "", "ٓ": "", "ٰ": "a",
+  // Zero-width joiners / non-joiners -> dropped
+  "‌": "", "‍": "", "‎": "", "‏": "", "﻿": "",
+  // Digits — Eastern Arabic-Indic (Persian/Urdu) and Arabic-Indic -> Latin
+  "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
+  "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
 };
 
 /** Reverse of transliterateProperNoun: script text in ur/ar/fa/ps -> a Latin/English rendering. */
@@ -411,13 +416,44 @@ export function transliterateToLatin(text: string): string {
     i += 1;
   }
   // Collapse accidental double spaces/letters from the char-by-char pass and title-case words.
-  return out
-    .replace(/\s+/g, " ")
-    .trim()
+  let latin = out.replace(/\s+/g, " ").trim();
+
+  // Readability pass: Perso-Arabic script omits short vowels, so the raw char map
+  // yields consonant clusters ("Mhmd", "Ywsf"). Fix the most common Islamic name
+  // fragments to their conventional Latin spelling (whole-word, case-insensitive).
+  for (const [re, rep] of LATIN_NAME_CORRECTIONS) latin = latin.replace(re, rep);
+
+  return latin
     .split(" ")
     .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
     .join(" ");
 }
+
+// Common Perso-Arabic personal / place name fragments -> conventional Latin spelling.
+// Applied after the char-by-char pass, whole-word only, so it never mangles a
+// genuine word it does not know (that word just stays consonant-only).
+const LATIN_NAME_CORRECTIONS: Array<[RegExp, string]> = ([
+  ["mhmd", "muhammad"], ["mohmd", "mohammad"], ["ahmd", "ahmad"], ["ahmed", "ahmed"],
+  ["hamd", "hamid"], ["mahmwd", "mahmood"], ["mahmwod", "mahmood"], ["mhmwd", "mahmood"],
+  ["ywsf", "yousuf"], ["ywswf", "yousuf"], ["ysf", "yousuf"], ["ibrahym", "ibrahim"],
+  ["ismayyl", "ismail"], ["ismaayl", "ismail"], ["abdallh", "abdullah"], ["abdallah", "abdullah"],
+  ["abdalrhmn", "abdurrahman"], ["abdalrahman", "abdurrahman"], ["rhmn", "rahman"],
+  ["rhym", "rahim"], ["karym", "karim"], ["halym", "halim"], ["hakym", "hakim"],
+  ["shryf", "sharif"], ["nabyl", "nabil"], ["jamyl", "jamil"], ["khalyl", "khalil"],
+  ["saayd", "saeed"], ["sayyd", "sayed"], ["syd", "syed"], ["zynb", "zainab"],
+  ["ftmh", "fatima"], ["fatmh", "fatima"], ["aayshh", "aisha"], ["aaysh", "aisha"],
+  ["khan", "khan"], ["hsyn", "hussain"], ["hussyn", "hussain"], ["hsn", "hassan"],
+  ["ali", "ali"], ["aly", "ali"], ["akbry", "akbari"], ["akbr", "akbar"],
+  ["kabl", "kabul"], ["qndhar", "kandahar"], ["qandhar", "kandahar"], ["hrat", "herat"],
+  ["jlalabad", "jalalabad"], ["mzar", "mazar"], ["qwyth", "quetta"], ["qyth", "quetta"],
+  ["chmn", "chaman"], ["pshawr", "peshawar"], ["lahwr", "lahore"], ["krachy", "karachi"],
+  ["nngrhar", "nangarhar"], ["ngrhar", "nangarhar"], ["swdagr", "sodagar"], ["swdagar", "sodagar"],
+  ["tjarty", "tijarati"], ["tjarty", "tijarati"], ["adarh", "idara"], ["sharkt", "sharikat"],
+  ["mnh", "manra"], ["baba", "baba"], ["saheb", "saheb"], ["hajy", "haji"], ["haajy", "haji"],
+  ["dbyy", "dubai"], ["abwzby", "abu dhabi"], ["shrjh", "sharjah"], ["tstyng", "testing"],
+  ["tyst", "test"], ["kmpny", "company"], ["kmpany", "company"], ["trady", "trading"],
+  ["trdyng", "trading"], ["gljstan", "gulistan"], ["glstan", "gulistan"], ["fwd", "food"],
+] as Array<[string, string]>).map(([k, v]) => [new RegExp(`\\b${k}\\b`, "gi"), v]);
 
 /** Localize or transliterate any business/entity term dynamically into the target language. */
 export function localizeTerm(val: string | null | undefined, lang: string = "en"): string {
