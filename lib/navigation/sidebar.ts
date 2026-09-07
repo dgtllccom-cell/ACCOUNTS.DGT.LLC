@@ -1446,6 +1446,14 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-financials-panel",
+        labelKey: "nav.financial_statements_report_shell" as any,
+        iconKey: "scale",
+        href: "/dashboard/reports/financials" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
