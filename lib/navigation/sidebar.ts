@@ -1374,6 +1374,22 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-customers-panel",
+        labelKey: "nav.customer_report_shell" as any,
+        iconKey: "users",
+        href: "/dashboard/reports/customers" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-hr-panel",
+        labelKey: "nav.hr_report_shell" as any,
+        iconKey: "users",
+        href: "/dashboard/reports/hr" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "city_branch_admin", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
