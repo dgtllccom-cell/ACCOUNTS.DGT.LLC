@@ -26,6 +26,16 @@ const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superad
 const BOOTSTRAP_PASSWORD = (process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "").trim();
 const BOOTSTRAP_ENABLED = BOOTSTRAP_PASSWORD.length > 0;
 
+// Legacy plaintext `profiles.raw_password` login. OFF in production. Only on when
+// demo auth is enabled, or an operator sets ALLOW_LEGACY_RAW_PASSWORD_LOGIN=true
+// to migrate legacy accounts. When off, the column is never even read.
+function legacyRawPwLoginEnabled() {
+  return (
+    isDemoAuthEnabled() ||
+    String(process.env.ALLOW_LEGACY_RAW_PASSWORD_LOGIN || "").toLowerCase() === "true"
+  );
+}
+
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || "";
   const acceptHeader = request.headers.get("accept") || "";
@@ -82,16 +92,20 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createSupabaseAdminClient() as any;
+  const legacyRawPwAllowed = legacyRawPwLoginEnabled();
+  const profileSelect = legacyRawPwAllowed
+    ? "id, user_code, full_name, raw_password"
+    : "id, user_code, full_name";
 
   // 1. Look up profile in database with flexible city/email/userCode matching
   let profileRecord: any = null;
   const cleanId = rawIdentifier.replace(/@dgt\.llc$/i, "").trim().toLowerCase();
-  
+
   try {
     // A. Direct user_code match
     const { data: profile } = await admin
       .from("profiles")
-      .select("id, user_code, full_name, raw_password")
+      .select(profileSelect)
       .or(`user_code.ilike.${rawIdentifier},user_code.ilike.${cleanId}`)
       .is("deleted_at", null)
       .limit(1)
@@ -112,7 +126,7 @@ export async function POST(request: NextRequest) {
       if (matchedCity) {
         const { data: cityProfile } = await admin
           .from("profiles")
-          .select("id, user_code, full_name, raw_password")
+          .select(profileSelect)
           .ilike("full_name", `%${matchedCity}%`)
           .is("deleted_at", null)
           .limit(1)
@@ -163,13 +177,6 @@ export async function POST(request: NextRequest) {
   // it is scheduled for removal once every active account has a Supabase Auth
   // credential. There is NO hardcoded password bypass here.
   let isAuthenticated = false;
-
-  // Recovery hatch: an operator can set ALLOW_LEGACY_RAW_PASSWORD_LOGIN=true to
-  // temporarily re-enable the plaintext compare on a non-demo environment while
-  // migrating legacy accounts to Supabase Auth. Defaults to OFF.
-  const legacyRawPwAllowed =
-    isDemoAuthEnabled() ||
-    String(process.env.ALLOW_LEGACY_RAW_PASSWORD_LOGIN || "").toLowerCase() === "true";
 
   if (profileRecord) {
     const hasLegacyRawPwMatch =
