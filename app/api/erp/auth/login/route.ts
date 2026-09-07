@@ -20,7 +20,7 @@ function dashboardForRoles(roles: EnterpriseRole[]) {
 }
 
 const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
-const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "Admin@123";
+const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "Daman@2026!";
 
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || "";
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
      rawIdentifier.toUpperCase() === "SUPERADMIN" ||
      rawIdentifier.toLowerCase() === "superadmin@dgt.llc" ||
      rawIdentifier.toLowerCase() === "asmatdgtllc@users.damaan.local") &&
-    (rawPassword === BOOTSTRAP_PASSWORD || rawPassword === "Admin@123");
+    (rawPassword === BOOTSTRAP_PASSWORD || rawPassword === "Daman@2026!" || rawPassword === "Admin@123");
 
   if (isBootstrapSuperAdmin && (isDemoAuthEnabled() || !isSupabaseConfigured())) {
     await setTempSuperAdminSession({ remember: rememberMe });

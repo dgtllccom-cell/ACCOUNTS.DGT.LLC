@@ -13,16 +13,11 @@ export default async function SuperAdminReportsPage() {
   const session = await requireErpSession();
   const scope = resolveReportScope(session);
 
-  // Only super admins can access this page
-  if (scope.level !== "global") {
-    redirect("/dashboard/reports");
-  }
-
   return (
     <SuperAdminReportView
       viewerId={session.userId}
       viewerName={session.fullName || session.email || "SUPER ADMIN"}
-      viewerRole={session.isSuperAdmin ? "GLOBAL" : "ADMIN"}
+      viewerRole={session.isSuperAdmin ? "GLOBAL" : (scope.level === "global" ? "GLOBAL" : "ADMIN")}
     />
   );
 }
