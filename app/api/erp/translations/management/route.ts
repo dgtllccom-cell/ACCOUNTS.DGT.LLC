@@ -119,12 +119,15 @@ export async function GET(request: NextRequest) {
     const viaPgRows = await withLocalPg(async (sql) => {
       const like = `%${term}%`;
       const rows = await sql`
-        select * from record_translations
-        where deleted_at is null
-          ${moduleFilter ? sql`and record_table = ${moduleFilter}` : sql``}
-          ${term ? sql`and (original_text ilike ${like} or field_name ilike ${like} or english_text ilike ${like}
-            or urdu_text ilike ${like} or pashto_text ilike ${like} or persian_text ilike ${like} or arabic_text ilike ${like})` : sql``}
-        order by updated_at desc
+        select rt.* from record_translations rt
+        where rt.deleted_at is null
+          and not (rt.record_table = 'customers' and exists (select 1 from customers c where c.id = rt.record_id::uuid and c.deleted_at is not null))
+          and not (rt.record_table = 'companies' and exists (select 1 from companies comp where comp.id = rt.record_id::uuid and comp.deleted_at is not null))
+          and not (rt.record_table = 'employees' and exists (select 1 from employees emp where emp.id = rt.record_id::uuid and emp.deleted_at is not null))
+          ${moduleFilter ? sql`and rt.record_table = ${moduleFilter}` : sql``}
+          ${term ? sql`and (rt.original_text ilike ${like} or rt.field_name ilike ${like} or rt.english_text ilike ${like}
+            or rt.urdu_text ilike ${like} or rt.pashto_text ilike ${like} or rt.persian_text ilike ${like} or rt.arabic_text ilike ${like})` : sql``}
+        order by rt.updated_at desc
         limit ${limit}`;
       return rows as any[];
     });

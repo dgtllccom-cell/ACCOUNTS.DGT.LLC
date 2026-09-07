@@ -33,7 +33,8 @@ import {
   Briefcase,
   IdCard,
   Building,
-  UserPlus
+  UserPlus,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,193 +61,11 @@ export interface EmployeeRecord {
   fatherName?: string;
 }
 
-const INITIAL_EMPLOYEES: EmployeeRecord[] = [
-  {
-    id: "emp-1",
-    empCode: "EMP-001",
-    name: "Abdul Rahman",
-    initials: "AR",
-    avatarColor: "from-purple-500 to-indigo-600",
-    department: "Accounts",
-    position: "Accountant",
-    branch: "Karachi Main",
-    country: "Pakistan",
-    mobile: "+92 300 1234567",
-    whatsapp: "+923001234567",
-    email: "abdul.rahman@dgt.llc",
-    status: "Active",
-    joinDate: "12 Jan 2024",
-    salary: "PKR 145,000",
-    fatherName: "Muhammad Ibrahim"
-  },
-  {
-    id: "emp-2",
-    empCode: "EMP-002",
-    name: "Sara Khan",
-    initials: "SK",
-    avatarColor: "from-pink-500 to-rose-500",
-    department: "HR",
-    position: "HR Officer",
-    branch: "Karachi Main",
-    country: "Pakistan",
-    mobile: "+92 301 9876543",
-    whatsapp: "+923019876543",
-    email: "sara.khan@dgt.llc",
-    status: "Active",
-    joinDate: "18 Feb 2024",
-    salary: "PKR 130,000",
-    fatherName: "Tariq Khan"
-  },
-  {
-    id: "emp-3",
-    empCode: "EMP-003",
-    name: "Muhammad Khan",
-    initials: "MK",
-    avatarColor: "from-blue-500 to-cyan-600",
-    department: "Purchase",
-    position: "Purchase Officer",
-    branch: "Lahore Branch",
-    country: "Pakistan",
-    mobile: "+92 321 4567890",
-    whatsapp: "+923214567890",
-    email: "m.khan@dgt.llc",
-    status: "Active",
-    joinDate: "05 Mar 2024",
-    salary: "PKR 125,000",
-    fatherName: "Wali Khan"
-  },
-  {
-    id: "emp-4",
-    empCode: "EMP-004",
-    name: "Fatima Ali",
-    initials: "FA",
-    avatarColor: "from-amber-500 to-orange-500",
-    department: "Sales",
-    position: "Sales Executive",
-    branch: "Islamabad",
-    country: "Pakistan",
-    mobile: "+92 333 1122334",
-    whatsapp: "+923331122334",
-    email: "fatima.ali@dgt.llc",
-    status: "Active",
-    joinDate: "20 Mar 2024",
-    salary: "PKR 140,000",
-    fatherName: "Ali Asghar"
-  },
-  {
-    id: "emp-5",
-    empCode: "EMP-005",
-    name: "Rashid Ahmed",
-    initials: "RA",
-    avatarColor: "from-emerald-500 to-teal-600",
-    department: "Logistics",
-    position: "Logistics Officer",
-    branch: "Karachi Main",
-    country: "Pakistan",
-    mobile: "+92 321 5678901",
-    whatsapp: "+923215678901",
-    email: "rashid.ahmed@dgt.llc",
-    status: "On Leave",
-    joinDate: "10 Apr 2024",
-    salary: "PKR 115,000",
-    fatherName: "Ahmed Jan"
-  },
-  {
-    id: "emp-6",
-    empCode: "EMP-006",
-    name: "Nadia Malik",
-    initials: "NM",
-    avatarColor: "from-emerald-400 to-green-600",
-    department: "i-Documents",
-    position: "Document Officer",
-    branch: "Dubai Office",
-    country: "United Arab Emirates",
-    mobile: "+971 50 1234567",
-    whatsapp: "+971501234567",
-    email: "nadia.malik@dgt.llc",
-    status: "Active",
-    joinDate: "22 Apr 2024",
-    salary: "AED 7,500",
-    fatherName: "Malik Usman"
-  },
-  {
-    id: "emp-7",
-    empCode: "EMP-007",
-    name: "Zahid Hussain",
-    initials: "ZH",
-    avatarColor: "from-red-500 to-rose-600",
-    department: "Inventory",
-    position: "Inventory Officer",
-    branch: "Peshawar",
-    country: "Pakistan",
-    mobile: "+92 333 6789012",
-    whatsapp: "+923336789012",
-    email: "zahid.hussain@dgt.llc",
-    status: "Active",
-    joinDate: "15 May 2024",
-    salary: "PKR 110,000",
-    fatherName: "Ghulam Hussain"
-  },
-  {
-    id: "emp-8",
-    empCode: "EMP-008",
-    name: "Samina Akhtar",
-    initials: "SA",
-    avatarColor: "from-blue-400 to-indigo-600",
-    department: "Admin",
-    position: "Admin Assistant",
-    branch: "Karachi Main",
-    country: "Pakistan",
-    mobile: "+92 300 7890123",
-    whatsapp: "+923007890123",
-    email: "samina.akhtar@dgt.llc",
-    status: "Inactive",
-    joinDate: "01 Jun 2024",
-    salary: "PKR 95,000",
-    fatherName: "Akhtar Abbas"
-  },
-  {
-    id: "emp-9",
-    empCode: "EMP-009",
-    name: "Bilal Tariq",
-    initials: "BT",
-    avatarColor: "from-cyan-500 to-blue-600",
-    department: "Accounts",
-    position: "Senior Accountant",
-    branch: "Quetta Main",
-    country: "Pakistan",
-    mobile: "+92 345 8899001",
-    whatsapp: "+923458899001",
-    email: "bilal.tariq@dgt.llc",
-    status: "Active",
-    joinDate: "14 Jun 2024",
-    salary: "PKR 160,000",
-    fatherName: "Tariq Mehmood"
-  },
-  {
-    id: "emp-10",
-    empCode: "EMP-010",
-    name: "Usman Ghani",
-    initials: "UG",
-    avatarColor: "from-violet-500 to-purple-600",
-    department: "Logistics",
-    position: "Transit Coordinator",
-    branch: "Chaman Border",
-    country: "Pakistan",
-    mobile: "+92 312 9988776",
-    whatsapp: "+923129988776",
-    email: "usman.ghani@dgt.llc",
-    status: "Active",
-    joinDate: "02 Jul 2024",
-    salary: "PKR 120,000",
-    fatherName: "Noor Ghani"
-  }
-];
-
 export function VipRegisterEmployeeView() {
   const { lang, dir } = useActiveLanguage();
 
-  const [employees, setEmployees] = useState<EmployeeRecord[]>(INITIAL_EMPLOYEES);
+  const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -254,6 +73,78 @@ export function VipRegisterEmployeeView() {
   const [selectedCountry, setSelectedCountry] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
+
+  const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/erp/employees?limit=500");
+      const json = await res.json();
+      const list = json.ok && Array.isArray(json.data?.employees)
+        ? json.data.employees
+        : Array.isArray(json.employees)
+        ? json.employees
+        : [];
+
+      const mapped: EmployeeRecord[] = list.map((emp: any, idx: number) => {
+        const empName = emp.name || emp.full_name || emp.customer_name || "Employee";
+        const initials = empName
+          .split(" ")
+          .filter(Boolean)
+          .map((w: string) => w[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase() || "EM";
+        const colors = [
+          "from-purple-500 to-indigo-600",
+          "from-blue-500 to-cyan-600",
+          "from-emerald-500 to-teal-600",
+          "from-amber-500 to-orange-500",
+          "from-rose-500 to-pink-600"
+        ];
+        const avatarColor = colors[idx % colors.length];
+        return {
+          id: emp.id,
+          empCode: emp.employee_code || `EMP-${String(idx + 1).padStart(3, "0")}`,
+          name: empName,
+          initials,
+          avatarColor,
+          department: emp.department || "General",
+          position: emp.designation || "Staff",
+          branch: emp.branch || emp.branch_name || "Main Headquarters",
+          country: emp.country?.name || emp.country_name || "Pakistan",
+          mobile: emp.mobile || "—",
+          whatsapp: emp.whatsapp || emp.mobile?.replace(/\D/g, "") || "",
+          email: emp.email || "—",
+          status: emp.status === "On Leave" ? "On Leave" : (emp.status === "Inactive" || emp.is_active === false ? "Inactive" : "Active"),
+          joinDate: emp.created_at ? new Date(emp.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—",
+          salary: emp.basic_salary ? `${emp.salary_currency || "USD"} ${emp.basic_salary}` : "—",
+          fatherName: emp.father_name || "—"
+        };
+      });
+
+      setEmployees(mapped);
+    } catch (err) {
+      console.error("Failed to load employees:", err);
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  // Computed dynamic stats from real database data
+  const stats = useMemo(() => {
+    const total = employees.length;
+    const active = employees.filter(e => e.status === "Active").length;
+    const onLeave = employees.filter(e => e.status === "On Leave").length;
+    const inactive = employees.filter(e => e.status === "Inactive").length;
+    const departments = new Set(employees.map(e => e.department).filter(Boolean)).size;
+    const branches = new Set(employees.map(e => e.branch).filter(Boolean)).size;
+    return { total, active, onLeave, inactive, departments, branches };
+  }, [employees]);
 
   // Checkbox selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -341,66 +232,52 @@ export function VipRegisterEmployeeView() {
   };
 
   // Register New Employee
-  const handleSaveEmployee = (e: React.FormEvent) => {
+  const handleSaveEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name?.trim()) return;
 
-    const newEmpCode = `EMP-${String(employees.length + 1).padStart(3, "0")}`;
-    const initials = formData.name
-      .split(" ")
-      .map(w => w[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-
-    const colors = [
-      "from-purple-500 to-indigo-600",
-      "from-blue-500 to-cyan-600",
-      "from-emerald-500 to-teal-600",
-      "from-amber-500 to-orange-500",
-      "from-rose-500 to-pink-600"
-    ];
-    const avatarColor = colors[Math.floor(Math.random() * colors.length)];
-
-    const newRecord: EmployeeRecord = {
-      id: `emp-${Date.now()}`,
-      empCode: newEmpCode,
-      name: formData.name,
-      fatherName: formData.fatherName || "—",
-      initials,
-      avatarColor,
-      department: formData.department || "Accounts",
-      position: formData.position || "Staff",
-      branch: formData.branch || "Karachi Main",
-      country: formData.country || "Pakistan",
-      mobile: formData.mobile || "+92 300 0000000",
-      whatsapp: formData.whatsapp || formData.mobile?.replace(/\D/g, "") || "",
-      email: formData.email || `${formData.name.toLowerCase().replace(/\s+/g, ".")}@dgt.llc`,
-      status: (formData.status as any) || "Active",
-      joinDate: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-      salary: formData.salary || "PKR 100,000"
-    };
-
-    setEmployees(prev => [newRecord, ...prev]);
-    setIsRegisterOpen(false);
-    setFormData({
-      name: "",
-      fatherName: "",
-      department: "Accounts",
-      position: "Accountant",
-      branch: "Karachi Main",
-      country: "Pakistan",
-      mobile: "",
-      whatsapp: "",
-      email: "",
-      status: "Active",
-      salary: ""
-    });
+    try {
+      const res = await fetch("/api/erp/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          employeeCode: `EMP-${String(employees.length + 1).padStart(4, "0")}`,
+          designation: formData.position || "Staff",
+          department: formData.department || "General",
+          isActive: formData.status !== "Inactive"
+        })
+      });
+      if (res.ok) {
+        loadEmployees();
+        setIsRegisterOpen(false);
+        setFormData({
+          name: "",
+          fatherName: "",
+          department: "Accounts",
+          position: "Accountant",
+          branch: "Karachi Main",
+          country: "Pakistan",
+          mobile: "",
+          whatsapp: "",
+          email: "",
+          status: "Active",
+          salary: ""
+        });
+      }
+    } catch (err) {
+      console.error("Save employee error:", err);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this employee record?")) {
-      setEmployees(prev => prev.filter(e => e.id !== id));
+      try {
+        await fetch(`/api/erp/hr-payroll/employees/${id}`, { method: "DELETE" });
+        loadEmployees();
+      } catch (err) {
+        console.error("Delete employee error:", err);
+      }
       setActiveActionMenu(null);
     }
   };
@@ -471,8 +348,7 @@ export function VipRegisterEmployeeView() {
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Total Employees</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">54</span>
-              <span className="text-[10px] font-extrabold text-emerald-600">↑+12%</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats.total}</span>
             </div>
             <span className="text-[10px] font-semibold text-slate-400 block">All Countries</span>
           </div>
@@ -486,8 +362,7 @@ export function VipRegisterEmployeeView() {
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Active Employees</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">48</span>
-              <span className="text-[10px] font-extrabold text-emerald-600">↑+8%</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats.active}</span>
             </div>
             <span className="text-[10px] font-semibold text-slate-400 block">Currently Working</span>
           </div>
@@ -501,8 +376,7 @@ export function VipRegisterEmployeeView() {
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">On Leave</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">3</span>
-              <span className="text-[10px] font-extrabold text-amber-600">↑ -1</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats.onLeave}</span>
             </div>
             <span className="text-[10px] font-semibold text-slate-400 block">This Month</span>
           </div>
@@ -516,8 +390,7 @@ export function VipRegisterEmployeeView() {
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Inactive Employees</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">3</span>
-              <span className="text-[10px] font-extrabold text-rose-600">↓ -2</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats.inactive}</span>
             </div>
             <span className="text-[10px] font-semibold text-slate-400 block">Resigned / Inactive</span>
           </div>
@@ -531,7 +404,7 @@ export function VipRegisterEmployeeView() {
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Departments</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">8</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats.departments}</span>
             </div>
             <span className="text-[10px] font-semibold text-slate-400 block">All Branches</span>
           </div>
@@ -545,9 +418,9 @@ export function VipRegisterEmployeeView() {
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Branches</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">5</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats.branches}</span>
             </div>
-            <span className="text-[10px] font-semibold text-slate-400 block truncate">Pak • UAE • Afg...</span>
+            <span className="text-[10px] font-semibold text-slate-400 block truncate">Active Locations</span>
           </div>
           <div className="h-11 w-11 rounded-2xl bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-300 shadow-2xs">
             <Building2 className="h-5 w-5" />
@@ -794,7 +667,14 @@ export function VipRegisterEmployeeView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-              {paginatedEmployees.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={11} className="py-16 text-center text-slate-400">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500 mb-2" />
+                    <span>Loading employees from database...</span>
+                  </td>
+                </tr>
+              ) : paginatedEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-slate-400">
                     No employees matching filter criteria.
