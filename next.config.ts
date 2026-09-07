@@ -155,6 +155,61 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/purchase/new-purchase-booking-order",
         permanent: false,
       },
+      {
+        source: "/dashboard/settlement-reconciliation",
+        destination: "/dashboard/settlement",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/document-management",
+        destination: "/dashboard/documents",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/document-intake",
+        destination: "/dashboard/document-intelligence",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/general-office/attendance",
+        destination: "/dashboard/general-office/leave-attendance",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/banks",
+        destination: "/dashboard/settings/bank",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/settings/banks",
+        destination: "/dashboard/settings/bank",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/settings/warehouses",
+        destination: "/dashboard/settings/warehouse",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/ai",
+        destination: "/dashboard/ai-entry/voice-text",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/ai-calls",
+        destination: "/dashboard/customer-inquiries",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/reports/ledger",
+        destination: "/dashboard/ledger/general-report",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/ledger/branch/detailed",
+        destination: "/dashboard/ledger/detailed",
+        permanent: false,
+      },
     ];
   },
   async headers() {
