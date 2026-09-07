@@ -5,8 +5,9 @@
  * -------------------------------------------------------------
  * Custom Sidebar precisely matching Daman Business Group visual specification:
  * - Pure white aesthetic with deep navy typography
- * - Dynamic accordion with blue pill background and crisp blue left indicator
- * - Sub-items indented with matching icons
+ * - Top-level categories match user's screenshot exactly
+ * - Nested sub-menus for Purchase (including Local Purchase), Sales, Trade, Reports, etc.
+ * - Dynamic multi-tier accordions with active blue styling
  * - "Need Help?" support card with "Get Support" button
  * - "<< Collapse Menu" footer
  */
@@ -26,7 +27,14 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronsLeft,
+  CircleDollarSign,
+  ClipboardList,
+  Clock,
   Container,
+  CreditCard,
+  Database,
+  FileBarChart,
+  FileCheck2,
   FileSpreadsheet,
   FileText,
   Globe,
@@ -37,17 +45,22 @@ import {
   Layers,
   ListPlus,
   Package,
+  Receipt,
   RefreshCw,
   ScanLine,
+  ScrollText,
   Settings,
+  ShieldAlert,
   ShieldCheck,
   Ship,
   ShoppingCart,
   Sparkles,
+  Split,
   Star,
   TrendingUp,
   Truck,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -55,10 +68,18 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 /* ---------------- Types ---------------- */
-export type SidebarSubItem = {
+export type SidebarDeepChild = {
   label: string;
   href: string;
+  icon?: ComponentType<{ className?: string }>;
+};
+
+export type SidebarSubItem = {
+  key?: string;
+  label: string;
+  href?: string;
   icon: ComponentType<{ className?: string }>;
+  children?: SidebarDeepChild[];
 };
 
 export type SidebarMenuItem = {
@@ -83,11 +104,42 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "New Entry",
     icon: ScanLine,
     children: [
-      { label: "Branch Entry", href: "/dashboard/new-entry/branch-entry/city-branch", icon: Building2 },
-      { label: "User Registration", href: "/dashboard/new-entry/users/registration", icon: Users },
-      { label: "Account Setup", href: "/dashboard/accounts/setup", icon: BookOpen },
-      { label: "New Ledger Account", href: "/dashboard/ledger/new", icon: BookOpen },
+      {
+        key: "ne-branch",
+        label: "Branch & Network",
+        icon: Building2,
+        children: [
+          { label: "Country Branch Entry", href: "/dashboard/new-entry/branch-entry/country-branch", icon: Globe2 },
+          { label: "City Branch Entry", href: "/dashboard/new-entry/branch-entry/city-branch", icon: Building2 },
+          { label: "Super Admin Branch", href: "/dashboard/new-entry/branches/super-admin", icon: Building2 },
+          { label: "Branch General Report", href: "/dashboard/branch-management/general-report", icon: FileBarChart },
+          { label: "Locations Management", href: "/dashboard/settings/locations", icon: Globe },
+        ],
+      },
+      {
+        key: "ne-users",
+        label: "User Accounts",
+        icon: Users,
+        children: [
+          { label: "User Registration", href: "/dashboard/new-entry/users/registration", icon: Users },
+          { label: "All Users Report", href: "/dashboard/new-entry/users/all", icon: FileText },
+          { label: "Super Admin User", href: "/dashboard/new-entry/users/super-admin", icon: Users },
+          { label: "Country User", href: "/dashboard/new-entry/users/country", icon: Users },
+          { label: "Branch User", href: "/dashboard/new-entry/users/branch", icon: Users },
+        ],
+      },
+      {
+        key: "ne-accounts",
+        label: "Accounts & Ledger Setup",
+        icon: BookOpen,
+        children: [
+          { label: "New Account Setup", href: "/dashboard/accounts/setup", icon: BookOpen },
+          { label: "New Ledger Account", href: "/dashboard/ledger/new", icon: BookOpenText },
+          { label: "Accounts General Report", href: "/dashboard/new-entry/accounts/general-report", icon: FileBarChart },
+        ],
+      },
       { label: "Register Employee", href: "/dashboard/general-office/employees", icon: Users },
+      { label: "Share Form External Links", href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
       { label: "New Entry Hub", href: "/dashboard/new-entry", icon: ListPlus },
     ],
   },
@@ -96,18 +148,28 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Ledgers",
     icon: BookOpen,
     children: [
-      { label: "New Ledger", href: "/dashboard/ledger/new", icon: BookOpen },
-      { label: "Super Admin Detailed", href: "/dashboard/ledger/super-admin/detailed", icon: FileText },
-      { label: "Country Detailed", href: "/dashboard/ledger/country/detailed", icon: FileText },
-      { label: "General Report", href: "/dashboard/ledger/general-report", icon: FileText },
-      { label: "Outstanding Ledgers", href: "/dashboard/ledger/outstanding", icon: FileText },
+      { label: "New Ledger Account", href: "/dashboard/ledger/new", icon: BookOpen },
+      { label: "Super Admin Detailed Ledger", href: "/dashboard/ledger/super-admin/detailed", icon: FileText },
+      { label: "Country Detailed Ledger", href: "/dashboard/ledger/country/detailed", icon: FileText },
+      { label: "Branch Detailed Ledger", href: "/dashboard/ledger/branch/detailed", icon: FileText },
+      { label: "Ledger General Report", href: "/dashboard/ledger/general-report", icon: FileBarChart },
+      { label: "Outstanding Ledgers Report", href: "/dashboard/ledger/outstanding", icon: FileSpreadsheet },
     ],
   },
   {
     key: "daily-payment",
     label: "Daily Payment Entry",
     icon: FileText,
-    href: "/dashboard/roznamcha/cash-entry",
+    children: [
+      { label: "Daily Cash Entry (Roznamcha)", href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
+      { label: "Purchase Order Payment (Advance)", href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt },
+      { label: "Purchase Order Payment (Remaining)", href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard },
+      { label: "Purchase Payment History", href: "/dashboard/journal/purchase-order-payment/history", icon: Clock },
+      { label: "Sales Order Payment", href: "/dashboard/journal/sales-order-payment/advance", icon: CircleDollarSign },
+      { label: "Daily Operational Expenses", href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
+      { label: "Office / Home Expenses Bill", href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
+      { label: "Money Exchange (Currency Changer)", href: "/dashboard/roznamcha/money-exchange", icon: RefreshCw },
+    ],
   },
   {
     key: "purchase-sales-trade",
@@ -115,10 +177,62 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: ShoppingCart,
     defaultOpen: true,
     children: [
-      { label: "Purchase", href: "/dashboard/purchase/new-purchase-booking-order", icon: FileText },
-      { label: "Sales", href: "/dashboard/sales", icon: TrendingUp },
-      { label: "Other Country Trade", href: "/dashboard/purchase/country-transfer", icon: Globe },
-      { label: "Bill Cost, Expenses & Profit", href: "/dashboard/bill-cost-profit", icon: FileSpreadsheet },
+      {
+        key: "sub-purchase",
+        label: "Purchase",
+        icon: FileText,
+        children: [
+          { label: "Purchase Booking", href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
+          { label: "Local Purchase", href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
+          { label: "Local Purchase Payment / Transfer", href: "/dashboard/purchase/local-purchase-transfer-payment", icon: Receipt },
+          { label: "Local Purchase Journal Report", href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
+          { label: "Local Goods Received", href: "/dashboard/purchase/local-goods-received", icon: Package },
+          { label: "Country-to-Country Transfer", href: "/dashboard/purchase/country-transfer", icon: Globe },
+          { label: "Purchase Order & Payment", href: "/dashboard/purchase/purchase-order", icon: CreditCard },
+          { label: "Booking Purchase Confirmation", href: "/dashboard/purchase/purchase-confirm", icon: CheckSquare },
+          { label: "Purchase Loading Records", href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
+          { label: "Completed Purchase Bills", href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
+          { label: "Purchase Order Tracking", href: "/dashboard/purchase/purchase-order-tracking", icon: Clock },
+          { label: "Purchase Booking Journal Report", href: "/dashboard/purchase/purchase-booking-journal-report", icon: FileBarChart },
+        ],
+      },
+      {
+        key: "sub-sales",
+        label: "Sales",
+        icon: TrendingUp,
+        children: [
+          { label: "New Sales Booking Order", href: "/dashboard/sales/new-sales-booking-order", icon: ClipboardList },
+          { label: "Local Sales", href: "/dashboard/sales/local-sales", icon: ShoppingCart },
+          { label: "Sales Order & Payment Transfer", href: "/dashboard/sales/sales-order", icon: Receipt },
+          { label: "Confirmed Sales Orders", href: "/dashboard/sales/sales-confirm", icon: CheckSquare },
+          { label: "Sales Booking Journal Report", href: "/dashboard/sales/sales-booking-journal-report", icon: FileBarChart },
+        ],
+      },
+      {
+        key: "sub-trade",
+        label: "Other Country Trade",
+        icon: Globe,
+        children: [
+          { label: "Country-to-Country Transfer", href: "/dashboard/purchase/country-transfer", icon: Globe },
+          { label: "Inter-Country Transfers", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
+          { label: "Country Purchase Reports", href: "/dashboard/purchase/country-purchase-reports", icon: FileBarChart },
+          { label: "Country Purchase Timeline", href: "/dashboard/purchase/country-purchase-timeline", icon: Clock },
+        ],
+      },
+      {
+        key: "sub-bcp",
+        label: "Bill Cost, Expenses & Profit",
+        icon: FileSpreadsheet,
+        children: [
+          { label: "Bill Cost & Profit Overview", href: "/dashboard/bill-cost-profit", icon: BarChart3 },
+          { label: "Bill Expenses Entry", href: "/dashboard/expenses/bill-expenses", icon: Banknote },
+          { label: "Business Edit Invoice", href: "/dashboard/business-edit-invoice", icon: FileText },
+          { label: "BCP Purchase Cost Audit", href: "/dashboard/bill-cost-profit/purchase", icon: ShoppingCart },
+          { label: "BCP Sales Profit Analytics", href: "/dashboard/bill-cost-profit/sales", icon: TrendingUp },
+          { label: "BCP Operational Expenses", href: "/dashboard/bill-cost-profit/expenses", icon: Receipt },
+          { label: "BCP Universal Reports", href: "/dashboard/bill-cost-profit/reports", icon: FileBarChart },
+        ],
+      },
     ],
   },
   {
@@ -126,10 +240,16 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Journal Stock",
     icon: Boxes,
     children: [
-      { label: "Stock Register", href: "/dashboard/inventory", icon: Package },
-      { label: "Stock Reports", href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
+      { label: "Stock Register / Inventory", href: "/dashboard/inventory", icon: Package },
+      { label: "Stock Reports (Branch)", href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
+      { label: "Stock Reports (Country)", href: "/dashboard/inventory/stock-reports/country", icon: Globe },
+      { label: "Stock Reports (Salesman)", href: "/dashboard/inventory/stock-reports/salesman", icon: Users },
       { label: "Warehouse Stock", href: "/dashboard/purchase/stock/warehouse", icon: Boxes },
+      { label: "Booking Stock", href: "/dashboard/purchase/stock/booking", icon: ClipboardList },
+      { label: "Confirmed Stock", href: "/dashboard/purchase/stock/confirmed", icon: CheckSquare },
+      { label: "Import Stock", href: "/dashboard/purchase/stock/import", icon: Ship },
       { label: "In-Transit Stock", href: "/dashboard/purchase/stock/in-transit", icon: Truck },
+      { label: "Journal Stock Checking Report", href: "/dashboard/inventory/journal-report/branch", icon: FileBarChart },
     ],
   },
   {
@@ -139,7 +259,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
-      { label: "Logistics Tracking", href: "/dashboard/logistics", icon: Container },
+      { label: "Containers Register", href: "/dashboard/shipping-line", icon: Container },
+      { label: "Clearing Order Trucks", href: "/dashboard/shipping-line", icon: Truck },
+      { label: "Shipping Handovers", href: "/dashboard/purchase/purchase-loading-records", icon: ClipboardList },
+      { label: "Logistics Tracking Dashboard", href: "/dashboard/logistics", icon: BarChart3 },
     ],
   },
   {
@@ -147,10 +270,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Finance",
     icon: ShieldCheck,
     children: [
-      { label: "Banks & Accounts", href: "/dashboard/banks", icon: Landmark },
-      { label: "Money Exchange", href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
-      { label: "Exchange Rates", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
-      { label: "Investments", href: "/dashboard/super-admin/investments", icon: TrendingUp },
+      { label: "Banks & Bank Accounts", href: "/dashboard/banks", icon: Landmark },
+      { label: "Bank Cheque Roznamcha", href: "/dashboard/banks", icon: Receipt },
+      { label: "Money Exchange (Currency Changer)", href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
+      { label: "Daily Exchange Rates (Intraday)", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
+      { label: "Country Investments", href: "/dashboard/super-admin/investments", icon: TrendingUp },
+      { label: "Daily Operational Expenses", href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
+      { label: "Office / Home Expenses Bill", href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
     ],
   },
   {
@@ -158,16 +284,24 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "General Office",
     icon: Settings,
     children: [
-      { label: "Employees", href: "/dashboard/general-office/employees", icon: Users },
-      { label: "Attendance & Leave", href: "/dashboard/general-office/attendance", icon: CalendarCheck },
-      { label: "Payroll Runs", href: "/dashboard/general-office/payroll", icon: Banknote },
+      { label: "Employees Directory", href: "/dashboard/general-office/employees", icon: Users },
+      { label: "Employee KYC & Documents", href: "/dashboard/general-office/employees", icon: FileText },
+      { label: "Attendance & Leave Management", href: "/dashboard/general-office/attendance", icon: CalendarCheck },
+      { label: "Payroll Runs & Salary Slips", href: "/dashboard/general-office/payroll", icon: Banknote },
+      { label: "Departments & Designations", href: "/dashboard/general-office/departments", icon: Building2 },
+      { label: "Gratuity & End-of-Service", href: "/dashboard/general-office/gratuity", icon: Receipt },
+      { label: "Share External Forms", href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
     ],
   },
   {
     key: "settlement-reconciliation",
     label: "Settlement & Reconciliation",
     icon: Layers,
-    href: "/dashboard/settlement-reconciliation",
+    children: [
+      { label: "Settlement & Reconciliation Engine", href: "/dashboard/settlement-reconciliation", icon: Layers },
+      { label: "Tax & Ledger Reconciliation", href: "/dashboard/tax-reconciliation", icon: Split },
+      { label: "Payments Reconciliation", href: "/dashboard/reports/payments", icon: Receipt },
+    ],
   },
   {
     key: "reports-all",
@@ -175,10 +309,55 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: BarChart3,
     defaultOpen: true,
     children: [
-      { label: "KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
-      { label: "User Tasks", href: "/dashboard/user-tasks", icon: CheckSquare },
-      { label: "Reports", href: "/dashboard/reports", icon: CheckSquare },
-      { label: "Document Management", href: "/dashboard/document-management", icon: FileText },
+      {
+        key: "sub-kyc",
+        label: "KYC Reports",
+        icon: FileText,
+        children: [
+          { label: "Customer KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
+          { label: "Employee KYC Verification", href: "/dashboard/general-office/employees", icon: Users },
+          { label: "Compliance & Audit Monitoring", href: "/dashboard/audit-monitoring", icon: ShieldAlert },
+        ],
+      },
+      {
+        key: "sub-tasks",
+        label: "User Tasks",
+        icon: CheckSquare,
+        children: [
+          { label: "Active User Tasks", href: "/dashboard/user-tasks", icon: CheckSquare },
+          { label: "CRM Today Action Center", href: "/dashboard/crm?tab=today", icon: CalendarCheck },
+          { label: "Smart Due & Follow-Up", href: "/dashboard/smart-due", icon: Clock },
+        ],
+      },
+      {
+        key: "sub-reports",
+        label: "Reports",
+        icon: CheckSquare,
+        children: [
+          { label: "All Reports Hub", href: "/dashboard/reports", icon: BarChart3 },
+          { label: "Super Admin Reports", href: "/dashboard/reports/super-admin", icon: FileBarChart },
+          { label: "Country Admin Reports", href: "/dashboard/reports/country", icon: Globe },
+          { label: "Branch Reports", href: "/dashboard/reports/branch", icon: Building2 },
+          { label: "Payments & Settlements Report", href: "/dashboard/reports/payments", icon: Receipt },
+          { label: "Shipping & Clearing Reports", href: "/dashboard/reports/shipping", icon: Ship },
+          { label: "Ledgers Universal Report", href: "/dashboard/reports/ledger", icon: BookOpen },
+          { label: "Financial Statements", href: "/dashboard/reports/financial-statements", icon: FileSpreadsheet },
+          { label: "Daily Exchange Rates Report", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
+          { label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", icon: FileText },
+          { label: "System Forms Directory", href: "/dashboard/reports/system-forms-directory", icon: ListPlus },
+        ],
+      },
+      {
+        key: "sub-docs",
+        label: "Document Management",
+        icon: FileText,
+        children: [
+          { label: "Document Intake Center", href: "/dashboard/document-management", icon: FileText },
+          { label: "Intake Drafts & Uploads", href: "/dashboard/document-intake", icon: ClipboardList },
+          { label: "Document Roznamcha Entries", href: "/dashboard/document-intake/roznamcha", icon: ScrollText },
+          { label: "Document Intelligence AI", href: "/dashboard/document-intelligence", icon: Sparkles },
+        ],
+      },
     ],
   },
   {
@@ -186,10 +365,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Master Data",
     icon: BookOpenText,
     children: [
-      { label: "Goods Master", href: "/dashboard/settings/goods-master", icon: Package },
-      { label: "Product Categories", href: "/dashboard/settings/product-categories", icon: Boxes },
-      { label: "Warehouses", href: "/dashboard/settings/warehouses", icon: Building2 },
-      { label: "Location Workspace", href: "/dashboard/settings/locations", icon: Globe2 },
+      { label: "Goods Master & Category", href: "/dashboard/settings/goods-master", icon: Package },
+      { label: "Almond Kernel Parameters", href: "/dashboard/settings/goods-master?tab=parameters", icon: Database },
+      { label: "Product Reorder Barcodes", href: "/dashboard/settings/goods-master?tab=barcodes", icon: ScanLine },
+      { label: "Product Categories & Brands", href: "/dashboard/settings/product-categories", icon: Boxes },
+      { label: "Warehouses Management", href: "/dashboard/settings/warehouses", icon: Building2 },
+      { label: "Country & City Locations", href: "/dashboard/settings/locations", icon: Globe2 },
+      { label: "Country Tax & Currency Settings", href: "/dashboard/settings/tax", icon: Landmark },
     ],
   },
   {
@@ -198,8 +380,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Star,
     children: [
       { label: "AI Business Assistant", href: "/dashboard/ai", icon: Sparkles },
-      { label: "Document Intelligence", href: "/dashboard/document-intelligence", icon: FileText },
-      { label: "Smart CRM", href: "/dashboard/crm", icon: CalendarCheck },
+      { label: "Document Intelligence & Extraction", href: "/dashboard/document-intelligence", icon: FileText },
+      { label: "Smart CRM Control Center", href: "/dashboard/crm", icon: CalendarCheck },
+      { label: "AI Calls & Inquiry Log", href: "/dashboard/ai-calls", icon: Clock },
     ],
   },
 ];
@@ -209,6 +392,14 @@ function isPathActive(href: string | undefined, currentPath: string): boolean {
   if (!href) return false;
   if (currentPath === href) return true;
   if (href !== "/dashboard" && currentPath.startsWith(href)) return true;
+  return false;
+}
+
+function hasActiveDescendant(item: SidebarMenuItem | SidebarSubItem, currentPath: string): boolean {
+  if (item.href && isPathActive(item.href, currentPath)) return true;
+  if (item.children) {
+    return item.children.some((c) => hasActiveDescendant(c, currentPath));
+  }
   return false;
 }
 
@@ -240,21 +431,45 @@ export function DigitalDockPremiumSidebar({
     return () => { alive = false; };
   }, [lang]);
 
-  // Track expanded accordion keys. Initially include items with defaultOpen or active child
+  // Track expanded accordion keys (Level 1 and Level 2)
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     for (const item of DAMAN_SIDEBAR_ITEMS) {
-      if (item.defaultOpen) {
+      if (item.defaultOpen || hasActiveDescendant(item, pathname)) {
         initial.add(item.key);
       }
-      if (item.children?.some((c) => isPathActive(c.href, pathname))) {
-        initial.add(item.key);
+      if (item.children) {
+        for (const sub of item.children) {
+          if (sub.key && hasActiveDescendant(sub, pathname)) {
+            initial.add(sub.key);
+          }
+        }
       }
     }
     return initial;
   });
 
-  const toggleGroup = (key: string) => {
+  // Auto-expand when navigating to a deep route
+  useEffect(() => {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      for (const item of DAMAN_SIDEBAR_ITEMS) {
+        if (hasActiveDescendant(item, pathname)) {
+          next.add(item.key);
+        }
+        if (item.children) {
+          for (const sub of item.children) {
+            if (sub.key && hasActiveDescendant(sub, pathname)) {
+              next.add(sub.key);
+            }
+          }
+        }
+      }
+      return next;
+    });
+  }, [pathname]);
+
+  const toggleKey = (key: string) => {
     setOpenKeys((prev) => {
       const next = new Set(prev);
       if (next.has(key)) {
@@ -290,17 +505,17 @@ export function DigitalDockPremiumSidebar({
           const hasChildren = Boolean(item.children?.length);
           const isOpen = hasChildren && openKeys.has(item.key);
           const isDirectActive = isPathActive(item.href, pathname);
-          const isChildActive = hasChildren && item.children!.some((c) => isPathActive(c.href, pathname));
-          const isHighlighted = isOpen || isDirectActive || isChildActive;
+          const isDescActive = hasChildren && hasActiveDescendant(item, pathname);
+          const isHighlighted = isOpen || isDirectActive || isDescActive;
 
           return (
             <div key={item.key} className="relative">
               {hasChildren ? (
-                /* Accordion Parent Item */
+                /* Level 1: Accordion Parent Item */
                 <div>
                   <button
                     type="button"
-                    onClick={() => toggleGroup(item.key)}
+                    onClick={() => toggleKey(item.key)}
                     className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
                       isHighlighted
                         ? "bg-[#edf5ff] text-[#2563eb] font-bold"
@@ -330,28 +545,101 @@ export function DigitalDockPremiumSidebar({
                     )}
                   </button>
 
-                  {/* Sub-items list */}
+                  {/* Level 2 Sub-items list */}
                   {isOpen && item.children && (
-                    <div className="mt-1 ps-3 pe-1 space-y-0.5 animate-in fade-in-50 duration-150">
-                      {item.children.map((child) => {
-                        const ChildIcon = child.icon;
-                        const isSubActive = isPathActive(child.href, pathname);
+                    <div className="mt-1 ps-2 pe-1 space-y-0.5 animate-in fade-in-50 duration-150">
+                      {item.children.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const subHasChildren = Boolean(sub.children?.length);
+                        const subKey = sub.key || `${item.key}-${sub.label}`;
+                        const isSubOpen = subHasChildren && openKeys.has(subKey);
+                        const isSubDirectActive = isPathActive(sub.href, pathname);
+                        const isSubDescActive = subHasChildren && hasActiveDescendant(sub, pathname);
+                        const isSubActive = isSubDirectActive || isSubDescActive;
+
+                        if (subHasChildren) {
+                          return (
+                            <div key={subKey} className="space-y-0.5">
+                              {/* Level 2 with Level 3 children (e.g. Purchase -> Purchase Booking, Local Purchase...) */}
+                              <button
+                                type="button"
+                                onClick={() => toggleKey(subKey)}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 cursor-pointer ${
+                                  isSubActive || isSubOpen
+                                    ? "text-[#2563eb] font-bold bg-blue-50/70"
+                                    : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
+                                    isSubActive || isSubOpen ? "text-[#2563eb]" : "text-[#0f172a]"
+                                  }`} />
+                                  <span className="truncate text-left tracking-tight">
+                                    {tr(sub.label)}
+                                  </span>
+                                </div>
+                                {isSubOpen ? (
+                                  <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#2563eb]" />
+                                ) : (
+                                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                )}
+                              </button>
+
+                              {/* Level 3 Deep Children (e.g. Local Purchase, Completed Bills...) */}
+                              {isSubOpen && sub.children && (
+                                <div className="ms-5 ps-3 pe-1 py-1 space-y-0.5 border-l-2 border-blue-200/60 my-0.5 animate-in fade-in-50 duration-150">
+                                  {sub.children.map((leaf) => {
+                                    const LeafIcon = leaf.icon;
+                                    const isLeafActive = isPathActive(leaf.href, pathname);
+                                    return (
+                                      <Link
+                                        key={leaf.label + leaf.href}
+                                        href={leaf.href}
+                                        onClick={onNavigate}
+                                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] transition-all duration-150 ${
+                                          isLeafActive
+                                            ? "text-[#2563eb] font-bold bg-blue-50/90"
+                                            : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                                        }`}
+                                      >
+                                        {LeafIcon ? (
+                                          <LeafIcon className={`h-3.5 w-3.5 shrink-0 ${
+                                            isLeafActive ? "text-[#2563eb]" : "text-slate-400"
+                                          }`} />
+                                        ) : (
+                                          <span className={`h-1.5 w-1.5 rounded-full ${
+                                            isLeafActive ? "bg-[#2563eb]" : "bg-slate-300"
+                                          }`} />
+                                        )}
+                                        <span className="truncate tracking-tight">
+                                          {tr(leaf.label)}
+                                        </span>
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        /* Level 2 Direct Link */
                         return (
                           <Link
-                            key={child.label + child.href}
-                            href={child.href}
+                            key={sub.label + (sub.href || "")}
+                            href={sub.href || "/dashboard"}
                             onClick={onNavigate}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
-                              isSubActive
+                              isSubDirectActive
                                 ? "text-[#2563eb] font-bold bg-blue-50/70"
                                 : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
                             }`}
                           >
-                            <ChildIcon className={`h-4 w-4 shrink-0 transition-colors ${
-                              isSubActive ? "text-[#2563eb]" : "text-[#0f172a]"
+                            <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
+                              isSubDirectActive ? "text-[#2563eb]" : "text-[#0f172a]"
                             }`} />
                             <span className="truncate tracking-tight">
-                              {tr(child.label)}
+                              {tr(sub.label)}
                             </span>
                           </Link>
                         );
@@ -360,7 +648,7 @@ export function DigitalDockPremiumSidebar({
                   )}
                 </div>
               ) : (
-                /* Standalone Direct Link Item */
+                /* Level 1: Standalone Direct Link Item */
                 <Link
                   href={item.href || "/dashboard"}
                   onClick={onNavigate}
