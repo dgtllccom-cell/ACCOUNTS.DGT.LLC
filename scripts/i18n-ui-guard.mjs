@@ -207,6 +207,7 @@ const PARALLEL_ALLOW = new Set([
   "app/api/erp/qvc/accounts/route.ts",                // {en:"present"} status literal, not i18n
   "features/clearing-agent/components/truck-recreation-wizard.tsx", // {en:"",ur:"",...} record-translation DATA fields
   "app/ext/form/[token]/location-translations.ts",   // curated place-name reference DATA (countries/provinces/cities/ports) for the offline public form — DB-VALUE-style, not UI chrome
+  "lib/customers/auto-reply-templates.ts",            // curated customer-facing message-body DATA in 5 languages — mirrors communication_templates.body_{en,ur,ps,fa,ar} columns, not UI chrome
 ]);
 // Genuine pre-existing parallel UI dictionaries — GRANDFATHERED. The gate blocks NEW
 // ones; these are tracked tech-debt to migrate into lib/i18n/ui.ts (see docs/i18n-audit-inventory.txt).
