@@ -47,6 +47,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
+import { DigitalDockPremiumSidebar } from "@/components/layout/digital-dock-premium-sidebar";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -420,9 +421,20 @@ export function DashboardFrame({
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex">
+      {/* Desktop Persistent Sidebar (Collapsible via << Collapse Menu or Menu button) */}
+      {!sidebarCollapsed && (
+        <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-r border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
+          <DigitalDockPremiumSidebar
+            brandTitle={brandCompany || "Daman Business Group"}
+            onToggleCollapse={() => setSidebarCollapsed(true)}
+          />
+        </aside>
+      )}
+
+      {/* Mobile / Tablet Drawer */}
       {(drawerOpen || mobileOpen) && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex lg:hidden">
           <button
             type="button"
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in cursor-pointer border-none p-0 outline-none"
@@ -432,48 +444,31 @@ export function DashboardFrame({
               setMobileOpen(false);
             }}
           />
-          <aside className="relative z-50 h-full w-72 max-w-[85vw] border-r border-border bg-white dark:bg-slate-950 shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 text-card-foreground">
-            <div className="border-b border-border/80 px-5 py-4 flex items-center justify-between gap-2 bg-muted/20">
-              <Link href="/dashboard" className="block flex-1 min-w-0" onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}>
-                <div className="flex items-center gap-3">
-                  <img src="/icons/digital-dock-icon.svg" alt={brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP")} className="h-8 w-8 shrink-0 object-contain" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">{brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP")}</p>
-                    <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                      {brandScopeLine || userName || t(lang, "role.super_admin", "Super Admin")}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
-                className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg cursor-pointer"
-                aria-label={t(lang, "nav.close_navigation", "Close navigation")}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-3 py-3 bg-white dark:bg-slate-950">
-              <PremiumSidebarNav nodes={filteredNodes} lang={lang} onNavigate={() => { setDrawerOpen(false); setMobileOpen(false); }} />
-            </div>
-            <div className="border-t border-border/80 p-3.5 bg-white dark:bg-slate-950">
-              <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200/80 dark:border-slate-800">
-                <p className="text-[11px] font-bold text-foreground/90 flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {t(lang, "nav.erp_core_engine", "ERP Core Engine")}
-                </p>
-                <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
-                  {t(lang, "nav.erp_core_engine_subtitle", "Multi-country branches, accounts & exchange matrices are active.")}
-                </p>
-              </div>
-            </div>
+          <aside className="relative z-50 h-full w-[275px] max-w-[85vw] border-r border-border bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
+            <button
+              type="button"
+              onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
+              className="absolute right-3 top-4 z-10 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"
+              aria-label="Close navigation"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <DigitalDockPremiumSidebar
+              brandTitle={brandCompany || "Daman Business Group"}
+              onNavigate={() => {
+                setDrawerOpen(false);
+                setMobileOpen(false);
+              }}
+              onToggleCollapse={() => {
+                setDrawerOpen(false);
+                setMobileOpen(false);
+              }}
+            />
           </aside>
         </div>
       )}
 
-      <div className="transition-all duration-300 min-h-screen flex flex-col w-full">
+      <div className="transition-all duration-300 min-h-screen flex flex-col flex-1 min-w-0">
         <header className="erp-topbar sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
           <div className={cn("flex items-center gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 transition-all duration-200 justify-between", isWizardPath ? "h-16" : "h-14")}>
             <div className="flex items-center gap-3">
@@ -481,7 +476,13 @@ export function DashboardFrame({
                 variant="outline"
                 size="icon"
                 className="h-9 w-9 rounded-lg border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
-                onClick={() => setDrawerOpen((prev) => !prev)}
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+                    setSidebarCollapsed((prev) => !prev);
+                  } else {
+                    setDrawerOpen((prev) => !prev);
+                  }
+                }}
                 aria-label={t(lang, "nav.open_navigation", "Open navigation")}
               >
                 <Menu className="h-4 w-4" aria-hidden />

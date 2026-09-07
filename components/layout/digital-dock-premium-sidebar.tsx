@@ -3,553 +3,468 @@
 /**
  * DigitalDockPremiumSidebar
  * -------------------------------------------------------------
- * Standalone premium left navigation menu for Digital Dock ERP.
- *
- * Pure UI component — design reference aligned with ERP navigation tree.
- *
- * Requirements: React 18+, Tailwind CSS, lucide-react.
+ * Custom Sidebar precisely matching Daman Business Group visual specification:
+ * - Pure white aesthetic with deep navy typography
+ * - Dynamic accordion with blue pill background and crisp blue left indicator
+ * - Sub-items indented with matching icons
+ * - "Need Help?" support card with "Get Support" button
+ * - "<< Collapse Menu" footer
  */
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  Anchor,
+  ArrowRightLeft,
   Banknote,
   BarChart3,
-  Bell,
   BookOpen,
+  BookOpenText,
   Boxes,
   Building2,
-  Calendar,
   CalendarCheck,
-  CheckCircle2,
+  CheckSquare,
+  ChevronDown,
   ChevronRight,
-  CircleDollarSign,
-  Clock,
+  ChevronsLeft,
   Container,
-  Coins,
-  CreditCard,
-  ArrowRightLeft,
-  FileBarChart,
+  FileSpreadsheet,
   FileText,
-  Flag,
+  Globe,
   Globe2,
-  HandCoins,
-  History,
+  Headphones,
+  Home,
   Landmark,
-  LayoutDashboard,
-  Menu,
-  NotebookPen,
+  Layers,
+  ListPlus,
   Package,
-  Receipt,
   RefreshCw,
-  Search,
+  ScanLine,
   Settings,
   ShieldCheck,
   Ship,
   ShoppingCart,
   Sparkles,
   Star,
-  Trash2,
   TrendingUp,
   Truck,
   Users,
-  Users2,
-  Wallet,
   X,
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 
-/* ---------------- types ---------------- */
-type NavChild = {
+/* ---------------- Types ---------------- */
+export type SidebarSubItem = {
   label: string;
-  href?: string;
-  badge?: string;
-  active?: boolean;
-  icon?: ComponentType<{ className?: string }>;
-};
-type NavItem = {
+  href: string;
   icon: ComponentType<{ className?: string }>;
+};
+
+export type SidebarMenuItem = {
+  key: string;
   label: string;
-  href?: string;
-  badge?: string;
-  active?: boolean;
-  highlighted?: boolean;
-  children?: NavChild[];
-};
-type NavGroup = { title: string; items: NavItem[] };
-
-/* ---------------- menu data ---------------- */
-export const SIDEBAR_GROUPS: NavGroup[] = [
-  {
-    title: "Quick Setup",
-    items: [
-      { icon: Users, label: "New User", href: "/dashboard/new-entry/users/registration" },
-      { icon: Globe2, label: "New Country", href: "/dashboard/new-entry/branch-entry/country-branch" },
-      { icon: Building2, label: "New Branch", href: "/dashboard/new-entry/branch-entry/city-branch" },
-      { icon: TrendingUp, label: "Country Investments", href: "/dashboard/super-admin/investments" },
-    ],
-  },
-  {
-    title: "Journal & Ledger",
-    items: [
-      {
-        icon: BookOpen,
-        label: "Journal & Ledger",
-        children: [
-          { label: "Journal", href: "/dashboard/journal/sales-order-payment/advance", icon: NotebookPen },
-          { label: "Ledgers", href: "/dashboard/ledger", icon: BookOpen },
-          { label: "Inter-Country Transfers", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
-          { label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", icon: FileText, badge: "PDF" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Daily Payment",
-    items: [
-      {
-        icon: HandCoins,
-        label: "Daily Payment",
-        children: [
-          { label: "Purchase Invoice Payment", href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt },
-          { label: "Sales Invoice Payment", href: "/dashboard/journal/sales-order-payment/advance", icon: CircleDollarSign },
-          { label: "Cash Payment", href: "/dashboard/roznamcha/cash-entry", icon: Banknote },
-          { label: "Daily Cash Entry", href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
-          { label: "Exchange Rate", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
-          { label: "Payment History", href: "/dashboard/journal/purchase-order-payment/history", icon: History },
-        ],
-      },
-    ],
-  },
-  {
-    title: "CRM",
-    items: [
-      {
-        icon: CalendarCheck,
-        label: "CRM Control Center",
-        badge: "Live",
-        children: [
-          { label: "CRM Dashboard", href: "/dashboard/crm", icon: LayoutDashboard },
-          { label: "Today's Action Center", href: "/dashboard/crm?tab=today", icon: CheckCircle2 },
-          { label: "Due & Follow-Up", href: "/dashboard/smart-due", icon: Clock },
-          { label: "Cheques Reminders", href: "/dashboard/crm?tab=cheques", icon: CreditCard },
-          { label: "Purchase Payments Due", href: "/dashboard/crm?tab=purchases", icon: ShoppingCart },
-          { label: "Sales Recovery Due", href: "/dashboard/crm?tab=sales", icon: CircleDollarSign },
-          { label: "Shipping / Clearing Due", href: "/dashboard/crm?tab=shipping", icon: Truck },
-          { label: "Customer & Supplier Follow-Up", href: "/dashboard/crm?tab=customers", icon: Users },
-          { label: "CRM Calendar", href: "/dashboard/crm?tab=calendar", icon: Calendar },
-          { label: "CRM Universal Reports", href: "/dashboard/crm/reports", icon: BarChart3 },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Overview",
-    items: [
-      { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
-    ],
-  },
-  {
-    title: "Purchase",
-    items: [
-      {
-        icon: ShoppingCart,
-        label: "Purchase",
-        badge: "8",
-        children: [
-          { label: "Purchase Booking", href: "/dashboard/purchase/new-purchase-booking-order", active: true },
-          { label: "Local Purchase", href: "/dashboard/purchase/local-purchase" },
-          { label: "Country-to-Country Transfer", href: "/dashboard/purchase/country-transfer" },
-          { label: "Loading Records", href: "/dashboard/purchase/purchase-loading-records" },
-          { label: "Completed Purchase Bills", href: "/dashboard/purchase/completed-purchase-bills" },
-          { label: "Advance Payment", href: "/dashboard/journal/purchase-order-payment/advance" },
-          { label: "Remaining Payment", href: "/dashboard/journal/purchase-order-payment/remaining" },
-          { label: "Payment History", href: "/dashboard/journal/purchase-order-payment/history" },
-          { label: "Purchase Reports", href: "/dashboard/purchase/purchase-booking-journal-report" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Sales",
-    items: [
-      {
-        icon: CircleDollarSign,
-        label: "Sales",
-        children: [
-          { label: "Sales Booking", href: "/dashboard/sales" },
-          { label: "Sales Payment", href: "/dashboard/journal/sales-order-payment/advance" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Stock & Warehouse",
-    items: [
-      {
-        icon: Boxes,
-        label: "Stock & Warehouse",
-        children: [
-          { label: "Stock Register", href: "/dashboard/inventory", icon: Package },
-          { label: "Stock Reports", href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Shipping & Logistics",
-    items: [
-      {
-        icon: Ship,
-        label: "Shipping & Logistics",
-        children: [
-          { label: "Shipping Lines", href: "/dashboard/shipping-line" },
-          { label: "Clearing Agents", href: "/dashboard/clearing-agent" },
-          { label: "Loading Records", href: "/dashboard/purchase/purchase-loading-records" },
-          { label: "Containers", href: "/dashboard/shipping-line", icon: Container },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Reports",
-    items: [
-      {
-        icon: FileBarChart,
-        label: "Reports",
-        children: [
-          { label: "Super Admin Reports", href: "/dashboard/reports/super-admin" },
-          { label: "Country Admin Reports", href: "/dashboard/reports/country" },
-          { label: "Branch Reports", href: "/dashboard/reports/branch" },
-          { label: "Shipping / Clearing Reports", href: "/dashboard/reports/shipping" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Administration",
-    items: [
-      {
-        icon: ShieldCheck,
-        label: "Administration",
-        children: [
-          { label: "Users", href: "/dashboard/users", icon: Users },
-          { label: "Countries", href: "/dashboard/country", icon: Globe2 },
-          { label: "Branches", href: "/dashboard/branch-management", icon: Building2 },
-          { label: "Exchange Rates", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Enterprise Audit & Control",
-    items: [
-      {
-        icon: ShieldCheck,
-        label: "Enterprise Audit & Control",
-        children: [
-          { label: "Edit / Version History", href: "/dashboard/audit/edit-history", icon: History },
-          { label: "Deleted Records", href: "/dashboard/audit/deleted-records", icon: Trash2 },
-          { label: "Audit Monitoring Center", href: "/dashboard/audit-monitoring", icon: ShieldCheck },
-        ],
-      },
-    ],
-  },
-  {
-    title: "System & Settings",
-    items: [
-      { icon: FileText, label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", badge: "PDF" },
-      { icon: Settings, label: "Settings", href: "/dashboard/settings" }
-    ],
-  },
-];
-
-export const QUICK_FAVOURITES = [
-  { icon: ShoppingCart, label: "Purchase Booking", href: "/dashboard/purchase" },
-  { icon: Wallet, label: "Daily Payment", href: "/dashboard/roznamcha/cash-entry" },
-  { icon: CircleDollarSign, label: "Exchange Rates", href: "/dashboard/reports/exchange-rate" },
-];
-
-export const QUICK_RECENT = [
-  { icon: FileText, label: "PB-2026-6789", href: "/dashboard/purchase" },
-  { icon: Package, label: "Sales Invoice", href: "/dashboard/sales" },
-  { icon: BookOpen, label: "Ledger — FAREDULLAH", href: "/dashboard/ledger" },
-];
-
-/* ---------------- palette tokens ---------------- */
-const colors = {
-  primary: "#2563EB",
-  success: "#10B981",
-  warning: "#F59E0B",
-  danger: "#EF4444",
-  sidebarBg: "#FFFFFF",
-  background: "#F8FAFC",
-};
-
-function useTr() {
-  const lang = useActiveLanguage();
-  return (s: string) => translateHeader(lang, s);
-}
-
-/* ---------------- internal components ---------------- */
-function SidebarNavItem({ item, query }: { item: NavItem; query: string }) {
-  const tr = useTr();
-  const Icon = item.icon;
-  const hasChildren = !!item.children?.length;
-  const [open, setOpen] = useState<boolean>(
-    hasChildren && (!!item.active || !!item.highlighted || !!item.children?.some((c) => c.active)),
-  );
-  const matches = useMemo(() => {
-    if (!query) return { self: true, children: item.children ?? [] };
-    const q = query.toLowerCase();
-    const selfMatch = item.label.toLowerCase().includes(q);
-    const kids = (item.children ?? []).filter((c) => c.label.toLowerCase().includes(q));
-    return { self: selfMatch || kids.length > 0, children: selfMatch ? (item.children ?? []) : kids };
-  }, [query, item]);
-  useEffect(() => {
-    if (query && matches.children.length > 0) setOpen(true);
-  }, [query, matches.children.length]);
-
-  if (!matches.self) return null;
-  const isTopActive = item.active && !hasChildren;
-
-  if (!hasChildren) {
-    return (
-      <a
-        href={item.href ?? "#"}
-        className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-all duration-200 ${
-          isTopActive
-            ? "bg-gradient-to-r from-[#2563EB] to-indigo-500 font-semibold text-white shadow-lg shadow-[#2563EB]/25"
-            : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 hover:translate-x-0.5"
-        }`}
-      >
-        <Icon className={`h-[17px] w-[17px] shrink-0 ${isTopActive ? "text-white" : "text-slate-500 group-hover:text-[#2563EB]"}`} />
-        <span className="truncate">{tr(item.label)}</span>
-        {item.badge && (
-          <span className="ml-auto rounded-full bg-[#EF4444] px-1.5 py-0.5 text-[9px] font-bold text-white">{item.badge}</span>
-        )}
-      </a>
-    );
-  }
-
-  const activeChild = item.children?.some((c) => c.active);
-  const highlightClass = item.highlighted
-    ? "bg-gradient-to-r from-[#2563EB]/10 via-indigo-500/5 to-transparent ring-1 ring-[#2563EB]/15 text-[#1D4ED8] font-semibold"
-    : "";
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-all duration-200 ${
-          activeChild ? "bg-[#2563EB]/8 font-semibold text-[#2563EB]" : highlightClass || "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
-        }`}
-      >
-        <Icon className={`h-[17px] w-[17px] shrink-0 ${item.highlighted || activeChild ? "text-[#2563EB]" : "text-slate-500 group-hover:text-[#2563EB]"}`} />
-        <span className="flex-1 truncate text-left">{tr(item.label)}</span>
-        {item.highlighted && (
-          <span className="rounded-full bg-[#2563EB] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">NEW</span>
-        )}
-        {item.badge && (
-          <span className="rounded-full bg-[#2563EB]/10 px-1.5 py-0.5 text-[9px] font-bold text-[#2563EB]">{item.badge}</span>
-        )}
-        <ChevronRight className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${open ? "rotate-90" : ""}`} />
-      </button>
-      <div className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-        <div className="min-h-0">
-          <div className="relative ml-[19px] mt-1 space-y-0.5 border-l border-slate-200/80 pl-3">
-            {matches.children.map((c) => {
-              const CIcon = c.icon;
-              return (
-                <a
-                  key={c.label}
-                  href={c.href ?? "#"}
-                  className={`group/child relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-[12.5px] transition-all duration-150 ${
-                    c.active
-                      ? "bg-gradient-to-r from-[#2563EB] to-indigo-500 font-semibold text-white shadow-md shadow-[#2563EB]/20"
-                      : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-800 hover:pl-4"
-                  }`}
-                >
-                  {CIcon ? (
-                    <CIcon className={`h-3.5 w-3.5 shrink-0 ${c.active ? "text-white" : "text-slate-400 group-hover/child:text-[#2563EB]"}`} />
-                  ) : (
-                    <span className={`h-1.5 w-1.5 rounded-full ${c.active ? "bg-white" : "bg-slate-300"}`} />
-                  )}
-                  <span className="truncate">{tr(c.label)}</span>
-                  {c.badge && (
-                    <span className="ml-auto rounded-full bg-[#F59E0B]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#F59E0B]">{c.badge}</span>
-                  )}
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function QuickList({
-  title,
-  icon: Icon,
-  items,
-}: {
-  title: string;
   icon: ComponentType<{ className?: string }>;
-  items: { icon: ComponentType<{ className?: string }>; label: string; href?: string }[];
-}) {
-  const tr = useTr();
-  return (
-    <div className="mb-4">
-      <div className="mb-1.5 flex items-center gap-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-        <Icon className="h-3 w-3" />
-        {tr(title)}
-      </div>
-      <div className="space-y-0.5">
-        {items.map((it) => {
-          const I = it.icon;
-          return (
-            <a
-              key={it.label}
-              href={it.href ?? "#"}
-              className="group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[12px] text-slate-600 transition-all hover:bg-slate-100/80 hover:text-slate-900"
-            >
-              <I className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#2563EB]" />
-              <span className="truncate">{tr(it.label)}</span>
-            </a>
-          );
-        })}
-      </div>
-    </div>
-  );
+  href?: string;
+  defaultOpen?: boolean;
+  children?: SidebarSubItem[];
+};
+
+/* ---------------- Menu Items Exactly As In Specification ---------------- */
+export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: Home,
+    href: "/dashboard",
+  },
+  {
+    key: "new-entry",
+    label: "New Entry",
+    icon: ScanLine,
+    children: [
+      { label: "Branch Entry", href: "/dashboard/new-entry/branch-entry/city-branch", icon: Building2 },
+      { label: "User Registration", href: "/dashboard/new-entry/users/registration", icon: Users },
+      { label: "Account Setup", href: "/dashboard/accounts/setup", icon: BookOpen },
+      { label: "New Ledger Account", href: "/dashboard/ledger/new", icon: BookOpen },
+      { label: "Register Employee", href: "/dashboard/general-office/employees", icon: Users },
+      { label: "New Entry Hub", href: "/dashboard/new-entry", icon: ListPlus },
+    ],
+  },
+  {
+    key: "ledgers",
+    label: "Ledgers",
+    icon: BookOpen,
+    children: [
+      { label: "New Ledger", href: "/dashboard/ledger/new", icon: BookOpen },
+      { label: "Super Admin Detailed", href: "/dashboard/ledger/super-admin/detailed", icon: FileText },
+      { label: "Country Detailed", href: "/dashboard/ledger/country/detailed", icon: FileText },
+      { label: "General Report", href: "/dashboard/ledger/general-report", icon: FileText },
+      { label: "Outstanding Ledgers", href: "/dashboard/ledger/outstanding", icon: FileText },
+    ],
+  },
+  {
+    key: "daily-payment",
+    label: "Daily Payment Entry",
+    icon: FileText,
+    href: "/dashboard/roznamcha/cash-entry",
+  },
+  {
+    key: "purchase-sales-trade",
+    label: "Purchase, Sales & Trade",
+    icon: ShoppingCart,
+    defaultOpen: true,
+    children: [
+      { label: "Purchase", href: "/dashboard/purchase/new-purchase-booking-order", icon: FileText },
+      { label: "Sales", href: "/dashboard/sales", icon: TrendingUp },
+      { label: "Other Country Trade", href: "/dashboard/purchase/country-transfer", icon: Globe },
+      { label: "Bill Cost, Expenses & Profit", href: "/dashboard/bill-cost-profit", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    key: "journal-stock",
+    label: "Journal Stock",
+    icon: Boxes,
+    children: [
+      { label: "Stock Register", href: "/dashboard/inventory", icon: Package },
+      { label: "Stock Reports", href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
+      { label: "Warehouse Stock", href: "/dashboard/purchase/stock/warehouse", icon: Boxes },
+      { label: "In-Transit Stock", href: "/dashboard/purchase/stock/in-transit", icon: Truck },
+    ],
+  },
+  {
+    key: "shipping-cleaning",
+    label: "Shipping & Cleaning",
+    icon: Ship,
+    children: [
+      { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
+      { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
+      { label: "Logistics Tracking", href: "/dashboard/logistics", icon: Container },
+    ],
+  },
+  {
+    key: "finance",
+    label: "Finance",
+    icon: ShieldCheck,
+    children: [
+      { label: "Banks & Accounts", href: "/dashboard/banks", icon: Landmark },
+      { label: "Money Exchange", href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
+      { label: "Exchange Rates", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
+      { label: "Investments", href: "/dashboard/super-admin/investments", icon: TrendingUp },
+    ],
+  },
+  {
+    key: "general-office",
+    label: "General Office",
+    icon: Settings,
+    children: [
+      { label: "Employees", href: "/dashboard/general-office/employees", icon: Users },
+      { label: "Attendance & Leave", href: "/dashboard/general-office/attendance", icon: CalendarCheck },
+      { label: "Payroll Runs", href: "/dashboard/general-office/payroll", icon: Banknote },
+    ],
+  },
+  {
+    key: "settlement-reconciliation",
+    label: "Settlement & Reconciliation",
+    icon: Layers,
+    href: "/dashboard/settlement-reconciliation",
+  },
+  {
+    key: "reports-all",
+    label: "Reports and All Reporting Page",
+    icon: BarChart3,
+    defaultOpen: true,
+    children: [
+      { label: "KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
+      { label: "User Tasks", href: "/dashboard/user-tasks", icon: CheckSquare },
+      { label: "Reports", href: "/dashboard/reports", icon: CheckSquare },
+      { label: "Document Management", href: "/dashboard/document-management", icon: FileText },
+    ],
+  },
+  {
+    key: "master-data",
+    label: "Master Data",
+    icon: BookOpenText,
+    children: [
+      { label: "Goods Master", href: "/dashboard/settings/goods-master", icon: Package },
+      { label: "Product Categories", href: "/dashboard/settings/product-categories", icon: Boxes },
+      { label: "Warehouses", href: "/dashboard/settings/warehouses", icon: Building2 },
+      { label: "Location Workspace", href: "/dashboard/settings/locations", icon: Globe2 },
+    ],
+  },
+  {
+    key: "all-ai",
+    label: "All AI Page",
+    icon: Star,
+    children: [
+      { label: "AI Business Assistant", href: "/dashboard/ai", icon: Sparkles },
+      { label: "Document Intelligence", href: "/dashboard/document-intelligence", icon: FileText },
+      { label: "Smart CRM", href: "/dashboard/crm", icon: CalendarCheck },
+    ],
+  },
+];
+
+/* ---------------- Helper to check path matches ---------------- */
+function isPathActive(href: string | undefined, currentPath: string): boolean {
+  if (!href) return false;
+  if (currentPath === href) return true;
+  if (href !== "/dashboard" && currentPath.startsWith(href)) return true;
+  return false;
 }
 
-/* ---------------- main sidebar component ---------------- */
+/* ---------------- Component Props ---------------- */
 export interface DigitalDockPremiumSidebarProps {
-  searchQuery?: string;
-  onSearchQueryChange?: (q: string) => void;
+  onNavigate?: () => void;
+  onToggleCollapse?: () => void;
+  brandTitle?: string;
 }
 
-export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearchQueryChange }: DigitalDockPremiumSidebarProps = {}) {
-  const tr = useTr();
-  const [internalQuery, setInternalQuery] = useState("");
-  const query = externalQuery !== undefined ? externalQuery : internalQuery;
-  const setQuery = (v: string) => {
-    setInternalQuery(v);
-    onSearchQueryChange?.(v);
+export function DigitalDockPremiumSidebar({
+  onNavigate,
+  onToggleCollapse,
+  brandTitle,
+}: DigitalDockPremiumSidebarProps = {}) {
+  const pathname = usePathname() ?? "";
+  const lang = useActiveLanguage();
+  const tr = (s: string) => translateHeader(lang, s);
+
+  const [companyName, setCompanyName] = useState<string>("Daman Business Group");
+
+  useEffect(() => {
+    let alive = true;
+    fetchBranding(null).then((b) => {
+      if (!alive) return;
+      const resolved = brandingName(b, lang);
+      if (resolved) setCompanyName(resolved);
+    });
+    return () => { alive = false; };
+  }, [lang]);
+
+  // Track expanded accordion keys. Initially include items with defaultOpen or active child
+  const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    for (const item of DAMAN_SIDEBAR_ITEMS) {
+      if (item.defaultOpen) {
+        initial.add(item.key);
+      }
+      if (item.children?.some((c) => isPathActive(c.href, pathname))) {
+        initial.add(item.key);
+      }
+    }
+    return initial;
+  });
+
+  const toggleGroup = (key: string) => {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
   };
 
+  const displayBrand = brandTitle || companyName || "Daman Business Group";
+
   return (
-    <div className="flex h-full flex-col bg-white/95 backdrop-blur-xl">
-      {/* Brand — Digital Dock ERP */}
-      <div className="border-b border-slate-100 px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] via-indigo-500 to-indigo-600 text-white shadow-lg shadow-[#2563EB]/30">
-            <Anchor className="h-5 w-5" strokeWidth={2.4} />
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#10B981]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[14px] font-extrabold tracking-tight text-slate-900">DIGITAL DOCK ERP</div>
-            <div className="truncate text-[10px] font-medium text-slate-500">{tr("Enterprise Management System")}</div>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#10B981]/8 to-transparent px-2.5 py-1.5">
-          <div className="flex items-center gap-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10B981] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#10B981]" />
-            </span>
-            <span className="text-[10.5px] font-semibold text-[#059669]">{tr("Online")}</span>
-          </div>
-          <span className="text-[9.5px] font-medium text-slate-400">v2.6.1</span>
-        </div>
+    <div className="flex h-full w-full flex-col bg-white text-[#0f172a] select-none font-sans overflow-hidden">
+      {/* 1. Header: Daman Business Group */}
+      <div className="px-5 pt-5 pb-3">
+        <Link
+          href="/dashboard"
+          onClick={onNavigate}
+          className="block group"
+        >
+          <h1 className="text-[17px] font-extrabold tracking-tight text-[#0a192f] group-hover:text-[#2563eb] transition-colors leading-snug">
+            {displayBrand}
+          </h1>
+        </Link>
       </div>
 
-      {/* Search */}
-      <div className="px-3 pt-3">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tr("Search menu…")}
-            className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-9 pr-8 text-[12.5px] text-slate-700 placeholder:text-slate-400 outline-none transition-all focus:border-[#2563EB]/40 focus:bg-white focus:ring-2 focus:ring-[#2563EB]/10"
-          />
-          <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">⌘K</kbd>
-        </div>
-      </div>
+      {/* 2. Navigation Items */}
+      <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-1 [scrollbar-width:thin]">
+        {DAMAN_SIDEBAR_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const hasChildren = Boolean(item.children?.length);
+          const isOpen = hasChildren && openKeys.has(item.key);
+          const isDirectActive = isPathActive(item.href, pathname);
+          const isChildActive = hasChildren && item.children!.some((c) => isPathActive(c.href, pathname));
+          const isHighlighted = isOpen || isDirectActive || isChildActive;
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-4 [scrollbar-width:thin]">
-        {!query && (
-          <>
-            <QuickList title={tr("Favourites")} icon={Star} items={QUICK_FAVOURITES} />
-            <QuickList title={tr("Recent")} icon={Clock} items={QUICK_RECENT} />
-          </>
-        )}
-        {SIDEBAR_GROUPS.map((group) => (
-          <div key={group.title} className="mb-4">
-            <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{tr(group.title)}</div>
-            <div className="space-y-1">
-              {group.items.map((it) => (
-                <SidebarNavItem key={it.label} item={it} query={query} />
-              ))}
+          return (
+            <div key={item.key} className="relative">
+              {hasChildren ? (
+                /* Accordion Parent Item */
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(item.key)}
+                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
+                      isHighlighted
+                        ? "bg-[#edf5ff] text-[#2563eb] font-bold"
+                        : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                    }`}
+                  >
+                    {/* Left vertical blue accent indicator bar when highlighted/open */}
+                    {isHighlighted && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] bg-[#2563eb] rounded-r-md" />
+                    )}
+
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
+                        isHighlighted ? "text-[#2563eb]" : "text-[#0f172a]"
+                      }`} />
+                      <span className="truncate text-left tracking-tight">
+                        {tr(item.label)}
+                      </span>
+                    </div>
+
+                    {isOpen ? (
+                      <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                        isHighlighted ? "text-[#2563eb]" : "text-[#0f172a]"
+                      }`} />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 shrink-0 text-[#0f172a] transition-transform duration-200" />
+                    )}
+                  </button>
+
+                  {/* Sub-items list */}
+                  {isOpen && item.children && (
+                    <div className="mt-1 ps-3 pe-1 space-y-0.5 animate-in fade-in-50 duration-150">
+                      {item.children.map((child) => {
+                        const ChildIcon = child.icon;
+                        const isSubActive = isPathActive(child.href, pathname);
+                        return (
+                          <Link
+                            key={child.label + child.href}
+                            href={child.href}
+                            onClick={onNavigate}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
+                              isSubActive
+                                ? "text-[#2563eb] font-bold bg-blue-50/70"
+                                : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                            }`}
+                          >
+                            <ChildIcon className={`h-4 w-4 shrink-0 transition-colors ${
+                              isSubActive ? "text-[#2563eb]" : "text-[#0f172a]"
+                            }`} />
+                            <span className="truncate tracking-tight">
+                              {tr(child.label)}
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Standalone Direct Link Item */
+                <Link
+                  href={item.href || "/dashboard"}
+                  onClick={onNavigate}
+                  className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 ${
+                    isDirectActive
+                      ? "bg-[#edf5ff] text-[#2563eb] font-bold"
+                      : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                  }`}
+                >
+                  {isDirectActive && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] bg-[#2563eb] rounded-r-md" />
+                  )}
+                  <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
+                    isDirectActive ? "text-[#2563eb]" : "text-[#0f172a]"
+                  }`} />
+                  <span className="truncate tracking-tight flex-1">
+                    {tr(item.label)}
+                  </span>
+                </Link>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
-      {/* Footer — user + status glass card */}
-      <div className="border-t border-slate-100 p-3">
-        <div className="rounded-2xl border border-white/60 bg-gradient-to-br from-white/80 to-slate-50/80 p-3 shadow-sm backdrop-blur-md">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-indigo-600 text-[12px] font-bold text-white shadow-md shadow-[#2563EB]/25">A</div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[12px] font-bold text-slate-800">{tr("Admin")}</div>
-              <div className="truncate text-[10px] text-slate-500">{tr("Super Admin")}</div>
+      {/* 3. Need Help? Card */}
+      <div className="p-3 pt-2">
+        <div className="rounded-2xl bg-[#eff6ff] p-3.5 border border-blue-100/70">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-[#2563eb]">
+              <Headphones className="h-5 w-5 text-[#2563eb]" />
             </div>
-            <button className="relative rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" aria-label={tr("Notifications")}>
-              <Bell className="h-3.5 w-3.5" />
-              <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#EF4444]" />
-            </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-bold text-[#0a192f] leading-tight">
+                {tr("Need Help?")}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">
+                {tr("Contact our support team")}
+              </p>
+            </div>
           </div>
-          <div className="mt-2.5 flex items-center gap-1.5 border-t border-slate-100 pt-2">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10B981] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#10B981]" />
-            </span>
-            <span className="text-[10px] font-medium text-slate-500">{tr("All systems operational")}</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              window.open("mailto:support@dgt.llc?subject=ERP%20Support%20Request", "_blank");
+            }}
+            className="mt-3 w-full py-2 px-3 bg-white text-[#2563eb] font-bold text-xs rounded-xl shadow-xs border border-blue-200/80 hover:bg-blue-50 transition-colors text-center cursor-pointer"
+          >
+            {tr("Get Support")}
+          </button>
         </div>
+      </div>
+
+      {/* 4. Collapse Menu Footer */}
+      <div className="border-t border-slate-100 px-4 py-2.5">
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="w-full flex items-center gap-2 py-1.5 text-xs font-bold text-[#0a192f] hover:text-[#2563eb] transition-colors cursor-pointer"
+        >
+          <ChevronsLeft className="h-4 w-4 text-[#0a192f]" />
+          <span>{tr("Collapse Menu")}</span>
+        </button>
       </div>
     </div>
   );
 }
 
-/* ---------------- responsive drawer wrapper ---------------- */
+/* ---------------- Drawer Wrapper for Mobile/Tablet ---------------- */
 export interface DigitalDockPremiumSidebarWithDrawerProps extends DigitalDockPremiumSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function DigitalDockPremiumSidebarWithDrawer({ open = false, onOpenChange = () => {}, ...sidebarProps }: DigitalDockPremiumSidebarWithDrawerProps) {
-  const tr = useTr();
+export function DigitalDockPremiumSidebarWithDrawer({
+  open = false,
+  onOpenChange = () => {},
+  ...sidebarProps
+}: DigitalDockPremiumSidebarWithDrawerProps) {
   return (
     <>
-      <button onClick={() => onOpenChange(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100" aria-label={tr("Open navigation")}>
-        <Menu className="h-4 w-4" />
-      </button>
       {open && (
-        <div className="fixed inset-0 z-50 xl:hidden">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-in fade-in" onClick={() => onOpenChange(false)} />
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-200">
-            <button onClick={() => onOpenChange(false)} className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label={tr("Close navigation")}>
+        <div className="fixed inset-0 z-50">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
+            onClick={() => onOpenChange(false)}
+          />
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-[275px] max-w-[85vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-250">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="absolute right-3 top-4 z-10 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"
+              aria-label="Close navigation"
+            >
               <X className="h-4 w-4" />
             </button>
-            <DigitalDockPremiumSidebar {...sidebarProps} />
+            <DigitalDockPremiumSidebar
+              {...sidebarProps}
+              onNavigate={() => {
+                sidebarProps.onNavigate?.();
+                onOpenChange(false);
+              }}
+              onToggleCollapse={() => onOpenChange(false)}
+            />
           </aside>
         </div>
       )}
@@ -558,6 +473,3 @@ export function DigitalDockPremiumSidebarWithDrawer({ open = false, onOpenChange
 }
 
 export default DigitalDockPremiumSidebar;
-
-// Re-export palette tokens for convenience when building matching UI elsewhere.
-export const digitalDockPalette = colors;
