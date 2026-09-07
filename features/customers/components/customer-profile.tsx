@@ -16,6 +16,7 @@ import { t } from "@/lib/i18n/ui";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { Party360Modal } from "./party-360-modal";
 import { SendToCustomerModal } from "./send-to-customer-modal";
+import { CustomerAutoReplyPanel } from "./customer-auto-reply-panel";
 
 type CustomerRow = {
   id: string;
@@ -605,6 +606,9 @@ export function CustomerProfile({
               <p className="text-xs text-slate-700 leading-relaxed font-medium dark:text-slate-300">{parsedMeta.remarks}</p>
             </div>
           )}
+
+          {/* Customer Auto-Reply — editable 5-language replies + send log */}
+          <CustomerAutoReplyPanel customerId={customer.id} lang={lang} countryId={customer.country_id} />
         </div>
 
         {/* Sticky Bottom Action Bar inside Drawer */}
