@@ -13,6 +13,7 @@ import {
   type ReportTableColumn,
 } from "./universal-report-shell";
 import { openUniversalReport, type UrpColumn } from "@/lib/reports/universal-report-print";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type ApiCol = { key: string; label: string; align?: "left" | "right" | "center"; kind?: string };
 type Payload = { columns: ApiCol[]; rows: Array<Record<string, unknown>>; totals: Record<string, unknown> };
@@ -114,7 +115,7 @@ export function BillCostProfitReportView({
 
   const shellCols: ReportTableColumn[] = apiCols.map((c) => ({
     key: c.key,
-    label: c.label,
+    label: translateHeader(s.lang, c.label),
     align: c.align === "right" ? "end" : c.align === "center" ? "center" : "start",
     render: (r: Record<string, unknown>) => {
       const v = r[c.key];
@@ -127,7 +128,7 @@ export function BillCostProfitReportView({
 
   const printInput = () => {
     const pdfCols: UrpColumn[] = apiCols.map((c) => ({
-      key: c.key, label: c.label,
+      key: c.key, label: translateHeader(s.lang, c.label),
       align: c.align === "right" ? "end" : c.align === "center" ? "center" : "start",
       format: c.kind === "money" ? "currency" : c.kind === "qty" ? "number" : c.kind === "date" ? "date" : "text",
     }));
@@ -175,7 +176,7 @@ export function BillCostProfitReportView({
   };
 
   const exportCsv = () => {
-    const head = apiCols.map((c) => c.label).join(",");
+    const head = apiCols.map((c) => translateHeader(s.lang, c.label)).join(",");
     const lines = rows.map((r) => apiCols.map((c) => {
       const v = r[c.key];
       if (c.kind === "money") return money(v);

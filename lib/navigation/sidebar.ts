@@ -1414,6 +1414,38 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-outstanding-panel",
+        labelKey: "nav.outstanding_report_shell" as any,
+        iconKey: "banknote",
+        href: "/dashboard/reports/outstanding" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-kyc-compliance-panel",
+        labelKey: "nav.kyc_compliance_report_shell" as any,
+        iconKey: "shield",
+        href: "/dashboard/reports/kyc-compliance" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-user-journal-panel",
+        labelKey: "nav.user_journal_report_shell" as any,
+        iconKey: "users",
+        href: "/dashboard/reports/user-journal" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-shipping-clearing-panel",
+        labelKey: "nav.shipping_clearing_report_shell" as any,
+        iconKey: "truck",
+        href: "/dashboard/reports/shipping-clearing" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "agent_user", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",

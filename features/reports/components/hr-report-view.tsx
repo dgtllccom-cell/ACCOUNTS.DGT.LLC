@@ -13,6 +13,7 @@ import {
   type ReportTableColumn,
 } from "./universal-report-shell";
 import { openUniversalReport, type UrpColumn } from "@/lib/reports/universal-report-print";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type ApiCol = { key: string; label: string; align?: "left" | "right" | "center"; kind?: string };
 type Payload = { columns: ApiCol[]; rows: Array<Record<string, unknown>> };
@@ -73,10 +74,10 @@ export function HrReportView({
         { label: s.t("k_employees", "Distinct Employees"), value: distinct("employee_code") || distinct("employee_name"), mono: true },
         ...(moneyKeys.slice(0, 3).map((k) => {
           const col = apiCols.find((c) => c.key === k);
-          return { label: col?.label ?? k, value: money(sumKey(k)), mono: true };
+          return { label: translateHeader(s.lang, col?.label ?? k), value: money(sumKey(k)), mono: true };
         }) as ReportCard["rows"]),
       ],
-      footer: moneyKeys[3] ? { label: apiCols.find((c) => c.key === moneyKeys[3])?.label ?? moneyKeys[3], value: money(sumKey(moneyKeys[3])), tone: "strong" } : undefined,
+      footer: moneyKeys[3] ? { label: translateHeader(s.lang, apiCols.find((c) => c.key === moneyKeys[3])?.label ?? moneyKeys[3]), value: money(sumKey(moneyKeys[3])), tone: "strong" } : undefined,
     },
     {
       key: "breakdown",
@@ -118,14 +119,14 @@ export function HrReportView({
   };
 
   const shellCols: ReportTableColumn[] = apiCols.map((c) => ({
-    key: c.key, label: c.label,
+    key: c.key, label: translateHeader(s.lang, c.label),
     align: c.align === "right" || c.kind === "money" || MONEY_HINT.test(c.key) ? "end" : c.align === "center" ? "center" : "start",
     render: (r: Record<string, unknown>) => cellFmt(c, r[c.key]),
   }));
 
   const printInput = () => {
     const pdfCols: UrpColumn[] = apiCols.map((c) => ({
-      key: c.key, label: c.label,
+      key: c.key, label: translateHeader(s.lang, c.label),
       align: c.align === "right" || c.kind === "money" || MONEY_HINT.test(c.key) ? "end" : c.align === "center" ? "center" : "start",
     }));
     const prows = rows.map((r) => {
@@ -169,7 +170,7 @@ export function HrReportView({
   };
 
   const exportCsv = () => {
-    const head = apiCols.map((c) => c.label).join(",");
+    const head = apiCols.map((c) => translateHeader(s.lang, c.label)).join(",");
     const lines = rows.map((r) => apiCols.map((c) => `"${cellFmt(c, r[c.key]).replace(/"/g, "'")}"`).join(","));
     const blob = new Blob(["﻿" + [head, ...lines].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");

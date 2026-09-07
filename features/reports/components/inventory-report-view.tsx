@@ -13,6 +13,7 @@ import {
   type ReportTableColumn,
 } from "./universal-report-shell";
 import { openUniversalReport, type UrpColumn } from "@/lib/reports/universal-report-print";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type ApiCol = { key: string; label: string; align?: "left" | "right" | "center"; kind?: string };
 type Payload = { columns: ApiCol[]; rows: Array<Record<string, unknown>>; totals?: Record<string, unknown>; functionalCurrency?: string };
@@ -74,11 +75,11 @@ export function InventoryReportView({
         { label: s.t("k_rows", "Report Rows"), value: rows.length, mono: true, tone: "strong" },
         ...(qtyKeys.slice(0, 2).map((k) => {
           const col = apiCols.find((c) => c.key === k);
-          return { label: col?.label ?? k, value: num(Number(totals[k] ?? sumKey(k))), mono: true };
+          return { label: translateHeader(s.lang, col?.label ?? k), value: num(Number(totals[k] ?? sumKey(k))), mono: true };
         }) as ReportCard["rows"]),
         ...(moneyKeys.slice(0, 1).map((k) => {
           const col = apiCols.find((c) => c.key === k);
-          return { label: `${col?.label ?? k} (${fc})`, value: money(Number(totals[k] ?? sumKey(k))), mono: true, tone: "strong" as const };
+          return { label: `${translateHeader(s.lang, col?.label ?? k)} (${fc})`, value: money(Number(totals[k] ?? sumKey(k))), mono: true, tone: "strong" as const };
         }) as ReportCard["rows"]),
       ],
     },
@@ -119,7 +120,7 @@ export function InventoryReportView({
   };
 
   const shellCols: ReportTableColumn[] = apiCols.map((c) => ({
-    key: c.key, label: c.label,
+    key: c.key, label: translateHeader(s.lang, c.label),
     align: c.kind === "money" || c.kind === "qty" || c.align === "right" ? "end" : c.align === "center" ? "center" : "start",
     render: (r: Record<string, unknown>) => cellFmt(c, r[c.key]),
   }));
@@ -137,7 +138,7 @@ export function InventoryReportView({
 
   const printInput = () => {
     const pdfCols: UrpColumn[] = apiCols.map((c) => ({
-      key: c.key, label: c.label,
+      key: c.key, label: translateHeader(s.lang, c.label),
       align: c.kind === "money" || c.kind === "qty" || c.align === "right" ? "end" : c.align === "center" ? "center" : "start",
     }));
     const prows = rows.map((r) => {
@@ -184,7 +185,7 @@ export function InventoryReportView({
   };
 
   const exportCsv = () => {
-    const head = apiCols.map((c) => c.label).join(",");
+    const head = apiCols.map((c) => translateHeader(s.lang, c.label)).join(",");
     const lines = rows.map((r) => apiCols.map((c) => `"${cellFmt(c, r[c.key]).replace(/"/g, "'")}"`).join(","));
     const blob = new Blob(["﻿" + [head, ...lines].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
