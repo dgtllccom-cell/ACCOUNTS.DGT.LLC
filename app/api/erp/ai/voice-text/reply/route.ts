@@ -18,7 +18,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Try real ERP business intelligence engine
+    // 1. Check for specific operational queries (prompts, branches, approvals, cash breakdown, roznamcha)
+    const smartReply = generateSmartOperationsReply(userMessage, language, session);
+    if (smartReply) {
+      return NextResponse.json({
+        ok: true,
+        reply: smartReply,
+        timestamp: new Date().toISOString(),
+        userId: session.userId
+      });
+    }
+
+    // 2. Try general ERP financial query engine
     try {
       const supabase = await createApiSupabaseClient();
       const assistantResult = await runErpAssistantQuery(session, supabase, {
@@ -39,9 +50,6 @@ export async function POST(request: NextRequest) {
     } catch (dbErr) {
       console.warn("ERP Assistant Query error, falling back to intelligent knowledge base:", dbErr);
     }
-
-    // 2. Intelligent multilingual operations responder
-    const reply = generateSmartOperationsReply(userMessage, language, session);
 
     return NextResponse.json({
       ok: true,

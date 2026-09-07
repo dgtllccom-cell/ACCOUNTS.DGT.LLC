@@ -90,7 +90,19 @@ export function classifyIntent(question: string, lang: SupportedLanguage): Assis
   if (!q.trim()) return "help";
 
   for (const langKey of Object.keys(WRITE_VERBS) as SupportedLanguage[]) {
-    if (WRITE_VERBS[langKey].some((v) => q.includes(normalize(v)))) return "write_refused";
+    if (WRITE_VERBS[langKey].some((v) => {
+      const nv = normalize(v).trim();
+      // Word boundary match to prevent "credit" matching "edit"
+      const re = new RegExp(`(^|\\s|[.,!?;])${nv}($|\\s|[.,!?;])`, "i");
+      return re.test(q) || q.includes(normalize(v));
+    })) {
+      // Specifically safeguard "credit" from triggering "edit"
+      if (q.includes("credit") && !q.match(/\b(edit|modify|update)\b/i)) {
+        // Not a write request
+      } else {
+        return "write_refused";
+      }
+    }
   }
 
   const scored: { intent: AssistantIntent; score: number }[] = [];
