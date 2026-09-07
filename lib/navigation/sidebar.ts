@@ -1334,6 +1334,14 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-ledger-general-panel",
+        labelKey: "nav.ledger_general_shell" as any,
+        iconKey: "book-open",
+        href: "/dashboard/reports/ledger-general" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",

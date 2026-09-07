@@ -1,34 +1,28 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { requireErpSession } from "@/lib/auth/session";
-import { resolveReportScope } from "@/lib/permissions/middleware";
 import { resolveReportContext } from "@/lib/reports/resolve-report-context";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { SuperAdminReportView } from "@/features/reports/components/super-admin-report-view";
+import { LedgerGeneralReportView } from "@/features/reports/components/ledger-general-report-view";
 import type { ReportMetaOption } from "@/features/reports/components/universal-report-shell";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Super Admin Reports — ERP Global",
-  description: "Global reports across all countries, branches, currencies and users.",
-};
+export const metadata: Metadata = { title: "General Ledger Report — ERP" };
 
-export default async function SuperAdminReportsPage() {
+export default async function LedgerGeneralReportPage() {
   const session = await requireErpSession();
-  const scope = resolveReportScope(session);
-  if (scope.level !== "global") redirect("/dashboard/reports");
-
   const context = await resolveReportContext(session);
 
   let countries: ReportMetaOption[] = [];
   try {
     countries = (await withLocalPg<ReportMetaOption[]>(async (sql) => {
-      const r = await sql`select id::text as id, name from public.countries where deleted_at is null order by name`;
+      const r = session.isSuperAdmin
+        ? await sql`select id::text as id, name from public.countries where deleted_at is null order by name`
+        : await sql`select id::text as id, name from public.countries where deleted_at is null and id = any(${session.countryIds}::uuid[]) order by name`;
       return (r as unknown as Array<{ id: string; name: string }>).map((c) => ({ id: c.id, name: c.name }));
     })) ?? [];
   } catch {
     countries = [];
   }
 
-  return <SuperAdminReportView context={context} countries={countries} />;
+  return <LedgerGeneralReportView context={context} countries={countries} />;
 }
