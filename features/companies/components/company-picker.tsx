@@ -97,7 +97,7 @@ export function CompanyPicker({
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(value)}`);
+        const res = await apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(value)}?lang=${encodeURIComponent(lang || "en")}`);
         if (cancelled) return;
         if (res.company) {
           setCompanies((current) => {

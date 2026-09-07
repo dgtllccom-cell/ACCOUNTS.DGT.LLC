@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
-    if (employee.person) {
+    if (employee.person && !wantsRawRecord(request)) {
       const [resolved] = await localizeRecordNames([employee.person as any], "customers", "customer_name", lang);
       const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
       employee = { ...employee, person: resolved2 };

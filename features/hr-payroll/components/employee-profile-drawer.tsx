@@ -62,7 +62,7 @@ export function EmployeeProfileDrawer({
     let active = true;
     setLoading(true);
 
-    apiGet<{ employee: any }>(`/api/erp/hr-payroll/employees/${employeeId}`)
+    apiGet<{ employee: any }>(`/api/erp/hr-payroll/employees/${employeeId}?lang=${encodeURIComponent(lang || "en")}`)
       .then((res) => {
         if (!active) return;
         setEmp(res.employee || null);

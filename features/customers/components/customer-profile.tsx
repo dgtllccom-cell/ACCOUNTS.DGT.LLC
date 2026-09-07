@@ -71,7 +71,8 @@ export function CustomerProfile({
       setLoading(true);
       setError(null);
       try {
-        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${customerId}`);
+        // Profile is a display view → resolve names into the viewer's language.
+        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${customerId}?lang=${encodeURIComponent(lang || "en")}`);
         setCustomer(res.customer);
       } catch (e: any) {
         setError(e.message || getLabel("failedToLoadCustomerProfile", lang));
@@ -79,7 +80,7 @@ export function CustomerProfile({
         setLoading(false);
       }
     })();
-  }, [customerId]);
+  }, [customerId, lang]);
 
   const parsedMeta = useMemo(() => {
     if (!customer) return null;
