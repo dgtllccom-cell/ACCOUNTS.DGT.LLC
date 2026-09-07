@@ -141,7 +141,6 @@ export function UserProfileReportModal({
       lastUpdatedBy: user.lastUpdatedBy,
       lastActivity: user.updatedAt || new Date().toISOString(),
       lastActivityAction: "user.profile_viewed",
-      rawPassword: user.passwordVaultRef || "VAULT-ENCRYPTED"
     };
 
     openUserA4ReportWindow({

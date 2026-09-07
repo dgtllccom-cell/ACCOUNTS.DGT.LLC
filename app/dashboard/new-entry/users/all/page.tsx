@@ -191,9 +191,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
               : [];
         const mapped: UserDirectoryItem[] = rawList.map((u: any, idx: number) => {
           const userCode = u.userCode || `USR-${String(idx + 1).padStart(4, "0")}`;
-          // Real password from the API (super admin only; null otherwise — the row
-          // renders a masked placeholder). NEVER a hard-coded "Admin@123".
-          const passwordKey = u.rawPassword || u.raw_password || null;
+          // SECURITY: plaintext passwords are no longer returned by any API and are
+          // never rendered here. Credentials live only in Supabase Auth (hashed).
+          const passwordKey: string | null = null;
 
           const role = (u.role || "").toLowerCase();
           let loginUrl = "/auth/login";
@@ -418,7 +418,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
   }, [users, searchQuery, countryFilter, roleFilter, statusFilter]);
 
   const handleExportCsv = () => {
-    const headers = ["Sr #", "User Code", "Full Name", "Role", "Country", "Branch", "Login URL", "Username / Email", "Password / Key", "Vault ID", "Status"];
+    const headers = ["Sr #", "User Code", "Full Name", "Role", "Country", "Branch", "Login URL", "Username / Email", "Vault ID", "Status"];
     const rows = filteredUsers.map((u, i) => [
       i + 1,
       `"${u.userCode}"`,
@@ -428,7 +428,6 @@ export default function SuperAdminAllUsersDirectoryPage() {
       `"${u.branchName}"`,
       `"${window.location.origin}${u.loginUrl}"`,
       `"${u.email}"`,
-      `"${u.passwordKey || ""}"`,
       `"${u.passwordVaultRef}"`,
       `"${u.isActive ? "Active" : "Inactive"}"`
     ]);
@@ -911,7 +910,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <th className="p-3.5">{th("Country & Branch")}</th>
                 <th className="p-3.5">{th("Login Portal URL")}</th>
                 <th className="p-3.5">{th("Username / Email")}</th>
-                <th className="p-3.5">{th("Password Key / Vault")}</th>
+                <th className="p-3.5">{th("Credential")}</th>
                 <th className="p-3.5 text-center">{th("Status")}</th>
                 <th className="p-3.5 text-center print:hidden">{th("Actions")}</th>
               </tr>
@@ -1026,29 +1025,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         </div>
                       </td>
 
-                      {/* Password Key / Vault */}
+                      {/* Credential — managed in Supabase Auth; never displayed */}
                       <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded text-[11px] tracking-wide border border-border">
-                            {isRevealed ? (u.passwordKey || th("Not set in vault")) : "••••••••"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => togglePassword(u.userId)}
-                            title={isRevealed ? th("Hide Password Key") : th("Reveal Password Key")}
-                            className="text-muted-foreground hover:text-indigo-600 print:hidden cursor-pointer"
-                          >
-                            {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => u.passwordKey && copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
-                            title={th("Copy Password")}
-                            className="text-muted-foreground hover:text-foreground print:hidden cursor-pointer"
-                          >
-                            {copiedKey === `pwd-${u.userId}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
+                        <span className="font-mono text-muted-foreground text-[11px] tracking-wide">
+                          {th("Managed in Auth")}
+                        </span>
                       </td>
 
                       {/* Status */}

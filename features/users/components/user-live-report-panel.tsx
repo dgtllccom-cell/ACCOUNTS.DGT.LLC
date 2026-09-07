@@ -32,7 +32,6 @@ type UserLiveReportPanelProps = {
   accountRegNo: string;
   role: string;
   userCode: string;
-  rawPassword?: string;
   status?: string;
   /** Real audit values from the record — never fabricated; default "—". */
   createdBy?: string;

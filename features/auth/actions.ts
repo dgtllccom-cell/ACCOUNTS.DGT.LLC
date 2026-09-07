@@ -20,7 +20,9 @@ const loginSchema = z.object({
 // in as super_admin with no real credentials. Now: exact match only, on a
 // single configurable identifier/password, and only when demo auth is enabled.
 const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
-const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "Daman@2026!";
+// No hardcoded fallback: the bootstrap login is disabled unless an operator sets
+// BOOTSTRAP_SUPERADMIN_PASSWORD in the environment AND demo auth is enabled.
+const BOOTSTRAP_PASSWORD = (process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "").trim();
 
 export async function signInWithPassword(formData: FormData) {
   const parsed = loginSchema.safeParse({
@@ -42,8 +44,9 @@ export async function signInWithPassword(formData: FormData) {
   // match — set ALLOW_DEMO_AUTH=false once real Supabase accounts are confirmed.
   if (
     isDemoAuthEnabled() &&
+    BOOTSTRAP_PASSWORD.length > 0 &&
     input.identifier.toLowerCase() === BOOTSTRAP_IDENTIFIER &&
-    (input.password === BOOTSTRAP_PASSWORD || input.password === "Daman@2026!" || input.password === "Admin@123")
+    input.password === BOOTSTRAP_PASSWORD
   ) {
     await setTempSuperAdminSession({ remember });
     redirect("/dashboard" as Route);

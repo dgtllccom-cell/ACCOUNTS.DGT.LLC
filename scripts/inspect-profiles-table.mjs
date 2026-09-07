@@ -32,7 +32,7 @@ async function inspectProfiles() {
   console.log("user_role_assignments columns:", uraCols.map(c => `${c.column_name} (${c.data_type})`));
 
   const existingProfiles = await sql`
-    SELECT id, user_code, full_name, raw_password FROM profiles LIMIT 10;
+    SELECT id, user_code, full_name FROM profiles LIMIT 10;
   `;
   console.log("Sample profiles:", existingProfiles);
 

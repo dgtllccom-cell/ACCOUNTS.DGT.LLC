@@ -28,10 +28,17 @@ async function run() {
     const [{ now }] = await sql`SELECT NOW()`;
     console.log("DB Connected at:", now);
 
-    const email = "superadmin@damaan.com";
+    const email = process.env.SUPERADMIN_EMAIL || "superadmin@damaan.com";
     const userCode = "SUPERADMIN";
-    const password = "Admin@123";
+    const password = process.env.SUPERADMIN_PASSWORD;
     const fullName = "Super Admin";
+
+    if (!password || password.length < 12) {
+      throw new Error(
+        "Set SUPERADMIN_PASSWORD (>=12 chars) in the environment before running this script. " +
+        "There is no default — the Super Admin credential must never be hardcoded."
+      );
+    }
 
     // 1. Check or create auth user
     const existing = await sql`SELECT id FROM auth.users WHERE email = ${email}`;
@@ -69,14 +76,14 @@ async function run() {
       WHERE id = ${userId}
     `;
 
-    // 3. Upsert profiles row
+    // 3. Upsert profiles row (no plaintext password — the credential lives only
+    //    in auth.users.encrypted_password, set above).
     await sql`
-      INSERT INTO profiles (id, full_name, user_code, raw_password, preferred_language_code, updated_at)
-      VALUES (${userId}, ${fullName}, ${userCode}, ${password}, 'en', NOW())
+      INSERT INTO profiles (id, full_name, user_code, preferred_language_code, updated_at)
+      VALUES (${userId}, ${fullName}, ${userCode}, 'en', NOW())
       ON CONFLICT (id) DO UPDATE SET
         full_name = EXCLUDED.full_name,
         user_code = EXCLUDED.user_code,
-        raw_password = EXCLUDED.raw_password,
         updated_at = NOW()
     `;
     console.log("Profiles row updated for Super Admin");
@@ -93,7 +100,7 @@ async function run() {
     console.log("SUCCESS! Super Admin user is seeded in DB.");
     console.log("Email:", email);
     console.log("User Code:", userCode);
-    console.log("Password:", password);
+    console.log("Password: (from SUPERADMIN_PASSWORD env — not printed)");
     console.log("=============================================\n");
 
   } catch (err) {

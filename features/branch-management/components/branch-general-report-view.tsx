@@ -130,7 +130,6 @@ type BranchUserDetail = {
   id: string;
   name: string;
   username: string;
-  temporaryPassword: string | null;
   mobile: string;
   email: string;
   role: string;
@@ -347,7 +346,6 @@ function BranchUsersPanel({
                   <Th className="border-r p-2">Branch</Th>
                   <Th className="border-r p-2 text-left">User Name</Th>
                   <Th className="border-r p-2">Login ID</Th>
-                  <Th className="border-r p-2">Temp Password</Th>
                   <Th className="border-r p-2">Email</Th>
                   <Th className="border-r p-2">Role</Th>
                   <Th className="border-r p-2">Status</Th>
@@ -364,7 +362,6 @@ function BranchUsersPanel({
                     <td className="border-r p-2">{user.branchName || "-"}</td>
                     <td className="border-r p-2 text-left font-bold text-slate-900">{user.name || "-"}</td>
                     <td className="border-r p-2 font-mono font-black text-indigo-700">{user.username || "-"}</td>
-                    <td className="border-r p-2 font-mono">{user.temporaryPassword || "-"}</td>
                     <td className="border-r p-2">{user.email || "-"}</td>
                     <td className="border-r p-2">
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 font-black text-slate-700">{user.role || "-"}</span>
@@ -478,7 +475,6 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
                 <Th className="border-r p-2 text-left">Main Branch Login</Th>
                 <Th className="border-r p-2 text-left">City Branch Login</Th>
                 <Th className="border-r p-2">Username</Th>
-                <Th className="border-r p-2">Password</Th>
                 <Th className="border-r p-2">Role</Th>
                 <Th className="border-r p-2">User Name</Th>
                 <Th className="border-r p-2">Email</Th>
@@ -493,7 +489,6 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
                   <td className="border-r p-2 text-left">{user.branchName || "-"}</td>
                   <td className="border-r p-2 text-left">{user.cityName || "-"}</td>
                   <td className="border-r p-2 font-mono font-black text-blue-700">{user.username || "-"}</td>
-                  <td className="border-r p-2 font-mono">{user.temporaryPassword || "-"}</td>
                   <td className="border-r p-2">
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 font-black text-slate-700">{user.role || "-"}</span>
                   </td>

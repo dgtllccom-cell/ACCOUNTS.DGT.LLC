@@ -40,7 +40,6 @@ export type BranchUser = {
   username: string;
   loginId?: string;
   lastLogin?: string | null;
-  temporaryPassword?: string | null;
   mobile?: string;
   email?: string;
   role: string;
@@ -280,8 +279,10 @@ export function AdminUserManagementPanel() {
     const temporaryPassword = `DEV-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16).toUpperCase()}!Aa1`;
     const ok = window.confirm(`Generate and apply a new temporary password for ${user.name}?`);
     if (!ok) return;
-    await triggerUserPatch(user.id, { password: temporaryPassword }, `Temporary password set for ${user.username}: ${temporaryPassword}`);
-    window.alert(`Temporary password set once for ${user.username}:\n${temporaryPassword}`);
+    // Never put the generated password into the audit/reason trail — it is shown
+    // to the operator once here and then only lives (hashed) in Supabase Auth.
+    await triggerUserPatch(user.id, { password: temporaryPassword }, `Temporary password reset for ${user.username}`);
+    window.alert(`Temporary password set once for ${user.username}:\n${temporaryPassword}\n\nShare it securely — it will not be shown again.`);
   };
 
   const toggleUserStatus = async (user: BranchUser) => {

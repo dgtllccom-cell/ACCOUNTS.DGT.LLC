@@ -79,7 +79,6 @@ type ProfileRow = {
   id: string;
   full_name: string | null;
   user_code: string | null;
-  raw_password: string | null;
   created_at: string | null;
 };
 
@@ -102,7 +101,6 @@ type BranchUserDetail = {
   id: string;
   name: string;
   username: string;
-  temporaryPassword?: string | null;
   mobile: string;
   email: string;
   role: string;
@@ -330,7 +328,7 @@ export async function GET() {
     }
 
     const [profileRes, permissionRes, authUsersRes] = await Promise.all([
-      admin.from("profiles").select("id, full_name, user_code, raw_password, created_at").is("deleted_at", null),
+      admin.from("profiles").select("id, full_name, user_code, created_at").is("deleted_at", null),
       admin.from("user_permission_sets").select("user_id, permissions").is("deleted_at", null),
       admin.auth.admin.listUsers({ perPage: 1000 }).then((res) => ({
         data: res.data?.users ?? [],
@@ -381,7 +379,6 @@ export async function GET() {
         id: assignment.user_id,
         name: profile?.full_name || metadata.full_name || authUser?.email || "Unnamed User",
         username: profile?.user_code || metadata.user_code || authUser?.email || assignment.user_id,
-        temporaryPassword: profile?.raw_password || null,
         mobile: metadata.phone || metadata.mobile || authUser?.phone || "",
         email: authUser?.email || "",
         role,

@@ -1,5 +1,12 @@
+import { randomBytes } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+
+/** Generate a strong one-time password. The operator must trigger a reset email
+ * afterwards — this value is intentionally not returned or logged. */
+function generateInitialPassword() {
+  return `A1!${randomBytes(18).toString("base64url")}`;
+}
 
 /**
  * HierarchyService
@@ -35,7 +42,7 @@ export class HierarchyService {
     // 1. Create Auth User
     const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email,
-      password: "ChangeMe123!", // Temporary password, should ideally trigger a reset email
+      password: generateInitialPassword(), // one-time random; operator sends a reset email
       email_confirm: true,
       user_metadata: { full_name: fullName }
     });

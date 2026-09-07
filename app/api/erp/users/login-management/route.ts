@@ -64,7 +64,6 @@ type ProfileRow = {
   id: string;
   full_name: string | null;
   user_code: string | null;
-  raw_password?: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted_at: string | null;
@@ -83,7 +82,6 @@ type BranchUserDetail = {
   username: string;
   email: string;
   mobile: string;
-  temporaryPassword?: string | null;
   role: string;
   classification: string;
   mainUser: boolean;
@@ -173,7 +171,7 @@ async function loadViaPg() {
     const clearingBranchRowsRaw = await sql<any[]>`select id, name, code, clearing_agent_id, branch_level from clearing_agent_branches where deleted_at is null`;
     const authUserRowsRaw = await sql<any[]>`select id, email from auth.users`;
     const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
-    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, raw_password, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
+    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
     const permissionRowsRaw = await sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`;
 
     const countryRows = countryRowsRaw as CountryRow[];
@@ -244,7 +242,6 @@ async function loadViaPg() {
         username: profile?.user_code || assignment.user_id,
         email: authUser?.email || (profile?.user_code ? `${profile.user_code.toLowerCase()}@dgt.llc` : ""),
         mobile: "",
-        temporaryPassword: profile?.raw_password || null,
         role,
         classification: roleClassification(role),
         mainUser: isMainUserRole(role),
