@@ -67,7 +67,6 @@ type UserJournalRow = {
   permissions: string[];
   lastActivity: string;
   lastActivityAction: string | null;
-  rawPassword?: string | null;
   activityCounts: {
     logins: number;
     transactions: number;
@@ -149,15 +148,6 @@ export function UserJournalReport() {
 
   const [adminOnly, setAdminOnly] = useState(false);
   const [recentLoginsOnly, setRecentLoginsOnly] = useState(false);
-  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
-
-  const togglePasswordVisibility = (userId: string) => {
-    setRevealedPasswords((prev) => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }));
-  };
-
   const [draftQuery, setDraftQuery] = useState("");
   const [draftCountryId, setDraftCountryId] = useState("all");
   const [draftBranchId, setDraftBranchId] = useState("all");
@@ -518,7 +508,7 @@ export function UserJournalReport() {
 
   function exportExcel() {
     const rows: string[][] = [
-      ["SR.", "Country", "Branch", "Branch Code", "User Name", "User ID", "Login User ID", "Email", "Role", "Password", "Purpose / Work", "Status", "Registration Date", "Last Activity"]
+      ["SR.", "Country", "Branch", "Branch Code", "User Name", "User ID", "Login User ID", "Email", "Role", "Purpose / Work", "Status", "Registration Date", "Last Activity"]
     ];
     for (let i = 0; i < filteredRows.length; i++) {
       const row = filteredRows[i];
@@ -532,7 +522,6 @@ export function UserJournalReport() {
         row.userCode,
         row.email || "-",
         formatRoleName(row.role),
-        row.rawPassword || "••••••••",
         row.purpose || row.lastActivityAction || "-",
         row.status,
         row.registrationDate,
@@ -720,7 +709,7 @@ export function UserJournalReport() {
             <table className="min-w-[1300px] w-full border-collapse text-left text-[11px]">
               <thead>
                 <tr className="bg-[var(--ujr-table-head)] text-[11px] font-black uppercase tracking-wide text-[var(--ujr-title)] text-center">
-                  {["#", "Country", "Branch", "Branch Code", "User Name", "User ID", "Login User ID", "Email", "Role", "Password", "Purpose / Work", "Status", "Actions"].map((head) => (
+                  {["#", "Country", "Branch", "Branch Code", "User Name", "User ID", "Login User ID", "Email", "Role", "Purpose / Work", "Status", "Actions"].map((head) => (
                     <Th key={head} className="border-b border-r border-[var(--ujr-line)] px-3 py-2.5 last:border-r-0 whitespace-nowrap">{head}</Th>
                   ))}
                 </tr>
@@ -755,28 +744,6 @@ export function UserJournalReport() {
                       {/* Role */}
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 text-[11px] whitespace-nowrap">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">{formatRoleName(row.role)}</span>
-                      </td>
-                      {/* Password */}
-                      <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-mono text-[10px]">
-                        <div className="flex items-center gap-1.5 justify-between">
-                          <span>
-                            {revealedPasswords[row.userId]
-                              ? (row.rawPassword || "—")
-                              : "••••••••"}
-                          </span>
-                          <button
-                            type="button"
-                            className="ujr-pw-toggle-btn text-[var(--ujr-muted)] hover:text-[#1455ff] transition shrink-0"
-                            onClick={() => togglePasswordVisibility(row.userId)}
-                            title={revealedPasswords[row.userId] ? "Hide password" : "Show password"}
-                          >
-                            {revealedPasswords[row.userId] ? (
-                              <EyeOff className="h-3.5 w-3.5" />
-                            ) : (
-                              <Eye className="h-3.5 w-3.5" />
-                            )}
-                          </button>
-                        </div>
                       </td>
                       {/* Purpose / Work */}
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 text-[11px] font-semibold text-[var(--ujr-muted)] whitespace-nowrap">
@@ -892,7 +859,6 @@ export function UserJournalReport() {
               accountRegNo={viewUser.userId}
               role={viewUser.role}
               userCode={viewUser.userCode}
-              rawPassword={viewUser.rawPassword || "••••••••"}
               status={viewUser.status === "active" ? "Active" : "Inactive"}
               selectedCountryName={viewUser.countryName}
               selectedBranchName={viewUser.branchName}

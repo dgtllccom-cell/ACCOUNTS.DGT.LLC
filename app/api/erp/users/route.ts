@@ -257,7 +257,8 @@ export async function POST(request: NextRequest) {
       user_code: issuedUserCode,
       preferred_language_code: body.preferredLanguage,
       default_company_id: body.companyId ?? null,
-      raw_password: body.password,
+      // SECURITY: never persist the plaintext password. The credential lives only
+      // in Supabase Auth (hashed), created via admin.auth.admin.createUser above.
       employee_id: body.employeeId ?? null,
       person_master_id: body.personMasterId ?? null,
       first_name: body.firstName ?? null,
@@ -485,7 +486,6 @@ export async function PATCH(request: NextRequest) {
     // 1. Update profiles table if profile fields are provided
     if (
       body.fullName !== undefined ||
-      body.password !== undefined ||
       body.companyId !== undefined ||
       body.employeeId !== undefined ||
       body.personMasterId !== undefined ||
@@ -498,7 +498,7 @@ export async function PATCH(request: NextRequest) {
         updated_at: new Date().toISOString()
       };
       if (body.fullName !== undefined) profileUpdates.full_name = body.fullName;
-      if (body.password !== undefined) profileUpdates.raw_password = body.password;
+      // SECURITY: password changes go only to Supabase Auth (hashed) in step 2 below.
       if (body.companyId !== undefined) profileUpdates.default_company_id = body.companyId;
       if (body.employeeId !== undefined) profileUpdates.employee_id = body.employeeId;
       if (body.personMasterId !== undefined) profileUpdates.person_master_id = body.personMasterId;

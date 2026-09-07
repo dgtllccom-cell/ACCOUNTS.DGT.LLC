@@ -162,12 +162,11 @@ async function run() {
       // Upsert profile
       console.log(`Upserting profile for user ${email}...`);
       await sql`
-        INSERT INTO profiles (id, full_name, user_code, raw_password, preferred_language_code, updated_at)
-        VALUES (${userId}, ${fullName}, ${userCode}, ${password}, 'en', NOW())
+        INSERT INTO profiles (id, full_name, user_code, preferred_language_code, updated_at)
+        VALUES (${userId}, ${fullName}, ${userCode}, 'en', NOW())
         ON CONFLICT (id) DO UPDATE SET
           full_name = EXCLUDED.full_name,
           user_code = EXCLUDED.user_code,
-          raw_password = EXCLUDED.raw_password,
           updated_at = NOW()
       `;
 

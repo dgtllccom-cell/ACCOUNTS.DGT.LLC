@@ -243,7 +243,7 @@ async function ensureMainBranch(setup, countryId) {
 
 async function ensureCountryAdminAssignment(setup, countryId) {
   let [profile] = await sql`
-    select id, full_name, user_code, raw_password
+    select id, full_name, user_code
     from profiles
     where deleted_at is null
       and upper(user_code) = upper(${setup.adminUserCode})
@@ -253,7 +253,10 @@ async function ensureCountryAdminAssignment(setup, countryId) {
   if (!profile?.id) {
     // Create the user in Supabase auth
     const email = ${'`${setup.adminUserCode.toLowerCase()}@test.com`'};
-    const password = "TestUser@1234";
+    const password = process.env.SEED_ADMIN_PASSWORD;
+    if (!password || password.length < 12) {
+      throw new Error("Set SEED_ADMIN_PASSWORD (>=12 chars) before running this dev seed script.");
+    }
 
     let authUser;
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -278,12 +281,12 @@ async function ensureCountryAdminAssignment(setup, countryId) {
     await new Promise(r => setTimeout(r, 1000));
     const [existingProfile] = await sql`select id from profiles where id = ${authUser.id}`;
     if (!existingProfile?.id) {
-       await sql`insert into profiles (id, full_name, user_code, raw_password) values (${authUser.id}, ${setup.countryName + ' Admin'}, ${setup.adminUserCode}, ${password})`;
+       await sql`insert into profiles (id, full_name, user_code) values (${authUser.id}, ${setup.countryName + ' Admin'}, ${setup.adminUserCode})`;
     } else {
-       await sql`update profiles set user_code = ${setup.adminUserCode}, raw_password = ${password} where id = ${authUser.id}`;
+       await sql`update profiles set user_code = ${setup.adminUserCode} where id = ${authUser.id}`;
     }
 
-    [profile] = await sql`select id, full_name, user_code, raw_password from profiles where id = ${authUser.id}`;
+    [profile] = await sql`select id, full_name, user_code from profiles where id = ${authUser.id}`;
   }
 
   await sql`
@@ -311,8 +314,7 @@ async function ensureCountryAdminAssignment(setup, countryId) {
   return {
     status: "assigned",
     userCode: profile.user_code,
-    fullName: profile.full_name,
-    password: profile.raw_password
+    fullName: profile.full_name
   };
 }
 
@@ -349,8 +351,7 @@ async function main() {
     branch: row.mainBranch,
     branchCode: row.branchCode,
     adminUser: row.admin.userCode,
-    adminName: row.admin.fullName || row.admin.status,
-    password: row.admin.password || "-"
+    adminName: row.admin.fullName || row.admin.status
   })));
   console.log("Counts:", counts);
 }
@@ -398,8 +399,7 @@ async function main() {
     branch: row.mainBranch,
     branchCode: row.branchCode,
     adminUser: row.admin.userCode,
-    adminName: row.admin.fullName || row.admin.status,
-    password: row.admin.password || "-"
+    adminName: row.admin.fullName || row.admin.status
   })));
   console.log("Counts:", counts);
 }

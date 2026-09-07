@@ -72,12 +72,13 @@ async function createOrUpdateUser(email, password, fullName, roleData) {
   // Wait a moment for trigger to create profile if it exists (some databases use triggers)
   await new Promise(r => setTimeout(r, 1000));
   
-  // Upsert Profile to guarantee it exists before role assignment
+  // Upsert Profile to guarantee it exists before role assignment.
+  // Credentials live only in Supabase Auth (set above) — never in profiles.
   await sql`
-    INSERT INTO profiles (id, full_name, raw_password)
-    VALUES (${userId}, ${fullName}, ${password})
-    ON CONFLICT (id) DO UPDATE 
-    SET full_name = EXCLUDED.full_name, raw_password = EXCLUDED.raw_password
+    INSERT INTO profiles (id, full_name)
+    VALUES (${userId}, ${fullName})
+    ON CONFLICT (id) DO UPDATE
+    SET full_name = EXCLUDED.full_name
   `;
   
   // Check if role assignment exists
@@ -102,8 +103,13 @@ async function createOrUpdateUser(email, password, fullName, roleData) {
   return userId;
 }
 
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+
 async function main() {
   try {
+    if (!SEED_ADMIN_PASSWORD || SEED_ADMIN_PASSWORD.length < 12) {
+      throw new Error("Set SEED_ADMIN_PASSWORD (>=12 chars) in the environment. No default — admin credentials must not be hardcoded.");
+    }
     console.log("Fetching countries...");
     const countries = await sql`SELECT id, name FROM countries`;
     console.log(`Found ${countries.length} countries.`);
@@ -117,7 +123,7 @@ async function main() {
       if (countryPrefix === "unitedarabemirates") countryPrefix = "uae";
       
       const email = `${countryPrefix}.admin@dgt.llc`;
-      const password = "Admin@123";
+      const password = SEED_ADMIN_PASSWORD;
       const fullName = `Admin ${country.name}`;
       
       console.log(`Setting up Country Admin for ${country.name}...`);
@@ -125,7 +131,7 @@ async function main() {
         role: "country_admin",
         countryId: country.id
       });
-      credentials.push({ Type: "Country Admin", Location: country.name, UserID: email, Password: password });
+      credentials.push({ Type: "Country Admin", Location: country.name, UserID: email });
     }
     
     // City Admins for ALL countries (including UAE, Pakistan, etc.)
@@ -135,7 +141,7 @@ async function main() {
     for (const city of allCities) {
       const cityPrefix = city.city_name.toLowerCase().replace(/[^a-z0-9]/g, "");
       const email = `${cityPrefix}@dgt.llc`;
-      const password = "Admin@123";
+      const password = SEED_ADMIN_PASSWORD;
       const fullName = `Admin ${city.city_name}`;
       
       console.log(`Setting up City Admin for ${city.city_name}...`);
@@ -145,7 +151,7 @@ async function main() {
         countryBranchId: city.country_branch_id,
         cityBranchId: city.id
       });
-      credentials.push({ Type: "City Admin", Location: city.city_name, UserID: email, Password: password });
+      credentials.push({ Type: "City Admin", Location: city.city_name, UserID: email });
     }
     
     // Fix existing names

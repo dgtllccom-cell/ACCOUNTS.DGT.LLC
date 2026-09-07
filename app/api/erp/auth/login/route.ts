@@ -20,7 +20,11 @@ function dashboardForRoles(roles: EnterpriseRole[]) {
 }
 
 const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
-const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "Daman@2026!";
+// No hardcoded fallback. The bootstrap Super Admin login is only available when
+// an operator explicitly sets BOOTSTRAP_SUPERADMIN_PASSWORD in the environment
+// AND demo auth is enabled (never in production).
+const BOOTSTRAP_PASSWORD = (process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "").trim();
+const BOOTSTRAP_ENABLED = BOOTSTRAP_PASSWORD.length > 0;
 
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || "";
@@ -62,15 +66,17 @@ export async function POST(request: NextRequest) {
     return respondError("Please enter both User ID / Email and Password.", 400);
   }
 
-  const isBootstrapSuperAdmin = 
+  const isBootstrapSuperAdmin =
+    BOOTSTRAP_ENABLED &&
+    (isDemoAuthEnabled() || !isSupabaseConfigured()) &&
     (rawIdentifier.toLowerCase() === BOOTSTRAP_IDENTIFIER ||
      rawIdentifier.toLowerCase() === "superadmin" ||
      rawIdentifier.toUpperCase() === "SUPERADMIN" ||
      rawIdentifier.toLowerCase() === "superadmin@dgt.llc" ||
      rawIdentifier.toLowerCase() === "asmatdgtllc@users.damaan.local") &&
-    (rawPassword === BOOTSTRAP_PASSWORD || rawPassword === "Daman@2026!" || rawPassword === "Admin@123");
+    rawPassword === BOOTSTRAP_PASSWORD;
 
-  if (isBootstrapSuperAdmin && (isDemoAuthEnabled() || !isSupabaseConfigured())) {
+  if (isBootstrapSuperAdmin) {
     await setTempSuperAdminSession({ remember: rememberMe });
     return respondSuccess("/dashboard/super-admin");
   }
@@ -149,16 +155,31 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 3. Verify Password (DB raw_password, Standard Admin@123, or Supabase Auth)
+  // 3. Verify Password.
+  // Primary path: Supabase Auth (hashed credentials) — see step below.
+  // Legacy path: `profiles.raw_password` plaintext compare. DEPRECATED and only
+  // kept so users provisioned by older seed scripts (that never created a
+  // Supabase Auth entry) are not locked out. No new code writes raw_password;
+  // it is scheduled for removal once every active account has a Supabase Auth
+  // credential. There is NO hardcoded password bypass here.
   let isAuthenticated = false;
 
+  // Recovery hatch: an operator can set ALLOW_LEGACY_RAW_PASSWORD_LOGIN=true to
+  // temporarily re-enable the plaintext compare on a non-demo environment while
+  // migrating legacy accounts to Supabase Auth. Defaults to OFF.
+  const legacyRawPwAllowed =
+    isDemoAuthEnabled() ||
+    String(process.env.ALLOW_LEGACY_RAW_PASSWORD_LOGIN || "").toLowerCase() === "true";
+
   if (profileRecord) {
-    // raw_password match is always valid (user explicitly set it)
-    const hasRawPwMatch = profileRecord.raw_password && profileRecord.raw_password === rawPassword;
-    // Admin@123 / BOOTSTRAP_PASSWORD are demo/dev shortcuts — only active when demo auth is enabled
-    const hasDemoBypass = isDemoAuthEnabled() &&
-      (rawPassword === "Admin@123" || rawPassword === BOOTSTRAP_PASSWORD);
-    if (hasRawPwMatch || hasDemoBypass) {
+    const hasLegacyRawPwMatch =
+      legacyRawPwAllowed &&
+      typeof profileRecord.raw_password === "string" &&
+      profileRecord.raw_password.length > 0 &&
+      profileRecord.raw_password === rawPassword;
+    const hasBootstrapBypass =
+      isDemoAuthEnabled() && BOOTSTRAP_ENABLED && rawPassword === BOOTSTRAP_PASSWORD;
+    if (hasLegacyRawPwMatch || hasBootstrapBypass) {
       isAuthenticated = true;
     }
   }
@@ -186,21 +207,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // @dgt.llc domain shortcut (branch onboarding convenience) — ONLY when demo auth is enabled
-  if (isDemoAuthEnabled() && rawPassword === "Admin@123" && rawIdentifier.toLowerCase().endsWith("@dgt.llc")) {
-    isAuthenticated = true;
-    if (!profileRecord) {
-      const cityKey = rawIdentifier.replace(/@dgt\.llc$/i, "").toLowerCase();
-      const capCity = cityKey.charAt(0).toUpperCase() + cityKey.slice(1);
-      const isAgent = cityKey.includes("agent") || cityKey.includes("clearing") || cityKey.includes("01");
-      profileRecord = {
-        id: `city-branch-${cityKey}`,
-        user_code: rawIdentifier.toLowerCase(),
-        full_name: `${capCity} Branch Officer`
-      };
-      userRoles = isAgent ? (["agent_user"] as EnterpriseRole[]) : (["city_branch_admin"] as EnterpriseRole[]);
-    }
-  }
+  // (Removed: the "<city>@dgt.llc + Admin@123" onboarding shortcut. It hardcoded
+  // a shared password and let anyone mint a branch/agent session. Branch users
+  // now authenticate through Supabase Auth like everyone else.)
 
   if (isBootstrapSuperAdmin) {
     isAuthenticated = true;

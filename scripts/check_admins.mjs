@@ -19,7 +19,7 @@ async function checkAdmins() {
   const sql = postgres(process.env.DATABASE_URL, { ssl: "require", max: 1, idle_timeout: 1, prepare: false });
 
   const users = await sql`
-    select u.id, u.email, p.full_name, p.raw_password, ura.role 
+    select u.id, u.email, p.full_name, ura.role
     from auth.users u
     left join profiles p on p.id = u.id
     left join user_role_assignments ura on ura.user_id = u.id
@@ -27,11 +27,10 @@ async function checkAdmins() {
     limit 20
   `;
 
-  console.log("\n================ ADMIN CREDENTIALS ================");
+  console.log("\n================ ADMIN ACCOUNTS ================");
   console.table(users.map(u => ({
     email: u.email,
     name: u.full_name,
-    password: u.raw_password || "(not set in profiles)",
     role: u.role
   })));
 

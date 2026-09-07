@@ -870,7 +870,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         workingShift: employeeProfile.workingShift,
         lastActivity: new Date().toISOString(),
         lastActivityAction: "user.registered",
-        rawPassword: `VAULT-DGT-${userCode}`
       },
       lang: activeLang
     });

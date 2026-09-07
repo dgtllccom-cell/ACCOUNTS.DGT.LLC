@@ -20,7 +20,6 @@ export type UserReportData = {
   permissions?: string[];
   lastActivity?: string;
   lastActivityAction?: string | null;
-  rawPassword?: string | null;
   department?: string;
   designation?: string;
   employmentType?: string;
