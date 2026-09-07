@@ -77,9 +77,32 @@ export async function addEntryReq(id: string, payload: Record<string, unknown>) 
   );
 }
 
+export async function updateEntryReq(id: string, kind: string, childId: string, patch: Record<string, unknown>) {
+  return j<{ id: string; childId: string }>(
+    await fetch(`/api/erp/consignment/${id}/entries`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ kind, childId, ...patch }),
+    }),
+  );
+}
+
 export async function deleteEntryReq(id: string, kind: string, childId: string) {
   const p = new URLSearchParams({ kind, childId });
   return j<{ id: string }>(
     await fetch(`/api/erp/consignment/${id}/entries?${p.toString()}`, { method: "DELETE", credentials: "same-origin" }),
+  );
+}
+
+export async function transferConsignmentReq(id: string) {
+  return j<{ id: string; accountingStatus: string }>(
+    await fetch(`/api/erp/consignment/${id}/transfer`, { method: "POST", credentials: "same-origin" }),
+  );
+}
+
+export async function untransferConsignmentReq(id: string) {
+  return j<{ id: string; accountingStatus: string }>(
+    await fetch(`/api/erp/consignment/${id}/transfer`, { method: "DELETE", credentials: "same-origin" }),
   );
 }

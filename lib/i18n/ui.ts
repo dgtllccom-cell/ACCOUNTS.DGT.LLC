@@ -1,6 +1,33 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "cns.tender_no"
+  | "cns.loading_from"
+  | "cns.loading_to"
+  | "cns.loading_window"
+  | "cns.reference_value"
+  | "cns.reference_rate"
+  | "cns.remaining_cartons"
+  | "cns.net_receivable"
+  | "cns.amount_received"
+  | "cns.balance_receivable"
+  | "cns.edit_details"
+  | "cns.transfer_to_erp"
+  | "cns.reverse_transfer"
+  | "cns.locked_note"
+  | "cns.locked_note_2"
+  | "cns.confirm_transfer"
+  | "cns.confirm_untransfer"
+  | "cns.confirm_delete_consignment"
+  | "cns.ss_pending"
+  | "cns.ss_partial"
+  | "cns.ss_sold"
+  | "cns.et_customs"
+  | "cns.et_cold_store"
+  | "cns.et_loading_unloading"
+  | "cns.search_master"
+  | "cns.linked_master"
+  | "cns.searching"
   | "custreply.machine_warn"
   | "custreply.title"
   | "custreply.loading"
@@ -19118,7 +19145,7 @@ const en: Dict = {
   "cns.saved": "Consignment saved.",
   "cns.deleted": "Consignment deleted.",
   "cns.err_party_required": "Party name is required.",
-  "cns.tracking_note": "Tracking only — container, expense, sale and receipt entries here do NOT post to Purchase, Sales, Ledger, Journal or Roznamcha. Transfer to Accounting is a later phase.",
+  "cns.tracking_note": "Tracking only — container, expense, sale and receipt entries here do NOT post to Purchase, Sales, Ledger, Journal or Roznamcha until you press Transfer / Confirm to Main ERP.",
   "cns.nav": "Consignment Register",
   "purchase.back_to_booking": "← Back to Booking",
   "purchase.col_price_ccy": "PRICE",
@@ -24306,6 +24333,33 @@ const en: Dict = {
   "custreply.status_no_channel": "saved — no channel",
   "custreply.status_queued": "queued",
   "custreply.machine_warn": "Auto-translation is machine-generated and may be inaccurate — review and correct it before sending, or pick a ready template.",
+  "cns.tender_no": "Tender / Contract No",
+  "cns.loading_from": "Loading Date From",
+  "cns.loading_to": "Loading Date To",
+  "cns.loading_window": "Loading",
+  "cns.reference_value": "Reference Value",
+  "cns.reference_rate": "Reference Rate",
+  "cns.remaining_cartons": "Remaining Cartons",
+  "cns.net_receivable": "Net Receivable",
+  "cns.amount_received": "Amount Received",
+  "cns.balance_receivable": "Balance Receivable",
+  "cns.edit_details": "Edit Details",
+  "cns.transfer_to_erp": "Transfer / Confirm to Main ERP",
+  "cns.reverse_transfer": "Reverse Transfer",
+  "cns.locked_note": "Transferred to Main ERP on",
+  "cns.locked_note_2": "this register row is locked. Reverse the transfer to edit again.",
+  "cns.confirm_transfer": "Transfer / Confirm this consignment to Main ERP? It will be locked from further editing. This does NOT post any ledger/roznamcha entry — it only marks it confirmed.",
+  "cns.confirm_untransfer": "Reverse the transfer and unlock this consignment for editing?",
+  "cns.confirm_delete_consignment": "Delete this consignment and all its entries?",
+  "cns.ss_pending": "Pending",
+  "cns.ss_partial": "Partial",
+  "cns.ss_sold": "Sold",
+  "cns.et_customs": "Customs",
+  "cns.et_cold_store": "Cold Store",
+  "cns.et_loading_unloading": "Loading / Unloading",
+  "cns.search_master": "Search or type a name…",
+  "cns.linked_master": "Linked to master record",
+  "cns.searching": "Searching…",
 };
 
 const ur: Dict = {
@@ -36307,7 +36361,7 @@ const ur: Dict = {
   "cns.saved": "کنسائنمنٹ محفوظ ہو گیا۔",
   "cns.deleted": "کنسائنمنٹ حذف ہو گیا۔",
   "cns.err_party_required": "پارٹی کا نام درکار ہے۔",
-  "cns.tracking_note": "صرف ٹریکنگ — یہاں کنٹینر، خرچہ، سیل اور رسید کے اندراجات پرچیز، سیلز، لیجر، جرنل یا روزنامچہ میں پوسٹ نہیں ہوتے۔ اکاؤنٹنگ میں منتقلی بعد کا مرحلہ ہے۔",
+  "cns.tracking_note": "صرف ٹریکنگ — یہاں کنٹینر، خرچہ، سیل اور رسید کے اندراجات پرچیز، سیلز، لیجر، جرنل یا روزنامچہ میں پوسٹ نہیں ہوتے جب تک آپ مین ای آر پی میں منتقل / تصدیق نہ کریں۔",
   "cns.nav": "کنسائنمنٹ رجسٹر",
   "purchase.back_to_booking": "← بکنگ پر واپس",
   "purchase.col_price_ccy": "قیمت",
@@ -41495,6 +41549,33 @@ const ur: Dict = {
   "custreply.status_no_channel": "محفوظ — کوئی چینل نہیں",
   "custreply.status_queued": "قطار میں",
   "custreply.machine_warn": "خودکار ترجمہ مشین سے تیار شدہ ہے اور غلط ہو سکتا ہے — بھیجنے سے پہلے جائزہ لے کر درست کریں، یا کوئی تیار ٹیمپلیٹ منتخب کریں۔",
+  "cns.tender_no": "ٹینڈر / کنٹریکٹ نمبر",
+  "cns.loading_from": "لوڈنگ کی تاریخ (سے)",
+  "cns.loading_to": "لوڈنگ کی تاریخ (تک)",
+  "cns.loading_window": "لوڈنگ",
+  "cns.reference_value": "حوالہ قدر",
+  "cns.reference_rate": "حوالہ ریٹ",
+  "cns.remaining_cartons": "باقی کارٹن",
+  "cns.net_receivable": "خالص وصولی",
+  "cns.amount_received": "موصول شدہ رقم",
+  "cns.balance_receivable": "بقایا وصولی",
+  "cns.edit_details": "تفصیلات میں ترمیم کریں",
+  "cns.transfer_to_erp": "مین ای آر پی میں منتقل / تصدیق کریں",
+  "cns.reverse_transfer": "منتقلی واپس لیں",
+  "cns.locked_note": "مین ای آر پی میں منتقل کیا گیا",
+  "cns.locked_note_2": "یہ رجسٹر قطار مقفل ہے۔ دوبارہ ترمیم کے لیے منتقلی واپس لیں۔",
+  "cns.confirm_transfer": "اس کھیپ کو مین ای آر پی میں منتقل / تصدیق کریں؟ یہ مزید ترمیم سے مقفل ہو جائے گی۔ یہ کوئی لیجر/روزنامچہ اندراج پوسٹ نہیں کرتا — صرف تصدیق شدہ نشان لگاتا ہے۔",
+  "cns.confirm_untransfer": "منتقلی واپس لے کر اس کھیپ کو ترمیم کے لیے کھولیں؟",
+  "cns.confirm_delete_consignment": "اس کھیپ اور اس کے تمام اندراجات کو حذف کریں؟",
+  "cns.ss_pending": "زیر التواء",
+  "cns.ss_partial": "جزوی",
+  "cns.ss_sold": "فروخت شدہ",
+  "cns.et_customs": "کسٹمز",
+  "cns.et_cold_store": "کولڈ اسٹور",
+  "cns.et_loading_unloading": "لوڈنگ / ان لوڈنگ",
+  "cns.search_master": "تلاش کریں یا نام لکھیں…",
+  "cns.linked_master": "ماسٹر ریکارڈ سے منسلک",
+  "cns.searching": "تلاش جاری…",
 };
 
 const ar: Dict = {
@@ -53498,7 +53579,7 @@ const ar: Dict = {
   "cns.saved": "تم حفظ الشحنة.",
   "cns.deleted": "تم حذف الشحنة.",
   "cns.err_party_required": "اسم الطرف مطلوب.",
-  "cns.tracking_note": "للتتبع فقط — إدخالات الحاوية والمصروف والبيع والإيصال هنا لا تُرحَّل إلى المشتريات أو المبيعات أو دفتر الأستاذ أو اليومية. الترحيل إلى المحاسبة مرحلة لاحقة.",
+  "cns.tracking_note": "للتتبع فقط — إدخالات الحاوية والمصروف والبيع والإيصال هنا لا تُرحَّل إلى المشتريات أو المبيعات أو دفتر الأستاذ أو اليومية أو الروزنامة حتى تضغط نقل / تأكيد إلى النظام الرئيسي.",
   "cns.nav": "سجل الشحنات",
   "purchase.back_to_booking": "← العودة إلى الحجز",
   "purchase.col_price_ccy": "السعر",
@@ -58686,6 +58767,33 @@ const ar: Dict = {
   "custreply.status_no_channel": "محفوظ — لا توجد قناة",
   "custreply.status_queued": "في قائمة الانتظار",
   "custreply.machine_warn": "الترجمة التلقائية آلية وقد تكون غير دقيقة — راجعها وصحّحها قبل الإرسال، أو اختر قالبًا جاهزًا.",
+  "cns.tender_no": "رقم المناقصة / العقد",
+  "cns.loading_from": "تاريخ التحميل من",
+  "cns.loading_to": "تاريخ التحميل إلى",
+  "cns.loading_window": "التحميل",
+  "cns.reference_value": "القيمة المرجعية",
+  "cns.reference_rate": "السعر المرجعي",
+  "cns.remaining_cartons": "الكراتين المتبقية",
+  "cns.net_receivable": "صافي المستحق",
+  "cns.amount_received": "المبلغ المستلم",
+  "cns.balance_receivable": "رصيد المستحق",
+  "cns.edit_details": "تعديل التفاصيل",
+  "cns.transfer_to_erp": "نقل / تأكيد إلى النظام الرئيسي",
+  "cns.reverse_transfer": "عكس النقل",
+  "cns.locked_note": "تم النقل إلى النظام الرئيسي في",
+  "cns.locked_note_2": "هذا السطر مقفل. اعكس النقل للتعديل مجددًا.",
+  "cns.confirm_transfer": "نقل / تأكيد هذه الإرسالية إلى النظام الرئيسي؟ ستُقفل من التعديل. لا يُنشئ أي قيد دفتر/يومية — يضع علامة مؤكد فقط.",
+  "cns.confirm_untransfer": "عكس النقل وفتح هذه الإرسالية للتعديل؟",
+  "cns.confirm_delete_consignment": "حذف هذه الإرسالية وجميع إدخالاتها؟",
+  "cns.ss_pending": "معلق",
+  "cns.ss_partial": "جزئي",
+  "cns.ss_sold": "مباع",
+  "cns.et_customs": "الجمارك",
+  "cns.et_cold_store": "مخزن تبريد",
+  "cns.et_loading_unloading": "تحميل / تفريغ",
+  "cns.search_master": "ابحث أو اكتب اسمًا…",
+  "cns.linked_master": "مرتبط بسجل رئيسي",
+  "cns.searching": "جارٍ البحث…",
 };
 
 const fa: Dict = {
@@ -70688,7 +70796,7 @@ const fa: Dict = {
   "cns.saved": "امانی ذخیره شد.",
   "cns.deleted": "امانی حذف شد.",
   "cns.err_party_required": "نام طرف الزامی است.",
-  "cns.tracking_note": "فقط پیگیری — ورودی‌های کانتینر، هزینه، فروش و رسید در اینجا به خرید، فروش، دفتر کل، ژورنال یا روزنامچه ثبت نمی‌شوند. انتقال به حسابداری مرحله بعدی است.",
+  "cns.tracking_note": "فقط پیگیری — ورودی‌های کانتینر، هزینه، فروش و رسید در اینجا به خرید، فروش، دفتر کل، ژورنال یا روزنامچه ثبت نمی‌شوند تا زمانی که «انتقال / تأیید به ERP اصلی» را بزنید.",
   "cns.nav": "دفتر امانی",
   "purchase.back_to_booking": "← بازگشت به رزرو",
   "purchase.col_price_ccy": "قیمت",
@@ -75876,6 +75984,33 @@ const fa: Dict = {
   "custreply.status_no_channel": "ذخیره شد — بدون کانال",
   "custreply.status_queued": "در صف",
   "custreply.machine_warn": "ترجمهٔ خودکار ماشینی است و ممکن است نادرست باشد — پیش از ارسال آن را بازبینی و اصلاح کنید، یا یک قالب آماده انتخاب کنید.",
+  "cns.tender_no": "شماره مناقصه / قرارداد",
+  "cns.loading_from": "تاریخ بارگیری از",
+  "cns.loading_to": "تاریخ بارگیری تا",
+  "cns.loading_window": "بارگیری",
+  "cns.reference_value": "ارزش مرجع",
+  "cns.reference_rate": "نرخ مرجع",
+  "cns.remaining_cartons": "کارتن‌های باقی‌مانده",
+  "cns.net_receivable": "خالص دریافتنی",
+  "cns.amount_received": "مبلغ دریافتی",
+  "cns.balance_receivable": "مانده دریافتنی",
+  "cns.edit_details": "ویرایش جزئیات",
+  "cns.transfer_to_erp": "انتقال / تأیید به ERP اصلی",
+  "cns.reverse_transfer": "بازگرداندن انتقال",
+  "cns.locked_note": "در تاریخ به ERP اصلی منتقل شد",
+  "cns.locked_note_2": "این ردیف دفتر قفل است. برای ویرایش مجدد، انتقال را بازگردانید.",
+  "cns.confirm_transfer": "این محموله به ERP اصلی منتقل / تأیید شود؟ از ویرایش بیشتر قفل می‌شود. هیچ ثبت دفتر/روزنامچه انجام نمی‌شود — فقط تأییدشده علامت می‌خورد.",
+  "cns.confirm_untransfer": "انتقال را بازگردانید و این محموله را برای ویرایش باز کنید؟",
+  "cns.confirm_delete_consignment": "این محموله و همه ورودی‌های آن حذف شود؟",
+  "cns.ss_pending": "در انتظار",
+  "cns.ss_partial": "جزئی",
+  "cns.ss_sold": "فروخته‌شده",
+  "cns.et_customs": "گمرک",
+  "cns.et_cold_store": "سردخانه",
+  "cns.et_loading_unloading": "بارگیری / تخلیه",
+  "cns.search_master": "جستجو کنید یا نامی بنویسید…",
+  "cns.linked_master": "به رکورد اصلی پیوند شده",
+  "cns.searching": "در حال جستجو…",
 };
 
 const ps: Dict = {
@@ -87884,7 +88019,7 @@ const ps: Dict = {
   "cns.saved": "امانت خوندي شو.",
   "cns.deleted": "امانت ړنګ شو.",
   "cns.err_party_required": "د ډلې نوم اړین دی.",
-  "cns.tracking_note": "یوازې تعقیب — د کانټینر، لګښت، پلور او رسید ننوتنې دلته پیرود، پلور، لیجر، journal یا روزنامچې ته نه ثبتیږي. محاسبې ته لیږد وروستی پړاو دی.",
+  "cns.tracking_note": "یوازې تعقیب — د کانټینر، لګښت، پلور او رسید ننوتنې دلته پیرود، پلور، لیجر، journal یا روزنامچې ته نه ثبتیږي ترڅو تاسو «اصلي ERP ته لیږد / تایید» ټک نه کړئ.",
   "cns.nav": "د امانت راجستر",
   "purchase.back_to_booking": "← بکنګ ته بیرته",
   "purchase.col_price_ccy": "بیه",
@@ -93072,6 +93207,33 @@ const ps: Dict = {
   "custreply.status_no_channel": "خوندي شو — چینل نشته",
   "custreply.status_queued": "په قطار کې",
   "custreply.machine_warn": "اتوماتیک ژباړه د ماشین له خوا جوړه شوې او ممکن سمه نه وي — له لیږلو مخکې یې وګورئ او سم یې کړئ، یا چمتو کینډۍ وټاکئ.",
+  "cns.tender_no": "ټینډر / قرارداد شمېره",
+  "cns.loading_from": "د بارولو نیټه (له)",
+  "cns.loading_to": "د بارولو نیټه (تر)",
+  "cns.loading_window": "بارول",
+  "cns.reference_value": "د حوالې ارزښت",
+  "cns.reference_rate": "د حوالې نرخ",
+  "cns.remaining_cartons": "پاتې کارتنونه",
+  "cns.net_receivable": "خالص د ترلاسه کولو وړ",
+  "cns.amount_received": "ترلاسه شوې اندازه",
+  "cns.balance_receivable": "پاتې د ترلاسه کولو وړ",
+  "cns.edit_details": "جزئیات سم کړئ",
+  "cns.transfer_to_erp": "اصلي ERP ته لیږد / تایید",
+  "cns.reverse_transfer": "لیږد بیرته وګرځوئ",
+  "cns.locked_note": "اصلي ERP ته لیږل شوی په",
+  "cns.locked_note_2": "دا د راجستر کرښه تړل شوې. بیا سمولو لپاره لیږد بیرته وګرځوئ.",
+  "cns.confirm_transfer": "دا محموله اصلي ERP ته ولیږل / تایید شي؟ دا به د نور سمون څخه تړل شي. دا هیڅ لیجر/روزنامچه ننوتنه نه پوسټوي — یوازې تایید شوی په نښه کوي.",
+  "cns.confirm_untransfer": "لیږد بیرته وګرځوئ او دا محموله د سمون لپاره خلاصه کړئ؟",
+  "cns.confirm_delete_consignment": "دا محموله او د هغې ټول ننوتنې حذف کړئ؟",
+  "cns.ss_pending": "پاتې",
+  "cns.ss_partial": "جزوي",
+  "cns.ss_sold": "پلورل شوی",
+  "cns.et_customs": "ګمرک",
+  "cns.et_cold_store": "سړه ذخیره",
+  "cns.et_loading_unloading": "بارول / پرانیستل",
+  "cns.search_master": "لټون وکړئ یا نوم ولیکئ…",
+  "cns.linked_master": "له ماسټر ریکارډ سره تړلی",
+  "cns.searching": "لټون روان…",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

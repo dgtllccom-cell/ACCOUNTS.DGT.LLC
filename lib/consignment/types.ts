@@ -2,11 +2,18 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export const CONSIGNMENT_STATUSES = ["open", "in_progress", "completed", "closed", "cancelled"] as const;
 export const CONTAINER_STATUSES = ["expected", "in_transit", "received", "unloaded", "closed"] as const;
-export const EXPENSE_TYPES = ["freight", "clearing", "transport", "labour", "storage", "duty", "commission", "other"] as const;
+/** Sales-fulfilment status of a container — auto-maintained (sold qty vs received qty). */
+export const CONTAINER_SALE_STATUSES = ["pending", "partial", "sold"] as const;
+/** Owner spec list first; legacy values kept so existing rows still validate. */
+export const EXPENSE_TYPES = [
+  "customs", "commission", "cold_store", "transport", "loading_unloading", "other",
+  "freight", "clearing", "labour", "storage", "duty",
+] as const;
 export const RECEIPT_METHODS = ["cash", "bank", "cheque", "online", "adjustment", "other"] as const;
 
 export type ConsignmentStatus = (typeof CONSIGNMENT_STATUSES)[number];
 export type ContainerStatus = (typeof CONTAINER_STATUSES)[number];
+export type ContainerSaleStatus = (typeof CONTAINER_SALE_STATUSES)[number];
 export type ExpenseType = (typeof EXPENSE_TYPES)[number];
 export type ReceiptMethod = (typeof RECEIPT_METHODS)[number];
 
@@ -23,10 +30,15 @@ export interface ConsignmentRow {
   party_phone: string | null;
   title: string | null;
   reference_no: string | null;
+  tender_no: string | null;
+  loading_from_date: string | null;
+  loading_to_date: string | null;
+  reference_value: number | null;
   base_currency: string;
   consignment_date: string;
   status: ConsignmentStatus;
   accounting_status: "not_transferred" | "transferred";
+  transferred_at: string | null;
   notes: string | null;
   original_language_code: SupportedLanguage;
   created_by: string;
@@ -48,7 +60,10 @@ export interface ContainerRow {
   total_cartons: number | null;
   total_gross_weight: number | null;
   total_net_weight: number | null;
+  reference_rate: number | null;
+  reference_value: number | null;
   status: ContainerStatus;
+  sale_status: ContainerSaleStatus;
   notes: string | null;
 }
 
@@ -90,11 +105,14 @@ export interface SaleRow {
   container_id: string | null;
   sale_date: string;
   buyer_name: string | null;
+  buyer_customer_id: string | null;
   goods_id: string | null;
   goods_name: string;
   unit_id: string | null;
   unit_label: string | null;
+  cartons: number | null;
   quantity: number;
+  net_weight: number | null;
   rate: number | null;
   currency: string;
   amount: number;
@@ -113,6 +131,8 @@ export interface ReceiptRow {
   notes: string | null;
 }
 
+export type Numish = number | string | null | undefined;
+
 export interface ConsignmentReport {
   consignment: ConsignmentRow;
   containers: (ContainerRow & { goods: ContainerGoodRow[] })[];
@@ -124,15 +144,22 @@ export interface ConsignmentReport {
   stockByGoods: Array<{ goodsKey: string; goodsName: string; unit: string | null; received: number; sold: number; remaining: number }>;
   totals: {
     containerCount: number;
+    totalCartons: number;          // Σ container goods cartons
     goodsReceivedQty: number;
     goodsSoldQty: number;
     remainingStockQty: number;
+    soldCartons: number;           // Σ sale cartons
+    remainingCartons: number;      // totalCartons − soldCartons
     totalGrossWeight: number;
     totalNetWeight: number;
-    totalSales: number;
-    totalExpenses: number;
-    totalReceipts: number;
-    remainingReceivable: number; // totalSales − totalReceipts
-    netPosition: number; // totalSales − totalExpenses − totalReceipts
+    referenceValue: number;        // head reference_value, else Σ container goods amount
+    totalSales: number;            // Total Sales Value
+    totalExpenses: number;         // Total Expenses
+    netReceivable: number;         // totalSales − totalExpenses
+    amountReceived: number;        // Σ receipts  (= totalReceipts)
+    totalReceipts: number;         // kept for backward compat
+    balanceReceivable: number;     // netReceivable − amountReceived
+    remainingReceivable: number;   // kept: totalSales − totalReceipts
+    netPosition: number;           // kept: totalSales − totalExpenses − totalReceipts
   };
 }
