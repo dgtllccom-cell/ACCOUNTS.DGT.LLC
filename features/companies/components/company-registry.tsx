@@ -23,7 +23,9 @@ import {
   Mail,
   MessageSquare,
   Globe,
-  Layers
+  Layers,
+  ChevronRight,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +46,100 @@ import {
   GroupProfileData,
   GroupCompanyItem
 } from "@/features/companies/components/group-360-profile-modal";
+
+export type LocationCountryCoverage = {
+  country: string;
+  flag: string;
+  shortName: string;
+  companyCount: number;
+  statesCount: number;
+  citiesCount: number;
+};
+
+export function getCountryDetails(countryStr?: string | null): { flag: string; name: string; shortName: string } {
+  if (!countryStr) return { flag: "🇦🇪", name: "United Arab Emirates", shortName: "UAE" };
+  const c = countryStr.toLowerCase().trim();
+  if (c.includes("emirates") || c.includes("uae") || c.includes("dubai") || c.includes("sharjah") || c.includes("abu dhabi")) {
+    return { flag: "🇦🇪", name: "United Arab Emirates", shortName: "UAE" };
+  }
+  if (c.includes("pakistan") || c.includes("pk") || c.includes("quetta") || c.includes("karachi") || c.includes("lahore") || c.includes("peshawar") || c.includes("islamabad")) {
+    return { flag: "🇵🇰", name: "Pakistan", shortName: "Pakistan" };
+  }
+  if (c.includes("saudi") || c.includes("ksa") || c.includes("riyadh")) {
+    return { flag: "🇸🇦", name: "Saudi Arabia", shortName: "KSA" };
+  }
+  if (c.includes("afghanistan") || c.includes("af") || c.includes("kabul") || c.includes("kandahar") || c.includes("nimruz")) {
+    return { flag: "🇦🇫", name: "Afghanistan", shortName: "Afghanistan" };
+  }
+  if (c.includes("qatar") || c.includes("doha")) {
+    return { flag: "🇶🇦", name: "Qatar", shortName: "Qatar" };
+  }
+  if (c.includes("oman") || c.includes("muscat")) {
+    return { flag: "🇴🇲", name: "Oman", shortName: "Oman" };
+  }
+  if (c.includes("kuwait")) {
+    return { flag: "🇰🇼", name: "Kuwait", shortName: "Kuwait" };
+  }
+  if (c.includes("china")) {
+    return { flag: "🇨🇳", name: "China", shortName: "China" };
+  }
+  return { flag: "🌐", name: countryStr, shortName: countryStr };
+}
+
+export function getGroupLocationCoverages(companiesList: GroupCompanyItem[]): LocationCountryCoverage[] {
+  const map = new Map<string, {
+    country: string;
+    flag: string;
+    shortName: string;
+    companies: GroupCompanyItem[];
+    states: Set<string>;
+    cities: Set<string>;
+  }>();
+
+  for (const comp of companiesList) {
+    const rawCountry = (comp.country || "United Arab Emirates").trim();
+    const details = getCountryDetails(rawCountry);
+    const key = details.shortName.toLowerCase();
+
+    if (!map.has(key)) {
+      map.set(key, {
+        country: details.name,
+        flag: details.flag,
+        shortName: details.shortName,
+        companies: [],
+        states: new Set<string>(),
+        cities: new Set<string>()
+      });
+    }
+
+    const entry = map.get(key)!;
+    entry.companies.push(comp);
+    if (comp.state && comp.state !== "—") entry.states.add(comp.state.trim());
+    if (comp.city && comp.city !== "—") entry.cities.add(comp.city.trim());
+  }
+
+  return Array.from(map.values()).map((e) => ({
+    country: e.country,
+    flag: e.flag,
+    shortName: e.shortName,
+    companyCount: e.companies.length,
+    statesCount: Math.max(e.states.size, 1),
+    citiesCount: Math.max(e.cities.size, 1),
+  }));
+}
+
+export function getConsortiumInitials(name: string): string {
+  if (!name) return "CO";
+  const clean = name.replace(/Group|Consortium|LLC|Ltd|Company/gi, "").trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  if (parts.length === 1 && parts[0].length >= 2) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return "CO";
+}
 
 export type CompanyRegistryItem = {
   id: string;
@@ -170,8 +266,9 @@ export function CompanyRegistry({
 } = {}) {
   const router = useRouter();
   const lang = useActiveLanguage();
+  const activeLang = lang || "en";
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
-  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang || "en");
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
 
   const [companies, setCompanies] = useState<CompanyRegistryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,7 +284,37 @@ export function CompanyRegistry({
   const [selectedGroupProfile, setSelectedGroupProfile] = useState<GroupProfileData | null>(null);
   const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [openContactMenuId, setOpenContactMenuId] = useState<string | null>(null);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [openCreateModal, setOpenCreateModal] = useState(false);
+
+  const handleCopyPhone = (text: string) => {
+    if (!text || text === "—") return;
+    navigator.clipboard.writeText(text);
+    setCopiedPhone(text);
+    setTimeout(() => setCopiedPhone(null), 2000);
+  };
+
+  const handleDelete = async (companyId: string, companyName: string) => {
+    const confirmMsg = activeLang === "ur"
+      ? `کیا آپ واقعی کمپنی "${companyName}" کو حذف کرنا چاہتے ہیں؟`
+      : `Are you sure you want to delete company "${companyName}"?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch(`/api/erp/companies/${encodeURIComponent(companyId)}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        await loadCompaniesFromDb();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error || "Failed to delete company");
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to delete company");
+    }
+  };
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -347,7 +474,21 @@ export function CompanyRegistry({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
-  // Filtered Companies
+  // Available unique countries across all registered companies
+  const availableCountries = useMemo(() => {
+    const map = new Map<string, { shortName: string; name: string; flag: string }>();
+    for (const group of companies) {
+      for (const comp of group.companies) {
+        if (comp.country && comp.country !== "—") {
+          const details = getCountryDetails(comp.country);
+          map.set(details.shortName.toLowerCase(), details);
+        }
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.shortName.localeCompare(b.shortName));
+  }, [companies]);
+
+  // Filtered Companies based on dynamic search, country (across sister companies), and status
   const filteredCompanies = useMemo(() => {
     return companies.filter((c) => {
       const term = searchQuery.toLowerCase().trim();
@@ -365,11 +506,25 @@ export function CompanyRegistry({
             (comp.company_code || "").toLowerCase().includes(term)
         );
 
-      const matchCountry = countryFilter === "all" || c.country.toLowerCase() === countryFilter.toLowerCase();
+      const matchCountry =
+        countryFilter === "all" ||
+        c.companies?.some((comp) => {
+          const det = getCountryDetails(comp.country);
+          return (
+            det.shortName.toLowerCase() === countryFilter.toLowerCase() ||
+            det.name.toLowerCase() === countryFilter.toLowerCase() ||
+            (comp.country || "").toLowerCase().includes(countryFilter.toLowerCase())
+          );
+        });
 
-      return matchSearch && matchCountry;
+      const matchStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && c.companies?.some((comp) => comp.is_active !== false)) ||
+        (statusFilter === "inactive" && c.companies?.every((comp) => comp.is_active === false));
+
+      return matchSearch && matchCountry && matchStatus;
     });
-  }, [companies, searchQuery, countryFilter]);
+  }, [companies, searchQuery, countryFilter, statusFilter]);
 
   // Paginated List
   const paginatedCompanies = useMemo(() => {
@@ -377,16 +532,41 @@ export function CompanyRegistry({
     return filteredCompanies.slice(start, start + pageSize);
   }, [filteredCompanies, page]);
 
-  // Statistics for 5 KPI Cards driven by real live database data
+  // Statistics for 4 KPI Cards driven by real live database data and dynamically scoped by country filter
   const stats = useMemo(() => {
-    const totalGroups = companies.length;
-    const totalCompanies = companies.reduce((acc, c) => acc + (c.companiesCount || 1), 0);
-    const totalBranches = totalDbBranches || (totalCompanies > 0 ? totalCompanies : 0);
-    const totalAccounts = totalGroups;
-    const totalContracts = companies.reduce((acc, c) => acc + (c.contractsCount || 0), 0);
-    const totalInAccounts = totalCompanies;
-    return { totalGroups, totalCompanies, totalBranches, totalAccounts, totalContracts, totalInAccounts };
-  }, [companies, totalDbBranches]);
+    if (countryFilter === "all") {
+      const totalGroups = companies.length;
+      const totalCompanies = companies.reduce((acc, c) => acc + (c.companiesCount || 1), 0);
+      const totalContracts = companies.reduce((acc, c) => acc + (c.contractsCount || 0), 0);
+      const allCountriesSet = new Set<string>();
+      companies.forEach((grp) =>
+        grp.companies.forEach((comp) => {
+          if (comp.country) allCountriesSet.add(getCountryDetails(comp.country).shortName);
+        })
+      );
+      const countriesCovered = Math.max(allCountriesSet.size, 1);
+      return { totalGroups, totalCompanies, totalContracts, countriesCovered };
+    } else {
+      const matchingGroups = filteredCompanies;
+      const totalGroups = matchingGroups.length;
+      let totalCompanies = 0;
+      let totalContracts = 0;
+      matchingGroups.forEach((grp) => {
+        grp.companies.forEach((comp) => {
+          const det = getCountryDetails(comp.country);
+          if (
+            det.shortName.toLowerCase() === countryFilter.toLowerCase() ||
+            det.name.toLowerCase() === countryFilter.toLowerCase() ||
+            (comp.country || "").toLowerCase().includes(countryFilter.toLowerCase())
+          ) {
+            totalCompanies += 1;
+            totalContracts += (comp.registrations?.length || 0);
+          }
+        });
+      });
+      return { totalGroups, totalCompanies, totalContracts, countriesCovered: totalGroups > 0 ? 1 : 0 };
+    }
+  }, [companies, filteredCompanies, countryFilter]);
 
   // Professional A4 Company Master Profile via the shared master-profile engine
   // (real record + bank relationships + related accounts + dynamic branding).
@@ -555,204 +735,247 @@ export function CompanyRegistry({
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 text-slate-900 dark:text-slate-100 pb-16">
 
-      {/* ── TOP HEADER & CONTROLS TOOLBAR ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs font-sans">
-        {/* Left: Icon + Title + Count Badge */}
+      {/* ── 4 STAT SUMMARY CARDS MATCHING SCREENSHOT 2 ── */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 font-sans">
+        {/* Card 1: TOTAL GROUPS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex items-center justify-between group hover:border-blue-300 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/80 dark:border-blue-800 shrink-0 shadow-2xs">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                {activeLang === "ur" ? "کل گروپس" : "TOTAL GROUPS"}
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalGroups}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {activeLang === "ur" ? "بزنس کنسورشیم گروپس" : "Business consortium groups"}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+        </div>
+
+        {/* Card 2: TOTAL REGISTERED COMPANIES */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex items-center justify-between group hover:border-emerald-300 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/80 dark:border-emerald-800 shrink-0 shadow-2xs">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                {activeLang === "ur" ? "کل رجسٹرڈ کمپنیاں" : "TOTAL REGISTERED COMPANIES"}
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalCompanies}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {activeLang === "ur" ? "سسٹم کی تمام کمپنیاں" : "All companies in the system"}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+        </div>
+
+        {/* Card 3: ACTIVE CONTRACTS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex items-center justify-between group hover:border-purple-300 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-2xl bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/80 dark:border-purple-800 shrink-0 shadow-2xs">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                {activeLang === "ur" ? "فعال معاہدے و لائسنس" : "ACTIVE CONTRACTS"}
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalContracts}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {activeLang === "ur" ? "موجودہ فعال معاہدے" : "Current active contracts"}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" />
+        </div>
+
+        {/* Card 4: COUNTRIES COVERED */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex items-center justify-between group hover:border-sky-300 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-2xl bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-200/80 dark:border-sky-800 shrink-0 shadow-2xs">
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                {activeLang === "ur" ? "ممالک کا احاطہ" : "COUNTRIES COVERED"}
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.countriesCovered}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {activeLang === "ur" ? "رجسٹرڈ کمپنیوں والے ممالک" : "Countries with registered companies"}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-sky-500 group-hover:translate-x-0.5 transition-all" />
+        </div>
+      </div>
+
+      {/* ── TOOLBAR & SEARCH FILTER ROW MATCHING SCREENSHOT 2 ── */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs font-sans">
+        {/* Left: Icon + Title + Groups Badge */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-900 shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-900 shrink-0">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-              <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100">
-                {tt("creg.title", "Company Management Registry")}
-              </h1>
-              <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800 shadow-xs leading-none">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5 shrink-0" />
-                {companies.length} {tt("creg.companies_word", "Companies")}
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                {activeLang === "ur" ? "کمپنی مینجمنٹ رجسٹری" : "Company Management Registry"}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+                • {filteredCompanies.length} {activeLang === "ur" ? "گروپس" : "Groups"}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-              {tt("creg.subtitle", "Complete registry of company accounts, branches, contracts and related information.")}
+            <p className="text-xs text-muted-foreground font-medium mt-0.5">
+              {activeLang === "ur"
+                ? "کمپنی اکاؤنٹس، برانچز، معاہدوں اور متعلقہ معلومات کی مکمل رجسٹری۔"
+                : "Complete registry of company accounts, branches, contracts and related information."}
             </p>
           </div>
         </div>
 
-        {/* Right: Unified Search, Filters & Action Buttons */}
+        {/* Right: Search, Filter Dropdowns & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Integrated Search Input */}
-          <div className="relative min-w-[200px] sm:min-w-[240px]">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
+          {/* Search Box */}
+          <div className="relative min-w-[200px] sm:min-w-[230px]">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={tt("common.search", "Search company, code, consortium...")}
-              className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl font-sans"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder={activeLang === "ur" ? "گروپس، اکاؤنٹس تلاش کریں..." : "Search groups, accounts..."}
+              className="w-full h-9 pl-9 pr-7 rounded-xl border border-slate-200 bg-white text-xs font-semibold placeholder:text-slate-400 text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Company Type Dropdown */}
+          {/* Type Dropdown */}
           <select
             value={companyTypeFilter}
-            onChange={(e) => setCompanyTypeFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
+            onChange={(e) => {
+              setCompanyTypeFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 cursor-pointer shadow-2xs"
           >
-            <option value="all">{tt("creg.all_types", "All Types")}</option>
-            <option value="trading">{tt("creg.type_trading", "Trading")}</option>
-            <option value="clearing">{tt("creg.type_clearing", "Clearing")}</option>
-            <option value="logistics">{tt("creg.type_logistics", "Logistics")}</option>
+            <option value="all">{activeLang === "ur" ? "تمام اقسام" : "All Types"}</option>
+            <option value="trading">{activeLang === "ur" ? "ٹریڈنگ" : "Trading"}</option>
+            <option value="clearing">{activeLang === "ur" ? "کلیئرنگ" : "Clearing"}</option>
+            <option value="logistics">{activeLang === "ur" ? "لاجسٹکس" : "Logistics"}</option>
           </select>
 
           {/* Status Dropdown */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 cursor-pointer shadow-2xs"
           >
-            <option value="all">{tt("creg.all_status", "All Status")}</option>
-            <option value="active">{tt("creg.status_active", "Active")}</option>
-            <option value="inactive">{tt("creg.status_inactive", "Inactive")}</option>
+            <option value="all">{activeLang === "ur" ? "تمام حالتیں" : "All Status"}</option>
+            <option value="active">{activeLang === "ur" ? "فعال" : "Active"}</option>
+            <option value="inactive">{activeLang === "ur" ? "غیر فعال" : "Inactive"}</option>
           </select>
 
-          {/* Country Dropdown */}
+          {/* Dynamic Country Dropdown */}
           <select
             value={countryFilter}
-            onChange={(e) => setCountryFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
+            onChange={(e) => {
+              setCountryFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 cursor-pointer shadow-2xs"
           >
-            <option value="all">{tt("creg.all_countries", "All Countries")}</option>
-            <option value="pakistan">{tt("creg.country_pakistan", "Pakistan")}</option>
-            <option value="uae">{tt("creg.country_uae", "United Arab Emirates")}</option>
-            <option value="afghanistan">{tt("creg.country_afghanistan", "Afghanistan")}</option>
+            <option value="all">{activeLang === "ur" ? "تمام ممالک" : "All Countries"}</option>
+            {availableCountries.map((c) => (
+              <option key={c.shortName} value={c.shortName}>
+                {c.flag} {c.name}
+              </option>
+            ))}
           </select>
 
           {/* Branch Dropdown */}
           <select
             value={branchFilter}
-            onChange={(e) => setBranchFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
+            onChange={(e) => {
+              setBranchFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 cursor-pointer shadow-2xs"
           >
-            <option value="all">{tt("creg.all_branches", "All Branches")}</option>
-            <option value="main">{tt("creg.branch_main_hq", "Main Headquarters")}</option>
-            <option value="lahore">{tt("creg.branch_lahore_hub", "Lahore Hub")}</option>
-            <option value="dubai">{tt("creg.branch_dubai_hub", "Dubai Regional Hub")}</option>
+            <option value="all">{activeLang === "ur" ? "تمام برانچز" : "All Branches"}</option>
+            <option value="main">{activeLang === "ur" ? "مرکزی ہیڈ کوارٹر" : "Main Headquarters"}</option>
+            <option value="lahore">{activeLang === "ur" ? "لاہور ہب" : "Lahore Hub"}</option>
+            <option value="dubai">{activeLang === "ur" ? "دبئی ریجنل ہب" : "Dubai Regional Hub"}</option>
           </select>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setSearchQuery("");
-                setCompanyTypeFilter("all");
-                setStatusFilter("all");
-                setCountryFilter("all");
-                setBranchFilter("all");
-              }}
-              className="h-8.5 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 font-sans cursor-pointer"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {tt("common.reset", "Reset")}
-            </Button>
+          {/* Reset Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearchQuery("");
+              setCompanyTypeFilter("all");
+              setStatusFilter("all");
+              setCountryFilter("all");
+              setBranchFilter("all");
+              setPage(1);
+            }}
+            className="h-9 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-2xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>{activeLang === "ur" ? "ری سیٹ" : "Reset"}</span>
+          </Button>
 
-            <Button
-              type="button"
-              onClick={() => {
-                if (onRegisterNew) {
-                  onRegisterNew();
-                } else {
-                  setOpenCreateModal(true);
-                }
-              }}
-              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm font-sans cursor-pointer"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {tt("creg.new_company", "New Company")}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            onClick={() => {
+              if (onRegisterNew) {
+                onRegisterNew();
+              } else {
+                setOpenCreateModal(true);
+              }
+            }}
+            className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-xs cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{activeLang === "ur" ? "+ نئی کمپنی رجسٹر کریں" : "+ Register New Company"}</span>
+          </Button>
         </div>
       </div>
 
-      {/* ── 5 STAT SUMMARY CARDS MATCHING SCREENSHOT 1 ── */}
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* Card 1: TOTAL CONSORTIUMS */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 shrink-0">
-            <Building2 className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_accounts", "Total Consortiums")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalGroups}</div>
-            <div className="text-[10px] text-muted-foreground">{stats.totalCompanies} {tt("creg.companies_word", "Companies")}</div>
-          </div>
-        </div>
-
-        {/* Card 2: TOTAL SISTER COMPANIES */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 shrink-0">
-            <Layers className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_companies", "Total Sister Companies")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalCompanies}</div>
-            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_companies_sub", "All Registered Companies")}</div>
-          </div>
-        </div>
-
-        {/* Card 3: TOTAL ACCOUNTS */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200 shrink-0">
-            <Users className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_accounts", "Total Accounts")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalAccounts}</div>
-            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_accounts_sub", "Company Accounts")}</div>
-          </div>
-        </div>
-
-        {/* Card 4: TOTAL CONTRACTS */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200 shrink-0">
-            <FileText className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_contracts", "Total Contracts")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalContracts}</div>
-            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_contracts_sub", "Active Contracts")}</div>
-          </div>
-        </div>
-
-        {/* Card 5: TOTAL COMPANIES IN ACCOUNTS */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-200 shrink-0">
-            <DollarSign className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_in_accounts", "Total Companies in Accounts")}</div>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalInAccounts}</div>
-            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_in_accounts_sub", "Sum of Companies in All Accounts")}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── MAIN REGISTRY TABLE MATCHING SCREENSHOT 1 ── */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+      {/* ── MAIN REGISTRY TABLE MATCHING SCREENSHOT 2 ── */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden font-sans">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-50/80 dark:bg-slate-950 text-slate-500 uppercase font-black text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
-                <th className="p-3.5 text-center w-12">#</th>
-                <th className="p-3.5">{tt("creg.col_account_no", "Account No. & Serials")}</th>
-                <th className="p-3.5">{tt("creg.col_consortium", "Consortium / Group")}</th>
-                <th className="p-3.5">{tt("creg.col_branch_rules", "Branch Rules")}</th>
-                <th className="p-3.5">{tt("creg.col_account_name", "Sister Companies & Accounts")}</th>
-                <th className="p-3.5 text-center">{tt("creg.col_companies_count", "Companies Count")}</th>
-                <th className="p-3.5 text-center">{tt("creg.col_contracts", "Contracts")}</th>
-                <th className="p-3.5 text-center">{tt("creg.col_contacts_combined", "Contacts")}</th>
-                <th className="p-3.5 text-center">{tt("common.actions", "Actions")}</th>
+                <th className="p-3.5 text-center w-10">#</th>
+                <th className="p-3.5">{activeLang === "ur" ? "اکاؤنٹ نمبر" : "ACCOUNT NO."}</th>
+                <th className="p-3.5">{activeLang === "ur" ? "کنسورشیم / گروپ" : "CONSORTIUM"}</th>
+                <th className="p-3.5">{activeLang === "ur" ? "برانچ رولز" : "BRANCH RULES"}</th>
+                <th className="p-3.5">{activeLang === "ur" ? "مقام کا خلاصہ" : "LOCATION SUMMARY"}</th>
+                <th className="p-3.5 text-center">{activeLang === "ur" ? "کمپنیوں کی تعداد" : "COMPANIES COUNT"}</th>
+                <th className="p-3.5 text-center">{activeLang === "ur" ? "معاہدے" : "CONTRACTS"}</th>
+                <th className="p-3.5 text-center">{activeLang === "ur" ? "رابطے" : "CONTACTS"}</th>
+                <th className="p-3.5 text-center">{activeLang === "ur" ? "اقدامات" : "ACTIONS"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -760,242 +983,331 @@ export function CompanyRegistry({
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
-                    {tt("creg.loading", "Loading company registry...")}
+                    {activeLang === "ur" ? "کمپنی رجسٹری لوڈ ہو رہی ہے..." : "Loading company registry..."}
                   </td>
                 </tr>
               ) : paginatedCompanies.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-muted-foreground">
-                    {tt("creg.no_results", "No company accounts found matching your filters.")}
+                    {activeLang === "ur" ? "کوئی کمپنی اکاؤنٹ نہیں ملا۔" : "No company accounts found matching your filters."}
                   </td>
                 </tr>
               ) : (
-                paginatedCompanies.map((c, idx) => (
-                  <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors">
-                    {/* Index */}
-                    <td className="p-3.5 text-center font-bold text-slate-400">
-                      {(page - 1) * pageSize + idx + 1}
-                    </td>
+                paginatedCompanies.map((c, idx) => {
+                  const locationCoverages = getGroupLocationCoverages(c.companies);
 
-                    {/* Account No & Serials */}
-                    <td className="p-3.5">
-                      <div className="flex flex-col gap-0.5">
-                        <span
-                          className="font-bold font-mono text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-xs"
-                          onClick={() => setSelectedGroupProfile(c.groupData)}
-                          title="Open Group 360° Profile"
-                        >
-                          {c.accountNo}
-                        </span>
-                        <div className="flex items-center gap-1 flex-wrap text-[9px] font-mono">
-                          <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 font-bold" title="Corporate Group Master Serial">
-                            GRP-{String(idx + 1).padStart(3, "0")}
+                  return (
+                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors">
+                      {/* 1. Index */}
+                      <td className="p-3.5 text-center font-bold text-slate-400">
+                        {(page - 1) * pageSize + idx + 1}
+                      </td>
+
+                      {/* 2. Account No & Serials */}
+                      <td className="p-3.5">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className="font-black font-mono text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-xs"
+                            onClick={() => setSelectedGroupProfile(c.groupData)}
+                            title="Open Group 360° Profile"
+                          >
+                            {c.accountNo}
                           </span>
-                          {c.raw?.owner_person_id && (
-                            <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 font-bold" title="Customer Master Serial">
-                              CUST-LINK
+                          <div className="flex items-center gap-1 flex-wrap text-[9px] font-mono">
+                            <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 font-bold" title="Corporate Group Master Serial">
+                              GRP-{String(idx + 1).padStart(3, "0")}
                             </span>
-                          )}
+                            {c.raw?.owner_person_id && (
+                              <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 font-bold" title="Customer Master Serial">
+                                CUST-LINK
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Consortium / Group Name */}
-                    <td className="p-3.5">
-                      <div
-                        className="font-black text-xs text-slate-900 dark:text-slate-100 hover:text-blue-600 transition cursor-pointer"
-                        onClick={() => setSelectedGroupProfile(c.groupData)}
-                      >
-                        {localizeTerm(c.consortium, lang)}
-                      </div>
-                      <span className="text-[10px] text-muted-foreground block mt-0.5">
-                        Owner: <strong className="text-slate-700 dark:text-slate-300">{localizeTerm(c.groupData.ownerName, lang)}</strong>
-                      </span>
-                    </td>
-
-                    {/* Branch Rules */}
-                    <td className="p-3.5 text-slate-600 dark:text-slate-400 font-medium">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold">
-                        {localizeTerm(c.branchRules, lang)}
-                      </span>
-                    </td>
-
-                    {/* Sister Companies Pills / Preview */}
-                    <td className="p-3.5">
-                      <div className="space-y-1.5 max-w-md">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {c.companies?.map((comp) => (
-                            <span
-                              key={comp.id}
+                      {/* 3. Consortium (Avatar circle + Group Name + Owner) */}
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-black text-xs flex items-center justify-center border border-blue-200 dark:border-blue-800 shrink-0 shadow-2xs">
+                            {getConsortiumInitials(c.consortium)}
+                          </div>
+                          <div className="min-w-0">
+                            <div
+                              className="font-black text-xs text-slate-900 dark:text-slate-100 hover:text-blue-600 transition cursor-pointer truncate"
                               onClick={() => setSelectedGroupProfile(c.groupData)}
-                              className="inline-flex items-center gap-1 text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950 text-slate-800 dark:text-slate-200 hover:text-blue-700 transition cursor-pointer border border-slate-200/80 dark:border-slate-700 shadow-2xs"
-                              title={`View ${comp.name} details`}
                             >
-                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
-                              <span className="font-bold">{comp.name}</span>
-                              <span className="text-[9px] font-mono text-slate-500 font-semibold">({comp.base_currency || "USD"})</span>
+                              {localizeTerm(c.consortium, lang)}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground block mt-0.5 truncate">
+                              Owner: <strong className="text-slate-700 dark:text-slate-300">{localizeTerm(c.groupData.ownerName, lang)}</strong>
                             </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 4. Branch Rules */}
+                      <td className="p-3.5 text-slate-600 dark:text-slate-400 font-medium">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold border border-slate-200/60 dark:border-slate-700">
+                          {localizeTerm(c.branchRules, lang)}
+                        </span>
+                      </td>
+
+                      {/* 5. Location Summary (Country Pills: Flag, Country, X Companies, Y States • Z Cities) */}
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {locationCoverages.map((cov) => (
+                            <div
+                              key={cov.shortName}
+                              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 min-w-[130px] shadow-2xs"
+                            >
+                              <span className="text-xl leading-none shrink-0" role="img" aria-label={cov.country}>
+                                {cov.flag}
+                              </span>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                                  {cov.shortName}
+                                </span>
+                                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                  {cov.companyCount} {cov.companyCount === 1 ? (activeLang === "ur" ? "کمپنی" : "Company") : (activeLang === "ur" ? "کمپنیاں" : "Companies")}
+                                </span>
+                                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                                  {cov.statesCount} {activeLang === "ur" ? "ریاستیں" : cov.statesCount === 1 ? "State" : "States"} • {cov.citiesCount} {activeLang === "ur" ? "شہر" : cov.citiesCount === 1 ? "City" : "Cities"}
+                                </span>
+                              </div>
+                            </div>
                           ))}
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Companies Count Badge */}
-                    <td className="p-3.5 text-center">
-                      <span
-                        onClick={() => setSelectedGroupProfile(c.groupData)}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900 cursor-pointer transition shadow-2xs"
-                        title="Click to view all sister companies"
-                      >
-                        <span className="font-mono font-black">{String(c.companiesCount).padStart(2, "0")}</span> {tt("creg.companies_suffix", "Companies")}
-                      </span>
-                    </td>
-
-                    {/* Contracts Badge */}
-                    <td className="p-3.5 text-center">
-                      <span
-                        onClick={() => setSelectedGroupProfile(c.groupData)}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900 cursor-pointer transition shadow-2xs"
-                        title="Click to view all contracts and licenses"
-                      >
-                        <span className="font-mono font-black">{String(c.contractsCount).padStart(2, "0")}</span> {tt("creg.contracts_suffix", "Contracts")}
-                      </span>
-                    </td>
-
-                    {/* Combined Contacts Column (Phone, WhatsApp, Email) */}
-                    <td className="p-3.5 text-center">
-                      <div className="flex items-center justify-center gap-1.5" dir="ltr">
-                        {c.primaryContact && c.primaryContact !== "—" ? (
-                          <a
-                            href={`tel:${c.primaryContact.replace(/[^0-9+]/g, "")}`}
-                            className="h-7 w-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center transition border border-emerald-200/60 shadow-2xs"
-                            title={`${tt("creg.call_phone", "Call")}: ${c.primaryContact}`}
+                      {/* 6. Companies Count (Clickable Button + Subtext) */}
+                      <td className="p-3.5 text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedGroupProfile(c.groupData)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900 cursor-pointer transition shadow-2xs group"
+                            title="Click to view full group profile"
                           >
-                            <Phone className="h-3.5 w-3.5" />
-                          </a>
-                        ) : null}
-                        {c.primaryContact && c.primaryContact !== "—" ? (
-                          <a
-                            href={`https://wa.me/${c.primaryContact.replace(/[^0-9]/g, "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="h-7 w-7 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-950 dark:hover:bg-green-900 dark:text-green-300 flex items-center justify-center transition border border-green-200/60 shadow-2xs"
-                            title={`${tt("creg.whatsapp_chat", "WhatsApp")}: ${c.primaryContact}`}
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                          </a>
-                        ) : null}
-                        {c.email && c.email !== "—" ? (
-                          <a
-                            href={`mailto:${c.email}`}
-                            className="h-7 w-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 flex items-center justify-center transition border border-blue-200/60 shadow-2xs"
-                            title={`${tt("creg.official_email", "Email")}: ${c.email}`}
-                          >
-                            <Mail className="h-3.5 w-3.5" />
-                          </a>
-                        ) : null}
-                      </div>
-                    </td>
+                            <span>{c.companiesCount} {c.companiesCount === 1 ? (activeLang === "ur" ? "کمپنی" : "Company") : (activeLang === "ur" ? "کمپنیاں" : "Companies")}</span>
+                            <ChevronRight className="h-3.5 w-3.5 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+                            {activeLang === "ur" ? "تفصیلات کے لیے کلک کریں" : "Click to view company details"}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Unified Actions Column with 3-Dots Menu */}
-                    <td className="p-3.5 text-center relative">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
+                      {/* 7. Contracts Badge */}
+                      <td className="p-3.5 text-center">
+                        <span
                           onClick={() => setSelectedGroupProfile(c.groupData)}
-                          className="h-7 w-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 inline-flex items-center justify-center cursor-pointer transition border border-blue-200/50"
-                          title="View Group 360° Profile"
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900 cursor-pointer transition shadow-2xs"
+                          title="Click to view all contracts and licenses"
                         >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setOpenActionMenuId(openActionMenuId === c.id ? null : c.id)}
-                          className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer"
-                          title={tt("common.actions", "Actions")}
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                          {c.contractsCount} {activeLang === "ur" ? "معاہدے" : c.contractsCount === 1 ? "Contract" : "Contracts"}
+                        </span>
+                      </td>
 
-                      {openActionMenuId === c.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setOpenActionMenuId(null)}
-                          />
-                          <div className={cn(
-                            "absolute right-3 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-1.5 text-left animate-in fade-in zoom-in-95 duration-150",
-                            idx >= Math.max(paginatedCompanies.length - 2, 1) ? "bottom-8 mb-1" : "top-10"
-                          )}>
+                      {/* 8. Combined Contacts (Phone, WhatsApp, Email) + Interactive Popover */}
+                      <td className="p-3.5 text-center relative">
+                        <div className="inline-flex items-center justify-center gap-1.5" dir="ltr">
+                          {c.primaryContact && c.primaryContact !== "—" ? (
                             <button
                               type="button"
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                setSelectedGroupProfile(c.groupData);
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              onClick={() => setOpenContactMenuId(openContactMenuId === c.id ? null : c.id)}
+                              className="h-7 w-7 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center transition border border-emerald-200 shadow-2xs cursor-pointer"
+                              title="Call / Contact Options"
                             >
-                              <Globe className="h-3.5 w-3.5 text-indigo-500" />
-                              <span>View Group Profile (360°)</span>
+                              <Phone className="h-3.5 w-3.5" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                if (onEditCompany) {
-                                  onEditCompany(c.companies[0]?.id || c.id);
-                                } else {
-                                  router.push(`/dashboard/settings/company-setup?companyId=${c.companies[0]?.id || c.id}` as Route);
-                                }
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          ) : null}
+                          {c.primaryContact && c.primaryContact !== "—" ? (
+                            <a
+                              href={`https://wa.me/${c.primaryContact.replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="h-7 w-7 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center transition border border-emerald-200 shadow-2xs cursor-pointer"
+                              title="Chat on WhatsApp"
                             >
-                              <PencilLine className="h-3.5 w-3.5 text-blue-500" />
-                              <span>{tt("branch.edit", "Edit Master")}</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                handlePrint(c);
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              <MessageSquare className="h-3.5 w-3.5" />
+                            </a>
+                          ) : null}
+                          {c.email && c.email !== "—" ? (
+                            <a
+                              href={`mailto:${c.email}`}
+                              className="h-7 w-7 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 flex items-center justify-center transition border border-blue-200 shadow-2xs cursor-pointer"
+                              title={`Send email to ${c.email}`}
                             >
-                              <Printer className="h-3.5 w-3.5 text-emerald-500" />
-                              <span>{tt("creg.crtr_duplicate_print", "Print Dossier (PDF)")}</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                setSelectedGroupProfile(c.groupData);
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                            >
-                              <Globe className="h-3.5 w-3.5 text-indigo-500" />
-                              <span>{tt("cusm.view_360", "View 360 Profile & PDF")}</span>
-                            </button>
-                            <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenActionMenuId(null);
-                                if (confirm(`${tt("creg.crtr_confirm_delete_prefix", "Are you sure you want to delete")} ${c.accountName}?`)) {
-                                  setCompanies((prev) => prev.filter((item) => item.id !== c.id));
-                                }
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition cursor-pointer"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              <span>{tt("common.delete", "Delete")}</span>
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                              <Mail className="h-3.5 w-3.5" />
+                            </a>
+                          ) : null}
+                        </div>
+
+                        {/* Contact Popover Dropdown */}
+                        {openContactMenuId === c.id && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setOpenContactMenuId(null)} />
+                            <div className={cn(
+                              "absolute right-0 w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-2 text-left animate-in fade-in zoom-in-95 duration-150",
+                              idx >= Math.max(paginatedCompanies.length - 2, 1) ? "bottom-8 mb-1" : "top-10"
+                            )}>
+                              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800">
+                                <div className="text-[10px] uppercase font-bold text-slate-400">Contact Options</div>
+                                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{c.primaryContact}</div>
+                              </div>
+                              <div className="p-1 space-y-1 text-xs">
+                                {c.primaryContact && c.primaryContact !== "—" && (
+                                  <a
+                                    href={`tel:${c.primaryContact.replace(/[^0-9+]/g, "")}`}
+                                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 transition font-medium"
+                                  >
+                                    <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                                    <span>Call ({c.primaryContact})</span>
+                                  </a>
+                                )}
+                                {c.primaryContact && c.primaryContact !== "—" && (
+                                  <a
+                                    href={`https://wa.me/${c.primaryContact.replace(/[^0-9]/g, "")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 transition font-medium"
+                                  >
+                                    <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
+                                    <span>Open WhatsApp</span>
+                                  </a>
+                                )}
+                                {c.email && c.email !== "—" && (
+                                  <a
+                                    href={`mailto:${c.email}`}
+                                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/40 transition font-medium"
+                                  >
+                                    <Mail className="h-3.5 w-3.5 text-blue-600" />
+                                    <span className="truncate">Send Email</span>
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyPhone(c.primaryContact)}
+                                  className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium cursor-pointer"
+                                >
+                                  <Copy className="h-3.5 w-3.5 text-slate-500" />
+                                  <span>{copiedPhone === c.primaryContact ? "Copied!" : "Copy Contact Number"}</span>
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </td>
+
+                      {/* 9. Actions Column (Eye Quick View + 3-Dots Menu) */}
+                      <td className="p-3.5 text-center relative">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedGroupProfile(c.groupData)}
+                            className="h-8 w-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 inline-flex items-center justify-center cursor-pointer transition border border-blue-200/50 shadow-2xs"
+                            title="View Group 360° Profile"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setOpenActionMenuId(openActionMenuId === c.id ? null : c.id)}
+                            className="h-8 w-8 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                            title="Actions Menu"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        {openActionMenuId === c.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setOpenActionMenuId(null)}
+                            />
+                            <div className={cn(
+                              "absolute right-3 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-2 text-left animate-in fade-in zoom-in-95 duration-150",
+                              idx >= Math.max(paginatedCompanies.length - 2, 1) ? "bottom-8 mb-1" : "top-10"
+                            )}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  setSelectedGroupProfile(c.groupData);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 dark:hover:text-blue-300 transition cursor-pointer"
+                              >
+                                <Eye className="h-4 w-4 text-blue-600" />
+                                <span>View Full Group Profile</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  const compId = c.companies[0]?.id || c.id;
+                                  if (onEditCompany && compId) {
+                                    onEditCompany(compId);
+                                  } else {
+                                    router.push(`/dashboard/settings/company-setup?companyId=${compId}` as Route);
+                                  }
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              >
+                                <PencilLine className="h-4 w-4 text-slate-500" />
+                                <span>Edit Group / Main Company</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  if (onRegisterNew) {
+                                    onRegisterNew(c.raw?.owner_person_id || undefined);
+                                  } else {
+                                    router.push(`/dashboard/settings/company-setup?action=new` as Route);
+                                  }
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition cursor-pointer"
+                              >
+                                <Plus className="h-4 w-4 text-emerald-600" />
+                                <span>+ Add Sister Company</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  handleMasterProfile(c);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              >
+                                <Printer className="h-4 w-4 text-slate-500" />
+                                <span>Print Master Profile (A4)</span>
+                              </button>
+
+                              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  handleDelete(c.id, c.accountName);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4 text-rose-600" />
+                                <span>Delete Group / Company</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

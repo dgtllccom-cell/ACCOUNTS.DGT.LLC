@@ -23,7 +23,10 @@ import {
   Landmark,
   BadgeCheck,
   Building,
-  Briefcase
+  Briefcase,
+  ChevronRight,
+  Copy,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -81,6 +84,27 @@ export type Group360ProfileModalProps = {
   onRegisterSisterCompany?: (ownerPersonId?: string) => void;
 };
 
+export function getStakeholderInitials(name?: string): string {
+  if (!name || name === "—") return "AA";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function getCountryFlag(countryStr?: string | null): string {
+  if (!countryStr) return "🌐";
+  const c = countryStr.toLowerCase();
+  if (c.includes("pakistan") || c.includes("pk") || c.includes("chaman") || c.includes("quetta") || c.includes("karachi") || c.includes("lahore")) return "🇵🇰";
+  if (c.includes("emirates") || c.includes("uae") || c.includes("dubai") || c.includes("sharjah") || c.includes("abu dhabi")) return "🇦🇪";
+  if (c.includes("saudi") || c.includes("ksa") || c.includes("riyadh")) return "🇸🇦";
+  if (c.includes("afghanistan") || c.includes("af") || c.includes("kabul") || c.includes("kandahar") || c.includes("nimruz")) return "🇦🇫";
+  if (c.includes("qatar") || c.includes("doha")) return "🇶🇦";
+  if (c.includes("oman") || c.includes("muscat")) return "🇴🇲";
+  if (c.includes("kuwait")) return "🇰🇼";
+  if (c.includes("china")) return "🇨🇳";
+  return "🌐";
+}
+
 export function Group360ProfileModal({
   group,
   lang: langProp,
@@ -97,6 +121,13 @@ export function Group360ProfileModal({
   >("summary");
 
   const [selectedCompanyForPreview, setSelectedCompanyForPreview] = useState<GroupCompanyItem | null>(null);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const handleCopyPhone = (phone: string) => {
+    void navigator.clipboard.writeText(phone);
+    setCopiedPhone(phone);
+    setTimeout(() => setCopiedPhone(null), 2000);
+  };
 
   // Distinct currencies across the group
   const currencies = Array.from(
@@ -401,37 +432,114 @@ export function Group360ProfileModal({
               {/* Stakeholder Details: Owner & Manager Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Principal Owner / Investor Card */}
-                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center font-bold">
-                        <Users className="h-4 w-4" />
+                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center font-black text-sm ring-2 ring-amber-300/50 shadow-sm shrink-0">
+                        {getStakeholderInitials(group.ownerName)}
                       </div>
                       <div>
-                        <div className="text-xs font-black text-slate-800 dark:text-slate-200">Selected Owner / Investor</div>
+                        <div className="text-xs font-black text-slate-900 dark:text-slate-100">Selected Owner / Investor</div>
                         <div className="text-[10px] text-muted-foreground">Principal Stakeholder</div>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
                       Primary Owner
                     </span>
                   </div>
 
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Full Name:</span>
-                      <strong className="text-slate-900 dark:text-slate-100">{localizeTerm(group.ownerName, activeLang)}</strong>
+                      <strong className="text-slate-900 dark:text-slate-100 font-black">{localizeTerm(group.ownerName, activeLang)}</strong>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Contact Mobile:</span>
                       <div className="flex items-center gap-1.5" dir="ltr">
-                        <span className="font-mono font-bold">{group.primaryContact}</span>
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{group.primaryContact}</span>
+                        {group.primaryContact && group.primaryContact !== "—" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyPhone(group.primaryContact)}
+                              className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer"
+                              title="Copy Phone"
+                            >
+                              {copiedPhone === group.primaryContact ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                            <a
+                              href={`https://wa.me/${group.primaryContact.replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition"
+                              title="Chat on WhatsApp"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Official Email:</span>
+                      <a href={`mailto:${group.email}`} className="font-mono text-blue-600 dark:text-blue-400 hover:underline">
+                        {group.email}
+                      </a>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Registered Country:</span>
+                      <span className="flex items-center gap-1 font-medium">
+                        <span>{getCountryFlag(group.country)}</span>
+                        <span>{group.country || "Pakistan"}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Company Manager Details */}
+                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-600 text-white flex items-center justify-center font-black text-sm ring-2 ring-indigo-300/50 shadow-sm shrink-0">
+                        {getStakeholderInitials(group.managerName || group.ownerName)}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-slate-900 dark:text-slate-100">Selected Company Manager</div>
+                        <div className="text-[10px] text-muted-foreground">Authorized Signatory</div>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                      Authorized
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Manager Name:</span>
+                      <strong className="text-slate-900 dark:text-slate-100 font-black">
+                        {localizeTerm(group.managerName || group.ownerName, activeLang)}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Manager ID/Code:</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                        {group.managerPersonId || "MGR-0010"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Mobile Contact:</span>
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{group.primaryContact}</span>
                         {group.primaryContact && group.primaryContact !== "—" && (
                           <a
                             href={`https://wa.me/${group.primaryContact.replace(/[^0-9]/g, "")}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-green-600 hover:text-green-700"
+                            className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition"
                             title="Chat on WhatsApp"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
@@ -439,69 +547,37 @@ export function Group360ProfileModal({
                         )}
                       </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Official Email:</span>
-                      <span className="font-mono text-blue-600 dark:text-blue-400">{group.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Registered Country:</span>
-                      <span>{group.country || "United Arab Emirates"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Company Manager Details */}
-                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 flex items-center justify-center font-bold">
-                        <Briefcase className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-black text-slate-800 dark:text-slate-200">Selected Company Manager</div>
-                        <div className="text-[10px] text-muted-foreground">Authorized Signatory</div>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      Authorized
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Manager Name:</span>
-                      <strong className="text-slate-900 dark:text-slate-100">{localizeTerm(group.managerName || group.ownerName, activeLang)}</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Manager ID/Code:</span>
-                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300">MGR-0010</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Mobile Contact:</span>
-                      <span className="font-mono font-bold" dir="ltr">{group.primaryContact}</span>
-                    </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Location / City:</span>
-                      <span>{group.city || "Dubai"}, {group.country || "UAE"}</span>
+                      <span className="flex items-center gap-1 font-medium">
+                        <span>{getCountryFlag(group.country)}</span>
+                        <span>{group.city || "Chaman"}, {group.country || "Pakistan"}</span>
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Group Registered Address & Branch Rules */}
-              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-black text-slate-800 dark:text-slate-200">
                   <MapPin className="h-4 w-4 text-rose-500" />
                   <span>Consortium Headquarters & Branch Policy</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-0.5">
+                  <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-1">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground">Branch Rules:</span>
-                    <div className="font-bold text-blue-600 dark:text-blue-400">{localizeTerm(group.branchRules, activeLang)}</div>
+                    <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <span>{localizeTerm(group.branchRules, activeLang)}</span>
+                    </div>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-0.5 md:col-span-2">
+                  <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-1 md:col-span-2">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground">Head Office Address:</span>
-                    <div className="font-medium text-slate-700 dark:text-slate-300">{group.address || "Main Commercial Plaza"}, {group.city}, {group.country}</div>
+                    <div className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <span className="shrink-0">{getCountryFlag(group.country)}</span>
+                      <span>{group.address || "Main Commercial Plaza"}, {group.city}, {group.state ? `${group.state}, ` : ""}{group.country}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -516,42 +592,125 @@ export function Group360ProfileModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab("companies")}
-                    className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                    className="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
                   >
-                    View Detailed Cards →
+                    <span>View Detailed Cards</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {group.companies.map((comp, i) => (
-                    <div
-                      key={comp.id}
-                      onClick={() => setSelectedCompanyForPreview(comp)}
-                      className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-blue-300 hover:shadow-md transition cursor-pointer space-y-2 group"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="text-[10px] font-mono font-bold text-slate-400">#{i + 1}</span>
-                          <div className="font-black text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition">
-                            {localizeTerm(comp.name, activeLang)}
-                          </div>
-                          {comp.legal_name && comp.legal_name !== comp.name && (
-                            <div className="text-[10px] text-muted-foreground truncate max-w-[220px]">
-                              {comp.legal_name}
-                            </div>
-                          )}
-                        </div>
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                          {comp.base_currency || "USD"}
-                        </span>
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {group.companies.map((comp, i) => {
+                    const compPhone = comp.contacts?.find((c) => c.type.toLowerCase().includes("mobile") || c.type.toLowerCase().includes("phone"))?.value || group.primaryContact;
+                    const compEmail = comp.contacts?.find((c) => c.type.toLowerCase().includes("email"))?.value || group.email;
+                    const compCity = comp.city || group.city;
+                    const compState = comp.state || group.state;
+                    const compCountry = comp.country || group.country;
 
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">
-                        <span className="font-mono">{comp.company_code || "CMP-CODE"}</span>
-                        <span className="text-emerald-600 font-bold">Active</span>
+                    return (
+                      <div
+                        key={comp.id}
+                        onClick={() => setSelectedCompanyForPreview(comp)}
+                        className="p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-blue-400 hover:shadow-lg transition flex flex-col justify-between group cursor-pointer relative"
+                      >
+                        <div>
+                          {/* Top Row: #1 + Active, Currency */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                #{i + 1}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                                Active
+                              </span>
+                            </div>
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+                              {comp.base_currency || "USD"}
+                            </span>
+                          </div>
+
+                          {/* Company Name & Subtitle */}
+                          <div className="mt-3 space-y-1">
+                            <h5 className="font-black text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition">
+                              {localizeTerm(comp.name, activeLang)}
+                            </h5>
+                            <div className="text-[11px] text-slate-500 font-medium">
+                              Account #{comp.company_code || comp.id} • Branch: {compCity || "Main"} Branch
+                            </div>
+                          </div>
+
+                          {/* Location & Metrics Chips */}
+                          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                            <div className="flex items-center gap-1.5 text-[11px]">
+                              <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                              <span className="truncate">
+                                {compCity}{compState ? `, ${compState}` : ""}, {compCountry}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                              <span className="flex items-center gap-1">
+                                <FileText className="h-3 w-3 text-purple-500" />
+                                {comp.registrations?.length || 1} Contracts
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <BadgeCheck className="h-3 w-3 text-emerald-500" />
+                                {comp.raw?.documents_count || 2} Docs
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Contacts & Action */}
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                          <div className="flex items-center gap-1" dir="ltr" onClick={(e) => e.stopPropagation()}>
+                            {compPhone && compPhone !== "—" && (
+                              <a
+                                href={`tel:${compPhone}`}
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition"
+                                title="Call"
+                              >
+                                <Phone className="h-3 w-3" />
+                              </a>
+                            )}
+                            {compPhone && compPhone !== "—" && (
+                              <a
+                                href={`https://wa.me/${compPhone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-green-50 text-slate-600 hover:text-green-700 transition"
+                                title="WhatsApp"
+                              >
+                                <MessageSquare className="h-3 w-3" />
+                              </a>
+                            )}
+                            {compEmail && compEmail !== "—" && (
+                              <a
+                                href={`mailto:${compEmail}`}
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 transition"
+                                title="Email"
+                              >
+                                <Mail className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedCompanyForPreview(comp);
+                            }}
+                            className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-0.5 cursor-pointer group-hover:translate-x-0.5 transition"
+                          >
+                            <span>View Profile</span>
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -997,6 +1156,143 @@ export function Group360ProfileModal({
         </div>
 
       </div>
+
+      {/* ── SISTER COMPANY 360 DETAIL PREVIEW MODAL ── */}
+      {selectedCompanyForPreview && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-150">
+          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center font-black">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-base text-slate-900 dark:text-slate-100">
+                      {localizeTerm(selectedCompanyForPreview.name, activeLang)}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                      {selectedCompanyForPreview.base_currency || "USD"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Account #{selectedCompanyForPreview.company_code || selectedCompanyForPreview.id} • {group.consortiumName}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCompanyForPreview(null)}
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-500 flex items-center justify-center cursor-pointer transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Business Type / Form:</span>
+                <div className="font-bold text-slate-800 dark:text-slate-200">{selectedCompanyForPreview.business_type || "LLC"}</div>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Operating Currency:</span>
+                <div className="font-bold text-blue-600 dark:text-blue-400">{selectedCompanyForPreview.base_currency || "USD"} Base Ledger</div>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1 col-span-2">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Location & Address:</span>
+                <div className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span>
+                    {selectedCompanyForPreview.address || group.address || "Main Branch"}, {selectedCompanyForPreview.city || group.city}, {selectedCompanyForPreview.state || group.state ? `${selectedCompanyForPreview.state || group.state}, ` : ""}{selectedCompanyForPreview.country || group.country}
+                  </span>
+                </div>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Primary Mobile:</span>
+                <div className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                  {selectedCompanyForPreview.contacts?.find((c) => c.type.toLowerCase().includes("mobile") || c.type.toLowerCase().includes("phone"))?.value || group.primaryContact}
+                </div>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Official Email:</span>
+                <div className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate">
+                  {selectedCompanyForPreview.contacts?.find((c) => c.type.toLowerCase().includes("email"))?.value || group.email}
+                </div>
+              </div>
+            </div>
+
+            {/* Registrations & Licenses */}
+            {selectedCompanyForPreview.registrations && selectedCompanyForPreview.registrations.length > 0 && (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Verified Registrations:</span>
+                <div className="space-y-1">
+                  {selectedCompanyForPreview.registrations.map((r, idx) => (
+                    <div key={idx} className="flex justify-between text-xs">
+                      <span className="text-slate-600 dark:text-slate-400">{r.type}:</span>
+                      <strong className="font-mono text-slate-900 dark:text-slate-100">{r.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-1.5">
+                {onEditCompany && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const id = selectedCompanyForPreview.id;
+                      setSelectedCompanyForPreview(null);
+                      onClose();
+                      onEditCompany(id);
+                    }}
+                    className="text-xs font-bold gap-1 text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer"
+                  >
+                    <PencilLine className="h-3.5 w-3.5" />
+                    <span>{activeLang === "ur" ? "ترمیم" : "Edit"}</span>
+                  </Button>
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePrintCompany(selectedCompanyForPreview)}
+                  className="text-xs font-bold gap-1 text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer"
+                >
+                  <Printer className="h-3.5 w-3.5 text-blue-500" />
+                  <span>Profile</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePrintCompanyDossier(selectedCompanyForPreview)}
+                  className="text-xs font-bold gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-pointer"
+                >
+                  <Printer className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>360° Dossier</span>
+                </Button>
+              </div>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setSelectedCompanyForPreview(null)}
+                className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 cursor-pointer"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

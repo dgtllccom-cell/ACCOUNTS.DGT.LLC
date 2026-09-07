@@ -304,6 +304,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "General Office",
     icon: Settings,
     children: [
+      { label: "Customer Management", href: "/dashboard/settings/customers", icon: Users },
+      { label: "Customer Management Journal", href: "/dashboard/settings/customers?view=journal", icon: FileSpreadsheet },
       { label: "Employees Directory", href: "/dashboard/general-office/employees", icon: Users },
       { label: "Employee KYC & Documents", href: "/dashboard/general-office/employee-kyc", icon: FileText },
       { label: "Attendance & Leave Management", href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck },

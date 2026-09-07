@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Route } from "next";
 import {
   Building2,
@@ -34,7 +34,8 @@ import {
   MapPin,
   Check,
   PhoneCall,
-  TrendingUp
+  TrendingUp,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -182,6 +183,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams?.get("view") === "journal") {
+      setShowUniversalDirectory(true);
+    }
+  }, [searchParams]);
 
   // Fetch customers from API
   const loadCustomers = async () => {
@@ -666,6 +674,19 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           >
             <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
             <span>{t(lang, "cl.filters", "Filters")}</span>
+          </Button>
+
+          {/* Directory Journal Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowUniversalDirectory(true)}
+            className="h-9 px-3 gap-1.5 bg-blue-50/70 hover:bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 rounded-xl text-xs font-bold shadow-2xs cursor-pointer"
+            title="Open Universal Party Directory & Journal"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            <span>{isRtl ? "ڈائریکٹری جرنل" : "Directory Journal"}</span>
           </Button>
 
           {/* Export Button */}

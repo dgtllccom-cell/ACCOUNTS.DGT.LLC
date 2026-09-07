@@ -4,6 +4,8 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  "CUSTOMER MANAGEMENT": { ur: "کسٹمر مینجمنٹ", ar: "إدارة العملاء", fa: "مدیریت مشتریان", ps: "د پیرودونکو مدیریت" },
+  "CUSTOMER MANAGEMENT JOURNAL": { ur: "کسٹمر مینجمنٹ جرنل", ar: "سجل إدارة العملاء", fa: "دفتر روزنامه مدیریت مشتریان", ps: "د پیرودونکو د مدیریت ورځپاڼه" },
   "CUSTOMER INQUIRIES": { ur: "کسٹمر انکوائریاں", ar: "استفسارات العملاء", fa: "استعلامات مشتری", ps: "د پیرودونکو پوښتنې" },
   "DIRECTION": { ur: "سمت", ar: "الاتجاه", fa: "جهت", ps: "لوري" },
   "ACTOR": { ur: "عمل کرنے والا", ar: "الفاعل", fa: "کاربر", ps: "ترسره کوونکی" },
