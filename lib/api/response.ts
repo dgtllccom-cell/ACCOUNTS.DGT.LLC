@@ -274,6 +274,39 @@ export async function handleApiError(error: unknown) {
     else { code = "CONSTRAINT_VIOLATION"; status = 422; }
   }
 
+  // A few routes/repositories still `throw new Error("...")` for what is really
+  // a client fault (bad input, out-of-scope, duplicate) rather than a server
+  // fault. Match only these specific, deliberate messages — never generic
+  // strings like "not found" that a real server bug could also produce — and
+  // only when nothing above already set a non-500 status (ApiClientError wins).
+  if (status === 500 && typeof message === "string") {
+    const m = message.toLowerCase();
+    if (
+      m.includes("is not allowed.") ||
+      m.includes("location write is not allowed") ||
+      m.includes("country scope is not allowed") ||
+      m.includes("do not have permission") ||
+      m.includes("only super admin can")
+    ) {
+      code = "FORBIDDEN";
+      status = 403;
+    } else if (m.includes("already exists")) {
+      code = "DUPLICATE";
+      status = 409;
+    } else if (
+      m.includes("could not be verified") ||
+      m.includes("countryid and name are required") ||
+      m.includes("countryid, stateprovinceid and name are required") ||
+      m.includes("city and area name are required") ||
+      m.includes("country name and country code") ||
+      m.includes("state name is required") ||
+      m.includes("no rows provided for import")
+    ) {
+      code = "BAD_REQUEST";
+      status = 400;
+    }
+  }
+
   // Normalize scope and ledger mismatches to user-friendly messages
   if (message.includes("financial scope") || message.includes("Ledger belongs to a different")) {
     message = "Account Scope mismatch";
