@@ -1366,6 +1366,14 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "reports", action: "read" }
       },
       {
+        key: "reports-bill-cost-profit-panel",
+        labelKey: "nav.bill_cost_profit_shell" as any,
+        iconKey: "coins",
+        href: "/dashboard/reports/bill-cost-profit" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
         key: "reports-country-panel",
         labelKey: "nav.country_reports",
         iconKey: "globe",
