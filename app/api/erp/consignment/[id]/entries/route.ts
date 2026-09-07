@@ -10,6 +10,7 @@ import {
   addSale,
   addReceipt,
   deleteChild,
+  updateChild,
 } from "@/lib/consignment/service";
 import { CONTAINER_STATUSES, EXPENSE_TYPES, RECEIPT_METHODS } from "@/lib/consignment/types";
 
@@ -19,37 +20,55 @@ const num = z.union([z.number(), z.string().trim().transform((v) => (v === "" ? 
 const uuid = z.string().uuid().nullable().optional();
 const txt = (n: number) => z.string().trim().max(n).nullable().optional();
 
-const containerSchema = z.object({
-  kind: z.literal("container"),
+const containerFields = {
   container_no: txt(120), bl_no: txt(120), loading_date: txt(40), arrival_date: txt(40),
   vessel_name: txt(160), shipping_line: txt(160), origin_country_id: uuid, seal_no: txt(80),
   total_cartons: num, total_gross_weight: num, total_net_weight: num,
+  reference_rate: num, reference_value: num,
   status: z.enum(CONTAINER_STATUSES).optional(), notes: txt(2000),
-});
-const goodSchema = z.object({
-  kind: z.literal("good"),
-  container_id: z.string().uuid(),
+};
+const goodFields = {
   goods_id: uuid, goods_name: z.string().trim().min(1).max(240), unit_id: uuid, unit_label: txt(60),
   cartons: num, quantity: num, gross_weight: num, net_weight: num, rate: num, amount: num,
   currency: txt(8), notes: txt(2000),
-});
-const expenseSchema = z.object({
-  kind: z.literal("expense"),
+};
+const expenseFields = {
   container_id: uuid, expense_type: z.enum(EXPENSE_TYPES).optional(), description: txt(400),
   currency: txt(8), amount: num, expense_date: txt(40), paid_by: txt(160), reference_no: txt(120), notes: txt(2000),
-});
-const saleSchema = z.object({
-  kind: z.literal("sale"),
-  container_id: uuid, sale_date: txt(40), buyer_name: txt(240),
+};
+const saleFields = {
+  container_id: uuid, sale_date: txt(40), buyer_name: txt(240), buyer_customer_id: uuid,
   goods_id: uuid, goods_name: z.string().trim().min(1).max(240), unit_id: uuid, unit_label: txt(60),
-  quantity: num, rate: num, currency: txt(8), amount: num, reference_no: txt(120), notes: txt(2000),
-});
-const receiptSchema = z.object({
-  kind: z.literal("receipt"),
+  cartons: num, quantity: num, net_weight: num, rate: num, currency: txt(8), amount: num, reference_no: txt(120), notes: txt(2000),
+};
+const receiptFields = {
   receipt_date: txt(40), amount: num, currency: txt(8),
   method: z.enum(RECEIPT_METHODS).optional(), reference_no: txt(120), notes: txt(2000),
-});
+};
+
+const containerSchema = z.object({ kind: z.literal("container"), ...containerFields });
+const goodSchema = z.object({ kind: z.literal("good"), container_id: z.string().uuid(), ...goodFields });
+const expenseSchema = z.object({ kind: z.literal("expense"), ...expenseFields });
+const saleSchema = z.object({ kind: z.literal("sale"), ...saleFields });
+const receiptSchema = z.object({ kind: z.literal("receipt"), ...receiptFields });
 const bodySchema = z.discriminatedUnion("kind", [containerSchema, goodSchema, expenseSchema, saleSchema, receiptSchema]);
+
+// PATCH: every field optional + childId. `updateChild` allow-lists columns per kind.
+const optTxt = z.string().trim().max(4000).nullable().optional();
+const patchBodySchema = z.object({
+  kind: z.enum(["container", "good", "expense", "sale", "receipt"]),
+  childId: z.string().uuid(),
+  container_no: optTxt, bl_no: optTxt, loading_date: optTxt, arrival_date: optTxt, vessel_name: optTxt, shipping_line: optTxt, seal_no: optTxt,
+  total_cartons: num, total_gross_weight: num, total_net_weight: num, reference_rate: num, reference_value: num,
+  status: optTxt,
+  goods_id: uuid, goods_name: optTxt, unit_id: uuid, unit_label: optTxt,
+  cartons: num, quantity: num, gross_weight: num, net_weight: num, rate: num, amount: num, currency: optTxt,
+  expense_type: optTxt, description: optTxt, expense_date: optTxt, paid_by: optTxt, reference_no: optTxt,
+  container_id: uuid,
+  sale_date: optTxt, buyer_name: optTxt, buyer_customer_id: uuid,
+  receipt_date: optTxt, method: optTxt,
+  notes: optTxt,
+});
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireConsignmentSession();
@@ -72,6 +91,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await auditApiAction(request, { action: `consignment.${b.kind}.add`, entityTable: "consignment", entityId: id, after: { childId: out.id } });
     } catch {}
     return apiCreated(out);
+  } catch (error) {
+    return consignmentErrorResponse(error);
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireConsignmentSession();
+  if ("response" in auth) return auth.response;
+  try {
+    const { id } = await params;
+    const parsed = patchBodySchema.safeParse(await request.json());
+    if (!parsed.success) return apiError("VALIDATION", "Invalid update", 400, parsed.error.flatten());
+    const { kind, childId, ...patch } = parsed.data;
+    await updateChild(auth.session, kind, id, childId, patch as Record<string, unknown>);
+    try {
+      await auditApiAction(request, { action: `consignment.${kind}.update`, entityTable: "consignment", entityId: id, after: { childId } });
+    } catch {}
+    return apiOk({ id, childId });
   } catch (error) {
     return consignmentErrorResponse(error);
   }

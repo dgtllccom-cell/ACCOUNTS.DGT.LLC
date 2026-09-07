@@ -84,6 +84,10 @@ export interface ConsignmentInput {
   partyPhone?: string | null;
   title?: string | null;
   referenceNo?: string | null;
+  tenderNo?: string | null;
+  loadingFromDate?: string | null;
+  loadingToDate?: string | null;
+  referenceValue?: number | string | null;
   baseCurrency?: string | null;
   consignmentDate?: string | null;
   countryId?: string | null;
@@ -93,6 +97,12 @@ export interface ConsignmentInput {
   originalLanguage?: SupportedLanguage;
   status?: ConsignmentRow["status"];
 }
+
+const nn = (v: unknown): number | null => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 export async function createConsignment(session: ErpSession, input: ConsignmentInput): Promise<{ id: string; consignmentNo: string }> {
   const name = (input.partyName || "").trim();
@@ -111,11 +121,14 @@ export async function createConsignment(session: ErpSession, input: ConsignmentI
       insert into public.consignment (
         country_id, country_branch_id, city_branch_id,
         party_account_id, party_customer_id, party_name, party_contact, party_phone,
-        title, reference_no, base_currency, consignment_date, status, notes, original_language_code, created_by
+        title, reference_no, tender_no, loading_from_date, loading_to_date, reference_value,
+        base_currency, consignment_date, status, notes, original_language_code, created_by
       ) values (
         ${countryId}, ${countryBranchId}, ${cityBranchId},
         ${input.partyAccountId ?? null}, ${input.partyCustomerId ?? null}, ${name}, ${input.partyContact ?? null}, ${input.partyPhone ?? null},
-        ${input.title ?? null}, ${input.referenceNo ?? null}, ${(input.baseCurrency || "USD").toUpperCase()},
+        ${input.title ?? null}, ${input.referenceNo ?? null}, ${input.tenderNo ?? null},
+        ${input.loadingFromDate || null}, ${input.loadingToDate || null}, ${nn(input.referenceValue)},
+        ${(input.baseCurrency || "USD").toUpperCase()},
         ${input.consignmentDate || new Date().toISOString().slice(0, 10)}, ${input.status || "open"},
         ${input.notes ?? null}, ${lang}, ${session.userId}::uuid
       )
@@ -144,6 +157,10 @@ export async function updateConsignment(session: ErpSession, id: string, patch: 
     if ("partyPhone" in patch) add(sql`party_phone = ${patch.partyPhone ?? null}`);
     if ("title" in patch) add(sql`title = ${patch.title ?? null}`);
     if ("referenceNo" in patch) add(sql`reference_no = ${patch.referenceNo ?? null}`);
+    if ("tenderNo" in patch) add(sql`tender_no = ${patch.tenderNo ?? null}`);
+    if ("loadingFromDate" in patch) add(sql`loading_from_date = ${patch.loadingFromDate || null}`);
+    if ("loadingToDate" in patch) add(sql`loading_to_date = ${patch.loadingToDate || null}`);
+    if ("referenceValue" in patch) add(sql`reference_value = ${nn(patch.referenceValue)}`);
     if ("baseCurrency" in patch) add(sql`base_currency = ${(patch.baseCurrency || "USD").toUpperCase()}`);
     if ("consignmentDate" in patch) add(sql`consignment_date = ${patch.consignmentDate || null}`);
     if ("notes" in patch) add(sql`notes = ${patch.notes ?? null}`);
@@ -164,13 +181,19 @@ export async function deleteConsignment(session: ErpSession, id: string): Promis
   });
 }
 
-async function assertCanEdit(session: ErpSession, id: string): Promise<void> {
-  const ok = await pg(async (sql) => {
+async function assertCanEdit(session: ErpSession, id: string, opts: { allowTransferred?: boolean } = {}): Promise<void> {
+  const row = await pg(async (sql) => {
     const scoped = visibleSql(sql, session);
-    const rows = (await sql`select 1 from public.consignment c where c.id = ${id}::uuid and c.deleted_at is null and ${scoped}`) as unknown as any[];
-    return rows.length > 0;
+    const rows = (await sql`select c.accounting_status from public.consignment c where c.id = ${id}::uuid and c.deleted_at is null and ${scoped}`) as unknown as Array<{ accounting_status: string }>;
+    return rows[0] ?? null;
   });
-  if (!ok) throw new ApiClientError("Consignment not found or not in your scope.", { status: 404, code: "NOT_FOUND" });
+  if (!row) throw new ApiClientError("Consignment not found or not in your scope.", { status: 404, code: "NOT_FOUND" });
+  if (!opts.allowTransferred && row.accounting_status === "transferred") {
+    throw new ApiClientError(
+      "This consignment has been transferred to Main ERP and is locked. Reverse the transfer before editing.",
+      { status: 409, code: "CNS_LOCKED" },
+    );
+  }
 }
 
 // ── list / register ──────────────────────────────────────────────────────────
@@ -245,6 +268,12 @@ export async function getConsignmentReport(session: ErpSession, id: string, lang
   const totalReceipts = data.receipts.reduce((a, r) => a + num(r.amount), 0);
   const goodsReceivedQty = data.goods.reduce((a, g) => a + num(g.quantity), 0);
   const goodsSoldQty = data.sales.reduce((a, s) => a + num(s.quantity), 0);
+  const totalCartons = data.goods.reduce((a, g) => a + num(g.cartons), 0);
+  const soldCartons = data.sales.reduce((a, s) => a + num((s as any).cartons), 0);
+  const containerGoodsAmount = data.goods.reduce((a, g) => a + num(g.amount), 0);
+  const headRefValue = num((data.head as any).reference_value);
+  const referenceValue = headRefValue > 0 ? headRefValue : containerGoodsAmount;
+  const netReceivable = totalSales - totalExpenses;
 
   const byContainer = new Map<string, ContainerGoodRow[]>();
   for (const g of data.goods) {
@@ -263,14 +292,21 @@ export async function getConsignmentReport(session: ErpSession, id: string, lang
     stockByGoods,
     totals: {
       containerCount: data.containers.length,
+      totalCartons,
       goodsReceivedQty,
       goodsSoldQty,
       remainingStockQty: goodsReceivedQty - goodsSoldQty,
+      soldCartons,
+      remainingCartons: totalCartons - soldCartons,
       totalGrossWeight: data.goods.reduce((a, g) => a + num(g.gross_weight), 0),
       totalNetWeight: data.goods.reduce((a, g) => a + num(g.net_weight), 0),
+      referenceValue,
       totalSales,
       totalExpenses,
+      netReceivable,
+      amountReceived: totalReceipts,
       totalReceipts,
+      balanceReceivable: netReceivable - totalReceipts,
       remainingReceivable: totalSales - totalReceipts,
       netPosition: totalSales - totalExpenses - totalReceipts,
     },
@@ -287,10 +323,12 @@ export async function addContainer(session: ErpSession, consignmentId: string, i
   return pg(async (sql) => {
     const rows = (await sql`
       insert into public.consignment_container
-        (consignment_id, container_no, bl_no, loading_date, arrival_date, vessel_name, shipping_line, origin_country_id, seal_no, total_cartons, total_gross_weight, total_net_weight, status, notes, created_by)
+        (consignment_id, container_no, bl_no, loading_date, arrival_date, vessel_name, shipping_line, origin_country_id, seal_no,
+         total_cartons, total_gross_weight, total_net_weight, reference_rate, reference_value, status, notes, created_by)
       values (${consignmentId}::uuid, ${input.container_no ?? null}, ${input.bl_no ?? null}, ${input.loading_date ?? null}, ${input.arrival_date ?? null},
         ${input.vessel_name ?? null}, ${input.shipping_line ?? null}, ${input.origin_country_id ?? null}, ${input.seal_no ?? null},
-        ${input.total_cartons ?? null}, ${input.total_gross_weight ?? null}, ${input.total_net_weight ?? null}, ${input.status || "received"}, ${input.notes ?? null}, ${session.userId}::uuid)
+        ${nn(input.total_cartons)}, ${nn(input.total_gross_weight)}, ${nn(input.total_net_weight)},
+        ${nn(input.reference_rate)}, ${nn(input.reference_value)}, ${input.status || "received"}, ${input.notes ?? null}, ${session.userId}::uuid)
       returning id
     `) as unknown as Array<{ id: string }>;
     await sql`insert into public.consignment_event (consignment_id, actor_id, event_type, detail) values (${consignmentId}::uuid, ${session.userId}::uuid, 'container_added', ${input.container_no ?? input.bl_no ?? null})`;
@@ -335,9 +373,11 @@ export async function addSale(session: ErpSession, consignmentId: string, input:
   if (!name) throw new ApiClientError("Goods name is required.", { status: 400, code: "VALIDATION" });
   return pg(async (sql) => {
     const rows = (await sql`
-      insert into public.consignment_sale (consignment_id, container_id, sale_date, buyer_name, goods_id, goods_name, unit_id, unit_label, quantity, rate, currency, amount, reference_no, notes, created_by)
-      values (${consignmentId}::uuid, ${input.container_id ?? null}, ${input.sale_date || new Date().toISOString().slice(0, 10)}, ${input.buyer_name ?? null},
-        ${input.goods_id ?? null}, ${name}, ${input.unit_id ?? null}, ${input.unit_label ?? null}, ${Number(input.quantity) || 0}, ${input.rate ?? null},
+      insert into public.consignment_sale (consignment_id, container_id, sale_date, buyer_name, buyer_customer_id, goods_id, goods_name, unit_id, unit_label,
+        cartons, quantity, net_weight, rate, currency, amount, reference_no, notes, created_by)
+      values (${consignmentId}::uuid, ${input.container_id ?? null}, ${input.sale_date || new Date().toISOString().slice(0, 10)}, ${input.buyer_name ?? null}, ${input.buyer_customer_id ?? null},
+        ${input.goods_id ?? null}, ${name}, ${input.unit_id ?? null}, ${input.unit_label ?? null},
+        ${nn(input.cartons)}, ${Number(input.quantity) || 0}, ${nn(input.net_weight)}, ${nn(input.rate)},
         ${(input.currency || "USD").toUpperCase()}, ${Number(input.amount) || (input.rate && input.quantity ? Number(input.rate) * Number(input.quantity) : 0)}, ${input.reference_no ?? null}, ${input.notes ?? null}, ${session.userId}::uuid)
       returning id
     `) as unknown as Array<{ id: string }>;
@@ -366,7 +406,131 @@ export async function deleteChild(session: ErpSession, kind: "container" | "good
   const table = { container: "consignment_container", good: "consignment_container_good", expense: "consignment_expense", sale: "consignment_sale", receipt: "consignment_receipt" }[kind];
   await pg(async (sql) => {
     await sql`update public.${sql(table)} set deleted_at = now() where id = ${childId}::uuid and consignment_id = ${consignmentId}::uuid`;
+    await sql`insert into public.consignment_event (consignment_id, actor_id, event_type, detail) values (${consignmentId}::uuid, ${session.userId}::uuid, ${kind + "_deleted"}, null)`;
   });
+}
+
+// ── child-row edit (spec: Edit / Delete / View) ──────────────────────────────
+const CHILD_TABLE: Record<string, string> = {
+  container: "consignment_container",
+  good: "consignment_container_good",
+  expense: "consignment_expense",
+  sale: "consignment_sale",
+  receipt: "consignment_receipt",
+};
+/** columns the client may PATCH on each child kind (snake_case) */
+const CHILD_FIELDS: Record<string, { col: string; kind: "text" | "num" | "date" | "uuid" }[]> = {
+  container: [
+    { col: "container_no", kind: "text" }, { col: "bl_no", kind: "text" }, { col: "loading_date", kind: "date" },
+    { col: "arrival_date", kind: "date" }, { col: "vessel_name", kind: "text" }, { col: "shipping_line", kind: "text" },
+    { col: "seal_no", kind: "text" }, { col: "total_cartons", kind: "num" }, { col: "total_gross_weight", kind: "num" },
+    { col: "total_net_weight", kind: "num" }, { col: "reference_rate", kind: "num" }, { col: "reference_value", kind: "num" },
+    { col: "status", kind: "text" }, { col: "notes", kind: "text" },
+  ],
+  good: [
+    { col: "goods_id", kind: "uuid" }, { col: "goods_name", kind: "text" }, { col: "unit_id", kind: "uuid" }, { col: "unit_label", kind: "text" },
+    { col: "cartons", kind: "num" }, { col: "quantity", kind: "num" }, { col: "gross_weight", kind: "num" }, { col: "net_weight", kind: "num" },
+    { col: "rate", kind: "num" }, { col: "amount", kind: "num" }, { col: "currency", kind: "text" }, { col: "notes", kind: "text" },
+  ],
+  expense: [
+    { col: "expense_type", kind: "text" }, { col: "description", kind: "text" }, { col: "currency", kind: "text" },
+    { col: "amount", kind: "num" }, { col: "expense_date", kind: "date" }, { col: "paid_by", kind: "text" },
+    { col: "reference_no", kind: "text" }, { col: "container_id", kind: "uuid" }, { col: "notes", kind: "text" },
+  ],
+  sale: [
+    { col: "sale_date", kind: "date" }, { col: "buyer_name", kind: "text" }, { col: "buyer_customer_id", kind: "uuid" },
+    { col: "goods_id", kind: "uuid" }, { col: "goods_name", kind: "text" }, { col: "unit_id", kind: "uuid" }, { col: "unit_label", kind: "text" },
+    { col: "container_id", kind: "uuid" }, { col: "cartons", kind: "num" }, { col: "quantity", kind: "num" }, { col: "net_weight", kind: "num" },
+    { col: "rate", kind: "num" }, { col: "amount", kind: "num" }, { col: "currency", kind: "text" }, { col: "reference_no", kind: "text" }, { col: "notes", kind: "text" },
+  ],
+  receipt: [
+    { col: "receipt_date", kind: "date" }, { col: "amount", kind: "num" }, { col: "currency", kind: "text" },
+    { col: "method", kind: "text" }, { col: "reference_no", kind: "text" }, { col: "notes", kind: "text" },
+  ],
+};
+
+export async function updateChild(
+  session: ErpSession,
+  kind: "container" | "good" | "expense" | "sale" | "receipt",
+  consignmentId: string,
+  childId: string,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  await guard(session, consignmentId);
+  const table = CHILD_TABLE[kind];
+  const allowed = CHILD_FIELDS[kind];
+  await pg(async (sql) => {
+    const set: any[] = [];
+    for (const f of allowed) {
+      if (!(f.col in patch)) continue;
+      const raw = patch[f.col];
+      let val: any;
+      if (raw === "" || raw === null || raw === undefined) val = null;
+      else if (f.kind === "num") val = nn(raw);
+      else if (f.kind === "text" && (f.col === "currency")) val = String(raw).toUpperCase();
+      else val = raw;
+      set.push(sql`${sql(f.col)} = ${val}`);
+    }
+    // auto-recompute goods/sale amount when rate+qty change and amount not sent
+    if ((kind === "good" || kind === "sale") && !("amount" in patch) && ("rate" in patch || "quantity" in patch)) {
+      const r = nn(patch.rate), q = nn(patch.quantity);
+      if (r != null && q != null) set.push(sql`amount = ${r * q}`);
+    }
+    if (!set.length) return;
+    let frag = set[0];
+    for (let i = 1; i < set.length; i++) frag = sql`${frag}, ${set[i]}`;
+    const res = (await sql`update public.${sql(table)} set ${frag} where id = ${childId}::uuid and consignment_id = ${consignmentId}::uuid and deleted_at is null returning id`) as unknown as any[];
+    if (!res.length) throw new ApiClientError("Row not found in this consignment.", { status: 404, code: "NOT_FOUND" });
+    await sql`insert into public.consignment_event (consignment_id, actor_id, event_type, detail) values (${consignmentId}::uuid, ${session.userId}::uuid, ${kind + "_updated"}, null)`;
+  });
+}
+
+// ── Transfer / Confirm to Main ERP ──────────────────────────────────────────
+// This register NEVER auto-posts. This is the ONLY path that changes
+// accounting_status, and it runs only on an explicit manager action. It does
+// not itself write to ledger / roznamcha / journal — it marks the register row
+// transferred + locked, and records a full snapshot in consignment_event so the
+// downstream accounting mapping (owner-defined) has an auditable source. It is
+// reversible via untransferConsignment.
+const TRANSFER_ROLES = new Set(["super_admin", "country_admin", "main_branch_admin"]);
+
+export async function transferConsignment(session: ErpSession, id: string): Promise<{ id: string; accountingStatus: string }> {
+  if (!session.isSuperAdmin && !session.roles.some((r) => TRANSFER_ROLES.has(r))) {
+    throw new ApiClientError("Only an admin can transfer a consignment to Main ERP.", { status: 403, code: "FORBIDDEN" });
+  }
+  await assertCanEdit(session, id, { allowTransferred: true });
+  const report = await getConsignmentReport(session, id);
+  if (report.consignment.accounting_status === "transferred") {
+    throw new ApiClientError("This consignment is already transferred.", { status: 409, code: "ALREADY_TRANSFERRED" });
+  }
+  await pg(async (sql) => {
+    await sql`update public.consignment set accounting_status = 'transferred', transferred_at = now() where id = ${id}::uuid and deleted_at is null`;
+    await sql`
+      insert into public.consignment_event (consignment_id, actor_id, event_type, detail, meta)
+      values (${id}::uuid, ${session.userId}::uuid, 'transferred_to_erp', ${report.consignment.consignment_no},
+        ${sql.json({
+          totals: report.totals,
+          containerCount: report.containers.length,
+          expenseCount: report.expenses.length,
+          saleCount: report.sales.length,
+          receiptCount: report.receipts.length,
+        })})`;
+  });
+  return { id, accountingStatus: "transferred" };
+}
+
+export async function untransferConsignment(session: ErpSession, id: string): Promise<{ id: string; accountingStatus: string }> {
+  if (!session.isSuperAdmin && !session.roles.some((r) => TRANSFER_ROLES.has(r))) {
+    throw new ApiClientError("Only an admin can reverse a transfer.", { status: 403, code: "FORBIDDEN" });
+  }
+  await pg(async (sql) => {
+    const scoped = visibleSql(sql, session);
+    const rows = (await sql`select 1 from public.consignment c where c.id = ${id}::uuid and c.deleted_at is null and ${scoped}`) as unknown as any[];
+    if (!rows.length) throw new ApiClientError("Consignment not found or not in your scope.", { status: 404, code: "NOT_FOUND" });
+    await sql`update public.consignment set accounting_status = 'not_transferred', transferred_at = null where id = ${id}::uuid`;
+    await sql`insert into public.consignment_event (consignment_id, actor_id, event_type, detail) values (${id}::uuid, ${session.userId}::uuid, 'transfer_reversed', null)`;
+  });
+  return { id, accountingStatus: "not_transferred" };
 }
 
 export async function consignmentSummary(session: ErpSession): Promise<Record<string, number>> {

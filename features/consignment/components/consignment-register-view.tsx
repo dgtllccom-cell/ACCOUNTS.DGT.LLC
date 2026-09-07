@@ -7,9 +7,11 @@ import { t } from "@/lib/i18n/ui";
 import {
   fetchConsignments,
   createConsignmentReq,
+  deleteConsignmentReq,
   type ConsignmentListRow,
 } from "@/features/consignment/consignment-api";
 import { CONSIGNMENT_STATUSES } from "@/lib/consignment/types";
+import { MasterCombo } from "@/features/consignment/components/master-combo";
 
 const CCY = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "INR", "CNY", "SAR", "IRR"];
 
@@ -168,9 +170,28 @@ export function ConsignmentRegisterView({ lang: langProp }: { lang?: string }) {
                         </span>
                       </td>
                       <td className="px-3 py-2 text-center">
-                        <Link href={`/dashboard/consignment/${r.id}`} className="text-xs font-bold text-primary hover:underline">
-                          {s.t("view", "View")}
-                        </Link>
+                        <span className="flex items-center justify-center gap-2">
+                          <Link href={`/dashboard/consignment/${r.id}`} className="text-xs font-bold text-primary hover:underline">
+                            {s.t("view", "View / Edit")}
+                          </Link>
+                          {r.accounting_status !== "transferred" && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!confirm(s.t("confirm_delete_consignment", "Delete this consignment and all its entries?"))) return;
+                                try {
+                                  await deleteConsignmentReq(r.id);
+                                  load();
+                                } catch (e) {
+                                  alert(e instanceof Error ? e.message : String(e));
+                                }
+                              }}
+                              className="text-xs font-bold text-red-600 hover:underline"
+                            >
+                              {s.t("delete", "Delete")}
+                            </button>
+                          )}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -218,10 +239,15 @@ function CreateConsignmentModal({
 }) {
   const [form, setForm] = useState({
     partyName: "",
+    partyCustomerId: null as string | null,
     title: "",
     referenceNo: "",
+    tenderNo: "",
     baseCurrency: "USD",
     consignmentDate: new Date().toISOString().slice(0, 10),
+    loadingFromDate: "",
+    loadingToDate: "",
+    referenceValue: "",
     partyContact: "",
     partyPhone: "",
     notes: "",
@@ -238,7 +264,12 @@ function CreateConsignmentModal({
     setBusy(true);
     setError(null);
     try {
-      await createConsignmentReq(form);
+      await createConsignmentReq({
+        ...form,
+        referenceValue: form.referenceValue === "" ? null : Number(form.referenceValue),
+        loadingFromDate: form.loadingFromDate || null,
+        loadingToDate: form.loadingToDate || null,
+      });
       onCreated();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -252,17 +283,36 @@ function CreateConsignmentModal({
       <div className="w-full max-w-lg rounded-xl border border-border bg-card p-5 shadow-xl">
         <h2 className="text-lg font-black text-foreground">{t(lang, "cns.new", "New Consignment")}</h2>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label={t(lang, "cns.party_name", "Party Name")} required>
-            <input value={form.partyName} onChange={(e) => set("partyName", e.target.value)} className="modal-input" />
+          <Field label={t(lang, "cns.party_name", "Party / Account (from Account Master)")} required full>
+            <MasterCombo
+              source="customer"
+              lang={lang}
+              value={form.partyName}
+              linkedId={form.partyCustomerId}
+              onChange={(name, linkedId) => setForm((p) => ({ ...p, partyName: name, partyCustomerId: linkedId }))}
+              placeholder={t(lang, "cns.search_master", "Search the Account Master, or type an old/temporary name…")}
+            />
           </Field>
-          <Field label={t(lang, "cns.reference_no", "Reference No")}>
+          <Field label={t(lang, "cns.reference_no", "Reference / Invoice No")}>
             <input value={form.referenceNo} onChange={(e) => set("referenceNo", e.target.value)} className="modal-input" />
+          </Field>
+          <Field label={t(lang, "cns.tender_no", "Tender / Contract No")}>
+            <input value={form.tenderNo} onChange={(e) => set("tenderNo", e.target.value)} className="modal-input" />
           </Field>
           <Field label={t(lang, "cns.f_title", "Title / Description")}>
             <input value={form.title} onChange={(e) => set("title", e.target.value)} className="modal-input" />
           </Field>
-          <Field label={t(lang, "cns.consignment_date", "Consignment Date")}>
+          <Field label={t(lang, "cns.consignment_date", "Date")}>
             <input type="date" value={form.consignmentDate} onChange={(e) => set("consignmentDate", e.target.value)} className="modal-input" />
+          </Field>
+          <Field label={t(lang, "cns.loading_from", "Loading Date From")}>
+            <input type="date" value={form.loadingFromDate} onChange={(e) => set("loadingFromDate", e.target.value)} className="modal-input" />
+          </Field>
+          <Field label={t(lang, "cns.loading_to", "Loading Date To")}>
+            <input type="date" value={form.loadingToDate} onChange={(e) => set("loadingToDate", e.target.value)} className="modal-input" />
+          </Field>
+          <Field label={t(lang, "cns.reference_value", "Reference Value")}>
+            <input type="number" value={form.referenceValue} onChange={(e) => set("referenceValue", e.target.value)} className="modal-input" />
           </Field>
           <Field label={t(lang, "cns.base_currency", "Base Currency")}>
             <select value={form.baseCurrency} onChange={(e) => set("baseCurrency", e.target.value)} className="modal-input">
@@ -279,7 +329,7 @@ function CreateConsignmentModal({
           <Field label={t(lang, "cns.party_phone", "Phone")}>
             <input value={form.partyPhone} onChange={(e) => set("partyPhone", e.target.value)} className="modal-input" />
           </Field>
-          <Field label={t(lang, "cns.notes", "Notes")} full>
+          <Field label={t(lang, "cns.notes", "Remarks")} full>
             <textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} className="modal-input" />
           </Field>
         </div>
