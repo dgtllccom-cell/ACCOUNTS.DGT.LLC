@@ -42,20 +42,33 @@ async function check() {
 
   const { data: countryBranches } = await supabase.from("country_branches").select("id, name, code, is_main, country_id");
   console.log("\\nCOUNTRY BRANCHES ON VPS (" + (countryBranches?.length || 0) + "):");
-  countryBranches?.forEach(b => console.log(" -", b.name, "(" + b.code + ")", "| is_main:", b.is_main, "| ID:", b.id, "| CountryId:", b.country_id));
+  const { data: searchResults, error: sErr } = await supabase.rpc("search_experiment");
+  // Let's do a direct query on common tables
+  const checkTables = ["branches", "city_branches", "country_branches", "companies", "customers", "profiles", "accounts", "roles", "warehouses", "banks"];
+  for (const t of checkTables) {
+    try {
+      const { data } = await supabase.from(t).select("*").limit(100);
+      const matched = data?.filter(row => JSON.stringify(row).toLowerCase().includes("experiment"));
+      if (matched && matched.length > 0) {
+        console.log("FOUND EXPERIMENT IN " + t + ":", JSON.stringify(matched, null, 2));
+      }
+    } catch (e) {}
+  }
 
   const tables = [
     "purchase_orders", "purchase_order_items", "purchase_order_payments", "purchase_order_expenses", "purchase_loading_records", "local_purchases",
-    "sales_orders", "sales_order_payments",
+    "sales_orders", "sales_order_payments", "sales_order_items",
     "roznamcha_entries", "roznamcha_lines", "roznamcha_reversals",
     "ledger_entries", "ledger_balances", "ledger_posting_lines", "ledger_posting_batches", "journal_entries", "journal_lines",
-    "companies", "customers", "employees", "banks", "warehouses", "city_branches", "accounts"
+    "companies", "customers", "employees", "banks", "warehouses", "city_branches", "country_branches", "branches", "accounts",
+    "document_intake_jobs", "document_intake_events", "erp_documents", "stock_movements", "expense_bills", "expenses",
+    "payment_work_entries", "profiles", "record_translations"
   ];
 
-  console.log("\\nTABLE RECORD COUNTS ON VPS:");
+  console.log("\\nDETAILED TABLE RECORD COUNTS ON VPS:");
   for (const t of tables) {
     const { count, error } = await supabase.from(t).select("*", { count: "exact", head: true });
-    console.log(" - " + t + ":", error ? "ERROR: " + error.message : count);
+    console.log(" - " + t + ":", error ? ("ERROR: " + error.message) : count);
   }
 }
 

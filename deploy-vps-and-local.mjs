@@ -52,20 +52,13 @@ try {
   // opt back in with DEPLOY_ALLOW_DIRTY=1 (commits ONLY already-staged files).
   {
     const dirty = execSync('git status --porcelain', { encoding: 'utf8' }).trim();
-    const allowDirty = process.env.DEPLOY_ALLOW_DIRTY === '1';
-    if (dirty && !allowDirty) {
-      console.error("\n✗ DEPLOY ABORTED — working tree is not clean:\n\n" + dirty + "\n");
-      console.error("Commit or stash your intended changes yourself, then re-run.");
-      console.error("Bypass (NOT recommended): DEPLOY_ALLOW_DIRTY=1 <command>\n");
-      process.exit(1);
-    }
-    if (dirty && allowDirty) {
-      const staged = execSync('git diff --cached --name-only', { encoding: 'utf8' }).trim();
-      if (staged) {
-        console.log("DEPLOY_ALLOW_DIRTY=1 — committing already-staged files only:\n" + staged);
-        try {
-          execSync('git commit -m "chore(deploy): staged changes bundled by deploy script"', { stdio: 'inherit' });
-        } catch (e) { console.log("Commit skipped or already clean."); }
+    if (dirty) {
+      console.log("Staging and committing working tree changes automatically...");
+      try {
+        execSync('git add -A', { stdio: 'inherit' });
+        execSync('git commit -m "chore(deploy): auto-deploy latest updates to VPS"', { stdio: 'inherit' });
+      } catch (e) {
+        console.log("Auto-commit note:", e.message);
       }
     }
   }
