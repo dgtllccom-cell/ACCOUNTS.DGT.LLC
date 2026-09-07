@@ -51,13 +51,17 @@ export async function GET(request: NextRequest) {
       const filterCountryBranch = scope.countryBranchId || null;
       const filterCityBranch = scope.cityBranchId || null;
 
-      // one CTE-based unified view of both payment sources
+      // one CTE-based unified view of both payment sources with full contextual linkage
       const rows = await sql`
         with unified as (
           select
             pop.id::text                            as id,
             'supplier_payment'                      as flow,
-            coalesce(po.purchase_order_no, pop.reference_no, pop.id::text) as ref_no,
+            'purchase'                              as module,
+            coalesce(pop.reference_no, po.purchase_order_no, pop.id::text) as ref_no,
+            po.purchase_order_no                    as order_no,
+            po.purchase_contract_no                 as contract_no,
+            coalesce(po.form_data->'form'->>'manualBillNumber', po.form_data->'form'->>'manual_bill_number', po.form_data->'form'->>'billNo', '') as manual_bill_no,
             pop.entry_date                          as txn_date,
             po.country_id                           as country_id,
             po.country_branch_id                    as country_branch_id,
@@ -66,18 +70,34 @@ export async function GET(request: NextRequest) {
             pop.kind::text                          as payment_kind,
             pop.currency_code                       as currency,
             pop.amount::numeric                     as amount,
+            coalesce(pop.exchange_rate::numeric, 1) as exchange_rate,
+            coalesce(pop.base_currency_amount::numeric, pop.amount::numeric) as base_amount,
             pop.status::text                        as status,
-            pr.full_name                            as created_by
+            pop.narration                           as narration,
+            dl.name                                 as debit_ledger_name,
+            cl.name                                 as credit_ledger_name,
+            coalesce(pop.super_admin_serial, re.super_admin_serial_number) as super_admin_serial,
+            coalesce(pop.country_serial, re.country_transaction_serial_number) as country_serial,
+            coalesce(pop.branch_serial, re.branch_transaction_serial_number) as branch_serial,
+            pr.full_name                            as created_by,
+            pop.created_at                          as created_at
           from public.purchase_order_payments pop
           left join public.purchase_orders po on po.id = pop.purchase_order_id
           left join public.companies sup on sup.id = po.supplier_company_id
+          left join public.ledgers dl on dl.id = pop.debit_ledger_id
+          left join public.ledgers cl on cl.id = pop.credit_ledger_id
+          left join public.roznamcha_entries re on re.id = pop.roznamcha_entry_id
           left join public.profiles pr on pr.id = pop.created_by
           where pop.deleted_at is null
           union all
           select
             sop.id::text                            as id,
             'customer_receipt'                      as flow,
-            coalesce(so.sales_order_no, sop.manual_reference_number, sop.id::text) as ref_no,
+            'sales'                                 as module,
+            coalesce(sop.manual_reference_number, so.sales_order_no, sop.id::text) as ref_no,
+            so.sales_order_no                       as order_no,
+            so.manual_reference_number              as contract_no,
+            coalesce(so.form_data->'form'->>'manualBillNumber', so.form_data->'form'->>'billNo', '') as manual_bill_no,
             sop.payment_date                        as txn_date,
             so.country_id                           as country_id,
             so.country_branch_id                    as country_branch_id,
@@ -86,8 +106,17 @@ export async function GET(request: NextRequest) {
             sop.payment_kind::text                  as payment_kind,
             sop.currency_code                       as currency,
             sop.amount::numeric                     as amount,
+            coalesce(sop.exchange_rate::numeric, 1) as exchange_rate,
+            (sop.amount::numeric * coalesce(sop.exchange_rate::numeric, 1)) as base_amount,
             sop.status::text                        as status,
-            pr.full_name                            as created_by
+            sop.remarks                             as narration,
+            'Customer Receivables'                  as debit_ledger_name,
+            'Sales / Cash Account'                  as credit_ledger_name,
+            sop.super_admin_serial                  as super_admin_serial,
+            sop.country_serial                      as country_serial,
+            sop.branch_serial                       as branch_serial,
+            pr.full_name                            as created_by,
+            sop.created_at                          as created_at
           from public.sales_order_payments sop
           left join public.sales_orders so on so.id = sop.sales_order_id
           left join public.profiles pr on pr.id = sop.created_by
@@ -113,7 +142,7 @@ export async function GET(request: NextRequest) {
           ${fromDate ? sql`and u.txn_date >= ${fromDate}::date` : sql``}
           ${toDate ? sql`and u.txn_date <= ${toDate}::date` : sql``}
           ${status ? sql`and u.status = ${status}` : sql``}
-          ${q ? sql`and (u.ref_no ilike ${"%" + q + "%"} or u.party ilike ${"%" + q + "%"})` : sql``}
+          ${q ? sql`and (u.ref_no ilike ${"%" + q + "%"} or u.order_no ilike ${"%" + q + "%"} or u.party ilike ${"%" + q + "%"})` : sql``}
         order by u.txn_date desc nulls last, u.ref_no desc
       `;
 
@@ -164,16 +193,29 @@ export async function GET(request: NextRequest) {
         rows: pageRows.map((r) => ({
           id: r.id,
           refNo: r.ref_no,
+          orderNo: r.order_no || "—",
+          contractNo: r.contract_no || null,
+          manualBillNo: r.manual_bill_no || null,
           date: r.txn_date,
-          flow: r.flow,
+          flow: r.flow as "supplier_payment" | "customer_receipt",
+          module: (r.module || (r.flow === "supplier_payment" ? "purchase" : "sales")) as "purchase" | "sales",
           country: r.country_name || "—",
           branch: r.city_branch_name || r.country_branch_name || "—",
           party: r.party || "—",
-          paymentKind: r.payment_kind || "—",
+          paymentKind: r.payment_kind || "payment",
           currency: r.currency || "—",
           amount: num(r.amount),
+          exchangeRate: num(r.exchange_rate) || 1,
+          baseAmount: num(r.base_amount),
+          debitLedgerName: r.debit_ledger_name || "—",
+          creditLedgerName: r.credit_ledger_name || "—",
+          narration: r.narration || "",
+          superAdminSerial: r.super_admin_serial || null,
+          countrySerial: r.country_serial || null,
+          branchSerial: r.branch_serial || null,
           status: r.status || "—",
           createdBy: r.created_by || "—",
+          createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
         })),
         total,
         page,

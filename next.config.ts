@@ -256,6 +256,8 @@ const nextConfig: NextConfig = {
 
     if (dev) {
       config.cache = { type: "memory" };
+    } else {
+      config.devtool = false;
     }
 
     config.infrastructureLogging = {

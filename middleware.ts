@@ -17,7 +17,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith("/api/erp/document-intelligence")) {
+  if (
+    pathname.startsWith("/api/erp/auth") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/erp/document-intelligence")
+  ) {
     return NextResponse.next();
   }
 
@@ -25,5 +30,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"]
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/erp/auth|auth|login|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
