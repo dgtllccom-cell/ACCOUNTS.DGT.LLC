@@ -1,6 +1,42 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "custreply.title"
+  | "custreply.loading"
+  | "custreply.load_failed"
+  | "custreply.draft_failed"
+  | "custreply.need_subject_body"
+  | "custreply.sent_ok"
+  | "custreply.no_channel"
+  | "custreply.send_failed"
+  | "custreply.to"
+  | "custreply.no_email"
+  | "custreply.no_wa"
+  | "custreply.channel"
+  | "custreply.email"
+  | "custreply.whatsapp"
+  | "custreply.reply_language"
+  | "custreply.customer_lang"
+  | "custreply.template"
+  | "custreply.free_compose"
+  | "custreply.generate_from_template"
+  | "custreply.translate_text"
+  | "custreply.subject_ph"
+  | "custreply.body_ph"
+  | "custreply.edited_note"
+  | "custreply.send"
+  | "custreply.history"
+  | "custreply.no_history"
+  | "custreply.col_when"
+  | "custreply.col_by"
+  | "custreply.col_lang"
+  | "custreply.col_channel"
+  | "custreply.col_status"
+  | "custreply.edited_badge"
+  | "custreply.status_sent"
+  | "custreply.status_failed"
+  | "custreply.status_no_channel"
+  | "custreply.status_queued"
   | "utask.ev_created"
   | "utask.ev_assigned"
   | "utask.ev_reassigned"
@@ -24232,6 +24268,42 @@ const en: Dict = {
   "roz.all_countries": "All Countries",
   "roz.main_branch": "Main Branch",
   "roz.select_main_branch": "Select Main Branch",
+  "custreply.title": "Customer Auto-Reply",
+  "custreply.loading": "Loading…",
+  "custreply.load_failed": "Could not load reply history.",
+  "custreply.draft_failed": "Draft generation failed.",
+  "custreply.need_subject_body": "Enter a subject and message before sending.",
+  "custreply.sent_ok": "Reply sent to the customer.",
+  "custreply.no_channel": "No delivery channel is configured. The reply was saved for later sending.",
+  "custreply.send_failed": "Sending failed.",
+  "custreply.to": "To",
+  "custreply.no_email": "no email on file",
+  "custreply.no_wa": "no number on file",
+  "custreply.channel": "Channel",
+  "custreply.email": "Email",
+  "custreply.whatsapp": "WhatsApp",
+  "custreply.reply_language": "Reply language",
+  "custreply.customer_lang": "customer language",
+  "custreply.template": "Template",
+  "custreply.free_compose": "Free compose",
+  "custreply.generate_from_template": "Generate draft",
+  "custreply.translate_text": "Translate to reply language",
+  "custreply.subject_ph": "Subject",
+  "custreply.body_ph": "Write your reply — you can edit every word before sending",
+  "custreply.edited_note": "Edited from the generated draft — your version will be sent and logged.",
+  "custreply.send": "Send reply",
+  "custreply.history": "Reply history",
+  "custreply.no_history": "No replies sent yet.",
+  "custreply.col_when": "When",
+  "custreply.col_by": "Sent by",
+  "custreply.col_lang": "Language",
+  "custreply.col_channel": "Channel",
+  "custreply.col_status": "Status",
+  "custreply.edited_badge": "edited",
+  "custreply.status_sent": "sent",
+  "custreply.status_failed": "failed",
+  "custreply.status_no_channel": "saved — no channel",
+  "custreply.status_queued": "queued",
 };
 
 const ur: Dict = {
@@ -41384,6 +41456,42 @@ const ur: Dict = {
   "roz.all_countries": "تمام ممالک",
   "roz.main_branch": "مین برانچ",
   "roz.select_main_branch": "مین برانچ منتخب کریں",
+  "custreply.title": "کسٹمر آٹو جواب",
+  "custreply.loading": "لوڈ ہو رہا ہے…",
+  "custreply.load_failed": "جوابات کی تاریخ لوڈ نہ ہو سکی۔",
+  "custreply.draft_failed": "مسودہ بنانے میں ناکامی۔",
+  "custreply.need_subject_body": "بھیجنے سے پہلے موضوع اور پیغام درج کریں۔",
+  "custreply.sent_ok": "جواب کسٹمر کو بھیج دیا گیا۔",
+  "custreply.no_channel": "کوئی ترسیل چینل مرتب نہیں۔ جواب بعد میں بھیجنے کے لیے محفوظ کر لیا گیا۔",
+  "custreply.send_failed": "بھیجنے میں ناکامی۔",
+  "custreply.to": "بنام",
+  "custreply.no_email": "کوئی ای میل ریکارڈ میں نہیں",
+  "custreply.no_wa": "کوئی نمبر ریکارڈ میں نہیں",
+  "custreply.channel": "چینل",
+  "custreply.email": "ای میل",
+  "custreply.whatsapp": "واٹس ایپ",
+  "custreply.reply_language": "جواب کی زبان",
+  "custreply.customer_lang": "کسٹمر کی زبان",
+  "custreply.template": "ٹیمپلیٹ",
+  "custreply.free_compose": "آزادانہ لکھیں",
+  "custreply.generate_from_template": "مسودہ بنائیں",
+  "custreply.translate_text": "جواب کی زبان میں ترجمہ کریں",
+  "custreply.subject_ph": "موضوع",
+  "custreply.body_ph": "اپنا جواب لکھیں — بھیجنے سے پہلے آپ ہر لفظ میں ترمیم کر سکتے ہیں",
+  "custreply.edited_note": "تیار کردہ مسودے سے تبدیل شدہ — آپ کا نسخہ بھیجا اور ریکارڈ کیا جائے گا۔",
+  "custreply.send": "جواب بھیجیں",
+  "custreply.history": "جوابات کی تاریخ",
+  "custreply.no_history": "ابھی تک کوئی جواب نہیں بھیجا گیا۔",
+  "custreply.col_when": "کب",
+  "custreply.col_by": "بھیجنے والا",
+  "custreply.col_lang": "زبان",
+  "custreply.col_channel": "چینل",
+  "custreply.col_status": "حالت",
+  "custreply.edited_badge": "ترمیم شدہ",
+  "custreply.status_sent": "بھیج دیا",
+  "custreply.status_failed": "ناکام",
+  "custreply.status_no_channel": "محفوظ — کوئی چینل نہیں",
+  "custreply.status_queued": "قطار میں",
 };
 
 const ar: Dict = {
@@ -58538,6 +58646,42 @@ const ar: Dict = {
   "roz.all_countries": "جميع الدول",
   "roz.main_branch": "الفرع الرئيسي",
   "roz.select_main_branch": "حدد الفرع الرئيسي",
+  "custreply.title": "الرد التلقائي على العميل",
+  "custreply.loading": "جارٍ التحميل…",
+  "custreply.load_failed": "تعذّر تحميل سجل الردود.",
+  "custreply.draft_failed": "فشل إنشاء المسودة.",
+  "custreply.need_subject_body": "أدخل الموضوع والرسالة قبل الإرسال.",
+  "custreply.sent_ok": "تم إرسال الرد إلى العميل.",
+  "custreply.no_channel": "لا توجد قناة إرسال مُهيأة. تم حفظ الرد لإرساله لاحقًا.",
+  "custreply.send_failed": "فشل الإرسال.",
+  "custreply.to": "إلى",
+  "custreply.no_email": "لا يوجد بريد إلكتروني مسجّل",
+  "custreply.no_wa": "لا يوجد رقم مسجّل",
+  "custreply.channel": "القناة",
+  "custreply.email": "البريد الإلكتروني",
+  "custreply.whatsapp": "واتساب",
+  "custreply.reply_language": "لغة الرد",
+  "custreply.customer_lang": "لغة العميل",
+  "custreply.template": "القالب",
+  "custreply.free_compose": "كتابة حرة",
+  "custreply.generate_from_template": "إنشاء مسودة",
+  "custreply.translate_text": "ترجمة إلى لغة الرد",
+  "custreply.subject_ph": "الموضوع",
+  "custreply.body_ph": "اكتب ردّك — يمكنك تعديل كل كلمة قبل الإرسال",
+  "custreply.edited_note": "تم تعديله عن المسودة المُنشأة — سيتم إرسال نسختك وتسجيلها.",
+  "custreply.send": "إرسال الرد",
+  "custreply.history": "سجل الردود",
+  "custreply.no_history": "لم يتم إرسال أي رد بعد.",
+  "custreply.col_when": "التاريخ",
+  "custreply.col_by": "أرسله",
+  "custreply.col_lang": "اللغة",
+  "custreply.col_channel": "القناة",
+  "custreply.col_status": "الحالة",
+  "custreply.edited_badge": "مُعدّل",
+  "custreply.status_sent": "أُرسل",
+  "custreply.status_failed": "فشل",
+  "custreply.status_no_channel": "محفوظ — لا توجد قناة",
+  "custreply.status_queued": "في قائمة الانتظار",
 };
 
 const fa: Dict = {
@@ -75691,6 +75835,42 @@ const fa: Dict = {
   "roz.all_countries": "همه کشورها",
   "roz.main_branch": "شعبه اصلی",
   "roz.select_main_branch": "انتخاب شعبه اصلی",
+  "custreply.title": "پاسخ خودکار مشتری",
+  "custreply.loading": "در حال بارگذاری…",
+  "custreply.load_failed": "تاریخچهٔ پاسخ‌ها بارگذاری نشد.",
+  "custreply.draft_failed": "ایجاد پیش‌نویس ناموفق بود.",
+  "custreply.need_subject_body": "پیش از ارسال، موضوع و متن پیام را وارد کنید.",
+  "custreply.sent_ok": "پاسخ برای مشتری ارسال شد.",
+  "custreply.no_channel": "هیچ کانال ارسالی پیکربندی نشده است. پاسخ برای ارسال بعدی ذخیره شد.",
+  "custreply.send_failed": "ارسال ناموفق بود.",
+  "custreply.to": "به",
+  "custreply.no_email": "ایمیلی ثبت نشده",
+  "custreply.no_wa": "شماره‌ای ثبت نشده",
+  "custreply.channel": "کانال",
+  "custreply.email": "ایمیل",
+  "custreply.whatsapp": "واتساپ",
+  "custreply.reply_language": "زبان پاسخ",
+  "custreply.customer_lang": "زبان مشتری",
+  "custreply.template": "قالب",
+  "custreply.free_compose": "نگارش آزاد",
+  "custreply.generate_from_template": "ایجاد پیش‌نویس",
+  "custreply.translate_text": "ترجمه به زبان پاسخ",
+  "custreply.subject_ph": "موضوع",
+  "custreply.body_ph": "پاسخ خود را بنویسید — پیش از ارسال می‌توانید هر واژه را ویرایش کنید",
+  "custreply.edited_note": "نسبت به پیش‌نویس تولیدشده ویرایش شد — نسخهٔ شما ارسال و ثبت خواهد شد.",
+  "custreply.send": "ارسال پاسخ",
+  "custreply.history": "تاریخچهٔ پاسخ‌ها",
+  "custreply.no_history": "هنوز پاسخی ارسال نشده است.",
+  "custreply.col_when": "زمان",
+  "custreply.col_by": "ارسال‌کننده",
+  "custreply.col_lang": "زبان",
+  "custreply.col_channel": "کانال",
+  "custreply.col_status": "وضعیت",
+  "custreply.edited_badge": "ویرایش‌شده",
+  "custreply.status_sent": "ارسال شد",
+  "custreply.status_failed": "ناموفق",
+  "custreply.status_no_channel": "ذخیره شد — بدون کانال",
+  "custreply.status_queued": "در صف",
 };
 
 const ps: Dict = {
@@ -92850,6 +93030,42 @@ const ps: Dict = {
   "roz.all_countries": "ټول هېوادونه",
   "roz.main_branch": "اصلي څانګه",
   "roz.select_main_branch": "اصلي څانګه وټاکئ",
+  "custreply.title": "د پیرودونکي اتوماتیک ځواب",
+  "custreply.loading": "بارول کیږي…",
+  "custreply.load_failed": "د ځوابونو تاریخچه بار نشوه.",
+  "custreply.draft_failed": "د مسودې جوړول ناکام شو.",
+  "custreply.need_subject_body": "له لیږلو مخکې موضوع او پیغام ولیکئ.",
+  "custreply.sent_ok": "ځواب پیرودونکي ته ولیږل شو.",
+  "custreply.no_channel": "د لیږد هیڅ چینل نه دی تنظیم شوی. ځواب وروسته لیږلو لپاره خوندي شو.",
+  "custreply.send_failed": "لیږل ناکام شول.",
+  "custreply.to": "لپاره",
+  "custreply.no_email": "په ثبت کې بریښنالیک نشته",
+  "custreply.no_wa": "په ثبت کې شمېره نشته",
+  "custreply.channel": "چینل",
+  "custreply.email": "بریښنالیک",
+  "custreply.whatsapp": "واتساپ",
+  "custreply.reply_language": "د ځواب ژبه",
+  "custreply.customer_lang": "د پیرودونکي ژبه",
+  "custreply.template": "کینډۍ",
+  "custreply.free_compose": "ازاد لیکنه",
+  "custreply.generate_from_template": "مسوده جوړه کړئ",
+  "custreply.translate_text": "د ځواب ژبې ته وژباړئ",
+  "custreply.subject_ph": "موضوع",
+  "custreply.body_ph": "خپل ځواب ولیکئ — له لیږلو مخکې کولی شئ هره کلمه سمه کړئ",
+  "custreply.edited_note": "د جوړ شوي مسودې څخه سم شوی — ستاسو نسخه به ولیږل شي او ثبت به شي.",
+  "custreply.send": "ځواب ولیږئ",
+  "custreply.history": "د ځوابونو تاریخچه",
+  "custreply.no_history": "تر اوسه هیڅ ځواب نه دی لیږل شوی.",
+  "custreply.col_when": "کله",
+  "custreply.col_by": "لیږونکی",
+  "custreply.col_lang": "ژبه",
+  "custreply.col_channel": "چینل",
+  "custreply.col_status": "حالت",
+  "custreply.edited_badge": "سم شوی",
+  "custreply.status_sent": "ولیږل شو",
+  "custreply.status_failed": "ناکام",
+  "custreply.status_no_channel": "خوندي شو — چینل نشته",
+  "custreply.status_queued": "په قطار کې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
