@@ -18,7 +18,7 @@ async function captureCustomers() {
 
   console.log("2. Filling credentials...");
   await page.fill('#identifier', 'superadmin@dgt.llc');
-  await page.fill('#password', 'AdminPassword123!');
+  await page.fill('#password', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.waitForTimeout(500);
 
   console.log("3. Submitting login...");

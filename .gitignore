@@ -59,3 +59,10 @@ uat-samples/
 # Local verification scratch space (never commit — may contain session cookies / DB dumps)
 scratch/
 supabase/backups/.env*
+# Database dumps must never be committed — they carry real credentials / PII
+supabase/backups/*.json
+supabase/backups/*.sql
+supabase/backups/*.dump
+# Capacitor copies a built Next.js bundle here on `npx cap sync`; it is a build
+# artifact (and the app loads server.url remotely), never source of truth
+android/app/src/main/assets/public/server/

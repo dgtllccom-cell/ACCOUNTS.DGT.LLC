@@ -15,7 +15,7 @@ These make the app show **fabricated data as if it were real**, which is the mos
 2. **Journal Report API injects mock journal rows.** `app/api/erp/reports/journal-report/route.ts` (`js-mock-1` …). Same pattern, same fix. **(M)**
 3. **Accounts table shows seed rows.** `features/accounts/components/accounts-table.tsx` renders 3 hardcoded rows ("Seed rows shown until Supabase data is connected"). **Fix:** wire to the accounts API or remove the component. **(S)**
 4. **Cash Entry demo array (dead code).** `features/roznamcha/components/cash-entry-form.tsx` still defines `recentTransactions` ("ABC Traders", etc.); now unused after the table rework — delete it. **(S)**
-5. **Dashboard prints working credentials.** The "Experimental Setup: Test Accounts" card in `app/dashboard/page.tsx` shows login codes + `TestUser@1234`. Remove from production. **(S)**
+5. **Dashboard prints working credentials.** The "Experimental Setup: Test Accounts" card in `app/dashboard/page.tsx` shows login codes + `<redacted-pw>`. Remove from production. **(S)**
 6. **Unfinished report types.** `app/api/erp/reports/scoped/route.ts` returns `"Report type '…' not yet implemented"` for some types. Enumerate which and either implement or hide. **(M)**
 7. **Duplicate design-only sidebar.** `components/layout/digital-dock-premium-sidebar.tsx` is a *"design-only reference (hardcoded English menu)"*. Confirm it's unused and delete to avoid confusion (the live menu is `lib/navigation/sidebar.ts`). **(S)**
 

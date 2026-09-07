@@ -19,7 +19,7 @@ async function capture() {
   // Fill login
   console.log("Filling login form...");
   await page.fill('#identifier, input[name="identifier"]', "superadmin@dgt.llc");
-  await page.fill('#password, input[name="password"]', "AdminPassword123!");
+  await page.fill('#password, input[name="password"]', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.click('button[type="submit"]');
 
   await page.waitForTimeout(4000);

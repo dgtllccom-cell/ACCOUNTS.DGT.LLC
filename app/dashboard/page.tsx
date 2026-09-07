@@ -258,7 +258,7 @@ export default async function DashboardPage() {
                     <div className="text-muted-foreground text-xs">{testUser.branch}</div>
                     <div className="mt-2 flex items-center justify-between bg-muted/50 p-2 rounded text-xs font-mono">
                       <span className="select-all">{testUser.code}@test.com</span>
-                      <span className="select-all">TestUser@1234</span>
+                      <span className="select-all">{process.env.NEXT_PUBLIC_DEMO_TEST_PASSWORD || "(set NEXT_PUBLIC_DEMO_TEST_PASSWORD)"}</span>
                     </div>
                   </div>
                 ))}

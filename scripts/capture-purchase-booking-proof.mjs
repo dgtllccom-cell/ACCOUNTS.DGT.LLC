@@ -19,7 +19,7 @@ async function captureSteps() {
   await page.goto(`${BASE_URL}/auth/login`, { waitUntil: "networkidle", timeout: 30000 });
   await page.waitForTimeout(1000);
   await page.fill('input#identifier, input[name="identifier"]', 'superadmin@damaan.com');
-  await page.fill('input#password, input[name="password"]', 'Admin@123');
+  await page.fill('input#password, input[name="password"]', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.waitForTimeout(500);
   
   // Click submit and wait for navigation

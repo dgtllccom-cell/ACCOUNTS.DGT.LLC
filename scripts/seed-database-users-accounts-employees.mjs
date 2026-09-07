@@ -231,7 +231,7 @@ async function runSeed() {
             insert into public.profiles (
               id, full_name, user_code, preferred_language_code, raw_password, updated_at
             ) values (
-              ${activeUserId}, ${u.name}, ${userCode}, 'en', 'User@123456', now()
+              ${activeUserId}, ${u.name}, ${userCode}, 'en', ${process.env.SEED_USER_PASSWORD || ""}, now()
             )
             on conflict (id) do update set
               full_name = excluded.full_name,

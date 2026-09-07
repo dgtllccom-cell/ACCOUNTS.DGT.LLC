@@ -149,9 +149,9 @@ async function runAuthenticatedTest() {
 
     // Set passwords
     const pwd = page.locator('input[placeholder="At least 8 characters"]');
-    if (await pwd.count() > 0) await pwd.fill("Admin@123456");
+    if (await pwd.count() > 0) await pwd.fill((process.env.E2E_USER_PASSWORD || ""));
     const confirmPwd = page.locator('input[placeholder="Re-enter password"]');
-    if (await confirmPwd.count() > 0) await confirmPwd.fill("Admin@123456");
+    if (await confirmPwd.count() > 0) await confirmPwd.fill((process.env.E2E_USER_PASSWORD || ""));
 
     const shotStep4 = path.join(ARTIFACTS_DIR, 'test_shot_5_step4_permission_matrix.png');
     await page.screenshot({ path: shotStep4, fullPage: true });

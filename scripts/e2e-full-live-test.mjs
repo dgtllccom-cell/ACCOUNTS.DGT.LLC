@@ -26,13 +26,13 @@ async function runFullE2ETest() {
   const page = await context.newPage();
 
   try {
-    // 1. Authenticate with superadmin@damaan.com / Admin@123
+    // 1. Authenticate with the superadmin account (password from env: E2E_SUPERADMIN_PASSWORD)
     console.log(`1. Authenticating at ${BASE_URL}/auth/login ...`);
     await page.goto(`${BASE_URL}/auth/login`, { waitUntil: 'networkidle', timeout: 30000 });
     await page.waitForTimeout(1000);
 
     await page.fill('input[name="identifier"], input[placeholder*="email"], input[type="text"]', 'superadmin@damaan.com');
-    await page.fill('input[name="password"], input[type="password"]', 'Admin@123');
+    await page.fill('input[name="password"], input[type="password"]', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
     await page.click('button[type="submit"], button:has-text("SECURE ERP LOGIN")');
 
     await page.waitForURL('**/dashboard/**', { timeout: 15000 });
@@ -141,9 +141,9 @@ async function runFullE2ETest() {
 
     // Enter Passwords
     const pw = page.locator('input[placeholder="At least 8 characters"]');
-    if (await pw.count() > 0) await pw.fill("Admin@123456");
+    if (await pw.count() > 0) await pw.fill((process.env.E2E_USER_PASSWORD || ""));
     const cpw = page.locator('input[placeholder="Re-enter password"]');
-    if (await cpw.count() > 0) await cpw.fill("Admin@123456");
+    if (await cpw.count() > 0) await cpw.fill((process.env.E2E_USER_PASSWORD || ""));
 
     const shotStep4 = path.join(ARTIFACTS_DIR, 'LIVE_SCREENSHOT_STEP4_PERMISSIONS_MATRIX.png');
     await page.screenshot({ path: shotStep4, fullPage: true });

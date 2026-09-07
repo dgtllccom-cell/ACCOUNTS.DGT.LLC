@@ -16,7 +16,7 @@ async function main() {
     await pageDesktop.waitForTimeout(500);
   }
   await pageDesktop.fill('#identifier', "superadmin@damaan.com");
-  await pageDesktop.fill('#password', "Admin@123");
+  await pageDesktop.fill('#password', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await pageDesktop.click('button[type="submit"]');
   await pageDesktop.waitForTimeout(4000);
   console.log("Logged in URL:", pageDesktop.url());

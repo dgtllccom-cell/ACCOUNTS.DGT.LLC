@@ -1,6 +1,7 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "custreply.machine_warn"
   | "custreply.title"
   | "custreply.loading"
   | "custreply.load_failed"
@@ -24304,6 +24305,7 @@ const en: Dict = {
   "custreply.status_failed": "failed",
   "custreply.status_no_channel": "saved — no channel",
   "custreply.status_queued": "queued",
+  "custreply.machine_warn": "Auto-translation is machine-generated and may be inaccurate — review and correct it before sending, or pick a ready template.",
 };
 
 const ur: Dict = {
@@ -41492,6 +41494,7 @@ const ur: Dict = {
   "custreply.status_failed": "ناکام",
   "custreply.status_no_channel": "محفوظ — کوئی چینل نہیں",
   "custreply.status_queued": "قطار میں",
+  "custreply.machine_warn": "خودکار ترجمہ مشین سے تیار شدہ ہے اور غلط ہو سکتا ہے — بھیجنے سے پہلے جائزہ لے کر درست کریں، یا کوئی تیار ٹیمپلیٹ منتخب کریں۔",
 };
 
 const ar: Dict = {
@@ -58682,6 +58685,7 @@ const ar: Dict = {
   "custreply.status_failed": "فشل",
   "custreply.status_no_channel": "محفوظ — لا توجد قناة",
   "custreply.status_queued": "في قائمة الانتظار",
+  "custreply.machine_warn": "الترجمة التلقائية آلية وقد تكون غير دقيقة — راجعها وصحّحها قبل الإرسال، أو اختر قالبًا جاهزًا.",
 };
 
 const fa: Dict = {
@@ -75871,6 +75875,7 @@ const fa: Dict = {
   "custreply.status_failed": "ناموفق",
   "custreply.status_no_channel": "ذخیره شد — بدون کانال",
   "custreply.status_queued": "در صف",
+  "custreply.machine_warn": "ترجمهٔ خودکار ماشینی است و ممکن است نادرست باشد — پیش از ارسال آن را بازبینی و اصلاح کنید، یا یک قالب آماده انتخاب کنید.",
 };
 
 const ps: Dict = {
@@ -93066,6 +93071,7 @@ const ps: Dict = {
   "custreply.status_failed": "ناکام",
   "custreply.status_no_channel": "خوندي شو — چینل نشته",
   "custreply.status_queued": "په قطار کې",
+  "custreply.machine_warn": "اتوماتیک ژباړه د ماشین له خوا جوړه شوې او ممکن سمه نه وي — له لیږلو مخکې یې وګورئ او سم یې کړئ، یا چمتو کینډۍ وټاکئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

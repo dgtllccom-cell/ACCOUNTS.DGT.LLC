@@ -11,7 +11,7 @@ async function verify() {
   console.log("1. Navigating to login...");
   await page.goto("http://localhost:3000/auth/login", { waitUntil: "networkidle" });
   await page.fill('input[name="identifier"], input[placeholder*="email" i], input[placeholder*="user" i]', "superadmin@damaan.com");
-  await page.fill('input[name="password"], input[type="password"]', "Admin@123");
+  await page.fill('input[name="password"], input[type="password"]', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.click('button[type="submit"], button:has-text("SECURE ERP LOGIN")');
   await page.waitForTimeout(4000);
   console.log("Logged in. Current URL:", page.url());

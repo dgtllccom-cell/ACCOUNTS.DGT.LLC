@@ -1,5 +1,5 @@
 const BASE_URL = "http://72.60.209.121:3000";
-const PASSWORD = "Admin@123";
+const PASSWORD = (process.env.E2E_SUPERADMIN_PASSWORD || "");
 
 const TEST_LOGINS = [
   // Super Admin

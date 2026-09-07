@@ -10,7 +10,7 @@ async function main() {
   const loginRes = await page.request.post("http://localhost:3000/api/erp/auth/login", {
     data: {
       identifier: "superadmin@damaan.com",
-      password: "Admin@123",
+      password: (process.env.E2E_SUPERADMIN_PASSWORD || ""),
       remember: true,
       login_type: "super_admin"
     }

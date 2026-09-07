@@ -31,7 +31,7 @@ async function main() {
       await page.waitForTimeout(500);
     }
     await idInput.first().fill("superadmin@damaan.com");
-    await page.fill('#password, input[name="password"]', "Admin@123");
+    await page.fill('#password, input[name="password"]', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: "domcontentloaded" }).catch(() => {});
     await page.waitForTimeout(2000);

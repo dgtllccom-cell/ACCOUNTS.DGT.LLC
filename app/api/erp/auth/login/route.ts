@@ -214,9 +214,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // (Removed: the "<city>@dgt.llc + Admin@123" onboarding shortcut. It hardcoded
-  // a shared password and let anyone mint a branch/agent session. Branch users
-  // now authenticate through Supabase Auth like everyone else.)
+  // (Removed: the "<city>@dgt.llc + shared onboarding password" shortcut. It
+  // hardcoded a shared password and let anyone mint a branch/agent session.
+  // Branch users now authenticate through Supabase Auth like everyone else.)
 
   if (isBootstrapSuperAdmin) {
     isAuthenticated = true;

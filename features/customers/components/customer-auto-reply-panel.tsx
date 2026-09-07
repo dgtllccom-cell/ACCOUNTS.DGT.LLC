@@ -111,14 +111,25 @@ export function CustomerAutoReplyPanel({
         setAiDraftBody(res.body || "");
       } else if (body.trim()) {
         // translate whatever is currently typed into the target language
-        const res = await apiPost<{ body: string; engine: string }>(`/api/erp/customers/${customerId}/auto-reply`, {
-          action: "draft",
-          sourceText: body,
-          sourceLang: "en",
-          targetLang,
-        });
+        const res = await apiPost<{ body: string; engine: string; confidence?: number }>(
+          `/api/erp/customers/${customerId}/auto-reply`,
+          { action: "draft", sourceText: body, sourceLang: "en", targetLang },
+        );
         setBody(res.body || body);
         setAiDraftBody(res.body || body);
+        // Only "template" / "approved" / "memory" / "glossary" are human-quality.
+        // Everything else is best-effort machine output the operator MUST rewrite.
+        const trusted = ["identity", "approved", "memory", "glossary"];
+        if (targetLang !== "en" && !trusted.includes(res.engine)) {
+          setFlash({
+            kind: "warn",
+            text: tr(
+              lang,
+              "machine_warn",
+              "Auto-translation is machine-generated and may be inaccurate — review and correct it before sending, or pick a ready template.",
+            ),
+          });
+        }
       }
     } catch {
       setFlash({ kind: "err", text: tr(lang, "draft_failed", "Draft generation failed.") });

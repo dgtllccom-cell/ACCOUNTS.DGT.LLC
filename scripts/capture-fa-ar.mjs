@@ -20,7 +20,7 @@ async function main() {
     await page.waitForTimeout(500);
   }
   await page.fill('#identifier', "superadmin@damaan.com");
-  await page.fill('#password', "Admin@123");
+  await page.fill('#password', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.click('button[type="submit"]');
   await page.waitForURL("**/dashboard**", { timeout: 30000 }).catch(() => {});
   await page.waitForTimeout(2000);

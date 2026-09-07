@@ -763,7 +763,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
       } else {
         payload.email = email;
-        payload.password = password || "User@123456";
+        // `password` is already validated non-empty + >=8 chars for new users
+        // (see the create-path guard above); never fall back to a shared literal.
+        payload.password = password;
         payload.preferredLanguage = preferredLanguage;
         const createRes = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
         if (createRes && (createRes as any).userId) {

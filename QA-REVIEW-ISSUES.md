@@ -10,7 +10,7 @@
 
 **Security cleanup (deployed to `dev` + `main`, verified live):**
 - Deleted **57 unauthenticated routes** that executed shell commands / raw SQL / git recovery / deploys / data dumps (temp-diagnose RCE, dev/run-sql, inspect-users, deploy, git-recover, recovery-*, db-alter, setup-db, debug*, dev*, test*, temp*, etc.). All return **404** now.
-- Removed the **login backdoor** (hardcoded `admin`/`password` + `superadmin@damaan.com`/`Admin@123` + weak-password allow-list + "any identifier containing admin" → super_admin). Login now authenticates **only** against real Supabase users. `admin`/`password` → **401**.
+- Removed the **login backdoor** (hardcoded `admin`/`password` + `superadmin@damaan.com`/`<redacted-pw>` + weak-password allow-list + "any identifier containing admin" → super_admin). Login now authenticates **only** against real Supabase users. `admin`/`password` → **401**.
 - Set a strong **`ERP_SESSION_SECRET`** (was unset → forgeable super-admin tokens) and `ALLOW_DEMO_AUTH=false`.
 - Provisioned a real super-admin (`asmatdgtllc@users.damaan.local`) with a known password so the removal doesn't lock anyone out. _(Owner confirmed the backdoor stays removed.)_
 - Removed the `database-cleanup` settings page + nav link and the "Reset Test Data" button (their routes were deleted).
@@ -39,7 +39,7 @@ Reproduced independently in **two different browsers** (Chrome and Edge), each o
 - The HTML document serves **200**, but **every** `/_next/static/*` asset — the stylesheet `css/41324d11fb10bd50.css` and all ~24 JS chunks (webpack, main-app, layout, the login page chunk, etc.) — returns **HTTP 503**. Reproduced across multiple reloads in both browsers; the CSS was requested/retried repeatedly and returned 503 every time.
 - A direct request to the CSS URL returns **400 Bad Request** (plain-text error page).
 - Rendered result: the login page is completely **unstyled** (elements stacked vertically, no layout).
-- **Login is non-functional:** filled `superadmin@damaan.com` / `Admin@123` and clicked "Secure ERP Login" — **no POST to `/api/erp/auth/login` was made at all** (network log shows only the login-page GET 200 and the page JS chunk 503). The click does nothing because the React handler never hydrated. Cannot reach anything behind auth.
+- **Login is non-functional:** filled `superadmin@damaan.com` / `<redacted-pw>` and clicked "Secure ERP Login" — **no POST to `/api/erp/auth/login` was made at all** (network log shows only the login-page GET 200 and the page JS chunk 503). The click does nothing because the React handler never hydrated. Cannot reach anything behind auth.
 
 **Impact:** any cold-cache visitor — a new user, an incognito window, or **every existing user immediately after a deploy** (content-hashed filenames change and invalidate all caches) — gets a broken, non-functional app that cannot even log in.
 
@@ -94,7 +94,7 @@ The page stays in a perpetual "loading" state (document never idles), which bloc
 `app/api/erp/auth/login/route.ts` contains a `demoAccounts` map that is evaluated **unconditionally** (the imported `isDemoAuthEnabled()` is never called in the handler). Consequences:
 - Identifier `admin` / `superadmin` / `asmat` / anything containing "admin" resolves to a **super_admin** account.
 - The password check accepts a hardcoded weak list regardless of the account: `admin@123`, `admin123`, `gulistan@9090`, `12345678`, `test@12345`, `testuser@1234`, `password`.
-- Net effect: `admin` + `password` (or `superadmin` + `Admin@123`) grants a signed **super-admin** session on production. Remove demo accounts from production, or hard-gate behind an env flag that is off by default.
+- Net effect: `admin` + `password` (or `superadmin` + `<redacted-pw>`) grants a signed **super-admin** session on production. Remove demo accounts from production, or hard-gate behind an env flag that is off by default.
 
 ### C4. Forgeable session cookie (hardcoded HMAC fallback secret) _(verify env)_
 `lib/auth/temp-session.ts` and the login route sign the `erp_session` cookie with `getSessionSecret()`, which falls back to the literal string `"dev-insecure-erp-session-secret"` when `ERP_SESSION_SECRET` / `AUTH_SECRET` / `NEXTAUTH_SECRET` are unset. Because the algorithm and fallback key are in the public source, if that env var is not set in production **anyone can forge a valid super-admin cookie offline**. Verify the secret is set on the server; if not, this is CRITICAL. Regardless, the fallback should throw in production rather than default.
@@ -114,7 +114,7 @@ The `app/api` tree contains a large set of maintenance routes, many unauthentica
 `app/dashboard/page.tsx` calls `getCurrentErpSession()` but only redirects when a session **exists**. When the session is `null` it falls through and renders the page, loading org-wide counts and financial totals via `createSupabaseAdminClient()` (service role, RLS bypassed). Combined with H2, an anonymous visitor to `/dashboard` may see production totals. Require a session before rendering.
 
 ### H4. Production dashboard prints working credentials
-`app/dashboard/page.tsx` renders an "Experimental Setup: Test Accounts" card listing login codes and the password `TestUser@1234` (marked `select-all`). With C3 these are live super/country credentials. Remove this card from production.
+`app/dashboard/page.tsx` renders an "Experimental Setup: Test Accounts" card listing login codes and the password `<redacted-pw>` (marked `select-all`). With C3 these are live super/country credentials. Remove this card from production.
 
 ### H5. Service-role client used for user-facing reads (RLS bypass)
 The main dashboard and several routes use `createSupabaseAdminClient()` for ordinary reads, which bypasses row-level security and any per-branch/per-country scoping. Data isolation between countries/branches then depends solely on hand-written `.eq()`/`.in()` filters in application code — easy to miss. Prefer the RLS-enforced server client for user-scoped reads; reserve the admin client for genuine system operations.

@@ -24,7 +24,7 @@ async function verifyAllBugs() {
   }
 
   await page.fill('#identifier', "superadmin@damaan.com");
-  await page.fill('#password', "Admin@123");
+  await page.fill('#password', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.click('button[type="submit"]');
   await page.waitForTimeout(4000);
   console.log("Current URL after login attempt:", page.url());

@@ -10,7 +10,7 @@ async function testStep4() {
   console.log('Logging in...');
   await page.goto(`${BASE_URL}/auth/login`);
   await page.fill('input[name="identifier"]', 'superadmin@damaan.com');
-  await page.fill('input[name="password"]', 'Admin@123');
+  await page.fill('input[name="password"]', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.click('button[type="submit"]');
   await page.waitForTimeout(3000);
 
@@ -66,8 +66,8 @@ async function testStep4() {
   console.log('Filling passwords in Step 4...');
   const pwInput = page.locator('input[placeholder="At least 8 characters"]');
   const cpwInput = page.locator('input[placeholder="Re-enter password"]');
-  await pwInput.fill('Admin@123456');
-  await cpwInput.fill('Admin@123456');
+  await pwInput.fill((process.env.E2E_USER_PASSWORD || ""));
+  await cpwInput.fill((process.env.E2E_USER_PASSWORD || ""));
   await page.waitForTimeout(1000);
 
   // Listen to response

@@ -13,7 +13,7 @@ const page = await context.newPage();
 async function login() {
   await page.goto(`${base}/auth/login`, { waitUntil: 'networkidle' });
   await page.fill('#identifier', 'superadmin@damaan.com');
-  await page.fill('#password', 'Admin@123');
+  await page.fill('#password', (process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.keyboard.press('Enter');
   await page.waitForURL(/\/dashboard\//, { timeout: 60000 });
 }

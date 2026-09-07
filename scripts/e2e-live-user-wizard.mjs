@@ -170,11 +170,11 @@ async function runLiveBrowserTest() {
 
     const pwdInput = page.locator('input[placeholder="At least 8 characters"]');
     if (await pwdInput.count() > 0) {
-      await pwdInput.fill("Admin@123456");
+      await pwdInput.fill((process.env.E2E_USER_PASSWORD || ""));
     }
     const confirmPwdInput = page.locator('input[placeholder="Re-enter password"]');
     if (await confirmPwdInput.count() > 0) {
-      await confirmPwdInput.fill("Admin@123456");
+      await confirmPwdInput.fill((process.env.E2E_USER_PASSWORD || ""));
     }
 
     const shotStep4 = path.join(ARTIFACTS_DIR, 'screenshot_step4_permissions_matrix.png');

@@ -17,7 +17,7 @@
 Commit `82b09ea`:
 
 - put a **plaintext Super Admin password in the commit message**;
-- hardcoded that same password as an accepted literal in `app/api/erp/auth/login/route.ts` and `features/auth/actions.ts` (in addition to the pre-existing `"Admin@123"` literal), so it was accepted **regardless of the demo-auth gate**;
+- hardcoded that same password as an accepted literal in `app/api/erp/auth/login/route.ts` and `features/auth/actions.ts` (in addition to the pre-existing `"<redacted-pw>"` literal), so it was accepted **regardless of the demo-auth gate**;
 - added `scripts/change-superadmin-password.mjs`, which writes that plaintext value into `profiles.raw_password` for **LOCAL and PROD** and prints it to the console.
 
 Separately, pre-existing code:
@@ -27,15 +27,15 @@ Separately, pre-existing code:
   - **written** on every user create/update by `POST/PATCH /api/erp/users`;
   - **compared** as a valid login path in `app/api/erp/auth/login/route.ts` (plaintext == submitted password), unconditionally;
   - **displayed** (with reveal/copy) in `features/branch-management/components/branch-general-report-view.tsx`, `features/users/components/user-journal-report.tsx`, `app/dashboard/new-entry/users/all/page.tsx`;
-- an `Admin@123` + `<city>@dgt.llc` login shortcut existed in `login/route.ts`;
-- ~20 seed/provisioning scripts hardcode admin/superadmin passwords (`Password123!`, `Admin@123`, `TestUser@1234`, `DevTest@12345`, `Dgt<City>123`) and several SSH to Production;
+- an `<redacted-pw>` + `<city>@dgt.llc` login shortcut existed in `login/route.ts`;
+- ~20 seed/provisioning scripts hardcode admin/superadmin passwords (`<redacted-pw>`, `<redacted-pw>`, `<redacted-pw>`, `<redacted-pw>`, `<redacted-pw>`) and several SSH to Production;
 - **`scripts/vps-db-probe.mjs` and `scripts/test-db-dns.mjs` hardcoded a Supabase Postgres password** (a real DB credential, project ref `csesvyxqjivnkkozgopt`). `scripts/sync-supabase-db.mjs` used it as a fallback. **This DB password must be rotated in the Supabase dashboard (Settings → Database → Reset database password) and every consumer's connection string / env updated.**
 
 ## 2. What this branch fixes (code — done, no secrets in the diff)
 
 | Area | Change |
 |---|---|
-| `app/api/erp/auth/login/route.ts` | Removed every hardcoded password literal. Bootstrap Super Admin login now requires `BOOTSTRAP_SUPERADMIN_PASSWORD` env **and** demo auth (never a default). Removed the `Admin@123` + `@dgt.llc` shortcut. The `profiles.raw_password` plaintext compare is now **off unless demo auth is on**, with an `ALLOW_LEGACY_RAW_PASSWORD_LOGIN=true` recovery hatch. |
+| `app/api/erp/auth/login/route.ts` | Removed every hardcoded password literal. Bootstrap Super Admin login now requires `BOOTSTRAP_SUPERADMIN_PASSWORD` env **and** demo auth (never a default). Removed the `<redacted-pw>` + `@dgt.llc` shortcut. The `profiles.raw_password` plaintext compare is now **off unless demo auth is on**, with an `ALLOW_LEGACY_RAW_PASSWORD_LOGIN=true` recovery hatch. |
 | `features/auth/actions.ts` | Same — env-only bootstrap password, no literals. |
 | `POST/PATCH /api/erp/users` | No longer writes `profiles.raw_password`. Credential goes only to Supabase Auth (hashed). |
 | `GET /api/erp/users/journal-report` | No longer selects or returns any password field. |
@@ -49,7 +49,7 @@ Separately, pre-existing code:
 ## 3. What the owner must still do (cannot be automated safely)
 
 1. **Rotate the Super Admin credential in Supabase Auth** — set a new strong password for `superadmin@damaan.com` via the Supabase dashboard (Authentication → Users) or an admin API call from a secure machine. Do this now; the old value is in public commit history.
-2. **Rotate the other admin passwords** that were hardcoded (`Password123!`, `Dgt<City>123`, …) for any account that exists in Production.
+2. **Rotate the other admin passwords** that were hardcoded (`<redacted-pw>`, `<redacted-pw>`, …) for any account that exists in Production.
 3. **Broad plaintext scrub** (after confirming every active account has a Supabase Auth entry — run the check below):
    ```sql
    -- how many active profiles have NO matching auth.users row?
@@ -67,7 +67,7 @@ Separately, pre-existing code:
    - Either way: enable GitHub secret scanning / push protection on the repo.
 5. **Set env on Production** (`/var/www/dgt-nextjs/.env`): ensure `ALLOW_DEMO_AUTH=false`, do **not** set `BOOTSTRAP_SUPERADMIN_PASSWORD` or `ALLOW_LEGACY_RAW_PASSWORD_LOGIN` unless actively recovering a lockout.
 6. **Rotate the Supabase DB password** (see §1) and update every connection string / `DATABASE_URL` that used it.
-7. **Finish the seed-script sweep** — ~35 dev QA / seed scripts still contain dev-domain password literals (`Admin@123`, `DevTest@12345`, `TestUser@1234`, `AdminPassword123!`): `seed-dev-test-master-data.mjs`, `seed-database-users-accounts-employees.mjs`, `setup-all-upcountry-logins.mjs`, `setup-standardized-users.mjs`, `master-seed-everything.mjs`, `verify-*`, `e2e-*`, `capture-*`. Lower risk (dev domains, run against a local/dev server), but env-ify or delete them in a follow-up. None write to Production.
+7. **Finish the seed-script sweep** — ~35 dev QA / seed scripts still contain dev-domain password literals (`<redacted-pw>`, `<redacted-pw>`, `<redacted-pw>`, `Admin<redacted-pw>`): `seed-dev-test-master-data.mjs`, `seed-database-users-accounts-employees.mjs`, `setup-all-upcountry-logins.mjs`, `setup-standardized-users.mjs`, `master-seed-everything.mjs`, `verify-*`, `e2e-*`, `capture-*`. Lower risk (dev domains, run against a local/dev server), but env-ify or delete them in a follow-up. None write to Production.
 
 ## 4. Release sequencing
 

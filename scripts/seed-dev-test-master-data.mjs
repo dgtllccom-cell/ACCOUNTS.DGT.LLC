@@ -179,7 +179,7 @@ function adminSpec(branch) {
   const code = `DEVTEST-${branch.branchCode}-ADMIN`;
   return {
     email: `devtest.${slugify(branch.branchCode)}.admin@dgt.llc`,
-    password: "DevTest@12345",
+    password: (process.env.SEED_TEST_PASSWORD || ""),
     fullName: `DEV TEST Branch Admin - ${branch.label}`,
     userCode: code,
     role: "city_branch_admin",
@@ -820,7 +820,7 @@ async function main() {
   }
   const uaeMainAdmin = await ensureScopedAdmin(sql, {
     email: "devtest.uae.main.admin@dgt.llc",
-    password: "DevTest@12345",
+    password: (process.env.SEED_TEST_PASSWORD || ""),
     fullName: "DEV TEST UAE Main Branch Admin",
     userCode: "DEVTEST-UAE-MAIN-ADMIN",
     role: "main_branch_admin",
@@ -859,7 +859,7 @@ async function main() {
     const masterDataSummary = await ensureBranchMasterData(sql, branchRecord, sourceTag);
     const admin = await ensureScopedAdmin(sql, {
       email: `devtest.${slugify(branchRecord.branchCode)}.admin@dgt.llc`,
-      password: "DevTest@12345",
+      password: (process.env.SEED_TEST_PASSWORD || ""),
       fullName: `DEV TEST Branch Admin - ${branchRecord.label}`,
       userCode: `DEVTEST-${branchRecord.branchCode}-ADMIN`,
       role: "city_branch_admin",

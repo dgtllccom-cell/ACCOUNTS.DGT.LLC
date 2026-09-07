@@ -17,7 +17,7 @@ async function main() {
   const idInput = page.locator('input[name="identifier"], input[type="text"]').first();
   await idInput.fill("superadmin@damaan.com");
   const pwdInput = page.locator('input[name="password"], input[type="password"]').first();
-  await pwdInput.fill("Admin@123");
+  await pwdInput.fill((process.env.E2E_SUPERADMIN_PASSWORD || ""));
   await page.click('button[type="submit"]');
   await page.waitForURL("**/dashboard**", { timeout: 15000 }).catch(() => {});
   await page.waitForTimeout(1000);
