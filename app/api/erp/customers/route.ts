@@ -6,7 +6,8 @@ import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-mid
 import { customerCreateSchema } from "@/lib/api/erp-validation";
 import { customersService } from "@/lib/services/customers-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const query = request.nextUrl.searchParams.get("q");
     let countryId = request.nextUrl.searchParams.get("countryId");
     const limit = request.nextUrl.searchParams.get("limit");
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     // Enforce session scope: if user is not super admin and no countryId provided,
     // restrict to their assigned country(ies)
@@ -44,10 +45,21 @@ export async function GET(request: NextRequest) {
     let customers: any[] = (result as any).customers ?? [];
     // Always resolve (see [id]/route.ts comment — skipping for lang === "en" would leak
     // non-English source text into the English view whenever a record's original language
-    // wasn't English).
+    // wasn't English). ONE row → the viewer's language for EVERY human-readable column:
+    // the customer's own name fields AND the denormalised location join names.
     if (Array.isArray(customers) && customers.length > 0) {
-      customers = await localizeRecordNames<any>(customers, "customers", "customer_name", lang);
-      customers = await localizeRecordNames<any>(customers, "customers", "company_name", lang);
+      customers = await localizeRecordFields<any>(
+        customers,
+        "customers",
+        ["customer_name", "company_name", "contact_person"],
+        lang,
+      );
+      customers = await localizeJoinedNames<any>(customers, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" },
+        { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
+        { idField: "district_id", nameField: "district_name", table: "districts" },
+        { idField: "city_id", nameField: "city_name", table: "cities" },
+      ]);
     }
 
     return apiOk({ ...(result as any), customers });

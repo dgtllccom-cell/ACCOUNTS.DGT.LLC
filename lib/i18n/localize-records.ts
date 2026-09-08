@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import { getSharedPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { transliterateToLatin } from "@/lib/i18n/transliteration";
+import { transliterateToLatin, transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translatable-fields";
 
 /**
@@ -98,24 +98,36 @@ function isBusinessIdentifier(v: string): boolean {
 /** DISPLAY-ONLY: render a proper-name value in `lang`'s script when there is no
  *  approved translation. Returns null when no safe rendering applies.
  *
- *  Policy (deliberately conservative — the write side stays the source of truth):
+ *  Policy (MULTILINGUAL BUSINESS DATA CONTRACT — the write side stays the source of truth;
+ *  this is the "Local Translator" display tier, above "safe original fallback"):
  *   - EN viewer + a Perso-Arabic-script name -> transliterate to Latin. An English
- *     reader genuinely cannot read the Arabic script; Latin is universal, and a
- *     transliterated identifier fragment stays legible.
- *   - UR / AR / FA / PS viewer -> NEVER re-spell. The four Perso-Arabic scripts
- *     are mutually legible, so a name in any of them shows as-is; a Latin name is
- *     kept verbatim (rule: original text is the fallback when no translation
- *     exists — and phonetically re-spelling "[DEVTEST-20260813]" into Arabic
- *     letters would corrupt an embedded identifier). A genuine curated UR/AR/FA/PS
- *     translation still wins via Tier 1. */
+ *     reader genuinely cannot read the Arabic script; Latin is universal.
+ *   - UR / AR / FA / PS viewer + a Latin-script name -> render it into the viewer's
+ *     script (transliterateProperNoun, which carries authentic-name dictionaries +
+ *     canonical corrections). A name typed in English must not stay permanently English
+ *     for a Perso-Arabic reader. A genuine curated Tier-1 translation still wins.
+ *   - UR / AR / FA / PS viewer + a name already in ANY Perso-Arabic script -> keep as-is
+ *     (the four scripts are mutually legible; re-spelling would only add noise).
+ *  In every case: display-only, NEVER written back, and skipped for values that look like
+ *  a business identifier / embedded code (isBusinessIdentifier) so codes stay intact. */
 function properNameForDisplay(raw: string, lang: SupportedLanguage): string | null {
-  if (lang !== "en") return null;
   const v = (raw || "").trim();
   if (!v || isBusinessIdentifier(v)) return null;
-  if (!ARABIC_SCRIPT_RE.test(v)) return null;          // already Latin
-  const out = transliterateToLatin(v).trim();
-  if (!out || out.toLowerCase() === v.toLowerCase()) return null;
-  if (ARABIC_SCRIPT_RE.test(out) || !LATIN_LETTER_RE.test(out)) return null;  // incomplete render
+
+  if (lang === "en") {
+    if (!ARABIC_SCRIPT_RE.test(v)) return null;          // already Latin
+    const out = transliterateToLatin(v).trim();
+    if (!out || out.toLowerCase() === v.toLowerCase()) return null;
+    if (ARABIC_SCRIPT_RE.test(out) || !LATIN_LETTER_RE.test(out)) return null;  // incomplete render
+    return out;
+  }
+
+  // ur / ar / fa / ps
+  if (ARABIC_SCRIPT_RE.test(v)) return null;             // already in a legible Perso-Arabic script
+  if (!LATIN_LETTER_RE.test(v)) return null;             // no letters to render (pure digits/punct)
+  const out = transliterateProperNoun(v, lang).trim();
+  if (!out || out === v) return null;
+  if (!ARABIC_SCRIPT_RE.test(out) || LATIN_LETTER_RE.test(out)) return null;  // render incomplete → keep original
   return out;
 }
 
@@ -567,6 +579,61 @@ export async function localizeRecordGroups(
   } finally {
     /* shared process-lifetime pool — deliberately not closed */ void 0;
   }
+}
+
+/**
+ * Localize DENORMALIZED join-name columns on a row set — the `{ <x>_id, <x>_name }`
+ * pairs that list/detail queries carry from a `JOIN` (country_name, state_province_name,
+ * city_name, district_name, port_name, branch_name, …). Each mapping names the FK column,
+ * the display column and the master table it points at; every distinct id is resolved
+ * ONCE per table (one `record_translations` query per table, not per row), through the
+ * same 4-tier resolver as {@link localizeRecordFields}.
+ *
+ * Use this in every list/detail API that surfaces a joined location or party name so the
+ * whole row follows the viewer's language, not just the primary record's own name.
+ */
+export async function localizeJoinedNames<T extends Record<string, any>>(
+  rows: T[],
+  lang: SupportedLanguage,
+  mappings: { idField: string; nameField: string; table: string; field?: string }[],
+): Promise<T[]> {
+  if (!rows?.length || !mappings.length) return rows;
+  if (!process.env.DATABASE_URL) return rows;
+
+  // one resolve pass per (table, field) — dedupe ids across the whole row set
+  const resolvedByMapping: Array<Map<string, string>> = [];
+  for (const m of mappings) {
+    const seen = new Map<string, string>(); // id -> raw name
+    for (const r of rows) {
+      const id = r[m.idField];
+      const nm = r[m.nameField];
+      if (id && typeof id === "string" && nm && typeof nm === "string" && !seen.has(id)) seen.set(id, nm);
+    }
+    if (seen.size === 0) {
+      resolvedByMapping.push(new Map());
+      continue;
+    }
+    const field = m.field ?? "name";
+    const synthetic: Array<{ id: string } & Record<string, string>> = [...seen.entries()].map(([id, name]) => ({ id, [field]: name }));
+    const localized = await localizeRecordFields(synthetic, m.table, [field], lang);
+    const out = new Map<string, string>();
+    for (const rec of localized as Array<Record<string, any>>) {
+      const v = rec[field];
+      if (rec.id && typeof v === "string") out.set(rec.id, v);
+    }
+    resolvedByMapping.push(out);
+  }
+
+  return rows.map((r) => {
+    let next: T | null = null;
+    mappings.forEach((m, i) => {
+      const id = r[m.idField];
+      if (!id) return;
+      const localized = resolvedByMapping[i].get(id);
+      if (localized && localized !== r[m.nameField]) next = { ...(next ?? r), [m.nameField]: localized };
+    });
+    return next ?? r;
+  });
 }
 
 /**

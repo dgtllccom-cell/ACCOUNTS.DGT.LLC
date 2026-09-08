@@ -4,6 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { party360Service } from "@/lib/services/party-360-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     const query = request.nextUrl.searchParams.get("q") || request.nextUrl.searchParams.get("search") || "";
     const limit = Number(request.nextUrl.searchParams.get("limit") || "100");
     const offset = Number(request.nextUrl.searchParams.get("offset") || "0");
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const result = await party360Service.getUniversalPartiesDirectory({
       query,

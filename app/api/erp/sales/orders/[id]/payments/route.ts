@@ -11,6 +11,7 @@ import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRo
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     // withLocalPg, not the RLS-gated Supabase client — see the POST handler for why.
     const { order, rows } = (await withLocalPg(async (sql) => {

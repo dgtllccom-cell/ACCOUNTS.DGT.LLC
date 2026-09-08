@@ -15,6 +15,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { revalidatePath } from "next/cache";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Never skip narration resolution based on lang === "en" — the base DB column may
     // hold non-English source text (see localizeRecordNames rule established earlier
     // this session for the same class of bug on other tables).
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     authorizeApiScope(session, {
       resource: "roznamcha",

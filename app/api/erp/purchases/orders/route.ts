@@ -20,6 +20,7 @@ import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-transl
 import { buildVerifiedTranslationSet } from "@/lib/i18n/verified-record-translations";
 import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
@@ -227,7 +228,7 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get("limit") || undefined,
       q: searchParams.get("q") || searchParams.get("search") || searchParams.get("purchaseOrderNo") || undefined
     });
-    const lang = normalizeLanguage(searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(searchParams.get("lang"));
 
     authorizeApiScope(session, {
       resource: "purchases",

@@ -15,3 +15,15 @@ node scripts/i18n-ui-guard.mjs --changed || {
   echo "  Bypass only if you are certain:  git commit --no-verify"
   exit 1
 }
+
+echo "• multilingual business-data contract guard…"
+node scripts/multilingual-contract-guard.mjs --quiet || {
+  echo ""
+  echo "✗ commit blocked by the multilingual contract guard."
+  echo "  A new form/table/route/report must enter the contract: classify every"
+  echo "  user-facing text column in lib/i18n/translatable-fields.ts (translate /"
+  echo "  transliterate) and resolve the viewer language with getRequestLanguage()"
+  echo "  + localizeRecordFields / localizeJoinedNames."
+  echo "  Bypass only if you are certain:  git commit --no-verify"
+  exit 1
+}

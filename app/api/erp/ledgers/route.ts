@@ -7,6 +7,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { ledgerService } from "@/lib/services/ledger-service";
 
 export async function GET(request: NextRequest) {
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       return apiOk({ ledgers: [], limit: 100 });
     }
 
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const resolvedData = await localizeRecordNames(viaPg as any[], "ledgers", "name", lang);
 
     return apiOk({

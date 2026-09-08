@@ -4,6 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { clearingAgentsRepository } from "@/lib/repositories/clearing-agents-repository";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 async function localizeClearingAgent(clearingAgent: any, lang: ReturnType<typeof normalizeLanguage>) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     let clearingAgent = await clearingAgentsRepository.getById(id);
     if (!wantsRawRecord(request)) clearingAgent = await localizeClearingAgent(clearingAgent, lang);
@@ -38,7 +39,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
     const body = await request.json();
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     if (body.personId && body.companyId) {
       return apiError("VALIDATION_ERROR", "A clearing agent can be linked to a Person or a Company, not both.", 400);

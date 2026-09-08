@@ -4,6 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 // Resolve name/legal_name/owner_name into the requested language — always, regardless of
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     let company = await companiesService.getById(id);
     // ?raw=1 → edit form: return the untranslated original (never overwrite source text).
@@ -55,7 +56,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
     const body = await request.json();
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     await companiesService.update(id, body, session?.userId ?? null);
     let company = await companiesService.getById(id);

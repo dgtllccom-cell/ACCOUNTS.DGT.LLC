@@ -4,6 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim();
-    const lang = normalizeLanguage(searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(searchParams.get("lang"));
 
     const data = await withLocalPg(async (sql) => {
       let query = sql`

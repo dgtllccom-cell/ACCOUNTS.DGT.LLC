@@ -92,10 +92,12 @@ export class CustomersRepository {
           c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
           cnt.name as country_name,
           sp.name as state_province_name,
+          di.name as district_name,
           ct.name as city_name
         FROM public.customers c
         LEFT JOIN public.countries cnt ON c.country_id = cnt.id
         LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
+        LEFT JOIN public.districts di ON c.district_id = di.id
         LEFT JOIN public.cities ct ON c.city_id = ct.id
         WHERE c.deleted_at IS NULL
           AND (${input.countryId ? sql`c.country_id = ${input.countryId}::uuid` : sql`true`})

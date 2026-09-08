@@ -6,7 +6,8 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { customerUpdateSchema } from "@/lib/api/erp-validation";
 import { customersService } from "@/lib/services/customers-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     if (!data?.customer) {
       throw new ApiClientError("Customer not found", { status: 404, code: "NOT_FOUND" });
     }
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     // Always resolve — even when lang === "en" — because the base column holds whatever
     // script the record was originally typed in. If that was Urdu/Arabic/etc, skipping
     // resolution for English would leak the raw source-language text into the English view
@@ -32,9 +33,19 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // EXCEPT `?raw=1` — an edit form must load the untranslated original so saving it
     // back never overwrites the source text with a display translation.
     if (data?.customer && !wantsRawRecord(request)) {
-      const [resolved] = await localizeRecordNames([data.customer as any], "customers", "customer_name", lang);
-      const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
-      (data as any).customer = resolved2;
+      let [row] = await localizeRecordFields(
+        [data.customer as any],
+        "customers",
+        ["customer_name", "company_name", "contact_person"],
+        lang,
+      );
+      [row] = await localizeJoinedNames([row], lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" },
+        { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
+        { idField: "district_id", nameField: "district_name", table: "districts" },
+        { idField: "city_id", nameField: "city_name", table: "cities" },
+      ]);
+      (data as any).customer = row;
     }
     return apiOk(data);
   } catch (error) {

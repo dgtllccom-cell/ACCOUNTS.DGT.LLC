@@ -4,6 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
@@ -209,7 +210,7 @@ export async function GET(request: NextRequest) {
 
     // Render bank / branch names in the viewer's language (shared 4-tier resolver).
     if (paged.length > 0 && !wantsRawRecord(request)) {
-      const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
       paged = await localizeRecordFields<any>(paged, "banks", ["bank_name", "branch_name"], lang);
     }
 

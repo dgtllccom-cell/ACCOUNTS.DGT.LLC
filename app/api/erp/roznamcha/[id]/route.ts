@@ -8,6 +8,7 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { revalidatePath } from "next/cache";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 type RoznamchaHeader = {
   id: string;
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     // Try direct PostgreSQL first for maximum performance and schema resilience
     const viaPg = await withLocalPg(async (sql) => {

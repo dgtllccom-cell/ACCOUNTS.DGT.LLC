@@ -220,6 +220,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   saved_reports: [{ field: "name", mode: "translate" }],
 
   // ── Logistics / shipping (party & vessel names → transliterate; goods → translate) ──
+  // Shipping-line MASTER (company name → transliterate). Distinct from the
+  // *_records transaction tables below.
+  shipping_lines: [{ field: "name", mode: "transliterate" }],
   shipping_line_records: [
     { field: "shipping_line_name", mode: "transliterate" },
     { field: "vessel_name", mode: "transliterate" },

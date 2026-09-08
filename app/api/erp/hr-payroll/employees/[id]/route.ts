@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
 
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     if (employee.person && !wantsRawRecord(request)) {
       const [resolved] = await localizeRecordNames([employee.person as any], "customers", "customer_name", lang);
       const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
@@ -242,7 +243,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
       return NextResponse.json({ error: "Employee not found after update" }, { status: 404 });
     }
 
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     let result = updatedEmployee;
     if (result.person) {
       const [resolved] = await localizeRecordNames([result.person as any], "customers", "customer_name", lang);

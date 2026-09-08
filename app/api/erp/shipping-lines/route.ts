@@ -3,6 +3,7 @@ import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response"
 import { requireErpSession } from "@/lib/auth/session";
 import { shippingLinesRepository } from "@/lib/repositories/shipping-lines-repository";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const result = await shippingLinesRepository.search({
       query,

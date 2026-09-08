@@ -6,6 +6,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "warehouses", action: "read" });
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     // withLocalPg, not the RLS-gated Supabase admin client: SUPABASE_SERVICE_ROLE_KEY
     // resolves to the anon key in this environment, so RLS silently filters this list to

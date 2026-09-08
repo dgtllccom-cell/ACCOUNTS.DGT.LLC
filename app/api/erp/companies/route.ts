@@ -5,6 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { companyCreateSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const cityBranchId = request.nextUrl.searchParams.get("cityBranchId");
     const isBranchOperativeParam = request.nextUrl.searchParams.get("isBranchOperative");
     const isBranchOperative = isBranchOperativeParam !== null ? isBranchOperativeParam === "true" : undefined;
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const result = await companiesService.search({
       query,

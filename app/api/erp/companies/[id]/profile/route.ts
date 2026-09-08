@@ -5,6 +5,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { id: rawId } = await context.params;
     const id = uuidSchema.parse(rawId);
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     let company = await companiesService.getById(id);
     if (!company) return apiOk({ profile: null });
