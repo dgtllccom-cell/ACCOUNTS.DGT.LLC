@@ -34,6 +34,20 @@ export interface HealthFinding {
   target: string;
   status: HealthStatus;
   title: string;
+  /**
+   * Optional i18n handles so the Health Center UI can render this finding's
+   * sentence in the operator's language. `title` / `expected` stay populated
+   * (English) as the fallback and for API/log consumers. `params` are substituted
+   * into the translated template as `{name}` placeholders. `actual` is data
+   * (paths, counts, HTTP codes) and is never translated.
+   */
+  i18n?: {
+    titleKey: string;
+    expectedKey?: string;
+    /** a UiKey to resolve and substitute for `{page}` in the template (e.g. a nav label) */
+    labelKey?: string;
+    params?: Record<string, string | number>;
+  };
   /** what a correct system should have returned */
   expected?: string;
   /** what we actually observed */
@@ -101,7 +115,7 @@ export interface HealthReport {
   categories: HealthCategorySummary[];
   findings: HealthFinding[];
   /** checks that were deliberately skipped and why — honesty requirement */
-  notTested: { area: string; reason: string }[];
+  notTested: { area: string; reason: string; areaKey?: string; reasonKey?: string }[];
 }
 
 export const HEALTH_STATUS_TONE: Record<HealthStatus, "good" | "warn" | "bad" | "muted" | "info"> = {

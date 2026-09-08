@@ -1,6 +1,59 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "health.f_dup_key"
+  | "health.fx_dup_key"
+  | "health.f_landing"
+  | "health.fx_landing"
+  | "health.f_dup_route"
+  | "health.fx_dup_route"
+  | "health.f_label_missing"
+  | "health.fx_label_missing"
+  | "health.f_dead_node"
+  | "health.fx_dead_node"
+  | "health.f_crosslink"
+  | "health.fx_crosslink"
+  | "health.f_lang_missing"
+  | "health.fx_lang_missing"
+  | "health.f_silent_en"
+  | "health.fx_silent_en"
+  | "health.f_raw_key"
+  | "health.fx_raw_key"
+  | "health.f_lang_ok"
+  | "health.fx_lang_ok"
+  | "health.f_build_behind"
+  | "health.fx_build_behind"
+  | "health.f_dirty_tree"
+  | "health.fx_dirty_tree"
+  | "health.f_page_wrong_role"
+  | "health.fx_page_wrong_role"
+  | "health.f_page_denied"
+  | "health.fx_page_ok"
+  | "health.f_api_ok"
+  | "health.f_api_slow"
+  | "health.fx_api_ok"
+  | "health.fx_api_validation"
+  | "health.f_rbac_sa"
+  | "health.fx_rbac_sa"
+  | "health.f_rbac_ok"
+  | "health.f_rbac_leak"
+  | "health.fx_rbac_scope"
+  | "health.f_print_nohtml"
+  | "health.fx_print_nohtml"
+  | "health.f_print_threw"
+  | "health.fx_print_threw"
+  | "health.f_print_ok"
+  | "health.fx_print_ok"
+  | "health.nt_printpdf"
+  | "health.ntx_printpdf"
+  | "health.nt_i18n"
+  | "health.ntx_i18n"
+  | "health.nt_pages"
+  | "health.nt_apis"
+  | "health.nt_rbac"
+  | "health.ntx_static"
+  | "health.nt_tsc"
+  | "health.ntx_tsc"
   | "cbs.back_to_edit"
   | "cnbs.step9_review_title"
   | "cnbs.step9_review_desc"
@@ -24546,6 +24599,59 @@ const en: Dict = {
   "cnbs.step9_review_title": "Country Main Branch — Final Review & Live Preview",
   "cnbs.step9_review_desc": "Please verify all corporate details and branch specifications before confirming. Only 1 Main Branch is permitted per country.",
   "cnbs.existing_branch_alert_title": "Country Main Branch Already Exists",
+  "health.f_dup_key": "Duplicate menu key \"{key}\"",
+  "health.fx_dup_key": "Each sidebar node key is unique",
+  "health.f_landing": "Section header shares its route with a child (intentional landing pattern)",
+  "health.fx_landing": "A parent menu node may open the same view as its default child",
+  "health.f_dup_route": "Two unrelated menu items point to the same route",
+  "health.fx_dup_route": "One menu item per route (or a parent/child landing pair)",
+  "health.f_label_missing": "Menu label key not in dictionary",
+  "health.fx_label_missing": "\"{key}\" resolves in all 5 languages",
+  "health.f_dead_node": "Menu node has neither a route nor children",
+  "health.fx_dead_node": "A menu node links somewhere or groups children",
+  "health.f_crosslink": "Menu item grouped under a parent from another URL section (cross-link)",
+  "health.fx_crosslink": "Informational — the target still resolves; grouped under \"{parent}\"",
+  "health.f_lang_missing": "{n} key(s) missing a {lang} value",
+  "health.fx_lang_missing": "all {total} keys present in {lang}",
+  "health.f_silent_en": "{n} key(s) render English in every non-English language",
+  "health.fx_silent_en": "translated text per language",
+  "health.f_raw_key": "{n} key(s) whose English value looks like the key itself",
+  "health.fx_raw_key": "human-readable English label",
+  "health.f_lang_ok": "{n} keys × 5 languages — full parity, no silent English",
+  "health.fx_lang_ok": "full parity",
+  "health.f_build_behind": "Running code differs from origin/main (may be behind — origin ref not fetched here)",
+  "health.fx_build_behind": "deployed HEAD === origin/main",
+  "health.f_dirty_tree": "{n} uncommitted file(s) in the running checkout",
+  "health.fx_dirty_tree": "clean working tree on a deployed server",
+  "health.f_page_wrong_role": "{page} — reachable but declared for other roles only",
+  "health.fx_page_wrong_role": "403 / redirect for roles not in [{roles}]",
+  "health.f_page_denied": "{page} — denied for a role that should have access",
+  "health.fx_page_ok": "200 for an in-scope page, or redirect to login when unauthenticated",
+  "health.f_api_ok": "{module} read API",
+  "health.f_api_slow": "{module} read API — SLOW response, over 8s",
+  "health.fx_api_ok": "HTTP 200 (or 401/403 if out of the caller's scope)",
+  "health.fx_api_validation": "HTTP 200, or 400/422 when required query params are omitted (validation active)",
+  "health.f_rbac_sa": "Cross-scope denial not probed for a Super Admin",
+  "health.fx_rbac_sa": "a scoped (country/branch) user is refused a foreign countryId",
+  "health.f_rbac_ok": "{module}: foreign country correctly refused",
+  "health.f_rbac_leak": "{module}: foreign country NOT refused",
+  "health.fx_rbac_scope": "HTTP 401/403 for a countryId outside the caller's scope",
+  "health.f_print_nohtml": "Report builder produced no usable HTML ({lang} / {case})",
+  "health.fx_print_nohtml": "an HTML document containing a <table>",
+  "health.f_print_threw": "Report builder threw an exception ({lang} / {case})",
+  "health.fx_print_threw": "no exception",
+  "health.f_print_ok": "Report builder renders in all 5 languages (empty + populated)",
+  "health.fx_print_ok": "valid HTML + <table>, no exception",
+  "health.nt_printpdf": "Print/PDF builder health",
+  "health.ntx_printpdf": "runs in the browser — press 'Run full live scan'; the report engine cannot be imported server-side",
+  "health.nt_i18n": "i18n guard",
+  "health.ntx_i18n": "the guard could not be executed in this environment",
+  "health.nt_pages": "Page & route health (live)",
+  "health.nt_apis": "API health (live)",
+  "health.nt_rbac": "RBAC integrity (live)",
+  "health.ntx_static": "static-only scan — press 'Run full live scan' to include this",
+  "health.nt_tsc": "TypeScript (tsc --noEmit)",
+  "health.ntx_tsc": "not run per request — run `npx tsc --noEmit` in CI / locally",
 };
 
 const ur: Dict = {
@@ -41855,6 +41961,59 @@ const ur: Dict = {
   "cnbs.step9_review_title": "ملکی مین برانچ — حتمی جائزہ اور لائیو پیش نظارہ",
   "cnbs.step9_review_desc": "تصدیق سے پہلے تمام کارپوریٹ تفصیلات اور برانچ کی خصوصیات کی تصدیق کریں۔ فی ملک صرف 1 مین برانچ کی اجازت ہے۔",
   "cnbs.existing_branch_alert_title": "ملکی مین برانچ پہلے سے موجود ہے",
+  "health.f_dup_key": "ڈپلیکیٹ مینو کلید \"{key}\"",
+  "health.fx_dup_key": "ہر سائیڈبار نوڈ کلید منفرد ہو",
+  "health.f_landing": "سیکشن ہیڈر اپنا راستہ ایک چائلڈ کے ساتھ شیئر کرتا ہے (ارادی لینڈنگ پیٹرن)",
+  "health.fx_landing": "ایک پیرنٹ مینو نوڈ اپنے ڈیفالٹ چائلڈ جیسا ہی منظر کھول سکتا ہے",
+  "health.f_dup_route": "دو غیر متعلقہ مینو آئٹمز ایک ہی راستے کی طرف اشارہ کرتے ہیں",
+  "health.fx_dup_route": "فی راستہ ایک مینو آئٹم (یا پیرنٹ/چائلڈ لینڈنگ جوڑا)",
+  "health.f_label_missing": "مینو لیبل کلید ڈکشنری میں نہیں",
+  "health.fx_label_missing": "\"{key}\" پانچوں زبانوں میں حل ہو",
+  "health.f_dead_node": "مینو نوڈ کا نہ راستہ ہے نہ چائلڈ",
+  "health.fx_dead_node": "مینو نوڈ کہیں لنک کرے یا چائلڈ گروپ کرے",
+  "health.f_crosslink": "مینو آئٹم کسی دوسرے URL سیکشن کے پیرنٹ کے تحت گروپ (کراس لنک)",
+  "health.fx_crosslink": "معلوماتی — ہدف اب بھی حل ہوتا ہے؛ \"{parent}\" کے تحت گروپ",
+  "health.f_lang_missing": "{n} کلید(وں) کی {lang} ویلیو غائب",
+  "health.fx_lang_missing": "تمام {total} کلیدیں {lang} میں موجود",
+  "health.f_silent_en": "{n} کلید(یں) ہر غیر انگریزی زبان میں انگریزی دکھاتی ہیں",
+  "health.fx_silent_en": "فی زبان ترجمہ شدہ متن",
+  "health.f_raw_key": "{n} کلید(یں) جن کی انگریزی ویلیو خود کلید جیسی ہے",
+  "health.fx_raw_key": "انسانی پڑھنے کے قابل انگریزی لیبل",
+  "health.f_lang_ok": "{n} کلیدیں × 5 زبانیں — مکمل برابری، کوئی خاموش انگریزی نہیں",
+  "health.fx_lang_ok": "مکمل برابری",
+  "health.f_build_behind": "چلتا کوڈ origin/main سے مختلف ہے (پیچھے ہو سکتا ہے — origin ref یہاں فیچ نہیں ہوا)",
+  "health.fx_build_behind": "تعینات شدہ HEAD === origin/main",
+  "health.f_dirty_tree": "چلتے چیک آؤٹ میں {n} غیر کمٹ شدہ فائل(یں)",
+  "health.fx_dirty_tree": "تعینات شدہ سرور پر صاف ورکنگ ٹری",
+  "health.f_page_wrong_role": "{page} — قابل رسائی لیکن صرف دیگر کرداروں کے لیے مختص",
+  "health.fx_page_wrong_role": "[{roles}] میں شامل نہ ہونے والے کرداروں کے لیے 403 / ری ڈائریکٹ",
+  "health.f_page_denied": "{page} — ایسے کردار کے لیے مسترد جسے رسائی ہونی چاہیے",
+  "health.fx_page_ok": "دائرہ کار میں صفحے کے لیے 200، یا غیر تصدیق شدہ ہونے پر لاگ ان کی طرف ری ڈائریکٹ",
+  "health.f_api_ok": "{module} ریڈ API",
+  "health.f_api_slow": "{module} ریڈ API — سست جواب، 8 سیکنڈ سے زیادہ",
+  "health.fx_api_ok": "HTTP 200 (یا کالر کے دائرہ کار سے باہر ہونے پر 401/403)",
+  "health.fx_api_validation": "HTTP 200، یا مطلوبہ کوئری پیرامیٹرز چھوڑنے پر 400/422 (تصدیق فعال)",
+  "health.f_rbac_sa": "سپر ایڈمن کے لیے کراس اسکوپ انکار کی جانچ نہیں",
+  "health.fx_rbac_sa": "دائرہ کار والے (ملک/برانچ) صارف کو غیر ملکی countryId مسترد ہو",
+  "health.f_rbac_ok": "{module}: غیر ملکی ملک درست طور پر مسترد",
+  "health.f_rbac_leak": "{module}: غیر ملکی ملک مسترد نہیں ہوا",
+  "health.fx_rbac_scope": "کالر کے دائرہ کار سے باہر countryId کے لیے HTTP 401/403",
+  "health.f_print_nohtml": "رپورٹ بلڈر نے کوئی قابل استعمال HTML نہیں بنایا ({lang} / {case})",
+  "health.fx_print_nohtml": "ایک HTML دستاویز جس میں <table> ہو",
+  "health.f_print_threw": "رپورٹ بلڈر نے ایکسیپشن پھینکا ({lang} / {case})",
+  "health.fx_print_threw": "کوئی ایکسیپشن نہیں",
+  "health.f_print_ok": "رپورٹ بلڈر پانچوں زبانوں میں رینڈر ہوتا ہے (خالی + بھرا ہوا)",
+  "health.fx_print_ok": "درست HTML + <table>، کوئی ایکسیپشن نہیں",
+  "health.nt_printpdf": "پرنٹ/PDF بلڈر صحت",
+  "health.ntx_printpdf": "براؤزر میں چلتا ہے — 'مکمل لائیو اسکین چلائیں' دبائیں؛ رپورٹ انجن سرور سائیڈ امپورٹ نہیں ہو سکتا",
+  "health.nt_i18n": "i18n گارڈ",
+  "health.ntx_i18n": "اس ماحول میں گارڈ نہیں چلایا جا سکا",
+  "health.nt_pages": "صفحہ اور راستہ صحت (لائیو)",
+  "health.nt_apis": "API صحت (لائیو)",
+  "health.nt_rbac": "RBAC سالمیت (لائیو)",
+  "health.ntx_static": "صرف سٹیٹک اسکین — اسے شامل کرنے کے لیے 'مکمل لائیو اسکین چلائیں' دبائیں",
+  "health.nt_tsc": "ٹائپ اسکرپٹ (tsc --noEmit)",
+  "health.ntx_tsc": "فی درخواست نہیں چلتا — CI / لوکل پر `npx tsc --noEmit` چلائیں",
 };
 
 const ar: Dict = {
@@ -59166,6 +59325,59 @@ const ar: Dict = {
   "cnbs.step9_review_title": "الفرع الرئيسي للدولة — المراجعة النهائية والمعاينة المباشرة",
   "cnbs.step9_review_desc": "يرجى التحقق من جميع تفاصيل الشركة ومواصفات الفرع قبل التأكيد. يُسمح بفرع رئيسي واحد فقط لكل دولة.",
   "cnbs.existing_branch_alert_title": "الفرع الرئيسي للدولة موجود بالفعل",
+  "health.f_dup_key": "مفتاح قائمة مكرّر \"{key}\"",
+  "health.fx_dup_key": "أن يكون مفتاح كل عقدة في الشريط الجانبي فريدًا",
+  "health.f_landing": "ترويسة القسم تشارك مسارها مع عنصر فرعي (نمط وصول مقصود)",
+  "health.fx_landing": "يجوز أن تفتح عقدة القائمة الأصل نفس عرض عنصرها الفرعي الافتراضي",
+  "health.f_dup_route": "عنصران غير مرتبطين في القائمة يشيران إلى نفس المسار",
+  "health.fx_dup_route": "عنصر قائمة واحد لكل مسار (أو زوج وصول أصل/فرعي)",
+  "health.f_label_missing": "مفتاح تسمية القائمة غير موجود في القاموس",
+  "health.fx_label_missing": "\"{key}\" يُحَلّ في جميع اللغات الخمس",
+  "health.f_dead_node": "عقدة القائمة ليس لها مسار ولا عناصر فرعية",
+  "health.fx_dead_node": "عقدة القائمة ترتبط بمكان أو تجمّع عناصر فرعية",
+  "health.f_crosslink": "عنصر قائمة مجمّع تحت أصل من قسم رابط آخر (ربط متقاطع)",
+  "health.fx_crosslink": "معلوماتي — الهدف لا يزال يُحَلّ؛ مجمّع تحت \"{parent}\"",
+  "health.f_lang_missing": "{n} مفتاح ينقصه قيمة {lang}",
+  "health.fx_lang_missing": "جميع المفاتيح {total} موجودة في {lang}",
+  "health.f_silent_en": "{n} مفتاح يعرض الإنجليزية في كل لغة غير إنجليزية",
+  "health.fx_silent_en": "نص مترجم لكل لغة",
+  "health.f_raw_key": "{n} مفتاح قيمته الإنجليزية تشبه المفتاح نفسه",
+  "health.fx_raw_key": "تسمية إنجليزية مقروءة",
+  "health.f_lang_ok": "{n} مفتاح × 5 لغات — تكافؤ كامل، بلا إنجليزية صامتة",
+  "health.fx_lang_ok": "تكافؤ كامل",
+  "health.f_build_behind": "الشيفرة قيد التشغيل تختلف عن origin/main (قد تكون متأخرة — لم يُجلب مرجع origin هنا)",
+  "health.fx_build_behind": "‏HEAD المنشور === origin/main",
+  "health.f_dirty_tree": "{n} ملف غير مُودَع في النسخة العاملة",
+  "health.fx_dirty_tree": "شجرة عمل نظيفة على خادم منشور",
+  "health.f_page_wrong_role": "{page} — يمكن الوصول إليه لكنه معلن لأدوار أخرى فقط",
+  "health.fx_page_wrong_role": "403 / إعادة توجيه للأدوار غير الموجودة في [{roles}]",
+  "health.f_page_denied": "{page} — مرفوض لدور يُفترض أن يملك الوصول",
+  "health.fx_page_ok": "200 لصفحة ضمن النطاق، أو إعادة توجيه لتسجيل الدخول عند عدم المصادقة",
+  "health.f_api_ok": "واجهة قراءة {module}",
+  "health.f_api_slow": "واجهة قراءة {module} — استجابة بطيئة، أكثر من 8 ثوانٍ",
+  "health.fx_api_ok": "HTTP 200 (أو 401/403 إذا كان خارج نطاق المُستدعي)",
+  "health.fx_api_validation": "HTTP 200، أو 400/422 عند حذف معاملات الاستعلام المطلوبة (التحقق نشط)",
+  "health.f_rbac_sa": "لم يُختبَر رفض تجاوز النطاق لمدير عام",
+  "health.fx_rbac_sa": "يُرفَض للمستخدم المحدود النطاق (دولة/فرع) معرّف دولة أجنبي",
+  "health.f_rbac_ok": "{module}: رُفضت الدولة الأجنبية بشكل صحيح",
+  "health.f_rbac_leak": "{module}: لم تُرفَض الدولة الأجنبية",
+  "health.fx_rbac_scope": "HTTP 401/403 لمعرّف دولة خارج نطاق المُستدعي",
+  "health.f_print_nohtml": "لم يُنتج مُنشئ التقرير أي HTML قابل للاستخدام ({lang} / {case})",
+  "health.fx_print_nohtml": "مستند HTML يحتوي على <table>",
+  "health.f_print_threw": "أطلق مُنشئ التقرير استثناءً ({lang} / {case})",
+  "health.fx_print_threw": "بلا استثناء",
+  "health.f_print_ok": "مُنشئ التقرير يُصيّر في جميع اللغات الخمس (فارغ + مملوء)",
+  "health.fx_print_ok": "‏HTML صالح + <table>، بلا استثناء",
+  "health.nt_printpdf": "صحة مُنشئ الطباعة/PDF",
+  "health.ntx_printpdf": "يعمل في المتصفح — اضغط 'تشغيل فحص مباشر كامل'؛ لا يمكن استيراد محرك التقارير من جهة الخادم",
+  "health.nt_i18n": "حارس i18n",
+  "health.ntx_i18n": "تعذّر تنفيذ الحارس في هذه البيئة",
+  "health.nt_pages": "صحة الصفحات والمسارات (مباشر)",
+  "health.nt_apis": "صحة واجهات البرمجة (مباشر)",
+  "health.nt_rbac": "سلامة صلاحيات الأدوار (مباشر)",
+  "health.ntx_static": "فحص ثابت فقط — اضغط 'تشغيل فحص مباشر كامل' لتضمين هذا",
+  "health.nt_tsc": "فحص الأنواع TypeScript (tsc --noEmit)",
+  "health.ntx_tsc": "لا يُشغّل مع كل طلب — شغّل `npx tsc --noEmit` في CI / محليًا",
 };
 
 const fa: Dict = {
@@ -76476,6 +76688,59 @@ const fa: Dict = {
   "cnbs.step9_review_title": "شعبه اصلی کشور — بازبینی نهایی و پیش‌نمایش زنده",
   "cnbs.step9_review_desc": "لطفاً پیش از تأیید، همه جزئیات شرکتی و مشخصات شعبه را بررسی کنید. فقط ۱ شعبه اصلی برای هر کشور مجاز است.",
   "cnbs.existing_branch_alert_title": "شعبه اصلی کشور از قبل وجود دارد",
+  "health.f_dup_key": "کلید منوی تکراری «{key}»",
+  "health.fx_dup_key": "کلید هر گره نوار کناری یکتا باشد",
+  "health.f_landing": "سرآیند بخش مسیر خود را با یک فرزند به اشتراک می‌گذارد (الگوی فرود عمدی)",
+  "health.fx_landing": "یک گره منوی والد می‌تواند همان نمای فرزند پیش‌فرض خود را باز کند",
+  "health.f_dup_route": "دو مورد منوی نامرتبط به یک مسیر اشاره می‌کنند",
+  "health.fx_dup_route": "برای هر مسیر یک مورد منو (یا یک جفت فرود والد/فرزند)",
+  "health.f_label_missing": "کلید برچسب منو در واژه‌نامه نیست",
+  "health.fx_label_missing": "«{key}» در هر ۵ زبان حل شود",
+  "health.f_dead_node": "گره منو نه مسیر دارد نه فرزند",
+  "health.fx_dead_node": "گره منو به جایی پیوند می‌دهد یا فرزندان را گروه می‌کند",
+  "health.f_crosslink": "مورد منو زیر والدی از بخش URL دیگر گروه شده (پیوند متقاطع)",
+  "health.fx_crosslink": "اطلاعاتی — مقصد همچنان حل می‌شود؛ زیر «{parent}» گروه شده",
+  "health.f_lang_missing": "{n} کلید فاقد مقدار {lang}",
+  "health.fx_lang_missing": "همه {total} کلید در {lang} موجود",
+  "health.f_silent_en": "{n} کلید در هر زبان غیرانگلیسی، انگلیسی نمایش می‌دهد",
+  "health.fx_silent_en": "متن ترجمه‌شده برای هر زبان",
+  "health.f_raw_key": "{n} کلید که مقدار انگلیسی‌اش شبیه خود کلید است",
+  "health.fx_raw_key": "برچسب انگلیسی خوانا",
+  "health.f_lang_ok": "{n} کلید × ۵ زبان — برابری کامل، بدون انگلیسی خاموش",
+  "health.fx_lang_ok": "برابری کامل",
+  "health.f_build_behind": "کد در حال اجرا با origin/main تفاوت دارد (ممکن است عقب باشد — ارجاع origin اینجا دریافت نشده)",
+  "health.fx_build_behind": "HEAD مستقرشده === origin/main",
+  "health.f_dirty_tree": "{n} فایل ثبت‌نشده در چک‌اوت در حال اجرا",
+  "health.fx_dirty_tree": "درخت کاری تمیز روی سرور مستقرشده",
+  "health.f_page_wrong_role": "{page} — قابل دسترسی اما فقط برای نقش‌های دیگر اعلام شده",
+  "health.fx_page_wrong_role": "۴۰۳ / هدایت برای نقش‌های خارج از [{roles}]",
+  "health.f_page_denied": "{page} — برای نقشی که باید دسترسی داشته باشد رد شد",
+  "health.fx_page_ok": "۲۰۰ برای صفحه در دامنه، یا هدایت به ورود در حالت احرازنشده",
+  "health.f_api_ok": "API خواندن {module}",
+  "health.f_api_slow": "API خواندن {module} — پاسخ کند، بیش از ۸ ثانیه",
+  "health.fx_api_ok": "HTTP 200 (یا 401/403 اگر خارج از دامنه فراخواننده باشد)",
+  "health.fx_api_validation": "HTTP 200، یا 400/422 وقتی پارامترهای لازم حذف شوند (اعتبارسنجی فعال)",
+  "health.f_rbac_sa": "رد میان‌دامنه برای سوپر ادمین آزمایش نشد",
+  "health.fx_rbac_sa": "کاربر دامنه‌دار (کشور/شعبه) از countryId خارجی منع شود",
+  "health.f_rbac_ok": "{module}: کشور خارجی به‌درستی رد شد",
+  "health.f_rbac_leak": "{module}: کشور خارجی رد نشد",
+  "health.fx_rbac_scope": "HTTP 401/403 برای countryId خارج از دامنه فراخواننده",
+  "health.f_print_nohtml": "سازنده گزارش هیچ HTML قابل‌استفاده تولید نکرد ({lang} / {case})",
+  "health.fx_print_nohtml": "یک سند HTML شامل <table>",
+  "health.f_print_threw": "سازنده گزارش استثنا پرتاب کرد ({lang} / {case})",
+  "health.fx_print_threw": "بدون استثنا",
+  "health.f_print_ok": "سازنده گزارش در هر ۵ زبان رندر می‌شود (خالی + پرشده)",
+  "health.fx_print_ok": "HTML معتبر + <table>، بدون استثنا",
+  "health.nt_printpdf": "سلامت سازنده چاپ/PDF",
+  "health.ntx_printpdf": "در مرورگر اجرا می‌شود — «اجرای اسکن کامل زنده» را بزنید؛ موتور گزارش سمت سرور قابل وارد کردن نیست",
+  "health.nt_i18n": "نگهبان i18n",
+  "health.ntx_i18n": "نگهبان در این محیط قابل اجرا نبود",
+  "health.nt_pages": "سلامت صفحه و مسیر (زنده)",
+  "health.nt_apis": "سلامت API (زنده)",
+  "health.nt_rbac": "یکپارچگی RBAC (زنده)",
+  "health.ntx_static": "اسکن فقط ایستا — برای گنجاندن این، «اجرای اسکن کامل زنده» را بزنید",
+  "health.nt_tsc": "بررسی نوع TypeScript (tsc --noEmit)",
+  "health.ntx_tsc": "برای هر درخواست اجرا نمی‌شود — `npx tsc --noEmit` را در CI / محلی اجرا کنید",
 };
 
 const ps: Dict = {
@@ -93792,6 +94057,59 @@ const ps: Dict = {
   "cnbs.step9_review_title": "د هیواد اصلي څانګه — وروستۍ کتنه او ژوندۍ مخکتنه",
   "cnbs.step9_review_desc": "له تاییدولو مخکې د ټولو شرکتي جزئیاتو او د څانګې مشخصاتو تایید وکړئ. په هر هیواد کې یوازې 1 اصلي څانګه اجازه لري.",
   "cnbs.existing_branch_alert_title": "د هیواد اصلي څانګه دمخه شتون لري",
+  "health.f_dup_key": "دوه‌ګونی مینو کیلي \"{key}\"",
+  "health.fx_dup_key": "د سایډبار د هرې نوډ کیلي بې‌ساری وي",
+  "health.f_landing": "د برخې سرلیک خپله لار له یوه ماشوم سره شریکوي (اراده‌ای لینډینګ بڼه)",
+  "health.fx_landing": "د مور مینو نوډ کولی شي د خپل اصلي ماشوم په څیر ورته لید پرانیزي",
+  "health.f_dup_route": "دوه نامربوط مینو توکي ورته لارې ته اشاره کوي",
+  "health.fx_dup_route": "پر هره لار یو مینو توکی (یا د مور/ماشوم لینډینګ جوړه)",
+  "health.f_label_missing": "د مینو لیبل کیلي په قاموس کې نشته",
+  "health.fx_label_missing": "\"{key}\" په ټولو ۵ ژبو کې حل شي",
+  "health.f_dead_node": "د مینو نوډ نه لار لري او نه ماشومان",
+  "health.fx_dead_node": "د مینو نوډ چیرته لینک کوي یا ماشومان ډله‌ییزوي",
+  "health.f_crosslink": "مینو توکی د بل URL برخې د مور لاندې ډله‌ییز شوی (کراس‌لینک)",
+  "health.fx_crosslink": "معلوماتي — هدف لاهم حل کیږي؛ د \"{parent}\" لاندې ډله‌ییز",
+  "health.f_lang_missing": "{n} کیلي(و) کې د {lang} ارزښت نشته",
+  "health.fx_lang_missing": "ټول {total} کیلي په {lang} کې شتون ولري",
+  "health.f_silent_en": "{n} کیلي په هره غیر انګلیسي ژبه کې انګلیسي ښیي",
+  "health.fx_silent_en": "پر هره ژبه ژباړل شوی متن",
+  "health.f_raw_key": "{n} کیلي چې انګلیسي ارزښت یې د کیلي په څیر ښکاري",
+  "health.fx_raw_key": "د انسان لوستلو وړ انګلیسي لیبل",
+  "health.f_lang_ok": "{n} کیلي × ۵ ژبې — بشپړ برابري، هیڅ چوپ انګلیسي نشته",
+  "health.fx_lang_ok": "بشپړه برابري",
+  "health.f_build_behind": "چلېدونکی کوډ له origin/main سره توپیر لري (ممکن وروسته وي — د origin ref دلته نه دی راوړل شوی)",
+  "health.fx_build_behind": "ځای پرځای شوی HEAD === origin/main",
+  "health.f_dirty_tree": "په چلېدونکي چیک‌آوټ کې {n} ناسپارل شوي فایل(ونه)",
+  "health.fx_dirty_tree": "په ځای پرځای شوي سرور کې پاک کاري ونه",
+  "health.f_page_wrong_role": "{page} — د رسیدو وړ خو یوازې د نورو رولونو لپاره اعلان شوی",
+  "health.fx_page_wrong_role": "د هغو رولونو لپاره چې په [{roles}] کې نه دي 403 / بیا لارښود",
+  "health.f_page_denied": "{page} — د هغه رول لپاره رد شوی چې باید لاسرسی ولري",
+  "health.fx_page_ok": "د ساحې دننه پاڼې لپاره 200، یا کله چې تصدیق نه وي لاگ‌ان ته بیا لارښود",
+  "health.f_api_ok": "{module} لوستلو API",
+  "health.f_api_slow": "{module} لوستلو API — ورو ځواب، له ۸ ثانیو زیات",
+  "health.fx_api_ok": "HTTP 200 (یا که د غوښتونکي له ساحې بهر وي 401/403)",
+  "health.fx_api_validation": "HTTP 200، یا کله چې اړین پوښتنې پیرامترې پریښودل شي 400/422 (اعتبار فعال)",
+  "health.f_rbac_sa": "د سوپر اډمن لپاره د کراس‌سکوپ رد نه دی ازمول شوی",
+  "health.fx_rbac_sa": "د ساحه‌لرونکي (هیواد/څانګه) کارونکي ته بهرنی countryId رد شي",
+  "health.f_rbac_ok": "{module}: بهرنی هیواد په سمه توګه رد شو",
+  "health.f_rbac_leak": "{module}: بهرنی هیواد رد نه شو",
+  "health.fx_rbac_scope": "د غوښتونکي له ساحې بهر countryId لپاره HTTP 401/403",
+  "health.f_print_nohtml": "د راپور جوړونکي هیڅ کارېدونکی HTML جوړ نه کړ ({lang} / {case})",
+  "health.fx_print_nohtml": "یو HTML سند چې <table> ولري",
+  "health.f_print_threw": "د راپور جوړونکي استثنا وغورځوله ({lang} / {case})",
+  "health.fx_print_threw": "هیڅ استثنا نشته",
+  "health.f_print_ok": "د راپور جوړونکی په ټولو ۵ ژبو کې رینډر کیږي (تش + ډک)",
+  "health.fx_print_ok": "سم HTML + <table>، هیڅ استثنا نشته",
+  "health.nt_printpdf": "د چاپ/PDF جوړونکي روغتیا",
+  "health.ntx_printpdf": "په براوزر کې چلیږي — 'بشپړ ژوندی سکن پیل کړئ' کېکاږئ؛ د راپور انجن د سرور په اړخ نه شي واردیدی",
+  "health.nt_i18n": "i18n ساتونکی",
+  "health.ntx_i18n": "په دې چاپیریال کې ساتونکی نه شو چلول کیدی",
+  "health.nt_pages": "د پاڼې او لارې روغتیا (ژوندی)",
+  "health.nt_apis": "د API روغتیا (ژوندی)",
+  "health.nt_rbac": "د RBAC بشپړتیا (ژوندی)",
+  "health.ntx_static": "یوازې جامد سکن — د دې شاملولو لپاره 'بشپړ ژوندی سکن پیل کړئ' کېکاږئ",
+  "health.nt_tsc": "د ډول کتنه TypeScript (tsc --noEmit)",
+  "health.ntx_tsc": "پر هره غوښتنه نه چلیږي — په CI / محلي کې `npx tsc --noEmit` چلوئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

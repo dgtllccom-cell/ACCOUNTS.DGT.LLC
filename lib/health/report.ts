@@ -38,7 +38,7 @@ export async function buildHealthReport(opts: {
 }): Promise<HealthReport> {
   const { session, baseUrl, cookie, live } = opts;
   const findings: HealthFinding[] = [];
-  const notTested: { area: string; reason: string }[] = [];
+  const notTested: { area: string; reason: string; areaKey?: string; reasonKey?: string }[] = [];
 
   // static
   findings.push(...scanNavigationIntegrity());
@@ -46,11 +46,11 @@ export async function buildHealthReport(opts: {
   findings.push(...langScan.findings);
   const { findings: buildFindings, ...build } = scanBuildDeploy();
   findings.push(...buildFindings);
-  notTested.push({ area: "Print/PDF builder health", reason: "runs in the browser — press 'Run full live scan'; the report engine cannot be imported server-side" });
+  notTested.push({ area: "Print/PDF builder health", reason: "runs in the browser — press 'Run full live scan'; the report engine cannot be imported server-side", areaKey: "health.nt_printpdf", reasonKey: "health.ntx_printpdf" });
 
   // gates
   const i18nGuard = runI18nGuard();
-  if (i18nGuard.status === "not_tested") notTested.push({ area: "i18n guard", reason: i18nGuard.detail });
+  if (i18nGuard.status === "not_tested") notTested.push({ area: "i18n guard", reason: i18nGuard.detail, areaKey: "health.nt_i18n", reasonKey: "health.ntx_i18n" });
 
   // live
   if (live && baseUrl && cookie) {
@@ -61,13 +61,13 @@ export async function buildHealthReport(opts: {
     ]);
     findings.push(...pages, ...apis, ...rbac);
   } else {
-    notTested.push({ area: "Page & route health (live)", reason: "static-only scan — no server base URL available" });
-    notTested.push({ area: "API health (live)", reason: "static-only scan" });
-    notTested.push({ area: "RBAC integrity (live)", reason: "static-only scan" });
+    notTested.push({ area: "Page & route health (live)", reason: "static-only scan — no server base URL available", areaKey: "health.nt_pages", reasonKey: "health.ntx_static" });
+    notTested.push({ area: "API health (live)", reason: "static-only scan", areaKey: "health.nt_apis", reasonKey: "health.ntx_static" });
+    notTested.push({ area: "RBAC integrity (live)", reason: "static-only scan", areaKey: "health.nt_rbac", reasonKey: "health.ntx_static" });
   }
 
   // typecheck is never run per-request (too slow)
-  notTested.push({ area: "TypeScript (tsc --noEmit)", reason: "not run per request — run `npx tsc --noEmit` in CI / locally" });
+  notTested.push({ area: "TypeScript (tsc --noEmit)", reason: "not run per request — run `npx tsc --noEmit` in CI / locally", areaKey: "health.nt_tsc", reasonKey: "health.ntx_tsc" });
 
   const categories = summarize(findings);
   const pageCat = categories.find((c) => c.category === "page")!;

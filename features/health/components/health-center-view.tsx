@@ -35,6 +35,27 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
   const { lang, dir } = s;
   const st = (k: string, f: string) => s.t(k, f);
 
+  // Resolve a finding's sentence into the operator's language. `f.title` / `f.expected`
+  // stay as the English fallback; `f.actual` is data and is never translated.
+  const interp = (tpl: string, params?: Record<string, string | number>, labelText?: string) => {
+    let out = tpl;
+    if (labelText != null) out = out.replace(/\{page\}/g, labelText);
+    if (params) for (const [k, v] of Object.entries(params)) out = out.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+    return out;
+  };
+  const fTitle = (f: HealthFinding) => {
+    if (!f.i18n) return f.title;
+    const labelText = f.i18n.labelKey ? s.tGlobal(f.i18n.labelKey, f.title) : undefined;
+    return interp(s.tGlobal(f.i18n.titleKey, f.title), f.i18n.params, labelText);
+  };
+  const fExpected = (f: HealthFinding) => {
+    if (!f.i18n?.expectedKey || !f.expected) return f.expected;
+    const labelText = f.i18n.labelKey ? s.tGlobal(f.i18n.labelKey, "") : undefined;
+    return interp(s.tGlobal(f.i18n.expectedKey, f.expected), f.i18n.params, labelText);
+  };
+  const ntArea = (n: HealthReport["notTested"][number]) => (n.areaKey ? s.tGlobal(n.areaKey, n.area) : n.area);
+  const ntReason = (n: HealthReport["notTested"][number]) => (n.reasonKey ? s.tGlobal(n.reasonKey, n.reason) : n.reason);
+
   const [report, setReport] = useState<HealthReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -221,7 +242,7 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                 <MiniCard title={st("not_tested_title", "Not tested (and why)")}>
                   <ul className="space-y-1 text-xs text-muted-foreground">
                     {report.notTested.map((n, i) => (
-                      <li key={i}>• <b>{n.area}</b> — {n.reason}</li>
+                      <li key={i}>• <b>{ntArea(n)}</b> — {ntReason(n)}</li>
                     ))}
                   </ul>
                 </MiniCard>
@@ -264,7 +285,7 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                       <tr key={f.id} className="border-t border-border hover:bg-muted/30">
                         <td className={`px-2.5 py-1.5 font-semibold ${s.textStart}`}>{f.module}</td>
                         <td className={`px-2.5 py-1.5 font-mono ${s.textStart}`}>{f.target}</td>
-                        <td className={`px-2.5 py-1.5 ${s.textStart}`}>{f.title}</td>
+                        <td className={`px-2.5 py-1.5 ${s.textStart}`}>{fTitle(f)}</td>
                         <td className="px-2.5 py-1.5 text-center">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[f.status]}`}>{statusLabel(f.status)}</span>
                         </td>
@@ -286,11 +307,11 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
         </>
       )}
 
-      <DetailDrawer isOpen={!!detail} onClose={() => setDetail(null)} title={detail?.title || ""} subtitle={detail ? `${detail.module} · ${detail.target}` : ""}>
+      <DetailDrawer isOpen={!!detail} onClose={() => setDetail(null)} title={detail ? fTitle(detail) : ""} subtitle={detail ? `${detail.module} · ${detail.target}` : ""}>
         {detail && (
           <div dir={dir} className="space-y-3 p-4 text-sm">
             <KV k={st("col_status", "Status")} v={statusLabel(detail.status)} />
-            {detail.expected && <KV k={st("expected", "Expected")} v={detail.expected} />}
+            {detail.expected && <KV k={st("expected", "Expected")} v={fExpected(detail) || detail.expected} />}
             {detail.actual && <KV k={st("actual", "Actual")} v={detail.actual} />}
             {detail.permission && <KV k={st("permission_result", "Permission")} v={detail.permission} />}
             {detail.printPdf && <KV k={st("print_result", "Print/PDF")} v={detail.printPdf} />}

@@ -73,6 +73,7 @@ export function scanNavigationIntegrity(): HealthFinding[] {
           target: key,
           status: "warning",
           title: `Duplicate menu key "${key}"`,
+          i18n: { titleKey: "health.f_dup_key", expectedKey: "health.fx_dup_key", params: { key } },
           expected: "Each sidebar node key is unique",
           actual: `Appears ${count} times`,
         }),
@@ -113,6 +114,7 @@ export function scanNavigationIntegrity(): HealthFinding[] {
           target: href,
           status: "healthy",
           title: `Section header shares its route with a child (intentional landing pattern)`,
+          i18n: { titleKey: "health.f_landing", expectedKey: "health.fx_landing" },
           expected: "a parent menu node may open the same view as its default child",
           actual: `${keys.join(", ")} → ${href}`,
           link: href,
@@ -126,6 +128,7 @@ export function scanNavigationIntegrity(): HealthFinding[] {
           target: href,
           status: "warning",
           title: `Two unrelated menu items point to the same route`,
+          i18n: { titleKey: "health.f_dup_route", expectedKey: "health.fx_dup_route" },
           expected: "One menu item per route (or a parent/child landing pair)",
           actual: `${keys.join(", ")} → ${href}`,
           link: href,
@@ -145,6 +148,7 @@ export function scanNavigationIntegrity(): HealthFinding[] {
           target: e.key,
           status: "failed",
           title: `Menu label key not in dictionary`,
+          i18n: { titleKey: "health.f_label_missing", expectedKey: "health.fx_label_missing", params: { key: e.labelKey } },
           expected: `"${e.labelKey}" resolves in all 5 languages`,
           actual: `Missing — the menu would show the raw key`,
           language: Object.fromEntries(LANGS.map((l) => [l, "fail"])) as any,
@@ -163,6 +167,7 @@ export function scanNavigationIntegrity(): HealthFinding[] {
           target: e.key,
           status: "warning",
           title: `Menu node has neither a route nor children`,
+          i18n: { titleKey: "health.f_dead_node", expectedKey: "health.fx_dead_node", params: { label: e.label } },
           expected: "A menu node links somewhere or groups children",
           actual: `"${e.label}" is a dead entry`,
         }),
@@ -190,6 +195,7 @@ export function scanNavigationIntegrity(): HealthFinding[] {
           target: e.href,
           status: "healthy",
           title: `Menu item grouped under a parent from another URL section (cross-link)`,
+          i18n: { titleKey: "health.f_crosslink", expectedKey: "health.fx_crosslink", params: { parent: parent.label } },
           expected: `informational — target still resolves; grouped under "${parent.label}"`,
           actual: e.href,
           link: e.href,
@@ -244,6 +250,7 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
           target: l,
           status: "failed",
           title: `${missing[l].length} key(s) missing a ${l.toUpperCase()} value`,
+          i18n: { titleKey: "health.f_lang_missing", expectedKey: "health.fx_lang_missing", params: { n: missing[l].length, lang: l.toUpperCase(), total: enKeys.length } },
           expected: `all ${enKeys.length} keys present in ${l.toUpperCase()}`,
           actual: `${missing[l].length} missing`,
           evidence: missing[l].slice(0, 25),
@@ -260,6 +267,7 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
         target: "silent-english",
         status: "warning",
         title: `${silentEnglish.length} key(s) render English in every non-English language`,
+        i18n: { titleKey: "health.f_silent_en", expectedKey: "health.fx_silent_en", params: { n: silentEnglish.length } },
         expected: "translated text per language",
         actual: "UR/PS/FA/AR value equals the English value",
         evidence: silentEnglish.slice(0, 30),
@@ -275,6 +283,7 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
         target: "raw-keys",
         status: "warning",
         title: `${rawLooking.length} key(s) whose English value looks like the key itself`,
+        i18n: { titleKey: "health.f_raw_key", expectedKey: "health.fx_raw_key", params: { n: rawLooking.length } },
         expected: "human-readable English label",
         actual: "value === key",
         evidence: rawLooking.slice(0, 20),
@@ -289,6 +298,7 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
         target: "parity",
         status: "healthy",
         title: `${enKeys.length} keys × 5 languages — full parity, no silent English`,
+        i18n: { titleKey: "health.f_lang_ok", expectedKey: "health.fx_lang_ok", params: { n: enKeys.length } },
         expected: "full parity",
         actual: "full parity",
         language: Object.fromEntries(LANGS.map((l) => [l, "pass"])) as any,
@@ -347,6 +357,7 @@ export function scanBuildDeploy(): HealthReport["build"] & { findings: HealthFin
         target: "HEAD vs origin/main",
         status: "warning",
         title: "Running code differs from origin/main (may be behind — origin ref not fetched here)",
+        i18n: { titleKey: "health.f_build_behind", expectedKey: "health.fx_build_behind" },
         expected: "deployed HEAD === origin/main",
         actual: `HEAD ${localSha.slice(0, 8)} · origin/main(cached) ${originMainSha.slice(0, 8)}`,
       }),
@@ -360,6 +371,7 @@ export function scanBuildDeploy(): HealthReport["build"] & { findings: HealthFin
         target: "working tree",
         status: "warning",
         title: `${dirtyCount} uncommitted file(s) in the running checkout`,
+        i18n: { titleKey: "health.f_dirty_tree", expectedKey: "health.fx_dirty_tree", params: { n: dirtyCount } },
         expected: "clean working tree on a deployed server",
         actual: `${dirtyCount} modified/untracked`,
       }),
@@ -452,15 +464,18 @@ export async function probePages(baseUrl: string, cookie: string, session: ErpSe
       let final: HealthStatus = status;
       let expected = "200 for an in-scope page, or redirect to login when unauthenticated";
       let actual = r.status === 0 ? "no response (timeout / connection error)" : `HTTP ${r.status}${r.location ? ` → ${r.location}` : ""} (${r.ms}ms)`;
+      let i18n: HealthFinding["i18n"] = { titleKey: e.labelKey, expectedKey: "health.fx_page_ok" };
       if (status === "healthy" && !roleOk) {
         final = "warning";
         title = `${e.label} — reachable but declared for other roles only`;
         expected = `403/redirect for roles not in [${e.roles?.join(", ")}]`;
+        i18n = { titleKey: "health.f_page_wrong_role", expectedKey: "health.fx_page_wrong_role", labelKey: e.labelKey, params: { roles: e.roles?.join(", ") ?? "" } };
       }
       if (status === "unauthorized_expected" && roleOk) {
         // current user SHOULD have access but got 401/403
         final = "warning";
         title = `${e.label} — denied for a role that should have access`;
+        i18n = { titleKey: "health.f_page_denied", expectedKey: "health.fx_page_ok", labelKey: e.labelKey };
       }
       out.push(
         finding({
@@ -469,6 +484,7 @@ export async function probePages(baseUrl: string, cookie: string, session: ErpSe
           target: e.href!,
           status: final,
           title,
+          i18n,
           expected,
           actual,
           permission: e.permission ? `${e.permission.resource}:${e.permission.action}` : e.roles?.length ? `roles: ${e.roles.join(", ")}` : "public (no role gate)",
@@ -542,6 +558,11 @@ export async function probeApis(baseUrl: string, cookie: string): Promise<Health
           target: tg.path,
           status,
           title: `${tg.module} read API${slowNote}`,
+          i18n: {
+            titleKey: slowNote ? "health.f_api_slow" : "health.f_api_ok",
+            expectedKey: tg.needsParams && status === "healthy" && r.status >= 400 ? "health.fx_api_validation" : "health.fx_api_ok",
+            params: { module: tg.module },
+          },
           expected,
           actual: r.status === 0 ? "no response (timeout / connection error)" : `HTTP ${r.status} (${r.ms}ms)`,
         }),
@@ -569,6 +590,7 @@ export async function probeRbac(baseUrl: string, cookie: string, session: ErpSes
         target: "scope-clamp (foreign countryId)",
         status: "not_tested",
         title: "Cross-scope denial not probed for a Super Admin",
+        i18n: { titleKey: "health.f_rbac_sa", expectedKey: "health.fx_rbac_sa" },
         expected: "a scoped (country/branch) user is refused a foreign countryId",
         actual: "current session is Super Admin — every country is in scope; run this scan as a country/branch user (or on DEV with a scoped dev-session)",
       }),
@@ -584,6 +606,7 @@ export async function probeRbac(baseUrl: string, cookie: string, session: ErpSes
           target: tg.path,
           status: denied ? "unauthorized_expected" : r.status >= 200 && r.status < 300 ? "failed" : "warning",
           title: denied ? `${tg.module}: foreign country correctly refused` : `${tg.module}: foreign country NOT refused`,
+          i18n: { titleKey: denied ? "health.f_rbac_ok" : "health.f_rbac_leak", expectedKey: "health.fx_rbac_scope", params: { module: tg.module } },
           expected: "HTTP 401/403 for a countryId outside the caller's scope",
           actual: `HTTP ${r.status}`,
           permission: `session roles: ${session.roles.join(", ")} · countries: ${session.countryIds?.length ?? 0}`,
