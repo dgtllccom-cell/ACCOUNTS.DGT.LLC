@@ -93,6 +93,16 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    // Central operational control center — read-only aggregation of the real ERP
+    // (Smart Due engine + approvals + user tasks). Every item deep-links to the
+    // original record; nothing here posts to accounting.
+    key: "smart-operations",
+    labelKey: "nav.smart_operations" as UiKey,
+    iconKey: "gantt",
+    href: "/dashboard/smart-operations" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"]
+  },
+  {
     key: "new-entry",
     labelKey: "nav.new_entry" as any,
     iconKey: "list-plus",

@@ -16,7 +16,7 @@ type Summary = {
 };
 
 type UrgencyClass = "all" | "overdue" | "due_today" | "due_tomorrow" | "upcoming" | "pending";
-type ModuleType = "all" | "cheque" | "purchase" | "sales" | "shipping_bl" | "shipping_line" | "followup";
+type ModuleType = "all" | "cheque" | "purchase" | "sales" | "shipping_bl" | "shipping_line" | "followup" | "approval" | "task";
 
 const URGENCY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   overdue: { bg: "bg-red-50 dark:bg-red-950", text: "text-red-700 dark:text-red-300", border: "border-red-300 dark:border-red-700" },
@@ -138,6 +138,8 @@ export function SmartDueView() {
     { value: "shipping_bl", label: tt("smart_due.shipping_bl", "Shipping BL") },
     { value: "shipping_line", label: tt("smart_due.shipping_line", "Shipping Line") },
     { value: "followup", label: tt("smart_due.followup", "Follow-up") },
+    { value: "approval", label: tt("smart_due.approval", "Approval") },
+    { value: "task", label: tt("smart_due.task", "User Task") },
   ];
 
   const summaryCards = [

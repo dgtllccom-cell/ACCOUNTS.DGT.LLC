@@ -111,15 +111,37 @@ export async function GET(request: NextRequest) {
           WHERE deleted_at IS NULL AND status != 'closed'
             AND (${scopeWhere})
         )
+        , approvals AS (
+          SELECT 'pending' AS urgency_class
+          FROM public.approval_requests
+          WHERE deleted_at IS NULL AND status = 'pending' AND (${scopeWhere})
+        )
+        , tasks AS (
+          SELECT
+            CASE
+              WHEN status IN ('completed','verified','cancelled') THEN 'completed'
+              WHEN due_at IS NULL THEN 'pending'
+              WHEN due_at::date < CURRENT_DATE THEN 'overdue'
+              WHEN due_at::date = CURRENT_DATE THEN 'due_today'
+              WHEN due_at::date = CURRENT_DATE + 1 THEN 'due_tomorrow'
+              ELSE 'upcoming'
+            END AS urgency_class
+          FROM public.user_tasks
+          WHERE deleted_at IS NULL AND status NOT IN ('completed','verified','cancelled')
+            AND (${scopeWhere})
+        )
         , combined AS (
           ${isShipping
-            ? sql`SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line`
+            ? sql`SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line
+                  UNION ALL SELECT * FROM approvals UNION ALL SELECT * FROM tasks`
             : sql`SELECT * FROM cheques
                   UNION ALL SELECT * FROM purchases
                   UNION ALL SELECT * FROM sales
                   UNION ALL SELECT * FROM shipping_bl
                   UNION ALL SELECT * FROM shipping_line
-                  UNION ALL SELECT * FROM followups`
+                  UNION ALL SELECT * FROM followups
+                  UNION ALL SELECT * FROM approvals
+                  UNION ALL SELECT * FROM tasks`
           }
         )
         SELECT

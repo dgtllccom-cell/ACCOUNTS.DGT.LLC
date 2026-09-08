@@ -1,6 +1,11 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "smart_due.approval"
+  | "smart_due.task"
+  | "nav.smart_operations"
+  | "smart_ops.title"
+  | "smart_ops.subtitle"
   | "nav.temp_bills"
   | "nav.temp_bills_purchase"
   | "nav.temp_bills_sales"
@@ -24790,6 +24795,11 @@ const en: Dict = {
   "tbill.save": "Save",
   "tbill.saving": "Saving…",
   "tbill.form_note": "This bill is stored only in the Temporary Bills Register. It does not post to Ledger, Roznamcha, Journal, DR/CR, Stock or any Voucher, and it is not transferred to the main ERP.",
+  "smart_due.approval": "Approval",
+  "smart_due.task": "User Task",
+  "nav.smart_operations": "Smart Operations",
+  "smart_ops.title": "Smart Operations & Action Center",
+  "smart_ops.subtitle": "Today • Pending • Overdue • Approvals • Payments Due • Tasks • Containers • Shipping/Clearing • Cheque Dates. Every item links to the original ERP record. Read-only aggregation — nothing here posts to accounting.",
 };
 
 const ur: Dict = {
@@ -42221,6 +42231,11 @@ const ur: Dict = {
   "tbill.save": "محفوظ کریں",
   "tbill.saving": "محفوظ ہو رہا ہے…",
   "tbill.form_note": "یہ بل صرف عارضی بل رجسٹر میں محفوظ ہوتا ہے۔ یہ لیجر، روزنامچہ، جرنل، ڈیبٹ/کریڈٹ، اسٹاک یا کسی واؤچر میں پوسٹ نہیں ہوتا، اور مین ERP میں منتقل نہیں ہوتا۔",
+  "smart_due.approval": "منظوری",
+  "smart_due.task": "صارف ٹاسک",
+  "nav.smart_operations": "سمارٹ آپریشنز",
+  "smart_ops.title": "سمارٹ آپریشنز اور ایکشن سینٹر",
+  "smart_ops.subtitle": "آج • زیر التواء • مقررہ مدت گزر چکی • منظوریاں • واجب الادا ادائیگیاں • ٹاسکس • کنٹینرز • شپنگ/کلیئرنگ • چیک کی تاریخیں۔ ہر آئٹم اصل ERP ریکارڈ سے منسلک ہے۔ صرف پڑھنے کے لیے مجموعہ — یہاں کچھ بھی اکاؤنٹنگ میں پوسٹ نہیں ہوتا۔",
 };
 
 const ar: Dict = {
@@ -59654,6 +59669,11 @@ const ar: Dict = {
   "tbill.save": "حفظ",
   "tbill.saving": "جارٍ الحفظ…",
   "tbill.form_note": "تُحفظ هذه الفاتورة في سجل الفواتير المؤقتة فقط. لا تُرحَّل إلى دفتر الأستاذ أو الروزنامة أو اليومية أو مدين/دائن أو المخزون أو أي سند، ولا تُحوَّل إلى النظام الرئيسي.",
+  "smart_due.approval": "موافقة",
+  "smart_due.task": "مهمة المستخدم",
+  "nav.smart_operations": "العمليات الذكية",
+  "smart_ops.title": "مركز العمليات والإجراءات الذكية",
+  "smart_ops.subtitle": "اليوم • معلّق • متأخر • الموافقات • المدفوعات المستحقة • المهام • الحاويات • الشحن/التخليص • تواريخ الشيكات. كل عنصر مرتبط بالسجل الأصلي في النظام. تجميع للقراءة فقط — لا شيء هنا يُرحَّل إلى المحاسبة.",
 };
 
 const fa: Dict = {
@@ -77086,6 +77106,11 @@ const fa: Dict = {
   "tbill.save": "ذخیره",
   "tbill.saving": "در حال ذخیره…",
   "tbill.form_note": "این صورتحساب فقط در دفتر صورتحساب‌های موقت ذخیره می‌شود. در دفتر کل، روزنامچه، ژورنال، بدهکار/بستانکار، موجودی یا هیچ سندی ثبت نمی‌شود و به ERP اصلی منتقل نمی‌شود.",
+  "smart_due.approval": "تأیید",
+  "smart_due.task": "وظیفه کاربر",
+  "nav.smart_operations": "عملیات هوشمند",
+  "smart_ops.title": "مرکز عملیات و اقدامات هوشمند",
+  "smart_ops.subtitle": "امروز • در انتظار • عقب‌افتاده • تأییدها • پرداخت‌های سررسید • وظایف • کانتینرها • حمل/ترخیص • تاریخ چک‌ها. هر مورد به رکورد اصلی ERP پیوند دارد. تجمیع فقط‌خواندنی — چیزی اینجا در حسابداری ثبت نمی‌شود.",
 };
 
 const ps: Dict = {
@@ -94524,6 +94549,11 @@ const ps: Dict = {
   "tbill.save": "خوندي کړئ",
   "tbill.saving": "خوندي کیږي…",
   "tbill.form_note": "دا بل یوازې د لنډمهاله بلونو رجسټر کې خوندي کیږي. دا لیجر، روزنامچه، جورنال، ډیبټ/کریډیټ، سټاک یا کوم واوچر ته نه ثبتیږي، او اصلي ERP ته نه لیږدول کیږي.",
+  "smart_due.approval": "تصویب",
+  "smart_due.task": "د کارونکي دنده",
+  "nav.smart_operations": "سمارټ عملیات",
+  "smart_ops.title": "سمارټ عملیات او د کړنو مرکز",
+  "smart_ops.subtitle": "نن • پاتې • ناوخته • تصویبونه • د تادیې وړ تادیات • دندې • کانتینرونه • شپنګ/کلیرنګ • د چک نیټې. هر توکی د اصلي ERP ریکارډ سره تړل شوی. یوازې د لوستلو راټولونه — دلته هیڅ شی محاسبې ته نه ثبتیږي.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

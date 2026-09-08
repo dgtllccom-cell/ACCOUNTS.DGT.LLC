@@ -327,15 +327,79 @@ export async function GET(request: NextRequest) {
           WHERE f.deleted_at IS NULL AND f.status != 'closed'
             AND (${mkScopeWhere('f')})
         )
+        , approvals AS (
+          SELECT
+            'approval' AS source_type,
+            a.id::text AS source_id,
+            NULL::text AS due_date,
+            'smart_due.approval' AS module_label_key,
+            COALESCE(a.request_no, a.action, 'Approval') AS reference_no,
+            COALESCE(a.target_table, '') AS party_name,
+            COALESCE(ca.name, '') AS country_name,
+            COALESCE(cba.name, '') AS branch_name,
+            0::numeric AS total_amount, 0::numeric AS paid_amount, 0::numeric AS remaining_amount,
+            'USD' AS currency,
+            a.status AS status,
+            'pending' AS urgency_class,
+            COALESCE(pa.full_name, '') AS responsible_user,
+            COALESCE(a.reason, '') AS remarks,
+            '/dashboard/approvals' AS source_href,
+            a.country_id::text AS country_id,
+            a.country_branch_id::text AS country_branch_id,
+            a.city_branch_id::text AS city_branch_id
+          FROM public.approval_requests a
+          LEFT JOIN public.countries ca ON ca.id = a.country_id
+          LEFT JOIN public.country_branches cba ON cba.id = a.country_branch_id
+          LEFT JOIN public.profiles pa ON pa.id = a.requested_by
+          WHERE a.deleted_at IS NULL AND a.status = 'pending'
+            AND (${mkScopeWhere('a')})
+        )
+        , tasks AS (
+          SELECT
+            'task' AS source_type,
+            ut.id::text AS source_id,
+            ut.due_at::date::text AS due_date,
+            'smart_due.task' AS module_label_key,
+            COALESCE(ut.task_no || ' — ' || ut.title, ut.title, 'Task') AS reference_no,
+            COALESCE(ut.related_record_label, '') AS party_name,
+            COALESCE(ct.name, '') AS country_name,
+            COALESCE(cbt.name, '') AS branch_name,
+            0::numeric AS total_amount, 0::numeric AS paid_amount, 0::numeric AS remaining_amount,
+            'USD' AS currency,
+            ut.status AS status,
+            CASE
+              WHEN ut.status IN ('completed','verified','cancelled') THEN 'completed'
+              WHEN ut.due_at IS NULL THEN 'pending'
+              WHEN ut.due_at::date < CURRENT_DATE THEN 'overdue'
+              WHEN ut.due_at::date = CURRENT_DATE THEN 'due_today'
+              WHEN ut.due_at::date = CURRENT_DATE + 1 THEN 'due_tomorrow'
+              ELSE 'upcoming'
+            END AS urgency_class,
+            COALESCE(pt.full_name, '') AS responsible_user,
+            COALESCE(ut.remarks, '') AS remarks,
+            COALESCE(NULLIF(ut.related_route, ''), '/dashboard/user-tasks') AS source_href,
+            ut.country_id::text AS country_id,
+            ut.country_branch_id::text AS country_branch_id,
+            ut.city_branch_id::text AS city_branch_id
+          FROM public.user_tasks ut
+          LEFT JOIN public.countries ct ON ct.id = ut.country_id
+          LEFT JOIN public.country_branches cbt ON cbt.id = ut.country_branch_id
+          LEFT JOIN public.profiles pt ON pt.id = ut.assigned_to
+          WHERE ut.deleted_at IS NULL AND ut.status NOT IN ('completed','verified','cancelled')
+            AND (${mkScopeWhere('ut')})
+        )
         , combined AS (
           ${isShipping
-            ? sql`SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line`
+            ? sql`SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line
+                  UNION ALL SELECT * FROM approvals UNION ALL SELECT * FROM tasks`
             : sql`SELECT * FROM cheques
                   UNION ALL SELECT * FROM purchases
                   UNION ALL SELECT * FROM sales
                   UNION ALL SELECT * FROM shipping_bl
                   UNION ALL SELECT * FROM shipping_line
-                  UNION ALL SELECT * FROM followups`
+                  UNION ALL SELECT * FROM followups
+                  UNION ALL SELECT * FROM approvals
+                  UNION ALL SELECT * FROM tasks`
           }
         )
         SELECT *
@@ -382,10 +446,18 @@ export async function GET(request: NextRequest) {
           SELECT 'followup' AS source_type, CASE WHEN status = 'closed' THEN 'completed' WHEN due_at IS NULL THEN 'pending' WHEN due_at::date < CURRENT_DATE THEN 'overdue' WHEN due_at::date = CURRENT_DATE THEN 'due_today' WHEN due_at::date = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
           FROM public.communication_center_followups WHERE deleted_at IS NULL AND status != 'closed' AND (${scopeWhere})
         )
+        , approvals AS (
+          SELECT 'approval' AS source_type, 'pending' AS urgency_class
+          FROM public.approval_requests WHERE deleted_at IS NULL AND status = 'pending' AND (${scopeWhere})
+        )
+        , tasks AS (
+          SELECT 'task' AS source_type, CASE WHEN status IN ('completed','verified','cancelled') THEN 'completed' WHEN due_at IS NULL THEN 'pending' WHEN due_at::date < CURRENT_DATE THEN 'overdue' WHEN due_at::date = CURRENT_DATE THEN 'due_today' WHEN due_at::date = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
+          FROM public.user_tasks WHERE deleted_at IS NULL AND status NOT IN ('completed','verified','cancelled') AND (${scopeWhere})
+        )
         , combined AS (
           ${isShipping
-            ? sql`SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line`
-            : sql`SELECT * FROM cheques UNION ALL SELECT * FROM purchases UNION ALL SELECT * FROM sales UNION ALL SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line UNION ALL SELECT * FROM followups`
+            ? sql`SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line UNION ALL SELECT * FROM approvals UNION ALL SELECT * FROM tasks`
+            : sql`SELECT * FROM cheques UNION ALL SELECT * FROM purchases UNION ALL SELECT * FROM sales UNION ALL SELECT * FROM shipping_bl UNION ALL SELECT * FROM shipping_line UNION ALL SELECT * FROM followups UNION ALL SELECT * FROM approvals UNION ALL SELECT * FROM tasks`
           }
         )
         SELECT COUNT(*)::int AS total,
