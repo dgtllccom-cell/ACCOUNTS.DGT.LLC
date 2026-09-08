@@ -3,7 +3,6 @@ import type { HealthReport, HealthFinding, HealthCategory, HealthCategorySummary
 import {
   scanNavigationIntegrity,
   scanLanguages,
-  scanPrintPdf,
   scanBuildDeploy,
   runI18nGuard,
   probePages,
@@ -45,9 +44,9 @@ export async function buildHealthReport(opts: {
   findings.push(...scanNavigationIntegrity());
   const langScan = scanLanguages();
   findings.push(...langScan.findings);
-  findings.push(...scanPrintPdf());
   const { findings: buildFindings, ...build } = scanBuildDeploy();
   findings.push(...buildFindings);
+  notTested.push({ area: "Print/PDF builder health", reason: "runs in the browser — press 'Run full live scan'; the report engine cannot be imported server-side" });
 
   // gates
   const i18nGuard = runI18nGuard();

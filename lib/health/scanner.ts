@@ -10,7 +10,6 @@ import { execFileSync } from "node:child_process";
 import type { ErpSession } from "@/lib/auth/session";
 import { sidebarTree, type SidebarNode } from "@/lib/navigation/sidebar";
 import { getUiDictionaries, t } from "@/lib/i18n/ui";
-import { buildGenericErpReportHtml } from "@/lib/reports/open-generic-erp-report";
 import type { HealthFinding, HealthReport, HealthStatus, HealthCategory } from "./types";
 
 const LANGS = ["en", "ur", "ps", "fa", "ar"] as const;
@@ -263,76 +262,10 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
   return { findings, namespaceRollup };
 }
 
-/* ── 3. print / PDF builder health (static) ───────────────────────────────── */
-
-export function scanPrintPdf(): HealthFinding[] {
-  const out: HealthFinding[] = [];
-  const columns = [
-    { key: "name", label: "Name", align: "left" as const },
-    { key: "amount", label: "Amount", align: "right" as const, format: "number" as const },
-  ];
-  const cases: { name: string; rows: Record<string, unknown>[] }[] = [
-    { name: "empty dataset", rows: [] },
-    { name: "sample dataset", rows: [{ name: "Test Row", amount: 1234.5 }] },
-  ];
-  for (const lang of LANGS) {
-    for (const c of cases) {
-      try {
-        const { html } = buildGenericErpReportHtml({
-          title: "Health Check Report",
-          lang,
-          columns,
-          rows: c.rows,
-          summary: { Total: c.rows.length },
-          filters: [{ label: "Scope", value: "health" }],
-        });
-        const ok = typeof html === "string" && html.length > 200 && html.includes("<table");
-        if (!ok) {
-          out.push(
-            finding({
-              category: "print_pdf",
-              module: "Universal report engine",
-              target: `buildGenericErpReportHtml [${lang}/${c.name}]`,
-              status: "failed",
-              title: `Report builder produced no usable HTML`,
-              expected: "an HTML document containing a <table>",
-              actual: `${html?.length ?? 0} chars, table=${html?.includes("<table")}`,
-              language: { [lang]: "fail" } as any,
-            }),
-          );
-        }
-      } catch (e) {
-        out.push(
-          finding({
-            category: "print_pdf",
-            module: "Universal report engine",
-            target: `buildGenericErpReportHtml [${lang}/${c.name}]`,
-            status: "failed",
-            title: `Report builder threw`,
-            expected: "no exception",
-            actual: e instanceof Error ? e.message : String(e),
-            language: { [lang]: "fail" } as any,
-          }),
-        );
-      }
-    }
-  }
-  if (!out.length) {
-    out.push(
-      finding({
-        category: "print_pdf",
-        module: "Universal report engine",
-        target: "buildGenericErpReportHtml",
-        status: "healthy",
-        title: "Report builder renders for all 5 languages (empty + populated)",
-        expected: "valid HTML + <table>, no exception",
-        actual: "10/10 cases passed",
-        language: Object.fromEntries(LANGS.map((l) => [l, "pass"])) as any,
-      }),
-    );
-  }
-  return out;
-}
+/* ── 3. print / PDF builder health ────────────────────────────────────────── */
+// Runs client-side only (see lib/health/print-check.ts) — the report engine
+// pulls in a client-only print store, so it cannot be imported into a route.
+// The API leaves the "print_pdf" category empty; the Health Center UI fills it.
 
 /* ── 4. build & deploy (static) ───────────────────────────────────────────── */
 

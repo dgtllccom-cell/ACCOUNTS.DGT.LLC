@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet } from "@/lib/api/client";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { runPrintPdfCheck } from "@/lib/health/print-check";
 import type { HealthReport, HealthFinding, HealthStatus, HealthCategory } from "@/lib/health/types";
 
 const TABS: { key: HealthCategory | "overview"; label: string; fallback: string }[] = [
@@ -48,7 +49,25 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
       setErr(null);
       try {
         const res = await apiGet<{ report: HealthReport }>(`/api/erp/health${withLive ? "?live=1" : ""}`);
-        setReport(res.report);
+        const merged = res.report;
+        // Print/PDF engine health can only run in the browser — fold it in here.
+        try {
+          const printFindings = runPrintPdfCheck();
+          merged.findings = [...merged.findings.filter((f) => f.category !== "print_pdf"), ...printFindings];
+          merged.notTested = merged.notTested.filter((n) => !/Print\/PDF/i.test(n.area));
+          const pc = merged.categories.find((c) => c.category === "print_pdf");
+          if (pc) {
+            pc.total = printFindings.length;
+            pc.healthy = printFindings.filter((f) => f.status === "healthy").length;
+            pc.warning = printFindings.filter((f) => f.status === "warning").length;
+            pc.failed = printFindings.filter((f) => f.status === "failed").length;
+            pc.notTested = 0;
+          }
+          merged.overall.printPdfIssues = printFindings.filter((f) => f.status === "failed" || f.status === "warning").length;
+        } catch {
+          /* print check is best-effort */
+        }
+        setReport(merged);
         setLive(withLive);
       } catch (e) {
         setErr(e instanceof Error ? e.message : String(e));
