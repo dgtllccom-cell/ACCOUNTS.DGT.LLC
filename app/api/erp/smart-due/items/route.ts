@@ -333,13 +333,13 @@ export async function GET(request: NextRequest) {
             a.id::text AS source_id,
             NULL::text AS due_date,
             'smart_due.approval' AS module_label_key,
-            COALESCE(a.request_no, a.action, 'Approval') AS reference_no,
+            COALESCE(a.request_no, a.action::text, 'Approval') AS reference_no,
             COALESCE(a.target_table, '') AS party_name,
             COALESCE(ca.name, '') AS country_name,
             COALESCE(cba.name, '') AS branch_name,
             0::numeric AS total_amount, 0::numeric AS paid_amount, 0::numeric AS remaining_amount,
             'USD' AS currency,
-            a.status AS status,
+            a.status::text AS status,
             'pending' AS urgency_class,
             COALESCE(pa.full_name, '') AS responsible_user,
             COALESCE(a.reason, '') AS remarks,
@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
             COALESCE(cbt.name, '') AS branch_name,
             0::numeric AS total_amount, 0::numeric AS paid_amount, 0::numeric AS remaining_amount,
             'USD' AS currency,
-            ut.status AS status,
+            ut.status::text AS status,
             CASE
               WHEN ut.status IN ('completed','verified','cancelled') THEN 'completed'
               WHEN ut.due_at IS NULL THEN 'pending'
