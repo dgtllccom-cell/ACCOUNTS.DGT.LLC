@@ -299,6 +299,12 @@ if (JSON_OUT) console.log(JSON.stringify(summary, null, 2));
 if (warn.length) console.log(`\n⚠ i18n-ui-guard warnings (non-blocking):\n${warn.map((w) => "  - " + w).join("\n")}`);
 if (fail.length) {
   console.log(`\n✗ i18n-ui-guard FAILED:\n${fail.map((f) => "  - " + f).join("\n")}`);
+  if (parityGaps.length || fallbacks.length) {
+    console.log(`\n  → PARITY / silent-English gaps auto-close with:  npm run i18n:autofill`);
+    console.log(`    (deterministic ERP glossary + local engine; add AI_TRANSLATE_PROVIDER`);
+    console.log(`     + AI_TRANSLATE_API_KEY, or use i18n:autofill:online, for full coverage).`);
+    console.log(`    Then review lib/i18n/ui.autofill-provenance.json and re-run this guard.`);
+  }
   process.exit(1);
 }
 console.log(`\n✓ i18n-ui-guard passed — ${summary.keysPerBlock} keys × 5 languages, full parity, no missing refs, no silent English.`);

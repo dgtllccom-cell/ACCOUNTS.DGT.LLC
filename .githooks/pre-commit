@@ -15,6 +15,17 @@ node scripts/repo-safety-guard.mjs --staged || {
   exit 1
 }
 
+# Auto-generate UR/AR/FA/PS for any NEW English-only key in a staged ui.ts change,
+# so a new form/page/module/report only needs its English string (see
+# docs/auto-i18n-engine.md). Deterministic ERP glossary + local engine offline;
+# add AI_TRANSLATE_PROVIDER + AI_TRANSLATE_API_KEY for full coverage. Anything the
+# engine cannot render cleanly is left in English and the guard below still blocks.
+if git diff --cached --name-only | grep -q '^lib/i18n/ui\.ts$'; then
+  echo "• i18n autofill (staged ui.ts — generating missing languages)…"
+  node_modules/.bin/vite-node --config vitest.config.mjs scripts/i18n-autofill.mts -- --staged || true
+  git add lib/i18n/ui.ts lib/i18n/ui.autofill-provenance.json 2>/dev/null || true
+fi
+
 echo "• i18n five-language guard…"
 node scripts/i18n-ui-guard.mjs --changed || {
   echo ""

@@ -48,6 +48,10 @@ hook (`npm install` / `npm run prepare` enables it), and `.github/workflows/i18n
 DB side: `npm run i18n:scan` guards `translation_field_registry` (new translatable columns).
 
 ### Checklist — every new page / form / module / report / modal / export
+0. Add the key with its **English** value; run `npm run i18n:autofill` (or just
+   commit — the pre-commit hook does it) to auto-generate UR/AR/FA/PS. Review
+   `lib/i18n/ui.autofill-provenance.json`; hand-fix anything left in `unresolved`.
+   See `docs/auto-i18n-engine.md`.
 1. Central keys added in `lib/i18n/ui.ts` — **all five** blocks (`npm run i18n:guard` green).
 2. No visible hard-coded English (`npm run i18n:guard:changed` green).
 3. RTL/LTR verified — whole screen flips EN↔UR/AR/FA/PS.
