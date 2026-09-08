@@ -209,6 +209,14 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       {
+        key: "sub-consignment-purchase",
+        label: "Temporary / Consignment Purchase",
+        icon: Package,
+        children: [
+          { label: "Consignment Purchase & Sales Register", href: "/dashboard/consignment", icon: Package },
+        ],
+      },
+      {
         key: "sub-sales-booking",
         label: "Sales Booking",
         icon: ClipboardList,

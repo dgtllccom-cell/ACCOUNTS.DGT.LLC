@@ -604,12 +604,19 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
         isOpen={showNewEmployeeModal}
         onClose={() => setShowNewEmployeeModal(false)}
         title={tt("uf.modal_title", "Register New Employee in HR Master")}
+        className="max-w-6xl w-[95vw]"
+        maxWidth="max-w-6xl"
       >
         <EmployeeForm
-          lang="en"
-          onSave={() => {
+          lang={lang}
+          defaultCountryId={countryId}
+          defaultCountryBranchId={countryBranchId}
+          defaultCityBranchId={cityBranchId}
+          onSave={(newEmpId) => {
             setShowNewEmployeeModal(false);
-            fetchEmployees();
+            fetchEmployees().then(() => {
+              if (newEmpId) setSelectedEmployeeId(newEmpId);
+            });
           }}
           onCancel={() => setShowNewEmployeeModal(false)}
         />

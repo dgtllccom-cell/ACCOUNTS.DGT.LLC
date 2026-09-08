@@ -45,6 +45,9 @@ type EmployeeFormProps = {
    * useActiveLanguage() store can lag behind the page's resolved language, so hosts that already
    * know the language pass it here; we reconcile (prefer a non-"en" explicit value). */
   lang?: SupportedLanguage;
+  defaultCountryId?: string;
+  defaultCountryBranchId?: string;
+  defaultCityBranchId?: string;
 };
 
 const CATEGORY_DEFAULTS: Record<string, Record<string, { designation: string; department: string }>> = {
@@ -181,9 +184,20 @@ type BranchOption = {
   name: string;
   code: string;
   country_branch_id?: string | null;
+  city_name?: string | null;
+  is_main?: boolean;
+  local_currency?: string;
 };
 
-export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: EmployeeFormProps) {
+export function EmployeeForm({
+  employeeId,
+  onSave,
+  onCancel,
+  lang: langProp,
+  defaultCountryId,
+  defaultCountryBranchId,
+  defaultCityBranchId
+}: EmployeeFormProps) {
   const router = useRouter();
   const activeLang = useActiveLanguage();
   // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
@@ -214,9 +228,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const [department, setDepartment] = useState(() => (CATEGORY_DEFAULTS[lang]?.[category] || CATEGORY_DEFAULTS.en[category])?.department || "");
 
   // Location scopes
-  const [countryId, setCountryId] = useState("");
-  const [countryBranchId, setCountryBranchId] = useState("");
-  const [cityBranchId, setCityBranchId] = useState("");
+  const [countryId, setCountryId] = useState(defaultCountryId || "");
+  const [countryBranchId, setCountryBranchId] = useState(defaultCountryBranchId || "");
+  const [cityBranchId, setCityBranchId] = useState(defaultCityBranchId || "");
   const [reportingManagerId, setReportingManagerId] = useState("");
 
   // Timelines
@@ -297,16 +311,23 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     }
     async function loadBranches() {
       try {
-        const res: any = await apiGet(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(countryId)}`);
-        const list = Array.isArray(res?.data?.branches) ? res.data.branches : Array.isArray(res?.branches) ? res.branches : [];
+        const res: any = await apiGet(`/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}`);
+        const list: BranchOption[] = Array.isArray(res?.countryBranches)
+          ? res.countryBranches
+          : Array.isArray(res?.data?.branches)
+          ? res.data.branches
+          : Array.isArray(res?.branches)
+          ? res.branches
+          : [];
         setBranches(list);
         if (list.length > 0) {
-          setCountryBranchId((prev: string) => (list.some((b: any) => b.id === prev) ? prev : list[0].id));
+          const mainBranch = list.find((b: any) => b.is_main) || list[0];
+          setCountryBranchId((prev: string) => (list.some((b: any) => b.id === prev) ? prev : mainBranch.id));
         } else {
           setCountryBranchId("");
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load country branches:", err);
       }
     }
     loadBranches();
@@ -321,42 +342,37 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     }
     async function loadCityBranches() {
       try {
-        const url = `/api/erp/locations/branches/city?scope=all&countryId=${encodeURIComponent(countryId)}${countryBranchId ? `&countryBranchId=${encodeURIComponent(countryBranchId)}` : ""}`;
+        const url = `/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}${countryBranchId ? `&countryBranchId=${encodeURIComponent(countryBranchId)}` : ""}`;
         const res: any = await apiGet(url);
-        const list = Array.isArray(res?.data?.cityBranches) ? res.data.cityBranches : Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        const list: BranchOption[] = Array.isArray(res?.cityBranches)
+          ? res.cityBranches
+          : Array.isArray(res?.data?.cityBranches)
+          ? res.data.cityBranches
+          : [];
         setCityBranches(list);
         if (list.length > 0) {
-          setCityBranchId((prev: string) => (list.some((cb: any) => cb.id === prev) ? prev : list[0].id));
+          setCityBranchId((prev: string) => (list.some((cb: any) => cb.id === prev) ? prev : ""));
         } else {
           setCityBranchId("");
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load city branches:", err);
       }
     }
     loadCityBranches();
   }, [countryId, countryBranchId]);
 
-  // Salary currency is the OFFICIAL currency of the assigned country/branch —
-  // resolved server-side (city branch → main branch → country), never typed by
-  // the user and never hard-coded.
+  // Salary currency is the OFFICIAL currency of the assigned country/branch
   useEffect(() => {
     if (!countryId) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const params = new URLSearchParams({ countryId });
-        if (countryBranchId) params.set("countryBranchId", countryBranchId);
-        if (cityBranchId) params.set("cityBranchId", cityBranchId);
-        const res: any = await apiGet(`/api/erp/hr/currency?${params.toString()}`);
-        const cur = res?.currency || res?.data?.currency;
-        if (!cancelled && cur) setSalaryCurrency(cur);
-      } catch {
-        /* keep the current value on failure */
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [countryId, countryBranchId, cityBranchId]);
+    const country = countries.find((c) => c.id === countryId);
+    const branch = branches.find((b) => b.id === countryBranchId);
+    if (branch?.local_currency) {
+      setSalaryCurrency(branch.local_currency);
+    } else if (country?.currency_code) {
+      setSalaryCurrency(country.currency_code);
+    }
+  }, [countryId, countryBranchId, countries, branches]);
 
   // Auto-sync countryBranchId if a city branch with parent branch is selected
   useEffect(() => {
@@ -840,9 +856,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
       {/* 2-Column Split for Steps 1-4, Full-Width for Step 5 */}
       {activeStep < 5 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* LEFT COLUMN: PROMINENT LIVE EMPLOYEE MASTER REPORT (6 cols) */}
-          <div className="lg:col-span-6 space-y-4 lg:sticky lg:top-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          {/* LEFT COLUMN: PROMINENT LIVE EMPLOYEE MASTER REPORT (5 cols) */}
+          <div className="md:col-span-5 space-y-4 md:sticky md:top-4">
             <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-slate-50 to-emerald-50/20 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 p-5 shadow-lg space-y-4">
               
               {/* Live Report Top Bar */}
@@ -1053,8 +1069,8 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             </div>
           </div>
 
-          {/* RIGHT COLUMN: STEP PACKETS (6 cols) */}
-          <div className="lg:col-span-6 space-y-5">
+          {/* RIGHT COLUMN: STEP PACKETS (7 cols) */}
+          <div className="md:col-span-7 space-y-5">
             {/* STEP 1 PACKET: Category & Identity */}
             {activeStep === 1 && (
               <div className="space-y-4">
@@ -1249,7 +1265,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_main_branch", "Main Branch")}</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_main_branch", "Main Branch")} *</label>
                     <select
                       value={countryBranchId}
                       onChange={(e) => setCountryBranchId(e.target.value)}
@@ -1272,10 +1288,10 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                       disabled={!countryId}
                       className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
                     >
-                      <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
+                      <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch (Optional)")}</option>
                       {cityBranches.map((cb) => (
                         <option key={cb.id} value={cb.id}>
-                          {cb.name} {cb.code ? `(${cb.code})` : ""}
+                          {cb.city_name ? `${cb.city_name} - ` : ""}{cb.name} {cb.code ? `(${cb.code})` : ""}
                         </option>
                       ))}
                     </select>
