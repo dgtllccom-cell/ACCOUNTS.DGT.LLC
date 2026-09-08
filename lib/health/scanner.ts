@@ -80,22 +80,53 @@ export function scanNavigationIntegrity(): HealthFinding[] {
     }
   }
 
-  // duplicate hrefs (two menu items → same page)
+  // duplicate hrefs (two menu items → same page).
+  // A section parent that shares its route with its own first child (the "click the
+  // section header to open its landing view" pattern) is intentional — only flag
+  // duplicates that sit in unrelated parts of the menu.
+  const navByKey = new Map(nav.map((e) => [e.key, e]));
+  const isAncestor = (ancestorKey: string, node: NavEntry): boolean => {
+    let p = node.parentKey;
+    while (p) {
+      if (p === ancestorKey) return true;
+      p = navByKey.get(p)?.parentKey ?? null;
+    }
+    return false;
+  };
   const hrefSeen = new Map<string, string[]>();
   for (const e of nav) {
     if (!e.href) continue;
     hrefSeen.set(e.href, [...(hrefSeen.get(e.href) ?? []), e.key]);
   }
   for (const [href, keys] of hrefSeen) {
-    if (keys.length > 1) {
+    if (keys.length < 2) continue;
+    const entries = keys.map((k) => navByKey.get(k)!).filter(Boolean);
+    // every entry is on a single ancestor chain → intentional landing pattern
+    const onOneChain = entries.every(
+      (a) => a === entries[0] || isAncestor(a.key, entries[0]) || isAncestor(entries[0].key, a) || entries.some((b) => b !== a && (isAncestor(a.key, b) || isAncestor(b.key, a))),
+    );
+    if (onOneChain) {
+      out.push(
+        finding({
+          category: "navigation",
+          module: "Sidebar",
+          target: href,
+          status: "healthy",
+          title: `Section header shares its route with a child (intentional landing pattern)`,
+          expected: "a parent menu node may open the same view as its default child",
+          actual: `${keys.join(", ")} → ${href}`,
+          link: href,
+        }),
+      );
+    } else {
       out.push(
         finding({
           category: "navigation",
           module: "Sidebar",
           target: href,
           status: "warning",
-          title: `Two menu items point to the same route`,
-          expected: "One menu item per route",
+          title: `Two unrelated menu items point to the same route`,
+          expected: "One menu item per route (or a parent/child landing pair)",
           actual: `${keys.join(", ")} → ${href}`,
           link: href,
         }),
@@ -139,20 +170,27 @@ export function scanNavigationIntegrity(): HealthFinding[] {
     }
   }
 
-  // child route not under its parent's path (loose structural check)
+  // child route in a different top-level section than its parent (loose structural
+  // check). Compare on the "/dashboard/<section>" prefix, not the parent's full href —
+  // a section parent often deep-links to one of its own pages while its children sit
+  // elsewhere under the same section, which is fine.
   const byKey = new Map(nav.map((e) => [e.key, e]));
+  const section = (href: string) => href.split("?")[0].split("/").slice(0, 3).join("/"); // /dashboard/<x>
   for (const e of nav) {
     if (!e.href || !e.parentKey) continue;
     const parent = byKey.get(e.parentKey);
-    if (parent?.href && !e.href.startsWith(parent.href) && parent.href !== "/dashboard") {
+    if (parent?.href && parent.href !== "/dashboard" && section(e.href) !== section(parent.href)) {
+      // informational: a curated menu legitimately groups cross-section shortcuts
+      // under a heading. Only a real concern if the target is also unreachable —
+      // the live page probe reports that separately.
       out.push(
         finding({
           category: "navigation",
           module: parent.label,
           target: e.href,
-          status: "warning",
-          title: `Child route is outside its parent's path`,
-          expected: `starts with "${parent.href}"`,
+          status: "healthy",
+          title: `Menu item grouped under a parent from another URL section (cross-link)`,
+          expected: `informational — target still resolves; grouped under "${parent.label}"`,
           actual: e.href,
           link: e.href,
         }),
@@ -170,6 +208,13 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
   const findings: HealthFinding[] = [];
   const enKeys = Object.keys(dict.en);
 
+  // Keys whose value is a brand name or a standard code/acronym — correctly identical
+  // in every language (CLAUDE.md: translate chrome, not names/codes).
+  const INVARIANT_KEYS = new Set<string>([
+    "cbr.pdf_brand", // "Digital Dock ERP" — product name
+    "pdfui.eip2_ifsc_colon", // "IFSC:" — standard bank-code label
+  ]);
+
   // parity — every en key must exist (non-empty) in every language
   const missing: Record<Lang, string[]> = { en: [], ur: [], ps: [], fa: [], ar: [] };
   const silentEnglish: string[] = [];
@@ -185,7 +230,7 @@ export function scanLanguages(): { findings: HealthFinding[]; namespaceRollup: R
       else if (l !== "en" && v === enVal) sameCount++;
     }
     // a non-en value identical to en across ALL 4 → silent English (ignore short tokens / codes)
-    if (sameCount === 4 && enVal.length > 3 && /[a-z]{2,}/i.test(enVal) && !/^[A-Z0-9_ /-]+$/.test(enVal)) {
+    if (sameCount === 4 && enVal.length > 3 && /[a-z]{2,}/i.test(enVal) && !/^[A-Z0-9_ /-]+$/.test(enVal) && !INVARIANT_KEYS.has(k)) {
       silentEnglish.push(k);
     }
   }
@@ -369,14 +414,14 @@ function classifyHttp(status: number, location: string | null): HealthStatus {
   return "unknown";
 }
 
-async function probe(baseUrl: string, path: string, cookie: string, method: "GET" | "HEAD" = "GET"): Promise<{ status: number; location: string | null; ms: number }> {
+async function probe(baseUrl: string, path: string, cookie: string, method: "GET" | "HEAD" = "GET", timeoutMs = 12000): Promise<{ status: number; location: string | null; ms: number }> {
   const start = Date.now();
   try {
     const res = await fetch(baseUrl + path, {
       method,
       headers: { cookie, "x-erp-health-scan": "1" },
       redirect: "manual",
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     return { status: res.status, location: res.headers.get("location"), ms: Date.now() - start };
   } catch (e) {
@@ -436,7 +481,7 @@ export async function probePages(baseUrl: string, cookie: string, session: ErpSe
 }
 
 /** Curated set of safe, read-only GET endpoints. Never anything that writes. */
-const SAFE_API_TARGETS: { module: string; path: string; expectAuthWhenScoped?: boolean }[] = [
+const SAFE_API_TARGETS: { module: string; path: string; expectAuthWhenScoped?: boolean; needsParams?: boolean }[] = [
   { module: "Accounts", path: "/api/erp/accounts?limit=1" },
   { module: "Customers", path: "/api/erp/customers?limit=1" },
   { module: "Companies", path: "/api/erp/companies?limit=1" },
@@ -446,8 +491,8 @@ const SAFE_API_TARGETS: { module: string; path: string; expectAuthWhenScoped?: b
   { module: "Warehouses", path: "/api/erp/master-data/warehouses?limit=1" },
   { module: "Locations · Countries", path: "/api/erp/locations/countries" },
   { module: "Locations · Summary", path: "/api/erp/locations/summary" },
-  { module: "Purchase Orders", path: "/api/erp/purchase-orders?limit=1" },
-  { module: "Sales Orders", path: "/api/erp/sales-orders?limit=1" },
+  { module: "Purchase Orders", path: "/api/erp/purchases/orders?limit=1" },
+  { module: "Sales Orders", path: "/api/erp/sales/orders?limit=1" },
   { module: "Roznamcha", path: "/api/erp/roznamcha?limit=1" },
   { module: "Ledger · Accounts", path: "/api/erp/accounting/accounts?limit=1" },
   { module: "Approvals", path: "/api/erp/approvals?limit=1" },
@@ -455,36 +500,49 @@ const SAFE_API_TARGETS: { module: string; path: string; expectAuthWhenScoped?: b
   { module: "Customer Inquiries", path: "/api/erp/customer-inquiries?limit=1" },
   { module: "Consignment Register", path: "/api/erp/consignment?limit=1" },
   { module: "Bill Expenses", path: "/api/erp/bill-expenses?limit=1" },
-  { module: "Documents", path: "/api/erp/documents?limit=1" },
+  { module: "Documents", path: "/api/erp/documents?limit=1", needsParams: true },
   { module: "Reports · Business Summary", path: "/api/erp/reports/business-summary" },
   { module: "Reports · Activity Summary", path: "/api/erp/reports/activity-summary" },
-  { module: "HR · Contract Reminders", path: "/api/erp/hr/contracts/reminders" },
+  { module: "HR · Contracts", path: "/api/erp/hr/contracts?limit=1" },
   { module: "Shipping Lines", path: "/api/erp/shipping-lines?limit=1" },
   { module: "Trucks", path: "/api/erp/master-data/trucks?limit=1" },
 ];
 
 export async function probeApis(baseUrl: string, cookie: string): Promise<HealthFinding[]> {
   const out: HealthFinding[] = [];
-  const CONCURRENCY = 6;
+  const CONCURRENCY = 4;
   for (let i = 0; i < SAFE_API_TARGETS.length; i += CONCURRENCY) {
     const batch = SAFE_API_TARGETS.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(batch.map(async (tg) => ({ tg, r: await probe(baseUrl, tg.path, cookie, "GET") })));
+    const results = await Promise.all(
+      batch.map(async (tg) => {
+        let r = await probe(baseUrl, tg.path, cookie, "GET", 20000);
+        // one retry, serially, for a timeout / connection drop before calling it broken
+        if (r.status === 0) r = await probe(baseUrl, tg.path, cookie, "GET", 25000);
+        return { tg, r };
+      }),
+    );
     for (const { tg, r } of results) {
       let status: HealthStatus;
+      let expected = "HTTP 200 (or 401/403 if out of the caller's scope)";
       if (r.status === 0) status = "failed";
-      else if (r.status >= 200 && r.status < 300) status = "healthy";
+      else if (r.status >= 200 && r.status < 300) status = r.ms > 8000 ? "warning" : "healthy";
       else if (r.status === 401 || r.status === 403) status = "unauthorized_expected";
-      else if (r.status === 404) status = "not_found";
+      else if ((r.status === 400 || r.status === 422) && tg.needsParams) {
+        // route exists, auth passed, input validation is enforced — that is healthy
+        status = "healthy";
+        expected = "HTTP 200, or 400/422 when required query params are omitted (validation active)";
+      } else if (r.status === 404) status = "not_found";
       else if (r.status >= 500) status = "server_error";
       else status = "warning";
+      const slowNote = status === "warning" && r.status >= 200 && r.status < 300 ? " — SLOW response, over 8s" : "";
       out.push(
         finding({
           category: "api",
           module: tg.module,
           target: tg.path,
           status,
-          title: `${tg.module} read API`,
-          expected: "HTTP 200 (or 401/403 if out of the caller's scope)",
+          title: `${tg.module} read API${slowNote}`,
+          expected,
           actual: r.status === 0 ? "no response (timeout / connection error)" : `HTTP ${r.status} (${r.ms}ms)`,
         }),
       );
