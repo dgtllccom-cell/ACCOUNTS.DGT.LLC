@@ -1107,7 +1107,7 @@ function CountryBranchSetupContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-[1600px] mx-auto items-start">
-        <div className={cn(activeStep === 9 ? "col-span-12" : "lg:col-span-7 xl:col-span-7", "space-y-6 w-full")}>
+        <div className={cn(activeStep === 9 ? "hidden" : "lg:col-span-7 xl:col-span-7", "space-y-6 w-full")}>
           <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle>{t(lang, "cnbs.setup_title")}</CardTitle>
@@ -1421,7 +1421,93 @@ function CountryBranchSetupContent() {
         </Card>
       </div>
 
-      <div className="lg:col-span-5 xl:col-span-5 w-full space-y-4 lg:sticky lg:top-4">
+      <div className={cn(activeStep === 9 ? "col-span-12 w-full max-w-5xl mx-auto space-y-5" : "lg:col-span-5 xl:col-span-5 w-full space-y-4 lg:sticky lg:top-4")}>
+        {activeStep === 9 && (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>📋</span>
+                <span>{tt("cnbs.step9_review_title", "Country Main Branch — Final Review & Live Preview")}</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {tt("cnbs.step9_review_desc", "Please verify all corporate details and branch specifications before confirming. Only 1 Main Branch is permitted per country.")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setActiveStep(8);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="font-bold text-xs h-8 px-3.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                ← {t(lang, "cbs.back_to_edit")}
+              </Button>
+              {existingMainBranch && !editingCountryBranchId ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 font-bold text-xs h-8 px-3.5"
+                  onClick={() => beginEditCountryBranch(existingMainBranch)}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1" aria-hidden />
+                  {t(lang, "cbs.edit_existing_branch")}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form="country-branch-wizard-form"
+                  disabled={saving || !location.countryId}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-8 px-5 cursor-pointer disabled:opacity-40"
+                >
+                  {saving ? t(lang, "common.saving") : editingCountryBranchId ? t(lang, "cnbs.update_country_branch") : t(lang, "cnbs.accept_save_country_branch")}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeStep === 9 && existingMainBranch && !editingCountryBranchId && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+            <div className="flex items-center gap-2 font-bold text-sm">
+              <span className="text-base">⚠️</span>
+              <span>{tt("cnbs.existing_branch_alert_title", "Country Main Branch Already Exists")}</span>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed">
+              A Main Branch already exists for {previewCountry}: <strong>{existingMainBranch.name}</strong> ({existingMainBranch.code}).
+              Under system rules, each country can have only <strong>1 Country Main Branch</strong>. All other offices in this country must be created as <strong>City Branches</strong>.
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <Button
+                type="button"
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-8 px-4"
+                onClick={() => beginEditCountryBranch(existingMainBranch)}
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1.5" aria-hidden />
+                {t(lang, "cbs.edit_existing_branch")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {activeStep === 9 && banner && (
+          <div
+            className={
+              banner.type === "success"
+                ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+                : "rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+            }
+            role="status"
+          >
+            <div className="whitespace-pre-line font-medium">{banner.message}</div>
+          </div>
+        )}
+
           <BranchLiveReportPanel
             title={tt("cnbs.live_preview_title", "Store Entry (Live Preview)")}
             status={hasAny ? "Draft" : "Empty"}
@@ -1562,6 +1648,48 @@ function CountryBranchSetupContent() {
               </div>
             }
           />
+
+          {activeStep === 9 && (
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setActiveStep(8);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                ← {t(lang, "cbs.back_to_edit")}
+              </Button>
+              {existingMainBranch && !editingCountryBranchId ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                    Main branch already registered for {previewCountry}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => beginEditCountryBranch(existingMainBranch)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm h-9 px-5 cursor-pointer"
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" aria-hidden />
+                    {t(lang, "cbs.edit_existing_branch")}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="submit"
+                  form="country-branch-wizard-form"
+                  disabled={saving || !location.countryId}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-9 px-6 cursor-pointer disabled:opacity-40"
+                >
+                  {saving ? t(lang, "common.saving") : editingCountryBranchId ? t(lang, "cnbs.update_country_branch") : t(lang, "cnbs.accept_save_country_branch")}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -458,6 +458,27 @@ function CityBranchSetupContent() {
     setPermissionGrants((current) => current.filter((permission) => parentPermissionGrants.includes(permission)));
   }, [parentPermissionGrants]);
 
+  const effectiveBranchName = useMemo(() => {
+    if (branchName.trim()) return branchName.trim();
+    if (locationMeta.city?.name?.trim()) {
+      return suggestBranchName(locationMeta, existingCityBranches) || `${locationMeta.city.name.trim()} City Branch`;
+    }
+    return "";
+  }, [branchName, locationMeta, existingCityBranches]);
+
+  // Auto-sync branch name from city name whenever city changes or branch name is empty
+  useEffect(() => {
+    if (editingCityBranchId) return;
+    const city = locationMeta.city?.name?.trim();
+    if (!city) return;
+    if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
+      const suggested = suggestBranchName(locationMeta, existingCityBranches) || `${city} City Branch`;
+      if (suggested && suggested !== branchName) {
+        setBranchName(suggested);
+      }
+    }
+  }, [locationMeta.city?.name, editingCityBranchId, existingCityBranches]);
+
   const matchingExistingCityBranch = useMemo(() => {
     if (!countryBranchId) return null;
     if (branchCode.trim()) {
@@ -1197,6 +1218,12 @@ function CityBranchSetupContent() {
     setCountryBranchId(nextId);
     const list = await loadExistingCityBranches(location.countryId, nextId);
     setBranchCode(suggestBranchCode(locationMeta, list));
+    if (!editingCityBranchId && locationMeta.city?.name?.trim()) {
+      if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
+        const nextName = suggestBranchName(locationMeta, list) || `${locationMeta.city.name.trim()} City Branch`;
+        if (nextName) setBranchName(nextName);
+      }
+    }
     const parent = mainBranches.find((branch) => branch.id === nextId);
     const parentPermissions = parent?.permission_grants?.length ? parent.permission_grants : undefined;
     setPermissionGrants((current) => (parentPermissions ? current.filter((permission) => parentPermissions.includes(permission)) : current));
@@ -1213,7 +1240,7 @@ function CityBranchSetupContent() {
     if (editingCityBranchId) return;
 
     if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
-      const nextName = suggestBranchName(meta, existingCityBranches);
+      const nextName = suggestBranchName(meta, existingCityBranches) || (meta.city?.name ? `${meta.city.name.trim()} City Branch` : "");
       if (nextName) setBranchName(nextName);
     }
 
@@ -1249,6 +1276,19 @@ function CityBranchSetupContent() {
       return;
     }
 
+    let finalBranchName = branchName.trim() || effectiveBranchName;
+    if (!finalBranchName && locationMeta.city?.name?.trim()) {
+      finalBranchName = suggestBranchName(locationMeta, existingCityBranches) || `${locationMeta.city.name.trim()} City Branch`;
+    }
+    if (!branchName.trim() && finalBranchName) {
+      setBranchName(finalBranchName);
+    }
+
+    if (!finalBranchName) {
+      setBanner({ type: "error", message: t(lang, "cbs.branch_name_required") });
+      return;
+    }
+
     if (codeAlreadyExists) {
       setBanner({
         type: "error",
@@ -1260,13 +1300,8 @@ function CityBranchSetupContent() {
     if (nameAlreadyExists) {
       setBanner({
         type: "error",
-        message: `${t(lang, "cbs.branch_name_exists_title")}\n${t(lang, "cbs.branch_name_in_use_msg").replace("{0}", branchName)}`
+        message: `${t(lang, "cbs.branch_name_exists_title")}\n${t(lang, "cbs.branch_name_in_use_msg").replace("{0}", finalBranchName)}`
       });
-      return;
-    }
-
-    if (!branchName.trim()) {
-      setBanner({ type: "error", message: t(lang, "cbs.branch_name_required") });
       return;
     }
 
@@ -1314,7 +1349,7 @@ function CityBranchSetupContent() {
           districtId: location.districtId || undefined,
           cityId: location.cityId || undefined,
           areaLocationId: location.areaId || undefined,
-          name: branchName,
+          name: finalBranchName,
           code: branchCode,
           currencyCode: currency || locationMeta.country?.currency_code || "USD",
           address: fullAddress.trim() || undefined,
@@ -2169,10 +2204,11 @@ function CityBranchSetupContent() {
                 <div className="border-x border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-950">
                   <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">⑤ {t(lang, "cbs.review_summary_label")}</p>
                   {(() => {
+                    const resolvedBranchName = branchName.trim() || effectiveBranchName;
                     const missing: string[] = [];
                     if (!location.countryId) missing.push(t(lang, "common.country"));
                     if (!countryBranchId) missing.push(t(lang, "cbs.main_branch_word"));
-                    if (!branchName) missing.push(t(lang, "cbs.city_branch_name_word"));
+                    if (!resolvedBranchName) missing.push(t(lang, "cbs.city_branch_name_word"));
                     if (!branchCode) missing.push(t(lang, "cbs.branch_code_word"));
                     if (!currency) missing.push(t(lang, "cbs.currency_word"));
                     if (!location.cityId && !locationMeta.city?.name) missing.push(t(lang, "common.city"));
@@ -2199,7 +2235,7 @@ function CityBranchSetupContent() {
                     { num: 1, title: t(lang, "cbs.pb_branch_info"), icon: "🏢", color: "text-blue-700 dark:text-blue-400", rows: [
                       { label: t(lang, "common.country"), value: previewCountry },
                       { label: t(lang, "cbs.main_branch_word"), value: previewMainBranch },
-                      { label: t(lang, "cbs.city_branch_word"), value: branchName },
+                      { label: t(lang, "cbs.city_branch_word"), value: branchName.trim() || effectiveBranchName || "—" },
                       { label: t(lang, "cbs.branch_code_word"), value: branchCode },
                       { label: t(lang, "cbs.currency_word"), value: currency },
                       { label: t(lang, "common.status"), value: editingCityBranchId ? (activeExistingCityBranch?.status || t(lang, "common.active")) : t(lang, "cbs.new_draft_word") },
