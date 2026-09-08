@@ -600,29 +600,29 @@ export async function localizeJoinedNames<T extends Record<string, any>>(
   if (!rows?.length || !mappings.length) return rows;
   if (!process.env.DATABASE_URL) return rows;
 
-  // one resolve pass per (table, field) — dedupe ids across the whole row set
-  const resolvedByMapping: Array<Map<string, string>> = [];
-  for (const m of mappings) {
-    const seen = new Map<string, string>(); // id -> raw name
-    for (const r of rows) {
-      const id = r[m.idField];
-      const nm = r[m.nameField];
-      if (id && typeof id === "string" && nm && typeof nm === "string" && !seen.has(id)) seen.set(id, nm);
-    }
-    if (seen.size === 0) {
-      resolvedByMapping.push(new Map());
-      continue;
-    }
-    const field = m.field ?? "name";
-    const synthetic: Array<{ id: string } & Record<string, string>> = [...seen.entries()].map(([id, name]) => ({ id, [field]: name }));
-    const localized = await localizeRecordFields(synthetic, m.table, [field], lang);
-    const out = new Map<string, string>();
-    for (const rec of localized as Array<Record<string, any>>) {
-      const v = rec[field];
-      if (rec.id && typeof v === "string") out.set(rec.id, v);
-    }
-    resolvedByMapping.push(out);
-  }
+  // one resolve pass per (table, field) — dedupe ids across the whole row set.
+  // The passes are independent (different tables) → run them concurrently so a row
+  // with 4 joined names costs ~1 DB round-trip of latency, not 4 sequential ones.
+  const resolvedByMapping: Array<Map<string, string>> = await Promise.all(
+    mappings.map(async (m) => {
+      const seen = new Map<string, string>(); // id -> raw name
+      for (const r of rows) {
+        const id = r[m.idField];
+        const nm = r[m.nameField];
+        if (id && typeof id === "string" && nm && typeof nm === "string" && !seen.has(id)) seen.set(id, nm);
+      }
+      if (seen.size === 0) return new Map<string, string>();
+      const field = m.field ?? "name";
+      const synthetic: Array<{ id: string } & Record<string, string>> = [...seen.entries()].map(([id, name]) => ({ id, [field]: name }));
+      const localized = await localizeRecordFields(synthetic, m.table, [field], lang);
+      const out = new Map<string, string>();
+      for (const rec of localized as Array<Record<string, any>>) {
+        const v = rec[field];
+        if (rec.id && typeof v === "string") out.set(rec.id, v);
+      }
+      return out;
+    }),
+  );
 
   return rows.map((r) => {
     let next: T | null = null;

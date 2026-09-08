@@ -11,7 +11,9 @@ import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-r
 
 export async function GET(request: NextRequest) {
   try {
+    const _T0 = Date.now(); const _t = (l: string) => console.log(`[cust-perf] ${l}: +${Date.now() - _T0}ms`);
     const session = await requireErpSession();
+    _t("requireErpSession");
     const scope = getScopeFromSearchParams(request);
 
     authorizeApiScope(session, {
@@ -19,11 +21,13 @@ export async function GET(request: NextRequest) {
       action: "read",
       ...scope
     });
+    _t("authorizeApiScope");
 
     const query = request.nextUrl.searchParams.get("q");
     let countryId = request.nextUrl.searchParams.get("countryId");
     const limit = request.nextUrl.searchParams.get("limit");
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    _t("getRequestLanguage");
 
     // Enforce session scope: if user is not super admin and no countryId provided,
     // restrict to their assigned country(ies)
@@ -36,6 +40,7 @@ export async function GET(request: NextRequest) {
       countryId,
       limit: limit ? Number(limit) : 20
     });
+    _t("customersService.search");
 
     // Resolve customer_name / company_name into the requested language — without this, any
     // consumer of this endpoint (Person Master picker, generic customer search, etc.) always
@@ -48,18 +53,22 @@ export async function GET(request: NextRequest) {
     // wasn't English). ONE row → the viewer's language for EVERY human-readable column:
     // the customer's own name fields AND the denormalised location join names.
     if (Array.isArray(customers) && customers.length > 0) {
-      customers = await localizeRecordFields<any>(
-        customers,
-        "customers",
-        ["customer_name", "company_name", "contact_person"],
-        lang,
-      );
-      customers = await localizeJoinedNames<any>(customers, lang, [
-        { idField: "country_id", nameField: "country_name", table: "countries" },
-        { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
-        { idField: "district_id", nameField: "district_name", table: "districts" },
-        { idField: "city_id", nameField: "city_name", table: "cities" },
+      // the two passes touch disjoint fields (own names vs joined location names) → run together
+      const [ownNames, joined] = await Promise.all([
+        localizeRecordFields<any>(customers, "customers", ["customer_name", "company_name", "contact_person"], lang),
+        localizeJoinedNames<any>(customers, lang, [
+          { idField: "country_id", nameField: "country_name", table: "countries" },
+          { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
+          { idField: "district_id", nameField: "district_name", table: "districts" },
+          { idField: "city_id", nameField: "city_name", table: "cities" },
+        ]),
       ]);
+      const joinedById = new Map(joined.map((r: any) => [r.id, r]));
+      customers = ownNames.map((r: any) => {
+        const j = joinedById.get(r.id);
+        return j ? { ...r, country_name: j.country_name, state_province_name: j.state_province_name, district_name: j.district_name, city_name: j.city_name } : r;
+      });
+      _t("localize (parallel)");
     }
 
     return apiOk({ ...(result as any), customers });
