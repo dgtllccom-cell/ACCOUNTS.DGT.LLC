@@ -1,6 +1,15 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "smartsum.all_clear"
+  | "smartsum.view_details"
+  | "smartsum.open_record"
+  | "smartsum.take_action"
+  | "smartsum.at_a_glance"
+  | "smartsum.sd_overdue"
+  | "smartsum.sd_today"
+  | "smartsum.sd_tomorrow"
+  | "smartsum.sd_pending"
   | "smart_due.approval"
   | "smart_due.task"
   | "nav.smart_operations"
@@ -24800,6 +24809,15 @@ const en: Dict = {
   "nav.smart_operations": "Smart Operations",
   "smart_ops.title": "Smart Operations & Action Center",
   "smart_ops.subtitle": "Today • Pending • Overdue • Approvals • Payments Due • Tasks • Containers • Shipping/Clearing • Cheque Dates. Every item links to the original ERP record. Read-only aggregation — nothing here posts to accounting.",
+  "smartsum.all_clear": "Nothing needs attention right now.",
+  "smartsum.view_details": "View Details",
+  "smartsum.open_record": "Open Record",
+  "smartsum.take_action": "Take Action",
+  "smartsum.at_a_glance": "At a glance",
+  "smartsum.sd_overdue": "Overdue actions",
+  "smartsum.sd_today": "Due today",
+  "smartsum.sd_tomorrow": "Due tomorrow",
+  "smartsum.sd_pending": "Pending items",
 };
 
 const ur: Dict = {
@@ -42236,6 +42254,15 @@ const ur: Dict = {
   "nav.smart_operations": "سمارٹ آپریشنز",
   "smart_ops.title": "سمارٹ آپریشنز اور ایکشن سینٹر",
   "smart_ops.subtitle": "آج • زیر التواء • مقررہ مدت گزر چکی • منظوریاں • واجب الادا ادائیگیاں • ٹاسکس • کنٹینرز • شپنگ/کلیئرنگ • چیک کی تاریخیں۔ ہر آئٹم اصل ERP ریکارڈ سے منسلک ہے۔ صرف پڑھنے کے لیے مجموعہ — یہاں کچھ بھی اکاؤنٹنگ میں پوسٹ نہیں ہوتا۔",
+  "smartsum.all_clear": "ابھی کسی چیز پر توجہ کی ضرورت نہیں۔",
+  "smartsum.view_details": "تفصیلات دیکھیں",
+  "smartsum.open_record": "ریکارڈ کھولیں",
+  "smartsum.take_action": "کارروائی کریں",
+  "smartsum.at_a_glance": "ایک نظر میں",
+  "smartsum.sd_overdue": "واجب الادا کارروائیاں",
+  "smartsum.sd_today": "آج واجب",
+  "smartsum.sd_tomorrow": "کل واجب",
+  "smartsum.sd_pending": "زیر التواء آئٹمز",
 };
 
 const ar: Dict = {
@@ -59674,6 +59701,15 @@ const ar: Dict = {
   "nav.smart_operations": "العمليات الذكية",
   "smart_ops.title": "مركز العمليات والإجراءات الذكية",
   "smart_ops.subtitle": "اليوم • معلّق • متأخر • الموافقات • المدفوعات المستحقة • المهام • الحاويات • الشحن/التخليص • تواريخ الشيكات. كل عنصر مرتبط بالسجل الأصلي في النظام. تجميع للقراءة فقط — لا شيء هنا يُرحَّل إلى المحاسبة.",
+  "smartsum.all_clear": "لا شيء يحتاج انتباهًا الآن.",
+  "smartsum.view_details": "عرض التفاصيل",
+  "smartsum.open_record": "فتح السجل",
+  "smartsum.take_action": "اتخاذ إجراء",
+  "smartsum.at_a_glance": "لمحة سريعة",
+  "smartsum.sd_overdue": "إجراءات متأخرة",
+  "smartsum.sd_today": "مستحق اليوم",
+  "smartsum.sd_tomorrow": "مستحق غدًا",
+  "smartsum.sd_pending": "عناصر معلقة",
 };
 
 const fa: Dict = {
@@ -77111,6 +77147,15 @@ const fa: Dict = {
   "nav.smart_operations": "عملیات هوشمند",
   "smart_ops.title": "مرکز عملیات و اقدامات هوشمند",
   "smart_ops.subtitle": "امروز • در انتظار • عقب‌افتاده • تأییدها • پرداخت‌های سررسید • وظایف • کانتینرها • حمل/ترخیص • تاریخ چک‌ها. هر مورد به رکورد اصلی ERP پیوند دارد. تجمیع فقط‌خواندنی — چیزی اینجا در حسابداری ثبت نمی‌شود.",
+  "smartsum.all_clear": "در حال حاضر چیزی نیاز به توجه ندارد.",
+  "smartsum.view_details": "مشاهده جزئیات",
+  "smartsum.open_record": "باز کردن رکورد",
+  "smartsum.take_action": "اقدام کنید",
+  "smartsum.at_a_glance": "در یک نگاه",
+  "smartsum.sd_overdue": "اقدامات عقب‌افتاده",
+  "smartsum.sd_today": "سررسید امروز",
+  "smartsum.sd_tomorrow": "سررسید فردا",
+  "smartsum.sd_pending": "موارد در انتظار",
 };
 
 const ps: Dict = {
@@ -94554,6 +94599,15 @@ const ps: Dict = {
   "nav.smart_operations": "سمارټ عملیات",
   "smart_ops.title": "سمارټ عملیات او د کړنو مرکز",
   "smart_ops.subtitle": "نن • پاتې • ناوخته • تصویبونه • د تادیې وړ تادیات • دندې • کانتینرونه • شپنګ/کلیرنګ • د چک نیټې. هر توکی د اصلي ERP ریکارډ سره تړل شوی. یوازې د لوستلو راټولونه — دلته هیڅ شی محاسبې ته نه ثبتیږي.",
+  "smartsum.all_clear": "اوس مهال هیڅ شي ته پاملرنې ته اړتیا نشته.",
+  "smartsum.view_details": "جزئیات وګورئ",
+  "smartsum.open_record": "ریکارډ پرانیزئ",
+  "smartsum.take_action": "اقدام وکړئ",
+  "smartsum.at_a_glance": "په یوه کتنه کې",
+  "smartsum.sd_overdue": "ناوخته کړنې",
+  "smartsum.sd_today": "نن نیټه",
+  "smartsum.sd_tomorrow": "سبا نیټه",
+  "smartsum.sd_pending": "پاتې توکي",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { SmartSummary, smartDueSummaryToItems } from "@/components/ui/smart-summary";
 import type { DueItem } from "@/app/api/erp/smart-due/items/route";
 
 type Summary = {
@@ -180,6 +181,15 @@ export function SmartDueView() {
             {summary.overdue > 0 && <span className="ms-2 font-bold">({summary.overdue} {tt("smart_due.card_overdue", "Overdue")})</span>}
           </span>
         </div>
+      )}
+
+      {/* Get-to-the-point strip — shared SmartSummary layer, real aggregation only */}
+      {!summaryLoading && summary && (
+        <SmartSummary
+          title={t(lang, "smartsum.at_a_glance", "At a glance")}
+          items={smartDueSummaryToItems(summary, (k, f) => t(lang, `smartsum.${k}` as never, f))}
+          dense
+        />
       )}
 
       {/* Summary Cards */}
