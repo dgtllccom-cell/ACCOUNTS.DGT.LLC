@@ -103,6 +103,13 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "title", mode: "translate" },
     { field: "notes", mode: "translate" },
   ],
+  // ── HR masters (descriptive labels → translate) ──
+  hr_departments: [{ field: "name", mode: "translate" }],
+  hr_designations: [{ field: "title", mode: "translate" }],
+  hr_leave_types: [{ field: "name", mode: "translate" }],
+  hr_shifts: [{ field: "name", mode: "translate" }],
+  hr_holidays: [{ field: "name", mode: "translate" }],
+
   // ── Temporary Purchase & Sales Bills Register (historical tracking only, NO accounting) ──
   temp_bill: [
     { field: "party_name", mode: "transliterate" },

@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { guardHr } from "@/lib/services/hr-api";
 import { hrAttendanceLeaveService } from "@/lib/services/hr-attendance-leave-service";
 
@@ -27,7 +29,12 @@ export async function GET(request: NextRequest) {
       year: sp.get("year") ? Number(sp.get("year")) : undefined,
       countryId: sp.get("countryId") || undefined,
     });
-    return apiOk({ rows });
+    let localized = rows as any[];
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      localized = await localizeRecordFields<any>(localized, "hr_holidays", ["name"], lang);
+    }
+    return apiOk({ rows: localized });
   } catch (error) {
     return handleApiError(error);
   }

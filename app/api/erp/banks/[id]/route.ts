@@ -4,6 +4,8 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 type BankRow = {
   id: string;
@@ -131,10 +133,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     authorizeApiScope(session, { resource: "banks", action: "read" });
 
-    const bank = await getBankById(id);
+    let bank = await getBankById(id);
     if (!bank) throw new Error("Bank not found");
     if (!session.isSuperAdmin && bank.country_id && !session.countryIds.includes(bank.country_id)) {
       throw new Error("Not authorized");
+    }
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      [bank] = await localizeRecordFields<any>([bank], "banks", ["bank_name", "branch_name", "short_name", "account_title"], lang);
+      [bank] = await localizeJoinedNames<any>([bank], lang, [{ idField: "country_id", nameField: "country_name", table: "countries" }]);
     }
     return apiOk({ bank });
   } catch (error) {

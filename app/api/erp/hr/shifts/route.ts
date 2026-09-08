@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { guardHr } from "@/lib/services/hr-api";
 import { hrAttendanceLeaveService } from "@/lib/services/hr-attendance-leave-service";
 
@@ -22,11 +24,16 @@ const schema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { scope } = await guardHr("read");
     const rows = await hrAttendanceLeaveService.listShifts(scope);
-    return apiOk({ rows });
+    let localized = rows as any[];
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      localized = await localizeRecordFields<any>(localized, "hr_shifts", ["name"], lang);
+    }
+    return apiOk({ rows: localized });
   } catch (error) {
     return handleApiError(error);
   }
