@@ -19,7 +19,9 @@ export async function GET() {
           ? sql`select id, name, code, country_id from public.country_branches where id = ${session.countryBranchIds[0]}::uuid limit 1`
           : Promise.resolve([]),
         session.cityBranchIds[0]
-          ? sql`select id, name, code, country_id, country_branch_id from public.city_branches where id = ${session.cityBranchIds[0]}::uuid limit 1`
+          ? sql`select cb.id, cb.name, cb.code, cb.country_id, cb.country_branch_id, co.name as country_name
+                from public.city_branches cb left join public.countries co on co.id = cb.country_id
+                where cb.id = ${session.cityBranchIds[0]}::uuid limit 1`
           : Promise.resolve([])
       ]);
       return [
@@ -29,7 +31,10 @@ export async function GET() {
       ] as const;
     })) ?? [{ data: null }, { data: null }, { data: null }];
 
-    const countryName = countryRow?.data?.name ?? null;
+    // Branch-scoped users carry cityBranchIds but no countryIds — fall back to the
+    // branch's own country so scope-aware forms (e.g. cash entry) can still resolve.
+    const effectiveCountryId = session.countryIds[0] ?? cityBranchRow?.data?.country_id ?? countryBranchRow?.data?.country_id ?? null;
+    const countryName = countryRow?.data?.name ?? cityBranchRow?.data?.country_name ?? null;
     const countryBranchName = countryBranchRow?.data?.name ?? null;
     const cityBranchName = cityBranchRow?.data?.name ?? null;
     const branchDisplayName =
@@ -44,6 +49,7 @@ export async function GET() {
       },
       roles: session.roles,
       permissions: session.permissions,
+      mobileProfile: session.mobileProfile,
       scopes: {
         assignments: session.assignments,
         countryIds: session.countryIds,
@@ -54,6 +60,10 @@ export async function GET() {
           level: reportScope.level,
           scopeLabel: reportScope.scopeLabel,
           countryId: session.countryIds[0] ?? null,
+          // The country a branch-scoped user's branch belongs to (display / form
+          // pre-fill only — never a scope grant; the server still enforces
+          // session.countryIds / cityBranchIds).
+          branchCountryId: effectiveCountryId,
           countryName,
           countryBranchId: session.countryBranchIds[0] ?? null,
           countryBranchName,

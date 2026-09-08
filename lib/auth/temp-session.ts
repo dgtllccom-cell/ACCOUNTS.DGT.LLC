@@ -26,6 +26,7 @@ export type TempSessionPayloadV1 = {
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
     operationalDomain?: string;
+    mobileProfile?: string;
   }>;
   createdAt: number;
 };
@@ -101,6 +102,7 @@ export async function setDirectUserSession(user: {
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
     operationalDomain?: string;
+    mobileProfile?: string;
   }>;
   remember?: boolean;
 }) {
@@ -146,6 +148,7 @@ export async function readTempSession(): Promise<
         clearingAgentId?: string | null;
         ledgerVisibility?: string;
     operationalDomain?: string;
+    mobileProfile?: string;
       }>;
       preferredLanguage: SupportedLanguage;
     }
@@ -204,6 +207,7 @@ export function buildTempAgentToken(options: {
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
     operationalDomain?: string;
+    mobileProfile?: string;
   }>;
 }): string {
   const payload: TempSessionPayloadV1 = {

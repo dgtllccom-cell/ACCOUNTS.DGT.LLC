@@ -205,7 +205,11 @@ export const userCreateSchema = scopeSchema.extend({
   // Only meaningful for the shipping domain — binds the login to one clearing agent.
   clearingAgentId: optionalUuidSchema,
   // "scoped" (business default), "shipping_only" (clearing/shipping default), "full" (explicit grant).
-  ledgerVisibility: z.enum(["scoped", "shipping_only", "full"]).optional()
+  ledgerVisibility: z.enum(["scoped", "shipping_only", "full"]).optional(),
+  // Simplified mobile working interface (reuses this same user id / login / scope):
+  // "standard" = full ERP; "mobile_cash_ledger" = Brother User (cash entry + ledger/
+  // roznamcha/journal viewing); "mobile_field" = Munshi / field (assigned forms + jobs).
+  mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).default("standard")
 });
 
 export const accountCreateSchema = scopeSchema.extend({

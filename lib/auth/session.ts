@@ -6,6 +6,7 @@ import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
+import { type MobileProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
 
 export type LedgerVisibility = "scoped" | "shipping_only" | "full";
 
@@ -19,6 +20,7 @@ export type RoleAssignmentScope = {
   clearingAgentId: string | null;
   ledgerVisibility: LedgerVisibility;
   operationalDomain: OperationalDomain;
+  mobileProfile: MobileProfile;
 };
 
 export type ErpSession = {
@@ -42,6 +44,10 @@ export type ErpSession = {
   // Operational domains this login belongs to, derived from its active assignments.
   // "business" → Purchase/Sales/Ledger/Accounting; "shipping" → Clearing Agent / Shipping Line.
   operationalDomains: OperationalDomain[];
+  // Simplified mobile working interface. "standard" for every full-ERP user;
+  // "mobile_cash_ledger" / "mobile_field" route the user to a simple mobile
+  // screen and hard-cap what the server will allow (see lib/permissions/mobile-profiles).
+  mobileProfile: MobileProfile;
 };
 
 /** True when this session may see data in the given operational domain. */
@@ -67,7 +73,16 @@ type AssignmentRow = {
   clearing_agent_id?: string | null;
   ledger_visibility?: string | null;
   operational_domain?: string | null;
+  mobile_profile?: string | null;
 };
+
+/** The effective mobile profile for a session = the most restrictive non-standard
+ *  profile across active assignments (a user is normally on exactly one). */
+export function resolveMobileProfile(assignments: RoleAssignmentScope[], isSuperAdmin: boolean): MobileProfile {
+  if (isSuperAdmin) return "standard";
+  const nonStandard = assignments.map((a) => a.mobileProfile).filter((p) => p && p !== "standard");
+  return (nonStandard[0] as MobileProfile) ?? "standard";
+}
 
 /** Derive the shipping/clearing scope fields from a user's active assignments. */
 export function resolveShippingScope(assignments: RoleAssignmentScope[], isSuperAdmin: boolean): {
@@ -210,7 +225,8 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           cityBranchId: a.cityBranchId,
           clearingAgentId: (a as any).clearingAgentId ?? null,
           ledgerVisibility: ((a as any).ledgerVisibility as LedgerVisibility) ?? "scoped",
-          operationalDomain: (d === "shipping" || d === "both" ? d : "business") as OperationalDomain
+          operationalDomain: (d === "shipping" || d === "both" ? d : "business") as OperationalDomain,
+          mobileProfile: normalizeMobileProfile((a as any).mobileProfile)
         };
       });
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
@@ -236,7 +252,8 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         countryBranchIds: resolvedScopes.countryBranchIds,
         cityBranchIds: resolvedScopes.cityBranchIds,
         isSuperAdmin,
-        ...resolveShippingScope(tempAssignments, isSuperAdmin)
+        ...resolveShippingScope(tempAssignments, isSuperAdmin),
+        mobileProfile: resolveMobileProfile(tempAssignments, isSuperAdmin)
       };
     }
 
@@ -264,7 +281,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     // otherwise an unknown-column error here would return null and break authentication.
     let assignmentsResult = await db
       .from("user_role_assignments")
-      .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain")
+      .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain, mobile_profile")
       .eq("user_id", user.id)
       .eq("is_active", true)
       .is("deleted_at", null);
@@ -305,7 +322,8 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           cityBranchId: assignment.city_branch_id,
           clearingAgentId: assignment.clearing_agent_id ?? null,
           ledgerVisibility: (assignment.ledger_visibility as LedgerVisibility) ?? "scoped",
-          operationalDomain
+          operationalDomain,
+          mobileProfile: normalizeMobileProfile((assignment as AssignmentRow).mobile_profile)
         };
       })
       .filter((assignment): assignment is RoleAssignmentScope => Boolean(assignment));
@@ -365,7 +383,8 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       countryBranchIds: resolvedScopes.countryBranchIds,
       cityBranchIds: resolvedScopes.cityBranchIds,
       isSuperAdmin,
-      ...resolveShippingScope(assignments, isSuperAdmin)
+      ...resolveShippingScope(assignments, isSuperAdmin),
+      mobileProfile: resolveMobileProfile(assignments, isSuperAdmin)
     };
   } catch (err: any) {
     if (err?.digest === "DYNAMIC_SERVER_USAGE" || (err?.message && String(err.message).includes("Dynamic server usage"))) {

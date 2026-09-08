@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getCurrentErpSession } from "@/lib/auth/session";
+import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled } from "@/lib/supabase/config";
 
@@ -28,6 +29,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await getCurrentErpSession();
   if (!session) {
     redirect("/auth/login");
+  }
+
+  // A user on a simplified mobile profile never sees the full ERP dashboard —
+  // send them straight to their assigned mobile interface.
+  if (session.mobileProfile && session.mobileProfile !== "standard") {
+    redirect(MOBILE_PROFILE_HOME[session.mobileProfile]);
   }
 
   return (

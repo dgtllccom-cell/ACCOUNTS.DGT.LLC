@@ -5,6 +5,7 @@ import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { dashboardByRole, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
 
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     try {
       const { data: assignments } = await admin
         .from("user_role_assignments")
-        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
+        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile")
         .eq("user_id", profileRecord.id)
         .eq("is_active", true)
         .is("deleted_at", null);
@@ -175,7 +176,8 @@ export async function POST(request: NextRequest) {
           countryBranchId: a.country_branch_id,
           cityBranchId: a.city_branch_id,
           clearingAgentId: a.clearing_agent_id,
-          ledgerVisibility: a.ledger_visibility
+          ledgerVisibility: a.ledger_visibility,
+          mobileProfile: a.mobile_profile ?? "standard"
         }));
         userRoles = assignments.map((a: any) => a.role as EnterpriseRole);
       }
@@ -251,7 +253,7 @@ export async function POST(request: NextRequest) {
             try {
               const { data: assignments } = await admin
                 .from("user_role_assignments")
-                .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
+                .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile")
                 .eq("user_id", profileRecord.id)
                 .eq("is_active", true)
                 .is("deleted_at", null);
@@ -263,7 +265,8 @@ export async function POST(request: NextRequest) {
                   countryBranchId: a.country_branch_id,
                   cityBranchId: a.city_branch_id,
                   clearingAgentId: a.clearing_agent_id,
-                  ledgerVisibility: a.ledger_visibility
+                  ledgerVisibility: a.ledger_visibility,
+                  mobileProfile: a.mobile_profile ?? "standard"
                 }));
                 userRoles = assignments.map((a: any) => a.role as EnterpriseRole);
               }
@@ -326,7 +329,15 @@ export async function POST(request: NextRequest) {
   });
 
   // 6. Determine Redirection Target
-  const redirectTo = dashboardForRoles(userRoles);
+  // A simplified mobile profile overrides the role dashboard — the user lands
+  // directly on their assigned mobile interface.
+  const mobileProfile = (roleAssignments.find((a) => a?.mobileProfile && a.mobileProfile !== "standard")?.mobileProfile) as
+    | "mobile_cash_ledger"
+    | "mobile_field"
+    | undefined;
+  const redirectTo = mobileProfile
+    ? MOBILE_PROFILE_HOME[mobileProfile]
+    : dashboardForRoles(userRoles);
 
   try {
     await admin.from("audit_logs").insert({

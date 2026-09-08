@@ -2,6 +2,7 @@
   "_comment": "Routes returning record rows that predate the multilingual-contract guard (2026-09-08). Grandfathered so only NEW un-enrolled data paths fail the build. SHRINK as routes are localised; do not add without review. | exemptRoutes: reviewed, carry no translatable text (permanent). unlocalizedRoutes: backlog to shrink.",
   "exemptRoutes": {
     "app/api/erp/accounting/accounts/statement/export/route.ts": "export passthrough — localisation happens in the report builder it feeds",
+    "app/api/erp/accounting/ledgers/[id]/statement/route.ts": "get_ledger_statement RPC — only free-text column is `description` (financial narration), which translatable-fields.ts deliberately excludes; the added ledgers query is a country/branch scope check, no user-facing text",
     "app/api/erp/accounting/reports/ledger/balances/route.ts": "aggregate figures / KPI counts only",
     "app/api/erp/accounting/reports/ledger/export/route.ts": "export passthrough — localisation happens in the report builder it feeds",
     "app/api/erp/admin/dashboard-settings/route.ts": "admin config / DB audit — not end-user master data",

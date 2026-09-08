@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import { expandPermissionGroups } from "@/lib/permissions/catalog";
+import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
 
 function isUuid(value: string) {
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     // - Country/Main branch admins can create non-admin users within their own country.
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin) {
-      if (!isCountryManager) throw new Error("Not authorized to create users.");
+      if (!isCountryManager) throw new ApiClientError("Not authorized to create users.", { status: 403 });
       if (body.role === "super_admin" || body.role === "country_admin") {
         throw new Error("Only Super Admin can create Super Admin or Country Admin users.");
       }
@@ -159,9 +160,18 @@ export async function POST(request: NextRequest) {
       body.userCode ?? (await issueNextUserCode(admin, { role: body.role, countryId: body.countryId ?? null }))
     );
 
+    const mobileProfile = normalizeMobileProfile(body.mobileProfile);
+
     const requestedPermissions = normalizePermissions(body.permissions);
     const defaultRolePermissions = [...new Set(enterpriseRolePermissions[body.role] ?? [])];
-    const requestedOrDefault = requestedPermissions.length ? requestedPermissions : defaultRolePermissions;
+    // A simplified mobile profile has a FIXED small permission surface — start
+    // from that, not from the (larger) role template, so the profile really is
+    // limited. It is still capped by the creator's own authority below.
+    const profileBaseline =
+      mobileProfile === "standard"
+        ? (requestedPermissions.length ? requestedPermissions : defaultRolePermissions)
+        : [...MOBILE_PROFILE_ALLOWED[mobileProfile]];
+    const requestedOrDefault = profileBaseline;
     const scopePermissionLimit = session.isSuperAdmin
       ? null
       : await loadScopePermissionLimit(admin, {
@@ -170,9 +180,11 @@ export async function POST(request: NextRequest) {
         });
     const creatorLimit = session.isSuperAdmin ? ["*:*"] : session.permissions;
     const parentLimit = scopePermissionLimit ?? creatorLimit;
-    const issuedPermissions = session.isSuperAdmin
+    let issuedPermissions = session.isSuperAdmin
       ? requestedOrDefault
       : constrainPermissions(constrainPermissions(requestedOrDefault, creatorLimit), parentLimit);
+    // Hard cap: even a super admin's mobile user cannot exceed the profile surface.
+    issuedPermissions = capPermissionsToProfile(mobileProfile, issuedPermissions);
 
     if (!issuedPermissions.length) {
       throw new Error("No assignable permissions remain after applying parent scope limits.");
@@ -310,17 +322,23 @@ export async function POST(request: NextRequest) {
       operational_domain: domain,
       clearing_agent_id: body.clearingAgentId ?? null,
       ledger_visibility: ledgerVisibility,
+      mobile_profile: mobileProfile,
       created_by: isUuid(session.userId) ? session.userId : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
     let { error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload);
+    if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
+      delete assignmentPayload.mobile_profile;
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
     if (assignmentError && /operational_domain|clearing_agent_id|ledger_visibility/.test(assignmentError.message)) {
       // DB predates the shipping/clearing RBAC columns — insert the core row.
       delete assignmentPayload.operational_domain;
       delete assignmentPayload.clearing_agent_id;
       delete assignmentPayload.ledger_visibility;
+      delete assignmentPayload.mobile_profile;
       ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
     }
     if (assignmentError) throw new Error(assignmentError.message);
@@ -340,11 +358,12 @@ export async function POST(request: NextRequest) {
         companyId: body.companyId ?? null,
         operationalDomain: domain,
         clearingAgentId: body.clearingAgentId ?? null,
-        ledgerVisibility
+        ledgerVisibility,
+        mobileProfile
       }
     });
 
-    return apiCreated({ userId: newUserId, userCode: issuedUserCode, operationalDomain: domain });
+    return apiCreated({ userId: newUserId, userCode: issuedUserCode, operationalDomain: domain, mobileProfile });
   } catch (error) {
     return handleApiError(error);
   }
@@ -360,7 +379,7 @@ export async function GET(request: NextRequest) {
 
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin && !isCountryManager) {
-      throw new Error("Not authorized to view user details.");
+      throw new ApiClientError("Not authorized to view user details.", { status: 403 });
     }
 
     const admin = createSupabaseAdminClient() as any;
@@ -380,7 +399,7 @@ export async function GET(request: NextRequest) {
 
     const assignment = assignmentRes.data;
     if (!session.isSuperAdmin && assignment?.country_id && !session.countryIds.includes(assignment.country_id)) {
-      throw new Error("Not authorized to view users outside of your country.");
+      throw new ApiClientError("Not authorized to view users outside of your country.", { status: 403 });
     }
 
     const permissions = permissionsRes.data?.permissions ?? [];
@@ -396,6 +415,9 @@ export async function GET(request: NextRequest) {
       countryId: assignment?.country_id ?? null,
       countryBranchId: assignment?.country_branch_id ?? null,
       cityBranchId: assignment?.city_branch_id ?? null,
+      mobileProfile: normalizeMobileProfile(assignment?.mobile_profile),
+      operationalDomain: assignment?.operational_domain ?? "business",
+      clearingAgentId: assignment?.clearing_agent_id ?? null,
       permissions,
       email: authUser?.email ?? "",
       phone: authUser?.user_metadata?.phone ?? "",
@@ -434,6 +456,7 @@ export async function PATCH(request: NextRequest) {
       countryId: uuidSchema.nullable().optional(),
       countryBranchId: uuidSchema.nullable().optional(),
       cityBranchId: uuidSchema.nullable().optional(),
+      mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).optional(),
       permissions: z.array(z.string()).optional(),
       email: z.string().trim().email().optional(),
       phone: z.string().trim().optional(),
@@ -457,7 +480,7 @@ export async function PATCH(request: NextRequest) {
     // Country Admin and Main Branch Admin can edit users in their country.
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin) {
-      if (!isCountryManager) throw new Error("Not authorized to update users.");
+      if (!isCountryManager) throw new ApiClientError("Not authorized to update users.", { status: 403 });
       // If updating scope, ensure it matches current session country.
       if (body.countryId && !session.countryIds.includes(body.countryId as string)) {
         throw new Error("Country scope is not allowed.");
@@ -467,19 +490,27 @@ export async function PATCH(request: NextRequest) {
     const admin = createSupabaseAdminClient() as any;
 
     // Fetch the target user's current assignment to check their current country scope
-    const { data: targetAssignment } = await admin
+    let { data: targetAssignment } = await admin
       .from("user_role_assignments")
-      .select("country_id, role, country_branch_id, city_branch_id")
+      .select("country_id, role, country_branch_id, city_branch_id, mobile_profile")
       .eq("user_id", body.userId)
       .is("deleted_at", null)
       .maybeSingle();
+    if (!targetAssignment) {
+      ({ data: targetAssignment } = await admin
+        .from("user_role_assignments")
+        .select("country_id, role, country_branch_id, city_branch_id")
+        .eq("user_id", body.userId)
+        .is("deleted_at", null)
+        .maybeSingle());
+    }
 
     if (!session.isSuperAdmin && targetAssignment) {
       if (targetAssignment.role === "super_admin" || targetAssignment.role === "country_admin") {
         throw new Error("Only Super Admin can update Super Admin or Country Admin users.");
       }
       if (targetAssignment.country_id && !session.countryIds.includes(targetAssignment.country_id)) {
-        throw new Error("Not authorized to update users outside of your country.");
+        throw new ApiClientError("Not authorized to update users outside of your country.", { status: 403 });
       }
     }
 
@@ -565,7 +596,8 @@ export async function PATCH(request: NextRequest) {
       body.role !== undefined ||
       body.countryId !== undefined ||
       body.countryBranchId !== undefined ||
-      body.cityBranchId !== undefined
+      body.cityBranchId !== undefined ||
+      body.mobileProfile !== undefined
     ) {
       // Fetch latest assignment row
       const { data: currentAssign } = await admin
@@ -586,22 +618,38 @@ export async function PATCH(request: NextRequest) {
         if (body.countryId !== undefined) assignmentUpdates.country_id = body.countryId;
         if (body.countryBranchId !== undefined) assignmentUpdates.country_branch_id = body.countryBranchId;
         if (body.cityBranchId !== undefined) assignmentUpdates.city_branch_id = body.cityBranchId;
+        if (body.mobileProfile !== undefined) assignmentUpdates.mobile_profile = body.mobileProfile;
 
-        const { error: assignmentError } = await admin
+        let { error: assignmentError } = await admin
           .from("user_role_assignments")
           .update(assignmentUpdates)
           .eq("id", currentAssign.id);
+        if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
+          delete assignmentUpdates.mobile_profile;
+          ({ error: assignmentError } = await admin
+            .from("user_role_assignments")
+            .update(assignmentUpdates)
+            .eq("id", currentAssign.id));
+        }
 
         if (assignmentError) throw new Error(assignmentError.message);
       }
     }
 
-    // 4. Update user_permission_sets if permissions are provided
-    if (body.permissions !== undefined) {
+    // 4. Update user_permission_sets when permissions OR the mobile profile change.
+    // Switching a user onto a simplified mobile profile must immediately re-cap
+    // what they can do — not wait for a separate permissions edit.
+    if (body.permissions !== undefined || body.mobileProfile !== undefined) {
+      const effectiveMobileProfile = normalizeMobileProfile(
+        body.mobileProfile ?? (targetAssignment as any)?.mobile_profile
+      );
       const requestedPermissions = normalizePermissions(body.permissions);
       const targetRole = (body.role || targetAssignment?.role || "city_branch_admin") as EnterpriseRole;
       const defaultRolePermissions = [...new Set(enterpriseRolePermissions[targetRole] ?? [])];
-      const requestedOrDefault = requestedPermissions.length ? requestedPermissions : defaultRolePermissions;
+      const baseline =
+        effectiveMobileProfile === "standard"
+          ? (requestedPermissions.length ? requestedPermissions : defaultRolePermissions)
+          : [...MOBILE_PROFILE_ALLOWED[effectiveMobileProfile]];
 
       const scopePermissionLimit = session.isSuperAdmin
         ? null
@@ -611,9 +659,10 @@ export async function PATCH(request: NextRequest) {
           });
       const creatorLimit = session.isSuperAdmin ? ["*:*"] : session.permissions;
       const parentLimit = scopePermissionLimit ?? creatorLimit;
-      const issuedPermissions = session.isSuperAdmin
-        ? requestedOrDefault
-        : constrainPermissions(constrainPermissions(requestedOrDefault, creatorLimit), parentLimit);
+      let issuedPermissions = session.isSuperAdmin
+        ? baseline
+        : constrainPermissions(constrainPermissions(baseline, creatorLimit), parentLimit);
+      issuedPermissions = capPermissionsToProfile(effectiveMobileProfile, issuedPermissions);
 
       const { error: permError } = await admin
         .from("user_permission_sets")
@@ -621,7 +670,7 @@ export async function PATCH(request: NextRequest) {
           {
             user_id: body.userId,
             permissions: issuedPermissions,
-            source: requestedPermissions.length ? "manual" : "role_default",
+            source: effectiveMobileProfile !== "standard" ? "mobile_profile" : (requestedPermissions.length ? "manual" : "role_default"),
             updated_at: new Date().toISOString()
           },
           { onConflict: "user_id" }
@@ -640,7 +689,8 @@ export async function PATCH(request: NextRequest) {
         role: body.role,
         countryId: body.countryId,
         countryBranchId: body.countryBranchId,
-        cityBranchId: body.cityBranchId
+        cityBranchId: body.cityBranchId,
+        mobileProfile: body.mobileProfile
       }
     });
 
@@ -660,7 +710,7 @@ export async function DELETE(request: NextRequest) {
 
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin && !isCountryManager) {
-      throw new Error("Not authorized to delete users.");
+      throw new ApiClientError("Not authorized to delete users.", { status: 403 });
     }
 
     const admin = createSupabaseAdminClient() as any;
@@ -677,7 +727,7 @@ export async function DELETE(request: NextRequest) {
         throw new Error("Only Super Admin can delete Super Admin or Country Admin users.");
       }
       if (targetAssignment.country_id && !session.countryIds.includes(targetAssignment.country_id)) {
-        throw new Error("Not authorized to delete users outside of your country.");
+        throw new ApiClientError("Not authorized to delete users outside of your country.", { status: 403 });
       }
     }
 

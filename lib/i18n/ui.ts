@@ -1,6 +1,50 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "mcash.kind_receipt"
+  | "mcash.kind_payment"
+  | "mcash.field_account"
+  | "mcash.field_amount"
+  | "mcash.field_remarks"
+  | "mcash.change"
+  | "mcash.saving"
+  | "mcash.save_entry"
+  | "urw2.mobile_profile_label"
+  | "urw2.mobile_profile_standard"
+  | "urw2.mobile_profile_cash"
+  | "urw2.mobile_profile_field"
+  | "urw2.mobile_profile_soon"
+  | "urw2.mobile_profile_cash_hint"
+  | "urw2.mobile_profile_field_hint"
+  | "urw2.mobile_profile_standard_hint"
+  | "mcash.app_title"
+  | "mcash.hi"
+  | "mcash.menu_entry"
+  | "mcash.menu_book"
+  | "mcash.menu_ledger"
+  | "mcash.menu_journal"
+  | "mcash.menu_entry_sub"
+  | "mcash.menu_book_sub"
+  | "mcash.menu_ledger_sub"
+  | "mcash.menu_journal_sub"
+  | "mcash.back"
+  | "mcash.logout"
+  | "mcash.search_account"
+  | "mcash.no_results"
+  | "mcash.opening"
+  | "mcash.closing"
+  | "mcash.debit"
+  | "mcash.credit"
+  | "mcash.balance"
+  | "mcash.date"
+  | "mcash.details"
+  | "mcash.no_entries"
+  | "mcash.loading"
+  | "mcash.today"
+  | "mcash.scope_note"
+  | "mcash.view_only"
+  | "mcash.open_full_form"
+  | "mcash.entry_help"
   | "smartsum.all_clear"
   | "smartsum.view_details"
   | "smartsum.open_record"
@@ -24818,6 +24862,50 @@ const en: Dict = {
   "smartsum.sd_today": "Due today",
   "smartsum.sd_tomorrow": "Due tomorrow",
   "smartsum.sd_pending": "Pending items",
+  "urw2.mobile_profile_label": "Mobile Access Profile",
+  "urw2.mobile_profile_standard": "Standard ERP Access",
+  "urw2.mobile_profile_cash": "Mobile Cash & Ledger User",
+  "urw2.mobile_profile_field": "Mobile Field User",
+  "urw2.mobile_profile_soon": "(coming soon)",
+  "urw2.mobile_profile_cash_hint": "After login this user opens a simple mobile screen: daily cash entry plus cash book, ledger and journal viewing only. No user administration, no settings, no editing of posted entries. Country and branch scope still applies.",
+  "urw2.mobile_profile_field_hint": "A field user who only sees assigned operational forms and assigned jobs.",
+  "urw2.mobile_profile_standard_hint": "Full ERP web interface with the permissions assigned below.",
+  "mcash.app_title": "Cash & Ledger",
+  "mcash.hi": "Assalam o Alaikum",
+  "mcash.menu_entry": "New Cash Entry",
+  "mcash.menu_book": "Cash Book",
+  "mcash.menu_ledger": "Ledger Search",
+  "mcash.menu_journal": "Journal",
+  "mcash.menu_entry_sub": "Record a daily cash receipt or payment",
+  "mcash.menu_book_sub": "View the day book and roznamcha",
+  "mcash.menu_ledger_sub": "Find an account and view its ledger",
+  "mcash.menu_journal_sub": "View journal entries",
+  "mcash.back": "Back",
+  "mcash.logout": "Log out",
+  "mcash.search_account": "Search account by name or number",
+  "mcash.no_results": "No accounts found",
+  "mcash.opening": "Opening balance",
+  "mcash.closing": "Closing balance",
+  "mcash.debit": "Debit",
+  "mcash.credit": "Credit",
+  "mcash.balance": "Balance",
+  "mcash.date": "Date",
+  "mcash.details": "Details",
+  "mcash.no_entries": "No entries for the selected day",
+  "mcash.loading": "Loading",
+  "mcash.today": "Today",
+  "mcash.scope_note": "You can work only within your authorized country and branch.",
+  "mcash.view_only": "View only",
+  "mcash.open_full_form": "Open cash entry form",
+  "mcash.entry_help": "Use the standard cash form. Your entry follows the normal validation and approval rules.",
+  "mcash.kind_receipt": "Receipt (money in)",
+  "mcash.kind_payment": "Payment (money out)",
+  "mcash.field_account": "Account",
+  "mcash.field_amount": "Amount",
+  "mcash.field_remarks": "Remarks",
+  "mcash.change": "Change",
+  "mcash.saving": "Saving…",
+  "mcash.save_entry": "Save entry",
 };
 
 const ur: Dict = {
@@ -42263,6 +42351,50 @@ const ur: Dict = {
   "smartsum.sd_today": "آج واجب",
   "smartsum.sd_tomorrow": "کل واجب",
   "smartsum.sd_pending": "زیر التواء آئٹمز",
+  "urw2.mobile_profile_label": "موبائل رسائی پروفائل",
+  "urw2.mobile_profile_standard": "معیاری ERP رسائی",
+  "urw2.mobile_profile_cash": "موبائل کیش اور لیجر صارف",
+  "urw2.mobile_profile_field": "موبائل فیلڈ صارف",
+  "urw2.mobile_profile_soon": "(جلد آ رہا ہے)",
+  "urw2.mobile_profile_cash_hint": "لاگ اِن کے بعد یہ صارف ایک سادہ موبائل اسکرین کھولتا ہے: روزانہ کیش اندراج اور کیش بک، لیجر اور جرنل صرف دیکھنا۔ کوئی صارف انتظام نہیں، کوئی ترتیبات نہیں، پوسٹ شدہ اندراجات میں ترمیم نہیں۔ ملک اور برانچ کا دائرہ کار بدستور لاگو رہتا ہے۔",
+  "urw2.mobile_profile_field_hint": "ایک فیلڈ صارف جو صرف تفویض کردہ آپریشنل فارم اور تفویض کردہ کام دیکھتا ہے۔",
+  "urw2.mobile_profile_standard_hint": "مکمل ERP ویب انٹرفیس جس میں نیچے تفویض کردہ اجازتیں شامل ہیں۔",
+  "mcash.app_title": "کیش اور لیجر",
+  "mcash.hi": "السلام علیکم",
+  "mcash.menu_entry": "نیا کیش اندراج",
+  "mcash.menu_book": "کیش بک",
+  "mcash.menu_ledger": "لیجر تلاش",
+  "mcash.menu_journal": "جرنل",
+  "mcash.menu_entry_sub": "روزانہ کیش وصولی یا ادائیگی درج کریں",
+  "mcash.menu_book_sub": "روزنامچہ اور ڈے بک دیکھیں",
+  "mcash.menu_ledger_sub": "اکاؤنٹ تلاش کریں اور اس کا لیجر دیکھیں",
+  "mcash.menu_journal_sub": "جرنل اندراجات دیکھیں",
+  "mcash.back": "واپس",
+  "mcash.logout": "لاگ آؤٹ",
+  "mcash.search_account": "نام یا نمبر سے اکاؤنٹ تلاش کریں",
+  "mcash.no_results": "کوئی اکاؤنٹ نہیں ملا",
+  "mcash.opening": "ابتدائی بیلنس",
+  "mcash.closing": "اختتامی بیلنس",
+  "mcash.debit": "ڈیبٹ",
+  "mcash.credit": "کریڈٹ",
+  "mcash.balance": "بیلنس",
+  "mcash.date": "تاریخ",
+  "mcash.details": "تفصیل",
+  "mcash.no_entries": "منتخب دن کے لیے کوئی اندراج نہیں",
+  "mcash.loading": "لوڈ ہو رہا ہے",
+  "mcash.today": "آج",
+  "mcash.scope_note": "آپ صرف اپنے مجاز ملک اور برانچ کے اندر کام کر سکتے ہیں۔",
+  "mcash.view_only": "صرف دیکھیں",
+  "mcash.open_full_form": "کیش اندراج فارم کھولیں",
+  "mcash.entry_help": "معیاری کیش فارم استعمال کریں۔ آپ کا اندراج عام توثیق اور منظوری کے اصولوں کے مطابق ہوتا ہے۔",
+  "mcash.kind_receipt": "وصولی (رقم آمد)",
+  "mcash.kind_payment": "ادائیگی (رقم اخراج)",
+  "mcash.field_account": "اکاؤنٹ",
+  "mcash.field_amount": "رقم",
+  "mcash.field_remarks": "تفصیل",
+  "mcash.change": "تبدیل کریں",
+  "mcash.saving": "محفوظ ہو رہا ہے…",
+  "mcash.save_entry": "اندراج محفوظ کریں",
 };
 
 const ar: Dict = {
@@ -59710,6 +59842,50 @@ const ar: Dict = {
   "smartsum.sd_today": "مستحق اليوم",
   "smartsum.sd_tomorrow": "مستحق غدًا",
   "smartsum.sd_pending": "عناصر معلقة",
+  "urw2.mobile_profile_label": "ملف الوصول عبر الجوال",
+  "urw2.mobile_profile_standard": "وصول ERP القياسي",
+  "urw2.mobile_profile_cash": "مستخدم النقد ودفتر الأستاذ عبر الجوال",
+  "urw2.mobile_profile_field": "مستخدم ميداني عبر الجوال",
+  "urw2.mobile_profile_soon": "(قريبًا)",
+  "urw2.mobile_profile_cash_hint": "بعد تسجيل الدخول يفتح هذا المستخدم شاشة جوال بسيطة: إدخال النقد اليومي مع عرض دفتر النقد ودفتر الأستاذ واليومية فقط. لا إدارة مستخدمين ولا إعدادات ولا تعديل للقيود المرحّلة. يظل نطاق الدولة والفرع ساريًا.",
+  "urw2.mobile_profile_field_hint": "مستخدم ميداني يرى فقط النماذج التشغيلية المُسندة والمهام المُسندة.",
+  "urw2.mobile_profile_standard_hint": "واجهة ويب ERP كاملة بالصلاحيات المُسندة أدناه.",
+  "mcash.app_title": "النقد ودفتر الأستاذ",
+  "mcash.hi": "السلام عليكم",
+  "mcash.menu_entry": "إدخال نقدي جديد",
+  "mcash.menu_book": "دفتر النقد",
+  "mcash.menu_ledger": "بحث دفتر الأستاذ",
+  "mcash.menu_journal": "اليومية",
+  "mcash.menu_entry_sub": "سجّل إيصال أو دفعة نقدية يومية",
+  "mcash.menu_book_sub": "اعرض دفتر اليومية والروزنامة",
+  "mcash.menu_ledger_sub": "ابحث عن حساب واعرض دفتر أستاذه",
+  "mcash.menu_journal_sub": "اعرض قيود اليومية",
+  "mcash.back": "رجوع",
+  "mcash.logout": "تسجيل الخروج",
+  "mcash.search_account": "ابحث عن حساب بالاسم أو الرقم",
+  "mcash.no_results": "لم يُعثر على حسابات",
+  "mcash.opening": "الرصيد الافتتاحي",
+  "mcash.closing": "الرصيد الختامي",
+  "mcash.debit": "مدين",
+  "mcash.credit": "دائن",
+  "mcash.balance": "الرصيد",
+  "mcash.date": "التاريخ",
+  "mcash.details": "التفاصيل",
+  "mcash.no_entries": "لا قيود لليوم المحدد",
+  "mcash.loading": "جارٍ التحميل",
+  "mcash.today": "اليوم",
+  "mcash.scope_note": "يمكنك العمل فقط ضمن الدولة والفرع المصرّح لك بهما.",
+  "mcash.view_only": "عرض فقط",
+  "mcash.open_full_form": "افتح نموذج الإدخال النقدي",
+  "mcash.entry_help": "استخدم نموذج النقد القياسي. يخضع إدخالك لقواعد التحقق والاعتماد المعتادة.",
+  "mcash.kind_receipt": "قبض (نقد وارد)",
+  "mcash.kind_payment": "دفع (نقد صادر)",
+  "mcash.field_account": "الحساب",
+  "mcash.field_amount": "المبلغ",
+  "mcash.field_remarks": "ملاحظات",
+  "mcash.change": "تغيير",
+  "mcash.saving": "جارٍ الحفظ…",
+  "mcash.save_entry": "حفظ القيد",
 };
 
 const fa: Dict = {
@@ -77156,6 +77332,50 @@ const fa: Dict = {
   "smartsum.sd_today": "سررسید امروز",
   "smartsum.sd_tomorrow": "سررسید فردا",
   "smartsum.sd_pending": "موارد در انتظار",
+  "urw2.mobile_profile_label": "پروفایل دسترسی موبایل",
+  "urw2.mobile_profile_standard": "دسترسی استاندارد ERP",
+  "urw2.mobile_profile_cash": "کاربر نقد و دفتر کل موبایل",
+  "urw2.mobile_profile_field": "کاربر میدانی موبایل",
+  "urw2.mobile_profile_soon": "(به‌زودی)",
+  "urw2.mobile_profile_cash_hint": "پس از ورود، این کاربر یک صفحهٔ سادهٔ موبایل باز می‌کند: ثبت نقدی روزانه به‌همراه مشاهدهٔ دفتر نقد، دفتر کل و روزنامه فقط. بدون مدیریت کاربر، بدون تنظیمات، بدون ویرایش اسناد ثبت‌شده. دامنهٔ کشور و شعبه همچنان اعمال می‌شود.",
+  "urw2.mobile_profile_field_hint": "کاربر میدانی که فقط فرم‌های عملیاتی و کارهای تخصیص‌یافته را می‌بیند.",
+  "urw2.mobile_profile_standard_hint": "رابط وب کامل ERP با مجوزهای تخصیص‌یافته در پایین.",
+  "mcash.app_title": "نقد و دفتر کل",
+  "mcash.hi": "السلام علیکم",
+  "mcash.menu_entry": "ثبت نقدی جدید",
+  "mcash.menu_book": "دفتر نقد",
+  "mcash.menu_ledger": "جستجوی دفتر کل",
+  "mcash.menu_journal": "روزنامه",
+  "mcash.menu_entry_sub": "دریافت یا پرداخت نقدی روزانه را ثبت کنید",
+  "mcash.menu_book_sub": "دفتر روزانه و روزنامچه را ببینید",
+  "mcash.menu_ledger_sub": "حساب را پیدا کنید و دفتر کل آن را ببینید",
+  "mcash.menu_journal_sub": "اسناد روزنامه را ببینید",
+  "mcash.back": "بازگشت",
+  "mcash.logout": "خروج",
+  "mcash.search_account": "حساب را با نام یا شماره جستجو کنید",
+  "mcash.no_results": "حسابی یافت نشد",
+  "mcash.opening": "مانده اول دوره",
+  "mcash.closing": "مانده پایان دوره",
+  "mcash.debit": "بدهکار",
+  "mcash.credit": "بستانکار",
+  "mcash.balance": "مانده",
+  "mcash.date": "تاریخ",
+  "mcash.details": "جزئیات",
+  "mcash.no_entries": "برای روز انتخاب‌شده سندی نیست",
+  "mcash.loading": "در حال بارگذاری",
+  "mcash.today": "امروز",
+  "mcash.scope_note": "شما فقط می‌توانید در کشور و شعبهٔ مجاز خود کار کنید.",
+  "mcash.view_only": "فقط مشاهده",
+  "mcash.open_full_form": "فرم ثبت نقدی را باز کنید",
+  "mcash.entry_help": "از فرم استاندارد نقدی استفاده کنید. ثبت شما از قواعد اعتبارسنجی و تأیید معمول پیروی می‌کند.",
+  "mcash.kind_receipt": "دریافت (پول ورودی)",
+  "mcash.kind_payment": "پرداخت (پول خروجی)",
+  "mcash.field_account": "حساب",
+  "mcash.field_amount": "مبلغ",
+  "mcash.field_remarks": "توضیحات",
+  "mcash.change": "تغییر",
+  "mcash.saving": "در حال ذخیره…",
+  "mcash.save_entry": "ذخیره ثبت",
 };
 
 const ps: Dict = {
@@ -94608,6 +94828,50 @@ const ps: Dict = {
   "smartsum.sd_today": "نن نیټه",
   "smartsum.sd_tomorrow": "سبا نیټه",
   "smartsum.sd_pending": "پاتې توکي",
+  "urw2.mobile_profile_label": "د موبایل لاسرسي پروفایل",
+  "urw2.mobile_profile_standard": "معیاري ERP لاسرسی",
+  "urw2.mobile_profile_cash": "د موبایل نغدو او لیجر کاروونکی",
+  "urw2.mobile_profile_field": "د موبایل ساحوي کاروونکی",
+  "urw2.mobile_profile_soon": "(ډېر ژر)",
+  "urw2.mobile_profile_cash_hint": "له ننوتلو وروسته دا کاروونکی یو ساده موبایل پرده پرانیزي: ورځنی نغدي ننوت او یوازې د نغدو کتاب، لیجر او جورنال کتل. د کاروونکي مدیریت نشته، تنظیمات نشته، په ثبت‌شویو ننوتونو کې سمون نشته. د هېواد او څانګې ساحه لا هم پلي کیږي.",
+  "urw2.mobile_profile_field_hint": "یو ساحوي کاروونکی چې یوازې ورسپارل شوي عملیاتي فورمې او ورسپارل شوي دندې ویني.",
+  "urw2.mobile_profile_standard_hint": "بشپړ ERP ویب انٹرفیس د لاندې ورکړل شویو اجازو سره.",
+  "mcash.app_title": "نغدې او لیجر",
+  "mcash.hi": "السلام علیکم",
+  "mcash.menu_entry": "نوی نغدي ننوت",
+  "mcash.menu_book": "د نغدو کتاب",
+  "mcash.menu_ledger": "د لیجر لټون",
+  "mcash.menu_journal": "جورنال",
+  "mcash.menu_entry_sub": "ورځنۍ نغدي ترلاسه یا تادیه ثبت کړئ",
+  "mcash.menu_book_sub": "ورځپاڼه او د ورځې کتاب وګورئ",
+  "mcash.menu_ledger_sub": "حساب ولټوئ او د هغه لیجر وګورئ",
+  "mcash.menu_journal_sub": "د جورنال ننوتونه وګورئ",
+  "mcash.back": "شاته",
+  "mcash.logout": "وتل",
+  "mcash.search_account": "حساب په نوم یا شمېره ولټوئ",
+  "mcash.no_results": "هېڅ حساب ونه موندل شو",
+  "mcash.opening": "پرانیستی بیلانس",
+  "mcash.closing": "پای بیلانس",
+  "mcash.debit": "ډیبیټ",
+  "mcash.credit": "کریډیټ",
+  "mcash.balance": "بیلانس",
+  "mcash.date": "نېټه",
+  "mcash.details": "تفصیل",
+  "mcash.no_entries": "د ټاکل شوې ورځې لپاره هېڅ ننوت نشته",
+  "mcash.loading": "بارېږي",
+  "mcash.today": "نن",
+  "mcash.scope_note": "تاسو یوازې د خپل مجاز هېواد او څانګې دننه کار کولی شئ.",
+  "mcash.view_only": "یوازې کتل",
+  "mcash.open_full_form": "د نغدي ننوت فورمه پرانیزئ",
+  "mcash.entry_help": "معیاري نغدي فورمه وکاروئ. ستاسو ننوت د معمول تصدیق او تصویب مقرراتو سره سم دی.",
+  "mcash.kind_receipt": "ترلاسه (پیسې راتلونکې)",
+  "mcash.kind_payment": "تادیه (پیسې وتونکې)",
+  "mcash.field_account": "حساب",
+  "mcash.field_amount": "مقدار",
+  "mcash.field_remarks": "یادښتونه",
+  "mcash.change": "بدلون",
+  "mcash.saving": "خوندي کیږي…",
+  "mcash.save_entry": "ننوت خوندي کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

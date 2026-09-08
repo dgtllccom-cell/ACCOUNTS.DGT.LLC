@@ -257,6 +257,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   // Mandatory operational domain — decides which role set + data world the user belongs to.
   const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
   const [clearingAgentId, setClearingAgentId] = useState("");
+  // Simplified mobile working interface (reuses this same user id / login / scope /
+  // permissions). "standard" = full ERP; "mobile_cash_ledger" = Brother User;
+  // "mobile_field" = Munshi / field user.
+  const [mobileProfile, setMobileProfile] = useState<"standard" | "mobile_cash_ledger" | "mobile_field">("standard");
 
   // Step 3: KYC & Security
   const [cnicPassportNo, setCnicPassportNo] = useState("");
@@ -460,6 +464,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setFullName(data.fullName || "");
         setUserCode(data.userCode || makeAutoUserCode());
         setRole(data.role || "staff_user");
+        if (data.operationalDomain === "shipping") setOperationalDomain("shipping");
+        if (data.clearingAgentId) setClearingAgentId(data.clearingAgentId);
+        if (data.mobileProfile === "mobile_cash_ledger" || data.mobileProfile === "mobile_field") {
+          setMobileProfile(data.mobileProfile);
+        }
         setCountryId(data.countryId || "");
         if (data.email) setPersonalEmail(data.email);
         if (data.phone) setContactPhone(data.phone);
@@ -730,6 +739,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         userCode: issuedCode,
         operationalDomain,
         clearingAgentId: operationalDomain === "shipping" ? (clearingAgentId || null) : null,
+        mobileProfile,
         countryId: resolvedCountryId,
         countryBranchId: resolvedCountryBranchId,
         cityBranchId: resolvedCityBranchId,
@@ -1379,6 +1389,47 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* Mobile access profile — a simplified mobile working interface on top
+                      of the SAME user id / login / scope / permissions. Not a new role. */}
+                  <div className="space-y-1.5 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-900 dark:bg-indigo-950/20">
+                    <Label className="text-xs font-black uppercase tracking-wide text-indigo-800 dark:text-indigo-300">
+                      {centralT(activeLang, "urw2.mobile_profile_label" as never, "Mobile Access Profile")}
+                    </Label>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      {([
+                        ["standard", "urw2.mobile_profile_standard", "Standard ERP Access"],
+                        ["mobile_cash_ledger", "urw2.mobile_profile_cash", "Mobile Cash & Ledger User"],
+                        ["mobile_field", "urw2.mobile_profile_field", "Mobile Field User"],
+                      ] as const).map(([v, key, fallback]) => (
+                        <button
+                          key={v}
+                          type="button"
+                          disabled={v === "mobile_field"}
+                          onClick={() => setMobileProfile(v)}
+                          className={`rounded-lg border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                            mobileProfile === v
+                              ? "border-indigo-500 bg-indigo-600 text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          {centralT(activeLang, key as never, fallback)}
+                          {v === "mobile_field" && (
+                            <span className="ml-1 text-[9px] font-normal opacity-70">
+                              {centralT(activeLang, "urw2.mobile_profile_soon" as never, "(coming soon)")}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-indigo-700/80 dark:text-indigo-400/80">
+                      {mobileProfile === "mobile_cash_ledger"
+                        ? centralT(activeLang, "urw2.mobile_profile_cash_hint" as never, "After login this user opens a simple mobile screen: daily cash entry + cash book / ledger / journal viewing only. No user admin, no settings, no editing posted entries. Country / branch scope still applies.")
+                        : mobileProfile === "mobile_field"
+                        ? centralT(activeLang, "urw2.mobile_profile_field_hint" as never, "A Munshi / field user who only sees assigned operational forms and assigned jobs.")
+                        : centralT(activeLang, "urw2.mobile_profile_standard_hint" as never, "Full ERP web interface with the permissions assigned below.")}
+                    </p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">

@@ -1215,9 +1215,13 @@ export function CashEntryForm({
     if (session.scopes.isSuperAdmin) return;
 
     // Country is fixed. If multiple are assigned, pick the first deterministically.
-    if (!countryId && session.scopes.countryIds?.length) {
+    // Branch-scoped users have no countryIds — fall back to their branch's own
+    // country (branchCountryId, display/pre-fill only; scope stays server-enforced).
+    const fixedCountryId =
+      session.scopes.countryIds?.[0] ?? (session.scopes as any)?.summary?.branchCountryId ?? null;
+    if (!countryId && fixedCountryId) {
       suppressScopeResetRef.current = true;
-      setCountryId(session.scopes.countryIds[0]!);
+      setCountryId(fixedCountryId);
     }
 
     const branchIds = session.scopes.countryBranchIds ?? [];

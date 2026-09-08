@@ -1,4 +1,5 @@
 import type { ErpSession } from "@/lib/auth/session";
+import { mobileProfileAllows } from "@/lib/permissions/mobile-profiles";
 
 export type PermissionCheck = {
   resource: string;
@@ -96,8 +97,26 @@ export function assertResourceDomain(session: ErpSession, resource: string) {
   }
 }
 
+/**
+ * A user on a simplified mobile profile (Brother User / Field User) may ONLY
+ * touch the resources/actions on that profile's allow-list — regardless of what
+ * their enterprise role would otherwise permit. This is the server-side cap that
+ * makes the mobile interfaces real security, not just hidden menus. Scope
+ * (country/branch) is still enforced by the canAccess* checks below.
+ */
+export function assertMobileProfile(session: ErpSession, resource: string, action: string) {
+  const profile = session.mobileProfile ?? "standard";
+  if (profile === "standard") return;
+  if (!mobileProfileAllows(profile, resource, action)) {
+    throw new ErpPermissionError(
+      `Your mobile access profile does not allow ${action} on ${resource}.`
+    );
+  }
+}
+
 export function authorize(session: ErpSession, check: PermissionCheck) {
   assertResourceDomain(session, check.resource);
+  assertMobileProfile(session, check.resource, check.action);
 
   if (!hasRolePermission(session, check.resource, check.action)) {
     throw new ErpPermissionError(`Missing permission: ${check.resource}:${check.action}`);
