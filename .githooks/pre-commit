@@ -6,6 +6,15 @@
 # ships silent English, adds a NEW parallel per-module dictionary, or introduces
 # NEW hard-coded English strings in the staged files.
 
+echo "• repo safety guard (plaintext credentials / destructive identity scripts)…"
+node scripts/repo-safety-guard.mjs --staged || {
+  echo ""
+  echo "✗ commit blocked: a plaintext credential or a destructive auth/identity"
+  echo "  script must not enter version control. Rotate via the Supabase dashboard;"
+  echo "  do user cleanup through a reviewed, guarded migration — not a scripts/*.mjs."
+  exit 1
+}
+
 echo "• i18n five-language guard…"
 node scripts/i18n-ui-guard.mjs --changed || {
   echo ""
