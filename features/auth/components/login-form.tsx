@@ -424,32 +424,6 @@ export function LoginForm({
         </div>
       )}
 
-      {/* ── Role Header Banner ── */}
-      <div className="mb-4 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
-              {ACCESS_PROFILES[activeTab].eyebrow}
-            </p>
-            <h3 className="mt-1 text-lg font-black tracking-tight text-slate-900 dark:text-white">
-              {ACCESS_PROFILES[activeTab].title}
-            </h3>
-            <p className="mt-1 text-xs leading-5 font-medium text-slate-600 dark:text-slate-400">
-              {ACCESS_PROFILES[activeTab].subtitle}
-            </p>
-          </div>
-          <div className="hidden sm:flex flex-col items-end gap-1 rounded-2xl border border-blue-100 bg-white px-3 py-2 text-right shadow-sm dark:border-blue-900/40 dark:bg-slate-900">
-            <span className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-400">{tt("login.scope_heading", "Scope")}</span>
-            <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-300">
-              {ACCESS_PROFILES[activeTab].scopeLabel}
-            </span>
-          </div>
-        </div>
-        <p className="mt-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-          {ACCESS_PROFILES[activeTab].note}
-        </p>
-      </div>
-
       {/* ── Error Banner ── */}
       {errorState && (
         <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-bold text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 animate-in fade-in zoom-in-95 duration-150">
@@ -506,8 +480,8 @@ export function LoginForm({
         {/* Email / User ID */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="identifier" className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              {tt("login.email_label", "Username / User ID (e.g. CountryCode/CityCode@DGT.LLC)")}
+            <label htmlFor="identifier" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
+              {tt("login.email_label", "User ID or Email")}
             </label>
             {suggestedUser && (
               <button
@@ -535,28 +509,14 @@ export function LoginForm({
               onChange={(e) => setIdentifier(e.target.value)}
               onFocus={() => setIdFocused(true)}
               onBlur={() => setIdFocused(false)}
-              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 font-mono text-xs sm:text-sm font-bold shadow-xs placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
-              placeholder={ACCESS_PROFILES[activeTab].formatPlaceholder}
+              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
+              placeholder="Enter your User ID or Email"
               autoComplete="username"
               required
             />
           </div>
-
-          {/* Quick Format Picker Badges */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tt("login.quick_pick", "Quick Pick:")}</span>
-            {ACCESS_PROFILES[activeTab].quickExamples.map((ex) => (
-              <button
-                key={ex}
-                type="button"
-                onClick={() => setIdentifier(ex)}
-                className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10.5px] font-bold font-mono text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 dark:hover:text-blue-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-              >
-                {ex}
-              </button>
-            ))}
-          </div>
         </div>
+
 
         {/* Password */}
         <div className="space-y-1.5">
