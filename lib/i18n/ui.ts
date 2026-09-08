@@ -1,6 +1,87 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "nav.health_center"
+  | "health.title"
+  | "health.subtitle"
+  | "health.rescan_static"
+  | "health.run_full_scan"
+  | "health.scanning"
+  | "health.readonly_note"
+  | "health.loading"
+  | "health.overall_health"
+  | "health.healthy_pages"
+  | "health.warnings"
+  | "health.broken_pages"
+  | "health.failed_apis"
+  | "health.permission_issues"
+  | "health.translation_issues"
+  | "health.print_issues"
+  | "health.tab_overview"
+  | "health.tab_pages"
+  | "health.tab_apis"
+  | "health.tab_navigation"
+  | "health.tab_permissions"
+  | "health.tab_languages"
+  | "health.tab_print"
+  | "health.tab_build"
+  | "health.environment"
+  | "health.build_deploy"
+  | "health.gates"
+  | "health.scan_scope"
+  | "health.app_env"
+  | "health.main_sha"
+  | "health.origin_sha"
+  | "health.dirty_files"
+  | "health.i18n_guard"
+  | "health.typecheck"
+  | "health.not_tested_short"
+  | "health.role"
+  | "health.live_probes"
+  | "health.on"
+  | "health.off"
+  | "health.generated"
+  | "health.by_category"
+  | "health.category"
+  | "health.checked"
+  | "health.healthy"
+  | "health.warning"
+  | "health.failed"
+  | "health.not_tested"
+  | "health.cat_page"
+  | "health.cat_navigation"
+  | "health.cat_api"
+  | "health.cat_permission"
+  | "health.cat_language"
+  | "health.cat_print_pdf"
+  | "health.cat_build_deploy"
+  | "health.not_tested_title"
+  | "health.filter_status"
+  | "health.all"
+  | "health.empty_findings"
+  | "health.col_module"
+  | "health.col_target"
+  | "health.col_issue"
+  | "health.col_status"
+  | "health.col_lang"
+  | "health.view"
+  | "health.expected"
+  | "health.actual"
+  | "health.permission_result"
+  | "health.print_result"
+  | "health.language_result"
+  | "health.evidence"
+  | "health.last_checked"
+  | "health.open_page"
+  | "health.status_healthy"
+  | "health.status_redirected"
+  | "health.status_unauthorized_expected"
+  | "health.status_warning"
+  | "health.status_failed"
+  | "health.status_not_found"
+  | "health.status_server_error"
+  | "health.status_not_tested"
+  | "health.status_unknown"
   | "cns.total"
   | "cns.tender_no"
   | "cns.loading_from"
@@ -24362,6 +24443,87 @@ const en: Dict = {
   "cns.linked_master": "Linked to master record",
   "cns.searching": "Searching…",
   "cns.total": "TOTAL",
+  "nav.health_center": "Health & Integrity Center",
+  "health.title": "ERP Health & Integrity Center",
+  "health.subtitle": "Pages • APIs • Permissions • Languages • Print/PDF • Production",
+  "health.rescan_static": "Re-scan (static)",
+  "health.run_full_scan": "Run full live scan",
+  "health.scanning": "Scanning…",
+  "health.readonly_note": "All scans are read-only. They probe routes and read APIs with your own session — they never create or alter Ledger, Journal, Roznamcha, Purchase, Sales, Payment, Stock or any business record.",
+  "health.loading": "Loading…",
+  "health.overall_health": "Overall Health",
+  "health.healthy_pages": "Healthy Pages",
+  "health.warnings": "Warnings",
+  "health.broken_pages": "Broken Pages",
+  "health.failed_apis": "Failed APIs",
+  "health.permission_issues": "Permission Issues",
+  "health.translation_issues": "Translation Issues",
+  "health.print_issues": "Print/PDF Issues",
+  "health.tab_overview": "Overview",
+  "health.tab_pages": "Pages",
+  "health.tab_apis": "APIs",
+  "health.tab_navigation": "Navigation",
+  "health.tab_permissions": "Permissions",
+  "health.tab_languages": "Languages",
+  "health.tab_print": "Print/PDF",
+  "health.tab_build": "Build/Deploy",
+  "health.environment": "Environment",
+  "health.build_deploy": "Build / Deploy",
+  "health.gates": "Gates",
+  "health.scan_scope": "Scan scope",
+  "health.app_env": "APP_ENV",
+  "health.main_sha": "Running SHA",
+  "health.origin_sha": "origin/main (cached)",
+  "health.dirty_files": "Uncommitted files",
+  "health.i18n_guard": "i18n guard",
+  "health.typecheck": "TypeScript",
+  "health.not_tested_short": "not run per-scan",
+  "health.role": "Role",
+  "health.live_probes": "Live probes",
+  "health.on": "on",
+  "health.off": "off — static only",
+  "health.generated": "Generated",
+  "health.by_category": "By category",
+  "health.category": "Category",
+  "health.checked": "Checked",
+  "health.healthy": "Healthy",
+  "health.warning": "Warning",
+  "health.failed": "Failed",
+  "health.not_tested": "Not Tested",
+  "health.cat_page": "Page & Route Health",
+  "health.cat_navigation": "Navigation Integrity",
+  "health.cat_api": "API Health",
+  "health.cat_permission": "RBAC Integrity",
+  "health.cat_language": "Five-Language Health",
+  "health.cat_print_pdf": "Print/PDF Health",
+  "health.cat_build_deploy": "Build & Deployment",
+  "health.not_tested_title": "Not tested (and why)",
+  "health.filter_status": "Filter",
+  "health.all": "All",
+  "health.empty_findings": "No findings in this view.",
+  "health.col_module": "Module",
+  "health.col_target": "Route / Target",
+  "health.col_issue": "Issue / Result",
+  "health.col_status": "Status",
+  "health.col_lang": "Lang",
+  "health.view": "View",
+  "health.expected": "Expected",
+  "health.actual": "Actual",
+  "health.permission_result": "Permission",
+  "health.print_result": "Print/PDF",
+  "health.language_result": "Language result",
+  "health.evidence": "Evidence",
+  "health.last_checked": "Last checked",
+  "health.open_page": "Open the affected page",
+  "health.status_healthy": "Healthy",
+  "health.status_redirected": "Redirected",
+  "health.status_unauthorized_expected": "Denied (expected)",
+  "health.status_warning": "Warning",
+  "health.status_failed": "Failed",
+  "health.status_not_found": "404 Not Found",
+  "health.status_server_error": "500 Server Error",
+  "health.status_not_tested": "Not Tested",
+  "health.status_unknown": "Unknown",
 };
 
 const ur: Dict = {
@@ -41579,6 +41741,87 @@ const ur: Dict = {
   "cns.linked_master": "ماسٹر ریکارڈ سے منسلک",
   "cns.searching": "تلاش جاری…",
   "cns.total": "کل میزان",
+  "nav.health_center": "ہیلتھ اینڈ انٹیگریٹی سینٹر",
+  "health.title": "ای آر پی ہیلتھ اینڈ انٹیگریٹی سینٹر",
+  "health.subtitle": "صفحات • APIs • اجازتیں • زبانیں • پرنٹ/PDF • پروڈکشن",
+  "health.rescan_static": "دوبارہ اسکین (سٹیٹک)",
+  "health.run_full_scan": "مکمل لائیو اسکین چلائیں",
+  "health.scanning": "اسکیننگ…",
+  "health.readonly_note": "تمام اسکین صرف پڑھنے کے لیے ہیں۔ یہ آپ کے اپنے سیشن سے راستے اور APIs پڑھتے ہیں — یہ کبھی لیجر، جرنل، روزنامچہ، خرید، فروخت، ادائیگی، اسٹاک یا کوئی کاروباری ریکارڈ نہیں بناتے یا تبدیل نہیں کرتے۔",
+  "health.loading": "لوڈ ہو رہا ہے…",
+  "health.overall_health": "مجموعی صحت",
+  "health.healthy_pages": "صحت مند صفحات",
+  "health.warnings": "انتباہات",
+  "health.broken_pages": "خراب صفحات",
+  "health.failed_apis": "ناکام APIs",
+  "health.permission_issues": "اجازت کے مسائل",
+  "health.translation_issues": "ترجمے کے مسائل",
+  "health.print_issues": "پرنٹ/PDF کے مسائل",
+  "health.tab_overview": "جائزہ",
+  "health.tab_pages": "صفحات",
+  "health.tab_apis": "اے پی آئیز",
+  "health.tab_navigation": "نیویگیشن",
+  "health.tab_permissions": "اجازتیں",
+  "health.tab_languages": "زبانیں",
+  "health.tab_print": "پرنٹ/PDF",
+  "health.tab_build": "بلڈ/ڈیپلائے",
+  "health.environment": "ماحول",
+  "health.build_deploy": "بلڈ / ڈیپلائے",
+  "health.gates": "گیٹس",
+  "health.scan_scope": "اسکین کا دائرہ",
+  "health.app_env": "ایپ ماحول (APP_ENV)",
+  "health.main_sha": "رننگ SHA",
+  "health.origin_sha": "origin/main (کیشڈ)",
+  "health.dirty_files": "غیر کمٹ شدہ فائلیں",
+  "health.i18n_guard": "i18n گارڈ",
+  "health.typecheck": "ٹائپ اسکرپٹ",
+  "health.not_tested_short": "فی اسکین نہیں چلایا گیا",
+  "health.role": "کردار",
+  "health.live_probes": "لائیو پروبز",
+  "health.on": "آن",
+  "health.off": "آف — صرف سٹیٹک",
+  "health.generated": "تیار کیا گیا",
+  "health.by_category": "زمرہ کے لحاظ سے",
+  "health.category": "زمرہ",
+  "health.checked": "چیک شدہ",
+  "health.healthy": "صحت مند",
+  "health.warning": "انتباہ",
+  "health.failed": "ناکام",
+  "health.not_tested": "ٹیسٹ نہیں ہوا",
+  "health.cat_page": "صفحہ اور راستہ صحت",
+  "health.cat_navigation": "نیویگیشن سالمیت",
+  "health.cat_api": "API صحت",
+  "health.cat_permission": "RBAC سالمیت",
+  "health.cat_language": "پانچ زبان صحت",
+  "health.cat_print_pdf": "پرنٹ/PDF صحت",
+  "health.cat_build_deploy": "بلڈ اور ڈیپلائمنٹ",
+  "health.not_tested_title": "ٹیسٹ نہیں ہوا (اور کیوں)",
+  "health.filter_status": "فلٹر",
+  "health.all": "سب",
+  "health.empty_findings": "اس منظر میں کوئی نتیجہ نہیں۔",
+  "health.col_module": "ماڈیول",
+  "health.col_target": "راستہ / ہدف",
+  "health.col_issue": "مسئلہ / نتیجہ",
+  "health.col_status": "حالت",
+  "health.col_lang": "زبان",
+  "health.view": "دیکھیں",
+  "health.expected": "متوقع",
+  "health.actual": "اصل",
+  "health.permission_result": "اجازت",
+  "health.print_result": "پرنٹ/PDF",
+  "health.language_result": "زبان کا نتیجہ",
+  "health.evidence": "شواہد",
+  "health.last_checked": "آخری بار چیک کیا",
+  "health.open_page": "متاثرہ صفحہ کھولیں",
+  "health.status_healthy": "صحت مند",
+  "health.status_redirected": "ری ڈائریکٹ",
+  "health.status_unauthorized_expected": "مسترد (متوقع)",
+  "health.status_warning": "انتباہ",
+  "health.status_failed": "ناکام",
+  "health.status_not_found": "404 نہیں ملا",
+  "health.status_server_error": "500 سرور ایرر",
+  "health.status_not_tested": "ٹیسٹ نہیں ہوا",
+  "health.status_unknown": "نامعلوم",
 };
 
 const ar: Dict = {
@@ -58798,6 +59041,87 @@ const ar: Dict = {
   "cns.linked_master": "مرتبط بسجل رئيسي",
   "cns.searching": "جارٍ البحث…",
   "cns.total": "الإجمالي",
+  "nav.health_center": "مركز الصحة والسلامة",
+  "health.title": "مركز صحة وسلامة النظام",
+  "health.subtitle": "الصفحات • واجهات البرمجة • الأذونات • اللغات • الطباعة/PDF • الإنتاج",
+  "health.rescan_static": "إعادة الفحص (ثابت)",
+  "health.run_full_scan": "تشغيل فحص مباشر كامل",
+  "health.scanning": "جارٍ الفحص…",
+  "health.readonly_note": "جميع عمليات الفحص للقراءة فقط. تفحص المسارات وتقرأ واجهات البرمجة بجلستك أنت — ولا تُنشئ أو تُعدّل دفتر الأستاذ أو اليومية أو الروزنامة أو المشتريات أو المبيعات أو المدفوعات أو المخزون أو أي سجل عمل.",
+  "health.loading": "جارٍ التحميل…",
+  "health.overall_health": "الصحة العامة",
+  "health.healthy_pages": "الصفحات السليمة",
+  "health.warnings": "التحذيرات",
+  "health.broken_pages": "الصفحات المعطلة",
+  "health.failed_apis": "واجهات برمجة فاشلة",
+  "health.permission_issues": "مشكلات الأذونات",
+  "health.translation_issues": "مشكلات الترجمة",
+  "health.print_issues": "مشكلات الطباعة/PDF",
+  "health.tab_overview": "نظرة عامة",
+  "health.tab_pages": "الصفحات",
+  "health.tab_apis": "واجهات البرمجة",
+  "health.tab_navigation": "التنقل",
+  "health.tab_permissions": "الأذونات",
+  "health.tab_languages": "اللغات",
+  "health.tab_print": "الطباعة/PDF",
+  "health.tab_build": "البناء/النشر",
+  "health.environment": "البيئة",
+  "health.build_deploy": "البناء / النشر",
+  "health.gates": "البوابات",
+  "health.scan_scope": "نطاق الفحص",
+  "health.app_env": "بيئة التطبيق (APP_ENV)",
+  "health.main_sha": "SHA قيد التشغيل",
+  "health.origin_sha": "origin/main (مخزّن)",
+  "health.dirty_files": "ملفات غير مُودَعة",
+  "health.i18n_guard": "حارس i18n",
+  "health.typecheck": "فحص الأنواع (TypeScript)",
+  "health.not_tested_short": "لا يُشغّل مع كل فحص",
+  "health.role": "الدور",
+  "health.live_probes": "الفحوص المباشرة",
+  "health.on": "مفعّل",
+  "health.off": "متوقف — ثابت فقط",
+  "health.generated": "تم الإنشاء",
+  "health.by_category": "حسب الفئة",
+  "health.category": "الفئة",
+  "health.checked": "تم الفحص",
+  "health.healthy": "سليم",
+  "health.warning": "تحذير",
+  "health.failed": "فشل",
+  "health.not_tested": "لم يُختبر",
+  "health.cat_page": "صحة الصفحات والمسارات",
+  "health.cat_navigation": "سلامة التنقل",
+  "health.cat_api": "صحة واجهات البرمجة",
+  "health.cat_permission": "سلامة صلاحيات الأدوار",
+  "health.cat_language": "صحة اللغات الخمس",
+  "health.cat_print_pdf": "صحة الطباعة/PDF",
+  "health.cat_build_deploy": "البناء والنشر",
+  "health.not_tested_title": "لم يُختبر (ولماذا)",
+  "health.filter_status": "تصفية",
+  "health.all": "الكل",
+  "health.empty_findings": "لا نتائج في هذا العرض.",
+  "health.col_module": "الوحدة",
+  "health.col_target": "المسار / الهدف",
+  "health.col_issue": "المشكلة / النتيجة",
+  "health.col_status": "الحالة",
+  "health.col_lang": "اللغة",
+  "health.view": "عرض",
+  "health.expected": "المتوقع",
+  "health.actual": "الفعلي",
+  "health.permission_result": "الإذن",
+  "health.print_result": "الطباعة/PDF",
+  "health.language_result": "نتيجة اللغة",
+  "health.evidence": "الدليل",
+  "health.last_checked": "آخر فحص",
+  "health.open_page": "افتح الصفحة المتأثرة",
+  "health.status_healthy": "سليم",
+  "health.status_redirected": "مُعاد التوجيه",
+  "health.status_unauthorized_expected": "مرفوض (متوقع)",
+  "health.status_warning": "تحذير",
+  "health.status_failed": "فشل",
+  "health.status_not_found": "404 غير موجود",
+  "health.status_server_error": "500 خطأ خادم",
+  "health.status_not_tested": "لم يُختبر",
+  "health.status_unknown": "غير معروف",
 };
 
 const fa: Dict = {
@@ -76016,6 +76340,87 @@ const fa: Dict = {
   "cns.linked_master": "به رکورد اصلی پیوند شده",
   "cns.searching": "در حال جستجو…",
   "cns.total": "جمع کل",
+  "nav.health_center": "مرکز سلامت و یکپارچگی",
+  "health.title": "مرکز سلامت و یکپارچگی ERP",
+  "health.subtitle": "صفحات • APIها • دسترسی‌ها • زبان‌ها • چاپ/PDF • تولید",
+  "health.rescan_static": "اسکن مجدد (ایستا)",
+  "health.run_full_scan": "اجرای اسکن کامل زنده",
+  "health.scanning": "در حال اسکن…",
+  "health.readonly_note": "همه اسکن‌ها فقط-خواندنی هستند. مسیرها را بررسی و APIها را با نشست خودتان می‌خوانند — هرگز دفتر کل، ژورنال، روزنامچه، خرید، فروش، پرداخت، موجودی یا هیچ رکورد کسب‌وکاری ایجاد یا تغییر نمی‌دهند.",
+  "health.loading": "در حال بارگذاری…",
+  "health.overall_health": "سلامت کلی",
+  "health.healthy_pages": "صفحات سالم",
+  "health.warnings": "هشدارها",
+  "health.broken_pages": "صفحات خراب",
+  "health.failed_apis": "APIهای ناموفق",
+  "health.permission_issues": "مشکلات دسترسی",
+  "health.translation_issues": "مشکلات ترجمه",
+  "health.print_issues": "مشکلات چاپ/PDF",
+  "health.tab_overview": "نمای کلی",
+  "health.tab_pages": "صفحات",
+  "health.tab_apis": "APIها",
+  "health.tab_navigation": "ناوبری",
+  "health.tab_permissions": "دسترسی‌ها",
+  "health.tab_languages": "زبان‌ها",
+  "health.tab_print": "چاپ/PDF",
+  "health.tab_build": "ساخت/استقرار",
+  "health.environment": "محیط",
+  "health.build_deploy": "ساخت / استقرار",
+  "health.gates": "دروازه‌ها",
+  "health.scan_scope": "دامنه اسکن",
+  "health.app_env": "محیط برنامه (APP_ENV)",
+  "health.main_sha": "SHA در حال اجرا",
+  "health.origin_sha": "origin/main (کش‌شده)",
+  "health.dirty_files": "فایل‌های ثبت‌نشده",
+  "health.i18n_guard": "نگهبان i18n",
+  "health.typecheck": "بررسی نوع (TypeScript)",
+  "health.not_tested_short": "در هر اسکن اجرا نمی‌شود",
+  "health.role": "نقش",
+  "health.live_probes": "کاوش‌های زنده",
+  "health.on": "روشن",
+  "health.off": "خاموش — فقط ایستا",
+  "health.generated": "تولیدشده",
+  "health.by_category": "بر اساس دسته",
+  "health.category": "دسته",
+  "health.checked": "بررسی‌شده",
+  "health.healthy": "سالم",
+  "health.warning": "هشدار",
+  "health.failed": "ناموفق",
+  "health.not_tested": "آزمایش‌نشده",
+  "health.cat_page": "سلامت صفحه و مسیر",
+  "health.cat_navigation": "یکپارچگی ناوبری",
+  "health.cat_api": "سلامت API",
+  "health.cat_permission": "یکپارچگی RBAC",
+  "health.cat_language": "سلامت پنج‌زبانه",
+  "health.cat_print_pdf": "سلامت چاپ/PDF",
+  "health.cat_build_deploy": "ساخت و استقرار",
+  "health.not_tested_title": "آزمایش‌نشده (و چرا)",
+  "health.filter_status": "فیلتر",
+  "health.all": "همه",
+  "health.empty_findings": "در این نما یافته‌ای نیست.",
+  "health.col_module": "ماژول",
+  "health.col_target": "مسیر / هدف",
+  "health.col_issue": "مشکل / نتیجه",
+  "health.col_status": "وضعیت",
+  "health.col_lang": "زبان",
+  "health.view": "مشاهده",
+  "health.expected": "مورد انتظار",
+  "health.actual": "واقعی",
+  "health.permission_result": "دسترسی",
+  "health.print_result": "چاپ/PDF",
+  "health.language_result": "نتیجه زبان",
+  "health.evidence": "شواهد",
+  "health.last_checked": "آخرین بررسی",
+  "health.open_page": "صفحه متأثر را باز کنید",
+  "health.status_healthy": "سالم",
+  "health.status_redirected": "هدایت‌شده",
+  "health.status_unauthorized_expected": "رد شد (مورد انتظار)",
+  "health.status_warning": "هشدار",
+  "health.status_failed": "ناموفق",
+  "health.status_not_found": "۴۰۴ یافت نشد",
+  "health.status_server_error": "۵۰۰ خطای سرور",
+  "health.status_not_tested": "آزمایش‌نشده",
+  "health.status_unknown": "نامشخص",
 };
 
 const ps: Dict = {
@@ -93240,6 +93645,87 @@ const ps: Dict = {
   "cns.linked_master": "له ماسټر ریکارډ سره تړلی",
   "cns.searching": "لټون روان…",
   "cns.total": "ټول",
+  "nav.health_center": "د روغتیا او بشپړتیا مرکز",
+  "health.title": "د ERP روغتیا او بشپړتیا مرکز",
+  "health.subtitle": "پاڼې • APIs • اجازې • ژبې • چاپ/PDF • تولید",
+  "health.rescan_static": "بیا سکن (جامد)",
+  "health.run_full_scan": "بشپړ ژوندی سکن پیل کړئ",
+  "health.scanning": "سکن کیږي…",
+  "health.readonly_note": "ټول سکنونه یوازې د لوستلو لپاره دي. دوی ستاسو د خپلې غونډې له لارې لارې او APIs لولي — دوی هیڅکله لیجر، journal، روزنامچه، پیرود، پلور، تادیه، ذخیره یا کوم سوداګریز ریکارډ نه جوړوي او نه بدلوي.",
+  "health.loading": "بارول کیږي…",
+  "health.overall_health": "ټولیزه روغتیا",
+  "health.healthy_pages": "روغې پاڼې",
+  "health.warnings": "خبرتیاوې",
+  "health.broken_pages": "خرابې پاڼې",
+  "health.failed_apis": "ناکام APIs",
+  "health.permission_issues": "د اجازې ستونزې",
+  "health.translation_issues": "د ژباړې ستونزې",
+  "health.print_issues": "د چاپ/PDF ستونزې",
+  "health.tab_overview": "کتنه",
+  "health.tab_pages": "پاڼې",
+  "health.tab_apis": "API ګانې",
+  "health.tab_navigation": "نیویګیشن",
+  "health.tab_permissions": "اجازې",
+  "health.tab_languages": "ژبې",
+  "health.tab_print": "چاپ/PDF",
+  "health.tab_build": "جوړول/خپرول",
+  "health.environment": "چاپیریال",
+  "health.build_deploy": "جوړول / خپرول",
+  "health.gates": "دروازې",
+  "health.scan_scope": "د سکن ساحه",
+  "health.app_env": "د اپلیکیشن چاپیریال (APP_ENV)",
+  "health.main_sha": "چلېدونکی SHA",
+  "health.origin_sha": "origin/main (کیش شوی)",
+  "health.dirty_files": "ناسپارل شوي فایلونه",
+  "health.i18n_guard": "i18n ساتونکی",
+  "health.typecheck": "د ډول کتنه (TypeScript)",
+  "health.not_tested_short": "په هر سکن کې نه چلول کیږي",
+  "health.role": "رول",
+  "health.live_probes": "ژوندي ازموینې",
+  "health.on": "پرانیستی",
+  "health.off": "بند — یوازې جامد",
+  "health.generated": "جوړ شوی",
+  "health.by_category": "د کټګورۍ له مخې",
+  "health.category": "کټګوري",
+  "health.checked": "کتل شوی",
+  "health.healthy": "روغ",
+  "health.warning": "خبرتیا",
+  "health.failed": "ناکام",
+  "health.not_tested": "نه دی ازمول شوی",
+  "health.cat_page": "د پاڼې او لارې روغتیا",
+  "health.cat_navigation": "د نیویګیشن بشپړتیا",
+  "health.cat_api": "د API روغتیا",
+  "health.cat_permission": "د RBAC بشپړتیا",
+  "health.cat_language": "د پنځو ژبو روغتیا",
+  "health.cat_print_pdf": "د چاپ/PDF روغتیا",
+  "health.cat_build_deploy": "جوړول او خپرول",
+  "health.not_tested_title": "نه دی ازمول شوی (او ولې)",
+  "health.filter_status": "فلټر",
+  "health.all": "ټول",
+  "health.empty_findings": "په دې کتنه کې هیڅ موندنه نشته.",
+  "health.col_module": "ماډیول",
+  "health.col_target": "لار / هدف",
+  "health.col_issue": "ستونزه / پایله",
+  "health.col_status": "حالت",
+  "health.col_lang": "ژبه",
+  "health.view": "وګورئ",
+  "health.expected": "تمه کیده",
+  "health.actual": "واقعي",
+  "health.permission_result": "اجازه",
+  "health.print_result": "چاپ/PDF",
+  "health.language_result": "د ژبې پایله",
+  "health.evidence": "شواهد",
+  "health.last_checked": "وروستی ځل کتل شوی",
+  "health.open_page": "اغیزمنه پاڼه خلاصه کړئ",
+  "health.status_healthy": "روغ",
+  "health.status_redirected": "بیا لارښود",
+  "health.status_unauthorized_expected": "رد شوی (تمه کیده)",
+  "health.status_warning": "خبرتیا",
+  "health.status_failed": "ناکام",
+  "health.status_not_found": "404 و نه موندل شو",
+  "health.status_server_error": "500 د سرور تېروتنه",
+  "health.status_not_tested": "نه دی ازمول شوی",
+  "health.status_unknown": "نامعلوم",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
@@ -93249,6 +93735,12 @@ const dictionaries: Record<SupportedLanguage, Dict> = {
   fa,
   ps
 };
+
+/** Read-only access to the raw 5-language dictionaries (used by the ERP Health
+ *  & Integrity Center's language scan). Do not mutate. */
+export function getUiDictionaries(): Readonly<Record<SupportedLanguage, Dict>> {
+  return dictionaries;
+}
 
 export function t(lang: SupportedLanguage | string | null | undefined, key: string | null | undefined, defaultValue?: string): string {
   if (!key) return defaultValue ?? "";

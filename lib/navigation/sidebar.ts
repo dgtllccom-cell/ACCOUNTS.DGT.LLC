@@ -1238,6 +1238,13 @@ export const sidebarTree: SidebarNode[] = [
         roles: ["super_admin", "super_admin_reports"]
       },
       {
+        key: "sa-health-center",
+        labelKey: "nav.health_center" as any,
+        iconKey: "shield",
+        href: "/dashboard/super-admin/health" as Route,
+        roles: ["super_admin"]
+      },
+      {
         key: "sa-edit-version-history",
         labelKey: "nav.edit_version_history" as any,
         iconKey: "clock",
