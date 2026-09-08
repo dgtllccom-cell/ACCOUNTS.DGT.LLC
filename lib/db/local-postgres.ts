@@ -50,7 +50,9 @@ export function getSharedPg(): ReturnType<typeof postgres> | null {
   if (_sharedPg) return _sharedPg;
   const isLocal = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/i.test(url);
   _sharedPg = postgres(url, {
-    max: 4,
+    // headroom for a request that fans out several independent read lookups in
+    // parallel (e.g. the customer list: own-name resolve + 4 location-name resolves).
+    max: 8,
     prepare: false,
     idle_timeout: 60,
     connect_timeout: 15,

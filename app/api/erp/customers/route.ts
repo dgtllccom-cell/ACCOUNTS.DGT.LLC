@@ -5,15 +5,12 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
 import { customerCreateSchema } from "@/lib/api/erp-validation";
 import { customersService } from "@/lib/services/customers-service";
-import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
-    const _T0 = Date.now(); const _t = (l: string) => console.log(`[cust-perf] ${l}: +${Date.now() - _T0}ms`);
     const session = await requireErpSession();
-    _t("requireErpSession");
     const scope = getScopeFromSearchParams(request);
 
     authorizeApiScope(session, {
@@ -21,13 +18,11 @@ export async function GET(request: NextRequest) {
       action: "read",
       ...scope
     });
-    _t("authorizeApiScope");
 
     const query = request.nextUrl.searchParams.get("q");
     let countryId = request.nextUrl.searchParams.get("countryId");
     const limit = request.nextUrl.searchParams.get("limit");
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
-    _t("getRequestLanguage");
 
     // Enforce session scope: if user is not super admin and no countryId provided,
     // restrict to their assigned country(ies)
@@ -40,7 +35,7 @@ export async function GET(request: NextRequest) {
       countryId,
       limit: limit ? Number(limit) : 20
     });
-    _t("customersService.search");
+
 
     // Resolve customer_name / company_name into the requested language — without this, any
     // consumer of this endpoint (Person Master picker, generic customer search, etc.) always
@@ -68,7 +63,7 @@ export async function GET(request: NextRequest) {
         const j = joinedById.get(r.id);
         return j ? { ...r, country_name: j.country_name, state_province_name: j.state_province_name, district_name: j.district_name, city_name: j.city_name } : r;
       });
-      _t("localize (parallel)");
+
     }
 
     return apiOk({ ...(result as any), customers });
