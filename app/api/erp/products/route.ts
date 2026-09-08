@@ -5,6 +5,7 @@ import { productCreateSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { productsService } from "@/lib/services/products-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     const result = await productsService.search({
       session,
       query: params.get("q"),
-      languageCode: params.get("lang"),
+      languageCode: await getRequestLanguage(params.get("lang")),
       countryId,
       stateProvinceId,
       cityId,

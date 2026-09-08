@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -18,7 +20,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .single();
 
     if (error || !data) throw new Error("Contact type not found");
-    return apiOk({ contactType: data });
+    let contactType = data;
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      [contactType] = await localizeRecordFields<any>([contactType], "contact_types", ["name"], lang);
+    }
+    return apiOk({ contactType });
   } catch (error) {
     return handleApiError(error);
   }

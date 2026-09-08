@@ -62,13 +62,18 @@ function walk(dir, out = []) {
 const rel = (p) => path.relative(ROOT, p).replace(/\\/g, "/");
 
 // ── allowlist ───────────────────────────────────────────────────────────────
-let allow = { unlocalizedRoutes: [], dynamicLocalizeTables: [] };
+// `unlocalizedRoutes`  — the BACKLOG: routes that still owe localisation. Shrink it.
+// `exemptRoutes`       — PERMANENT: routes that carry no translatable text (codes,
+//                        numbers, dates, status enums, config, previews). Each needs
+//                        a one-line reason. Reviewed, not a dumping ground.
+let allow = { unlocalizedRoutes: [], exemptRoutes: {}, dynamicLocalizeTables: [] };
 try {
   allow = { ...allow, ...JSON.parse(fs.readFileSync(path.join(ROOT, ALLOWLIST_FILE), "utf8")) };
 } catch {
   /* no allowlist yet — everything is held to the contract */
 }
 const allowUnlocalized = new Set(allow.unlocalizedRoutes || []);
+const exemptRoutes = new Set(Object.keys(allow.exemptRoutes || {}));
 const allowDynamicTables = new Set(allow.dynamicLocalizeTables || []);
 
 // ── registry: which record_tables are classified ────────────────────────────
@@ -131,7 +136,7 @@ const apiRoutes = walk(path.join(ROOT, "app/api/erp")).filter((f) => /[/\\]route
 for (const file of apiRoutes) {
   const src = fs.readFileSync(file, "utf8");
   const r = rel(file);
-  if (allowUnlocalized.has(r)) continue;
+  if (allowUnlocalized.has(r) || exemptRoutes.has(r)) continue;
 
   const hasGet = /export\s+async\s+function\s+GET\b/.test(src);
   if (!hasGet) continue;
@@ -170,7 +175,8 @@ if (JSON_OUT) {
 log("• Multilingual business-data contract guard");
 log(`  registry ......... ${registeredTables.size} record_tables classified`);
 log(`  api routes ....... ${apiRoutes.length} scanned`);
-log(`  grandfathered .... ${allowUnlocalized.size} routes in the allowlist (shrink, never grow)`);
+log(`  backlog .......... ${allowUnlocalized.size} routes still owe localisation (shrink, never grow)`);
+log(`  exempt ........... ${exemptRoutes.size} routes carry no translatable text (reviewed)`);
 
 if (warnings.length) {
   log("");

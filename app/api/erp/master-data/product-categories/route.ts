@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,8 +27,12 @@ export async function GET(request: NextRequest) {
       return await sql`${query} ORDER BY created_at DESC LIMIT 500`;
     });
 
-    const list = data || [];
+    let list: any[] = data || [];
     const active = list.filter((item: any) => item.is_active).length;
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(searchParams.get("lang"));
+      list = await localizeRecordFields<any>(list, "product_categories", ["category_name", "description"], lang);
+    }
     return apiOk({
       categories: list,
       productCategories: list,

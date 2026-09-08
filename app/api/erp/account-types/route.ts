@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 /**
  * `account_types` master. The physical table (see supabase/production-schema.sql)
@@ -61,8 +63,14 @@ export async function GET(request: NextRequest) {
       created_at: d.created_at,
     }));
 
+    let accountTypes = rows;
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      accountTypes = await localizeRecordFields<any>(accountTypes, "account_types", ["name"], lang);
+    }
+
     return apiOk({
-      accountTypes: rows,
+      accountTypes,
       summary: { total: rows.length, active: rows.length, inactive: 0 },
     });
   } catch (error) {

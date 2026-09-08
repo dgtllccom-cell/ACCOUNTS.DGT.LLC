@@ -5,13 +5,15 @@ import { productUpdateSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { productsService } from "@/lib/services/products-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     const { id } = await params;
     authorizeApiScope(session, { resource: "products", action: "read" });
-    const result = await productsService.getById(id, session, request.nextUrl.searchParams.get("lang"));
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const result = await productsService.getById(id, session, lang);
     return apiOk(result);
   } catch (error) {
     return handleApiError(error);

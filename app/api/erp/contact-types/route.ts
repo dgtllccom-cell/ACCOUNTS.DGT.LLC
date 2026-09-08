@@ -4,6 +4,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   limit: z.coerce.number().default(100),
@@ -46,7 +48,12 @@ export async function GET(request: NextRequest) {
     }
 
     const active = data.filter((d: any) => d.is_active).length;
-    return apiOk({ contactTypes: data, summary: { total: count || 0, active, inactive: data.length - active } });
+    let contactTypes = data;
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      contactTypes = await localizeRecordFields<any>(contactTypes, "contact_types", ["name"], lang);
+    }
+    return apiOk({ contactTypes, summary: { total: count || 0, active, inactive: data.length - active } });
   } catch (error) {
     return handleApiError(error);
   }

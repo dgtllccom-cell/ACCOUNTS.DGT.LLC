@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 export async function GET(
   request: NextRequest,
@@ -23,7 +25,12 @@ export async function GET(
       return new Response(JSON.stringify({ error: "Record not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
-    return apiOk({ brand: item });
+    let brand = item;
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      [brand] = await localizeRecordFields<any>([brand], "product_brands", ["brand_name", "description"], lang);
+    }
+    return apiOk({ brand });
   } catch (error) {
     return handleApiError(error);
   }

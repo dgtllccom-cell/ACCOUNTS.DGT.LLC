@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,24 +54,22 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // Multilingual Translation Mapping if lang specified
-    let localizedPorts = data || [];
-    if (lang && ["ur", "ar", "fa", "ps"].includes(lang.toLowerCase())) {
-      const transTable = `ports_${lang.toLowerCase()}`;
-      try {
-        const { data: transData } = await db
-          .from(transTable)
-          .select("record_id, translated_text")
-          .in("record_id", (data || []).map((p: any) => p.id));
-
-        const transMap = new Map((transData || []).map((t: any) => [t.record_id, t.translated_text]));
-        localizedPorts = (data || []).map((p: any) => ({
-          ...p,
-          port_name: transMap.get(p.id) || p.port_name
-        }));
-      } catch (e) {
-        // Fallback to default port_name
-      }
+    // Multilingual: resolve the port name AND the joined country name through the
+    // central resolver (record_translations). Replaces the legacy per-language
+    // `ports_<lang>` table lookup, which was superseded by record_translations.
+    let localizedPorts: any[] = data || [];
+    if (!wantsRawRecord(request) && localizedPorts.length > 0) {
+      const resolved = await getRequestLanguage(lang);
+      localizedPorts = await localizeRecordFields<any>(localizedPorts, "ports", ["port_name"], resolved);
+      const withCtry = await localizeJoinedNames<any>(
+        localizedPorts.map((p) => ({ ...p, _country_name: p.country?.name })),
+        resolved,
+        [{ idField: "country_id", nameField: "_country_name", table: "countries" }],
+      );
+      localizedPorts = withCtry.map((p: any) => ({
+        ...p,
+        country: p.country ? { ...p.country, name: p._country_name ?? p.country.name } : p.country,
+      }));
     }
 
     // Map backwards-compatible fields
