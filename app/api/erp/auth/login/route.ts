@@ -58,18 +58,33 @@ export async function POST(request: NextRequest) {
     rawPassword = String(form.get("password") ?? "").trim();
   }
 
+  const getRedirectBase = () => {
+    const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") || "http";
+    if (forwardedHost && !forwardedHost.includes("0.0.0.0")) {
+      return `${forwardedProto}://${forwardedHost}`;
+    }
+    const origin = request.nextUrl?.origin;
+    if (origin && !origin.includes("0.0.0.0") && !origin.includes("127.0.0.1")) {
+      return origin;
+    }
+    return "http://72.60.209.121";
+  };
+
   const respondError = (message: string, status: number) => {
     if (isJson) {
       return NextResponse.json({ error: message }, { status });
     }
-    return NextResponse.redirect(new URL(`/auth/login?error=${encodeURIComponent(message)}`, request.url), { status: 303 });
+    const base = getRedirectBase();
+    return NextResponse.redirect(new URL(`/auth/login?error=${encodeURIComponent(message)}`, base), { status: 303 });
   };
 
   const respondSuccess = (redirectTo: string) => {
     if (isJson) {
       return NextResponse.json({ success: true, redirectUrl: redirectTo });
     }
-    return NextResponse.redirect(new URL(redirectTo, request.url), { status: 303 });
+    const base = getRedirectBase();
+    return NextResponse.redirect(new URL(redirectTo, base), { status: 303 });
   };
 
   if (!rawIdentifier || !rawPassword) {
@@ -194,19 +209,69 @@ export async function POST(request: NextRequest) {
   if (!isAuthenticated && isSupabaseConfigured()) {
     try {
       const supabase = await createServerSupabaseClient();
-      const authEmail = rawIdentifier.toLowerCase();
-      const { data: signInData, error: sbError } = await supabase.auth.signInWithPassword({
-        email: authEmail,
-        password: rawPassword
-      });
-      if (!sbError && signInData?.user) {
-        isAuthenticated = true;
-        if (!profileRecord) {
-          profileRecord = {
-            id: signInData.user.id,
-            user_code: rawIdentifier,
-            full_name: signInData.user.user_metadata?.full_name || rawIdentifier
-          };
+      const aliasMap: Record<string, string> = {
+        "superadmin@damaan.com": "superadmin@dgt.llc",
+        "all.superadmin@dgt.llc": "superadmin@dgt.llc",
+        "superadmin": "superadmin@dgt.llc",
+        "clearing.superadmin@dgt.llc": "shipping.superadmin@dgt.llc",
+        "clearingagent@dgt.llc": "shipping.superadmin@dgt.llc",
+        "shipping@dgt.llc": "shipping.superadmin@dgt.llc",
+        "clearing@dgt.llc": "shipping.superadmin@dgt.llc",
+        "business@dgt.llc": "business.superadmin@dgt.llc",
+      };
+      const mapped = aliasMap[rawIdentifier.toLowerCase()] || aliasMap[cleanId.toLowerCase()];
+      const candidateEmails = Array.from(new Set([
+        mapped,
+        rawIdentifier.toLowerCase(),
+        cleanId.toLowerCase(),
+        profileRecord?.user_code?.toLowerCase(),
+      ].filter(Boolean) as string[]));
+
+      for (const authEmail of candidateEmails) {
+        const { data: signInData, error: sbError } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password: rawPassword
+        });
+        if (!sbError && signInData?.user) {
+          isAuthenticated = true;
+          if (!profileRecord) {
+            const { data: prof } = await admin
+              .from("profiles")
+              .select(profileSelect)
+              .eq("id", signInData.user.id)
+              .maybeSingle();
+            profileRecord = prof || {
+              id: signInData.user.id,
+              user_code: signInData.user.user_metadata?.user_code || rawIdentifier,
+              full_name: signInData.user.user_metadata?.full_name || rawIdentifier
+            };
+          }
+
+          if (userRoles.length === 0 && profileRecord?.id) {
+            try {
+              const { data: assignments } = await admin
+                .from("user_role_assignments")
+                .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
+                .eq("user_id", profileRecord.id)
+                .eq("is_active", true)
+                .is("deleted_at", null);
+
+              if (assignments && assignments.length > 0) {
+                roleAssignments = assignments.map((a: any) => ({
+                  role: a.role as EnterpriseRole,
+                  countryId: a.country_id,
+                  countryBranchId: a.country_branch_id,
+                  cityBranchId: a.city_branch_id,
+                  clearingAgentId: a.clearing_agent_id,
+                  ledgerVisibility: a.ledger_visibility
+                }));
+                userRoles = assignments.map((a: any) => a.role as EnterpriseRole);
+              }
+            } catch (e) {
+              console.warn("Role lookup retry err:", e);
+            }
+          }
+          break;
         }
       }
     } catch (sbEx) {

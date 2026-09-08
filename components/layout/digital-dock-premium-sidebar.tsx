@@ -391,23 +391,15 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    key: "ai-voice-messaging",
-    label: "AI Voice Messaging",
-    icon: Mic,
+    key: "ai-operations",
+    label: "AI Voice & Smart Operations",
+    icon: Sparkles,
     children: [
       { label: "AI Voice Messaging Hub", href: "/dashboard/ai-entry/messages", icon: Mic },
       { label: "AI Voice & Text Entry", href: "/dashboard/ai-entry/voice-text", icon: Sparkles },
       { label: "AI Approvals & Workflow", href: "/dashboard/ai-entry/approvals", icon: CheckSquare },
-    ],
-  },
-  {
-    key: "ai-calls-inquiries",
-    label: "AI Calls",
-    icon: PhoneCall,
-    children: [
       { label: "AI Calls Center", href: "/dashboard/customer-inquiries/calls", icon: PhoneCall },
-      { label: "Customer Inquiries", href: "/dashboard/customer-inquiries", icon: Users },
-      { label: "Inquiry Follow-ups", href: "/dashboard/customer-inquiries/follow-ups", icon: Clock },
+      { label: "Document Intelligence AI", href: "/dashboard/document-intelligence", icon: FileText },
     ],
   },
   {
@@ -462,6 +454,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "WhatsApp Center", href: "/dashboard/messages/whatsapp", icon: MessageCircle },
       { label: "Communication Center", href: "/dashboard/communication-center", icon: MessageSquare },
       { label: "Customer Inquiries & Calls", href: "/dashboard/customer-inquiries", icon: PhoneCall },
+      { label: "Inquiry Follow-ups", href: "/dashboard/customer-inquiries/follow-ups", icon: Clock },
       { label: "SMS & Customer Responses", href: "/dashboard/return-sms-reply", icon: FileText },
     ],
   },
@@ -481,19 +474,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Email Accounts", href: "/dashboard/settings/email-accounts", icon: Mail },
       { label: "ERP Translations & Languages", href: "/dashboard/settings/translations", icon: Globe },
       { label: "Profile & Security", href: "/dashboard/settings/profile", icon: ShieldCheck },
-    ],
-  },
-  {
-    key: "all-ai",
-    label: "All AI Page",
-    icon: Star,
-    children: [
-      { label: "AI Voice Messaging", href: "/dashboard/ai-entry/messages", icon: Mic },
-      { label: "AI Voice & Text Entry", href: "/dashboard/ai-entry/voice-text", icon: Sparkles },
-      { label: "AI Calls Center", href: "/dashboard/customer-inquiries/calls", icon: PhoneCall },
-      { label: "AI Approvals", href: "/dashboard/ai-entry/approvals", icon: CheckSquare },
-      { label: "Document Intelligence & Extraction", href: "/dashboard/document-intelligence", icon: FileText },
-      { label: "Smart CRM Control Center", href: "/dashboard/crm", icon: CalendarCheck },
     ],
   },
 ];

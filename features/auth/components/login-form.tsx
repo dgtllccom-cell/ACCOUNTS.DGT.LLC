@@ -55,8 +55,8 @@ const ACCESS_PROFILES: Record<
     subtitle: "Full system visibility for configuration, audit, reporting, and cross-country administration.",
     note: "Use this entry point for global ERP operations and security oversight.",
     scopeLabel: "All countries, all branches",
-    formatPlaceholder: "superadmin@dgt.llc or admin@dgt.llc",
-    quickExamples: ["superadmin@dgt.llc", "admin@dgt.llc"]
+    formatPlaceholder: "superadmin@dgt.llc, shipping.superadmin@dgt.llc, business.superadmin@dgt.llc",
+    quickExamples: ["superadmin@dgt.llc", "shipping.superadmin@dgt.llc", "business.superadmin@dgt.llc"]
   },
   country: {
     eyebrow: "Country Workspace",
