@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listCountries, listCities, type LocationCountry, type LocationCity } from "@/features/master-forms";
+import { useLoginScope } from "./login-scope-context";
 
 export type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
 
@@ -167,6 +168,7 @@ export function LoginForm({
   initialTab?: LoginTab;
   showRoleTabs?: boolean;
 }) {
+  const scope = useLoginScope();
   const [activeTab, setActiveTab] = useState<LoginTab>(initialTab);
   const [selectedLang, setSelectedLang] = useState<string>(initialLang || "en");
   const [showPassword, setShowPassword] = useState(false);
@@ -251,8 +253,11 @@ export function LoginForm({
 
   function handleTabChange(tab: LoginTab) {
     setActiveTab(tab);
+    scope.setActiveTab(tab);
     setSelectedCountry("");
+    scope.setSelectedCountry("");
     setSelectedCity("");
+    scope.setSelectedCity("");
     setSelectedBranch("");
     setErrorState(null);
   }
@@ -372,6 +377,7 @@ export function LoginForm({
               type="button"
               onClick={() => {
                 setSelectedLang(l.code);
+                scope.setSelectedLang(l.code);
                 if (typeof window !== "undefined") {
                   try {
                     localStorage.setItem("erp_lang", l.code);
@@ -442,7 +448,9 @@ export function LoginForm({
             value={selectedCountry}
             onChange={(v) => {
               setSelectedCountry(v);
+              scope.setSelectedCountry(v);
               setSelectedCity("");
+              scope.setSelectedCity("");
               setSelectedBranch("");
             }}
             options={countryOptions}
@@ -458,6 +466,7 @@ export function LoginForm({
             value={selectedCity}
             onChange={(v) => {
               setSelectedCity(v);
+              scope.setSelectedCity(v);
               setSelectedBranch("");
             }}
             options={availableCities}
@@ -486,7 +495,10 @@ export function LoginForm({
             {suggestedUser && (
               <button
                 type="button"
-                onClick={() => setIdentifier(suggestedUser)}
+                onClick={() => {
+                  setIdentifier(suggestedUser);
+                  scope.setIdentifier(suggestedUser);
+                }}
                 className="text-[10.5px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Sparkles className="h-3 w-3" /> Auto-fill: <span className="font-mono font-black">{suggestedUser}</span>
@@ -506,7 +518,10 @@ export function LoginForm({
               name="identifier"
               type="text"
               value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              onChange={(e) => {
+                setIdentifier(e.target.value);
+                scope.setIdentifier(e.target.value);
+              }}
               onFocus={() => setIdFocused(true)}
               onBlur={() => setIdFocused(false)}
               className="h-12 rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
