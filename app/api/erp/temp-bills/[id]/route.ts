@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiError, apiOk } from "@/lib/api/response";
+import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, ErpAuthError } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { wantsRawRecord } from "@/lib/i18n/localize-records";
 import { deleteTempBill, getTempBill, updateTempBill, mapTempBillError } from "@/lib/temp-bills/service";
@@ -18,6 +18,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     if (!bill) return apiError("NOT_FOUND", "Bill not found.", 404);
     return apiOk({ bill });
   } catch (error) {
+    if (error instanceof ErpAuthError) return handleApiError(error);
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
   }
@@ -59,6 +60,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     await auditApiAction(request, { action: "temp_bill.update.api", entityTable: "temp_bill", entityId: id, after: body });
     return apiOk({ ok: true });
   } catch (error) {
+    if (error instanceof ErpAuthError) return handleApiError(error);
     if (error instanceof z.ZodError) return apiError("BAD_REQUEST", error.issues.map((i) => i.message).join("; "), 400);
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
@@ -73,6 +75,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     await auditApiAction(request, { action: "temp_bill.delete.api", entityTable: "temp_bill", entityId: id });
     return apiOk({ ok: true });
   } catch (error) {
+    if (error instanceof ErpAuthError) return handleApiError(error);
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
   }

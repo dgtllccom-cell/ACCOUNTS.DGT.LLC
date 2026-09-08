@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiError, apiOk } from "@/lib/api/response";
+import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, ErpAuthError } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { createTempBill, listTempBills, tempBillSummary, mapTempBillError } from "@/lib/temp-bills/service";
 
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     ]);
     return apiOk({ rows, summary, lang });
   } catch (error) {
+    if (error instanceof ErpAuthError) return handleApiError(error);
     const m = mapTempBillError(error);
     if (m.setupPending) return apiOk({ rows: [], summary: {}, setupPending: true });
     return apiError(m.code, m.message, m.status);
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     });
     return apiCreated({ id, entryNo });
   } catch (error) {
+    if (error instanceof ErpAuthError) return handleApiError(error);
     if (error instanceof z.ZodError) return apiError("BAD_REQUEST", error.issues.map((i) => i.message).join("; "), 400);
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
