@@ -1,6 +1,17 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "cbs.back_to_edit"
+  | "cnbs.step9_review_title"
+  | "cnbs.step9_review_desc"
+  | "cnbs.existing_branch_alert_title"
+  | "crm.menu_today_action"
+  | "crm.menu_due_followup"
+  | "crm.menu_cheques"
+  | "crm.menu_purchase_due"
+  | "crm.menu_sales_recovery"
+  | "crm.menu_shipping_due"
+  | "crm.menu_customers"
   | "nav.health_center"
   | "health.title"
   | "health.subtitle"
@@ -13264,7 +13275,7 @@ const en: Dict = {
   "pb.drag_drop": "Drag & drop files here or click to browse",
 
   "pb.pdf": "PDF",
-  "common.unknown": "",
+  "common.unknown": "Unknown",
 
   "cpb.print_title": "COMPLETED PURCHASE BILLS REGISTER",
   "cpb.print_subtitle": "Official A4 ERP Journal Report - Zero Remaining Balance Archive",
@@ -24524,6 +24535,17 @@ const en: Dict = {
   "health.status_server_error": "500 Server Error",
   "health.status_not_tested": "Not Tested",
   "health.status_unknown": "Unknown",
+  "crm.menu_today_action": "Today's Actions",
+  "crm.menu_due_followup": "Due Follow-ups",
+  "crm.menu_cheques": "Cheque Dates",
+  "crm.menu_purchase_due": "Purchase Payments Due",
+  "crm.menu_sales_recovery": "Sales Recovery",
+  "crm.menu_shipping_due": "Shipping / Clearing Due",
+  "crm.menu_customers": "Customer Follow-up",
+  "cbs.back_to_edit": "Back to Edit",
+  "cnbs.step9_review_title": "Country Main Branch — Final Review & Live Preview",
+  "cnbs.step9_review_desc": "Please verify all corporate details and branch specifications before confirming. Only 1 Main Branch is permitted per country.",
+  "cnbs.existing_branch_alert_title": "Country Main Branch Already Exists",
 };
 
 const ur: Dict = {
@@ -25602,7 +25624,7 @@ const ur: Dict = {
   "cpb.email": "ای میل",
   "cpb.whatsapp": "واٹس ایپ",
   "pb.pdf": "PDF",
-  "common.unknown": "",
+  "common.unknown": "نامعلوم",
   "pb.payment_summary": "ادائیگی خلاصہ",
   "pb.invoice": "فاکچر",
   "pb.paid": "ادا شدہ",
@@ -41822,6 +41844,17 @@ const ur: Dict = {
   "health.status_server_error": "500 سرور ایرر",
   "health.status_not_tested": "ٹیسٹ نہیں ہوا",
   "health.status_unknown": "نامعلوم",
+  "crm.menu_today_action": "آج کے اقدامات",
+  "crm.menu_due_followup": "واجب فالو اپ",
+  "crm.menu_cheques": "چیک کی تاریخیں",
+  "crm.menu_purchase_due": "خرید کی واجب ادائیگیاں",
+  "crm.menu_sales_recovery": "سیلز ریکوری",
+  "crm.menu_shipping_due": "شپنگ / کلیئرنگ واجب",
+  "crm.menu_customers": "کسٹمر فالو اپ",
+  "cbs.back_to_edit": "ترمیم پر واپس",
+  "cnbs.step9_review_title": "ملکی مین برانچ — حتمی جائزہ اور لائیو پیش نظارہ",
+  "cnbs.step9_review_desc": "تصدیق سے پہلے تمام کارپوریٹ تفصیلات اور برانچ کی خصوصیات کی تصدیق کریں۔ فی ملک صرف 1 مین برانچ کی اجازت ہے۔",
+  "cnbs.existing_branch_alert_title": "ملکی مین برانچ پہلے سے موجود ہے",
 };
 
 const ar: Dict = {
@@ -42900,7 +42933,7 @@ const ar: Dict = {
   "cpb.email": "البريد الإلكتروني",
   "cpb.whatsapp": "واتساب",
   "pb.pdf": "PDF",
-  "common.unknown": "",
+  "common.unknown": "غير معروف",
   "pb.payment_summary": "ملخص الدفع",
   "pb.invoice": "الفاتورة",
   "pb.paid": "مدفوع",
@@ -59122,6 +59155,17 @@ const ar: Dict = {
   "health.status_server_error": "500 خطأ خادم",
   "health.status_not_tested": "لم يُختبر",
   "health.status_unknown": "غير معروف",
+  "crm.menu_today_action": "إجراءات اليوم",
+  "crm.menu_due_followup": "المتابعات المستحقة",
+  "crm.menu_cheques": "تواريخ الشيكات",
+  "crm.menu_purchase_due": "مدفوعات المشتريات المستحقة",
+  "crm.menu_sales_recovery": "تحصيل المبيعات",
+  "crm.menu_shipping_due": "الشحن / التخليص المستحق",
+  "crm.menu_customers": "متابعة العملاء",
+  "cbs.back_to_edit": "العودة إلى التعديل",
+  "cnbs.step9_review_title": "الفرع الرئيسي للدولة — المراجعة النهائية والمعاينة المباشرة",
+  "cnbs.step9_review_desc": "يرجى التحقق من جميع تفاصيل الشركة ومواصفات الفرع قبل التأكيد. يُسمح بفرع رئيسي واحد فقط لكل دولة.",
+  "cnbs.existing_branch_alert_title": "الفرع الرئيسي للدولة موجود بالفعل",
 };
 
 const fa: Dict = {
@@ -60200,7 +60244,7 @@ const fa: Dict = {
   "cpb.email": "ایمیل",
   "cpb.whatsapp": "واتساپ",
   "pb.pdf": "PDF",
-  "common.unknown": "",
+  "common.unknown": "نامشخص",
   "pb.payment_summary": "خلاصه پرداخت",
   "pb.invoice": "فاکتور",
   "pb.paid": "پرداخت شده",
@@ -76421,6 +76465,17 @@ const fa: Dict = {
   "health.status_server_error": "۵۰۰ خطای سرور",
   "health.status_not_tested": "آزمایش‌نشده",
   "health.status_unknown": "نامشخص",
+  "crm.menu_today_action": "اقدامات امروز",
+  "crm.menu_due_followup": "پیگیری‌های سررسید",
+  "crm.menu_cheques": "تاریخ‌های چک",
+  "crm.menu_purchase_due": "پرداخت‌های خرید سررسید",
+  "crm.menu_sales_recovery": "وصول فروش",
+  "crm.menu_shipping_due": "حمل / ترخیص سررسید",
+  "crm.menu_customers": "پیگیری مشتری",
+  "cbs.back_to_edit": "بازگشت به ویرایش",
+  "cnbs.step9_review_title": "شعبه اصلی کشور — بازبینی نهایی و پیش‌نمایش زنده",
+  "cnbs.step9_review_desc": "لطفاً پیش از تأیید، همه جزئیات شرکتی و مشخصات شعبه را بررسی کنید. فقط ۱ شعبه اصلی برای هر کشور مجاز است.",
+  "cnbs.existing_branch_alert_title": "شعبه اصلی کشور از قبل وجود دارد",
 };
 
 const ps: Dict = {
@@ -77499,7 +77554,7 @@ const ps: Dict = {
   "cpb.email": "بریښنا لیک",
   "cpb.whatsapp": "واټساپ",
   "pb.pdf": "PDF",
-  "common.unknown": "",
+  "common.unknown": "نامعلوم",
   "pb.payment_summary": "د تادیې لنډیز",
   "pb.invoice": "بل",
   "pb.paid": "تادیه شوی",
@@ -93726,6 +93781,17 @@ const ps: Dict = {
   "health.status_server_error": "500 د سرور تېروتنه",
   "health.status_not_tested": "نه دی ازمول شوی",
   "health.status_unknown": "نامعلوم",
+  "crm.menu_today_action": "د نن ورځې کړنې",
+  "crm.menu_due_followup": "د تعقیب نیټه رسیدلې",
+  "crm.menu_cheques": "د چک نیټې",
+  "crm.menu_purchase_due": "د پیرود تادیې سررسیدلې",
+  "crm.menu_sales_recovery": "د پلور بیرته اخیستنه",
+  "crm.menu_shipping_due": "د بار وړلو / ترخیص نیټه",
+  "crm.menu_customers": "د پیرودونکي تعقیب",
+  "cbs.back_to_edit": "سمون ته بیرته",
+  "cnbs.step9_review_title": "د هیواد اصلي څانګه — وروستۍ کتنه او ژوندۍ مخکتنه",
+  "cnbs.step9_review_desc": "له تاییدولو مخکې د ټولو شرکتي جزئیاتو او د څانګې مشخصاتو تایید وکړئ. په هر هیواد کې یوازې 1 اصلي څانګه اجازه لري.",
+  "cnbs.existing_branch_alert_title": "د هیواد اصلي څانګه دمخه شتون لري",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
