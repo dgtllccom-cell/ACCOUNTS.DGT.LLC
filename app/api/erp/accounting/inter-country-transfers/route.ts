@@ -2,6 +2,8 @@
 import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 import {
   createInterCountryTransfer,
   listInterCountryTransfers,
@@ -28,6 +30,18 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     });
+
+    // Every transfer row → the reader's language (sender & receiver see the same
+    // record; only the presentation follows the viewer). Amounts / numbers untouched.
+    if (Array.isArray((data as any)?.transfers) && (data as any).transfers.length > 0) {
+      const lang = await getRequestLanguage(searchParams.get("lang"));
+      (data as any).transfers = await localizeJoinedNames<any>((data as any).transfers, lang, [
+        { idField: "source_country_id", nameField: "source_country_name", table: "countries" },
+        { idField: "dest_country_id", nameField: "dest_country_name", table: "countries" },
+        { idField: "sender_user_id", nameField: "sender_name", table: "profiles", field: "full_name" },
+        { idField: "receiver_user_id", nameField: "receiver_name", table: "profiles", field: "full_name" },
+      ]);
+    }
 
     return apiOk(data);
   } catch (error) {

@@ -45,7 +45,6 @@
   },
   "unlocalizedRoutes": [
     "app/api/erp/accounting/accounts/route.ts",
-    "app/api/erp/accounting/inter-country-transfers/[id]/route.ts",
     "app/api/erp/accounting/periods/route.ts",
     "app/api/erp/accounting/reports/ledger/outstanding/route.ts",
     "app/api/erp/accounts/[id]/route.ts",

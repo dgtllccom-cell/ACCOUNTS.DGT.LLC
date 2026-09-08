@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import {
   acceptInterCountryTransfer,
   rejectInterCountryTransfer,
@@ -58,7 +60,30 @@ export async function GET(
       throw new Error("Inter-country transfer record not found");
     }
 
-    return apiOk(transfer);
+    // ONE transfer record → the READER'S language. The sender may have created it in
+    // English; a Pashto/Urdu/etc. receiver opening the same record sees every joined
+    // party / branch / country / bank-cash / user name in their own language. Amounts,
+    // Bill/Serial/Container/BL numbers and every identifier are untouched.
+    // `remarks` is free-form financial narration → left exactly as entered (contract rule).
+    let localized = transfer;
+    if (!wantsRawRecord(request)) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      [localized] = await localizeJoinedNames<any>([localized], lang, [
+        { idField: "source_country_id", nameField: "source_country_name", table: "countries" },
+        { idField: "dest_country_id", nameField: "dest_country_name", table: "countries" },
+        { idField: "source_country_branch_id", nameField: "source_branch_name", table: "country_branches" },
+        { idField: "dest_country_branch_id", nameField: "dest_branch_name", table: "country_branches" },
+        { idField: "source_bank_cash_ledger_id", nameField: "source_bank_cash_name", table: "ledgers" },
+        { idField: "dest_bank_cash_ledger_id", nameField: "dest_bank_cash_name", table: "ledgers" },
+        { idField: "source_party_ledger_id", nameField: "source_party_name", table: "ledgers" },
+        { idField: "dest_party_ledger_id", nameField: "dest_party_name", table: "ledgers" },
+        { idField: "sender_user_id", nameField: "sender_name", table: "profiles", field: "full_name" },
+        { idField: "receiver_user_id", nameField: "receiver_name", table: "profiles", field: "full_name" },
+        { idField: "accepted_by", nameField: "accepted_by_name", table: "profiles", field: "full_name" },
+        { idField: "rejected_by", nameField: "rejected_by_name", table: "profiles", field: "full_name" },
+      ]);
+    }
+    return apiOk(localized);
   } catch (error) {
     return handleApiError(error);
   }

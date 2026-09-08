@@ -60,6 +60,20 @@ export function getSharedPg(): ReturnType<typeof postgres> | null {
 }
 
 /**
+ * Read-only sibling of {@link withLocalPg} that borrows the process-lifetime
+ * {@link getSharedPg} pool instead of opening + TLS-handshaking + closing a fresh
+ * connection every call (~2–5 s against the remote Supabase pooler). Use for the
+ * read path of list / detail / search endpoints — same call shape as `withLocalPg`,
+ * returns null when DATABASE_URL isn't set. NEVER use for writes or transactions
+ * (the pool is shared and connections are not owned by the caller).
+ */
+export async function withReadPg<T>(fn: (sql: ReturnType<typeof postgres>) => Promise<T>): Promise<T | null> {
+  const sql = getSharedPg();
+  if (!sql) return null;
+  return await fn(sql);
+}
+
+/**
  * Runs `fn` with a short-lived direct-Postgres connection when DATABASE_URL is configured,
  * always closing the connection afterward. Returns null if DATABASE_URL isn't set, so
  * callers can fall back to the Supabase client path.

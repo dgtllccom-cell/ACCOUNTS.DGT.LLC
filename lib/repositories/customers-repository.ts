@@ -1,6 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
-import { withLocalPg, getDbUrl } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg, getDbUrl } from "@/lib/db/local-postgres";
 import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type CustomerRow = {
@@ -83,7 +83,8 @@ export class CustomersRepository {
       ? await searchRecordIdsByTranslation("customers", ["customer_name", "company_name", "contact_person"], q)
       : [];
 
-    const viaPg = await withLocalPg(async (sql) => {
+    // read path → shared process-lifetime pool (no per-request connect/TLS cost)
+    const viaPg = await withReadPg(async (sql) => {
       const rows = await sql`
         SELECT 
           c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
@@ -155,7 +156,7 @@ export class CustomersRepository {
     // object" on 0 rows and surfaced as a 500. Only fall back to Supabase when there is
     // genuinely no DATABASE_URL.
     if (getDbUrl()) {
-      return (await withLocalPg(async (sql) => {
+      return (await withReadPg(async (sql) => {
         const rows = await sql`
           SELECT
             c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
@@ -191,7 +192,7 @@ export class CustomersRepository {
   }
 
   async getContacts(customerId: string) {
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await withReadPg(async (sql) => {
       const rows = await sql`
         SELECT id, customer_id, contact_type, contact_value, is_primary, created_at
         FROM public.customer_contacts
@@ -215,7 +216,7 @@ export class CustomersRepository {
   }
 
   async getRegistrations(customerId: string) {
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await withReadPg(async (sql) => {
       const rows = await sql`
         SELECT id, customer_id, registration_type, registration_value, created_at
         FROM public.customer_registrations
