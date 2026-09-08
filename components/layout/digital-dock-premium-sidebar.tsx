@@ -78,6 +78,9 @@ export type SidebarDeepChild = {
   label: string;
   href: string;
   icon?: ComponentType<{ className?: string }>;
+  /** RBAC: when set, the item shows only to a user holding one of these enterprise roles.
+   *  Omit to keep the current behaviour (visible to everyone; the page still enforces access). */
+  roles?: string[];
 };
 
 export type SidebarSubItem = {
@@ -86,6 +89,7 @@ export type SidebarSubItem = {
   href?: string;
   icon: ComponentType<{ className?: string }>;
   children?: SidebarDeepChild[];
+  roles?: string[];
 };
 
 export type SidebarMenuItem = {
@@ -95,6 +99,7 @@ export type SidebarMenuItem = {
   href?: string;
   defaultOpen?: boolean;
   children?: SidebarSubItem[];
+  roles?: string[];
 };
 
 /* ---------------- Menu Items Exactly As In Specification ---------------- */
@@ -104,6 +109,15 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Dashboard",
     icon: Home,
     href: "/dashboard",
+  },
+  {
+    // Central operational control center — read-only aggregation (Smart Due engine
+    // + approvals + user tasks). Every alert deep-links to the original ERP record.
+    key: "smart-operations",
+    label: "Smart Operations",
+    icon: Sparkles,
+    href: "/dashboard/smart-operations",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"],
   },
   {
     key: "new-entry",
@@ -209,14 +223,17 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       {
+        // Historical / temporary tracking ONLY — NOT main ERP accounting. No Ledger /
+        // Roznamcha / Journal / Stock / Voucher posting, no accounting transfer.
         key: "sub-temp-bills",
-        label: "Temporary (Arzi) Bills",
+        label: "Temporary Purchase & Sales",
         icon: FileSpreadsheet,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
         children: [
-          { label: "Arzi Purchase Bills (عارضی پرچیز)", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
-          { label: "Arzi Sales Bills (عارضی سیل)", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
-          { label: "Arzi Bills Register (تمام عارضی بل)", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
-          { label: "Arzi Bills Reports", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
+          { label: "Purchase Bills", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
+          { label: "Sales Bills", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
+          { label: "All Temporary Bills", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
+          { label: "Temporary Bills Reports & Search", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
         ],
       },
       {
@@ -402,8 +419,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
+    // Renamed from "AI Voice & Smart Operations" to avoid confusion with the new
+    // top-level "Smart Operations" action center — this section is AI voice/text/doc entry.
     key: "ai-operations",
-    label: "AI Voice & Smart Operations",
+    label: "AI Voice & Document Entry",
     icon: Sparkles,
     children: [
       { label: "AI Voice Messaging Hub", href: "/dashboard/ai-entry/messages", icon: Mic },
@@ -513,16 +532,38 @@ export interface DigitalDockPremiumSidebarProps {
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
   brandTitle?: string;
+  /** The signed-in user's enterprise roles. Menu entries carrying a `roles` list
+   *  are hidden unless they intersect. Entries WITHOUT `roles` are unaffected
+   *  (visible to all — the page still enforces access). Super admin sees all. */
+  roles?: string[] | null;
+}
+
+/** RBAC filter — keeps an entry when it declares no `roles`, the user is a super
+ *  admin, or the user holds one of the declared roles. Recurses into children and
+ *  drops an accordion that becomes empty. */
+function filterByRoles<T extends { roles?: string[]; children?: any[] }>(items: T[], userRoles: Set<string>): T[] {
+  const isSuper = userRoles.has("super_admin");
+  const keep = (r?: string[]) => !r || r.length === 0 || isSuper || r.some((x) => userRoles.has(x));
+  return items
+    .filter((it) => keep(it.roles))
+    .map((it) => {
+      if (!it.children) return it;
+      const kids = filterByRoles(it.children as any[], userRoles);
+      return { ...it, children: kids };
+    })
+    .filter((it) => it.children === undefined || (it as any).href || (it.children as any[]).length > 0) as T[];
 }
 
 export function DigitalDockPremiumSidebar({
   onNavigate,
   onToggleCollapse,
   brandTitle,
+  roles,
 }: DigitalDockPremiumSidebarProps = {}) {
   const pathname = usePathname() ?? "";
   const lang = useActiveLanguage();
   const tr = (s: string) => translateHeader(lang, s);
+  const menuItems = filterByRoles(DAMAN_SIDEBAR_ITEMS, new Set((roles ?? []).map(String)));
 
   const [companyName, setCompanyName] = useState<string>("Daman Business Group");
 
@@ -539,7 +580,7 @@ export function DigitalDockPremiumSidebar({
   // Track expanded accordion keys (Level 1 and Level 2)
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
     const initial = new Set<string>();
-    for (const item of DAMAN_SIDEBAR_ITEMS) {
+    for (const item of menuItems) {
       if (item.defaultOpen || hasActiveDescendant(item, pathname)) {
         initial.add(item.key);
       }
@@ -558,7 +599,7 @@ export function DigitalDockPremiumSidebar({
   useEffect(() => {
     setOpenKeys((prev) => {
       const next = new Set(prev);
-      for (const item of DAMAN_SIDEBAR_ITEMS) {
+      for (const item of menuItems) {
         if (hasActiveDescendant(item, pathname)) {
           next.add(item.key);
         }
@@ -605,7 +646,7 @@ export function DigitalDockPremiumSidebar({
 
       {/* 2. Navigation Items */}
       <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-1 [scrollbar-width:thin]">
-        {DAMAN_SIDEBAR_ITEMS.map((item) => {
+        {menuItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = Boolean(item.children?.length);
           const isOpen = hasChildren && openKeys.has(item.key);

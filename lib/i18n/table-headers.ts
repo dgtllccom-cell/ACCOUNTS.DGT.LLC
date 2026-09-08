@@ -4,6 +4,25 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  // ── Main-menu labels for the new modules (2026-09-08) ──
+  "SMART OPERATIONS": { ur: "سمارٹ آپریشنز", ar: "العمليات الذكية", fa: "عملیات هوشمند", ps: "سمارټ عملیات" },
+  "TEMPORARY PURCHASE & SALES": { ur: "عارضی خرید و فروخت", ar: "المشتريات والمبيعات المؤقتة", fa: "خرید و فروش موقت", ps: "لنډمهاله پیرود او پلور" },
+  "PURCHASE BILLS": { ur: "خرید بل", ar: "فواتير الشراء", fa: "صورتحساب‌های خرید", ps: "د پیرود بلونه" },
+  "SALES BILLS": { ur: "فروخت بل", ar: "فواتير البيع", fa: "صورتحساب‌های فروش", ps: "د پلور بلونه" },
+  "ALL TEMPORARY BILLS": { ur: "تمام عارضی بل", ar: "كل الفواتير المؤقتة", fa: "همه صورتحساب‌های موقت", ps: "ټول لنډمهاله بلونه" },
+  "TEMPORARY BILLS REPORTS & SEARCH": { ur: "عارضی بل رپورٹس اور تلاش", ar: "تقارير الفواتير المؤقتة والبحث", fa: "گزارش و جستجوی صورتحساب‌های موقت", ps: "د لنډمهاله بلونو راپورونه او لټون" },
+  "CONSIGNMENT REGISTER": { ur: "کنسائنمنٹ رجسٹر", ar: "سجل الشحنات", fa: "دفتر امانی", ps: "د امانت رجسټر" },
+  "AI VOICE & DOCUMENT ENTRY": { ur: "AI وائس اور دستاویز انٹری", ar: "إدخال الصوت والمستندات بالذكاء الاصطناعي", fa: "ورود صوت و سند با هوش مصنوعی", ps: "د AI غږ او سند ننوت" },
+  // adjacent pre-existing menu labels (for a consistent Purchase/Sales area in all 5 languages)
+  "DASHBOARD": { ur: "ڈیش بورڈ", ar: "لوحة التحكم", fa: "داشبورد", ps: "ډشبورد" },
+  "LEDGERS": { ur: "لیجرز", ar: "دفاتر الأستاذ", fa: "دفاتر کل", ps: "لیجرونه" },
+  "DAILY PAYMENT ENTRY": { ur: "روزانہ ادائیگی انٹری", ar: "إدخال الدفع اليومي", fa: "ورود پرداخت روزانه", ps: "ورځنی تادیه ننوت" },
+  "PURCHASE, SALES & TRADE": { ur: "خرید، فروخت اور تجارت", ar: "الشراء والبيع والتجارة", fa: "خرید، فروش و تجارت", ps: "پیرود، پلور او سوداګري" },
+  "PURCHASE BOOKING": { ur: "خرید بکنگ", ar: "حجز الشراء", fa: "رزرو خرید", ps: "د پیرود بکنګ" },
+  "SALES BOOKING": { ur: "فروخت بکنگ", ar: "حجز البيع", fa: "رزرو فروش", ps: "د پلور بکنګ" },
+  "PURCHASE ORDER & PAYMENT": { ur: "خرید آرڈر اور ادائیگی", ar: "أمر الشراء والدفع", fa: "سفارش خرید و پرداخت", ps: "د پیرود امر او تادیه" },
+  "BOOKING PURCHASE CONFIRMATION": { ur: "بکنگ خرید تصدیق", ar: "تأكيد حجز الشراء", fa: "تأیید رزرو خرید", ps: "د بکنګ پیرود تایید" },
+  "CONSIGNMENT STOCK & SALES REGISTER": { ur: "کنسائنمنٹ اسٹاک اور فروخت رجسٹر", ar: "سجل مخزون ومبيعات الشحنات", fa: "دفتر موجودی و فروش امانی", ps: "د امانت سټاک او پلور رجسټر" },
   "CUSTOMER MANAGEMENT": { ur: "کسٹمر مینجمنٹ", ar: "إدارة العملاء", fa: "مدیریت مشتریان", ps: "د پیرودونکو مدیریت" },
   "CUSTOMER MANAGEMENT JOURNAL": { ur: "کسٹمر مینجمنٹ جرنل", ar: "سجل إدارة العملاء", fa: "دفتر روزنامه مدیریت مشتریان", ps: "د پیرودونکو د مدیریت ورځپاڼه" },
   "CUSTOMER INQUIRIES": { ur: "کسٹمر انکوائریاں", ar: "استفسارات العملاء", fa: "استعلامات مشتری", ps: "د پیرودونکو پوښتنې" },
