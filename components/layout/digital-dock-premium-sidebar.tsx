@@ -209,11 +209,22 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       {
+        key: "sub-temp-bills",
+        label: "Temporary (Arzi) Bills",
+        icon: FileSpreadsheet,
+        children: [
+          { label: "Arzi Purchase Bills (عارضی پرچیز)", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
+          { label: "Arzi Sales Bills (عارضی سیل)", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
+          { label: "Arzi Bills Register (تمام عارضی بل)", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
+          { label: "Arzi Bills Reports", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
+        ],
+      },
+      {
         key: "sub-consignment-purchase",
-        label: "Temporary / Consignment Purchase",
+        label: "Consignment Register",
         icon: Package,
         children: [
-          { label: "Consignment Purchase & Sales Register", href: "/dashboard/consignment", icon: Package },
+          { label: "Consignment Stock & Sales Register", href: "/dashboard/consignment", icon: Package },
         ],
       },
       {
