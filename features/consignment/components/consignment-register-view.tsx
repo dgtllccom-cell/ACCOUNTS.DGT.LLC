@@ -11,7 +11,7 @@ import {
   type ConsignmentListRow,
 } from "@/features/consignment/consignment-api";
 import { CONSIGNMENT_STATUSES } from "@/lib/consignment/types";
-import { MasterCombo } from "@/features/consignment/components/master-combo";
+import { MasterCombo } from "@/components/ui/master-combo";
 
 const CCY = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "INR", "CNY", "SAR", "IRR"];
 

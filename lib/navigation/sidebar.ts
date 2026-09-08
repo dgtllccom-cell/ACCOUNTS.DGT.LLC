@@ -1580,6 +1580,22 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
   },
   {
+    // Kept at the very bottom, visually separate from the operational sections:
+    // this is a TEMPORARY / historical register only — NOT the main Purchase/Sales
+    // accounting module. No Ledger / Roznamcha / Journal / Stock / Voucher posting.
+    key: "temp-bills",
+    labelKey: "nav.temp_bills" as UiKey,
+    iconKey: "clipboard-list",
+    href: "/dashboard/temp-bills" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      { key: "temp-bills-purchase", labelKey: "nav.temp_bills_purchase" as UiKey, iconKey: "shopping-bag", href: "/dashboard/temp-bills/purchase" as Route },
+      { key: "temp-bills-sales", labelKey: "nav.temp_bills_sales" as UiKey, iconKey: "badge", href: "/dashboard/temp-bills/sales" as Route },
+      { key: "temp-bills-all", labelKey: "nav.temp_bills_all" as UiKey, iconKey: "list-plus", href: "/dashboard/temp-bills" as Route },
+      { key: "temp-bills-reports", labelKey: "nav.temp_bills_reports" as UiKey, iconKey: "search", href: "/dashboard/temp-bills/reports" as Route }
+    ]
+  },
+  {
     key: "walkthrough-video",
     labelKey: "nav.walkthrough_video",
     iconKey: "video",

@@ -22,7 +22,7 @@ import {
   RECEIPT_METHODS,
 } from "@/lib/consignment/types";
 import { openConsignmentReport } from "@/features/consignment/consignment-report";
-import { MasterCombo } from "@/features/consignment/components/master-combo";
+import { MasterCombo } from "@/components/ui/master-combo";
 import { HeadEditModal, EditRowModal } from "@/features/consignment/components/consignment-edit-modals";
 
 const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);

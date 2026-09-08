@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { t } from "@/lib/i18n/ui";
 import { CONTAINER_STATUSES, EXPENSE_TYPES, RECEIPT_METHODS } from "@/lib/consignment/types";
-import { MasterCombo } from "@/features/consignment/components/master-combo";
+import { MasterCombo } from "@/components/ui/master-combo";
 
 const mInput = "w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm outline-none";
 

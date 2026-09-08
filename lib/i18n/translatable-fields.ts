@@ -103,6 +103,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "title", mode: "translate" },
     { field: "notes", mode: "translate" },
   ],
+  // ── Temporary Purchase & Sales Bills Register (historical tracking only, NO accounting) ──
+  temp_bill: [
+    { field: "party_name", mode: "transliterate" },
+    { field: "goods_name", mode: "translate" },
+    { field: "remarks", mode: "translate" },
+  ],
   business_edit_invoices: [
     { field: "party_name", mode: "transliterate" },
     { field: "destination", mode: "translate" },

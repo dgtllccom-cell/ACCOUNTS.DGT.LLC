@@ -1,6 +1,75 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "nav.temp_bills"
+  | "nav.temp_bills_purchase"
+  | "nav.temp_bills_sales"
+  | "nav.temp_bills_all"
+  | "nav.temp_bills_reports"
+  | "tbill.group"
+  | "tbill.title"
+  | "tbill.title_purchase"
+  | "tbill.title_sale"
+  | "tbill.title_reports"
+  | "tbill.subtitle"
+  | "tbill.btn_report"
+  | "tbill.btn_new"
+  | "tbill.setup_pending"
+  | "tbill.kpi_purchase_bills"
+  | "tbill.kpi_purchase_amount"
+  | "tbill.kpi_sale_bills"
+  | "tbill.kpi_sale_amount"
+  | "tbill.kpi_bills"
+  | "tbill.kpi_parties"
+  | "tbill.kpi_total_amount"
+  | "tbill.f_search"
+  | "tbill.f_search_ph"
+  | "tbill.f_from"
+  | "tbill.f_to"
+  | "tbill.f_reset"
+  | "tbill.f_unit"
+  | "tbill.loading"
+  | "tbill.empty"
+  | "tbill.bills_word"
+  | "tbill.refs_word"
+  | "tbill.ref_label"
+  | "tbill.col_date"
+  | "tbill.col_kind"
+  | "tbill.col_goods"
+  | "tbill.col_billno"
+  | "tbill.col_container"
+  | "tbill.col_bl"
+  | "tbill.col_qty"
+  | "tbill.col_weight"
+  | "tbill.col_rate"
+  | "tbill.col_amount"
+  | "tbill.col_actions"
+  | "tbill.col_party"
+  | "tbill.col_ref"
+  | "tbill.col_currency"
+  | "tbill.col_remarks"
+  | "tbill.kind_purchase"
+  | "tbill.kind_sale"
+  | "tbill.act_view"
+  | "tbill.act_edit"
+  | "tbill.act_delete"
+  | "tbill.confirm_delete"
+  | "tbill.detail_title"
+  | "tbill.f_entry_no"
+  | "tbill.close"
+  | "tbill.report_title"
+  | "tbill.report_sub"
+  | "tbill.total"
+  | "tbill.form_edit"
+  | "tbill.form_new"
+  | "tbill.err_party"
+  | "tbill.party_ph"
+  | "tbill.goods_ph"
+  | "tbill.optional"
+  | "tbill.cancel"
+  | "tbill.save"
+  | "tbill.saving"
+  | "tbill.form_note"
   | "health.f_dup_key"
   | "health.fx_dup_key"
   | "health.f_landing"
@@ -24652,6 +24721,75 @@ const en: Dict = {
   "health.ntx_static": "static-only scan — press 'Run full live scan' to include this",
   "health.nt_tsc": "TypeScript (tsc --noEmit)",
   "health.ntx_tsc": "not run per request — run `npx tsc --noEmit` in CI / locally",
+  "nav.temp_bills": "Temporary Purchase & Sales",
+  "nav.temp_bills_purchase": "Purchase Bills",
+  "nav.temp_bills_sales": "Sales Bills",
+  "nav.temp_bills_all": "All Temporary Bills",
+  "nav.temp_bills_reports": "Reports / Search",
+  "tbill.group": "Temporary Bills Register",
+  "tbill.title": "Temporary Purchase & Sales Bills Register",
+  "tbill.title_purchase": "Temporary Purchase Bills",
+  "tbill.title_sale": "Temporary Sales Bills",
+  "tbill.title_reports": "Temporary Bills — Reports & Search",
+  "tbill.subtitle": "Historical / temporary tracking only. These bills are NOT main ERP accounting — no Ledger, Roznamcha, Journal, DR/CR, Stock or Voucher posting, and no accounting transfer. The main ERP is used only to pick existing Party / Account and Goods.",
+  "tbill.btn_report": "Report / Print PDF",
+  "tbill.btn_new": "New Temporary Bill",
+  "tbill.setup_pending": "The Temporary Bills Register table is not yet on this database. Run migration 20261114.",
+  "tbill.kpi_purchase_bills": "Purchase Bills",
+  "tbill.kpi_purchase_amount": "Purchase Amount",
+  "tbill.kpi_sale_bills": "Sales Bills",
+  "tbill.kpi_sale_amount": "Sales Amount",
+  "tbill.kpi_bills": "Bills",
+  "tbill.kpi_parties": "Parties",
+  "tbill.kpi_total_amount": "Total Amount",
+  "tbill.f_search": "Search",
+  "tbill.f_search_ph": "Party, reference, bill no, goods, container…",
+  "tbill.f_from": "From",
+  "tbill.f_to": "To",
+  "tbill.f_reset": "Reset",
+  "tbill.f_unit": "Unit",
+  "tbill.loading": "Loading…",
+  "tbill.empty": "No temporary bills yet. Create the first one.",
+  "tbill.bills_word": "bills",
+  "tbill.refs_word": "references",
+  "tbill.ref_label": "Reference / Account No",
+  "tbill.col_date": "Date",
+  "tbill.col_kind": "Type",
+  "tbill.col_goods": "Goods",
+  "tbill.col_billno": "Bill No",
+  "tbill.col_container": "Container No",
+  "tbill.col_bl": "BL No",
+  "tbill.col_qty": "Quantity",
+  "tbill.col_weight": "Weight / Cartons",
+  "tbill.col_rate": "Rate",
+  "tbill.col_amount": "Amount",
+  "tbill.col_actions": "Actions",
+  "tbill.col_party": "Party / Account",
+  "tbill.col_ref": "Reference No",
+  "tbill.col_currency": "Currency",
+  "tbill.col_remarks": "Remarks",
+  "tbill.kind_purchase": "Purchase",
+  "tbill.kind_sale": "Sale",
+  "tbill.act_view": "View",
+  "tbill.act_edit": "Edit",
+  "tbill.act_delete": "Delete",
+  "tbill.confirm_delete": "Delete this temporary bill? This cannot be undone.",
+  "tbill.detail_title": "Temporary Bill",
+  "tbill.f_entry_no": "Entry No",
+  "tbill.close": "Close",
+  "tbill.report_title": "Temporary Purchase & Sales Bills Register",
+  "tbill.report_sub": "Historical tracking only — not connected to Ledger / Roznamcha / Journal / Stock",
+  "tbill.total": "TOTAL",
+  "tbill.form_edit": "Edit Temporary Bill",
+  "tbill.form_new": "New Temporary Bill",
+  "tbill.err_party": "Party / Account is required.",
+  "tbill.party_ph": "Type or pick an existing Account / Party",
+  "tbill.goods_ph": "Type or pick from Goods master",
+  "tbill.optional": "optional",
+  "tbill.cancel": "Cancel",
+  "tbill.save": "Save",
+  "tbill.saving": "Saving…",
+  "tbill.form_note": "This bill is stored only in the Temporary Bills Register. It does not post to Ledger, Roznamcha, Journal, DR/CR, Stock or any Voucher, and it is not transferred to the main ERP.",
 };
 
 const ur: Dict = {
@@ -42014,6 +42152,75 @@ const ur: Dict = {
   "health.ntx_static": "صرف سٹیٹک اسکین — اسے شامل کرنے کے لیے 'مکمل لائیو اسکین چلائیں' دبائیں",
   "health.nt_tsc": "ٹائپ اسکرپٹ (tsc --noEmit)",
   "health.ntx_tsc": "فی درخواست نہیں چلتا — CI / لوکل پر `npx tsc --noEmit` چلائیں",
+  "nav.temp_bills": "عارضی خرید و فروخت",
+  "nav.temp_bills_purchase": "خرید بل",
+  "nav.temp_bills_sales": "فروخت بل",
+  "nav.temp_bills_all": "تمام عارضی بل",
+  "nav.temp_bills_reports": "رپورٹس / تلاش",
+  "tbill.group": "عارضی بل رجسٹر",
+  "tbill.title": "عارضی خرید و فروخت بل رجسٹر",
+  "tbill.title_purchase": "عارضی خرید بل",
+  "tbill.title_sale": "عارضی فروخت بل",
+  "tbill.title_reports": "عارضی بل — رپورٹس اور تلاش",
+  "tbill.subtitle": "صرف تاریخی / عارضی ٹریکنگ۔ یہ بل مین ERP اکاؤنٹنگ نہیں ہیں — کوئی لیجر، روزنامچہ، جرنل، ڈیبٹ/کریڈٹ، اسٹاک یا واؤچر پوسٹنگ نہیں، اور کوئی اکاؤنٹنگ ٹرانسفر نہیں۔ مین ERP صرف موجودہ پارٹی / اکاؤنٹ اور اشیاء منتخب کرنے کے لیے استعمال ہوتا ہے۔",
+  "tbill.btn_report": "رپورٹ / پرنٹ PDF",
+  "tbill.btn_new": "نیا عارضی بل",
+  "tbill.setup_pending": "عارضی بل رجسٹر ٹیبل ابھی اس ڈیٹابیس پر نہیں ہے۔ مائیگریشن 20261114 چلائیں۔",
+  "tbill.kpi_purchase_bills": "خرید بل",
+  "tbill.kpi_purchase_amount": "خرید رقم",
+  "tbill.kpi_sale_bills": "فروخت بل",
+  "tbill.kpi_sale_amount": "فروخت رقم",
+  "tbill.kpi_bills": "بل",
+  "tbill.kpi_parties": "پارٹیاں",
+  "tbill.kpi_total_amount": "کل رقم",
+  "tbill.f_search": "تلاش",
+  "tbill.f_search_ph": "پارٹی، ریفرنس، بل نمبر، اشیاء، کنٹینر…",
+  "tbill.f_from": "سے",
+  "tbill.f_to": "تک",
+  "tbill.f_reset": "ری سیٹ",
+  "tbill.f_unit": "یونٹ",
+  "tbill.loading": "لوڈ ہو رہا ہے…",
+  "tbill.empty": "ابھی کوئی عارضی بل نہیں۔ پہلا بنائیں۔",
+  "tbill.bills_word": "بل",
+  "tbill.refs_word": "ریفرنسز",
+  "tbill.ref_label": "ریفرنس / اکاؤنٹ نمبر",
+  "tbill.col_date": "تاریخ",
+  "tbill.col_kind": "قسم",
+  "tbill.col_goods": "اشیاء",
+  "tbill.col_billno": "بل نمبر",
+  "tbill.col_container": "کنٹینر نمبر",
+  "tbill.col_bl": "BL نمبر",
+  "tbill.col_qty": "مقدار",
+  "tbill.col_weight": "وزن / کارٹن",
+  "tbill.col_rate": "ریٹ",
+  "tbill.col_amount": "رقم",
+  "tbill.col_actions": "اعمال",
+  "tbill.col_party": "پارٹی / اکاؤنٹ",
+  "tbill.col_ref": "ریفرنس نمبر",
+  "tbill.col_currency": "کرنسی",
+  "tbill.col_remarks": "ریمارکس",
+  "tbill.kind_purchase": "خرید",
+  "tbill.kind_sale": "فروخت",
+  "tbill.act_view": "دیکھیں",
+  "tbill.act_edit": "ترمیم",
+  "tbill.act_delete": "حذف",
+  "tbill.confirm_delete": "یہ عارضی بل حذف کریں؟ یہ واپس نہیں ہو سکتا۔",
+  "tbill.detail_title": "عارضی بل",
+  "tbill.f_entry_no": "انٹری نمبر",
+  "tbill.close": "بند کریں",
+  "tbill.report_title": "عارضی خرید و فروخت بل رجسٹر",
+  "tbill.report_sub": "صرف تاریخی ٹریکنگ — لیجر / روزنامچہ / جرنل / اسٹاک سے منسلک نہیں",
+  "tbill.total": "کل",
+  "tbill.form_edit": "عارضی بل ترمیم کریں",
+  "tbill.form_new": "نیا عارضی بل",
+  "tbill.err_party": "پارٹی / اکاؤنٹ ضروری ہے۔",
+  "tbill.party_ph": "موجودہ اکاؤنٹ / پارٹی لکھیں یا منتخب کریں",
+  "tbill.goods_ph": "اشیاء ماسٹر سے لکھیں یا منتخب کریں",
+  "tbill.optional": "اختیاری",
+  "tbill.cancel": "منسوخ",
+  "tbill.save": "محفوظ کریں",
+  "tbill.saving": "محفوظ ہو رہا ہے…",
+  "tbill.form_note": "یہ بل صرف عارضی بل رجسٹر میں محفوظ ہوتا ہے۔ یہ لیجر، روزنامچہ، جرنل، ڈیبٹ/کریڈٹ، اسٹاک یا کسی واؤچر میں پوسٹ نہیں ہوتا، اور مین ERP میں منتقل نہیں ہوتا۔",
 };
 
 const ar: Dict = {
@@ -59378,6 +59585,75 @@ const ar: Dict = {
   "health.ntx_static": "فحص ثابت فقط — اضغط 'تشغيل فحص مباشر كامل' لتضمين هذا",
   "health.nt_tsc": "فحص الأنواع TypeScript (tsc --noEmit)",
   "health.ntx_tsc": "لا يُشغّل مع كل طلب — شغّل `npx tsc --noEmit` في CI / محليًا",
+  "nav.temp_bills": "المشتريات والمبيعات المؤقتة",
+  "nav.temp_bills_purchase": "فواتير الشراء",
+  "nav.temp_bills_sales": "فواتير البيع",
+  "nav.temp_bills_all": "كل الفواتير المؤقتة",
+  "nav.temp_bills_reports": "التقارير / البحث",
+  "tbill.group": "سجل الفواتير المؤقتة",
+  "tbill.title": "سجل فواتير المشتريات والمبيعات المؤقتة",
+  "tbill.title_purchase": "فواتير الشراء المؤقتة",
+  "tbill.title_sale": "فواتير البيع المؤقتة",
+  "tbill.title_reports": "الفواتير المؤقتة — التقارير والبحث",
+  "tbill.subtitle": "تتبّع تاريخي / مؤقت فقط. هذه الفواتير ليست محاسبة النظام الرئيسي — لا ترحيل إلى دفتر الأستاذ أو الروزنامة أو اليومية أو مدين/دائن أو المخزون أو السندات، ولا تحويل محاسبي. يُستخدم النظام الرئيسي فقط لاختيار الطرف/الحساب والبضائع الموجودة.",
+  "tbill.btn_report": "تقرير / طباعة PDF",
+  "tbill.btn_new": "فاتورة مؤقتة جديدة",
+  "tbill.setup_pending": "جدول سجل الفواتير المؤقتة غير موجود بعد على قاعدة البيانات هذه. شغّل الترحيل 20261114.",
+  "tbill.kpi_purchase_bills": "فواتير الشراء",
+  "tbill.kpi_purchase_amount": "مبلغ الشراء",
+  "tbill.kpi_sale_bills": "فواتير البيع",
+  "tbill.kpi_sale_amount": "مبلغ البيع",
+  "tbill.kpi_bills": "الفواتير",
+  "tbill.kpi_parties": "الأطراف",
+  "tbill.kpi_total_amount": "المبلغ الإجمالي",
+  "tbill.f_search": "بحث",
+  "tbill.f_search_ph": "الطرف، المرجع، رقم الفاتورة، البضاعة، الحاوية…",
+  "tbill.f_from": "من",
+  "tbill.f_to": "إلى",
+  "tbill.f_reset": "إعادة تعيين",
+  "tbill.f_unit": "الوحدة",
+  "tbill.loading": "جارٍ التحميل…",
+  "tbill.empty": "لا فواتير مؤقتة بعد. أنشئ الأولى.",
+  "tbill.bills_word": "فواتير",
+  "tbill.refs_word": "مراجع",
+  "tbill.ref_label": "المرجع / رقم الحساب",
+  "tbill.col_date": "التاريخ",
+  "tbill.col_kind": "النوع",
+  "tbill.col_goods": "البضائع",
+  "tbill.col_billno": "رقم الفاتورة",
+  "tbill.col_container": "رقم الحاوية",
+  "tbill.col_bl": "رقم بوليصة الشحن",
+  "tbill.col_qty": "الكمية",
+  "tbill.col_weight": "الوزن / الكراتين",
+  "tbill.col_rate": "السعر",
+  "tbill.col_amount": "المبلغ",
+  "tbill.col_actions": "إجراءات",
+  "tbill.col_party": "الطرف / الحساب",
+  "tbill.col_ref": "رقم المرجع",
+  "tbill.col_currency": "العملة",
+  "tbill.col_remarks": "ملاحظات",
+  "tbill.kind_purchase": "شراء",
+  "tbill.kind_sale": "بيع",
+  "tbill.act_view": "عرض",
+  "tbill.act_edit": "تعديل",
+  "tbill.act_delete": "حذف",
+  "tbill.confirm_delete": "حذف هذه الفاتورة المؤقتة؟ لا يمكن التراجع.",
+  "tbill.detail_title": "فاتورة مؤقتة",
+  "tbill.f_entry_no": "رقم القيد",
+  "tbill.close": "إغلاق",
+  "tbill.report_title": "سجل فواتير المشتريات والمبيعات المؤقتة",
+  "tbill.report_sub": "تتبّع تاريخي فقط — غير متصل بدفتر الأستاذ / الروزنامة / اليومية / المخزون",
+  "tbill.total": "الإجمالي",
+  "tbill.form_edit": "تعديل الفاتورة المؤقتة",
+  "tbill.form_new": "فاتورة مؤقتة جديدة",
+  "tbill.err_party": "الطرف / الحساب مطلوب.",
+  "tbill.party_ph": "اكتب أو اختر حسابًا / طرفًا موجودًا",
+  "tbill.goods_ph": "اكتب أو اختر من سجل البضائع",
+  "tbill.optional": "اختياري",
+  "tbill.cancel": "إلغاء",
+  "tbill.save": "حفظ",
+  "tbill.saving": "جارٍ الحفظ…",
+  "tbill.form_note": "تُحفظ هذه الفاتورة في سجل الفواتير المؤقتة فقط. لا تُرحَّل إلى دفتر الأستاذ أو الروزنامة أو اليومية أو مدين/دائن أو المخزون أو أي سند، ولا تُحوَّل إلى النظام الرئيسي.",
 };
 
 const fa: Dict = {
@@ -76741,6 +77017,75 @@ const fa: Dict = {
   "health.ntx_static": "اسکن فقط ایستا — برای گنجاندن این، «اجرای اسکن کامل زنده» را بزنید",
   "health.nt_tsc": "بررسی نوع TypeScript (tsc --noEmit)",
   "health.ntx_tsc": "برای هر درخواست اجرا نمی‌شود — `npx tsc --noEmit` را در CI / محلی اجرا کنید",
+  "nav.temp_bills": "خرید و فروش موقت",
+  "nav.temp_bills_purchase": "صورتحساب‌های خرید",
+  "nav.temp_bills_sales": "صورتحساب‌های فروش",
+  "nav.temp_bills_all": "همه صورتحساب‌های موقت",
+  "nav.temp_bills_reports": "گزارش‌ها / جستجو",
+  "tbill.group": "دفتر صورتحساب‌های موقت",
+  "tbill.title": "دفتر صورتحساب‌های خرید و فروش موقت",
+  "tbill.title_purchase": "صورتحساب‌های خرید موقت",
+  "tbill.title_sale": "صورتحساب‌های فروش موقت",
+  "tbill.title_reports": "صورتحساب‌های موقت — گزارش و جستجو",
+  "tbill.subtitle": "فقط ردیابی تاریخی / موقت. این صورتحساب‌ها حسابداری اصلی ERP نیستند — هیچ دفتر کل، روزنامچه، ژورنال، بدهکار/بستانکار، موجودی یا سند ثبت نمی‌شود و هیچ انتقال حسابداری وجود ندارد. ERP اصلی فقط برای انتخاب طرف/حساب و کالای موجود استفاده می‌شود.",
+  "tbill.btn_report": "گزارش / چاپ PDF",
+  "tbill.btn_new": "صورتحساب موقت جدید",
+  "tbill.setup_pending": "جدول دفتر صورتحساب‌های موقت هنوز روی این پایگاه‌داده نیست. مهاجرت 20261114 را اجرا کنید.",
+  "tbill.kpi_purchase_bills": "صورتحساب‌های خرید",
+  "tbill.kpi_purchase_amount": "مبلغ خرید",
+  "tbill.kpi_sale_bills": "صورتحساب‌های فروش",
+  "tbill.kpi_sale_amount": "مبلغ فروش",
+  "tbill.kpi_bills": "صورتحساب‌ها",
+  "tbill.kpi_parties": "طرف‌ها",
+  "tbill.kpi_total_amount": "مبلغ کل",
+  "tbill.f_search": "جستجو",
+  "tbill.f_search_ph": "طرف، مرجع، شماره صورتحساب، کالا، کانتینر…",
+  "tbill.f_from": "از",
+  "tbill.f_to": "تا",
+  "tbill.f_reset": "بازنشانی",
+  "tbill.f_unit": "واحد",
+  "tbill.loading": "در حال بارگذاری…",
+  "tbill.empty": "هنوز صورتحساب موقتی نیست. اولی را بسازید.",
+  "tbill.bills_word": "صورتحساب",
+  "tbill.refs_word": "مراجع",
+  "tbill.ref_label": "مرجع / شماره حساب",
+  "tbill.col_date": "تاریخ",
+  "tbill.col_kind": "نوع",
+  "tbill.col_goods": "کالا",
+  "tbill.col_billno": "شماره صورتحساب",
+  "tbill.col_container": "شماره کانتینر",
+  "tbill.col_bl": "شماره بارنامه",
+  "tbill.col_qty": "مقدار",
+  "tbill.col_weight": "وزن / کارتن",
+  "tbill.col_rate": "نرخ",
+  "tbill.col_amount": "مبلغ",
+  "tbill.col_actions": "اقدامات",
+  "tbill.col_party": "طرف / حساب",
+  "tbill.col_ref": "شماره مرجع",
+  "tbill.col_currency": "ارز",
+  "tbill.col_remarks": "ملاحظات",
+  "tbill.kind_purchase": "خرید",
+  "tbill.kind_sale": "فروش",
+  "tbill.act_view": "مشاهده",
+  "tbill.act_edit": "ویرایش",
+  "tbill.act_delete": "حذف",
+  "tbill.confirm_delete": "این صورتحساب موقت حذف شود؟ قابل بازگشت نیست.",
+  "tbill.detail_title": "صورتحساب موقت",
+  "tbill.f_entry_no": "شماره ورودی",
+  "tbill.close": "بستن",
+  "tbill.report_title": "دفتر صورتحساب‌های خرید و فروش موقت",
+  "tbill.report_sub": "فقط ردیابی تاریخی — به دفتر کل / روزنامچه / ژورنال / موجودی متصل نیست",
+  "tbill.total": "جمع",
+  "tbill.form_edit": "ویرایش صورتحساب موقت",
+  "tbill.form_new": "صورتحساب موقت جدید",
+  "tbill.err_party": "طرف / حساب الزامی است.",
+  "tbill.party_ph": "حساب / طرف موجود را تایپ یا انتخاب کنید",
+  "tbill.goods_ph": "از فهرست کالا تایپ یا انتخاب کنید",
+  "tbill.optional": "اختیاری",
+  "tbill.cancel": "لغو",
+  "tbill.save": "ذخیره",
+  "tbill.saving": "در حال ذخیره…",
+  "tbill.form_note": "این صورتحساب فقط در دفتر صورتحساب‌های موقت ذخیره می‌شود. در دفتر کل، روزنامچه، ژورنال، بدهکار/بستانکار، موجودی یا هیچ سندی ثبت نمی‌شود و به ERP اصلی منتقل نمی‌شود.",
 };
 
 const ps: Dict = {
@@ -94110,6 +94455,75 @@ const ps: Dict = {
   "health.ntx_static": "یوازې جامد سکن — د دې شاملولو لپاره 'بشپړ ژوندی سکن پیل کړئ' کېکاږئ",
   "health.nt_tsc": "د ډول کتنه TypeScript (tsc --noEmit)",
   "health.ntx_tsc": "پر هره غوښتنه نه چلیږي — په CI / محلي کې `npx tsc --noEmit` چلوئ",
+  "nav.temp_bills": "لنډمهاله پیرود او پلور",
+  "nav.temp_bills_purchase": "د پیرود بلونه",
+  "nav.temp_bills_sales": "د پلور بلونه",
+  "nav.temp_bills_all": "ټول لنډمهاله بلونه",
+  "nav.temp_bills_reports": "راپورونه / لټون",
+  "tbill.group": "د لنډمهاله بلونو رجسټر",
+  "tbill.title": "د لنډمهاله پیرود او پلور بلونو رجسټر",
+  "tbill.title_purchase": "لنډمهاله د پیرود بلونه",
+  "tbill.title_sale": "لنډمهاله د پلور بلونه",
+  "tbill.title_reports": "لنډمهاله بلونه — راپورونه او لټون",
+  "tbill.subtitle": "یوازې تاریخي / لنډمهاله تعقیب. دا بلونه د اصلي ERP محاسبه نه ده — هیڅ لیجر، روزنامچه، جورنال، ډیبټ/کریډیټ، سټاک یا واوچر ثبت نشته، او هیڅ محاسبوي لیږد نشته. اصلي ERP یوازې د موجودې ډلې / حساب او توکو د ټاکلو لپاره کارول کیږي.",
+  "tbill.btn_report": "راپور / چاپ PDF",
+  "tbill.btn_new": "نوی لنډمهاله بل",
+  "tbill.setup_pending": "د لنډمهاله بلونو رجسټر جدول لا تر اوسه پدې ډیټابیس کې نشته. د 20261114 مهاجرت پرمخ یوسئ.",
+  "tbill.kpi_purchase_bills": "د پیرود بلونه",
+  "tbill.kpi_purchase_amount": "د پیرود مقدار",
+  "tbill.kpi_sale_bills": "د پلور بلونه",
+  "tbill.kpi_sale_amount": "د پلور مقدار",
+  "tbill.kpi_bills": "بلونه",
+  "tbill.kpi_parties": "ډلې",
+  "tbill.kpi_total_amount": "ټول مقدار",
+  "tbill.f_search": "لټون",
+  "tbill.f_search_ph": "ډله، حواله، د بل شمیره، توکي، کانتینر…",
+  "tbill.f_from": "له",
+  "tbill.f_to": "تر",
+  "tbill.f_reset": "بیا تنظیم",
+  "tbill.f_unit": "واحد",
+  "tbill.loading": "بارول کیږي…",
+  "tbill.empty": "لا تر اوسه هیڅ لنډمهاله بل نشته. لومړی جوړ کړئ.",
+  "tbill.bills_word": "بلونه",
+  "tbill.refs_word": "حوالې",
+  "tbill.ref_label": "حواله / د حساب شمیره",
+  "tbill.col_date": "نیټه",
+  "tbill.col_kind": "ډول",
+  "tbill.col_goods": "توکي",
+  "tbill.col_billno": "د بل شمیره",
+  "tbill.col_container": "د کانتینر شمیره",
+  "tbill.col_bl": "د BL شمیره",
+  "tbill.col_qty": "مقدار",
+  "tbill.col_weight": "وزن / کارتنونه",
+  "tbill.col_rate": "نرخ",
+  "tbill.col_amount": "مقدار",
+  "tbill.col_actions": "کړنې",
+  "tbill.col_party": "ډله / حساب",
+  "tbill.col_ref": "د حوالې شمیره",
+  "tbill.col_currency": "اسعارو",
+  "tbill.col_remarks": "یادونې",
+  "tbill.kind_purchase": "پیرود",
+  "tbill.kind_sale": "پلور",
+  "tbill.act_view": "وګورئ",
+  "tbill.act_edit": "سمول",
+  "tbill.act_delete": "ړنګول",
+  "tbill.confirm_delete": "دا لنډمهاله بل ړنګ کړئ؟ دا بیرته نه شي کیدی.",
+  "tbill.detail_title": "لنډمهاله بل",
+  "tbill.f_entry_no": "د ننوتلو شمیره",
+  "tbill.close": "بند کړئ",
+  "tbill.report_title": "د لنډمهاله پیرود او پلور بلونو رجسټر",
+  "tbill.report_sub": "یوازې تاریخي تعقیب — له لیجر / روزنامچه / جورنال / سټاک سره نه دی تړل شوی",
+  "tbill.total": "ټول",
+  "tbill.form_edit": "لنډمهاله بل سمول",
+  "tbill.form_new": "نوی لنډمهاله بل",
+  "tbill.err_party": "ډله / حساب اړین دی.",
+  "tbill.party_ph": "موجود حساب / ډله ولیکئ یا وټاکئ",
+  "tbill.goods_ph": "د توکو له ماسټر څخه ولیکئ یا وټاکئ",
+  "tbill.optional": "اختیاري",
+  "tbill.cancel": "لغوه",
+  "tbill.save": "خوندي کړئ",
+  "tbill.saving": "خوندي کیږي…",
+  "tbill.form_note": "دا بل یوازې د لنډمهاله بلونو رجسټر کې خوندي کیږي. دا لیجر، روزنامچه، جورنال، ډیبټ/کریډیټ، سټاک یا کوم واوچر ته نه ثبتیږي، او اصلي ERP ته نه لیږدول کیږي.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
