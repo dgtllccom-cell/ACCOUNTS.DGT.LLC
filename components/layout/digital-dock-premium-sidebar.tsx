@@ -100,6 +100,8 @@ export type SidebarMenuItem = {
   defaultOpen?: boolean;
   children?: SidebarSubItem[];
   roles?: string[];
+  tone?: "red" | "default";
+  badge?: string;
 };
 
 /* ---------------- Menu Items Exactly As In Specification ---------------- */
@@ -223,20 +225,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       {
-        // Historical / temporary tracking ONLY — NOT main ERP accounting. No Ledger /
-        // Roznamcha / Journal / Stock / Voucher posting, no accounting transfer.
-        key: "sub-temp-bills",
-        label: "Temporary Purchase & Sales",
-        icon: FileSpreadsheet,
-        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
-        children: [
-          { label: "Purchase Bills", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
-          { label: "Sales Bills", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
-          { label: "All Temporary Bills", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
-          { label: "Temporary Bills Reports & Search", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
-        ],
-      },
-      {
         key: "sub-consignment-purchase",
         label: "Consignment Register",
         icon: Package,
@@ -288,6 +276,23 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: "BCP Universal Reports", href: "/dashboard/bill-cost-profit/reports", icon: FileBarChart },
         ],
       },
+    ],
+  },
+  {
+    // Main Menu Top-Level Item (Red Highlighted):
+    // Historical / temporary tracking ONLY — NOT main ERP accounting. No Ledger /
+    // Roznamcha / Journal / Stock / Voucher posting, no accounting transfer.
+    key: "temp-bills",
+    label: "Temporary (Arzi) Purchase & Sales",
+    icon: FileSpreadsheet,
+    tone: "red",
+    badge: "Arzi",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      { label: "Arzi Purchase Bills", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
+      { label: "Arzi Sales Bills", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
+      { label: "All Arzi Bills Register", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
+      { label: "Arzi Bills Reports & Search", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
     ],
   },
   {
@@ -653,6 +658,7 @@ export function DigitalDockPremiumSidebar({
           const isDirectActive = isPathActive(item.href, pathname);
           const isDescActive = hasChildren && hasActiveDescendant(item, pathname);
           const isHighlighted = isOpen || isDirectActive || isDescActive;
+          const isRed = item.tone === "red";
 
           return (
             <div key={item.key} className="relative">
@@ -664,30 +670,54 @@ export function DigitalDockPremiumSidebar({
                     onClick={() => toggleKey(item.key)}
                     className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
                       isHighlighted
-                        ? "bg-[#edf5ff] text-[#2563eb] font-bold"
-                        : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                        ? isRed
+                          ? "bg-red-50/90 text-red-600 font-bold border border-red-200/80 shadow-xs"
+                          : "bg-[#edf5ff] text-[#2563eb] font-bold"
+                        : isRed
+                          ? "text-red-600 font-bold hover:bg-red-100/70 hover:text-red-700 bg-red-50/40 border border-red-200/60"
+                          : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
                     }`}
                   >
-                    {/* Left vertical blue accent indicator bar when highlighted/open */}
+                    {/* Left vertical accent indicator bar when highlighted/open */}
                     {isHighlighted && (
-                      <span className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] bg-[#2563eb] rounded-r-md" />
+                      <span className={`absolute left-0 top-1.5 bottom-1.5 w-[3.5px] rounded-r-md ${
+                        isRed ? "bg-red-600" : "bg-[#2563eb]"
+                      }`} />
                     )}
 
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
-                        isHighlighted ? "text-[#2563eb]" : "text-[#0f172a]"
+                        isRed
+                          ? "text-red-600"
+                          : isHighlighted
+                            ? "text-[#2563eb]"
+                            : "text-[#0f172a]"
                       }`} />
-                      <span className="truncate text-left tracking-tight">
+                      <span className={`truncate text-left tracking-tight ${isRed ? "text-red-600 font-bold" : ""}`}>
                         {tr(item.label)}
                       </span>
                     </div>
 
+                    {item.badge && (
+                      <span className={`me-2 px-1.5 py-0.5 text-[10px] font-extrabold rounded uppercase tracking-wider ${
+                        isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+
                     {isOpen ? (
                       <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
-                        isHighlighted ? "text-[#2563eb]" : "text-[#0f172a]"
+                        isRed
+                          ? "text-red-600"
+                          : isHighlighted
+                            ? "text-[#2563eb]"
+                            : "text-[#0f172a]"
                       }`} />
                     ) : (
-                      <ChevronRight className="h-4 w-4 shrink-0 text-[#0f172a] transition-transform duration-200" />
+                      <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                        isRed ? "text-red-500" : "text-[#0f172a]"
+                      }`} />
                     )}
                   </button>
 
@@ -712,28 +742,36 @@ export function DigitalDockPremiumSidebar({
                                 onClick={() => toggleKey(subKey)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 cursor-pointer ${
                                   isSubActive || isSubOpen
-                                    ? "text-[#2563eb] font-bold bg-blue-50/70"
-                                    : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
+                                    ? isRed
+                                      ? "text-red-700 font-bold bg-red-100/70 border border-red-200/70"
+                                      : "text-[#2563eb] font-bold bg-blue-50/70"
+                                    : isRed
+                                      ? "text-red-700 font-semibold hover:text-red-800 hover:bg-red-50/60"
+                                      : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
-                                    isSubActive || isSubOpen ? "text-[#2563eb]" : "text-[#0f172a]"
+                                    isSubActive || isSubOpen
+                                      ? isRed ? "text-red-600" : "text-[#2563eb]"
+                                      : isRed ? "text-red-500" : "text-[#0f172a]"
                                   }`} />
                                   <span className="truncate text-left tracking-tight">
                                     {tr(sub.label)}
                                   </span>
                                 </div>
                                 {isSubOpen ? (
-                                  <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#2563eb]" />
+                                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isRed ? "text-red-600" : "text-[#2563eb]"}`} />
                                 ) : (
-                                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${isRed ? "text-red-400" : "text-slate-400"}`} />
                                 )}
                               </button>
 
                               {/* Level 3 Deep Children (e.g. Local Purchase, Completed Bills...) */}
                               {isSubOpen && sub.children && (
-                                <div className="ms-5 ps-3 pe-1 py-1 space-y-0.5 border-l-2 border-blue-200/60 my-0.5 animate-in fade-in-50 duration-150">
+                                <div className={`ms-5 ps-3 pe-1 py-1 space-y-0.5 border-l-2 my-0.5 animate-in fade-in-50 duration-150 ${
+                                  isRed ? "border-red-300" : "border-blue-200/60"
+                                }`}>
                                   {sub.children.map((leaf) => {
                                     const LeafIcon = leaf.icon;
                                     const isLeafActive = isPathActive(leaf.href, pathname);
@@ -744,17 +782,25 @@ export function DigitalDockPremiumSidebar({
                                         onClick={onNavigate}
                                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] transition-all duration-150 ${
                                           isLeafActive
-                                            ? "text-[#2563eb] font-bold bg-blue-50/90"
-                                            : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                                            ? isRed
+                                              ? "text-red-700 font-bold bg-red-100/90"
+                                              : "text-[#2563eb] font-bold bg-blue-50/90"
+                                            : isRed
+                                              ? "text-red-800 font-medium hover:text-red-600 hover:bg-red-50/70"
+                                              : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
                                         }`}
                                       >
                                         {LeafIcon ? (
                                           <LeafIcon className={`h-3.5 w-3.5 shrink-0 ${
-                                            isLeafActive ? "text-[#2563eb]" : "text-slate-400"
+                                            isLeafActive
+                                              ? isRed ? "text-red-600" : "text-[#2563eb]"
+                                              : isRed ? "text-red-400" : "text-slate-400"
                                           }`} />
                                         ) : (
                                           <span className={`h-1.5 w-1.5 rounded-full ${
-                                            isLeafActive ? "bg-[#2563eb]" : "bg-slate-300"
+                                            isLeafActive
+                                              ? isRed ? "bg-red-600" : "bg-[#2563eb]"
+                                              : isRed ? "bg-red-300" : "bg-slate-300"
                                           }`} />
                                         )}
                                         <span className="truncate tracking-tight">
@@ -777,12 +823,18 @@ export function DigitalDockPremiumSidebar({
                             onClick={onNavigate}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
                               isSubDirectActive
-                                ? "text-[#2563eb] font-bold bg-blue-50/70"
-                                : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                                ? isRed
+                                  ? "text-red-700 font-bold bg-red-100/70 border border-red-200/80"
+                                  : "text-[#2563eb] font-bold bg-blue-50/70"
+                                : isRed
+                                  ? "text-red-800 font-semibold hover:text-red-600 hover:bg-red-50/70"
+                                  : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
                             }`}
                           >
                             <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
-                              isSubDirectActive ? "text-[#2563eb]" : "text-[#0f172a]"
+                              isSubDirectActive
+                                ? isRed ? "text-red-600" : "text-[#2563eb]"
+                                : isRed ? "text-red-500" : "text-[#0f172a]"
                             }`} />
                             <span className="truncate tracking-tight">
                               {tr(sub.label)}
@@ -800,19 +852,36 @@ export function DigitalDockPremiumSidebar({
                   onClick={onNavigate}
                   className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 ${
                     isDirectActive
-                      ? "bg-[#edf5ff] text-[#2563eb] font-bold"
-                      : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                      ? isRed
+                        ? "bg-red-50 text-red-600 font-bold border border-red-200/80 shadow-xs"
+                        : "bg-[#edf5ff] text-[#2563eb] font-bold"
+                      : isRed
+                        ? "text-red-600 font-bold hover:bg-red-100/70 hover:text-red-700 bg-red-50/40 border border-red-200/60"
+                        : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
                   }`}
                 >
                   {isDirectActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] bg-[#2563eb] rounded-r-md" />
+                    <span className={`absolute left-0 top-1.5 bottom-1.5 w-[3.5px] rounded-r-md ${
+                      isRed ? "bg-red-600" : "bg-[#2563eb]"
+                    }`} />
                   )}
                   <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
-                    isDirectActive ? "text-[#2563eb]" : "text-[#0f172a]"
+                    isRed
+                      ? "text-red-600"
+                      : isDirectActive
+                        ? "text-[#2563eb]"
+                        : "text-[#0f172a]"
                   }`} />
-                  <span className="truncate tracking-tight flex-1">
+                  <span className={`truncate tracking-tight flex-1 ${isRed ? "text-red-600 font-bold" : ""}`}>
                     {tr(item.label)}
                   </span>
+                  {item.badge && (
+                    <span className={`px-1.5 py-0.5 text-[10px] font-extrabold rounded uppercase tracking-wider ${
+                      isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               )}
             </div>
