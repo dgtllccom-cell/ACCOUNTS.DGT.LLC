@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Search } from "lucide-react";
-import { apiGet, apiPost } from "@/lib/api/client";
+import { apiGet, apiFetch } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { MobileCashShell } from "./mobile-cash-shell";
@@ -19,28 +18,32 @@ type Ledger = {
   country_id: string | null;
 };
 
-type Scope = {
-  cityBranchId: string | null;
-  countryBranchId: string | null;
-  branchCountryId: string | null;
-};
-
 function genCode(prefix: string) {
   const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
   return `${prefix}-${ymd}-${rand}`;
+}
+function newIdempotencyKey() {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return `mcash-${crypto.randomUUID()}`;
+  } catch { /* ignore */ }
+  return `mcash-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 /**
- * Brother-User cash entry — deliberately tiny. Posts ONE line to the EXISTING
- * /api/erp/roznamcha endpoint (same validation, idempotency lock, posting engine,
- * approval rules). Locked to the user's own branch; no country/branch pickers.
+ * Brother-User cash entry — deliberately tiny, but ACCOUNTING-CORRECT:
+ *  - amount is in the SELECTED ACCOUNT's own currency (never defaulted to USD);
+ *  - posting branch is the account's own branch (server re-validates it against
+ *    the user's scope and the account), so a branch user posts only in their
+ *    branch and a country-level user posts in whichever authorized branch owns
+ *    the account they picked;
+ *  - the entry posts ONE line through the EXISTING /api/erp/roznamcha engine —
+ *    same validation, same idempotency lock (stable X-Idempotency-Key + voucher
+ *    per attempt, rotated only on success), same posting + approval rules.
  */
 export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage }) {
   const s = useErpScreen("mcash", langProp);
-  const router = useRouter();
 
-  const [scope, setScope] = useState<Scope | null>(null);
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,22 +56,19 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
 
+  // Stable per-attempt identity — makes a retry / double-click / concurrent submit
+  // the SAME logical request so the server idempotency lock collapses them.
+  const attempt = useRef<{ key: string; voucherNo: string; journalNo: string }>({
+    key: newIdempotencyKey(),
+    voucherNo: genCode("V"),
+    journalNo: genCode("J"),
+  });
+  const inFlight = useRef(false);
+
   useEffect(() => {
     let alive = true;
-    Promise.all([
-      apiGet<any>("/api/erp/auth/session"),
-      apiGet<{ ledgers: Ledger[] }>("/api/erp/ledgers"),
-    ])
-      .then(([sess, led]) => {
-        if (!alive) return;
-        const sum = sess?.scopes?.summary ?? {};
-        setScope({
-          cityBranchId: sess?.scopes?.cityBranchIds?.[0] ?? sum.cityBranchId ?? null,
-          countryBranchId: sess?.scopes?.countryBranchIds?.[0] ?? sum.countryBranchId ?? null,
-          branchCountryId: sum.branchCountryId ?? sum.countryId ?? null,
-        });
-        setLedgers(led.ledgers ?? []);
-      })
+    apiGet<{ ledgers: Ledger[] }>("/api/erp/ledgers")
+      .then((r) => { if (alive) setLedgers((r.ledgers ?? []).filter((l) => !!l.currency)); })
       .catch(() => { if (alive) setMsg({ tone: "err", text: s.t("no_results", "No accounts found") }); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
@@ -85,37 +85,46 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
 
   const amountNum = Number(amount);
   const canSave =
-    !!account && Number.isFinite(amountNum) && amountNum > 0 && !!scope?.cityBranchId && !busy;
+    !!account && !!account.currency && Number.isFinite(amountNum) && amountNum > 0 &&
+    !!(account.city_branch_id || account.country_branch_id) && !busy;
+
+  // Post at the account's own branch level. A city-branch account posts with only
+  // cityBranchId (a Brother-User session authorizes the city branch, not its
+  // parent main branch); a main-branch-level account posts with countryBranchId.
+  const postCityBranchId = account?.city_branch_id ?? null;
+  const postCountryBranchId = account && !account.city_branch_id ? account.country_branch_id ?? null : null;
 
   async function submit() {
-    if (!canSave || !account || !scope) return;
+    if (!canSave || !account || inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setMsg(null);
+    const isReceipt = kind === "receipt";
+    const cur = (account.currency || "").toUpperCase();
     try {
-      const isReceipt = kind === "receipt";
       const body = {
         mode: "post" as const,
         type: "branch" as const,
-        // Only the city-branch scope is passed — a Brother User's session carries
-        // no country/main-branch id, and passing one would (correctly) 403.
+        // No country id — the server resolves it from the branch (a branch-scoped
+        // Brother-User session legitimately carries none). Passing one would 403.
         countryId: null,
-        countryBranchId: null,
-        cityBranchId: scope.cityBranchId,
+        countryBranchId: postCountryBranchId,
+        cityBranchId: postCityBranchId,
         entryDate: date,
-        journalNo: genCode("J"),
-        voucherNo: genCode("V"),
-        referenceNo: undefined,
+        journalNo: attempt.current.journalNo,
+        voucherNo: attempt.current.voucherNo,
         narration: remarks.trim() || undefined,
         originalLanguage: s.lang,
         sourceModule: "cash_entry",
         sourceTransactionType: "Cash Book No.",
+        sourceReferenceNo: attempt.current.voucherNo,
         roznamchaCategory: "cash" as const,
         paymentDetails: {
           roznamchaBookType: "cash",
           paymentType: isReceipt ? "money_received" : "money_paid",
           paymentMode: isReceipt ? "DEBIT" : "CREDIT",
           finalAmount: amountNum,
-          currency: account.currency || "USD",
+          currency: cur,
           exchangeRate: 1,
           counterLedgerId: account.id,
         },
@@ -126,13 +135,21 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
             description: remarks.trim() || undefined,
             debit: isReceipt ? amountNum : 0,
             credit: isReceipt ? 0 : amountNum,
-            currency: account.currency || "USD",
+            currency: cur,
             exchangeRate: 1,
           },
         ],
       };
-      const res = await apiPost<any>("/api/erp/roznamcha", body);
-      setMsg({ tone: "ok", text: `${s.t("app_title", "Cash & Ledger")} — ${res?.voucherNo || res?.entryId || "OK"}` });
+      const res = await apiFetch<any>("/api/erp/roznamcha", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-idempotency-key": attempt.current.key },
+        body: JSON.stringify(body),
+      });
+      const ref = res?.voucherNo || res?.entryId || attempt.current.voucherNo;
+      setMsg({ tone: "ok", text: `${s.t("saved_ok", "Saved")} — ${ref}` });
+      // New attempt identity for the NEXT entry; a late retry of the old one is
+      // still collapsed by the (now COMPLETED) idempotency key on the server.
+      attempt.current = { key: newIdempotencyKey(), voucherNo: genCode("V"), journalNo: genCode("J") };
       setAmount("");
       setRemarks("");
       setAccount(null);
@@ -140,9 +157,12 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
     } catch (e: any) {
       setMsg({ tone: "err", text: e?.message || "Error" });
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }
+
+  const cur = account?.currency?.toUpperCase() || "";
 
   return (
     <MobileCashShell title={s.t("menu_entry", "New Cash Entry")} langProp={langProp} showBack>
@@ -154,7 +174,6 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
             {s.t("entry_help", "Use the standard cash form. Your entry follows the normal validation and approval rules.")}
           </p>
 
-          {/* receipt / payment */}
           <div className="grid grid-cols-2 gap-2">
             {(["receipt", "payment"] as const).map((k) => (
               <button
@@ -174,7 +193,6 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
             ))}
           </div>
 
-          {/* account */}
           <div>
             <label className="text-xs font-bold text-slate-500">{s.t("field_account", "Account")}</label>
             {account ? (
@@ -185,7 +203,7 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
               >
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-bold">{account.name || account.code}</span>
-                  <span className="block font-mono text-[11px] text-slate-400">{account.code} · {account.currency}</span>
+                  <span className="block font-mono text-[11px] text-slate-400">{account.code} · {cur}</span>
                 </span>
                 <span className="text-xs font-bold text-sky-600">{s.t("change", "Change")}</span>
               </button>
@@ -210,7 +228,7 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
                           className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2.5 text-start last:border-0 dark:border-slate-800"
                         >
                           <span className="truncate text-sm">{l.name || l.code}</span>
-                          <span className="shrink-0 font-mono text-[11px] text-slate-400">{l.code}</span>
+                          <span className="shrink-0 font-mono text-[11px] text-slate-400">{l.code} · {(l.currency || "").toUpperCase()}</span>
                         </button>
                       </li>
                     ))}
@@ -220,9 +238,10 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
             )}
           </div>
 
-          {/* amount */}
           <div>
-            <label className="text-xs font-bold text-slate-500">{s.t("field_amount", "Amount")}</label>
+            <label className="text-xs font-bold text-slate-500">
+              {s.t("field_amount", "Amount")}{cur ? ` (${cur})` : ""}
+            </label>
             <input
               inputMode="decimal"
               value={amount}
@@ -230,9 +249,13 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
               placeholder="0.00"
               className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-lg font-black tabular-nums dark:border-slate-800 dark:bg-slate-900"
             />
+            {account && cur && (
+              <p className="mt-1 text-[11px] text-slate-400">
+                {s.t("currency_note", "Amount is in the account's own currency; foreign currency is converted at the approved daily rate on the server.")}
+              </p>
+            )}
           </div>
 
-          {/* date */}
           <div>
             <label className="text-xs font-bold text-slate-500">{s.t("date", "Date")}</label>
             <input
@@ -244,7 +267,6 @@ export function MobileCashEntryView({ langProp }: { langProp?: SupportedLanguage
             />
           </div>
 
-          {/* remarks */}
           <div>
             <label className="text-xs font-bold text-slate-500">{s.t("field_remarks", "Remarks")}</label>
             <textarea

@@ -1,6 +1,8 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "mcash.saved_ok"
+  | "mcash.currency_note"
   | "mcash.kind_receipt"
   | "mcash.kind_payment"
   | "mcash.field_account"
@@ -24906,6 +24908,8 @@ const en: Dict = {
   "mcash.change": "Change",
   "mcash.saving": "Saving…",
   "mcash.save_entry": "Save entry",
+  "mcash.saved_ok": "Saved",
+  "mcash.currency_note": "Amount is in the account's own currency; foreign currency is converted at the approved daily rate on the server.",
 };
 
 const ur: Dict = {
@@ -42395,6 +42399,8 @@ const ur: Dict = {
   "mcash.change": "تبدیل کریں",
   "mcash.saving": "محفوظ ہو رہا ہے…",
   "mcash.save_entry": "اندراج محفوظ کریں",
+  "mcash.saved_ok": "محفوظ ہو گیا",
+  "mcash.currency_note": "رقم اکاؤنٹ کی اپنی کرنسی میں ہے؛ غیر ملکی کرنسی سرور پر منظور شدہ روزانہ شرح سے تبدیل ہوتی ہے۔",
 };
 
 const ar: Dict = {
@@ -59886,6 +59892,8 @@ const ar: Dict = {
   "mcash.change": "تغيير",
   "mcash.saving": "جارٍ الحفظ…",
   "mcash.save_entry": "حفظ القيد",
+  "mcash.saved_ok": "تم الحفظ",
+  "mcash.currency_note": "المبلغ بعملة الحساب نفسها؛ تُحوَّل العملة الأجنبية بسعر اليوم المعتمد على الخادم.",
 };
 
 const fa: Dict = {
@@ -77376,6 +77384,8 @@ const fa: Dict = {
   "mcash.change": "تغییر",
   "mcash.saving": "در حال ذخیره…",
   "mcash.save_entry": "ذخیره ثبت",
+  "mcash.saved_ok": "ذخیره شد",
+  "mcash.currency_note": "مبلغ به ارز خودِ حساب است؛ ارز خارجی با نرخ روزانهٔ تأییدشده در سرور تبدیل می‌شود.",
 };
 
 const ps: Dict = {
@@ -94872,6 +94882,8 @@ const ps: Dict = {
   "mcash.change": "بدلون",
   "mcash.saving": "خوندي کیږي…",
   "mcash.save_entry": "ننوت خوندي کړئ",
+  "mcash.saved_ok": "خوندي شو",
+  "mcash.currency_note": "اندازه د حساب په خپله اسعارو کې ده؛ بهرنۍ اسعارو په سرور کې د تصویب‌شوي ورځني نرخ سره اړول کیږي.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

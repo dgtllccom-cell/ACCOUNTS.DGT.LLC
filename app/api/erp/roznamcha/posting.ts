@@ -94,6 +94,11 @@ async function resolveUsdAmount(admin: any, input: {
   const amount = toNumber(input.amount);
   if (!amount) return { usdRate: 1, usdAmount: 0 };
 
+  // A line already in USD is its own USD equivalent (see resolveUsdAmountPg).
+  if (String(input.currency || "").toUpperCase() === "USD") {
+    return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
+  }
+
   let countryCurrency: string | null = null;
   if (input.countryId) {
     const { data: country, error } = await admin
@@ -449,6 +454,12 @@ async function resolveUsdAmountPg(sql: any, input: {
   const amount = toNumber(input.amount);
   if (!amount) return { usdRate: 1, usdAmount: 0 };
 
+  // A line already denominated in USD IS its own USD equivalent — never divide it
+  // by the local→USD rate (which only applies to local-currency lines).
+  if (String(input.currency || "").toUpperCase() === "USD") {
+    return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
+  }
+
   let countryCurrency: string | null = null;
   if (input.countryId) {
     const rows = await sql`select currency_code from public.countries where id = ${input.countryId} limit 1`;
@@ -482,6 +493,27 @@ async function resolveUsdAmountPg(sql: any, input: {
   };
 }
 
+/**
+ * When a caller (e.g. the simplified mobile Cash entry, whose branch-scoped
+ * session carries no country id) omits body.countryId, resolve it from the
+ * branch so USD conversion, serials and the country_id column are all correct.
+ * Callers that DO pass countryId are unaffected.
+ */
+async function resolveEntryCountryIdPg(sql: any, body: ReturnType<typeof roznamchaPostingSchema.parse>): Promise<string | null> {
+  if (body.countryId) return body.countryId;
+  try {
+    if (body.cityBranchId) {
+      const rows = await sql`select country_id from public.city_branches where id = ${body.cityBranchId} limit 1`;
+      if (rows[0]?.country_id) return rows[0].country_id as string;
+    }
+    if (body.countryBranchId) {
+      const rows = await sql`select country_id from public.country_branches where id = ${body.countryBranchId} limit 1`;
+      if (rows[0]?.country_id) return rows[0].country_id as string;
+    }
+  } catch { /* fall through — null keeps the previous behaviour */ }
+  return null;
+}
+
 async function postRoznamchaWithErpSessionPg(sql: any, input: {
   sessionUserId: string;
   session?: any;
@@ -489,7 +521,8 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
 }) {
   const actorId = await resolveProfileActorPg(sql, input.sessionUserId);
   const body = input.body;
-  const transactionSerials = await generateTransactionSerialsPg(sql, body);
+  const effectiveCountryId = await resolveEntryCountryIdPg(sql, body);
+  const transactionSerials = await generateTransactionSerialsPg(sql, { ...body, countryId: effectiveCountryId });
 
   const entryCategory = (body.roznamchaCategory || (body.paymentDetails as any)?.roznamchaCategory || null) as
     | "business"
@@ -513,7 +546,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       source_module, source_transaction_type, source_transaction_id, source_reference_no,
       entry_category, bank_id, posted_at
     ) values (
-      ${body.type}, ${body.countryId ?? null}, ${body.countryBranchId ?? null}, ${body.cityBranchId ?? null},
+      ${body.type}, ${effectiveCountryId}, ${body.countryBranchId ?? null}, ${body.cityBranchId ?? null},
       ${body.journalNo}, ${body.voucherNo}, ${body.entryDate}, ${body.paymentMethodId ?? null},
       ${body.referenceNo ?? null}, ${body.narration ?? null}, 'posted', ${actorId},
       ${transactionSerials.superAdminSerialNumber}, ${transactionSerials.countryTransactionSerialNumber},
@@ -561,6 +594,17 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       throw new Error("Ledger belongs to a different financial scope");
     }
 
+    // Record-level scope: the posting branch stated in the body must actually own
+    // this ledger. Guards a client that pairs an in-scope branch id with an
+    // out-of-scope account id (the simplified mobile form derives both from the
+    // same ledger row, so this only ever fires on a tampered request).
+    if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
+      throw new Error("The selected account does not belong to the posting branch.");
+    }
+    if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
+      throw new Error("The selected account does not belong to the posting main branch.");
+    }
+
     // Rule 1: Country Scope Validation — advisory/non-blocking (fail-open on lookup
     // errors), so keep using the Supabase admin client here; an RLS-empty read just
     // skips the extra check rather than corrupting the actual posting below.
@@ -572,9 +616,9 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       let admin: any = null;
       try { admin = createSupabaseAdminClient(); } catch { admin = null; }
       if (admin) {
-        await validateLedgerCountryScope(input.session, ledgerId, body.countryId, admin);
+        await validateLedgerCountryScope(input.session, ledgerId, effectiveCountryId, admin);
         if (enterpriseAccountId) {
-          await validateAccountCountryScope(input.session, enterpriseAccountId, body.countryId, admin);
+          await validateAccountCountryScope(input.session, enterpriseAccountId, effectiveCountryId, admin);
         }
       }
     }
@@ -611,7 +655,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     };
 
     const conversion = await resolveUsdAmountPg(sql, {
-      countryId: body.countryId,
+      countryId: effectiveCountryId,
       countryBranchId: body.countryBranchId,
       currency: line.currency,
       amount: debit + credit,
@@ -712,13 +756,26 @@ async function postRoznamchaWithErpSessionSupabase(input: {
   const admin = createSupabaseAdminClient() as any;
   const actorId = await resolveProfileActor(admin, input.sessionUserId);
   const body = input.body;
-  const transactionSerials = await generateTransactionSerials(admin, body);
+  let effectiveCountryId = body.countryId ?? null;
+  if (!effectiveCountryId) {
+    try {
+      if (body.cityBranchId) {
+        const { data } = await admin.from("city_branches").select("country_id").eq("id", body.cityBranchId).maybeSingle();
+        effectiveCountryId = data?.country_id ?? null;
+      }
+      if (!effectiveCountryId && body.countryBranchId) {
+        const { data } = await admin.from("country_branches").select("country_id").eq("id", body.countryBranchId).maybeSingle();
+        effectiveCountryId = data?.country_id ?? null;
+      }
+    } catch { /* keep null */ }
+  }
+  const transactionSerials = await generateTransactionSerials(admin, { ...body, countryId: effectiveCountryId });
 
   const { data: entry, error: entryError } = await admin
     .from("roznamcha_entries")
     .insert({
       type: body.type,
-      country_id: body.countryId ?? null,
+      country_id: effectiveCountryId,
       country_branch_id: body.countryBranchId ?? null,
       city_branch_id: body.cityBranchId ?? null,
       journal_no: body.journalNo,
@@ -787,12 +844,19 @@ async function postRoznamchaWithErpSessionSupabase(input: {
       throw new Error("Ledger belongs to a different financial scope");
     }
 
+    if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
+      throw new Error("The selected account does not belong to the posting branch.");
+    }
+    if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
+      throw new Error("The selected account does not belong to the posting main branch.");
+    }
+
     // ── Rule 1: Country Scope Validation ──
     const { validateLedgerCountryScope, validateAccountCountryScope } = await import("@/lib/api/country-scope-validator");
     if (input.session) {
-      await validateLedgerCountryScope(input.session, ledgerId, body.countryId, admin);
+      await validateLedgerCountryScope(input.session, ledgerId, effectiveCountryId, admin);
       if (enterpriseAccountId) {
-        await validateAccountCountryScope(input.session, enterpriseAccountId, body.countryId, admin);
+        await validateAccountCountryScope(input.session, enterpriseAccountId, effectiveCountryId, admin);
       }
     }
 
@@ -842,7 +906,7 @@ async function postRoznamchaWithErpSessionSupabase(input: {
     };
 
     const conversion = await resolveUsdAmount(admin, {
-      countryId: body.countryId,
+      countryId: effectiveCountryId,
       countryBranchId: body.countryBranchId,
       currency: line.currency,
       amount: debit + credit,
