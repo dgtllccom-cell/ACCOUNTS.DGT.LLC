@@ -24952,6 +24952,8 @@ const en: Dict = {
   "mfield.doc_type_seal": "Container Seal Photo",
   "mfield.choose_photo": "Take photo or choose file",
   "mfield.recent_docs": "Recent Uploads",
+  "hr.no_expense_accounts": "No Employee Expense account found (Create in New Account first)",
+  "hr.no_employee_accounts": "No Employee account found (Create in New Account first)",
 };
 
 const ur: Dict = {
@@ -42485,6 +42487,8 @@ const ur: Dict = {
   "mfield.doc_type_seal": "کنٹینر سیل کی تصویر",
   "mfield.choose_photo": "تصویر لیں یا فائل منتخب کریں",
   "mfield.recent_docs": "حالیہ اپلوڈز",
+  "hr.no_expense_accounts": "کوئی ملازم اخراجات کا اکاؤنٹ نہیں ملا (پہلے نیا اکاؤنٹ میں بنائیں)",
+  "hr.no_employee_accounts": "کوئی ملازم اکاؤنٹ نہیں ملا (پہلے نیا اکاؤنٹ میں بنائیں)",
 };
 
 const ar: Dict = {
@@ -60020,6 +60024,8 @@ const ar: Dict = {
   "mfield.doc_type_seal": "صورة ختم الحاوية",
   "mfield.choose_photo": "التقط صورة أو اختر ملفاً",
   "mfield.recent_docs": "المرفوعات الأخيرة",
+  "hr.no_expense_accounts": "لم يتم العثور على حساب مصروفات الموظف (أنشئه في حساب جديد أولاً)",
+  "hr.no_employee_accounts": "لم يتم العثور على حساب الموظف (أنشئه في حساب جديد أولاً)",
 };
 
 const fa: Dict = {
@@ -77554,6 +77560,8 @@ const fa: Dict = {
   "mfield.doc_type_seal": "عکس پلمپ کانتینر",
   "mfield.choose_photo": "عکس بگیرید یا فایل انتخاب کنید",
   "mfield.recent_docs": "فایل‌های آپلودشده اخیر",
+  "hr.no_expense_accounts": "حساب هزینه کارمند یافت نشد (ابتدا در حساب جدید بسازید)",
+  "hr.no_employee_accounts": "حساب کارمند یافت نشد (ابتدا در حساب جدید بسازید)",
 };
 
 const ps: Dict = {
@@ -95094,6 +95102,8 @@ const ps: Dict = {
   "mfield.doc_type_seal": "د کانتینر د مهر عکس",
   "mfield.choose_photo": "عکس واخلئ یا فایل وټاکئ",
   "mfield.recent_docs": "وروستي پورته شوي فایلونه",
+  "hr.no_expense_accounts": "د کارمند د لګښت حساب ونه موندل شو (لومړی په نوي حساب کې جوړ کړئ)",
+  "hr.no_employee_accounts": "د کارمند حساب ونه موندل شو (لومړی په نوي حساب کې جوړ کړئ)",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

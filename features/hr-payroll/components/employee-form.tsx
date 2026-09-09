@@ -384,6 +384,81 @@ export function EmployeeForm({
     }
   }, [cityBranchId, cityBranches, countryBranchId]);
 
+  // Filter ledgers to only show appropriate accounts (never cash, bank, or inter-country clearing)
+  const expenseLedgers = useMemo(() => {
+    return ledgers.filter((l) => {
+      const c = (l.code || "").toUpperCase();
+      const n = (l.name || "").toLowerCase();
+      // Exclude system cash, bank, clearing, investment
+      if (
+        c.startsWith("BR-BANK") ||
+        c.startsWith("BR-CASH") ||
+        c.startsWith("CT-INTER") ||
+        c.startsWith("CT-MAIN") ||
+        c.startsWith("CT-INVEST") ||
+        n.includes("inter-country") ||
+        n.includes("main branch cash") ||
+        n.includes("main branch bank") ||
+        n.includes("investment account") ||
+        n.includes("cash account") ||
+        n.includes("bank account")
+      ) {
+        return false;
+      }
+      // Must explicitly be an expense account
+      return (
+        c.includes("EXP") ||
+        c.includes("SAL") ||
+        c.includes("PAYROLL") ||
+        c.includes("WAGE") ||
+        c.startsWith("EX-") ||
+        n.includes("expense") ||
+        n.includes("salary") ||
+        n.includes("salaries") ||
+        n.includes("wages") ||
+        n.includes("payroll") ||
+        n.includes("خرچہ") ||
+        n.includes("اخراجات") ||
+        n.includes("تنخواہ")
+      );
+    });
+  }, [ledgers]);
+
+  const employeePayableLedgers = useMemo(() => {
+    return ledgers.filter((l) => {
+      const c = (l.code || "").toUpperCase();
+      const n = (l.name || "").toLowerCase();
+      // Exclude system cash, bank, clearing, investment
+      if (
+        c.startsWith("BR-BANK") ||
+        c.startsWith("BR-CASH") ||
+        c.startsWith("CT-INTER") ||
+        c.startsWith("CT-MAIN") ||
+        c.startsWith("CT-INVEST") ||
+        n.includes("inter-country") ||
+        n.includes("main branch cash") ||
+        n.includes("main branch bank") ||
+        n.includes("investment account") ||
+        n.includes("cash account") ||
+        n.includes("bank account")
+      ) {
+        return false;
+      }
+      // Must explicitly be an employee or staff payable account
+      return (
+        c.includes("EMP") ||
+        c.includes("STAFF") ||
+        c.includes("PAYABLE") ||
+        c.startsWith("S-") ||
+        n.includes("employee") ||
+        n.includes("staff") ||
+        n.includes("payable") ||
+        n.includes("ملازم") ||
+        n.includes("کارمند")
+      );
+    });
+  }, [ledgers]);
+
   // Fetch employee details if editing
   useEffect(() => {
     if (!employeeId) return;
@@ -1528,8 +1603,12 @@ export function EmployeeForm({
                       onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
                       className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
-                      <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
-                      {ledgers.map((l) => (
+                      <option value="">
+                        {expenseLedgers.length === 0
+                          ? t(lang, "hr.no_expense_accounts", "No Employee Expense account found (Create in New Account first)")
+                          : t(lang, "hr.f_select_ledger", "Select Ledger")}
+                      </option>
+                      {expenseLedgers.map((l) => (
                         <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                       ))}
                     </select>
@@ -1542,8 +1621,12 @@ export function EmployeeForm({
                       onChange={(e) => setEmployeePayableAccountId(e.target.value)}
                       className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
-                      <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
-                      {ledgers.map((l) => (
+                      <option value="">
+                        {employeePayableLedgers.length === 0
+                          ? t(lang, "hr.no_employee_accounts", "No Employee account found (Create in New Account first)")
+                          : t(lang, "hr.f_select_ledger", "Select Ledger")}
+                      </option>
+                      {employeePayableLedgers.map((l) => (
                         <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                       ))}
                     </select>

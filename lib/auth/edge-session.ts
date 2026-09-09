@@ -49,7 +49,7 @@ export async function readMobileProfileFromToken(token: string | undefined | nul
       false,
       ["verify"],
     );
-    const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(sigB64), new TextEncoder().encode(payloadB64));
+    const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(sigB64) as BufferSource, new TextEncoder().encode(payloadB64));
     if (!ok) return null;
 
     const payload = JSON.parse(new TextDecoder().decode(new Uint8Array(b64urlToBytes(payloadB64)))) as {

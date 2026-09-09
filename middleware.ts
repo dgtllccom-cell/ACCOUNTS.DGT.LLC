@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
     const mp = await readMobileProfileFromToken(request.cookies.get(ERP_SESSION_COOKIE)?.value);
     if (mp && mp !== "standard") {
       const isApi = pathname.startsWith("/api/");
-      const allowed = isApi ? mobileProfileAllowsApi(mp, pathname) : mobileProfileAllowsPath(mp, pathname);
+      const allowed = isApi ? mobileProfileAllowsApi(mp, pathname, request.method) : mobileProfileAllowsPath(mp, pathname);
       if (!allowed) {
         if (isApi) {
           return NextResponse.json(

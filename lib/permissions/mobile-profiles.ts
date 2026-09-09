@@ -95,28 +95,42 @@ export const MOBILE_PROFILE_PATHS: Record<Exclude<MobileProfile, "standard">, re
  * (HR/payroll, CRM, clearing-agents, audit, messages, …). `/api/erp/auth/*` is
  * always allowed (it is excluded from the middleware matcher).
  */
-export const MOBILE_PROFILE_API_ALLOW: Record<Exclude<MobileProfile, "standard">, readonly string[]> = {
+type ApiRule = { prefix: string; methods: readonly string[]; exact?: boolean };
+
+export const MOBILE_PROFILE_API_ALLOW: Record<Exclude<MobileProfile, "standard">, readonly ApiRule[]> = {
   mobile_cash_ledger: [
-    "/api/erp/roznamcha",
-    "/api/erp/ledgers",
-    "/api/erp/accounting/ledgers",
-    "/api/erp/accounting/accounts/lookup",
-    "/api/erp/accounting/reports/ledger",
-    "/api/erp/currency/daily-rate",
-    "/api/erp/locations/countries",
+    // cash entry is the ONLY write — a POST to the roznamcha COLLECTION endpoint.
+    // No PUT/PATCH/DELETE anywhere (no editing/deleting posted transactions).
+    { prefix: "/api/erp/roznamcha", methods: ["POST"], exact: true },
+    { prefix: "/api/erp/roznamcha", methods: ["GET"] },
+    { prefix: "/api/erp/ledgers", methods: ["GET"] },
+    { prefix: "/api/erp/accounting/ledgers", methods: ["GET"] },
+    { prefix: "/api/erp/accounting/accounts/lookup", methods: ["GET"] },
+    { prefix: "/api/erp/accounting/reports/ledger", methods: ["GET"] },
+    { prefix: "/api/erp/currency/daily-rate", methods: ["GET"] },
+    { prefix: "/api/erp/locations/countries", methods: ["GET"] },
   ],
   mobile_field: [
-    "/api/erp/mobile-field",
-    "/api/erp/locations/countries",
+    { prefix: "/api/erp/mobile-field", methods: ["GET", "POST", "PATCH"] },
+    { prefix: "/api/erp/clearing-agent/truck-loading", methods: ["GET", "POST"] },
+    { prefix: "/api/erp/user-tasks", methods: ["GET", "POST"] },
+    { prefix: "/api/erp/documents", methods: ["GET", "POST"] },
+    { prefix: "/api/erp/documents/download", methods: ["GET"] },
+    { prefix: "/api/erp/locations/countries", methods: ["GET"] },
   ],
 };
 
-/** True when a restricted profile's session may call the given API path. */
-export function mobileProfileAllowsApi(profile: MobileProfile, pathname: string): boolean {
+/** True when a restricted profile's session may call the given API path + method. */
+export function mobileProfileAllowsApi(profile: MobileProfile, pathname: string, method: string): boolean {
   if (profile === "standard") return true;
   if (!pathname.startsWith("/api/erp/")) return true; // non-erp APIs (auth handled by matcher)
-  const allow = MOBILE_PROFILE_API_ALLOW[profile] ?? [];
-  return allow.some((p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?"));
+  const m = (method || "GET").toUpperCase();
+  const rules = MOBILE_PROFILE_API_ALLOW[profile] ?? [];
+  return rules.some((r) => {
+    if (!r.methods.includes(m)) return false;
+    if (r.exact) return pathname === r.prefix || pathname.startsWith(r.prefix + "?");
+    return pathname === r.prefix || pathname.startsWith(r.prefix + "/") || pathname.startsWith(r.prefix + "?");
+  });
 }
 
 /** goods→products alias, mirrors hasRolePermission(). */
