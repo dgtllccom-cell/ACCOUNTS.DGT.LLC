@@ -1106,6 +1106,118 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "مرتبط",
     fa: "متصل",
     ps: "تړل شوی"
+  },
+  primaryTypeLabel: {
+    en: "Step 1A: Primary Account Category",
+    ur: "مرحلہ 1A: بنیادی کھاتہ کی قسم",
+    ar: "الخطوة 1أ: فئة الحساب الأساسية",
+    fa: "مرحله ۱الف: دسته‌بندی اصلی حساب",
+    ps: "لومړی ګام الف: د حساب اصلي کټګوري"
+  },
+  customersTradeOption: {
+    en: "1. Customers & Trade Account (Party, Company, Bank, Trade)",
+    ur: "1. کسٹمرز و تجارتی کھاتے (پارٹی، کمپنی، بینک، خرید و فروخت)",
+    ar: "1. حسابات العملاء والتجارة (الأطراف، الشركات، البنوك)",
+    fa: "۱. حساب‌های مشتریان و تجاری (طرف، شرکت، بانک، تجارت)",
+    ps: "۱. د پیرودونکو او سوداګریزو حسابونه (پارټي، شرکت، بانک)"
+  },
+  othersCountryOption: {
+    en: "2. Others Country Accounts (Inter-Country Transfers & Settlements)",
+    ur: "2. دیگر ممالک / بین الملکی کھاتے (چاروں ممالک کے ساتھ ٹرانسفر و لین دین)",
+    ar: "2. حسابات الدول الأخرى (التحويلات والتسويات بين الدول)",
+    fa: "۲. حساب‌های کشورهای دیگر (انتقالات و تسویه‌های بین‌کشوری)",
+    ps: "۲. د نورو هیوادونو حسابونه (د هیوادونو ترمنځ لېږدونې او تصفیه)"
+  },
+  employeeMulazimOption: {
+    en: "3. Employee / Mulazim Account (Staff Profile & Salary)",
+    ur: "3. ملازمین کا کھاتہ (اسٹاف پروفائل و ماہانہ تنخواہ)",
+    ar: "3. حساب الموظف (ملف الموظف والراتب)",
+    fa: "۳. حساب کارمندان / ملازمین (پروفایل پرسنل و حقوق)",
+    ps: "۳. د کارکوونکو / ملازم حساب (د کارکوونکي پروفایل او تنخوا)"
+  },
+  expensesOption: {
+    en: "4. Expenses Account (Office Rent, Bills, Customs, General)",
+    ur: "4. اخراجات کا کھاتہ (دفتری کرایہ، بلز، کلیئرنگ وغیرہ)",
+    ar: "4. حساب المصروفات (إيجار المكاتب، الفواتير، الجمارك)",
+    fa: "۴. حساب هزینه‌ها (اجاره دفتر، قبوض، گمرک، عمومی)",
+    ps: "۴. د لګښتونو حساب (د دفتر کرایه، بیلونه، ګمرک، عمومي)"
+  },
+  interCountryDomain: {
+    en: "Others Country Transfers & Settlements",
+    ur: "دیگر ممالک ترسیلات و سیٹلمنٹ (Inter-Country)",
+    ar: "تحويلات وتسويات الدول الأخرى",
+    fa: "انتقالات و تسویه حساب‌های بین‌کشوری",
+    ps: "د نورو هیوادونو مالي لېږدونې او تصفیه"
+  },
+  entityTypeLabel: {
+    en: "Entity / Party Type",
+    ur: "فریق یا کھاتے کی قسم",
+    ar: "نوع الطرف / الكيان",
+    fa: "نوع شخص / نهاد",
+    ps: "د اړخ / ادارې ډول"
+  },
+  tradeAccount: {
+    en: "Commercial Trade (Purchase & Sale)",
+    ur: "تجارتی کھاتہ (خرید و فروخت / Purchase & Sale)",
+    ar: "التجارة العامة (بيع وشراء)",
+    fa: "تجارت عمومی (خرید و فروش)",
+    ps: "سوداګریز حساب (پیرود او پلور)"
+  },
+  employeeNameLabel: {
+    en: "Staff / Employee Full Name",
+    ur: "ملازم کا مکمل نام",
+    ar: "الاسم الكامل للموظف",
+    fa: "نام کامل کارمند",
+    ps: "د کارکوونکي پوره نوم"
+  },
+  employeeDesignation: {
+    en: "Staff Role / Designation",
+    ur: "عہدہ / ذمہ داری",
+    ar: "المسمى الوظيفي / الدور",
+    fa: "سمت / عنوان شغلی",
+    ps: "دنده / مسؤلیت"
+  },
+  employeeSalary: {
+    en: "Monthly Salary / Wages",
+    ur: "ماہانہ تنخواہ / اجرت",
+    ar: "الراتب الشهري / الأجور",
+    fa: "حقوق ماهیانه / دستمزد",
+    ps: "میاشتنۍ تنخوا / مزدوري"
+  },
+  managerRole: {
+    en: "Manager / Supervisor",
+    ur: "منیجر / نگراں",
+    ar: "مدير / مشرف",
+    fa: "مدیر / سرپرست",
+    ps: "مدیر / څارونکی"
+  },
+  cashierRole: {
+    en: "Cashier / Treasurer",
+    ur: "کیشیئر / خزانچی",
+    ar: "أمين الصندوق",
+    fa: "صندوق‌دار",
+    ps: "صندوقدار / خزانچي"
+  },
+  accountantRole: {
+    en: "Accountant / Munshi",
+    ur: "اکاؤنٹنٹ / منشی",
+    ar: "محاسب",
+    fa: "حسابدار / منشی",
+    ps: "محاسب / منشي"
+  },
+  clerkRole: {
+    en: "Office Clerk",
+    ur: "دفتری کلرک",
+    ar: "كاتب مكتب",
+    fa: "کارمند اداری",
+    ps: "دفتري کلارک"
+  },
+  fieldOperatorRole: {
+    en: "Field / Port Operations Operator",
+    ur: "فیلڈ و پورٹ آپریٹر",
+    ar: "مشغل العمليات الميدانية والموانئ",
+    fa: "اپراتور عملیات میدانی و بندری",
+    ps: "د ساحې او بندر عملیاتي چلوونکی"
   }
 };
 

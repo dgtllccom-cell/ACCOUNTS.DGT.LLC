@@ -23,6 +23,7 @@ import {
   Pencil,
   Globe2,
   Ship,
+  UserCheck,
   CheckSquare,
   Square,
   ChevronDown,
@@ -294,9 +295,92 @@ export function NewAccountSetup({
   const [ownershipLevel, setOwnershipLevel] = useState<"country" | "main_branch" | "city_branch">("city_branch");
   const [branchType, setBranchType] = useState<BranchType | "">("City");
   const [branch, setBranch] = useState("");
-  const [accountTitle, setAccountTitle] = useState<AccountTitle | "">("");
-  const [subType, setSubType] = useState("");
-  const [category, setCategory] = useState("");
+  type PrimaryAccountCategory = "customers_trade" | "others_country" | "employee" | "expenses";
+  const [primaryType, setPrimaryType] = useState<PrimaryAccountCategory>("customers_trade");
+  const [tradeKind, setTradeKind] = useState<"customer" | "company" | "bank" | "shipping_line" | "trade" | "personal">("customer");
+  const [employeeRole, setEmployeeRole] = useState("Clerk");
+  const [employeeSalary, setEmployeeSalary] = useState("");
+  const [accountTitle, setAccountTitle] = useState<AccountTitle | "">("Customer");
+  const [subType, setSubType] = useState("Business Account");
+  const [category, setCategory] = useState("S");
+
+  function handlePrimaryTypeChange(val: PrimaryAccountCategory) {
+    setPrimaryType(val);
+    setMessage("");
+    if (val === "customers_trade") {
+      setAccountTitle("Customer");
+      setTradeKind("customer");
+      setSubType("Business Account");
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("S");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    } else if (val === "others_country") {
+      setAccountTitle("Company");
+      setTradeKind("company");
+      setSubType("Inter-Country Central Settlement Account");
+      setOperationalDomain("business");
+      setOwnershipLevel("country");
+      setBranchType("Main");
+      setCategory("INTER_TRANSFER");
+      setLinkedCountries(countries.map((c) => c.id));
+      setIsLinkedCountriesOpen(true);
+    } else if (val === "employee") {
+      setAccountTitle("Employee");
+      setSubType(`Employee Position: ${employeeRole}`);
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("EX");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    } else if (val === "expenses") {
+      setAccountTitle("Expenses Account");
+      setSubType("Office Expenses");
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("EX");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    }
+  }
+
+  function handleTradeKindChange(val: "customer" | "company" | "bank" | "shipping_line" | "trade" | "personal") {
+    setTradeKind(val);
+    if (val === "customer") {
+      setAccountTitle("Customer");
+      setSubType("Business Account");
+      setOperationalDomain("business");
+    } else if (val === "company") {
+      setAccountTitle("Company");
+      setSubType("Trading Company");
+      setOperationalDomain("business");
+    } else if (val === "bank") {
+      setAccountTitle("Bank");
+      setSubType("Company Bank");
+      setOperationalDomain("business");
+      setCategory("B/C");
+    } else if (val === "shipping_line") {
+      setAccountTitle("Company");
+      setSubType("Shipping Line Company");
+      setOperationalDomain("shipping");
+      if (linkedCountries.length === 0) {
+        setLinkedCountries(countries.map((c) => c.id));
+      }
+    } else if (val === "trade") {
+      setAccountTitle("Customer");
+      setSubType("Inter-Country Trading Account");
+      setOperationalDomain("business");
+      setCategory("P/S");
+    } else if (val === "personal") {
+      setAccountTitle("Personal");
+      setSubType("");
+      setOperationalDomain("business");
+    }
+  }
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [dbCategories, setDbCategories] = useState<Array<{
     id: string;
@@ -1003,7 +1087,14 @@ export function NewAccountSetup({
           companyId: linkedCompanyId,
           bankId: linkedBankId,
           shippingLineId: linkedShippingLineId || null,
-          linkedCountries: ownershipLevel === "country" ? linkedCountries : [],
+          linkedCountries:
+            primaryType === "others_country" ||
+            ownershipLevel === "country" ||
+            operationalDomain === "shipping" ||
+            tradeKind === "shipping_line" ||
+            Boolean(linkedShippingLineId)
+              ? linkedCountries
+              : [],
           code: accountCode || undefined,  // omit code if empty so PATCH doesn't fail min(2) validation
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
@@ -1039,7 +1130,14 @@ export function NewAccountSetup({
           companyId: linkedCompanyId,
           bankId: linkedBankId,
           shippingLineId: linkedShippingLineId || null,
-          linkedCountries: ownershipLevel === "country" ? linkedCountries : [],
+          linkedCountries:
+            primaryType === "others_country" ||
+            ownershipLevel === "country" ||
+            operationalDomain === "shipping" ||
+            tradeKind === "shipping_line" ||
+            Boolean(linkedShippingLineId)
+              ? linkedCountries
+              : [],
           code: "AUTO",
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
@@ -1246,41 +1344,23 @@ export function NewAccountSetup({
                 <h2 className="text-sm font-bold text-slate-900">{getLabel("step1Label", lang)}</h2>
               </div>
 
-              {/* ── Setup 1A, 1B & 1C: Account Type, Operational Domain, Ownership Level (Dropdowns) ── */}
+              {/* ── Setup 1A, 1B & 1C: Primary Account Category, Operational Domain, Ownership Level ── */}
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-4 border border-slate-200/60 dark:border-slate-800">
-                {/* 1A: Account Type (کھاتہ کی نوعیت) */}
+                {/* 1A: Primary Account Category (بنیادی کھاتہ کی قسم) */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="accountTitle" className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {getLabel("questionAccountType", lang)} *
+                  <Label htmlFor="primaryType" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {getLabel("primaryTypeLabel", lang)} *
                   </Label>
                   <select
-                    id="accountTitle"
-                    value={accountTitle}
-                    onChange={(e) => {
-                      const val = e.target.value as AccountTitle;
-                      setAccountTitle(val);
-                      setSubType("");
-                      if (val === "Customer" || val === "Employee" || val === "Personal") {
-                        if (ownershipLevel === "country") {
-                          setOwnershipLevel("city_branch");
-                          setBranchType("City");
-                          setLinkedCountries([]);
-                          setIsLinkedCountriesOpen(false);
-                        }
-                      }
-                      if (val === "Expenses Account" && !category) {
-                        setCategory("EX");
-                      }
-                    }}
+                    id="primaryType"
+                    value={primaryType}
+                    onChange={(e) => handlePrimaryTypeChange(e.target.value as PrimaryAccountCategory)}
                     className={selectClass()}
                   >
-                    <option value="">-- {getLabel("selectAccountTitle", lang)} --</option>
-                    <option value="Customer">{getLabel("customerAccount", lang)}</option>
-                    <option value="Company">{getLabel("company", lang)}</option>
-                    <option value="Bank">{getLabel("bankAccount", lang)}</option>
-                    <option value="Employee">{getLabel("employee", lang)}</option>
-                    <option value="Personal">{getLabel("personal", lang)}</option>
-                    <option value="Expenses Account">{getLabel("expensesAccount", lang)}</option>
+                    <option value="customers_trade">{getLabel("customersTradeOption", lang)}</option>
+                    <option value="others_country">{getLabel("othersCountryOption", lang)}</option>
+                    <option value="employee">{getLabel("employeeMulazimOption", lang)}</option>
+                    <option value="expenses">{getLabel("expensesOption", lang)}</option>
                   </select>
                 </div>
 
@@ -1291,17 +1371,26 @@ export function NewAccountSetup({
                   </Label>
                   <select
                     id="operationalDomain"
-                    value={operationalDomain}
+                    value={primaryType === "others_country" ? "inter_country" : operationalDomain}
                     onChange={(e) => {
-                      const val = e.target.value as "business" | "shipping";
-                      setOperationalDomain(val);
-                      setBranch("");
-                      void loadCategories(val);
+                      const val = e.target.value;
+                      if (val === "inter_country") {
+                        handlePrimaryTypeChange("others_country");
+                      } else {
+                        const dom = val as "business" | "shipping";
+                        setOperationalDomain(dom);
+                        if (dom === "shipping") {
+                          if (linkedCountries.length === 0) setLinkedCountries(countries.map((c) => c.id));
+                        }
+                        setBranch("");
+                        void loadCategories(dom);
+                      }
                     }}
                     className={selectClass()}
                   >
                     <option value="business">{getLabel("businessDomain", lang)}</option>
                     <option value="shipping">{getLabel("shippingDomain", lang)}</option>
+                    <option value="inter_country">{getLabel("interCountryDomain", lang)}</option>
                   </select>
                 </div>
 
@@ -1324,7 +1413,7 @@ export function NewAccountSetup({
                       setBranch("");
                       if (val === "country") {
                         setLinkedCountries(countries.map((c) => c.id));
-                      } else {
+                      } else if (primaryType !== "others_country" && operationalDomain !== "shipping") {
                         setLinkedCountries([]);
                         setIsLinkedCountriesOpen(false);
                       }
@@ -1333,12 +1422,44 @@ export function NewAccountSetup({
                   >
                     <option value="city_branch">{getLabel("cityBranchLevel", lang)}</option>
                     <option value="main_branch">{getLabel("mainBranchLevel", lang)}</option>
-                    {erpScope.isSuperAdmin && accountTitle !== "Customer" && accountTitle !== "Employee" && accountTitle !== "Personal" && (
+                    {(erpScope.isSuperAdmin || primaryType === "others_country") && (
                       <option value="country">{getLabel("countryLevel", lang)}</option>
                     )}
                   </select>
                 </div>
               </div>
+
+              {/* Secondary Entity Selector when 1A is Customers & Trade Account */}
+              {primaryType === "customers_trade" && (
+                <div className="rounded-xl bg-blue-50/50 dark:bg-blue-950/30 p-3 border border-blue-200/60 dark:border-blue-800/60 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shrink-0">ℹ</span>
+                    <div>
+                      <Label htmlFor="tradeKind" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {getLabel("entityTypeLabel", lang)} *
+                      </Label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Select whether this trade account belongs to a Customer, Company, Bank, Shipping Line, or Trade Ledger
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-80">
+                    <select
+                      id="tradeKind"
+                      value={tradeKind}
+                      onChange={(e) => handleTradeKindChange(e.target.value as any)}
+                      className={selectClass()}
+                    >
+                      <option value="customer">{getLabel("customerAccount", lang)} (Party / Buyer)</option>
+                      <option value="company">{getLabel("company", lang)} (Corporate / Supplier)</option>
+                      <option value="bank">{getLabel("bankAccount", lang)} (Bank Ledger)</option>
+                      <option value="shipping_line">{getLabel("shippingDomain", lang)}</option>
+                      <option value="trade">{getLabel("tradeAccount", lang)}</option>
+                      <option value="personal">{getLabel("personal", lang)}</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {/* ── Country & Branch Pickers ───────────────────────────────── */}
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
@@ -1418,8 +1539,78 @@ export function NewAccountSetup({
                 </div>
               </div>
 
+              {/* ── Employee / Mulazim Dedicated Profile Card (ملازمین کا کھاتہ) ── */}
+              {primaryType === "employee" && (
+                <div className="space-y-3 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 p-4 border border-purple-200/70 dark:border-purple-800">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        {getLabel("employeeMulazimOption", lang)}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {lang === "ur"
+                          ? "ملازم کا کھاتہ جو برانچ عملہ، تنخواہ اور اخراجات کے انتظام سے منسلک ہے"
+                          : "Staff employee account linked directly to monthly salary & office expenses"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="empName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("employeeNameLabel", lang)} *
+                      </Label>
+                      <Input
+                        id="empName"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        placeholder="e.g. Muhammad Ali"
+                        className="h-10 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="empRole" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("employeeDesignation", lang)}
+                      </Label>
+                      <select
+                        id="empRole"
+                        value={employeeRole}
+                        onChange={(e) => {
+                          const role = e.target.value;
+                          setEmployeeRole(role);
+                          setSubType(`Employee Position: ${role}`);
+                        }}
+                        className={selectClass()}
+                      >
+                        <option value="Manager">{getLabel("managerRole", lang)}</option>
+                        <option value="Cashier">{getLabel("cashierRole", lang)}</option>
+                        <option value="Accountant">{getLabel("accountantRole", lang)}</option>
+                        <option value="Clerk">{getLabel("clerkRole", lang)}</option>
+                        <option value="Field / Munshi Operator">{getLabel("fieldOperatorRole", lang)}</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="empSalary" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("employeeSalary", lang)}
+                      </Label>
+                      <Input
+                        id="empSalary"
+                        type="number"
+                        value={employeeSalary}
+                        onChange={(e) => setEmployeeSalary(e.target.value)}
+                        placeholder="e.g. 3500"
+                        className="h-10 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ── Shipping Line Carrier Master Linkage (شپنگ لائن ماسٹر لنک) ── */}
-              {(operationalDomain === "shipping" || subType === "Shipping Line Company" || accountTitle === "Company") && (
+              {(operationalDomain === "shipping" || tradeKind === "shipping_line" || subType === "Shipping Line Company") && (
                 <div className="space-y-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 p-4 border border-blue-200/70 dark:border-blue-800">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -1506,18 +1697,27 @@ export function NewAccountSetup({
                 </div>
               )}
 
-              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین - صرف Global / Country Level کھاتہ کے لیے) ── */}
-              {ownershipLevel === "country" && (
+              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین - چاروں ممالک کے ساتھ) ── */}
+              {(primaryType === "others_country" ||
+                ownershipLevel === "country" ||
+                operationalDomain === "shipping" ||
+                tradeKind === "shipping_line" ||
+                subType === "Shipping Line Company" ||
+                Boolean(linkedShippingLineId)) && (
                 <div className="space-y-2 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-3.5 border border-slate-200/70 dark:border-slate-800">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Globe2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div>
                       <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {getLabel("linkedCountriesTitle", lang)}
+                        {primaryType === "others_country"
+                          ? (lang === "ur" ? "دیگر ممالک ترسیلات و لین دین والے ممالک" : getLabel("linkedCountriesTitle", lang))
+                          : (lang === "ur" ? "شپنگ لائن و بحری روٹس والے ممالک" : getLabel("linkedCountriesTitle", lang))}
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {getLabel("linkedCountriesSubtitle", lang)}
+                        {lang === "ur"
+                          ? "وہ تمام ممالک منتخب کریں جن کے ساتھ یہ کھاتہ رقوم کی ترسیل، سامان کی منتقلی، یا کسٹم کلیئرنگ کرتا ہے۔"
+                          : getLabel("linkedCountriesSubtitle", lang)}
                       </p>
                     </div>
                   </div>
