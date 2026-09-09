@@ -155,10 +155,18 @@ type AccountCreateResponse = {
 };
 
 const subTypes: Record<AccountTitle, string[]> = {
-  Customer: ["Business Account", "Personal Account"],
-  Company: ["Trading Company", "Supplier Company", "Service Provider", "Logistics Company"],
-  Bank: ["Personal Bank", "Company Bank"],
-  Employee: ["Employee Position: Manager", "Employee Position: Cashier", "Employee Position: Clerk"],
+  Customer: ["Business Account", "Personal Account", "Inter-Country Trading Account", "Overseas Customer"],
+  Company: [
+    "Trading Company",
+    "Supplier Company",
+    "Service Provider",
+    "Logistics Company",
+    "Shipping Line Company",
+    "Clearing Agent Agency",
+    "Overseas Clearing Partner"
+  ],
+  Bank: ["Personal Bank", "Company Bank", "Inter-Country Central Holding Bank", "Exchange & Remittance Company"],
+  Employee: ["Employee Position: Manager", "Employee Position: Cashier", "Employee Position: Clerk", "Field / Munshi Operator", "Port Operations Officer"],
   Personal: [],
   "Expenses Account": [
     "Office Expenses",
@@ -170,7 +178,12 @@ const subTypes: Record<AccountTitle, string[]> = {
     "Marketing & Advertising",
     "Legal & Professional",
     "Maintenance & Repairs",
-    "Miscellaneous Expenses"
+    "Miscellaneous Expenses",
+    "Ocean & Air Freight",
+    "Customs Clearance & Duties",
+    "Port & Terminal Handling (THC)",
+    "Container Demurrage & Detention",
+    "Cross-Border Transit Charges"
   ]
 };
 
@@ -1256,14 +1269,21 @@ export function NewAccountSetup({
                         setBranchType("Main");
                         setBranch("");
                       }}
-                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
+                      className={`flex flex-col items-start justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
                         ownershipLevel === "country"
                           ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
                           : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
-                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
-                      <span>{getLabel("countryLevel", lang)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+                        <span className="font-bold">{getLabel("countryLevel", lang)}</span>
+                      </div>
+                      <span className={`text-[10px] font-normal leading-tight ${ownershipLevel === "country" ? "text-primary-foreground/90" : "text-slate-500"}`}>
+                        {operationalDomain === "shipping"
+                          ? getLabel("interCountryShippingDesc", lang)
+                          : getLabel("interCountryTradeDesc", lang)}
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -1327,8 +1347,22 @@ export function NewAccountSetup({
                 <div className="space-y-2">
                   {ownershipLevel === "country" ? (
                     <div className="h-full flex flex-col justify-end">
-                      <div className="rounded-lg bg-blue-50/70 border border-blue-200 p-2.5 text-xs text-blue-800 font-medium">
-                        ✓ {getLabel("countryLevel", lang)}: {selectedCountry?.name || getLabel("country", lang)}
+                      <div className="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 text-xs space-y-1.5 shadow-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shrink-0">
+                            {operationalDomain === "shipping" ? "⚓" : "🌐"}
+                          </span>
+                          <span className="font-bold text-blue-900 dark:text-blue-200">
+                            {operationalDomain === "shipping"
+                              ? `${selectedCountry?.name || getLabel("country", lang)} — ${getLabel("interCountryShippingDesc", lang)}`
+                              : `${selectedCountry?.name || getLabel("country", lang)} — ${getLabel("interCountryTradeDesc", lang)}`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
+                          {operationalDomain === "shipping"
+                            ? getLabel("countryLevelShippingHint", lang)
+                            : getLabel("countryLevelBusinessHint", lang)}
+                        </p>
                       </div>
                     </div>
                   ) : (

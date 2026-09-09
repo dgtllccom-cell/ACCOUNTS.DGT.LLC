@@ -2,24 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
 
-let databaseUrl = process.env.DATABASE_URL;
+import { getDbUrl } from "../lib/db/local-postgres.ts";
 
-if (!databaseUrl) {
-  for (const envFile of [".env.local", ".env"]) {
-    if (fs.existsSync(envFile)) {
-      const content = fs.readFileSync(envFile, "utf8");
-      const match = content.match(/^DATABASE_URL=(.+)$/m);
-      if (match) {
-        databaseUrl = match[1].trim().replace(/^['"]|['"]$/g, "");
-        break;
-      }
-    }
-  }
-}
-
-if (!databaseUrl) {
-  databaseUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
-}
+let databaseUrl = getDbUrl();
 
 async function main() {
   console.log("Connecting to PostgreSQL at:", databaseUrl.replace(/:[^:@]+@/, ":***@"));
