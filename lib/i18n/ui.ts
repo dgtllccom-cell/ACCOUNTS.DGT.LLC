@@ -1,6 +1,13 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "acct.shipping_carrier_desc"
+  | "acct.countries_linked"
+  | "shl.master_title"
+  | "shl.master_subtitle"
+  | "shl.create_account"
+  | "shl.register_new"
+  | "shl.search_lines"
   | "mcash.saved_ok"
   | "mcash.currency_note"
   | "mcash.kind_receipt"
@@ -24954,6 +24961,13 @@ const en: Dict = {
   "mfield.recent_docs": "Recent Uploads",
   "hr.no_expense_accounts": "No Employee Expense account found (Create in New Account first)",
   "hr.no_employee_accounts": "No Employee account found (Create in New Account first)",
+  "acct.shipping_carrier_desc": "Connect this account directly to a registered Shipping Line carrier master record.",
+  "acct.countries_linked": "Linked",
+  "shl.master_title": "Shipping Line Master & Accounts",
+  "shl.master_subtitle": "Register maritime shipping lines, configure inter-country operational links, and create dedicated accounts.",
+  "shl.create_account": "New Account Setup",
+  "shl.register_new": "Register Shipping Line",
+  "shl.search_lines": "Search shipping line by name, code, contact...",
 };
 
 const ur: Dict = {
@@ -42489,6 +42503,13 @@ const ur: Dict = {
   "mfield.recent_docs": "حالیہ اپلوڈز",
   "hr.no_expense_accounts": "کوئی ملازم اخراجات کا اکاؤنٹ نہیں ملا (پہلے نیا اکاؤنٹ میں بنائیں)",
   "hr.no_employee_accounts": "کوئی ملازم اکاؤنٹ نہیں ملا (پہلے نیا اکاؤنٹ میں بنائیں)",
+  "acct.shipping_carrier_desc": "اس اکاؤنٹ کو براہ راست رجسٹرڈ شپنگ لائن کیریئر ماسٹر ریکارڈ سے منسلک کریں۔",
+  "acct.countries_linked": "منسلک",
+  "shl.master_title": "شپنگ لائن ماسٹر و اکاؤنٹس",
+  "shl.master_subtitle": "بحری شپنگ لائنیں رجسٹر کریں، بین الملکی آپریشنل روابط ترتیب دیں، اور مخصوص اکاؤنٹس بنائیں۔",
+  "shl.create_account": "نیا اکاؤنٹ سیٹ اپ",
+  "shl.register_new": "شپنگ لائن رجسٹر کریں",
+  "shl.search_lines": "نام، کوڈ، رابطہ سے شپنگ لائن تلاش کریں...",
 };
 
 const ar: Dict = {
@@ -60026,6 +60047,13 @@ const ar: Dict = {
   "mfield.recent_docs": "المرفوعات الأخيرة",
   "hr.no_expense_accounts": "لم يتم العثور على حساب مصروفات الموظف (أنشئه في حساب جديد أولاً)",
   "hr.no_employee_accounts": "لم يتم العثور على حساب الموظف (أنشئه في حساب جديد أولاً)",
+  "acct.shipping_carrier_desc": "اربط هذا الحساب مباشرةً بسجل رئيسي لناقل خط شحن مسجل.",
+  "acct.countries_linked": "مرتبط",
+  "shl.master_title": "السجل الرئيسي لخط الشحن والحسابات",
+  "shl.master_subtitle": "سجّل خطوط الشحن البحرية، وهيّئ الروابط التشغيلية بين الدول، وأنشئ حسابات مخصصة.",
+  "shl.create_account": "إعداد حساب جديد",
+  "shl.register_new": "تسجيل خط شحن",
+  "shl.search_lines": "ابحث عن خط شحن بالاسم أو الرمز أو جهة الاتصال...",
 };
 
 const fa: Dict = {
@@ -77562,6 +77590,13 @@ const fa: Dict = {
   "mfield.recent_docs": "فایل‌های آپلودشده اخیر",
   "hr.no_expense_accounts": "حساب هزینه کارمند یافت نشد (ابتدا در حساب جدید بسازید)",
   "hr.no_employee_accounts": "حساب کارمند یافت نشد (ابتدا در حساب جدید بسازید)",
+  "acct.shipping_carrier_desc": "این حساب را مستقیماً به یک رکورد اصلی شرکت حمل‌کننده خط کشتیرانی ثبت‌شده متصل کنید.",
+  "acct.countries_linked": "متصل",
+  "shl.master_title": "دفتر اصلی خط کشتیرانی و حساب‌ها",
+  "shl.master_subtitle": "خطوط کشتیرانی دریایی را ثبت کنید، پیوندهای عملیاتی بین‌کشوری را پیکربندی کنید و حساب‌های اختصاصی بسازید.",
+  "shl.create_account": "تنظیم حساب جدید",
+  "shl.register_new": "ثبت خط کشتیرانی",
+  "shl.search_lines": "جستجوی خط کشتیرانی بر اساس نام، کد، تماس...",
 };
 
 const ps: Dict = {
@@ -95104,6 +95139,13 @@ const ps: Dict = {
   "mfield.recent_docs": "وروستي پورته شوي فایلونه",
   "hr.no_expense_accounts": "د کارمند د لګښت حساب ونه موندل شو (لومړی په نوي حساب کې جوړ کړئ)",
   "hr.no_employee_accounts": "د کارمند حساب ونه موندل شو (لومړی په نوي حساب کې جوړ کړئ)",
+  "acct.shipping_carrier_desc": "دا حساب مستقیم د یو ثبت‌شوي بحري لیکې لیږدوونکي ماسټر ریکارډ سره ونښلوئ.",
+  "acct.countries_linked": "تړل شوی",
+  "shl.master_title": "د بحري لیکې ماسټر او حسابونه",
+  "shl.master_subtitle": "بحري لیږدوونکي لیکې ثبت کړئ، د هیوادونو ترمنځ عملیاتي اړیکې تنظیم کړئ، او ځانګړي حسابونه جوړ کړئ.",
+  "shl.create_account": "د نوي حساب تنظیم",
+  "shl.register_new": "بحري لیکه ثبت کړئ",
+  "shl.search_lines": "بحري لیکه د نوم، کوډ، اړیکې له مخې ولټوئ...",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
