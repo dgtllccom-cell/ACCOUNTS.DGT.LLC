@@ -162,6 +162,16 @@ function formatShortDate(dateStr?: string | null) {
   }
 }
 
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function monthStartIso() {
+  const d = new Date();
+  d.setDate(1);
+  return d.toISOString().slice(0, 10);
+}
+
 function formatTimeOnly(timeStr?: string | null) {
   if (!timeStr) return "";
   try {
@@ -193,8 +203,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   const [bankList, setBankList] = useState<Array<{ id: string; bank_name: string; short_name: string }>>([]);
 
   // Active Filter state
-  const [fromDate, setFromDate] = useState("2024-05-01");
-  const [toDate, setToDate] = useState("2024-05-15");
+  const [fromDate, setFromDate] = useState(monthStartIso());
+  const [toDate, setToDate] = useState(todayIso());
   const [companyId, setCompanyId] = useState("all");
   const [countryId, setCountryId] = useState("all");
   const [countryBranchId, setCountryBranchId] = useState("all");
@@ -288,8 +298,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   }, [fromDate, toDate, companyId, countryId, countryBranchId, cityBranchId, bankName, activeTab, page, pageSize]);
 
   function handleResetFilters() {
-    setFromDate("2024-05-01");
-    setToDate("2024-05-15");
+    setFromDate(monthStartIso());
+    setToDate(todayIso());
     setCompanyId("all");
     setCountryId("all");
     setCountryBranchId("all");
