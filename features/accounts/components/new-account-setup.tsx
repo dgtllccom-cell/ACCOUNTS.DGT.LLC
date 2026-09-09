@@ -291,8 +291,8 @@ export function NewAccountSetup({
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
   const [country, setCountry] = useState("");
   const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
-  const [ownershipLevel, setOwnershipLevel] = useState<"country" | "main_branch" | "city_branch">("main_branch");
-  const [branchType, setBranchType] = useState<BranchType | "">("Main");
+  const [ownershipLevel, setOwnershipLevel] = useState<"country" | "main_branch" | "city_branch">("city_branch");
+  const [branchType, setBranchType] = useState<BranchType | "">("City");
   const [branch, setBranch] = useState("");
   const [accountTitle, setAccountTitle] = useState<AccountTitle | "">("");
   const [subType, setSubType] = useState("");
@@ -649,8 +649,6 @@ export function NewAccountSetup({
       .then((rows) => {
         if (!cancelled) {
           setCountries(rows);
-          // By default, initialize linked operating countries with all branch countries for full connectivity
-          setLinkedCountries((prev) => (prev.length > 0 ? prev : rows.map((c) => c.id)));
         }
       })
       .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCountries", lang)); });
@@ -1005,7 +1003,7 @@ export function NewAccountSetup({
           companyId: linkedCompanyId,
           bankId: linkedBankId,
           shippingLineId: linkedShippingLineId || null,
-          linkedCountries: linkedCountries,
+          linkedCountries: ownershipLevel === "country" ? linkedCountries : [],
           code: accountCode || undefined,  // omit code if empty so PATCH doesn't fail min(2) validation
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
@@ -1041,7 +1039,7 @@ export function NewAccountSetup({
           companyId: linkedCompanyId,
           bankId: linkedBankId,
           shippingLineId: linkedShippingLineId || null,
-          linkedCountries: linkedCountries,
+          linkedCountries: ownershipLevel === "country" ? linkedCountries : [],
           code: "AUTO",
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
@@ -1262,6 +1260,14 @@ export function NewAccountSetup({
                       const val = e.target.value as AccountTitle;
                       setAccountTitle(val);
                       setSubType("");
+                      if (val === "Customer" || val === "Employee" || val === "Personal") {
+                        if (ownershipLevel === "country") {
+                          setOwnershipLevel("city_branch");
+                          setBranchType("City");
+                          setLinkedCountries([]);
+                          setIsLinkedCountriesOpen(false);
+                        }
+                      }
                       if (val === "Expenses Account" && !category) {
                         setCategory("EX");
                       }
@@ -1316,12 +1322,20 @@ export function NewAccountSetup({
                         setBranchType("City");
                       }
                       setBranch("");
+                      if (val === "country") {
+                        setLinkedCountries(countries.map((c) => c.id));
+                      } else {
+                        setLinkedCountries([]);
+                        setIsLinkedCountriesOpen(false);
+                      }
                     }}
                     className={selectClass()}
                   >
-                    <option value="country">{getLabel("countryLevel", lang)}</option>
-                    <option value="main_branch">{getLabel("mainBranchLevel", lang)}</option>
                     <option value="city_branch">{getLabel("cityBranchLevel", lang)}</option>
+                    <option value="main_branch">{getLabel("mainBranchLevel", lang)}</option>
+                    {erpScope.isSuperAdmin && accountTitle !== "Customer" && accountTitle !== "Employee" && accountTitle !== "Personal" && (
+                      <option value="country">{getLabel("countryLevel", lang)}</option>
+                    )}
                   </select>
                 </div>
               </div>
@@ -1492,8 +1506,9 @@ export function NewAccountSetup({
                 </div>
               )}
 
-              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین - Dropdown with Tick Marks) ── */}
-              <div className="space-y-2 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-3.5 border border-slate-200/70 dark:border-slate-800">
+              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین - صرف Global / Country Level کھاتہ کے لیے) ── */}
+              {ownershipLevel === "country" && (
+                <div className="space-y-2 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-3.5 border border-slate-200/70 dark:border-slate-800">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Globe2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -1630,6 +1645,7 @@ export function NewAccountSetup({
                   </div>
                 )}
               </div>
+            )}
 
               {/* ── Sub-Type & Category (Database-backed & Editable) ───────── */}
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
