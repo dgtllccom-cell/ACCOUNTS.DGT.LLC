@@ -123,7 +123,9 @@ export const MOBILE_PROFILE_API_ALLOW: Record<Exclude<MobileProfile, "standard">
 /** True when a restricted profile's session may call the given API path + method. */
 export function mobileProfileAllowsApi(profile: MobileProfile, pathname: string, method: string): boolean {
   if (profile === "standard") return true;
-  if (!pathname.startsWith("/api/erp/")) return true; // non-erp APIs (auth handled by matcher)
+  if (!pathname.startsWith("/api/")) return true; // non-API (handled elsewhere)
+  // Any /api/** path — including /api/branch-management/**, server-action routes,
+  // document paths — must match an explicit allow-list rule below or it is denied.
   const m = (method || "GET").toUpperCase();
   const rules = MOBILE_PROFILE_API_ALLOW[profile] ?? [];
   return rules.some((r) => {
