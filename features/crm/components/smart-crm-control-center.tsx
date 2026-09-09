@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -61,6 +61,7 @@ export function SmartCrmControlCenter() {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const th = (x: string) => translateHeader(lang, x);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Filters State
   const [selectedCountry, setSelectedCountry] = useState("all");
@@ -108,6 +109,41 @@ export function SmartCrmControlCenter() {
   useEffect(() => {
     fetchDashboardData();
   }, [selectedCountry, selectedMainBranch, selectedCityBranch, targetDate, activeTab]);
+
+  // Honour the ?tab= query param so the CRM Control Center sub-menu links in the
+  // main sidebar actually change the view. Internal action-list tabs switch in
+  // place; the operational sub-modules (cheques, purchase/sales due, shipping)
+  // deep-link to their own pages — mirrors this screen's own left sub-nav.
+  useEffect(() => {
+    const raw = (searchParams.get("tab") || "").toLowerCase().trim();
+    if (!raw) return;
+    const INTERNAL = ["today", "overdue", "tomorrow", "upcoming", "completed"] as const;
+    const ALIASES: Record<string, (typeof INTERNAL)[number]> = {
+      action: "today",
+      followups: "overdue",
+      "follow-ups": "overdue",
+      due: "overdue",
+      calendar: "upcoming",
+      reminders: "tomorrow",
+    };
+    const resolved = ALIASES[raw] ?? raw;
+    if ((INTERNAL as readonly string[]).includes(resolved)) {
+      setActiveTab(resolved as (typeof INTERNAL)[number]);
+      return;
+    }
+    const DEEP_LINKS: Record<string, string> = {
+      cheques: "/dashboard/roznamcha/cash-entry",
+      cash: "/dashboard/roznamcha/cash-entry",
+      purchases: "/dashboard/journal/purchase-order-payment/advance",
+      sales: "/dashboard/journal/sales-order-payment/advance",
+      shipping: "/dashboard/shipping-line",
+      clearing: "/dashboard/shipping-line",
+      customers: "/dashboard/settings/customers",
+      companies: "/dashboard/settings/companies",
+      reports: "/dashboard/crm/reports",
+    };
+    if (DEEP_LINKS[raw]) router.replace(DEEP_LINKS[raw]);
+  }, [searchParams, router]);
 
   // Load real scope master data (countries + branches), scoped to the session on the API side
   useEffect(() => {

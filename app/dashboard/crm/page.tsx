@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
 import { SmartCrmControlCenter } from "@/features/crm/components/smart-crm-control-center";
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function SmartCrmPage() {
-  return <SmartCrmControlCenter />;
+  return (
+    <Suspense fallback={null}>
+      <SmartCrmControlCenter />
+    </Suspense>
+  );
 }

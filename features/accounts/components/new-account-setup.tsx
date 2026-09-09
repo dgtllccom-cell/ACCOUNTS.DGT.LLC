@@ -24,7 +24,9 @@ import {
   Globe2,
   Ship,
   CheckSquare,
-  Square
+  Square,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -530,6 +532,7 @@ export function NewAccountSetup({
   const [linkedShippingLineName, setLinkedShippingLineName] = useState("");
   const [shippingLinesList, setShippingLinesList] = useState<Array<{ id: string; name: string; shipping_line_code?: string; linked_countries?: string[] }>>([]);
   const [linkedCountries, setLinkedCountries] = useState<string[]>([]);
+  const [isLinkedCountriesOpen, setIsLinkedCountriesOpen] = useState(false);
 
   const [customerDetail, setCustomerDetail] = useState<any>(null);
   const [companyDetail, setCompanyDetail] = useState<any>(null);
@@ -1245,155 +1248,81 @@ export function NewAccountSetup({
                 <h2 className="text-sm font-bold text-slate-900">{getLabel("step1Label", lang)}</h2>
               </div>
 
-              {/* ── Question 1A: Account Type ──────────────────────────────── */}
-              <div className="space-y-2 rounded-xl bg-slate-50/70 p-3.5 border border-slate-200/60">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="accountTitle" className="text-xs font-bold text-slate-800">
+              {/* ── Setup 1A, 1B & 1C: Account Type, Operational Domain, Ownership Level (Dropdowns) ── */}
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-4 border border-slate-200/60 dark:border-slate-800">
+                {/* 1A: Account Type (کھاتہ کی نوعیت) */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="accountTitle" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     {getLabel("questionAccountType", lang)} *
                   </Label>
-                  <span className="text-[10px] text-slate-500 font-medium">{getLabel("selectAccountTitle", lang)}</span>
+                  <select
+                    id="accountTitle"
+                    value={accountTitle}
+                    onChange={(e) => {
+                      const val = e.target.value as AccountTitle;
+                      setAccountTitle(val);
+                      setSubType("");
+                      if (val === "Expenses Account" && !category) {
+                        setCategory("EX");
+                      }
+                    }}
+                    className={selectClass()}
+                  >
+                    <option value="">-- {getLabel("selectAccountTitle", lang)} --</option>
+                    <option value="Customer">{getLabel("customerAccount", lang)}</option>
+                    <option value="Company">{getLabel("company", lang)}</option>
+                    <option value="Bank">{getLabel("bankAccount", lang)}</option>
+                    <option value="Employee">{getLabel("employee", lang)}</option>
+                    <option value="Personal">{getLabel("personal", lang)}</option>
+                    <option value="Expenses Account">{getLabel("expensesAccount", lang)}</option>
+                  </select>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {(
-                    [
-                      { id: "Customer", label: getLabel("customerAccount", lang) },
-                      { id: "Company", label: getLabel("company", lang) },
-                      { id: "Bank", label: getLabel("bankAccount", lang) },
-                      { id: "Employee", label: getLabel("employee", lang) },
-                      { id: "Personal", label: getLabel("personal", lang) },
-                      { id: "Expenses Account", label: getLabel("expensesAccount", lang) }
-                    ] as const
-                  ).map((item) => {
-                    const selected = accountTitle === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setAccountTitle(item.id);
-                          setSubType("");
-                          if (item.id === "Expenses Account" && !category) {
-                            setCategory("EX");
-                          }
-                        }}
-                        className={`flex items-center justify-center px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-center ${
-                          selected
-                            ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* ── Question 1B & 1C: Owning Operational Section & Ownership Level ── */}
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                {/* Question 1B: Owning Operational Section */}
-                <div className="space-y-2 rounded-xl bg-slate-50/70 p-3.5 border border-slate-200/60">
-                  <Label className="text-xs font-bold text-slate-800">
+                {/* 1B: Owning Operational Section (کاروباری شعبہ / ڈومین) */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="operationalDomain" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     {getLabel("questionOperationalDomain", lang)} *
                   </Label>
-                  <div className="grid grid-cols-1 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOperationalDomain("business");
-                        setBranch("");
-                        void loadCategories("business");
-                      }}
-                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
-                        operationalDomain === "business"
-                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
-                      <span>{getLabel("businessDomain", lang)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOperationalDomain("shipping");
-                        setBranch("");
-                        void loadCategories("shipping");
-                      }}
-                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
-                        operationalDomain === "shipping"
-                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
-                      <span>{getLabel("shippingDomain", lang)}</span>
-                    </button>
-                  </div>
+                  <select
+                    id="operationalDomain"
+                    value={operationalDomain}
+                    onChange={(e) => {
+                      const val = e.target.value as "business" | "shipping";
+                      setOperationalDomain(val);
+                      setBranch("");
+                      void loadCategories(val);
+                    }}
+                    className={selectClass()}
+                  >
+                    <option value="business">{getLabel("businessDomain", lang)}</option>
+                    <option value="shipping">{getLabel("shippingDomain", lang)}</option>
+                  </select>
                 </div>
 
-                {/* Question 1C: Ownership Level */}
-                <div className="space-y-2 rounded-xl bg-slate-50/70 p-3.5 border border-slate-200/60">
-                  <Label className="text-xs font-bold text-slate-800">
+                {/* 1C: Ownership Level (کھاتہ یا لیجر کی سطح) */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="ownershipLevel" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     {getLabel("questionOwnershipLevel", lang)} *
                   </Label>
-                  <div className="grid grid-cols-1 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOwnershipLevel("country");
+                  <select
+                    id="ownershipLevel"
+                    value={ownershipLevel}
+                    onChange={(e) => {
+                      const val = e.target.value as "country" | "main_branch" | "city_branch";
+                      setOwnershipLevel(val);
+                      if (val === "country" || val === "main_branch") {
                         setBranchType("Main");
-                        setBranch("");
-                      }}
-                      className={`flex flex-col items-start justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
-                        ownershipLevel === "country"
-                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-current shrink-0" />
-                        <span className="font-bold">{getLabel("countryLevel", lang)}</span>
-                      </div>
-                      <span className={`text-[10px] font-normal leading-tight ${ownershipLevel === "country" ? "text-primary-foreground/90" : "text-slate-500"}`}>
-                        {operationalDomain === "shipping"
-                          ? getLabel("interCountryShippingDesc", lang)
-                          : getLabel("interCountryTradeDesc", lang)}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOwnershipLevel("main_branch");
-                        setBranchType("Main");
-                        setBranch("");
-                      }}
-                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
-                        ownershipLevel === "main_branch"
-                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
-                      <span>{getLabel("mainBranchLevel", lang)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOwnershipLevel("city_branch");
+                      } else {
                         setBranchType("City");
-                        setBranch("");
-                      }}
-                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
-                        ownershipLevel === "city_branch"
-                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
-                      <span>{getLabel("cityBranchLevel", lang)}</span>
-                    </button>
-                  </div>
+                      }
+                      setBranch("");
+                    }}
+                    className={selectClass()}
+                  >
+                    <option value="country">{getLabel("countryLevel", lang)}</option>
+                    <option value="main_branch">{getLabel("mainBranchLevel", lang)}</option>
+                    <option value="city_branch">{getLabel("cityBranchLevel", lang)}</option>
+                  </select>
                 </div>
               </div>
 
@@ -1563,8 +1492,8 @@ export function NewAccountSetup({
                 </div>
               )}
 
-              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین) ── */}
-              <div className="space-y-3 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-4 border border-slate-200/70 dark:border-slate-800">
+              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین - Dropdown with Tick Marks) ── */}
+              <div className="space-y-2 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-3.5 border border-slate-200/70 dark:border-slate-800">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Globe2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -1577,68 +1506,129 @@ export function NewAccountSetup({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200">
-                      {linkedCountries.length} / {countries.length} {getLabel("countriesLinked", lang)}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setLinkedCountries(countries.map((c) => c.id))}
-                      className="h-6 text-[10px] px-2 text-emerald-700 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-800 dark:text-emerald-300"
-                    >
-                      {getLabel("selectAll", lang)}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setLinkedCountries([])}
-                      className="h-6 text-[10px] px-2 text-slate-600 hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:text-slate-300"
-                    >
-                      {getLabel("clearAll", lang)}
-                    </Button>
-                  </div>
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200">
+                    {linkedCountries.length} / {countries.length} {getLabel("countriesLinked", lang)}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 pt-1">
-                  {countries.map((c) => {
-                    const isSelected = linkedCountries.includes(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => {
-                          setLinkedCountries((prev) =>
-                            prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
-                          );
-                        }}
-                        className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border text-left transition-all ${
-                          isSelected
-                            ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-100 shadow-xs ring-1 ring-emerald-400/30"
-                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {isSelected ? (
-                            <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          ) : (
-                            <Square className="h-4 w-4 text-slate-300 dark:text-slate-600 shrink-0" />
-                          )}
-                          <div className="truncate">
-                            <span className="block text-xs font-bold truncate">
-                              {localizeTerm(c.name, lang)}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-mono">
-                              {c.iso2 || "-"} {c.currency_code ? `• ${c.currency_code}` : ""}
-                            </span>
-                          </div>
+                {/* Dropdown Selector Trigger */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsLinkedCountriesOpen((prev) => !prev)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Globe2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="truncate">
+                        {linkedCountries.length === 0
+                          ? "-- Select Operating Countries (لین دین) --"
+                          : `${linkedCountries.length} ${getLabel("countriesLinked", lang)}: ${countries
+                              .filter((c) => linkedCountries.includes(c.id))
+                              .map((c) => localizeTerm(c.name, lang))
+                              .join(", ")}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 text-slate-400">
+                      {isLinkedCountriesOpen ? (
+                        <ChevronUp className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu with Tick Marks */}
+                  {isLinkedCountriesOpen && (
+                    <div className="absolute z-30 mt-1.5 w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-3 space-y-2.5">
+                      <div className="flex items-center justify-between border-b pb-2 text-xs">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          Active Branch Countries ({countries.length})
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setLinkedCountries(countries.map((c) => c.id))}
+                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline px-1.5 py-0.5 rounded"
+                          >
+                            ✓ {getLabel("selectAll", lang)}
+                          </button>
+                          <span className="text-slate-300">|</span>
+                          <button
+                            type="button"
+                            onClick={() => setLinkedCountries([])}
+                            className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:underline px-1.5 py-0.5 rounded"
+                          >
+                            ✕ {getLabel("clearAll", lang)}
+                          </button>
                         </div>
-                      </button>
-                    );
-                  })}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
+                        {countries.map((c) => {
+                          const isSelected = linkedCountries.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => {
+                                setLinkedCountries((prev) =>
+                                  prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                                );
+                              }}
+                              className={`flex items-center justify-between gap-2 p-2 rounded-lg border text-left transition-all ${
+                                isSelected
+                                  ? "bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-400 text-emerald-900 dark:text-emerald-100 shadow-xs ring-1 ring-emerald-400/30"
+                                  : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {isSelected ? (
+                                  <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                ) : (
+                                  <Square className="h-4 w-4 text-slate-300 dark:text-slate-600 shrink-0" />
+                                )}
+                                <div className="truncate">
+                                  <span className="block text-xs font-bold truncate">
+                                    {localizeTerm(c.name, lang)}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-mono">
+                                    {c.iso2 || "-"} {c.currency_code ? `• ${c.currency_code}` : ""}
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Selected Country Badges / Chips */}
+                {linkedCountries.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {countries
+                      .filter((c) => linkedCountries.includes(c.id))
+                      .map((c) => (
+                        <span
+                          key={c.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-800 dark:text-emerald-200"
+                        >
+                          <span className="font-bold">{c.iso2 ?? ""}</span>
+                          <span>{localizeTerm(c.name, lang)}</span>
+                          <button
+                            type="button"
+                            onClick={() => setLinkedCountries((prev) => prev.filter((id) => id !== c.id))}
+                            className="ml-0.5 text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 text-xs font-bold"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                  </div>
+                )}
               </div>
 
               {/* ── Sub-Type & Category (Database-backed & Editable) ───────── */}

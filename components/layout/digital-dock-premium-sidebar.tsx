@@ -407,7 +407,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: "CRM Dashboard", href: "/dashboard/crm", icon: BarChart3 },
       { label: "Today's Action Center", href: "/dashboard/crm?tab=today", icon: CalendarCheck },
-      { label: "Due & Follow-Up", href: "/dashboard/smart-due", icon: Clock },
+      { label: "Due & Follow-Up", href: "/dashboard/smart-due?tab=overdue", icon: Clock },
       { label: "Cheques Reminders", href: "/dashboard/crm?tab=cheques", icon: CreditCard },
       { label: "Purchase Payments Due", href: "/dashboard/crm?tab=purchases", icon: ShoppingCart },
       { label: "Sales Recovery Due", href: "/dashboard/crm?tab=sales", icon: CircleDollarSign },
