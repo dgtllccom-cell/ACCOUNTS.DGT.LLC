@@ -151,6 +151,8 @@ export async function readTempSession(): Promise<
     mobileProfile?: string;
       }>;
       preferredLanguage: SupportedLanguage;
+      /** epoch ms the token was issued — used for server-side absolute expiry. */
+      createdAt: number;
     }
   | null
 > {
@@ -182,6 +184,13 @@ export async function readTempSession(): Promise<
 
   if (!payload || payload.v !== 1 || payload.kind !== "temp") return null;
 
+  // Server-side absolute expiry — independent of the cookie's own maxAge, so an
+  // exfiltrated cookie also stops working. 30 days is the maximum "remember me"
+  // lifetime; the DB re-check in getCurrentErpSession() applies status/permission
+  // changes long before this.
+  const createdAt = typeof payload.createdAt === "number" ? payload.createdAt : 0;
+  if (!createdAt || Date.now() - createdAt > 30 * 24 * 60 * 60 * 1000) return null;
+
   const preferredLanguage = normalizeLanguage(cookieStore.get("erp_lang")?.value);
 
   return {
@@ -190,7 +199,8 @@ export async function readTempSession(): Promise<
     fullName: payload.fullName,
     roles: payload.roles,
     assignments: payload.assignments ?? [],
-    preferredLanguage
+    preferredLanguage,
+    createdAt
   };
 }
 

@@ -84,6 +84,19 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "customer_name", mode: "transliterate" },
     { field: "company_name", mode: "transliterate" },
     { field: "contact_person", mode: "transliterate" },
+    { field: "first_name", mode: "transliterate" },
+    { field: "last_name", mode: "transliterate" },
+    { field: "father_name", mode: "transliterate" },
+  ],
+  account_categories: [
+    { field: "name", mode: "translate" },
+    { field: "description", mode: "translate" },
+  ],
+  employees: [
+    { field: "full_name", mode: "transliterate" },
+    { field: "designation", mode: "translate" },
+    { field: "department", mode: "translate" },
+    { field: "category", mode: "translate" },
   ],
   // ── Online Customer Inquiry / Meeting Record ──
   // ONE original row; these free-text fields get translated views via record_translations.
@@ -158,14 +171,6 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "account_title", mode: "translate" },
   ],
   profiles: [{ field: "full_name", mode: "transliterate" }],
-  // Employee full_name is surfaced on the employees row (joined from person master) and read
-  // via localizeRecordNames(record_table='employees'); register it here so write matches read.
-  employees: [
-    { field: "full_name", mode: "transliterate" },
-    { field: "category", mode: "translate" },
-    { field: "department", mode: "translate" },
-    { field: "designation", mode: "translate" },
-  ],
 
   // ── Product / inventory master (descriptive → translate) ──
   products: [

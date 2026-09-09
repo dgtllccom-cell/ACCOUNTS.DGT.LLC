@@ -205,17 +205,175 @@ async function resolveHierarchyScopes(
   };
 }
 
+const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local"]);
+// Synthetic UUIDs minted by readTempSession() for the bootstrap identities
+// (temp-super-admin / temp-pakistan-country-admin / temp-quetta-city-admin) —
+// these have no DB row, so the live DB re-check is skipped for them.
+const BOOTSTRAP_TEMP_UUIDS = new Set([
+  "00000000-0000-4000-8000-000000000001",
+  "00000000-0000-4000-8000-000000000002",
+  "00000000-0000-4000-8000-000000000003",
+]);
+
+/**
+ * The single source of truth for a session's live state. Given an identity
+ * (userId/email) and any `{ from(table) }` client, it re-reads the user's
+ * CURRENT status, assignments and effective permissions from the database —
+ * so disabling a user, changing their branch scope, changing their mobile
+ * profile or editing their permission set all take effect on the NEXT request,
+ * regardless of which login path issued the cookie.
+ *
+ * Returns null when the account is disabled / deleted / has no active
+ * assignment (and is not a bootstrap super admin) — the caller then treats the
+ * session as revoked.
+ */
+async function resolveErpSessionFromDb(
+  db: { from(table: string): any },
+  identity: { userId: string; email: string | null; preferredLanguage?: SupportedLanguage },
+): Promise<ErpSession | null> {
+  const isBootstrapEmail = Boolean(identity.email && BOOTSTRAP_EMAILS.has(identity.email.toLowerCase()));
+
+  // 1. Current profile — a soft-deleted profile is a disabled account.
+  //    An infrastructure error (client misconfigured) THROWS so the caller can
+  //    fall back to the signed cookie rather than nuking every session.
+  let profile: { full_name: string | null; preferred_language_code: SupportedLanguage | null; deleted_at?: string | null } | null = null;
+  let profileErrored = false;
+  {
+    let r = await db.from("profiles").select("full_name, preferred_language_code, deleted_at").eq("id", identity.userId).maybeSingle();
+    if (r?.error) r = await db.from("profiles").select("full_name, preferred_language_code").eq("id", identity.userId).maybeSingle();
+    if (r?.error) profileErrored = true;
+    else profile = (r?.data as any) ?? null;
+  }
+  if (profileErrored) throw new Error("session-db-unavailable: profiles");
+  if (profile && (profile as any).deleted_at && !isBootstrapEmail) return null; // disabled
+  if (!profile && !isBootstrapEmail) {
+    // No profile row at all — a synthetic dev-session identity, not a real user.
+    // Signal distinctly so the caller can keep dev-session working while a real
+    // disabled/revoked account (which HAS a profile) still returns null.
+    throw new Error("session-no-such-user");
+  }
+
+  // 2. Current active assignments (schema-drift tolerant).
+  let assignmentsResult: { data: AssignmentRow[] | null; error?: { message: string } | null } = { data: null };
+  const selects = [
+    "role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain, mobile_profile",
+    "role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility",
+    "role, country_id, country_branch_id, city_branch_id",
+  ];
+  for (const sel of selects) {
+    assignmentsResult = await db.from("user_role_assignments").select(sel).eq("user_id", identity.userId).eq("is_active", true).is("deleted_at", null);
+    if (!assignmentsResult.error) break;
+  }
+  if (assignmentsResult.error) {
+    throw new Error("session-db-unavailable: user_role_assignments " + assignmentsResult.error.message);
+  }
+
+  const assignments = (assignmentsResult.data ?? [])
+    .map((assignment) => {
+      const role = normalizeRole(assignment.role);
+      if (!role) return null;
+      const rawDomain = (assignment as AssignmentRow).operational_domain;
+      const operationalDomain: OperationalDomain = rawDomain === "shipping" || rawDomain === "both" ? rawDomain : "business";
+      return {
+        role,
+        countryId: assignment.country_id,
+        countryBranchId: assignment.country_branch_id,
+        cityBranchId: assignment.city_branch_id,
+        clearingAgentId: assignment.clearing_agent_id ?? null,
+        ledgerVisibility: (assignment.ledger_visibility as LedgerVisibility) ?? "scoped",
+        operationalDomain,
+        mobileProfile: normalizeMobileProfile((assignment as AssignmentRow).mobile_profile),
+      } as RoleAssignmentScope;
+    })
+    .filter((a): a is RoleAssignmentScope => Boolean(a));
+
+  let roles = [...new Set(assignments.map((a) => a.role))];
+  if ((!roles.length || !roles.includes("super_admin")) && isBootstrapEmail) {
+    roles = Array.from(new Set(["super_admin", ...roles]));
+  }
+
+  // A non-bootstrap user with no active assignment has been revoked.
+  if (!roles.length && !isBootstrapEmail) return null;
+
+  // 3. Effective permissions — the user's SAVED custom set wins; role defaults
+  //    are only a fallback. Never widen a custom set to role defaults.
+  let permissions: string[] = [];
+  try {
+    const permResult = (await db.from("user_permission_sets").select("permissions").eq("user_id", identity.userId).maybeSingle()) as { data: PermissionSetRow | null };
+    const explicit = permResult?.data?.permissions ?? null;
+    permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
+  } catch { permissions = []; }
+  if (!permissions.length) {
+    permissions = [...new Set(roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+  }
+  if (roles.includes("super_admin") && !permissions.includes("*:*")) {
+    permissions = ["*:*", ...permissions];
+  }
+
+  const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(assignments);
+  const isSuperAdmin = roles.includes("super_admin") || isBootstrapEmail;
+
+  const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin);
+
+  return {
+    userId: identity.userId,
+    email: identity.email,
+    fullName: profile?.full_name ?? null,
+    preferredLanguage: profile?.preferred_language_code ?? identity.preferredLanguage ?? "en",
+    roles,
+    permissions,
+    assignments,
+    countryIds: resolvedScopes.countryIds,
+    countryBranchIds: resolvedScopes.countryBranchIds,
+    cityBranchIds: resolvedScopes.cityBranchIds,
+    isSuperAdmin,
+    ...resolveShippingScope(assignments, isSuperAdmin),
+    mobileProfile: resolveMobileProfile(assignments, isSuperAdmin),
+  };
+}
+
 export async function getCurrentErpSession(): Promise<ErpSession | null> {
   try {
-    // Temporary local session (for initial Super Admin bootstrapping)
+    // ── Custom login path (POST /api/erp/auth/login → signed temp-session JWT) ──
     const temp = await readTempSession();
     if (temp) {
-      // A temporary session is self-contained. Do not make an Admin API call here:
-      // because local development may intentionally have no service-role key configured.
-      const resolvedUserId = temp.userId;
-      const adminSupabase: any = null;
+      const isBootstrap =
+        Boolean(temp.email && BOOTSTRAP_EMAILS.has(temp.email.toLowerCase())) ||
+        BOOTSTRAP_TEMP_UUIDS.has(temp.userId);
 
-      const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+      // Re-validate against the database on EVERY request so a disablement /
+      // permission change / scope change / mobile-profile change is enforced on
+      // the next protected request — not only after a voluntary re-login.
+      if (!isBootstrap) {
+        let admin: any = null;
+        try { admin = createSupabaseAdminClient(); } catch { admin = null; }
+        if (admin) {
+          try {
+            const live = await resolveErpSessionFromDb(admin, {
+              userId: temp.userId,
+              email: temp.email,
+              preferredLanguage: temp.preferredLanguage,
+            });
+            return live; // null ⇒ revoked ⇒ requireErpSession() redirects to login
+          } catch (e: any) {
+            const msg = String(e?.message || "");
+            // A synthetic dev-session identity has no profile row — keep it working
+            // only when demo auth is explicitly enabled (never in production).
+            if (msg.includes("session-no-such-user")) {
+              if (!isDemoAuthEnabled()) return null;
+              // fall through to the signed-cookie build below
+            } else {
+              // DB unreachable / client misconfigured — fall through to the signed
+              // cookie so a transient infra fault does not log everyone out.
+              console.warn("[session] live re-check unavailable, using signed cookie:", msg);
+            }
+          }
+        }
+      }
+
+      // Fallback (bootstrap super admin, or no service-role key in local dev):
+      // trust the signed, non-forgeable cookie. Custom permission sets cannot be
+      // loaded here, so use role-template permissions.
       const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => {
         const d = (a as any).operationalDomain;
         return {
@@ -226,34 +384,27 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           clearingAgentId: (a as any).clearingAgentId ?? null,
           ledgerVisibility: ((a as any).ledgerVisibility as LedgerVisibility) ?? "scoped",
           operationalDomain: (d === "shipping" || d === "both" ? d : "business") as OperationalDomain,
-          mobileProfile: normalizeMobileProfile((a as any).mobileProfile)
+          mobileProfile: normalizeMobileProfile((a as any).mobileProfile),
         };
       });
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
-
-      const resolvedScopes = await resolveHierarchyScopes(
-        adminSupabase,
-        initialCountryIds,
-        initialCountryBranchIds,
-        initialCityBranchIds,
-        isSuperAdmin
-      );
-
+      const resolvedScopes = await resolveHierarchyScopes(null, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin);
+      const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
       return {
-        userId: resolvedUserId,
+        userId: temp.userId,
         email: temp.email,
         fullName: temp.fullName ?? null,
         preferredLanguage: temp.preferredLanguage,
         roles: temp.roles,
-        permissions: perms,
+        permissions: isSuperAdmin && !perms.includes("*:*") ? ["*:*", ...perms] : perms,
         assignments: tempAssignments,
         countryIds: resolvedScopes.countryIds,
         countryBranchIds: resolvedScopes.countryBranchIds,
         cityBranchIds: resolvedScopes.cityBranchIds,
         isSuperAdmin,
         ...resolveShippingScope(tempAssignments, isSuperAdmin),
-        mobileProfile: resolveMobileProfile(tempAssignments, isSuperAdmin)
+        mobileProfile: resolveMobileProfile(tempAssignments, isSuperAdmin),
       };
     }
 
@@ -261,131 +412,13 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       return null;
     }
 
+    // ── Supabase Auth login path ─────────────────────────────────────────────
     const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-      error
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      return null;
-    }
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
 
     const db = supabase as unknown as { from(table: string): LooseQueryBuilder };
-
-    const profileQuery = db.from("profiles").select("full_name, preferred_language_code").eq("id", user.id);
-    const profileResult = await profileQuery.maybeSingle();
-
-    // Select the shipping/clearing scope columns when present, but fall back gracefully for
-    // databases where the 20260818_shipping_clearing_rbac migration has not been applied yet â€”
-    // otherwise an unknown-column error here would return null and break authentication.
-    let assignmentsResult = await db
-      .from("user_role_assignments")
-      .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain, mobile_profile")
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .is("deleted_at", null);
-    if (assignmentsResult.error) {
-      assignmentsResult = await db
-        .from("user_role_assignments")
-        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-        .is("deleted_at", null);
-    }
-    if (assignmentsResult.error) {
-      assignmentsResult = await db
-        .from("user_role_assignments")
-        .select("role, country_id, country_branch_id, city_branch_id")
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-        .is("deleted_at", null);
-    }
-
-    if (assignmentsResult.error) {
-      console.error("Role assignments query error:", assignmentsResult.error.message);
-      return null;
-    }
-
-    const assignments = (assignmentsResult.data ?? [])
-      .map((assignment) => {
-        const role = normalizeRole(assignment.role);
-        if (!role) return null;
-
-        const rawDomain = (assignment as AssignmentRow).operational_domain;
-        const operationalDomain: OperationalDomain =
-          rawDomain === "shipping" || rawDomain === "both" ? rawDomain : "business";
-        return {
-          role,
-          countryId: assignment.country_id,
-          countryBranchId: assignment.country_branch_id,
-          cityBranchId: assignment.city_branch_id,
-          clearingAgentId: assignment.clearing_agent_id ?? null,
-          ledgerVisibility: (assignment.ledger_visibility as LedgerVisibility) ?? "scoped",
-          operationalDomain,
-          mobileProfile: normalizeMobileProfile((assignment as AssignmentRow).mobile_profile)
-        };
-      })
-      .filter((assignment): assignment is RoleAssignmentScope => Boolean(assignment));
-
-    let roles = [...new Set(assignments.map((assignment) => assignment.role))];
-
-    // Bootstrap super admin: allow the two known bootstrap accounts to always have super_admin
-    // even if their DB row hasn't been created yet. DO NOT extend this to any other email pattern.
-    const isBootstrapEmail =
-      user.email &&
-      (user.email.toLowerCase() === "superadmin@damaan.com" ||
-       user.email.toLowerCase() === "asmatdgtllc@users.damaan.local");
-
-    if ((!roles.length || !roles.includes("super_admin")) && isBootstrapEmail) {
-      roles = Array.from(new Set(["super_admin", ...roles]));
-    }
-
-    // Load explicit permission set if available; else fallback to role-template permissions.
-    let permissions: string[] = [];
-    try {
-      const permQuery = db.from("user_permission_sets").select("permissions").eq("user_id", user.id);
-      const permResult = (await (permQuery as any).maybeSingle()) as { data: PermissionSetRow | null };
-      const explicit = permResult?.data?.permissions ?? null;
-      permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
-    } catch {
-      permissions = [];
-    }
-
-    if (!permissions.length) {
-      permissions = [...new Set(roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
-    }
-
-    if (roles.includes("super_admin") && !permissions.includes("*:*")) {
-      permissions = ["*:*", ...permissions];
-    }
-
-    const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(assignments);
-    const isSuperAdmin = roles.includes("super_admin") || Boolean(isBootstrapEmail);
-
-    const resolvedScopes = await resolveHierarchyScopes(
-      supabase,
-      initialCountryIds,
-      initialCountryBranchIds,
-      initialCityBranchIds,
-      isSuperAdmin
-    );
-
-    return {
-      userId: user.id,
-      email: user.email ?? null,
-      fullName: profileResult.data?.full_name ?? null,
-      preferredLanguage: profileResult.data?.preferred_language_code ?? "en",
-      roles,
-      permissions,
-      assignments,
-      countryIds: resolvedScopes.countryIds,
-      countryBranchIds: resolvedScopes.countryBranchIds,
-      cityBranchIds: resolvedScopes.cityBranchIds,
-      isSuperAdmin,
-      ...resolveShippingScope(assignments, isSuperAdmin),
-      mobileProfile: resolveMobileProfile(assignments, isSuperAdmin)
-    };
+    return resolveErpSessionFromDb(db as any, { userId: user.id, email: user.email ?? null });
   } catch (err: any) {
     if (err?.digest === "DYNAMIC_SERVER_USAGE" || (err?.message && String(err.message).includes("Dynamic server usage"))) {
       throw err;
