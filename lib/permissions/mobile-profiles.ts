@@ -64,6 +64,7 @@ export const MOBILE_PROFILE_ALLOWED: Record<Exclude<MobileProfile, "standard">, 
     "country_branches:read",
     "city_branches:read",
     "shipping_records:read",
+    "shipping_records:create",
     "shipping_records:update",
     "assignments:read",
     "assignments:update",
@@ -86,6 +87,37 @@ export const MOBILE_PROFILE_PATHS: Record<Exclude<MobileProfile, "standard">, re
   mobile_cash_ledger: ["/m/cash", "/m/common"],
   mobile_field: ["/m/field", "/m/common"],
 };
+
+/**
+ * Exact set of API path prefixes a restricted profile's session may call. The
+ * middleware returns 403 for any /api/erp/** request outside this list — the
+ * hard perimeter that closes routes which do NOT go through authorize()
+ * (HR/payroll, CRM, clearing-agents, audit, messages, …). `/api/erp/auth/*` is
+ * always allowed (it is excluded from the middleware matcher).
+ */
+export const MOBILE_PROFILE_API_ALLOW: Record<Exclude<MobileProfile, "standard">, readonly string[]> = {
+  mobile_cash_ledger: [
+    "/api/erp/roznamcha",
+    "/api/erp/ledgers",
+    "/api/erp/accounting/ledgers",
+    "/api/erp/accounting/accounts/lookup",
+    "/api/erp/accounting/reports/ledger",
+    "/api/erp/currency/daily-rate",
+    "/api/erp/locations/countries",
+  ],
+  mobile_field: [
+    "/api/erp/mobile-field",
+    "/api/erp/locations/countries",
+  ],
+};
+
+/** True when a restricted profile's session may call the given API path. */
+export function mobileProfileAllowsApi(profile: MobileProfile, pathname: string): boolean {
+  if (profile === "standard") return true;
+  if (!pathname.startsWith("/api/erp/")) return true; // non-erp APIs (auth handled by matcher)
+  const allow = MOBILE_PROFILE_API_ALLOW[profile] ?? [];
+  return allow.some((p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?"));
+}
 
 /** goods→products alias, mirrors hasRolePermission(). */
 function canon(resource: string) {

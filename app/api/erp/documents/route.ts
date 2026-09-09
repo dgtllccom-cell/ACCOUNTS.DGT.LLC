@@ -7,6 +7,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 import { saveDocumentBlob } from "@/lib/documents/document-storage";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 const BUCKET_NAME = "erp-documents";
 
@@ -24,6 +26,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "attachments", action: "read" });
     const { searchParams } = new URL(request.url);
+    const lang = await getRequestLanguage(searchParams.get("lang"));
 
     const query = listSchema.parse({
       entityType: searchParams.get("entityType"),
@@ -77,10 +80,19 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
     const entityType = readFormText(formData.get("entityType"));
     const entityId = readFormText(formData.get("entityId"));
-    const companyId =
+    let companyId =
       readFormText(formData.get("companyId")) ||
       readFormText(formData.get("company_id")) ||
       (entityType === "company" ? entityId : null);
+
+    if (!companyId) {
+      const firstCo = await withLocalPg(async (sql) => {
+        const rows = await sql`SELECT id FROM public.companies WHERE deleted_at IS NULL LIMIT 1`;
+        return rows[0]?.id as string | undefined;
+      });
+      companyId = firstCo ?? null;
+    }
+
     const sessionCountryId = (session as { countryId?: string; countryIds?: string[] }).countryId ?? session.countryIds?.[0] ?? null;
     const sessionCityBranchId = (session as { cityBranchId?: string; cityBranchIds?: string[] }).cityBranchId ?? session.cityBranchIds?.[0] ?? null;
 
