@@ -678,3 +678,57 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: formatError(msg, isSuperAdmin) }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  let session: Awaited<ReturnType<typeof requireErpSession>> | undefined;
+  try {
+    session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ error: "Only Super Admin has permission to delete branches" }, { status: 403 });
+    }
+
+    const url = new URL(request.url);
+    let id = url.searchParams.get("id");
+    if (!id) {
+      const body = await request.json().catch(() => ({}));
+      id = body?.id || body?.branchId;
+    }
+
+    if (!id || !isUuid(id)) {
+      return NextResponse.json({ error: "Valid Branch ID is required" }, { status: 400 });
+    }
+
+    const admin = createSupabaseAdminClient();
+    
+    // Soft-delete in Supabase
+    await (admin.from("city_branches") as any)
+      .update({ deleted_at: new Date().toISOString(), status: "Inactive" })
+      .eq("id", id);
+
+    // Also soft-delete via direct Postgres
+    await withLocalPg(async (sql) => {
+      await sql`
+        UPDATE public.city_branches
+        SET deleted_at = NOW(), status = 'Inactive'
+        WHERE id = ${id}
+      `;
+    }).catch(() => null);
+
+    await auditApiAction(request as any, {
+      action: "city_branches.delete.api",
+      entityTable: "city_branches",
+      entityId: id,
+      after: { deleted_at: new Date().toISOString(), status: "Inactive" }
+    });
+
+    return NextResponse.json({ success: true, message: "City branch deleted successfully", id });
+  } catch (error) {
+    rethrowIfNextControlFlow(error);
+    if (error instanceof ErpAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    const msg = error instanceof Error ? error.message : "Server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
+

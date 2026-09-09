@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   UserPlus,
   Users,
+  Trash2,
   X,
   XCircle
 } from "lucide-react";
@@ -810,6 +811,62 @@ export function BranchGeneralReportView({
       alert(err instanceof Error ? err.message : "Failed to load branch details.");
     } finally {
       setViewLoadingId(null);
+    }
+  }
+
+  const [deletingBranchId, setDeletingBranchId] = useState<string | null>(null);
+
+  const loadReport = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await apiGet<BranchGeneralReportResponse>("/api/branch-management/general-report");
+      setData(res);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  async function handleDeleteCityBranch(branchId: string, branchName: string, branchCode: string) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete / deactivate branch:\n\n"${branchName} (${branchCode})"?\n\nThis will remove it from active operations.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingBranchId(branchId);
+      const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(branchId)}`, {
+        method: "DELETE"
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error || "Failed to delete branch");
+      }
+
+      // Optimistically remove from state
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          countries: prev.countries.map((c) => ({
+            ...c,
+            totalCityBranches: Math.max(0, (c.totalCityBranches || 1) - 1),
+            mainBranches: c.mainBranches.map((mb) => ({
+              ...mb,
+              cityBranches: mb.cityBranches.filter((cb) => cb.id !== branchId)
+            }))
+          }))
+        };
+      });
+
+      alert(`Branch "${branchName} (${branchCode})" deleted successfully.`);
+      void loadReport();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete branch");
+    } finally {
+      setDeletingBranchId(null);
     }
   }
 
@@ -1863,6 +1920,16 @@ export function BranchGeneralReportView({
                                                   >
                                                     <UserPlus className="h-2.5 w-2.5" />
                                                     {tt("bgr.create_user", "Create User")}
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteCityBranch(cityBranch.id, cityBranch.name, cityBranch.code)}
+                                                    disabled={deletingBranchId === cityBranch.id}
+                                                    className="rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-[8px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    title={`Delete / Deactivate branch ${cityBranch.name}`}
+                                                  >
+                                                    <Trash2 className="h-2.5 w-2.5" />
+                                                    {deletingBranchId === cityBranch.id ? "..." : (lang === "ur" ? "حذف" : lang === "ps" ? "ړنګول" : "Delete")}
                                                   </button>
                                                 </div>
                                               </td>
