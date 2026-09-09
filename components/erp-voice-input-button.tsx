@@ -112,7 +112,10 @@ export function ErpVoiceInputButton({
       const errType = e?.error || "unknown";
       let msg = `${s.t("error", "Voice input error")}: ${errType}`;
       if (errType === "not-allowed" || errType === "service-not-allowed") {
-        msg = s.t("mic_denied", "Microphone access denied. Please click the camera/mic icon in the browser address bar to allow microphone access.");
+        const isHttp = typeof window !== "undefined" && window.location.protocol === "http:" && window.location.hostname !== "localhost";
+        msg = isHttp
+          ? s.t("mic_denied_http", "Microphone blocked by browser on HTTP IP. Please open via secure HTTPS: https://new.dgt.llc or click the Not Secure/Lock icon in address bar to Allow Microphone.")
+          : s.t("mic_denied", "Microphone access denied. Please click the camera/mic icon in the browser address bar to allow microphone access.");
       } else if (errType === "no-speech") {
         msg = s.t("mic_no_speech", "No speech detected. Please speak clearly into your microphone.");
       } else if (errType === "network") {

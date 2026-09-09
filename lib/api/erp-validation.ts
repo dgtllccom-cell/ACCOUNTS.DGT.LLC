@@ -198,7 +198,7 @@ export const userCreateSchema = scopeSchema.extend({
   firstName: z.string().trim().max(100).nullable().optional(),
   middleName: z.string().trim().max(100).nullable().optional(),
   lastName: z.string().trim().max(100).nullable().optional(),
-  photoUrl: z.string().trim().max(2000).nullable().optional(),
+  photoUrl: z.string().trim().max(10_000_000).nullable().optional(),
   // Mandatory operational domain — decides which data world the user belongs to.
   // "business" = Purchase/Sales/Ledger/Accounting; "shipping" = Clearing Agent / Shipping Line.
   operationalDomain: z.enum(["business", "shipping", "both"]).default("business"),
