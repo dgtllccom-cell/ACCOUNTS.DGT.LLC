@@ -651,8 +651,10 @@ export const enterpriseAccountCreateSchema = scopeSchema.extend({
   customerId: optionalUuidSchema,
   companyId: optionalUuidSchema,
   bankId: optionalUuidSchema,
+  shippingLineId: optionalUuidSchema,
   status: z.string().trim().max(80).optional(),
-  contacts: z.array(z.object({ type: z.string(), value: z.string() })).default([])
+  contacts: z.array(z.object({ type: z.string(), value: z.string() })).default([]),
+  linkedCountries: z.array(z.string()).default([])
 });
 
 export const enterpriseLedgerCreateSchema = scopeSchema.extend({

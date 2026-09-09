@@ -5,11 +5,28 @@ import { locationsRepository } from "@/lib/repositories/locations-repository";
 import { linkEmailAccount } from "@/lib/api/email-link";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET(request: NextRequest) {
   try {
     const q = request.nextUrl.searchParams.get("q");
+    const withBranchesOnly = request.nextUrl.searchParams.get("withBranchesOnly") === "true";
     let countries = await locationsRepository.listCountries({ query: q, limit: 500 });
+
+    if (withBranchesOnly) {
+      const branchCountryIds = await withLocalPg(async (sql) => {
+        const rows = await sql`
+          select distinct country_id from public.country_branches where deleted_at is null and country_id is not null
+          union
+          select distinct country_id from public.city_branches where deleted_at is null and country_id is not null
+        `;
+        return rows.map((r: any) => String(r.country_id));
+      });
+      if (branchCountryIds && branchCountryIds.length > 0) {
+        const branchCountrySet = new Set(branchCountryIds);
+        countries = countries.filter((c) => branchCountrySet.has(c.id));
+      }
+    }
 
     let session = null;
     try {

@@ -79,9 +79,10 @@ export function invalidateLocationCache() {
   cache.clear();
 }
 
-export async function listCountries(params?: { q?: string }) {
+export async function listCountries(params?: { q?: string; withBranchesOnly?: boolean }) {
   const qp = new URLSearchParams();
   if (params?.q) qp.set("q", params.q);
+  if (params?.withBranchesOnly) qp.set("withBranchesOnly", "true");
   const cacheKey = `countries:${qp.toString()}`;
   const cached = getCached<LocationCountry[]>(cacheKey);
   if (cached) return cached;

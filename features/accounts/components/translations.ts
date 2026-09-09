@@ -1092,6 +1092,20 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "خط ملاحي جديد",
     fa: "خط کشتیرانی جدید",
     ps: "نوی بار وړونکی لاین"
+  },
+  shippingCarrierDesc: {
+    en: "Connect this account directly to a registered Shipping Line carrier master record.",
+    ur: "اس اکاؤنٹ کو براہِ راست رجسٹرڈ شپنگ لائن کیریئر ماسٹر ریکارڈ سے منسلک کریں۔",
+    ar: "ربط هذا الحساب مباشرة بسجل الناقل البحري المعتمد للخط الملاحي.",
+    fa: "اتصال مستقیم این حساب به رکورد اصلی خط کشتیرانی ثبت شده.",
+    ps: "دا حساب په مستقیم ډول د ثبت شوي بار وړلو لاین کیریر ماسټر ریکارډ سره وصل کړئ."
+  },
+  countriesLinked: {
+    en: "Linked",
+    ur: "منسلک",
+    ar: "مرتبط",
+    fa: "متصل",
+    ps: "تړل شوی"
   }
 };
 

@@ -230,15 +230,65 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase.from("country_branches").insert(payload).select("id").single();
+    let insertedId: string | null = null;
+    const viaPgInsert = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.country_branches (
+          country_id, operational_domain, parent_country_branch_id, name, code, local_currency,
+          is_main, status, state_province_id, district_id, city_id, address, phone, email,
+          whatsapp_number, company_id, owner_name, owner_customer_id, owner_profile_id,
+          contacts, documents, permission_template, permission_grants, created_by,
+          created_at, updated_at
+        ) values (
+          ${payload.country_id}::uuid,
+          ${payload.operational_domain},
+          ${payload.parent_country_branch_id ? payload.parent_country_branch_id : null}::uuid,
+          ${payload.name},
+          ${payload.code},
+          ${payload.local_currency},
+          ${payload.is_main},
+          ${payload.status},
+          ${payload.state_province_id ? payload.state_province_id : null}::uuid,
+          ${payload.district_id ? payload.district_id : null}::uuid,
+          ${payload.city_id ? payload.city_id : null}::uuid,
+          ${payload.address},
+          ${payload.phone},
+          ${payload.email},
+          ${payload.whatsapp_number},
+          ${payload.company_id ? payload.company_id : null}::uuid,
+          ${payload.owner_name},
+          ${payload.owner_customer_id ? payload.owner_customer_id : null}::uuid,
+          ${payload.owner_profile_id ? payload.owner_profile_id : null}::uuid,
+          ${JSON.stringify(payload.contacts)}::jsonb,
+          ${JSON.stringify(payload.documents)}::jsonb,
+          ${payload.permission_template},
+          ${payload.permission_grants},
+          ${payload.created_by ? payload.created_by : null}::uuid,
+          ${payload.created_at},
+          ${payload.updated_at}
+        )
+        returning id
+      `;
+      return rows[0]?.id ?? null;
+    });
 
-    if (error) {
-      return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+    if (viaPgInsert) {
+      insertedId = viaPgInsert;
+    } else {
+      const { data, error } = await supabase.from("country_branches").insert(payload).select("id").single();
+      if (error) {
+        return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+      }
+      insertedId = data?.id;
+    }
+
+    if (!insertedId) {
+      return NextResponse.json({ error: "Failed to create country branch record." }, { status: 500 });
     }
 
     void syncRecordTranslations({
       table: "country_branches",
-      recordId: data.id,
+      recordId: insertedId,
       record: payload,
       originalLanguage: session.preferredLanguage ?? "en",
       actorId: session.userId
@@ -247,7 +297,7 @@ export async function POST(request: Request) {
     // Link/Upsert central email account
     await linkEmailAccount({
       countryId: parsed.data.countryId,
-      countryBranchId: data.id,
+      countryBranchId: insertedId,
       scope: "country_branch",
       displayName: parsed.data.name.trim(),
       emailAddress: parsed.data.email
@@ -256,11 +306,11 @@ export async function POST(request: Request) {
     await auditApiAction(request as any, {
       action: "country_branches.create.api",
       entityTable: "country_branches",
-      entityId: data?.id ?? null,
+      entityId: insertedId,
       after: payload
     });
 
-    return NextResponse.json({ id: data?.id }, { status: 201 });
+    return NextResponse.json({ id: insertedId }, { status: 201 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
@@ -350,26 +400,63 @@ export async function PUT(request: Request) {
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
-      .from("country_branches")
-      .update(payload)
-      .eq("id", id)
-      .is("deleted_at", null)
-      .select("id")
-      .single();
+    let updatedId: string | null = null;
+    const viaPgUpdate = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update public.country_branches
+        set
+          country_id = ${payload.country_id}::uuid,
+          name = ${payload.name},
+          code = ${payload.code},
+          local_currency = ${payload.local_currency},
+          is_main = ${payload.is_main},
+          status = ${payload.status},
+          state_province_id = ${payload.state_province_id ? payload.state_province_id : null}::uuid,
+          district_id = ${payload.district_id ? payload.district_id : null}::uuid,
+          city_id = ${payload.city_id ? payload.city_id : null}::uuid,
+          address = ${payload.address},
+          phone = ${payload.phone},
+          email = ${payload.email},
+          whatsapp_number = ${payload.whatsapp_number},
+          company_id = ${payload.company_id ? payload.company_id : null}::uuid,
+          owner_name = ${payload.owner_name},
+          owner_customer_id = ${payload.owner_customer_id ? payload.owner_customer_id : null}::uuid,
+          owner_profile_id = ${payload.owner_profile_id ? payload.owner_profile_id : null}::uuid,
+          contacts = ${JSON.stringify(payload.contacts)}::jsonb,
+          documents = ${JSON.stringify(payload.documents)}::jsonb,
+          permission_template = ${payload.permission_template},
+          permission_grants = ${payload.permission_grants},
+          updated_at = ${payload.updated_at}
+        where id = ${id}::uuid and deleted_at is null
+        returning id
+      `;
+      return rows[0]?.id ?? null;
+    });
 
-    if (!error && data?.id) {
-      void syncRecordTranslations({
-      table: "country_branches",
-      recordId: data.id,
-      record: payload,
-      originalLanguage: session.preferredLanguage ?? "en",
-      actorId: session.userId
-    }).catch(() => {});
+    if (viaPgUpdate) {
+      updatedId = viaPgUpdate;
+    } else {
+      const { data, error } = await supabase
+        .from("country_branches")
+        .update(payload)
+        .eq("id", id)
+        .is("deleted_at", null)
+        .select("id")
+        .single();
+      if (error) {
+        return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+      }
+      updatedId = data?.id;
     }
 
-    if (error) {
-      return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+    if (updatedId) {
+      void syncRecordTranslations({
+        table: "country_branches",
+        recordId: updatedId,
+        record: payload,
+        originalLanguage: session.preferredLanguage ?? "en",
+        actorId: session.userId
+      }).catch(() => {});
     }
 
     // Link/Upsert central email account
@@ -384,11 +471,11 @@ export async function PUT(request: Request) {
     await auditApiAction(request as any, {
       action: "country_branches.update.api",
       entityTable: "country_branches",
-      entityId: data?.id ?? id,
+      entityId: id,
       after: payload
     });
 
-    return NextResponse.json({ id: data?.id ?? id }, { status: 200 });
+    return NextResponse.json({ id }, { status: 200 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {

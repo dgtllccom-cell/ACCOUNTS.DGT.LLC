@@ -1486,7 +1486,7 @@ export function NewAccountSetup({
                           {getLabel("shippingLineCarrier", lang)}
                         </h4>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {t(lang, "acct.shipping_carrier_desc", "Connect this account directly to a registered Shipping Line carrier master record.")}
+                          {getLabel("shippingCarrierDesc", lang)}
                         </p>
                       </div>
                     </div>
@@ -1579,7 +1579,7 @@ export function NewAccountSetup({
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200">
-                      {linkedCountries.length} / {countries.length} {t(lang, "acct.countries_linked", "Linked")}
+                      {linkedCountries.length} / {countries.length} {getLabel("countriesLinked", lang)}
                     </span>
                     <Button
                       type="button"

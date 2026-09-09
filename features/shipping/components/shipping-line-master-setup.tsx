@@ -27,7 +27,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t } from "@/lib/i18n/ui";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 import { localizeTerm } from "@/lib/i18n/transliteration";
 
@@ -239,14 +238,10 @@ export function ShippingLineMasterSetup() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {t(lang, "shl.master_title", "Shipping Line Master & Accounts")}
+                {localizeTerm("Shipping Line Master & Accounts", lang)}
               </h1>
               <p className="text-xs text-muted-foreground">
-                {t(
-                  lang,
-                  "shl.master_subtitle",
-                  "Register maritime shipping lines, configure inter-country operational links, and create dedicated accounts."
-                )}
+                {localizeTerm("Register maritime shipping lines, configure inter-country operational links, and create dedicated accounts.", lang)}
               </p>
             </div>
           </div>
@@ -260,11 +255,11 @@ export function ShippingLineMasterSetup() {
             className="h-9 gap-2 text-xs font-semibold"
           >
             <Building2 className="h-4 w-4 text-slate-500" />
-            {t(lang, "shl.create_account", "New Account Setup")}
+            {localizeTerm("New Account Setup", lang)}
           </Button>
           <Button onClick={handleOpenNew} size="sm" className="h-9 gap-2 text-xs font-semibold shadow-xs">
             <Plus className="h-4 w-4" />
-            {t(lang, "shl.register_new", "Register Shipping Line")}
+            {localizeTerm("Register Shipping Line", lang)}
           </Button>
         </div>
       </div>
@@ -336,7 +331,7 @@ export function ShippingLineMasterSetup() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t(lang, "shl.search_lines", "Search shipping line by name, code, contact...")}
+              placeholder={localizeTerm("Search shipping line by name, code, contact...", lang)}
               className="h-9 pl-9 text-xs"
             />
           </div>

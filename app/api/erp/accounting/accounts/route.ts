@@ -597,6 +597,14 @@ export async function POST(request: NextRequest) {
           } catch {}
         }
 
+        let validShippingLineId = null;
+        if (body.shippingLineId) {
+          try {
+            const rows = await tx`select id from shipping_lines where id = ${body.shippingLineId}::uuid limit 1;`;
+            if (rows.length > 0) validShippingLineId = rows[0].id;
+          } catch {}
+        }
+
         let validActorId = null;
         if (actorId) {
           try {
@@ -618,6 +626,8 @@ export async function POST(request: NextRequest) {
             customer_id: validCustomerId,
             company_id: validCompanyId,
             bank_id: validBankId,
+            shipping_line_id: validShippingLineId,
+            linked_countries: JSON.stringify(body.linkedCountries || []),
             code: issuedCode,
             account_number: issuedCode,
             customer_number: customerNumber,
@@ -811,6 +821,8 @@ export async function POST(request: NextRequest) {
         customer_id: body.customerId ?? null,
         company_id: body.companyId ?? null,
         bank_id: body.bankId ?? null,
+        shipping_line_id: body.shippingLineId ?? null,
+        linked_countries: body.linkedCountries || [],
         code: issuedCode,
         account_number: identity.accountNumber,
         customer_number: identity.customerNumber,
