@@ -2,14 +2,14 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
+import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
 
-const reportTypes = ["ledger", "bills", "payments", "sales", "purchase", "user-activity", "edit-history", "employee", "branch", "project"] as const;
+const reportTypes = ["ledger", "bills", "payments", "sales", "purchase", "user-activity", "edit-history", "employee", "branch", "project", "country-overview"] as const;
 const scopeModes = ["entire-country", "main-branch", "city-branch"] as const;
 
 const querySchema = z.object({
@@ -377,12 +377,15 @@ export async function GET(request: NextRequest) {
       throw new Error("Edit history reports are restricted to Super Admin users.");
     }
 
-    const isGlobalCountry = !params.countryId || params.countryId === "all";
-    const targetCountryId = isGlobalCountry ? null : params.countryId;
+    // Enforce the caller's actual report scope (same canonical guard every other
+    // report route uses) so a country/branch-scoped user can never see cross-country
+    // data by omitting countryId or passing "all" - resolveReportScope() alone does
+    // NOT do this; it only computes the scope, it must be applied via enforceScopeFilters().
+    const requestedCountryId = (!params.countryId || params.countryId === "all") ? null : params.countryId;
+    const { effectiveCountryId } = enforceScopeFilters(scope, requestedCountryId, null);
+    const targetCountryId = effectiveCountryId;
+    const isGlobalCountry = targetCountryId === null;
 
-    if (!session.isSuperAdmin && targetCountryId && !session.countryIds.includes(targetCountryId)) {
-      throw new Error("Requested country is outside the signed-in user's report scope.");
-    }
     if (params.scopeMode === "main-branch" && !params.mainBranchId) throw new Error("Main branch is required for Main Branch scope.");
     if (params.scopeMode === "city-branch" && !params.branchId) throw new Error("City branch is required for City Branch scope.");
     if (!session.isSuperAdmin && params.mainBranchId && !session.countryBranchIds.includes(params.mainBranchId)) {
@@ -390,6 +393,55 @@ export async function GET(request: NextRequest) {
     }
     if (!session.isSuperAdmin && params.branchId && !session.cityBranchIds.includes(params.branchId)) {
       throw new Error("Requested city branch is outside the signed-in user's report scope.");
+    }
+
+    // Lightweight, read-only, count-only overview for the Super Admin Reports Hub
+    // KPI cards + Country Overview table. Deliberately has zero financial/ledger math
+    // (that logic already exists and is trusted below) - just real branch/user counts,
+    // scoped by the same enforceScopeFilters() guard as every other report type here.
+    if (params.reportType === "country-overview") {
+      const overviewRows = await withLocalPg(async (sql) => {
+        return sql`
+          select
+            c.id, c.name, c.iso2, c.currency_code, c.is_active,
+            coalesce(cb.total_main, 0) + coalesce(ctb.total_city, 0) as total_branches,
+            coalesce(cb.active_main, 0) + coalesce(ctb.active_city, 0) as active_branches,
+            coalesce(u.total_users, 0) as total_users
+          from public.countries c
+          left join (
+            select country_id, count(*) as total_main, count(*) filter (where status = 'active') as active_main
+            from public.country_branches where deleted_at is null group by country_id
+          ) cb on cb.country_id = c.id
+          left join (
+            select country_id, count(*) as total_city, count(*) filter (where status = 'active') as active_city
+            from public.city_branches where deleted_at is null group by country_id
+          ) ctb on ctb.country_id = c.id
+          left join (
+            select country_id, count(distinct user_id) as total_users
+            from public.user_role_assignments where is_active = true and deleted_at is null group by country_id
+          ) u on u.country_id = c.id
+          where c.deleted_at is null
+            ${targetCountryId ? sql`and c.id = ${targetCountryId}::uuid` : sql``}
+          order by c.name
+        `;
+      });
+      const localized = await localizeRecordNames<any>(overviewRows as any[], "countries", "name", params.lang);
+      return apiOk({
+        reportType: "country-overview",
+        data: localized.map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          iso2: row.iso2 || "GL",
+          currencyCode: row.currency_code || "USD",
+          totalBranches: Number(row.total_branches ?? 0),
+          activeBranches: Number(row.active_branches ?? 0),
+          totalUsers: Number(row.total_users ?? 0),
+          status: row.is_active !== false ? "ACTIVE" : "INACTIVE"
+        })),
+        generatedAt: new Date().toISOString(),
+        generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId },
+        scope: { level: scope.level, label: scope.scopeLabel }
+      });
     }
 
     const localPgResponse = await withLocalPg(async (sql) => {
