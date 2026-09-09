@@ -17,6 +17,7 @@ import {
   Compass,
   CreditCard,
   FileSpreadsheet,
+  FileText,
   Globe,
   History,
   LayoutDashboard,
@@ -624,6 +625,17 @@ export function DashboardFrame({
 
               <div className="flex items-center gap-3 relative" ref={profileMenuRef}>
                 <PreferencesControls />
+                <a
+                  href="/Country_Branch_Users_Credentials_Register.pdf"
+                  download="Country_Branch_Users_Credentials_Register.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${t(lang, "urf.erp_credentials", "ERP Credentials")} (PDF)`}
+                  className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50/90 hover:bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-bold transition-all shadow-xs"
+                >
+                  <FileText className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>PDF</span>
+                </a>
                 <button 
                   type="button"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
@@ -660,6 +672,22 @@ export function DashboardFrame({
                   </div>
 
                   <div className="p-2 flex flex-col gap-1">
+                    <a
+                      href="/Country_Branch_Users_Credentials_Register.pdf"
+                      download="Country_Branch_Users_Credentials_Register.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="px-3 py-2 text-xs font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/60 mb-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>{t(lang, "urf.erp_credentials", "ERP Credentials")} (PDF)</span>
+                      </div>
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-600 text-white shadow-xs">
+                        {t(lang, "purchase.download_pdf", "Download PDF")}
+                      </span>
+                    </a>
                     {[
                       ["/dashboard/settings/profile", t(lang, "nav.my_profile", "My Profile"), "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"],
                       ["/dashboard/settings/profile?mode=edit", t(lang, "nav.edit_profile", "Edit Profile"), "bg-cyan-50 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400"],
