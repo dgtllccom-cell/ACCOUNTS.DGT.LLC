@@ -100,13 +100,9 @@ export function apiCreated<T>(data: T) {
   return apiOk(data, { status: 201 });
 }
 
-export function apiError(code: string, message: string, status = 400, details?: unknown, isSuperAdmin = false) {
+export function apiError(code: string, message: string, status = 400, details?: unknown, _isSuperAdmin = false) {
   console.error("[API ERROR]", { code, message, details, status });
-  let finalMessage = message;
-  if (isSuperAdmin) {
-    const urduTranslation = translateToUrdu(message);
-    finalMessage = urduTranslation;
-  }
+  const finalMessage = message;
 
   return NextResponse.json<ApiErrorBody>(
     {

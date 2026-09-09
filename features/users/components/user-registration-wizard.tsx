@@ -73,7 +73,7 @@ import { UserProfileReportModal, UserProfileData } from "./user-profile-report-m
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
-type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string; country_branch_id: string };
+type CityBranchRow = { id: string; name: string; code: string; city_name: string; cityName?: string; local_currency: string; country_branch_id: string };
 
 type WizardStep = 1 | 2 | 3 | 4;
 
@@ -88,7 +88,7 @@ const branchTypeOptions = [
 // worlds — the domain + ledger_visibility on the assignment keeps the data apart.
 const DOMAIN_ROLES: Record<"business" | "shipping", EnterpriseRole[]> = {
   business: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "auditor_viewer"],
-  shipping: ["country_admin", "city_branch_admin", "agent_user", "staff_user", "auditor_viewer"],
+  shipping: ["country_admin", "country_user", "main_branch_admin", "city_branch_admin", "staff_user", "agent_user", "auditor_viewer"],
 };
 
 const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string; labelKey: string; helpKey: string }> = [
@@ -546,8 +546,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     (async () => {
       try {
         const [cbRes, ctyRes, cityList] = await Promise.all([
-          fetch(`/api/branch-management/country-branches?countryId=${countryId}`).then((r) => r.json()),
-          fetch(`/api/branch-management/city-branches?countryId=${countryId}`).then((r) => r.json()),
+          fetch(`/api/branch-management/country-branches?countryId=${countryId}&operationalDomain=${operationalDomain}`).then((r) => r.json()),
+          fetch(`/api/branch-management/city-branches?countryId=${countryId}&operationalDomain=${operationalDomain}`).then((r) => r.json()),
           listCities({ countryId })
         ]);
 
@@ -584,7 +584,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return () => {
       cancelled = true;
     };
-  }, [countryId]);
+  }, [countryId, operationalDomain]);
 
   const countryOptions = useMemo(() => countries.map(toCountryOption), [countries]);
 
@@ -647,19 +647,21 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   function isStepValid(currentStep: WizardStep) {
     if (currentStep === 1) {
-      return Boolean(fullName.trim().length >= 2 || selectedEmployeeId);
+      return Boolean(selectedEmployeeId || fullName.trim().length >= 2);
     }
     if (currentStep === 2) {
       if (role === "super_admin") return true;
       if (!countryId) return false;
+      if (operationalDomain === "shipping" && role === "agent_user" && !clearingAgentId) return false;
       return true;
     }
     if (currentStep === 3) {
+      if (!loginUsername.trim()) return false;
+      if (!editUserId && (!password || password.length < 8)) return false;
+      if (password && confirmPassword && password !== confirmPassword) return false;
       return true;
     }
     if (currentStep === 4) {
-      if (!editUserId && (!password || password.length < 8)) return false;
-      if (password && password !== confirmPassword) return false;
       return Boolean(userCode.trim());
     }
     return true;
@@ -839,10 +841,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   const steps = [
-    { number: 1 as const, label: tr("step1Label"), icon: <Users className="h-4 w-4" /> },
-    { number: 2 as const, label: tr("step2Label"), icon: <MapPin className="h-4 w-4" /> },
-    { number: 3 as const, label: tr("step3Label"), icon: <FileCheck className="h-4 w-4" /> },
-    { number: 4 as const, label: tr("step4Label"), icon: <ShieldCheck className="h-4 w-4" /> }
+    { number: 1 as const, label: centralT(activeLang, "urw2.step1_title" as never, "Employee & Operational Section"), icon: <Users className="h-4 w-4" /> },
+    { number: 2 as const, label: centralT(activeLang, "urw2.step2_title" as never, "Role & Branch Scope"), icon: <MapPin className="h-4 w-4" /> },
+    { number: 3 as const, label: centralT(activeLang, "urw2.step3_title" as never, "Login & Mobile Access"), icon: <Lock className="h-4 w-4" /> },
+    { number: 4 as const, label: centralT(activeLang, "urw2.step4_title" as never, "Permissions & Confirmation"), icon: <ShieldCheck className="h-4 w-4" /> }
   ];
 
   const handlePrintCard = () => {
@@ -1021,10 +1023,232 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         </div>
       )}
 
-      {/* Main Split-Screen Section */}
+      {/* Main Split-Screen Section: Authoritative Employee Summary on LEFT, Wizard Steps on RIGHT */}
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Side Form Wizard (7 Columns) */}
-        <div className="space-y-4 lg:col-span-7">
+        {/* LEFT COLUMN: Authoritative Read-Only Employee Summary Panel (5 Columns on desktop) */}
+        <div className="space-y-4 lg:col-span-5 order-2 lg:order-1">
+          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-4 dark:border-slate-800 dark:bg-slate-950">
+            {/* Header: Title & Source Badge */}
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200">
+                  {centralT(activeLang, "urw2.authoritative_summary" as never, "Authoritative Employee Master")}
+                </span>
+              </div>
+              <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                {centralT(activeLang, "urw2.single_source_truth" as never, "Source of Truth")}
+              </span>
+            </div>
+
+            {selectedEmployeeId && employeeProfile.fullName ? (
+              <div className="space-y-4">
+                {/* Employee Card: Photo, Name, Code, Badges */}
+                <div className="flex items-center justify-between border-b pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-xl bg-slate-900 text-slate-100 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
+                      {employeeProfile.photoUrl ? (
+                        <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-7 w-7 text-slate-300" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate block">
+                          {employeeProfile.fullName || fullName}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
+                            employeeProfile.gender?.toLowerCase().startsWith("f")
+                              ? "bg-pink-50 text-pink-700 border-pink-200"
+                              : "bg-blue-50 text-blue-700 border-blue-200"
+                          }`}
+                        >
+                          {employeeProfile.gender || "Staff"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1.5 font-mono">
+                        <span className="text-emerald-600 font-bold">{employeeProfile.employeeCode || employeeCode}</span>
+                        <span>•</span>
+                        <span className="truncate">{employeeProfile.designation || designation}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {employeeProfile.department || department}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                      kycStatus === "VERIFIED"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    {kycStatus === "VERIFIED"
+                      ? centralT(activeLang, "urw2.verified" as never, "Verified & Compliant")
+                      : centralT(activeLang, "urw2.pending" as never, "Pending Verification")}
+                  </span>
+                </div>
+
+                {/* Prominent Master Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setViewEmployeeId(selectedEmployeeId)}
+                    className="flex-1 h-8 text-[11px] font-bold text-blue-700 border-blue-200 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-900"
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    <span>{centralT(activeLang, "urw2.view_employee" as never, "View Employee Record")}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditEmployeeId(selectedEmployeeId)}
+                    className="flex-1 h-8 text-[11px] font-bold text-amber-700 border-amber-200 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-900"
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1" />
+                    <span>{centralT(activeLang, "urw2.edit_employee" as never, "Edit Employee Record")}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedEmployeeId("");
+                      setEmployeeCode("");
+                      setEmployeeProfile({});
+                    }}
+                    className="h-8 px-2 text-[11px] font-semibold text-slate-500 hover:text-red-600"
+                    title={centralT(activeLang, "urw2.change_selection" as never, "Change Employee Selection")}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                {/* Section 1: Employment Details */}
+                <div className="space-y-1.5 text-xs rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                  <div className="font-bold text-[11px] text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    <span>{th("Employment Details")}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+                    <div>
+                      <span className="text-slate-400">{th("Type")}:</span>{" "}
+                      <span className="font-semibold">{employeeProfile.employmentType || "Full-Time"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("Job Status")}:</span>{" "}
+                      <span className="font-semibold">{employeeProfile.jobStatus || "Active"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("Shift")}:</span>{" "}
+                      <span>{employeeProfile.workingShift || "Day Shift"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("Duty Hours")}:</span>{" "}
+                      <span>{`${employeeProfile.dutyStartTime || "09:00 AM"} - ${employeeProfile.dutyEndTime || "06:00 PM"}`}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("Joining")}:</span>{" "}
+                      <span>{employeeProfile.joiningDate || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("Salary")}:</span>{" "}
+                      <span>{`${employeeProfile.salaryType || "Monthly"} (${employeeProfile.salaryCurrency || "USD"})`}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Contact & Location */}
+                <div className="space-y-1.5 text-xs rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                  <div className="font-bold text-[11px] text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span>{th("Contact & Location")}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+                    <div>
+                      <span className="text-slate-400">{th("Mobile")}:</span>{" "}
+                      <span className="font-mono">{contactPhone || employeeProfile.phone || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("WhatsApp")}:</span>{" "}
+                      <span className="font-mono">{employeeProfile.whatsapp || contactPhone || "-"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400">{th("Email")}:</span>{" "}
+                      <span className="font-mono truncate block">{personalEmail || "user@dgt.llc"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400">{th("Address")}:</span>{" "}
+                      <span className="truncate block">{residentialAddress || employeeProfile.address || "Not Provided"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Identity & Relevant Documents */}
+                <div className="space-y-1.5 text-xs rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                  <div className="font-bold text-[11px] text-purple-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <FileCheck className="h-3.5 w-3.5" />
+                    <span>{th("Relevant Documents & KYC")}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+                    <div>
+                      <span className="text-slate-400">{th("CNIC / Passport")}:</span>{" "}
+                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{cnicPassportNo || "Not Provided"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">{th("Expiry Date")}:</span>{" "}
+                      <span>{idExpiryDate || "Permanent / Not Set"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400">{th("Status")}:</span>{" "}
+                      <span className="font-bold text-emerald-600">
+                        {kycStatus === "VERIFIED" ? "Verified & Compliant" : "Pending Verification"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Placeholder state when no employee is selected */
+              <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center space-y-3">
+                <div className="mx-auto h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400">
+                  <User className="h-6 w-6" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {centralT(activeLang, "urw2.no_employee_title" as never, "No Employee Selected")}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                    {centralT(
+                      activeLang,
+                      "urw2.no_employee_hint" as never,
+                      "Select an employee from the dropdown on the right. Their authoritative personal information, contact records, and KYC documents will appear here automatically."
+                    )}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowEmployeeModal(true)}
+                  className="gap-1.5 text-xs font-bold text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{tr("addNewEmployee")}</span>
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* RIGHT COLUMN: Streamlined User Registration Wizard (7 Columns on desktop) */}
+        <div className="space-y-4 lg:col-span-7 order-1 lg:order-2">
           <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm overflow-hidden">
             <CardHeader className="border-b bg-slate-900 text-white px-5 py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
@@ -1037,10 +1261,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             </CardHeader>
 
             <CardContent className="p-4 space-y-4">
-              {/* STEP 1: Employee Master Profile Information */}
+              {/* STEP 1: Employee Selection & Operational Domain */}
               {step === 1 && (
                 <div className="space-y-4">
-                  {/* Single Unified Header Packet: Gender / Staff Filter + Employee Select */}
+                  {/* Employee Selection Header */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -1104,239 +1328,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     />
                   </div>
 
-                  {/* Selected Employee Master Profile Banner */}
-                  {selectedEmployeeId && employeeProfile.fullName && (
-                    <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/80 to-slate-50 p-3.5 space-y-2.5 dark:border-blue-900/50 dark:from-blue-950/30 dark:to-slate-900 shadow-sm">
-                      <div className="flex items-center justify-between border-b border-blue-100 dark:border-blue-900/50 pb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-9 w-9 rounded-lg bg-slate-900 text-slate-100 font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
-                            {employeeProfile.photoUrl ? (
-                              <img src={employeeProfile.photoUrl} alt={th("Employee")} className="h-full w-full object-cover" />
-                            ) : (
-                              <User className="h-5 w-5 text-slate-300" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
-                                {employeeProfile.fullName}
-                              </span>
-                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
-                                employeeProfile.gender?.toLowerCase().startsWith("f")
-                                  ? "bg-pink-50 text-pink-700 border-pink-200"
-                                  : "bg-blue-50 text-blue-700 border-blue-200"
-                              }`}>
-                                {employeeProfile.gender || "Staff"}
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-slate-500 font-mono">
-                              {employeeProfile.employeeCode} • {employeeProfile.designation} • {employeeProfile.department}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setViewEmployeeId(selectedEmployeeId)}
-                            className="h-7 px-2 text-[11px] font-semibold text-blue-700 hover:text-blue-800 hover:bg-blue-100/50 dark:text-blue-300"
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            {tr("viewMasterRecord")}
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedEmployeeId("");
-                              setEmployeeCode("");
-                              setEmployeeProfile({});
-                            }}
-                            className="h-7 px-2 text-[11px] font-semibold text-slate-600 hover:text-red-600 border-slate-200 hover:border-red-200"
-                          >
-                            <RotateCcw className="h-3 w-3 mr-1" />
-                            {tr("changeSelection")}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                        <div><span className="text-slate-400">Branch:</span> <span className="font-semibold">{employeeProfile.cityName || "Main Branch"}</span></div>
-                        <div><span className="text-slate-400">Employment:</span> <span className="font-semibold">{employeeProfile.employmentType || "Full-Time"}</span></div>
-                        <div><span className="text-slate-400">Phone:</span> <span className="font-mono">{employeeProfile.phone || contactPhone || "-"}</span></div>
-                        <div><span className="text-slate-400">Shift:</span> <span>{employeeProfile.workingShift || "General Shift"}</span></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {showEmployeeModal ? (
-                    <SimpleModal
-                      title={tr("newEmployeeModalTitle")}
-                      onClose={() => setShowEmployeeModal(false)}
-                      className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
-                    >
-                      <EmployeeForm
-                        onSave={async (newEmployeeId) => {
-                          setShowEmployeeModal(false);
-                          const freshList = await fetchHrEmployees();
-                          if (newEmployeeId && freshList.some((e) => e.id === newEmployeeId)) {
-                            setSelectedEmployeeId(newEmployeeId);
-                          }
-                        }}
-                        onCancel={() => setShowEmployeeModal(false)}
-                      />
-                    </SimpleModal>
-                  ) : null}
-
-                  {editEmployeeId ? (
-                    <SimpleModal
-                      title={centralT(activeLang, "urw2.edit_employee_record" as never, "Edit Employee Master Record")}
-                      onClose={() => setEditEmployeeId(null)}
-                      className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
-                    >
-                      <EmployeeForm
-                        employeeId={editEmployeeId}
-                        onSave={async (savedId) => {
-                          setEditEmployeeId(null);
-                          const freshList = await fetchHrEmployees();
-                          if (savedId && freshList.some((e) => e.id === savedId)) {
-                            setSelectedEmployeeId(savedId);
-                          }
-                        }}
-                        onCancel={() => setEditEmployeeId(null)}
-                      />
-                    </SimpleModal>
-                  ) : null}
-
-                  {viewEmployeeId ? (
-                    <EmployeeDetailModal
-                      employeeId={viewEmployeeId}
-                      employees={hrEmployees}
-                      onClose={() => setViewEmployeeId(null)}
-                      onEdit={(empId) => {
-                        setViewEmployeeId(null);
-                        setEditEmployeeId(empId);
-                      }}
-                    />
-                  ) : null}
-
-                  {/* Core Identity Fields with First Name & Surname Split */}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("firstNameLabel")}</Label>
-                      <Input
-                        value={firstName}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFirstName(val);
-                          const combined = `${val} ${lastName}`.trim();
-                          setFullName(combined);
-                          if (!loginUsername || loginUsername.includes(".")) {
-                            setLoginUsername(`${val}.${lastName}`.toLowerCase().replace(/[^a-z0-9]/g, "."));
-                          }
-                        }}
-                        placeholder={th("e.g. Muhammad")}
-                        className="h-9 text-xs font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("lastNameLabel")}</Label>
-                      <Input
-                        value={lastName}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setLastName(val);
-                          const combined = `${firstName} ${val}`.trim();
-                          setFullName(combined);
-                          if (!loginUsername || loginUsername.includes(".")) {
-                            setLoginUsername(`${firstName}.${val}`.toLowerCase().replace(/[^a-z0-9]/g, "."));
-                          }
-                        }}
-                        placeholder={th("e.g. Ali Shah")}
-                        className="h-9 text-xs font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("fullName")}</Label>
-                      <Input
-                        value={fullName}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFullName(val);
-                          const parts = val.trim().split(" ");
-                          setFirstName(parts[0] || "");
-                          setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
-                        }}
-                        placeholder={th("e.g. Muhammad Ali Shah")}
-                        className="h-9 text-xs font-medium bg-slate-50/50 dark:bg-slate-900/50"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("username")}</Label>
-                      <Input
-                        value={loginUsername}
-                        onChange={(e) => setLoginUsername(e.target.value)}
-                        placeholder={th("e.g. muhammad.ali")}
-                        className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("designation")}</Label>
-                      <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder={th("e.g. Senior Accountant")} className="h-9 text-xs" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("department")}</Label>
-                      <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder={th("e.g. Finance & Accounts")} className="h-9 text-xs" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("phone")}</Label>
-                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+92 300 1234567" className="h-9 text-xs font-mono" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("email")}</Label>
-                      <Input value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="user@dgt.llc" className="h-9 text-xs font-mono" />
-                    </div>
-                  </div>
-
-                  {/* Additional Employee Master Fields if Linked */}
-                  {selectedEmployeeId && (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900/50 p-3.5 space-y-2 text-xs">
-                      <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b pb-1.5">
-                        <Briefcase className="h-3.5 w-3.5 text-blue-600" />
-                        <span>{centralT(activeLang, "urw2.linked_contract_data" as never, "Linked Employment Contract & Schedule Data")}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div><span className="text-slate-500">{th("Employment Type")}:</span> <strong>{employeeProfile.employmentType || "Full-Time"}</strong></div>
-                        <div><span className="text-slate-500">{th("Job Status")}:</span> <strong>{employeeProfile.jobStatus || "Active"}</strong></div>
-                        <div><span className="text-slate-500">{th("Working Shift")}:</span> <strong>{employeeProfile.workingShift || "Day Shift"}</strong></div>
-                        <div><span className="text-slate-500">{th("Duty Hours")}:</span> <strong>{`${employeeProfile.dutyStartTime || "09:00 AM"} - ${employeeProfile.dutyEndTime || "06:00 PM"}`}</strong></div>
-                        <div><span className="text-slate-500">{th("Contract End")}:</span> <strong>{employeeProfile.contractEndDate || "Permanent"}</strong></div>
-                        <div><span className="text-slate-500">{th("Salary Schedule")}:</span> <strong>{`${employeeProfile.salaryType || "Monthly"} (${employeeProfile.salaryCurrency || "USD"})`}</strong></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* STEP 2: Employee & Branch Access */}
-              {step === 2 && (
-                <div className="space-y-3">
-                  {/* MANDATORY operational domain — "What is this user being created for?" */}
-                  <div className="space-y-1.5 rounded-xl border border-teal-200 bg-teal-50/60 p-3 dark:border-teal-900 dark:bg-teal-950/20">
+                  {/* MANDATORY Operational Domain */}
+                  <div className="space-y-2 rounded-xl border border-teal-200 bg-teal-50/60 p-3.5 dark:border-teal-900 dark:bg-teal-950/20">
                     <Label className="text-xs font-black uppercase tracking-wide text-teal-800 dark:text-teal-300">
                       {centralT(activeLang, "urw2.domain_question" as never, "What is this user being created for?")} *
                     </Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
                       {(["business", "shipping"] as const).map((d) => (
                         <button
                           key={d}
@@ -1346,36 +1343,51 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             if (d === "business") setClearingAgentId("");
                             if (!DOMAIN_ROLES[d].includes(role)) setRole(DOMAIN_ROLES[d][DOMAIN_ROLES[d].length - 1]);
                           }}
-                          className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
+                          className={`rounded-xl border px-3.5 py-2.5 text-xs font-bold transition flex items-center justify-center gap-2 ${
                             operationalDomain === d
-                              ? "border-teal-500 bg-teal-600 text-white"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                              ? "border-teal-500 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                           }`}
                         >
-                          {d === "business"
-                            ? centralT(activeLang, "urw2.domain_business" as never, "Business")
-                            : centralT(activeLang, "urw2.domain_shipping" as never, "Clearing Agent / Shipping Line")}
+                          {d === "business" ? (
+                            <>
+                              <Building2 className="h-4 w-4" />
+                              <span>{centralT(activeLang, "urw2.domain_business" as never, "Business")}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Globe2 className="h-4 w-4" />
+                              <span>{centralT(activeLang, "urw2.domain_shipping" as never, "Shipping Line & Clearing Agent")}</span>
+                            </>
+                          )}
                         </button>
                       ))}
                     </div>
-                    <p className="text-[10px] text-teal-700/80 dark:text-teal-400/80">
-                      {centralT(activeLang, "urw2.domain_hint" as never, "Business users see Purchase / Sales / Ledger. Clearing / Shipping users see only their own clearing/shipping data.")}
+                    <p className="text-[11px] text-teal-700/90 dark:text-teal-400/90">
+                      {operationalDomain === "business"
+                        ? centralT(activeLang, "urw2.domain_business_desc" as never, "Business users access General Ledger, Purchase, Sales, Banking, Cash Counter, and Branch Accounts.")
+                        : centralT(activeLang, "urw2.domain_shipping_desc" as never, "Shipping Line & Clearing Agent users access Port Clearance, Container Tracking, Customs Operations, and Shipping Records.")}
                     </p>
                   </div>
 
-                  {operationalDomain === "shipping" && (
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {centralT(activeLang, "urw2.clearing_agent" as never, "Clearing Agent / Shipping Line *")}
-                      </Label>
-                      <ClearingAgentPicker
-                        value={clearingAgentId}
-                        onValueChange={(v: string) => setClearingAgentId(v)}
-                        placeholder={centralT(activeLang, "urw2.select_clearing_agent" as never, "Select clearing agent / shipping line")}
-                      />
-                    </div>
-                  )}
+                  {/* Informational callout confirming authoritative single-source */}
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400 flex items-start gap-2">
+                    <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                    <span>
+                      {centralT(
+                        activeLang,
+                        "urw2.authoritative_notice" as never,
+                        "Personal identity, contact numbers, residential address, and KYC documents are linked directly from the Employee Master shown on the left. To correct personal details, use 'Edit Employee Record' without losing your wizard progress."
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
 
+              {/* STEP 2: Role & Branch Access Scope */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  {/* Role Selection */}
                   <div className="space-y-1">
                     <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("role")}</Label>
                     <select
@@ -1383,55 +1395,31 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       onChange={(e) => setRole(e.target.value as EnterpriseRole)}
                       className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
                     >
-                      {roleOptions.filter((r) => DOMAIN_ROLES[operationalDomain].includes(r.value)).map((r) => (
-                        <option key={r.value} value={r.value}>
-                          {centralT(activeLang, r.labelKey as never, r.label)} — {centralT(activeLang, r.helpKey as never, r.help)}
-                        </option>
-                      ))}
+                      {roleOptions
+                        .filter((r) => DOMAIN_ROLES[operationalDomain].includes(r.value))
+                        .map((r) => (
+                          <option key={r.value} value={r.value}>
+                            {centralT(activeLang, r.labelKey as never, r.label)} — {centralT(activeLang, r.helpKey as never, r.help)}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
-                  {/* Mobile access profile — a simplified mobile working interface on top
-                      of the SAME user id / login / scope / permissions. Not a new role. */}
-                  <div className="space-y-1.5 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-900 dark:bg-indigo-950/20">
-                    <Label className="text-xs font-black uppercase tracking-wide text-indigo-800 dark:text-indigo-300">
-                      {centralT(activeLang, "urw2.mobile_profile_label" as never, "Mobile Access Profile")}
-                    </Label>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      {([
-                        ["standard", "urw2.mobile_profile_standard", "Standard ERP Access"],
-                        ["mobile_cash_ledger", "urw2.mobile_profile_cash", "Mobile Cash & Ledger User"],
-                        ["mobile_field", "urw2.mobile_profile_field", "Mobile Field User"],
-                      ] as const).map(([v, key, fallback]) => (
-                        <button
-                          key={v}
-                          type="button"
-                          disabled={v === "mobile_field"}
-                          onClick={() => setMobileProfile(v)}
-                          className={`rounded-lg border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                            mobileProfile === v
-                              ? "border-indigo-500 bg-indigo-600 text-white"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                          }`}
-                        >
-                          {centralT(activeLang, key as never, fallback)}
-                          {v === "mobile_field" && (
-                            <span className="ml-1 text-[9px] font-normal opacity-70">
-                              {centralT(activeLang, "urw2.mobile_profile_soon" as never, "(coming soon)")}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                  {/* Clearing Agent Picker (Only for external agent_user in shipping domain) */}
+                  {operationalDomain === "shipping" && role === "agent_user" && (
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {centralT(activeLang, "urw2.clearing_agent" as never, "Clearing Agent Record *")}
+                      </Label>
+                      <ClearingAgentPicker
+                        value={clearingAgentId}
+                        onValueChange={(v: string) => setClearingAgentId(v)}
+                        placeholder={centralT(activeLang, "urw2.select_clearing_agent" as never, "Select clearing agent")}
+                      />
                     </div>
-                    <p className="text-[10px] text-indigo-700/80 dark:text-indigo-400/80">
-                      {mobileProfile === "mobile_cash_ledger"
-                        ? centralT(activeLang, "urw2.mobile_profile_cash_hint" as never, "After login this user opens a simple mobile screen: daily cash entry + cash book / ledger / journal viewing only. No user admin, no settings, no editing posted entries. Country / branch scope still applies.")
-                        : mobileProfile === "mobile_field"
-                        ? centralT(activeLang, "urw2.mobile_profile_field_hint" as never, "A Munshi / field user who only sees assigned operational forms and assigned jobs.")
-                        : centralT(activeLang, "urw2.mobile_profile_standard_hint" as never, "Full ERP web interface with the permissions assigned below.")}
-                    </p>
-                  </div>
+                  )}
 
+                  {/* Geographic & Branch Scopes */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     <SearchSelect
                       label={loadingCountries ? `${tr("country")} (...)` : tr("country")}
@@ -1460,7 +1448,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         label={tr("assignedBranch")}
                         value={countryBranchId}
                         placeholder={centralT(activeLang, "urw2.select_main_branch" as never, "Select main branch")}
-                        options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: b.name }))}
+                        options={mainBranches.map((b) => ({
+                          value: b.id,
+                          label: `${b.name} (${b.code})`,
+                          keywords: b.name
+                        }))}
                         disabled={!countryId || role === "super_admin"}
                         onValueChange={setCountryBranchId}
                       />
@@ -1469,7 +1461,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         label={tr("assignedBranch")}
                         value={cityBranchId}
                         placeholder={centralT(activeLang, "urw2.select_city_branch" as never, "Select city branch")}
-                        options={cityBranches.map((b) => ({ value: b.id, label: `${b.city_name || (b as any).cityName || ""} - ${b.name} (${b.code})`, keywords: `${b.name} ${b.city_name || (b as any).cityName || ""}` }))}
+                        options={cityBranches.map((b) => ({
+                          value: b.id,
+                          label: `${b.city_name || b.cityName || ""} - ${b.name} (${b.code})`,
+                          keywords: `${b.name} ${b.city_name || b.cityName || ""}`
+                        }))}
                         disabled={!countryId || role === "super_admin"}
                         onValueChange={setCityBranchId}
                       />
@@ -1477,47 +1473,108 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Branch Code & Scope")}</Label>
-                      <Input value={`${branchCode || "MAIN"} (${currency})`} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200" />
+                      <Input
+                        value={`${branchCode || "MAIN"} (${currency})`}
+                        readOnly
+                        className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200"
+                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: KYC & Document Verification */}
+              {/* STEP 3: Login Credentials & Mobile Access */}
               {step === 3 && (
-                <div className="space-y-3">
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-center gap-2">
-                    <Info className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>{centralT(activeLang, "urw2.kyc_sync_note" as never, "KYC details are synchronized with the Employee Master Record and stored securely.")}</span>
+                <div className="space-y-4">
+                  {/* Username */}
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("username")}</Label>
+                    <Input
+                      value={loginUsername}
+                      onChange={(e) => setLoginUsername(e.target.value)}
+                      placeholder={th("e.g. muhammad.ali")}
+                      className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                    />
                   </div>
 
+                  {/* Password & Confirm Password */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("cnicPassport")}</Label>
-                      <Input value={cnicPassportNo} onChange={(e) => setCnicPassportNo(e.target.value)} placeholder={th("e.g. 42101-1234567-1 or A1234567")} className="h-9 text-xs font-mono font-bold" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Account Password *")}</Label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder={centralT(activeLang, "edm.pw_hint" as never, "At least 8 characters")}
+                          className="h-9 text-xs pr-8"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-2 text-slate-400"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("expiryDate")}</Label>
-                      <Input type="date" value={idExpiryDate} onChange={(e) => setIdExpiryDate(e.target.value)} className="h-9 text-xs" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Confirm Password *")}</Label>
+                      <Input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder={centralT(activeLang, "edm.pw_reenter" as never, "Re-enter password")}
+                        className="h-9 text-xs"
+                      />
                     </div>
+                  </div>
 
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("kycStatus")}</Label>
-                      <select
-                        value={kycStatus}
-                        onChange={(e) => setKycStatus(e.target.value as any)}
-                        className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500"
-                      >
-                        <option value="VERIFIED">✅ {tr("verifiedCompliant")}</option>
-                        <option value="PENDING">⏳ {tr("pendingVerification")}</option>
-                      </select>
+                  {/* Mobile Access Profile Selection */}
+                  <div className="space-y-2 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3.5 dark:border-indigo-900 dark:bg-indigo-950/20">
+                    <Label className="text-xs font-black uppercase tracking-wide text-indigo-800 dark:text-indigo-300">
+                      {centralT(activeLang, "urw2.mobile_profile_label" as never, "Mobile Access Profile")}
+                    </Label>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      {([
+                        ["standard", "urw2.mobile_profile_standard", "Standard ERP Access"],
+                        ["mobile_cash_ledger", "urw2.mobile_profile_cash", "Brother User (Cash & Ledger)"],
+                        ["mobile_field", "urw2.mobile_profile_field", "Munshi / Field User"],
+                      ] as const).map(([v, key, fallback]) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setMobileProfile(v)}
+                          className={`rounded-lg border px-3 py-2.5 text-xs font-bold transition text-left ${
+                            mobileProfile === v
+                              ? "border-indigo-500 bg-indigo-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          {centralT(activeLang, key as never, fallback)}
+                        </button>
+                      ))}
                     </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("address")}</Label>
-                      <Input value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} placeholder={th("Enter street / city address")} className="h-9 text-xs" />
-                    </div>
+                    <p className="text-[11px] text-indigo-700/90 dark:text-indigo-400/90">
+                      {mobileProfile === "mobile_cash_ledger"
+                        ? centralT(
+                            activeLang,
+                            "urw2.mobile_profile_cash_hint" as never,
+                            "Brother User: opens dedicated mobile interface for daily cash receipts, payments, and cash book / ledger / journal viewing. Scoped to assigned branch."
+                          )
+                        : mobileProfile === "mobile_field"
+                        ? centralT(
+                            activeLang,
+                            "urw2.mobile_profile_field_hint" as never,
+                            "Munshi / Field User: opens operational mobile forms for port loading, container checks, and assigned job forms."
+                          )
+                        : centralT(
+                            activeLang,
+                            "urw2.mobile_profile_standard_hint" as never,
+                            "Standard ERP Access: full responsive desktop and tablet interface with assigned role permissions."
+                          )}
+                    </p>
                   </div>
                 </div>
               )}
@@ -1532,14 +1589,42 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                      <div><span className="text-slate-500">{th("Full Name")}:</span> <strong className="text-slate-900 dark:text-slate-100">{fullName || "-"}</strong></div>
-                      <div><span className="text-slate-500">{th("Username")}:</span> <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong></div>
-                      <div><span className="text-slate-500">{th("Designation")}:</span> <strong>{designation}</strong></div>
-                      <div><span className="text-slate-500">{th("Department")}:</span> <strong>{department}</strong></div>
-                      <div><span className="text-slate-500">{th("Country Scope")}:</span> <strong>{selectedCountry?.name || "Global Scope"}</strong></div>
-                      <div><span className="text-slate-500">{th("Assigned Branch")}:</span> <strong>{branchCode || selectedMainBranch?.name || "Main Branch"}</strong></div>
-                      <div><span className="text-slate-500">{th("KYC Status")}:</span> <strong className="text-emerald-600">{kycStatus === "VERIFIED" ? "Verified & Compliant" : "Pending Verification"}</strong></div>
-                      <div><span className="text-slate-500">{th("CNIC / ID")}:</span> <strong className="font-mono">{cnicPassportNo || "Not Provided"}</strong></div>
+                      <div>
+                        <span className="text-slate-500">{th("Full Name")}:</span>{" "}
+                        <strong className="text-slate-900 dark:text-slate-100">{fullName || "-"}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Username")}:</span>{" "}
+                        <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Designation")}:</span> <strong>{designation}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Department")}:</span> <strong>{department}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Domain")}:</span>{" "}
+                        <strong>{operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "Business"}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Country Scope")}:</span>{" "}
+                        <strong>{selectedCountry?.name || "Global Scope"}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Assigned Branch")}:</span>{" "}
+                        <strong>{branchCode || selectedMainBranch?.name || "Main Branch"}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{th("Mobile Profile")}:</span>{" "}
+                        <strong className="text-indigo-600 font-bold">
+                          {mobileProfile === "mobile_cash_ledger"
+                            ? "Brother User (Cash & Ledger)"
+                            : mobileProfile === "mobile_field"
+                            ? "Munshi / Field User"
+                            : "Standard ERP"}
+                        </strong>
+                      </div>
                     </div>
                   </div>
 
@@ -1598,139 +1683,86 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     {/* Matrix Table */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-72 overflow-y-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[9px] sticky top-0 z-10">
-                          <tr>
-                            <th className="p-2.5">{th("Module / Form")}</th>
-                            <th className="p-2 text-center">{th("View")}</th>
-                            <th className="p-2 text-center">{th("Create")}</th>
-                            <th className="p-2 text-center">{th("Edit")}</th>
-                            <th className="p-2 text-center">{th("Delete")}</th>
-                            <th className="p-2 text-center">{th("Approve")}</th>
-                            <th className="p-2 text-center">{th("Export")}</th>
-                            <th className="p-2 text-center">{th("All")}</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                          {filteredModuleCapabilities.map((mod) => (
-                            <tr key={mod.moduleKey} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                              <td className="p-2.5 font-medium text-slate-900 dark:text-slate-100">
-                                <div>{mod.moduleName}</div>
-                                <div className="text-[9px] text-slate-400 font-normal">{mod.category}</div>
-                              </td>
-                              
-                              {/* View Checkbox */}
-                              <td className="p-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={mod.canView}
-                                  onChange={() => handleToggleCapability(mod.moduleKey, "canView")}
-                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                                />
-                              </td>
-
-                              {/* Create Checkbox */}
-                              <td className="p-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={mod.canCreate}
-                                  onChange={() => handleToggleCapability(mod.moduleKey, "canCreate")}
-                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                                />
-                              </td>
-
-                              {/* Edit Checkbox */}
-                              <td className="p-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={mod.canEdit}
-                                  onChange={() => handleToggleCapability(mod.moduleKey, "canEdit")}
-                                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                />
-                              </td>
-
-                              {/* Delete Checkbox */}
-                              <td className="p-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={mod.canDelete}
-                                  onChange={() => handleToggleCapability(mod.moduleKey, "canDelete")}
-                                  className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer"
-                                />
-                              </td>
-
-                              {/* Approve Checkbox */}
-                              <td className="p-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={mod.canPostApprove}
-                                  onChange={() => handleToggleCapability(mod.moduleKey, "canPostApprove")}
-                                  className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                                />
-                              </td>
-
-                              {/* Export Checkbox */}
-                              <td className="p-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={mod.canPrintExport}
-                                  onChange={() => handleToggleCapability(mod.moduleKey, "canPrintExport")}
-                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                                />
-                              </td>
-
-                              {/* Toggle All Checkbox */}
-                              <td className="p-2 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleAllForModule(mod.moduleKey)}
-                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300"
-                                  title={centralT(activeLang, "urw2.toggle_module_perms" as never, "Toggle all permissions for this module")}
-                                >
-                                  {mod.canView && mod.canCreate && mod.canEdit && mod.canDelete && mod.canPostApprove && mod.canPrintExport ? "None" : "All"}
-                                </button>
-                              </td>
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden text-[11px]">
+                      <div className="max-h-[280px] overflow-y-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-10 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300">
+                            <tr>
+                              <th className="p-2 pl-3">Module / Form</th>
+                              <th className="p-2 text-center">View</th>
+                              <th className="p-2 text-center">Create</th>
+                              <th className="p-2 text-center">Edit</th>
+                              <th className="p-2 text-center">Delete</th>
+                              <th className="p-2 text-center">Post</th>
+                              <th className="p-2 text-center pr-3">Print</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Password & Security Credentials */}
-                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Account Password *")}</Label>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder={centralT(activeLang, "edm.pw_hint" as never, "At least 8 characters")}
-                          className="h-9 text-xs pr-8"
-                        />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-2 text-slate-400">
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                            {filteredModuleCapabilities.map((mod) => (
+                              <tr key={mod.moduleKey} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                                <td className="p-2 pl-3 font-semibold text-slate-800 dark:text-slate-200">
+                                  {mod.moduleName}
+                                  <span className="block text-[9px] font-normal text-slate-400">{mod.category}</span>
+                                </td>
+                                <td className="p-2 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.canView}
+                                    onChange={() => handleToggleCapability(mod.moduleKey, "canView")}
+                                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                  />
+                                </td>
+                                <td className="p-2 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.canCreate}
+                                    onChange={() => handleToggleCapability(mod.moduleKey, "canCreate")}
+                                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                  />
+                                </td>
+                                <td className="p-2 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.canEdit}
+                                    onChange={() => handleToggleCapability(mod.moduleKey, "canEdit")}
+                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                </td>
+                                <td className="p-2 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.canDelete}
+                                    onChange={() => handleToggleCapability(mod.moduleKey, "canDelete")}
+                                    className="rounded border-slate-300 text-red-600 focus:ring-red-500"
+                                  />
+                                </td>
+                                <td className="p-2 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.canPostApprove}
+                                    onChange={() => handleToggleCapability(mod.moduleKey, "canPostApprove")}
+                                    className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                                  />
+                                </td>
+                                <td className="p-2 text-center pr-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.canPrintExport}
+                                    onChange={() => handleToggleCapability(mod.moduleKey, "canPrintExport")}
+                                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Confirm Password *")}</Label>
-                      <Input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder={centralT(activeLang, "edm.pw_reenter" as never, "Re-enter password")}
-                        className="h-9 text-xs"
-                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Wizard Footer Buttons */}
+              {/* Wizard Footer Navigation Buttons */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
@@ -1784,131 +1816,58 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             </CardContent>
           </Card>
         </div>
-
-        {/* Right Side COMPLETE LIVE REGISTRATION REPORT (5 Columns) */}
-        <div className="space-y-4 lg:col-span-5">
-          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-4 dark:border-slate-800 dark:bg-slate-950">
-            
-            {/* Live Card Header with Photo & Name */}
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-slate-900 text-slate-100 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
-                  {employeeProfile.photoUrl ? (
-                    <img src={employeeProfile.photoUrl} alt={th("Employee")} className="h-full w-full object-cover" />
-                  ) : (
-                    <User className="h-6 w-6 text-slate-300" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate block">
-                      {fullName || (firstName ? `${firstName} ${lastName}`.trim() : "Employee Name")}
-                    </span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
-                      employeeProfile.gender?.toLowerCase().startsWith("f")
-                        ? "bg-pink-50 text-pink-700 border-pink-200"
-                        : "bg-blue-50 text-blue-700 border-blue-200"
-                    }`}>
-                      {employeeProfile.gender || (genderFilter === "female" ? "Female" : genderFilter === "male" ? "Male" : "General Staff")}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                    <span className="font-mono text-emerald-600 font-bold">{employeeCode || userCode}</span>
-                    <span>•</span>
-                    <span className="truncate">{designation}</span>
-                  </div>
-                </div>
-              </div>
-
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
-                kycStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
-              }`}>
-                {kycStatus === "VERIFIED" ? "Verified" : "Pending KYC"}
-              </span>
-            </div>
-
-            {/* Section 1: Complete Employee Master Profile (Step 1+) */}
-            <div className="space-y-2 text-xs">
-              <div className="font-bold text-[11px] text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5" />
-                <span>{th("1. Employee Master & Employment")}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
-                <div><span className="text-slate-500 font-medium">{th("First Name")}:</span> <span className="font-semibold">{firstName || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Surname / Last")}:</span> <span className="font-semibold">{lastName || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Department")}:</span> <span className="font-semibold">{department}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Employment")}:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Shift")}:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Job Status")}:</span> <span>{employeeProfile.jobStatus || "Active Permanent"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Phone")}:</span> <span>{contactPhone || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("WhatsApp")}:</span> <span>{employeeProfile.whatsapp || contactPhone || "-"}</span></div>
-                <div className="col-span-2"><span className="text-slate-500 font-medium">{th("Email")}:</span> <span className="font-medium truncate">{personalEmail || "user@dgt.llc"}</span></div>
-                <div className="col-span-2 border-t pt-1 mt-0.5"><span className="text-slate-500 font-medium">{th("Address")}:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{residentialAddress || "Not Provided"}</span></div>
-              </div>
-            </div>
-
-            {/* Section 2: Country & Branch Scope (Step 2+) */}
-            <div className="space-y-2 text-xs border-t pt-3">
-              <div className="font-bold text-[11px] text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{th("2. Geographic Scope & Branch Access")}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
-                <div><span className="text-slate-500 font-medium">{th("Country")}:</span> <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Branch")}:</span> <span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Currency")}:</span> <span className="font-mono font-bold text-emerald-600">{selectedMainBranch?.local_currency || "USD"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Role")}:</span> <span className="font-bold text-blue-600 uppercase">{role}</span></div>
-              </div>
-            </div>
-
-            {/* Section 3: KYC & Security Credentials (Step 3+) */}
-            <div className="space-y-2 text-xs border-t pt-3">
-              <div className="font-bold text-[11px] text-purple-600 uppercase tracking-wider flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5" />
-                <span>{th("3. KYC & Credential Vault")}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
-                <div><span className="text-slate-500 font-medium">{th("Login ID")}:</span> <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("CNIC/Passport")}:</span> <span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Expiry Date")}:</span> <span>{idExpiryDate || "Permanent"}</span></div>
-                <div><span className="text-slate-500 font-medium">{th("Vault Ref")}:</span> <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
-              </div>
-            </div>
-
-            {/* Section 4: Live Interactive Permission Breakdown (Step 4+) */}
-            <div className="space-y-2 text-xs border-t pt-3">
-              <div className="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                  <span>4. Assigned Permissions ({allowedModulesCount}/20)</span>
-                </span>
-                <span className="text-[10px] text-emerald-600 font-mono font-bold">{effectivePermissions.length} rules</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] text-center">
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("View")}</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canView).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Create")}</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canCreate).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Edit")}</span><strong className="text-blue-600 text-xs">{moduleCapabilities.filter(m => m.canEdit).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Delete")}</span><strong className="text-red-600 text-xs">{moduleCapabilities.filter(m => m.canDelete).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Approve")}</span><strong className="text-purple-600 text-xs">{moduleCapabilities.filter(m => m.canPostApprove).length}</strong></div>
-                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">{th("Export")}</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canPrintExport).length}</strong></div>
-              </div>
-            </div>
-
-            {savedUserData && (
-              <div className="pt-2 border-t">
-                <Button
-                  size="sm"
-                  onClick={() => setShowProfileModal(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5 shadow-sm"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>{centralT(activeLang, "edm.open_full_profile" as never, "Open Full User Profile Report")}</span>
-                </Button>
-              </div>
-            )}
-          </Card>
-        </div>
       </div>
+
+      {showEmployeeModal ? (
+        <SimpleModal
+          title={tr("newEmployeeModalTitle")}
+          onClose={() => setShowEmployeeModal(false)}
+          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        >
+          <EmployeeForm
+            onSave={async (newEmployeeId) => {
+              setShowEmployeeModal(false);
+              const freshList = await fetchHrEmployees();
+              if (newEmployeeId && freshList.some((e) => e.id === newEmployeeId)) {
+                setSelectedEmployeeId(newEmployeeId);
+              }
+            }}
+            onCancel={() => setShowEmployeeModal(false)}
+          />
+        </SimpleModal>
+      ) : null}
+
+      {editEmployeeId ? (
+        <SimpleModal
+          title={centralT(activeLang, "urw2.edit_employee_record" as never, "Edit Employee Master Record")}
+          onClose={() => setEditEmployeeId(null)}
+          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        >
+          <EmployeeForm
+            employeeId={editEmployeeId}
+            onSave={async (savedId) => {
+              setEditEmployeeId(null);
+              const freshList = await fetchHrEmployees();
+              if (savedId && freshList.some((e) => e.id === savedId)) {
+                setSelectedEmployeeId(savedId);
+              }
+            }}
+            onCancel={() => setEditEmployeeId(null)}
+          />
+        </SimpleModal>
+      ) : null}
+
+      {viewEmployeeId ? (
+        <EmployeeDetailModal
+          employeeId={viewEmployeeId}
+          employees={hrEmployees}
+          onClose={() => setViewEmployeeId(null)}
+          onEdit={(empId) => {
+            setViewEmployeeId(null);
+            setEditEmployeeId(empId);
+          }}
+        />
+      ) : null}
 
       {/* Full User Profile Report Modal */}
       {savedUserData && (

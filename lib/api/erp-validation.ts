@@ -637,6 +637,9 @@ export const accountUpdateSchema = scopeSchema.partial().extend({
 
 export const enterpriseAccountCreateSchema = scopeSchema.extend({
   scope: ledgerScopeSchema,
+  operationalDomain: z.enum(["business", "shipping"]).default("business"),
+  category: z.string().trim().max(120).optional().nullable(),
+  categoryId: optionalUuidSchema,
   parentId: optionalUuidSchema,
   code: z.string().trim().min(2).max(120),
   manualReferenceNumber: z.string().trim().max(120).optional().nullable(),

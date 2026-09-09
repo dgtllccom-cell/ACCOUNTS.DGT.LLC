@@ -18,7 +18,9 @@ import {
   MessageCircle,
   Loader2,
   Phone,
-  X
+  X,
+  Plus,
+  Pencil
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -269,12 +271,31 @@ export function NewAccountSetup({
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
   const [country, setCountry] = useState("");
-  const [branchType, setBranchType] = useState<BranchType | "">("");
+  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
+  const [ownershipLevel, setOwnershipLevel] = useState<"country" | "main_branch" | "city_branch">("main_branch");
+  const [branchType, setBranchType] = useState<BranchType | "">("Main");
   const [branch, setBranch] = useState("");
   const [accountTitle, setAccountTitle] = useState<AccountTitle | "">("");
   const [subType, setSubType] = useState("");
   const [category, setCategory] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [dbCategories, setDbCategories] = useState<Array<{
+    id: string;
+    name: string;
+    code: string;
+    description?: string | null;
+    operationalDomain?: string;
+    isSystem?: boolean;
+  }>>([]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryModalMode, setCategoryModalMode] = useState<"add" | "edit">("add");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [catFormName, setCatFormName] = useState("");
+  const [catFormCode, setCatFormCode] = useState("");
+  const [catFormDesc, setCatFormDesc] = useState("");
+  const [catSaving, setCatSaving] = useState(false);
+  const [catError, setCatError] = useState("");
   const [accountCode, setAccountCode] = useState("");
   const [manualReferenceNumber, setManualReferenceNumber] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -359,9 +380,24 @@ export function NewAccountSetup({
           const acc = res.data.account;
           if (acc) {
             setCountry(acc.country_id || "");
-            const bt = acc.scope === "main_branch" ? "Main" : acc.scope === "city_branch" ? "City" : "";
-            setBranchType(bt);
-            setBranch(acc.scope === "main_branch" ? acc.country_branch_id || "" : acc.scope === "city_branch" ? acc.city_branch_id || "" : "");
+            if (acc.operational_domain === "shipping") {
+              setOperationalDomain("shipping");
+            } else {
+              setOperationalDomain("business");
+            }
+            if (acc.scope === "country") {
+              setOwnershipLevel("country");
+              setBranchType("Main");
+              setBranch("");
+            } else if (acc.scope === "main_branch") {
+              setOwnershipLevel("main_branch");
+              setBranchType("Main");
+              setBranch(acc.country_branch_id || "");
+            } else {
+              setOwnershipLevel("city_branch");
+              setBranchType("City");
+              setBranch(acc.city_branch_id || "");
+            }
             
             // Determine accountTitle and linked master records
             if (acc.customer_id) {
@@ -399,7 +435,12 @@ export function NewAccountSetup({
             }
 
             // Determine category
-            if (acc.is_control_account) {
+            if (acc.category_id) {
+              setSelectedCategoryId(acc.category_id);
+            }
+            if (acc.category) {
+              setCategory(acc.category);
+            } else if (acc.is_control_account) {
               setCategory("B/C");
             } else if (acc.kind === "expense") {
               setCategory("EX");
@@ -603,44 +644,136 @@ export function NewAccountSetup({
   useEffect(() => {
     if (!country) { setMainBranches([]); return; }
     let cancelled = false;
-    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(country)}`)
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(country)}&operationalDomain=${operationalDomain}`)
       .then((res) => res.json())
       .then((json) => {
         if (!cancelled) {
           const list = json?.data?.branches || json?.branches || json?.countryBranches || [];
           setMainBranches(Array.isArray(list) ? list : []);
-          if (list.length === 1 && branchType === "Main" && !branch) {
+          if (list.length === 1 && (ownershipLevel === "main_branch" || branchType === "Main") && !branch) {
             setBranch(list[0].id);
           }
         }
       })
       .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadMainBranches", lang)); });
     return () => { cancelled = true; };
-  }, [country, branchType, branch]);
+  }, [country, branchType, ownershipLevel, branch, operationalDomain]);
 
   // Load City Branches
   useEffect(() => {
     if (!country) { setCityBranches([]); return; }
     let cancelled = false;
-    const params = new URLSearchParams({ countryId: country });
+    const params = new URLSearchParams({ countryId: country, operationalDomain });
     fetch(`/api/erp/locations/branches/city?${params.toString()}`)
       .then((res) => res.json())
       .then((json) => {
         if (!cancelled) {
           const list = json?.data?.cityBranches || json?.data?.branches || json?.cityBranches || [];
           setCityBranches(Array.isArray(list) ? list : []);
-          if (list.length === 1 && branchType === "City" && !branch) {
+          if (list.length === 1 && (ownershipLevel === "city_branch" || branchType === "City") && !branch) {
             setBranch(list[0].id);
           }
         }
       })
       .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCityBranches", lang)); });
     return () => { cancelled = true; };
-  }, [country, branchType, branch]);
+  }, [country, branchType, ownershipLevel, branch, operationalDomain]);
+
+  // Load Categories from database
+  async function loadCategories(domain = operationalDomain) {
+    try {
+      const res = await fetch(`/api/erp/account-categories?domain=${domain}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
+      if (res && res.ok && Array.isArray(res.categories)) {
+        setDbCategories(res.categories);
+      }
+    } catch (err) {
+      console.error("Failed to load account categories:", err);
+    }
+  }
+
+  useEffect(() => {
+    loadCategories(operationalDomain);
+  }, [operationalDomain, lang]);
+
+  function handleOpenAddCategory() {
+    setCategoryModalMode("add");
+    setEditingCategoryId(null);
+    setCatFormName("");
+    setCatFormCode("");
+    setCatFormDesc("");
+    setCatError("");
+    setShowCategoryModal(true);
+  }
+
+  function handleOpenEditCategory() {
+    const item = dbCategories.find((c) => c.name === category || c.id === selectedCategoryId);
+    if (!item) return;
+    setCategoryModalMode("edit");
+    setEditingCategoryId(item.id);
+    setCatFormName(item.name);
+    setCatFormCode(item.code);
+    setCatFormDesc(item.description || "");
+    setCatError("");
+    setShowCategoryModal(true);
+  }
+
+  async function handleSaveCategory() {
+    if (!catFormName.trim() || !catFormCode.trim()) {
+      setCatError("Category name and code are required.");
+      return;
+    }
+    setCatSaving(true);
+    setCatError("");
+    try {
+      if (categoryModalMode === "add") {
+        const res = await fetch("/api/erp/account-categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: catFormName.trim(),
+            code: catFormCode.trim().toUpperCase(),
+            description: catFormDesc.trim() || null,
+            operationalDomain
+          })
+        }).then((r) => r.json());
+        if (!res.ok) throw new Error(res.error?.message || "Failed to create category");
+        await loadCategories(operationalDomain);
+        setCategory(res.category.name);
+        setSelectedCategoryId(res.category.id);
+        setShowCategoryModal(false);
+      } else if (editingCategoryId) {
+        const res = await fetch(`/api/erp/account-categories/${editingCategoryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: catFormName.trim(),
+            code: catFormCode.trim().toUpperCase(),
+            description: catFormDesc.trim() || null,
+            operationalDomain
+          })
+        }).then((r) => r.json());
+        if (!res.ok) throw new Error(res.error?.message || "Failed to update category");
+        await loadCategories(operationalDomain);
+        setCategory(res.category.name);
+        setSelectedCategoryId(res.category.id);
+        setShowCategoryModal(false);
+      }
+    } catch (err: any) {
+      setCatError(err.message || "Failed to save category");
+    } finally {
+      setCatSaving(false);
+    }
+  }
 
   const selectedCountry = useMemo(() => countries.find((item) => item.id === country) ?? null, [countries, country]);
   const canonicalCountryId = selectedCountry?.id ?? "";
-  const branchOptionsRaw = branchType === "Main" ? mainBranches : branchType === "City" ? cityBranches : [];
+  const branchOptionsRaw =
+    ownershipLevel === "country"
+      ? []
+      : ownershipLevel === "main_branch" || branchType === "Main"
+      ? mainBranches
+      : cityBranches;
+
   // Filter branch options to the user's authorized branches (super admin = all).
   const branchOptions = useMemo(() => {
     if (erpScope.isSuperAdmin || initialAccountId) return branchOptionsRaw;
@@ -654,11 +787,27 @@ export function NewAccountSetup({
   }, [branchOptionsRaw, branchType, erpScope.isSuperAdmin, erpScope.cityBranchIds, erpScope.countryBranchIds, initialAccountId]);
 
   const branchInfo = useMemo<BranchInfo | null>(() => {
-    if (!selectedCountry || !branchType || !branch) return null;
+    if (!selectedCountry) return null;
     const company = brandCompanyName || selectedCountry.name;
     const fallbackCurrency = selectedCountry.currency_code || "USD";
 
-    if (branchType === "Main") {
+    if (ownershipLevel === "country") {
+      return {
+        company,
+        code: selectedCountry.iso2 || selectedCountry.iso3 || "CTR",
+        city: selectedCountry.name,
+        address: "-",
+        phone: "-",
+        email: "-",
+        manager: "-",
+        opening: "-",
+        currency: fallbackCurrency
+      };
+    }
+
+    if (!branch) return null;
+
+    if (ownershipLevel === "main_branch" || branchType === "Main") {
       const row = mainBranches.find((item) => item.id === branch);
       // The branch list may still be loading or scope-filtered — when the id is
       // the user's own locked main branch, resolve from the session so the
@@ -676,7 +825,7 @@ export function NewAccountSetup({
     }
     if (!row) return null;
     return { company, code: row.code, city: row.city_name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
-  }, [branch, branchType, cityBranches, mainBranches, selectedCountry, brandCompanyName, branchLocked, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.countryBranchName, erpScope.cityBranchName]);
+  }, [branch, branchType, ownershipLevel, cityBranches, mainBranches, selectedCountry, brandCompanyName, branchLocked, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.countryBranchName, erpScope.cityBranchName]);
 
   const branchCode = branchInfo?.code ?? "";
   const isEditMode = Boolean(initialAccountId);
@@ -690,7 +839,14 @@ export function NewAccountSetup({
   }, [accountCode, selectedCountry, branchInfo, category]);
 
   const accountPreview = lastCreated?.accountNumber || accountCode || (branchCode ? generatedPreviewCode : "AUTO");
-  const readyToSave = Boolean(country && branchType && branch && accountTitle && subType && category && accountName);
+  const readyToSave = Boolean(
+    country &&
+    (ownershipLevel === "country" || branch) &&
+    accountTitle &&
+    subType &&
+    category &&
+    accountName
+  );
   const saved = message?.startsWith("Saved") ?? false;
 
   useEffect(() => {
@@ -703,7 +859,7 @@ export function NewAccountSetup({
   }, [branchCode, lastBranchCode, initialAccountId]);
 
   function handleCountryChange(value: string) {
-    setCountry(value); setBranchType(""); setBranch(""); setLastBranchCode(""); setAccountCode(""); setLastCreated(null); setMessage("");
+    setCountry(value); setBranch(""); setLastBranchCode(""); setAccountCode(""); setLastCreated(null); setMessage("");
   }
 
   function handleBranchTypeChange(value: BranchType) {
@@ -717,8 +873,7 @@ export function NewAccountSetup({
     // explicitly forbids hiding the real problem behind "please review steps".
     const missing: string[] = [];
     if (!country) missing.push(getLabel("country", lang));
-    if (!branchType) missing.push(getLabel("branchType", lang));
-    if (!branch) missing.push(getLabel("selectBranch", lang));
+    if (ownershipLevel !== "country" && !branch) missing.push(getLabel("selectBranch", lang));
     if (!accountTitle) missing.push(getLabel("accountTitle", lang));
     const typeHasSubtypes = accountTitle && accountTitle !== "Personal" && (subTypes[accountTitle]?.length ?? 0) > 0;
     if ((typeHasSubtypes || accountTitle === "Personal") && !subType) missing.push(getLabel("subType", lang));
@@ -741,19 +896,24 @@ export function NewAccountSetup({
       return;
     }
     const issuedJournal = `SUPER-${nextNumber(journalCounter)}`;
-    const scope = branchType === "Main" ? "main_branch" : "city_branch";
+    const scope = ownershipLevel === "country" ? "country" : ownershipLevel === "main_branch" ? "main_branch" : "city_branch";
+    const countryBranchId =
+      ownershipLevel === "country"
+        ? null
+        : ownershipLevel === "main_branch"
+        ? branch
+        : cityBranches.find((item) => item.id === branch)?.country_branch_id ?? mainBranches[0]?.id ?? null;
+    const cityBranchId = ownershipLevel === "city_branch" ? branch : null;
     setSaving(true); setMessage(""); setLastCreated(null);
     try {
       if (initialAccountId) {
         // Edit mode!
         await apiPatch<any>(`/api/erp/accounting/accounts/${initialAccountId}`, {
           scope,
+          operationalDomain,
           countryId: country,
-          countryBranchId:
-            branchType === "Main"
-              ? branch
-              : cityBranches.find((item) => item.id === branch)?.country_branch_id ?? mainBranches[0]?.id ?? null,
-          cityBranchId: branchType === "City" ? branch : null,
+          countryBranchId,
+          cityBranchId,
           parentId: null,
           customerId: linkedCustomerId,
           companyId: linkedCompanyId,
@@ -764,6 +924,8 @@ export function NewAccountSetup({
           kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
           currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
           isControlAccount: accountTitle === "Bank",
+          category,
+          categoryId: selectedCategoryId || null,
           contacts
         });
         if (typeof window !== "undefined" && linkedWarehouseId) {
@@ -782,12 +944,10 @@ export function NewAccountSetup({
         // Create mode!
         const response = await apiPost<AccountCreateResponse>("/api/erp/accounting/accounts", {
           scope,
+          operationalDomain,
           countryId: country,
-          countryBranchId:
-            branchType === "Main"
-              ? branch
-              : cityBranches.find((item) => item.id === branch)?.country_branch_id ?? mainBranches[0]?.id ?? null,
-          cityBranchId: branchType === "City" ? branch : null,
+          countryBranchId,
+          cityBranchId,
           parentId: null,
           customerId: linkedCustomerId,
           companyId: linkedCompanyId,
@@ -800,6 +960,8 @@ export function NewAccountSetup({
           openingBalance: 0,
           status: "active",
           isControlAccount: accountTitle === "Bank",
+          category,
+          categoryId: selectedCategoryId || null,
           contacts
         });
         setLastCreated(response);
@@ -812,7 +974,12 @@ export function NewAccountSetup({
             manualReferenceNumber: response.manualReferenceNumber ?? null,
             customerNumber: response.customerNumber,
             accountName,
-            branchName: branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
+            branchName:
+              ownershipLevel === "country"
+                ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})`
+                : ownershipLevel === "main_branch" || branchType === "Main"
+                ? selectedBranchName(mainBranches, branch)
+                : selectedCityBranchName(cityBranches, branch),
             branchCode: response.branchCode,
             savedAt: new Date().toLocaleTimeString()
           },
@@ -989,6 +1156,152 @@ export function NewAccountSetup({
                 <h2 className="text-sm font-bold text-slate-900">{getLabel("step1Label", lang)}</h2>
               </div>
 
+              {/* ── Question 1A: Account Type ──────────────────────────────── */}
+              <div className="space-y-2 rounded-xl bg-slate-50/70 p-3.5 border border-slate-200/60">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="accountTitle" className="text-xs font-bold text-slate-800">
+                    {getLabel("questionAccountType", lang)} *
+                  </Label>
+                  <span className="text-[10px] text-slate-500 font-medium">{getLabel("selectAccountTitle", lang)}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {(
+                    [
+                      { id: "Customer", label: getLabel("customerAccount", lang) },
+                      { id: "Company", label: getLabel("company", lang) },
+                      { id: "Bank", label: getLabel("bankAccount", lang) },
+                      { id: "Employee", label: getLabel("employee", lang) },
+                      { id: "Personal", label: getLabel("personal", lang) },
+                      { id: "Expenses Account", label: getLabel("expensesAccount", lang) }
+                    ] as const
+                  ).map((item) => {
+                    const selected = accountTitle === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setAccountTitle(item.id);
+                          setSubType("");
+                          if (item.id === "Expenses Account" && !category) {
+                            setCategory("EX");
+                          }
+                        }}
+                        className={`flex items-center justify-center px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-center ${
+                          selected
+                            ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── Question 1B & 1C: Owning Operational Section & Ownership Level ── */}
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                {/* Question 1B: Owning Operational Section */}
+                <div className="space-y-2 rounded-xl bg-slate-50/70 p-3.5 border border-slate-200/60">
+                  <Label className="text-xs font-bold text-slate-800">
+                    {getLabel("questionOperationalDomain", lang)} *
+                  </Label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOperationalDomain("business");
+                        setBranch("");
+                        void loadCategories("business");
+                      }}
+                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
+                        operationalDomain === "business"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+                      <span>{getLabel("businessDomain", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOperationalDomain("shipping");
+                        setBranch("");
+                        void loadCategories("shipping");
+                      }}
+                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
+                        operationalDomain === "shipping"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+                      <span>{getLabel("shippingDomain", lang)}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Question 1C: Ownership Level */}
+                <div className="space-y-2 rounded-xl bg-slate-50/70 p-3.5 border border-slate-200/60">
+                  <Label className="text-xs font-bold text-slate-800">
+                    {getLabel("questionOwnershipLevel", lang)} *
+                  </Label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOwnershipLevel("country");
+                        setBranchType("Main");
+                        setBranch("");
+                      }}
+                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
+                        ownershipLevel === "country"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+                      <span>{getLabel("countryLevel", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOwnershipLevel("main_branch");
+                        setBranchType("Main");
+                        setBranch("");
+                      }}
+                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
+                        ownershipLevel === "main_branch"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+                      <span>{getLabel("mainBranchLevel", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOwnershipLevel("city_branch");
+                        setBranchType("City");
+                        setBranch("");
+                      }}
+                      className={`flex items-center justify-start gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left ${
+                        ownershipLevel === "city_branch"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+                      <span>{getLabel("cityBranchLevel", lang)}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Country & Branch Pickers ───────────────────────────────── */}
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="country">{getLabel("country", lang)} *</Label>
@@ -1010,62 +1323,49 @@ export function NewAccountSetup({
                     <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedCountry", lang)}</p>
                   )}
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="branchType">{getLabel("branchType", lang)} *</Label>
-                  <select id="branchType" value={branchType} onChange={(event) => handleBranchTypeChange(event.target.value as BranchType)} disabled={!country || branchLocked} className={selectClass()}>
-                    <option value="">{getLabel("selectBranchType", lang)}</option>
-                    <option value="Main">{getLabel("mainBranch", lang)}</option>
-                    <option value="City">{getLabel("cityBranch", lang)}</option>
-                  </select>
+                  {ownershipLevel === "country" ? (
+                    <div className="h-full flex flex-col justify-end">
+                      <div className="rounded-lg bg-blue-50/70 border border-blue-200 p-2.5 text-xs text-blue-800 font-medium">
+                        ✓ {getLabel("countryLevel", lang)}: {selectedCountry?.name || getLabel("country", lang)}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Label htmlFor="branch">
+                        {ownershipLevel === "main_branch"
+                          ? `${getLabel("mainBranch", lang)} *`
+                          : `${getLabel("cityBranch", lang)} *`}
+                      </Label>
+                      <select
+                        id="branch"
+                        value={branch}
+                        onChange={(event) => { setBranch(event.target.value); setMessage(""); }}
+                        disabled={!country || branchLocked}
+                        className={selectClass()}
+                      >
+                        <option value="">{getLabel("selectBranch", lang)}</option>
+                        {branchOptions.map((item) => {
+                          const mainName = (item as CountryBranchRow).name;
+                          const cityName = (item as CityBranchRow).city_name;
+                          const branchName = (item as CityBranchRow).name;
+                          const code = item.code;
+                          return (
+                            <option key={item.id} value={item.id}>
+                              {ownershipLevel === "main_branch" || branchType === "Main"
+                                ? `${localizeTerm(mainName, lang)} (${code})`
+                                : `${localizeTerm(cityName, lang)} - ${localizeTerm(branchName, lang)} (${code})`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="branch">{getLabel("selectBranch", lang)} *</Label>
-                  <select id="branch" value={branch} onChange={(event) => { setBranch(event.target.value); setMessage(""); }} disabled={!country || !branchType || branchLocked} className={selectClass()}>
-                    <option value="">{getLabel("selectBranch", lang)}</option>
-                    {branchOptions.map((item) => {
-                      const mainName = (item as CountryBranchRow).name;
-                      const cityName = (item as CityBranchRow).city_name;
-                      const branchName = (item as CityBranchRow).name;
-                      const code = item.code;
-                      return (
-                        <option key={item.id} value={item.id}>
-                          {branchType === "Main"
-                            ? `${localizeTerm(mainName, lang)} (${code})`
-                            : `${localizeTerm(cityName, lang)} - ${localizeTerm(branchName, lang)} (${code})`}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="accountTitle">{getLabel("accountTitle", lang)} *</Label>
-                  <select
-                    id="accountTitle"
-                    value={accountTitle}
-                    onChange={(event) => {
-                      const val = event.target.value as AccountTitle;
-                      setAccountTitle(val);
-                      setSubType("");
-                      if (val === "Expenses Account" && !category) {
-                        setCategory("EX");
-                      }
-                    }}
-                    className={selectClass()}
-                  >
-                    <option value="">{getLabel("selectAccountTitle", lang)}</option>
-                    <option value="Customer">{getLabel("customerAccount", lang)}</option>
-                    <option value="Bank">{getLabel("bankAccount", lang)}</option>
-                    <option value="Personal">{getLabel("personal", lang)}</option>
-                    <option value="Company">{getLabel("company", lang)}</option>
-                    <option value="Employee">{getLabel("employee", lang)}</option>
-                    <option value="Expenses Account">{getLabel("expensesAccount", lang)}</option>
-                  </select>
-                </div>
-              </div>
-
+              {/* ── Sub-Type & Category (Database-backed & Editable) ───────── */}
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="subType">{getLabel("subType", lang)} *</Label>
@@ -1083,23 +1383,30 @@ export function NewAccountSetup({
                     </select>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="category">{getLabel("category", lang)} *</Label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const promptMsg = t(lang, "acct.enter_new_category_prompt", "Enter New Category Name:");
-                        const newCat = window.prompt(promptMsg);
-                        if (newCat && newCat.trim()) {
-                          setCustomCategories((prev) => Array.from(new Set([...prev, newCat.trim()])));
-                          setCategory(newCat.trim());
-                        }
-                      }}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                    >
-                      + {t(lang, "acct.add_new_category", "Add New Category")}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {category && dbCategories.some((c) => c.name === category || c.id === selectedCategoryId) && (
+                        <button
+                          type="button"
+                          onClick={handleOpenEditCategory}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                        >
+                          <Pencil className="h-2.5 w-2.5" />
+                          {getLabel("editCategory", lang)}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleOpenAddCategory}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {getLabel("addCategory", lang)}
+                      </button>
+                    </div>
                   </div>
                   <select
                     id="category"
@@ -1107,24 +1414,31 @@ export function NewAccountSetup({
                     onChange={(event) => {
                       const val = event.target.value;
                       if (val === "__ADD_NEW_CATEGORY__") {
-                        const promptMsg = t(lang, "acct.enter_new_category_prompt", "Enter New Category Name:");
-                        const newCat = window.prompt(promptMsg);
-                        if (newCat && newCat.trim()) {
-                          setCustomCategories((prev) => Array.from(new Set([...prev, newCat.trim()])));
-                          setCategory(newCat.trim());
-                        } else {
-                          setCategory("");
-                        }
+                        handleOpenAddCategory();
                       } else {
                         setCategory(val);
+                        const matched = dbCategories.find((c) => c.name === val || c.id === val);
+                        if (matched) {
+                          setSelectedCategoryId(matched.id);
+                        } else {
+                          setSelectedCategoryId("");
+                        }
                       }
                     }}
                     className={selectClass()}
                   >
                     <option value="">{getLabel("selectCategory", lang)}</option>
-                    {Array.from(new Set([...categories, ...customCategories])).map((item) => (
-                      <option key={item} value={item}>{localizedOption(item, lang)}</option>
-                    ))}
+                    {dbCategories.length > 0
+                      ? dbCategories.map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name} ({item.code})
+                          </option>
+                        ))
+                      : categories.map((item) => (
+                          <option key={item} value={item}>
+                            {localizedOption(item, lang)}
+                          </option>
+                        ))}
                     <option value="__ADD_NEW_CATEGORY__">
                       + {t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
                     </option>
@@ -1630,7 +1944,7 @@ export function NewAccountSetup({
             warehouseDetail={warehouseDetail}
             selectedCountryName={selectedCountry?.name}
             selectedCountryCode={selectedCountry?.iso2 || selectedCountry?.iso3 || undefined}
-            selectedBranchName={branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}
+            selectedBranchName={ownershipLevel === "country" ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})` : branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}
             selectedBranchCode={branchInfo?.code}
             onBack={() => router.push("/dashboard/accounts")}
             onPrint={() => openReport(true)}
@@ -1667,7 +1981,7 @@ export function NewAccountSetup({
             <div className="bg-white rounded-xl border border-slate-200 shadow p-5 mt-4 flex items-center justify-between sticky bottom-4 z-10 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex flex-col gap-1 text-[11px] font-semibold text-slate-500">
                 <span>{getLabel("country", lang)}: <b className="text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</b></span>
-                <span>{getLabel("branchName", lang)}: <b className="text-slate-800 dark:text-slate-200">{branchInfo?.city || (branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch))}</b></span>
+                <span>{getLabel("branchName", lang)}: <b className="text-slate-800 dark:text-slate-200">{ownershipLevel === "country" ? getLabel("countryLevel", lang) : branchInfo?.city || (branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch))}</b></span>
               </div>
               <Button type="button" size="default" onClick={saveEntry} disabled={!readyToSave || saving} className="bg-primary hover:bg-primary/90 text-white text-sm px-10 h-12 font-bold tracking-wider rounded-lg shadow-sm">
                 {saving ? getLabel("saving", lang) : initialAccountId ? getLabel("updateAccount", lang) : getLabel("createSaveAccount", lang)}
@@ -1676,6 +1990,96 @@ export function NewAccountSetup({
           )}
         </div>
       </div>
+
+      {/* ── Persistent Category Modal (Add / Edit with 5-language translation sync) ── */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
+                {categoryModalMode === "add" ? getLabel("addCategory", lang) : getLabel("editCategory", lang)}
+              </h3>
+              <button
+                type="button"
+                onClick={() => { setShowCategoryModal(false); setCatError(""); }}
+                className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {catError && (
+              <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-700 font-medium">
+                {catError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="catName">{getLabel("categoryName", lang)} *</Label>
+                <Input
+                  id="catName"
+                  value={catFormName}
+                  onChange={(e) => setCatFormName(e.target.value)}
+                  placeholder="e.g. Office Rent / Clearance Charges"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="catCode">{getLabel("categoryCode", lang)} *</Label>
+                <Input
+                  id="catCode"
+                  value={catFormCode}
+                  onChange={(e) => setCatFormCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. RENT / CLR"
+                  className="h-9 text-sm font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="catDesc">{getLabel("categoryDescription", lang)}</Label>
+                <Input
+                  id="catDesc"
+                  value={catFormDesc}
+                  onChange={(e) => setCatFormDesc(e.target.value)}
+                  placeholder="Optional description"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">{getLabel("questionOperationalDomain", lang)}</Label>
+                <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {operationalDomain === "shipping" ? getLabel("shippingDomain", lang) : getLabel("businessDomain", lang)}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => { setShowCategoryModal(false); setCatError(""); }}
+                disabled={catSaving}
+              >
+                {getLabel("cancel", lang) || "Cancel"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSaveCategory}
+                disabled={catSaving}
+                className="gap-1.5"
+              >
+                {catSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {getLabel("saveCategory", lang)}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Master Form modals are handled inline by CustomerPicker / CompanyPicker / BankPicker */}
     </div>

@@ -6,7 +6,7 @@ import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 const selectColumns =
-  "id,country_id,country_branch_id,city_name,name,code,local_currency,status,is_business_branch,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
+  "id,country_id,country_branch_id,city_name,name,code,local_currency,status,is_business_branch,operational_domain,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
 
 export async function GET(request: Request) {
   try {
@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const countryId = url.searchParams.get("countryId");
     const countryBranchId = url.searchParams.get("countryBranchId");
+    const operationalDomain = url.searchParams.get("operationalDomain");
     // scope: business (default — hides agent/shipping branches), agent, or all (admin views).
     const scope = (url.searchParams.get("scope") || "business").toLowerCase();
 
@@ -28,12 +29,13 @@ export async function GET(request: Request) {
       const rows = await sql`
         select
           id, country_id, country_branch_id, city_name, name, code, local_currency, status,
-          is_business_branch, state_province_id, district_id, city_id, area_location_id,
+          is_business_branch, operational_domain, state_province_id, district_id, city_id, area_location_id,
           address, phone, email, whatsapp_number, company_id, owner_name, contacts, documents,
           created_at, updated_at
         from public.city_branches
         where deleted_at is null
-          and (${scope === "business" ? sql`is_business_branch is not false` : scope === "agent" ? sql`is_business_branch is false` : sql`true`})
+          and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
+          and (${!operationalDomain && scope === "business" ? sql`is_business_branch is not false` : !operationalDomain && scope === "agent" ? sql`is_business_branch is false` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}` : sql`true`})
@@ -52,7 +54,9 @@ export async function GET(request: Request) {
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
 
-      if (scope === "business") {
+      if (operationalDomain) {
+        query = query.eq("operational_domain", operationalDomain);
+      } else if (scope === "business") {
         query = query.neq("is_business_branch", false);
       } else if (scope === "agent") {
         query = query.eq("is_business_branch", false);
@@ -98,7 +102,8 @@ export async function GET(request: Request) {
       countryBranchId: branch.country_branch_id,
       cityName: branch.city_name,
       localCurrency: branch.local_currency,
-      isBusinessBranch: branch.is_business_branch !== false
+      isBusinessBranch: branch.is_business_branch !== false,
+      operationalDomain: branch.operational_domain || (branch.is_business_branch !== false ? "business" : "shipping")
     }));
 
     return NextResponse.json({

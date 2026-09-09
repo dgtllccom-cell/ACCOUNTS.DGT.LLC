@@ -61,6 +61,9 @@ async function buildAccountListViaLocalPg(
         ea.currency,
         ea.status,
         ea.scope,
+        ea.operational_domain,
+        ea.category,
+        ea.category_id,
         ea.country_id,
         ea.country_branch_id,
         ea.city_branch_id,
@@ -327,7 +330,7 @@ export async function GET(request: NextRequest) {
     let query: any = supabase
       .from("enterprise_accounts")
       .select(
-        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, created_at, updated_at, customers:customer_id(id, customer_name, mobile, whatsapp)"
+        "id, scope, operational_domain, category, category_id, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, created_at, updated_at, customers:customer_id(id, customer_name, mobile, whatsapp)"
       )
       .is("deleted_at", null)
       .order("code", { ascending: true });
@@ -555,7 +558,7 @@ export async function POST(request: NextRequest) {
         }
 
         let validCountryBranchId = null;
-        if (body.countryBranchId) {
+        if (body.countryBranchId && body.scope !== "country" && body.scope !== "super_admin") {
           try {
             const rows = await tx`select id from country_branches where id = ${body.countryBranchId}::uuid limit 1;`;
             if (rows.length > 0) validCountryBranchId = rows[0].id;
@@ -563,7 +566,7 @@ export async function POST(request: NextRequest) {
         }
 
         let validCityBranchId = null;
-        if (body.cityBranchId) {
+        if (body.cityBranchId && body.scope === "city_branch") {
           try {
             const rows = await tx`select id from city_branches where id = ${body.cityBranchId}::uuid limit 1;`;
             if (rows.length > 0) validCityBranchId = rows[0].id;
@@ -605,6 +608,9 @@ export async function POST(request: NextRequest) {
         const accountRows = await tx`
           insert into enterprise_accounts ${tx({
             scope: body.scope || "super_admin",
+            operational_domain: body.operationalDomain || "business",
+            category: body.category || null,
+            category_id: body.categoryId || null,
             country_id: validCountryId,
             country_branch_id: validCountryBranchId,
             city_branch_id: validCityBranchId,
@@ -795,9 +801,12 @@ export async function POST(request: NextRequest) {
       .from("enterprise_accounts")
       .insert({
         scope: body.scope,
+        operational_domain: body.operationalDomain || "business",
+        category: body.category || null,
+        category_id: body.categoryId || null,
         country_id: body.countryId ?? null,
-        country_branch_id: body.countryBranchId ?? null,
-        city_branch_id: body.cityBranchId ?? null,
+        country_branch_id: (body.scope === "country" || body.scope === "super_admin") ? null : (body.countryBranchId ?? null),
+        city_branch_id: (body.scope === "country" || body.scope === "main_branch" || body.scope === "super_admin") ? null : (body.cityBranchId ?? null),
         parent_id: body.parentId ?? null,
         customer_id: body.customerId ?? null,
         company_id: body.companyId ?? null,

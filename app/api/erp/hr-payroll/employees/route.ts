@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
           {
             records: employees.map((e: any) => e.person).filter(Boolean),
             table: "customers",
-            fields: ["customer_name", "company_name"]
+            fields: ["customer_name", "company_name", "first_name", "last_name", "father_name"]
           },
           { records: employees.map((e: any) => e.country).filter(Boolean), table: "countries", fields: ["name"] },
           {

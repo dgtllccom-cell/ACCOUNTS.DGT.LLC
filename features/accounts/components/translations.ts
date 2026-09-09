@@ -910,6 +910,111 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "تم تحديث الحساب بنجاح.",
     fa: "حساب با موفقیت به‌روزرسانی شد.",
     ps: "حساب په بریالیتوب سره تازه شو."
+  },
+  questionAccountType: {
+    en: "Step 1A: Account Type",
+    ur: "مرحلہ 1A: اکاؤنٹ کی قسم",
+    ar: "الخطوة 1أ: نوع الحساب",
+    fa: "مرحله ۱الف: نوع حساب",
+    ps: "لومړی ګام الف: د حساب ډول"
+  },
+  questionOperationalDomain: {
+    en: "Step 1B: Owning Operational Section",
+    ur: "مرحلہ 1B: متعلقہ آپریشنل سیکشن",
+    ar: "الخطوة 1ب: القسم التشغيلي التابع له",
+    fa: "مرحله ۱ب: بخش عملیاتی مربوطه",
+    ps: "لومړی ګام ب: اړوند عملیاتي برخه"
+  },
+  questionOwnershipLevel: {
+    en: "Step 1C: Ownership Level",
+    ur: "مرحلہ 1C: ملکیت کی سطح",
+    ar: "الخطوة 1ج: مستوى الملكية",
+    fa: "مرحله ۱ج: سطح مالکیت",
+    ps: "لومړی ګام ج: د مالکیت کچه"
+  },
+  businessDomain: {
+    en: "Business (Commercial ERP)",
+    ur: "کاروبار (کمرشل ای آر پی)",
+    ar: "الأعمال (التجاري)",
+    fa: "کسب و کار (تجاری)",
+    ps: "سوداګري (تجارتي)"
+  },
+  shippingDomain: {
+    en: "Shipping Line & Clearing Agent",
+    ur: "شپنگ لائن اور کلیئرنگ ایجنٹ",
+    ar: "خط الملاحة والتخليص الجمركي",
+    fa: "خط کشتیرانی و ترخیص کالا",
+    ps: "د بار وړلو لاین او ګمرکي تصفیه"
+  },
+  countryLevel: {
+    en: "Country Level (Global)",
+    ur: "ملکی سطح (عالمگیر)",
+    ar: "على مستوى الدولة (عام)",
+    fa: "سطح کشور (سراسری)",
+    ps: "د هیواد کچه (عمومي)"
+  },
+  mainBranchLevel: {
+    en: "Main Branch Level",
+    ur: "مین برانچ کی سطح",
+    ar: "مستوى الفرع الرئيسي",
+    fa: "سطح شعبه اصلی",
+    ps: "د اصلي څانګې کچه"
+  },
+  cityBranchLevel: {
+    en: "City Branch Level",
+    ur: "سٹی برانچ کی سطح",
+    ar: "مستوى فرع المدينة",
+    fa: "سطح شعبه شهری",
+    ps: "د ښاري څانګې کچه"
+  },
+  addCategory: {
+    en: "Add Category",
+    ur: "کیٹیگری شامل کریں",
+    ar: "إضافة فئة",
+    fa: "افزودن دسته‌بندی",
+    ps: "کټګوري اضافه کړئ"
+  },
+  editCategory: {
+    en: "Edit Category",
+    ur: "کیٹیگری میں ترمیم کریں",
+    ar: "تعديل الفئة",
+    fa: "ویرایش دسته‌بندی",
+    ps: "کټګوري سمول"
+  },
+  categoryName: {
+    en: "Category Name",
+    ur: "کیٹیگری کا نام",
+    ar: "اسم الفئة",
+    fa: "نام دسته‌بندی",
+    ps: "د کټګورۍ نوم"
+  },
+  categoryCode: {
+    en: "Category Code",
+    ur: "کیٹیگری کوڈ",
+    ar: "رمز الفئة",
+    fa: "کد دسته‌بندی",
+    ps: "د کټګورۍ کوډ"
+  },
+  categoryDescription: {
+    en: "Description",
+    ur: "تفصیل",
+    ar: "الوصف",
+    fa: "توضیحات",
+    ps: "توضیحات"
+  },
+  saveCategory: {
+    en: "Save Category",
+    ur: "کیٹیگری محفوظ کریں",
+    ar: "حفظ الفئة",
+    fa: "ذخیره دسته‌بندی",
+    ps: "کټګوري خوندي کړئ"
+  },
+  manageCategories: {
+    en: "Manage Categories",
+    ur: "کیٹیگریز کا انتظام",
+    ar: "إدارة الفئات",
+    fa: "مدیریت دسته‌بندی‌ها",
+    ps: "د کټګوریو مدیریت"
   }
 };
 

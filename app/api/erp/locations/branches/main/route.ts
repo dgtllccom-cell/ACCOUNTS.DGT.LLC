@@ -6,13 +6,14 @@ import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 const selectColumns =
-  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,created_at,updated_at";
+  "id,country_id,name,code,local_currency,is_main,operational_domain,parent_country_branch_id,status,state_province_id,district_id,city_id,address,phone,email,created_at,updated_at";
 
 export async function GET(request: Request) {
   try {
     const session = await requireErpSession();
     const url = new URL(request.url);
     const countryId = url.searchParams.get("countryId");
+    const operationalDomain = url.searchParams.get("operationalDomain");
 
     let branches: any[] = [];
     const viaPg = await withLocalPg(async (sql) => {
@@ -24,11 +25,12 @@ export async function GET(request: Request) {
       }
       const rows = await sql`
         select
-          id, country_id, name, code, local_currency, is_main, status,
+          id, country_id, name, code, local_currency, is_main, operational_domain, parent_country_branch_id, status,
           state_province_id, district_id, city_id, address, phone, email,
           created_at, updated_at
         from public.country_branches
         where deleted_at is null
+          and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
         order by created_at asc
@@ -45,6 +47,10 @@ export async function GET(request: Request) {
         .select(selectColumns)
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
+
+      if (operationalDomain) {
+        query = query.eq("operational_domain", operationalDomain);
+      }
 
       if (countryId) {
         if (!session.isSuperAdmin && !session.countryIds.includes(countryId)) {
@@ -78,7 +84,9 @@ export async function GET(request: Request) {
     const formattedBranches = (localized as any[]).map((branch: any) => ({
       ...branch,
       countryId: branch.country_id,
-      localCurrency: branch.local_currency
+      localCurrency: branch.local_currency,
+      operationalDomain: branch.operational_domain || "business",
+      parentCountryBranchId: branch.parent_country_branch_id || null
     }));
 
     return NextResponse.json({

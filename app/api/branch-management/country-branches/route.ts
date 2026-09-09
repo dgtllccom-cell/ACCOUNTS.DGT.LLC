@@ -12,10 +12,7 @@ import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
 
-function formatError(message: string, isSuperAdmin: boolean) {
-  if (isSuperAdmin) {
-    return `بھائی اس میں یہ خرابی ہے: ${translateToUrdu(message)}`;
-  }
+function formatError(message: string, _isSuperAdmin?: boolean) {
   return message;
 }
 
@@ -24,10 +21,10 @@ function isUuid(value: string) {
 }
 
 const countryBranchSelect =
-  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,permission_template,permission_grants,created_at,updated_at";
+  "id,country_id,operational_domain,parent_country_branch_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,permission_template,permission_grants,created_at,updated_at";
 
 const countryBranchFallbackSelect =
-  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,created_at,updated_at";
+  "id,country_id,operational_domain,parent_country_branch_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,created_at,updated_at";
 
 function isMissingOptionalColumn(message: string) {
   return /permission_template|permission_grants/i.test(message);
@@ -88,6 +85,7 @@ export async function GET(request: Request) {
     const id = url.searchParams.get("id");
     const countryIdRaw = url.searchParams.get("countryId");
     const countryId = countryIdRaw ? await locationsRepository.resolveCountryUuid(countryIdRaw) : null;
+    const operationalDomain = url.searchParams.get("operationalDomain");
 
     // Root-cause bypass: country_branches_scope_read gates on is_super_admin()/
     // can_access_country(), both keyed off auth.uid(), which is always NULL under
@@ -105,7 +103,7 @@ export async function GET(request: Request) {
       }
       const rows = await sql`
         select
-          id, country_id, name, code, local_currency, is_main, status, state_province_id,
+          id, country_id, operational_domain, parent_country_branch_id, name, code, local_currency, is_main, status, state_province_id,
           district_id, city_id, address, phone, email, whatsapp_number, company_id, owner_name,
           owner_customer_id, owner_profile_id,
           contacts, documents, permission_template, permission_grants, created_at, updated_at
@@ -114,6 +112,7 @@ export async function GET(request: Request) {
           and (${id && isUuid(id) ? sql`id = ${id}` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
+          and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
         order by created_at asc
       `;
       return { countryBranches: normalizeCountryBranchRows(rows as any[]) };
@@ -177,25 +176,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Country not found." }, { status: 404 });
     }
 
-    const { data: existingMainBranch, error: existingMainBranchError } = await supabase
-      .from("country_branches")
-      .select("id,country_id,name,code,local_currency,is_main,status,state_province_id,city_id,address,company_id,owner_name,created_at")
-      .eq("country_id", parsed.data.countryId)
-      .eq("is_main", true)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const domain = parsed.data.operationalDomain || "business";
 
-    if (existingMainBranchError) {
-      return NextResponse.json({ error: existingMainBranchError.message }, { status: 403 });
-    }
+    const existingMainBranch = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, country_id, name, code, local_currency, is_main, status
+        from public.country_branches
+        where country_id = ${parsed.data.countryId}::uuid
+          and operational_domain = ${domain}
+          and is_main = true
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
     if (existingMainBranch?.id) {
       return NextResponse.json(
         {
-          error: formatError(
-            "A main branch already exists for this country. Select this existing main branch when creating city branches, or choose another country to create its main branch.",
-            session.isSuperAdmin
-          ),
+          error: `A main branch already exists for this country under the ${domain === "shipping" ? "Shipping Line & Clearing Agent" : "Business"} section. Select this existing main branch when creating city branches.`,
           existingBranch: existingMainBranch
         },
         { status: 409 }
@@ -204,6 +203,8 @@ export async function POST(request: Request) {
 
     const payload = {
       country_id: parsed.data.countryId,
+      operational_domain: domain,
+      parent_country_branch_id: parsed.data.parentCountryBranchId ?? null,
       name: parsed.data.name.trim(),
       code: parsed.data.code.trim().toUpperCase(),
       local_currency: String(country.currency_code).trim().toUpperCase(),

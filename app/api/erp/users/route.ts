@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
         throw new Error(`You cannot create a ${domain === "shipping" ? "Clearing Agent / Shipping" : "Business"} user — it is outside your operational domain.`);
       }
     }
-    if (domain === "shipping" && !body.clearingAgentId) {
-      throw new Error("A Clearing Agent / Shipping Line user must be bound to a clearing agent.");
+    if (domain === "shipping" && body.role === "agent_user" && !body.clearingAgentId) {
+      throw new Error("An external Clearing Agent user must be bound to a clearing agent record.");
     }
     if (domain === "business" && body.clearingAgentId) {
       throw new Error("A Business-domain user cannot be bound to a clearing agent.");
@@ -161,15 +161,6 @@ export async function POST(request: NextRequest) {
     );
 
     const mobileProfile = normalizeMobileProfile(body.mobileProfile);
-    if (mobileProfile === "mobile_field") {
-      // The Mobile Field / Munshi profile is not assignable yet: its per-job /
-      // per-record assignment enforcement is not complete, so activating it would
-      // expose every record that uses an assigned form. Blocked until finished.
-      throw new ApiClientError(
-        "Mobile Field / Munshi User is not yet available for assignment. Use Standard ERP Access or Mobile Cash & Ledger.",
-        { status: 400 },
-      );
-    }
 
     const requestedPermissions = normalizePermissions(body.permissions);
     const defaultRolePermissions = [...new Set(enterpriseRolePermissions[body.role] ?? [])];

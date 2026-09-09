@@ -13,10 +13,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
-function formatError(message: string, isSuperAdmin: boolean) {
-  if (isSuperAdmin) {
-    return `بھائی اس میں یہ خرابی ہے: ${translateToUrdu(message)}`;
-  }
+function formatError(message: string, _isSuperAdmin?: boolean) {
   return message;
 }
 
@@ -25,10 +22,10 @@ function isUuid(value: string) {
 }
 
 const cityBranchSelect =
-  "id,country_id,country_branch_id,city_name,name,code,local_currency,status,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,permission_template,permission_grants,created_at,updated_at";
+  "id,country_id,country_branch_id,operational_domain,city_name,name,code,local_currency,status,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,permission_template,permission_grants,created_at,updated_at";
 
 const cityBranchFallbackSelect =
-  "id,country_id,country_branch_id,city_name,name,code,local_currency,status,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,created_at,updated_at";
+  "id,country_id,country_branch_id,operational_domain,city_name,name,code,local_currency,status,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,created_at,updated_at";
 
 function isMissingOptionalColumn(message: string) {
   return /permission_template|permission_grants/i.test(message);
@@ -106,6 +103,7 @@ export async function GET(request: Request) {
     const id = url.searchParams.get("id");
     const countryId = url.searchParams.get("countryId");
     const countryBranchId = url.searchParams.get("countryBranchId");
+    const operationalDomain = url.searchParams.get("operationalDomain");
 
     // Root-cause bypass: city_branches_scope_read gates on is_super_admin()/
     // can_access_country()/can_access_city_branch(), all keyed off auth.uid(), which
@@ -123,7 +121,7 @@ export async function GET(request: Request) {
       }
       const rows = await sql`
         select
-          id, country_id, country_branch_id, city_name, name, code, local_currency, status,
+          id, country_id, country_branch_id, operational_domain, city_name, name, code, local_currency, status,
           state_province_id, district_id, city_id, area_location_id, address, phone, email,
           whatsapp_number, company_id, owner_name, owner_customer_id, owner_profile_id,
           contacts, documents, permission_template,
@@ -134,6 +132,7 @@ export async function GET(request: Request) {
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}` : sql`true`})
+          and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
         order by created_at asc
       `;
       return { cityBranches: normalizeCityBranchRows(rows as any[]) };
@@ -278,9 +277,12 @@ export async function POST(request: Request) {
       }
     }
 
+    const domain = parsed.data.operationalDomain || (mainBranch as any)?.operational_domain || "business";
+
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
+      operational_domain: domain,
       city_name: normCityName,
       name: normName,
       code: normCode,
@@ -320,13 +322,13 @@ export async function POST(request: Request) {
     const viaPgInsert = await withLocalPg(async (sql) => {
       const rows = await sql`
         insert into public.city_branches (
-          country_id, country_branch_id, city_name, name, code, local_currency, status,
+          country_id, country_branch_id, operational_domain, city_name, name, code, local_currency, status,
           state_province_id, district_id, city_id, area_location_id, address, phone, email,
           whatsapp_number, company_id, owner_name, owner_customer_id, owner_profile_id,
           contacts, documents, permission_template,
           permission_grants, created_by, created_at, updated_at
         ) values (
-          ${payload.country_id}, ${payload.country_branch_id}, ${payload.city_name},
+          ${payload.country_id}, ${payload.country_branch_id}, ${payload.operational_domain}, ${payload.city_name},
           ${payload.name}, ${payload.code}, ${payload.local_currency}, ${payload.status},
           ${payload.state_province_id}, ${payload.district_id}, ${payload.city_id},
           ${payload.area_location_id}, ${payload.address}, ${payload.phone}, ${payload.email},

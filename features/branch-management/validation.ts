@@ -66,12 +66,15 @@ export const createCountryBranchSchema = z.object({
   contacts: z.array(contactRowSchema).max(50).optional(),
   documents: z.array(documentRowSchema).max(50).optional(),
   permissionTemplate: permissionTemplateSchema,
-  permissionGrants: z.array(permissionKeySchema).min(1, "At least one permission is required").max(100)
+  permissionGrants: z.array(permissionKeySchema).min(1, "At least one permission is required").max(100),
+  operationalDomain: z.enum(["business", "shipping"]).default("business"),
+  parentCountryBranchId: optionalUuidSchema
 });
 
 export const createCityBranchSchema = z.object({
   countryId: uuidSchema,
   countryBranchId: uuidSchema,
+  operationalDomain: z.enum(["business", "shipping"]).default("business"),
   cityName: z.string().trim().min(2, "City name is required").optional(),
   stateProvinceId: optionalUuidSchema,
   districtId: optionalUuidSchema,
