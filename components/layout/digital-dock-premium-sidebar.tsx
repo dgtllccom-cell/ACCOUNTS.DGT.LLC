@@ -30,7 +30,6 @@ import {
   CircleDollarSign,
   ClipboardList,
   Clock,
-  Container,
   CreditCard,
   Database,
   FileBarChart,
@@ -53,7 +52,6 @@ import {
   Receipt,
   RefreshCw,
   ScanLine,
-  ScrollText,
   Settings,
   ShieldAlert,
   ShieldCheck,
@@ -135,7 +133,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: "City Branch Entry", href: "/dashboard/new-entry/branch-entry/city-branch", icon: Building2 },
           { label: "Super Admin Branch", href: "/dashboard/new-entry/branches/super-admin", icon: Building2 },
           { label: "Branch General Report", href: "/dashboard/branch-management/general-report", icon: FileBarChart },
-          { label: "Locations Management", href: "/dashboard/settings/locations", icon: Globe },
         ],
       },
       {
@@ -160,8 +157,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: "Accounts General Report", href: "/dashboard/new-entry/accounts/general-report", icon: FileBarChart },
         ],
       },
-      { label: "Register Employee", href: "/dashboard/general-office/employees", icon: Users },
-      { label: "Share Form External Links", href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
       { label: "New Entry Hub", href: "/dashboard/new-entry", icon: ListPlus },
     ],
   },
@@ -170,7 +165,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Ledgers",
     icon: BookOpen,
     children: [
-      { label: "New Ledger Account", href: "/dashboard/ledger/new", icon: BookOpen },
       { label: "Super Admin Detailed Ledger", href: "/dashboard/ledger/super-admin/detailed", icon: FileText },
       { label: "Country Detailed Ledger", href: "/dashboard/ledger/country/detailed", icon: FileText },
       { label: "Branch Detailed Ledger", href: "/dashboard/ledger/detailed", icon: FileText },
@@ -190,7 +184,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Sales Order Payment", href: "/dashboard/journal/sales-order-payment/advance", icon: CircleDollarSign },
       { label: "Daily Operational Expenses", href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
       { label: "Office / Home Expenses Bill", href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
-      { label: "Money Exchange (Currency Changer)", href: "/dashboard/roznamcha/money-exchange", icon: RefreshCw },
     ],
   },
   {
@@ -259,7 +252,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: "Country-to-Country Transfer", href: "/dashboard/purchase/country-transfer", icon: Globe },
           { label: "Inter-Country Transfers", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
           { label: "Country Purchase Reports", href: "/dashboard/purchase/country-purchase-reports", icon: FileBarChart },
-          { label: "Country Purchase Timeline", href: "/dashboard/purchase/country-purchase-reports", icon: Clock },
         ],
       },
       {
@@ -297,15 +289,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
   },
   {
     key: "shipping-cleaning",
-    label: "Shipping & Cleaning",
+    label: "Shipping & Clearing",
     icon: Ship,
     children: [
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
-      { label: "Containers Register", href: "/dashboard/shipping-line", icon: Container },
-      { label: "Clearing Order Trucks", href: "/dashboard/shipping-line", icon: Truck },
-      { label: "Shipping Handovers", href: "/dashboard/purchase/purchase-loading-records", icon: ClipboardList },
-      { label: "Consignment Register", href: "/dashboard/consignment", icon: Package },
+      { label: "Clearing Order Trucks", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
+      { label: "Shipping Handovers", href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
       { label: "Logistics Tracking Dashboard", href: "/dashboard/logistics", icon: BarChart3 },
     ],
   },
@@ -319,8 +309,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Money Exchange (Currency Changer)", href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
       { label: "Daily Exchange Rates (Intraday)", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
       { label: "Country Investments", href: "/dashboard/super-admin/investments", icon: TrendingUp },
-      { label: "Daily Operational Expenses", href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
-      { label: "Office / Home Expenses Bill", href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
     ],
   },
   {
@@ -330,7 +318,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: "Customer Management", href: "/dashboard/settings/customers", icon: Users },
       { label: "Customer Management Journal", href: "/dashboard/settings/customers?view=journal", icon: FileSpreadsheet },
-      { label: "Employees Directory", href: "/dashboard/general-office/employees", icon: Users },
+      { label: "Employees Directory & Registration", href: "/dashboard/general-office/employees", icon: Users },
       { label: "Employee KYC & Documents", href: "/dashboard/general-office/employee-kyc", icon: FileText },
       { label: "Attendance & Leave Management", href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck },
       { label: "Payroll Runs & Salary Slips", href: "/dashboard/general-office/payroll", icon: Banknote },
@@ -345,8 +333,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Layers,
     children: [
       { label: "Settlement & Reconciliation Engine", href: "/dashboard/settlement", icon: Layers },
-      { label: "Tax & Ledger Reconciliation", href: "/dashboard/tax-einvoicing/uae/vat-control", icon: Split },
-      { label: "Payments Reconciliation", href: "/dashboard/reports/payments", icon: Receipt },
+      { label: "Daily Settlement", href: "/dashboard/settlement/daily", icon: CalendarCheck },
+      { label: "Payment Settlement", href: "/dashboard/settlement/payment", icon: Receipt },
     ],
   },
   {
@@ -361,7 +349,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: FileText,
         children: [
           { label: "Customer KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
-          { label: "Employee KYC Verification", href: "/dashboard/general-office/employees", icon: Users },
           { label: "Compliance & Audit Monitoring", href: "/dashboard/audit-monitoring", icon: ShieldAlert },
         ],
       },
@@ -371,8 +358,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: CheckSquare,
         children: [
           { label: "Active User Tasks", href: "/dashboard/user-tasks", icon: CheckSquare },
-          { label: "CRM Today Action Center", href: "/dashboard/crm?tab=today", icon: CalendarCheck },
-          { label: "Smart Due & Follow-Up", href: "/dashboard/smart-due", icon: Clock },
         ],
       },
       {
@@ -386,9 +371,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: "Branch Reports", href: "/dashboard/reports/branch", icon: Building2 },
           { label: "Payments & Settlements Report", href: "/dashboard/reports/payments", icon: Receipt },
           { label: "Shipping & Clearing Reports", href: "/dashboard/reports/shipping", icon: Ship },
-          { label: "Ledgers Universal Report", href: "/dashboard/ledger/general-report", icon: BookOpen },
           { label: "Financial Statements", href: "/dashboard/reports/financial-statements", icon: FileSpreadsheet },
-          { label: "Daily Exchange Rates Report", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
           { label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", icon: FileText },
           { label: "System Forms Directory", href: "/dashboard/reports/system-forms-directory", icon: ListPlus },
         ],
@@ -399,9 +382,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: FileText,
         children: [
           { label: "Document Intake Center", href: "/dashboard/documents", icon: FileText },
-          { label: "Intake Drafts & Uploads", href: "/dashboard/document-intelligence", icon: ClipboardList },
-          { label: "Document Roznamcha Entries", href: "/dashboard/roznamcha", icon: ScrollText },
-          { label: "Document Intelligence AI", href: "/dashboard/document-intelligence", icon: Sparkles },
         ],
       },
     ],
@@ -460,8 +440,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Product Reorder Barcodes", href: "/dashboard/settings/goods-master?tab=barcodes", icon: ScanLine },
       { label: "Product Categories & Brands", href: "/dashboard/settings/product-categories", icon: Boxes },
       { label: "Warehouses Management", href: "/dashboard/settings/warehouse", icon: Building2 },
-      { label: "Country & City Locations", href: "/dashboard/settings/locations", icon: Globe2 },
-      { label: "Country Tax & Currency Settings", href: "/dashboard/settings/tax", icon: Landmark },
     ],
   },
   {
@@ -483,8 +461,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: "System Settings Hub", href: "/dashboard/settings", icon: Settings },
       { label: "Dashboard Settings", href: "/dashboard/settings/dashboard-settings", icon: Sliders },
-      { label: "Banks & Accounts Setup", href: "/dashboard/settings/bank", icon: Landmark },
-      { label: "Warehouses Setup", href: "/dashboard/settings/warehouse", icon: Building2 },
       { label: "Company Setup", href: "/dashboard/settings/company-setup", icon: Building2 },
       { label: "Account Types Setup", href: "/dashboard/settings/account-type", icon: BookOpen },
       { label: "Locations & Cities", href: "/dashboard/settings/locations", icon: Globe2 },

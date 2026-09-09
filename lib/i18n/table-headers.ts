@@ -21,6 +21,12 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "GET SUPPORT": { ur: "سپورٹ حاصل کریں", ar: "الحصول على الدعم", fa: "دریافت پشتیبانی", ps: "ملاتړ ترلاسه کړئ" },
   "CONSIGNMENT REGISTER": { ur: "کنسائنمنٹ رجسٹر", ar: "سجل الشحنات", fa: "دفتر امانی", ps: "د امانت رجسټر" },
   "AI VOICE & DOCUMENT ENTRY": { ur: "AI وائس اور دستاویز انٹری", ar: "إدخال الصوت والمستندات بالذكاء الاصطناعي", fa: "ورود صوت و سند با هوش مصنوعی", ps: "د AI غږ او سند ننوت" },
+  // ── Main-menu cleanup 2026-09-09 — new/changed labels ──
+  "CLEARING ORDER TRUCKS": { ur: "کلیئرنگ آرڈر ٹرک", ar: "شاحنات أمر التخليص", fa: "کامیون‌های سفارش ترخیص", ps: "د کلیرنس امر لارۍ" },
+  "SHIPPING HANDOVERS": { ur: "شپنگ حوالگی", ar: "تسليمات الشحن", fa: "تحویل‌های حمل", ps: "د لېږد سپارنې" },
+  "DAILY SETTLEMENT": { ur: "روزانہ تصفیہ", ar: "التسوية اليومية", fa: "تسویه روزانه", ps: "ورځنۍ تصفیه" },
+  "PAYMENT SETTLEMENT": { ur: "ادائیگی تصفیہ", ar: "تسوية المدفوعات", fa: "تسویه پرداخت", ps: "د تادیې تصفیه" },
+  "EMPLOYEES DIRECTORY & REGISTRATION": { ur: "ملازمین ڈائریکٹری و رجسٹریشن", ar: "دليل الموظفين والتسجيل", fa: "فهرست و ثبت‌نام کارکنان", ps: "د کارکوونکو لارښود او ثبت" },
   // adjacent pre-existing menu labels (for a consistent Purchase/Sales area in all 5 languages)
   "DASHBOARD": { ur: "ڈیش بورڈ", ar: "لوحة التحكم", fa: "داشبورد", ps: "ډشبورد" },
   "LEDGERS": { ur: "لیجرز", ar: "دفاتر الأستاذ", fa: "دفاتر کل", ps: "لیجرونه" },

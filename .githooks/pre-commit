@@ -47,3 +47,12 @@ node scripts/multilingual-contract-guard.mjs --quiet || {
   echo "  Bypass only if you are certain:  git commit --no-verify"
   exit 1
 }
+
+echo "• navigation duplicate guard (Main Menu)…"
+node scripts/nav-duplicate-guard.mjs || {
+  echo ""
+  echo "✗ commit blocked: the Main Menu has a repeated destination or key."
+  echo "  Keep ONE canonical entry per function. A distinct ?tab=/filter is fine."
+  echo "  Bypass only if you are certain:  git commit --no-verify"
+  exit 1
+}

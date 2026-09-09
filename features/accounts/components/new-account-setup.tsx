@@ -20,7 +20,11 @@ import {
   Phone,
   X,
   Plus,
-  Pencil
+  Pencil,
+  Globe2,
+  Ship,
+  CheckSquare,
+  Square
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -469,6 +473,23 @@ export function NewAccountSetup({
             setAccountName(acc.name || "");
             setContacts(Array.isArray(acc.contacts) && acc.contacts.length > 0 ? acc.contacts : [{ type: "Mobile", value: "" }]);
 
+            if (acc.shipping_line_id) {
+              setLinkedShippingLineId(acc.shipping_line_id);
+              fetch(`/api/erp/shipping-lines/${acc.shipping_line_id}?lang=${lang}`)
+                .then((r) => r.json())
+                .then((json) => {
+                  const shl = json?.data?.shippingLine || json?.shippingLine;
+                  if (!cancelled && shl) {
+                    setShippingLineDetail(shl);
+                    setLinkedShippingLineName(shl.name || "");
+                  }
+                })
+                .catch(() => null);
+            }
+            if (Array.isArray(acc.linked_countries) && acc.linked_countries.length > 0) {
+              setLinkedCountries(acc.linked_countries);
+            }
+
             if (typeof window !== "undefined") {
               const storedWhKey = localStorage.getItem(`account_warehouse_${acc.id}`) || localStorage.getItem(`account_warehouse_${acc.account_number || acc.code}`);
               if (storedWhKey) {
@@ -505,11 +526,16 @@ export function NewAccountSetup({
   const [linkedBankId, setLinkedBankId] = useState<string | null>(null);
   const [linkedBankName, setLinkedBankName] = useState("");
   const [linkedWarehouseId, setLinkedWarehouseId] = useState<string | null>(null);
+  const [linkedShippingLineId, setLinkedShippingLineId] = useState<string | null>(null);
+  const [linkedShippingLineName, setLinkedShippingLineName] = useState("");
+  const [shippingLinesList, setShippingLinesList] = useState<Array<{ id: string; name: string; shipping_line_code?: string; linked_countries?: string[] }>>([]);
+  const [linkedCountries, setLinkedCountries] = useState<string[]>([]);
 
   const [customerDetail, setCustomerDetail] = useState<any>(null);
   const [companyDetail, setCompanyDetail] = useState<any>(null);
   const [bankDetail, setBankDetail] = useState<any>(null);
   const [warehouseDetail, setWarehouseDetail] = useState<any>(null);
+  const [shippingLineDetail, setShippingLineDetail] = useState<any>(null);
 
   // Fetch full customer details when linkedCustomerId changes
   useEffect(() => {
@@ -613,14 +639,58 @@ export function NewAccountSetup({
 
   useEffect(() => { fetchReport(); }, []);
 
-  // Load countries
+  // Load countries (restricted strictly to countries with operating branches)
   useEffect(() => {
     let cancelled = false;
-    listCountries()
-      .then((rows) => { if (!cancelled) setCountries(rows); })
+    listCountries({ withBranchesOnly: true })
+      .then((rows) => {
+        if (!cancelled) {
+          setCountries(rows);
+          // By default, initialize linked operating countries with all branch countries for full connectivity
+          setLinkedCountries((prev) => (prev.length > 0 ? prev : rows.map((c) => c.id)));
+        }
+      })
       .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCountries", lang)); });
     return () => { cancelled = true; };
   }, []);
+
+  // Fetch shipping lines list for master carrier linkage
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/erp/shipping-lines?limit=200&lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled && json?.ok && Array.isArray(json?.data?.shippingLines)) {
+          setShippingLinesList(json.data.shippingLines);
+        }
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [lang]);
+
+  // Fetch shipping line details when linkedShippingLineId changes
+  useEffect(() => {
+    if (!linkedShippingLineId) {
+      setShippingLineDetail(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/erp/shipping-lines/${linkedShippingLineId}?lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        const shl = json?.data?.shippingLine || json?.shippingLine;
+        if (shl) {
+          setShippingLineDetail(shl);
+          setLinkedShippingLineName(shl.name || "");
+          if (Array.isArray(shl.linked_countries) && shl.linked_countries.length > 0) {
+            setLinkedCountries(shl.linked_countries);
+          }
+        }
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [linkedShippingLineId, lang]);
 
   // Pre-select + lock country / branch from the authenticated scope or passed initial props (create mode only).
   useEffect(() => {
@@ -931,6 +1001,8 @@ export function NewAccountSetup({
           customerId: linkedCustomerId,
           companyId: linkedCompanyId,
           bankId: linkedBankId,
+          shippingLineId: linkedShippingLineId || null,
+          linkedCountries: linkedCountries,
           code: accountCode || undefined,  // omit code if empty so PATCH doesn't fail min(2) validation
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
@@ -965,6 +1037,8 @@ export function NewAccountSetup({
           customerId: linkedCustomerId,
           companyId: linkedCompanyId,
           bankId: linkedBankId,
+          shippingLineId: linkedShippingLineId || null,
+          linkedCountries: linkedCountries,
           code: "AUTO",
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
@@ -1037,6 +1111,8 @@ export function NewAccountSetup({
         customerDetail,
         companyDetail,
         bankDetail,
+        shippingLineName: shippingLineDetail?.name || linkedShippingLineName || undefined,
+        linkedCountriesNames: linkedCountries.map((id) => countries.find((c) => c.id === id)?.name || id),
         selectedCountryName: selectedCountry?.name,
         selectedCountryCode: (selectedCountry?.iso2 || selectedCountry?.iso3 || undefined),
         selectedBranchName: branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
@@ -1396,6 +1472,172 @@ export function NewAccountSetup({
                       </select>
                     </>
                   )}
+                </div>
+              </div>
+
+              {/* ── Shipping Line Carrier Master Linkage (شپنگ لائن ماسٹر لنک) ── */}
+              {(operationalDomain === "shipping" || subType === "Shipping Line Company" || accountTitle === "Company") && (
+                <div className="space-y-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 p-4 border border-blue-200/70 dark:border-blue-800">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Ship className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          {getLabel("shippingLineCarrier", lang)}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {t(lang, "acct.shipping_carrier_desc", "Connect this account directly to a registered Shipping Line carrier master record.")}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push("/dashboard/new-entry/shipping-line")}
+                      className="h-6 text-[10px] px-2 text-blue-700 hover:bg-blue-50 border-blue-300 dark:border-blue-700 dark:text-blue-300"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {getLabel("newShippingLine", lang)}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="shippingLinePicker" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("selectShippingLine", lang)}
+                      </Label>
+                      <select
+                        id="shippingLinePicker"
+                        value={linkedShippingLineId || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLinkedShippingLineId(val || null);
+                          if (val) {
+                            const matched = shippingLinesList.find((s) => s.id === val);
+                            if (matched) {
+                              setLinkedShippingLineName(matched.name);
+                              if (!accountName || accountName.toLowerCase().includes("shipping")) {
+                                setAccountName(`${matched.name} (Shipping Line)`);
+                              }
+                              if (Array.isArray(matched.linked_countries) && matched.linked_countries.length > 0) {
+                                setLinkedCountries(matched.linked_countries);
+                              }
+                            }
+                          }
+                        }}
+                        className={selectClass()}
+                      >
+                        <option value="">-- {getLabel("selectShippingLine", lang)} --</option>
+                        {shippingLinesList.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} {s.shipping_line_code ? `(${s.shipping_line_code})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {shippingLineDetail && (
+                      <div className="rounded-lg bg-white dark:bg-slate-900 p-2.5 border border-blue-100 dark:border-blue-900 text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">{shippingLineDetail.name}</span>
+                          {shippingLineDetail.shipping_line_code && (
+                            <span className="font-mono text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded font-semibold">
+                              {shippingLineDetail.shipping_line_code}
+                            </span>
+                          )}
+                        </div>
+                        {shippingLineDetail.contact_person && (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                            <span className="text-slate-400">Contact:</span> {shippingLineDetail.contact_person}
+                          </p>
+                        )}
+                        {(shippingLineDetail.phone || shippingLineDetail.email) && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            {shippingLineDetail.phone} {shippingLineDetail.email ? `• ${shippingLineDetail.email}` : ""}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین) ── */}
+              <div className="space-y-3 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-4 border border-slate-200/70 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Globe2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {getLabel("linkedCountriesTitle", lang)}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {getLabel("linkedCountriesSubtitle", lang)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200">
+                      {linkedCountries.length} / {countries.length} {t(lang, "acct.countries_linked", "Linked")}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLinkedCountries(countries.map((c) => c.id))}
+                      className="h-6 text-[10px] px-2 text-emerald-700 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-800 dark:text-emerald-300"
+                    >
+                      {getLabel("selectAll", lang)}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLinkedCountries([])}
+                      className="h-6 text-[10px] px-2 text-slate-600 hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:text-slate-300"
+                    >
+                      {getLabel("clearAll", lang)}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 pt-1">
+                  {countries.map((c) => {
+                    const isSelected = linkedCountries.includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setLinkedCountries((prev) =>
+                            prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                          );
+                        }}
+                        className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border text-left transition-all ${
+                          isSelected
+                            ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-100 shadow-xs ring-1 ring-emerald-400/30"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isSelected ? (
+                            <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          ) : (
+                            <Square className="h-4 w-4 text-slate-300 dark:text-slate-600 shrink-0" />
+                          )}
+                          <div className="truncate">
+                            <span className="block text-xs font-bold truncate">
+                              {localizeTerm(c.name, lang)}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              {c.iso2 || "-"} {c.currency_code ? `• ${c.currency_code}` : ""}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1920,13 +2162,36 @@ export function NewAccountSetup({
                 </div>
               </div>
 
-              {/* Linked Masters Summary */}
-              {(linkedCustomerId || linkedCompanyId || linkedBankId) && (
+              {/* Linked Masters & Inter-Country Summary */}
+              {(linkedCustomerId || linkedCompanyId || linkedBankId || linkedShippingLineId || linkedCountries.length > 0) && (
                 <div className="rounded-lg border bg-slate-50/40 p-4 text-xs space-y-2">
                   <h3 className="font-bold text-slate-700 border-b pb-1">{getLabel("linkedMasterRecords", lang)}</h3>
                   {linkedCustomerId && <div><b>{getLabel("linkedCustomer", lang)}:</b> {linkedCustomerName} <span className="text-slate-400 font-mono">({linkedCustomerId})</span></div>}
                   {linkedCompanyId && <div><b>{getLabel("linkedCompany", lang)}:</b> {linkedCompanyName} <span className="text-slate-400 font-mono">({linkedCompanyId})</span></div>}
                   {linkedBankId && <div><b>{getLabel("linkedBank", lang)}:</b> {linkedBankName} <span className="text-slate-400 font-mono">({linkedBankId})</span></div>}
+                  {linkedShippingLineId && (
+                    <div>
+                      <b>{getLabel("shippingLineCarrier", lang)}:</b> {shippingLineDetail?.name || linkedShippingLineName}
+                      {shippingLineDetail?.shipping_line_code && (
+                        <span className="text-slate-400 font-mono ml-1">({shippingLineDetail.shipping_line_code})</span>
+                      )}
+                    </div>
+                  )}
+                  {linkedCountries.length > 0 && (
+                    <div className="pt-1">
+                      <b className="block mb-1">{getLabel("linkedCountriesTitle", lang)}:</b>
+                      <div className="flex flex-wrap gap-1">
+                        {linkedCountries.map((cId) => {
+                          const matched = countries.find((c) => c.id === cId);
+                          return (
+                            <span key={cId} className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">
+                              {localizeTerm(matched?.name || cId, lang)} ({matched?.iso2 || "-"})
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1976,6 +2241,9 @@ export function NewAccountSetup({
             companyDetail={companyDetail}
             bankDetail={bankDetail}
             warehouseDetail={warehouseDetail}
+            shippingLineDetail={shippingLineDetail}
+            linkedCountries={linkedCountries}
+            countriesList={countries}
             selectedCountryName={selectedCountry?.name}
             selectedCountryCode={selectedCountry?.iso2 || selectedCountry?.iso3 || undefined}
             selectedBranchName={ownershipLevel === "country" ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})` : branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}

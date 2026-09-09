@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { cookies } from "next/headers";
-import { Building2, ChevronDown, Landmark, Layers3, LockKeyhole, Users } from "lucide-react";
+import { Building2, ChevronDown, Landmark, Layers3, LockKeyhole, Ship, Users } from "lucide-react";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { isDemoAuthEnabled } from "@/lib/supabase/config";
@@ -105,6 +105,21 @@ const accountEntryItems: SimpleEntryItem[] = [
     title: "New Account General Report",
     description: "Inspect all created accounts, journals, balances, and linked ledger activity.",
     href: "/dashboard/new-entry/accounts/general-report" as Route,
+    status: "Ready"
+  }
+];
+
+const shippingEntryItems: SimpleEntryItem[] = [
+  {
+    title: "Shipping Line Master",
+    description: "Register shipping line carriers, configure inter-country links, and manage maritime accounts.",
+    href: "/dashboard/new-entry/shipping-line" as Route,
+    status: "Ready"
+  },
+  {
+    title: "Goods Master & Variations",
+    description: "Manage root goods entries, HS codes, and product variations.",
+    href: "/dashboard/new-entry/goods-master" as Route,
     status: "Ready"
   }
 ];
@@ -232,6 +247,34 @@ export default async function NewEntryPage() {
 
           <div className="grid gap-3 p-5">
             {accountEntryItems.map((item) => (
+              <Link
+                key={item.title}
+                href={item.href}
+                className="rounded-lg border bg-white p-4 transition hover:border-primary hover:shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-950">{th(item.title)}</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">{th(item.description)}</p>
+                  </div>
+                  <StatusPill status={item.status} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-lg border bg-card">
+          <div className="border-b px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Ship className="h-5 w-5 text-primary" aria-hidden />
+              <h2 className="font-semibold">{th("Shipping & Master Entries")}</h2>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{th("Register shipping lines, cargo carriers, and trade goods.")}</p>
+          </div>
+
+          <div className="grid gap-3 p-5">
+            {shippingEntryItems.map((item) => (
               <Link
                 key={item.title}
                 href={item.href}

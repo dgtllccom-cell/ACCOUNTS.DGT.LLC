@@ -44,6 +44,9 @@ export type AccountLiveReportProps = {
   companyDetail?: any;
   bankDetail?: any;
   warehouseDetail?: any;
+  shippingLineDetail?: any;
+  linkedCountries?: string[];
+  countriesList?: Array<{ id: string; name: string; iso2?: string | null }>;
 
   // Context metadata
   selectedCountryName?: string;
@@ -75,6 +78,9 @@ export function AccountLiveReportPanel({
   companyDetail,
   bankDetail,
   warehouseDetail,
+  shippingLineDetail,
+  linkedCountries,
+  countriesList,
   selectedCountryName,
   selectedCountryCode,
   selectedBranchName,
@@ -253,6 +259,13 @@ export function AccountLiveReportPanel({
     { label: t("browserPlatform", "Browser / Platform"), value: "Chrome / Windows" }
   ];
 
+  const linkedCountryNames = useMemo(() => {
+    if (!linkedCountries || linkedCountries.length === 0 || !countriesList) return [];
+    return linkedCountries
+      .map((id) => countriesList.find((c) => c.id === id)?.name || id)
+      .filter(Boolean);
+  }, [linkedCountries, countriesList]);
+
   // 1. Account Information fields
   const accountFields = [
     { label: t("accountName", "Account Name"), value: trName(accountName || "-") },
@@ -266,6 +279,14 @@ export function AccountLiveReportPanel({
     { label: t("contactsList", "Contacts"), value: formattedStepContacts || "-" },
     { label: t("country", "Country"), value: trTerm(selectedCountryName || "-") },
     { label: t("branch", "Branch"), value: trName(selectedBranchName || "-") },
+    ...(linkedCountryNames.length > 0 ? [{
+      label: centralT(lang, "acct.linked_countries", "Inter-Country Linkage (لین دین)"),
+      value: `${linkedCountryNames.join(", ")} (${linkedCountryNames.length})`
+    }] : []),
+    ...(shippingLineDetail ? [{
+      label: centralT(lang, "acct.shipping_carrier", "Shipping Line Carrier"),
+      value: `${shippingLineDetail.name} ${shippingLineDetail.shipping_line_code ? `(${shippingLineDetail.shipping_line_code})` : ""}`
+    }] : [])
   ];
 
   const isExpense = category === "EX";

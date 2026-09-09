@@ -31,6 +31,7 @@ export type ShippingLineRow = {
   website: string | null;
   country_id: string | null;
   remarks: string | null;
+  linked_countries?: string[] | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -44,6 +45,7 @@ export type ShippingLineWriteInput = {
   website?: string | null;
   countryId?: string | null;
   remarks?: string | null;
+  linkedCountries?: string[] | null;
   originalLanguage?: string;
   isActive?: boolean;
 };
@@ -58,6 +60,7 @@ const SHIPPING_LINE_SELECT = [
   "website",
   "country_id",
   "remarks",
+  "linked_countries",
   "is_active",
   "created_at",
   "updated_at"
@@ -83,6 +86,7 @@ function mapRawRow(r: any): ShippingLineRow {
     website: r.website ?? null,
     country_id: r.country_id ?? null,
     remarks: r.remarks ?? null,
+    linked_countries: Array.isArray(r.linked_countries) ? r.linked_countries : [],
     is_active: r.is_active ?? true,
     created_at: String(r.created_at || new Date().toISOString()),
     updated_at: String(r.updated_at || new Date().toISOString())
@@ -98,6 +102,7 @@ function toPayload(input: Partial<ShippingLineWriteInput>) {
   if ("website" in input) payload.website = cleanText(input.website);
   if ("countryId" in input) payload.country_id = input.countryId || null;
   if ("remarks" in input) payload.remarks = cleanText(input.remarks);
+  if ("linkedCountries" in input) payload.linked_countries = Array.isArray(input.linkedCountries) ? input.linkedCountries : [];
   if ("isActive" in input) payload.is_active = Boolean(input.isActive);
   return payload;
 }
@@ -191,7 +196,7 @@ export class ShippingLinesRepository {
         const rows = await localSql`
           INSERT INTO public.shipping_lines (
             name, contact_person, phone, email, website, country_id, remarks,
-            original_language_code, is_active, created_at, updated_at
+            linked_countries, original_language_code, is_active, created_at, updated_at
           ) VALUES (
             ${(payload.name as string) || ""},
             ${(payload.contact_person as string) || null},
@@ -200,6 +205,7 @@ export class ShippingLinesRepository {
             ${(payload.website as string) || null},
             ${payload.country_id ? String(payload.country_id) : null}::uuid,
             ${(payload.remarks as string) || null},
+            ${JSON.stringify(payload.linked_countries ?? input.linkedCountries ?? [])}::jsonb,
             ${input.originalLanguage || "en"},
             true, ${now}, ${now}
           )
@@ -227,6 +233,7 @@ export class ShippingLinesRepository {
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("shipping_lines").insert({
       ...payload,
+      linked_countries: payload.linked_countries ?? input.linkedCountries ?? [],
       original_language_code: input.originalLanguage || "en",
       is_active: true,
       created_at: now,
@@ -253,6 +260,7 @@ export class ShippingLinesRepository {
             website = COALESCE(${payload.website !== undefined ? (payload.website as string) : null}, website),
             country_id = COALESCE(${payload.country_id !== undefined ? (payload.country_id ? String(payload.country_id) : null) : null}::uuid, country_id),
             remarks = COALESCE(${payload.remarks !== undefined ? (payload.remarks as string) : null}, remarks),
+            linked_countries = COALESCE(${payload.linked_countries !== undefined ? JSON.stringify(payload.linked_countries) : null}::jsonb, linked_countries),
             is_active = COALESCE(${payload.is_active !== undefined ? Boolean(payload.is_active) : null}, is_active),
             updated_at = ${now}
           WHERE id = ${id}::uuid AND deleted_at IS NULL

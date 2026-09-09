@@ -23,6 +23,8 @@ export type AccountReportData = {
   customerDetail?: any;
   companyDetail?: any;
   bankDetail?: any;
+  shippingLineName?: string;
+  linkedCountriesNames?: string[];
   selectedCountryName?: string;
   selectedCountryCode?: string;
   selectedBranchName?: string;
@@ -93,6 +95,8 @@ export function openAccountA4ReportWindow(input: {
         r(tt("acct.account_type", "Account Type"), b.subType || b.category),
         r(tt("acct.currency", "Currency"), b.currency),
         r(tt("acct.status", "Status"), b.status),
+        ...(b.shippingLineName ? [r(tt("acct.shipping_carrier", "Shipping Line Carrier"), b.shippingLineName)] : []),
+        ...(b.linkedCountriesNames && b.linkedCountriesNames.length > 0 ? [r(tt("acct.linked_countries", "Inter-Country Linkage (لین دین)"), `${b.linkedCountriesNames.join(", ")} (${b.linkedCountriesNames.length})`)] : []),
         r(tt("acct.as_on", "Date / As On"), stamp)
       ]},
       { title: tt("acct.sec_customer_info", "Customer Information"), rows: [

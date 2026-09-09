@@ -1043,6 +1043,55 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "إدارة الفئات",
     fa: "مدیریت دسته‌بندی‌ها",
     ps: "د کټګوریو مدیریت"
+  },
+  linkedCountriesTitle: {
+    en: "Inter-Country Trading & Transactions Linkage (لین دین)",
+    ur: "منسلک تجارتی و لین دین والے ممالک (Inter-Country Linkage)",
+    ar: "الربط التجاري والمعاملات بين الدول (لين دين)",
+    fa: "ارتباط تجاری و تراکنش‌های بین کشوری (لین دین)",
+    ps: "د هیوادونو ترمنځ سوداګریز او راکړې ورکړې اړیکه (لین دین)"
+  },
+  linkedCountriesSubtitle: {
+    en: "Select operating countries with which this account will conduct money transfers, cargo shipments, or trading.",
+    ur: "ان برانچ والے ممالک کا انتخاب کریں جن کے ساتھ اس اکاؤنٹ کا لین دین، رقم کی منتقلی یا کارگو ترسیل ہوگی۔",
+    ar: "حدد البلدان العاملة التي سيجري هذا الحساب معها تحويلات مالية أو شحنات بضائع أو معاملات تجارية.",
+    fa: "کشورهای فعالی را انتخاب کنید که این حساب با آنها انتقال وجه، محموله کالا یا تجارت انجام می‌دهد.",
+    ps: "هغه فعال هیوادونه وټاکئ چې ورسره دا حساب د پیسو لیږد، د بار بار وړل یا سوداګري ترسره کوي."
+  },
+  selectAll: {
+    en: "Select All",
+    ur: "تمام منتخب کریں",
+    ar: "تحديد الكل",
+    fa: "انتخاب همه",
+    ps: "ټول وټاکئ"
+  },
+  clearAll: {
+    en: "Clear",
+    ur: "صاف کریں",
+    ar: "مسح",
+    fa: "پاک کردن",
+    ps: "پاکول"
+  },
+  shippingLineCarrier: {
+    en: "Shipping Line Carrier Master",
+    ur: "شپنگ لائن کیریئر ماسٹر",
+    ar: "الناقل البحري للخطوط الملاحية",
+    fa: "خط کشتیرانی اصلی",
+    ps: "د بار وړلو اصلي کرښه"
+  },
+  selectShippingLine: {
+    en: "Select Shipping Line...",
+    ur: "شپنگ لائن منتخب کریں...",
+    ar: "اختر الخط الملاحي...",
+    fa: "انتخاب خط کشتیرانی...",
+    ps: "د بار وړلو لاین وټاکئ..."
+  },
+  newShippingLine: {
+    en: "New Shipping Line",
+    ur: "نئی شپنگ لائن بنائیں",
+    ar: "خط ملاحي جديد",
+    fa: "خط کشتیرانی جدید",
+    ps: "نوی بار وړونکی لاین"
   }
 };
 

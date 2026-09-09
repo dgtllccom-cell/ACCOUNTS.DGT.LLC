@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       website: body.website ?? null,
       countryId: body.countryId ?? null,
       remarks: body.remarks ?? null,
+      linkedCountries: Array.isArray(body.linkedCountries) ? body.linkedCountries : [],
       originalLanguage: body.originalLanguage || "en"
     });
 
