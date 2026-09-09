@@ -117,47 +117,67 @@ export async function POST(request: NextRequest) {
   const admin = createSupabaseAdminClient() as any;
   const profileSelect = "id, user_code, full_name, raw_password";
 
-  // 1. Look up profile in database with flexible city/email/userCode matching
+  // 1. Look up profile in database with direct SQL by email or user_code, with Supabase fallback
   let profileRecord: any = null;
   const cleanId = rawIdentifier.replace(/@dgt\.llc$/i, "").trim().toLowerCase();
 
   try {
-    // A. Direct user_code match
-    const { data: profile } = await admin
-      .from("profiles")
-      .select(profileSelect)
-      .or(`user_code.ilike.${rawIdentifier},user_code.ilike.${cleanId}`)
-      .is("deleted_at", null)
-      .limit(1)
-      .maybeSingle();
-    profileRecord = profile;
+    profileRecord = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT p.id, p.user_code, p.full_name, p.raw_password, u.email as auth_email
+        FROM public.profiles p
+        LEFT JOIN auth.users u ON u.id = p.id
+        WHERE u.email ILIKE ${rawIdentifier}
+           OR u.email ILIKE ${`${cleanId}@dgt.llc`}
+           OR p.user_code ILIKE ${rawIdentifier}
+           OR p.user_code ILIKE ${cleanId}
+        LIMIT 1;
+      `;
+      return rows[0] || null;
+    });
+  } catch (err) {
+    console.warn("Direct pg profile lookup err:", err);
+  }
 
-    // B. If not found by direct code, search by city name in profiles or branches
-    if (!profileRecord) {
-      const cityKeywords = [
-        "quetta", "chaman", "karachi", "lahore", "peshawar", "gwadar",
-        "kabul", "kandahar", "herat", "jalalabad", "mazar", "deira",
-        "alras", "jebelali", "dubai", "abudhabi", "sharjah", "riyadh",
-        "jeddah", "dammam", "yiwu", "guangzhou", "shanghai", "istanbul",
-        "mersin", "tehran", "bandarabbas", "chabahar", "delhi", "mumbai"
-      ];
-      
-      const matchedCity = cityKeywords.find(k => cleanId.includes(k));
-      if (matchedCity) {
-        const { data: cityProfile } = await admin
-          .from("profiles")
-          .select(profileSelect)
-          .ilike("full_name", `%${matchedCity}%`)
-          .is("deleted_at", null)
-          .limit(1)
-          .maybeSingle();
-        if (cityProfile) {
-          profileRecord = cityProfile;
+  if (!profileRecord) {
+    try {
+      // A. Direct user_code match via Supabase Admin
+      const { data: profile } = await admin
+        .from("profiles")
+        .select(profileSelect)
+        .or(`user_code.ilike.${rawIdentifier},user_code.ilike.${cleanId}`)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      profileRecord = profile;
+
+      // B. If not found by direct code, search by city name in profiles
+      if (!profileRecord) {
+        const cityKeywords = [
+          "quetta", "chaman", "karachi", "lahore", "peshawar", "gwadar",
+          "kabul", "kandahar", "herat", "jalalabad", "mazar", "deira",
+          "alras", "jebelali", "dubai", "abudhabi", "sharjah", "riyadh",
+          "jeddah", "dammam", "yiwu", "guangzhou", "shanghai", "istanbul",
+          "mersin", "tehran", "bandarabbas", "chabahar", "delhi", "mumbai"
+        ];
+        
+        const matchedCity = cityKeywords.find(k => cleanId.includes(k));
+        if (matchedCity) {
+          const { data: cityProfile } = await admin
+            .from("profiles")
+            .select(profileSelect)
+            .ilike("full_name", `%${matchedCity}%`)
+            .is("deleted_at", null)
+            .limit(1)
+            .maybeSingle();
+          if (cityProfile) {
+            profileRecord = cityProfile;
+          }
         }
       }
+    } catch (err) {
+      console.warn("Profile Supabase lookup err:", err);
     }
-  } catch (err) {
-    console.warn("Profile direct lookup err:", err);
   }
 
   // 2. Fetch User Role Assignments if profile is found
@@ -166,15 +186,18 @@ export async function POST(request: NextRequest) {
 
   if (profileRecord) {
     try {
-      const { data: assignments } = await admin
-        .from("user_role_assignments")
-        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile")
-        .eq("user_id", profileRecord.id)
-        .eq("is_active", true)
-        .is("deleted_at", null);
+      const rows = await withLocalPg(async (sql) => {
+        return await sql`
+          SELECT role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile
+          FROM public.user_role_assignments
+          WHERE user_id = ${profileRecord.id}
+            AND is_active = true
+            AND deleted_at IS NULL;
+        `;
+      });
 
-      if (assignments && assignments.length > 0) {
-        roleAssignments = assignments.map((a: any) => ({
+      if (rows && rows.length > 0) {
+        roleAssignments = rows.map((a: any) => ({
           role: toEnterpriseRole(a.role),
           countryId: a.country_id,
           countryBranchId: a.country_branch_id,
@@ -183,10 +206,36 @@ export async function POST(request: NextRequest) {
           ledgerVisibility: a.ledger_visibility,
           mobileProfile: a.mobile_profile ?? "standard"
         }));
-        userRoles = assignments.map((a: any) => toEnterpriseRole(a.role));
+        userRoles = rows.map((a: any) => toEnterpriseRole(a.role));
       }
     } catch (e) {
-      console.warn("Role lookup err:", e);
+      console.warn("Direct pg role lookup err:", e);
+    }
+
+    if (userRoles.length === 0) {
+      try {
+        const { data: assignments } = await admin
+          .from("user_role_assignments")
+          .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile")
+          .eq("user_id", profileRecord.id)
+          .eq("is_active", true)
+          .is("deleted_at", null);
+
+        if (assignments && assignments.length > 0) {
+          roleAssignments = assignments.map((a: any) => ({
+            role: toEnterpriseRole(a.role),
+            countryId: a.country_id,
+            countryBranchId: a.country_branch_id,
+            cityBranchId: a.city_branch_id,
+            clearingAgentId: a.clearing_agent_id,
+            ledgerVisibility: a.ledger_visibility,
+            mobileProfile: a.mobile_profile ?? "standard"
+          }));
+          userRoles = assignments.map((a: any) => toEnterpriseRole(a.role));
+        }
+      } catch (e) {
+        console.warn("Supabase role lookup err:", e);
+      }
     }
   }
 
