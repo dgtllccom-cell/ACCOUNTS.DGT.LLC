@@ -1155,8 +1155,10 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             </div>
 
             <div className="text-xs text-muted-foreground">
-              Showing {rows.length ? (page - 1) * pageSize + 1 : 0} to{" "}
-              {Math.min(page * pageSize, data?.totalCount || 0)} of {data?.totalCount || 0} entries
+              {t(activeLang, "ujr.showing_range", "Showing {from} to {to} of {count} entries")
+                .replace("{from}", String(rows.length ? (page - 1) * pageSize + 1 : 0))
+                .replace("{to}", String(Math.min(page * pageSize, data?.totalCount || 0)))
+                .replace("{count}", String(data?.totalCount || 0))}
             </div>
 
             <div className="flex items-center gap-1">
@@ -1261,7 +1263,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         </div>
 
         <div className="flex items-center gap-2">
-          <span>Last Updated: {lastUpdated || "Just now"}</span>
+          <span>{tt("bankroz.last_updated", "Last Updated:")} {lastUpdated || t(activeLang, "dashboard.just_now", "Just now")}</span>
           <button
             type="button"
             onClick={() => void loadData()}

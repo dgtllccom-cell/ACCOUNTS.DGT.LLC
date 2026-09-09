@@ -3,6 +3,8 @@ import "./globals.css";
 import { GoogleTranslateScript } from "@/components/layout/google-translate-script";
 import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
 import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { getHtmlLanguage, getLanguageDirection } from "@/lib/i18n/languages";
 
 export const metadata: Metadata = {
   applicationName: "Digital Dock ERP",
@@ -34,9 +36,17 @@ export const viewport: Viewport = {
   themeColor: "#0f3ea8"
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Server-rendered from the same erp_lang cookie the inline script below treats as
+  // authoritative. Without this, <html> was hardcoded to lang="en" with no dir attribute —
+  // correct on first paint (the inline script fixes it up before hydration) but every
+  // subsequent router.refresh() (e.g. after switching language in Settings) re-renders this
+  // Server Component and reconciles <html> back to the hardcoded en/no-dir values, silently
+  // discarding the RTL the user just switched to.
+  const lang = await getRequestLanguage();
+  const dir = getLanguageDirection(lang);
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={getHtmlLanguage(lang)} dir={dir} suppressHydrationWarning>
       <head>
         <script
           // Runs before React hydrates to avoid theme/lang flash.
