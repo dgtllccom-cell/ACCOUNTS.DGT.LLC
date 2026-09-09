@@ -685,6 +685,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }
     if (currentStep === 3) {
       if (!loginUsername.trim()) return false;
+      const cleanEmail = personalEmail.trim();
+      if (!cleanEmail || !/\S+@\S+\.\S+/.test(cleanEmail)) return false;
       if (!editUserId && (!password || password.length < 8)) return false;
       if (password && confirmPassword && password !== confirmPassword) return false;
       return true;
@@ -696,6 +698,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   function next() {
+    if (step === 2 && !personalEmail.trim()) {
+      const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+      const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
+      setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
+    }
     if (step < 4) setStep((s) => (s + 1) as WizardStep);
   }
 
@@ -714,6 +721,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     const issuedCode = normalizeUserCode(userCode || "");
     if (!issuedCode) {
       setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_user_code" as never, "User ID / Code is required.") });
+      return;
+    }
+
+    const cleanEmail = personalEmail.trim();
+    if (!cleanEmail || !/\S+@\S+\.\S+/.test(cleanEmail)) {
+      setBanner({
+        tone: "err",
+        text: centralT(activeLang, "urw2.err_email_valid" as never, "A valid Login Email Address (e.g. user@dgt.llc or personal@email.com) is required for user login access.")
+      });
       return;
     }
 
@@ -758,8 +774,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }
 
     const preferredLanguage = activeLang;
-    const cleanUserCode = issuedCode.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const email = personalEmail.trim() || `${cleanUserCode}@dgt.llc`;
+    let resolvedTargetEmail = cleanEmail;
 
     setSaving(true);
     try {
@@ -767,6 +782,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         role: role,
         fullName: fullName.trim(),
         userCode: issuedCode,
+        username: loginUsername.trim() || issuedCode,
         operationalDomain,
         clearingAgentId: operationalDomain === "shipping" ? (clearingAgentId || null) : null,
         mobileProfile,
@@ -774,6 +790,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         countryBranchId: resolvedCountryBranchId,
         cityBranchId: resolvedCityBranchId,
         phone: contactPhone.trim(),
+        email: cleanEmail,
         designation,
         department,
         cnicPassportNo: cnicPassportNo.trim(),
@@ -802,14 +819,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         const json = await fetchRes.json();
         if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
       } else {
-        payload.email = email;
-        // `password` is already validated non-empty + >=8 chars for new users
-        // (see the create-path guard above); never fall back to a shared literal.
+        payload.email = cleanEmail;
         payload.password = password;
         payload.preferredLanguage = preferredLanguage;
-        const createRes = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
+        const createRes = await apiPost<{ userId: string; userCode: string; email?: string }>("/api/erp/users", payload);
         if (createRes && (createRes as any).userId) {
           resUserId = (createRes as any).userId;
+          if ((createRes as any).email) {
+            resolvedTargetEmail = (createRes as any).email;
+          }
         }
       }
 
@@ -821,7 +839,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         firstName: employeeProfile.firstName,
         middleName: employeeProfile.middleName,
         lastName: employeeProfile.lastName,
-        email: email,
+        email: resolvedTargetEmail,
         phone: contactPhone.trim(),
         designation: designation,
         department: department,
@@ -858,7 +876,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
         setBanner({
           tone: "err",
-          text: `A user with email address '${email}' has already been registered. Please click "+ Auto-Generate Unique Email" or use a unique email identifier.`
+          text: `A user with email address '${cleanEmail}' has already been registered. Please click "+ Auto-Generate @dgt.llc Email" or use a unique email identifier.`
         });
       } else {
         setBanner({ tone: "err", text: errMsg });
@@ -1048,6 +1066,124 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           <button type="button" onClick={() => setBanner(null)} className="text-slate-400 hover:text-slate-600">
             ×
           </button>
+        </div>
+      )}
+
+      {/* Success Credentials & Ready to Login Card */}
+      {savedUserData && (
+        <div className="rounded-2xl border-2 border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/40 p-4 shadow-lg text-xs space-y-3 animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200 dark:border-emerald-800/60 pb-2.5">
+            <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-100 font-black text-sm">
+              <Sparkles className="h-5 w-5 text-emerald-600" />
+              <span>{centralT(activeLang, "urw2.ready_title" as never, "User Login Account Created & Verified")}</span>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-600 text-white tracking-wide">
+              {savedUserData.status || "ACTIVE"}
+            </span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 bg-white/80 dark:bg-slate-900/80 p-3 rounded-xl border border-emerald-200/80 dark:border-emerald-800/40">
+            <div>
+              <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                {centralT(activeLang, "urw2.login_email" as never, "Login Email Address")}
+              </span>
+              <strong className="text-sm font-mono font-black text-blue-700 dark:text-blue-400 select-all">
+                {savedUserData.email}
+              </strong>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                {centralT(activeLang, "urw2.user_code_lbl" as never, "System User ID / Code")}
+              </span>
+              <strong className="text-sm font-mono font-black text-emerald-700 dark:text-emerald-400 select-all">
+                {savedUserData.userCode}
+              </strong>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                {centralT(activeLang, "urw2.login_user_lbl" as never, "Username / Identifier")}
+              </span>
+              <strong className="text-sm font-mono font-bold text-slate-900 dark:text-slate-100 select-all">
+                {savedUserData.username || savedUserData.userCode}
+              </strong>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+            {centralT(
+              activeLang,
+              "urw2.login_hint" as never,
+              "You can now log in immediately at /auth/login using either the Login Email Address or User ID above with your password."
+            )}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                const text = `ERP Credentials:\nUser ID: ${savedUserData.userCode}\nLogin Email: ${savedUserData.email}\nUsername: ${savedUserData.username}\nLogin URL: ${window.location.origin}/auth/login`;
+                navigator.clipboard.writeText(text);
+                setBanner({ tone: "ok", text: "Login credentials copied to clipboard!" });
+              }}
+              className="gap-1.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white"
+            >
+              <Check className="h-3.5 w-3.5" />
+              <span>Copy Credentials</span>
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => window.open("/auth/login", "_blank")}
+              className="gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>Go to Login (/auth/login)</span>
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setShowProfileModal(true)}
+              className="gap-1.5 text-xs font-bold"
+            >
+              <Eye className="h-3.5 w-3.5 text-blue-600" />
+              <span>View Profile Report</span>
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handlePrintCard}
+              className="gap-1.5 text-xs font-bold"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>Print A4 User Card</span>
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setEditUserId(null);
+                setFullName("");
+                setLoginUsername("");
+                setPersonalEmail("");
+                setPassword("");
+                setConfirmPassword("");
+                setSelectedEmployeeId("");
+                setUserCode(makeAutoUserCode());
+                setStep(1);
+                setBanner(null);
+                setSavedUserData(null);
+                setEmployeeProfile({});
+              }}
+              className="gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              <span>Register Another User</span>
+            </Button>
+          </div>
         </div>
       )}
 
@@ -1630,9 +1766,52 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 3: Login Credentials & Mobile Access */}
               {step === 3 && (
                 <div className="space-y-4">
+                  {/* Primary Login Email Address */}
+                  <div className="space-y-1.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3.5 dark:border-blue-900 dark:bg-blue-950/20">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-black uppercase tracking-wide text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 text-blue-600" />
+                        <span>{centralT(activeLang, "urw2.login_email_required" as never, "Login Email Address (لاگ ان ای میل ایڈریس) *")}</span>
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+                          const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
+                          setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
+                        }}
+                        className="text-[10.5px] font-bold text-blue-700 hover:text-blue-900 dark:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        <span>{centralT(activeLang, "urw2.autogen_email" as never, "+ Auto-Generate @dgt.llc Email")}</span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="email"
+                        value={personalEmail}
+                        onChange={(e) => setPersonalEmail(e.target.value)}
+                        placeholder="e.g. user@dgt.llc or user@gmail.com"
+                        className="h-9 pl-8 text-xs font-mono font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-800"
+                        required
+                      />
+                    </div>
+                    <p className="text-[11px] text-blue-700/90 dark:text-blue-400">
+                      {centralT(
+                        activeLang,
+                        "urw2.login_email_hint" as never,
+                        "CRITICAL: This email address will be required along with your password when logging into the ERP system at /auth/login."
+                      )}
+                    </p>
+                  </div>
+
                   {/* Username */}
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("username")}</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("username")}</Label>
+                      <span className="text-[10.5px] font-mono text-emerald-600 font-bold">User Code: {userCode}</span>
+                    </div>
                     <Input
                       value={loginUsername}
                       onChange={(e) => setLoginUsername(e.target.value)}
@@ -1651,12 +1830,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder={centralT(activeLang, "edm.pw_hint" as never, "At least 8 characters")}
-                          className="h-9 text-xs pr-8"
+                          className="h-9 text-xs pr-8 font-mono"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2 top-2 text-slate-400"
+                          className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -1664,13 +1843,20 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Confirm Password *")}</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Confirm Password *")}</Label>
+                        {password && confirmPassword && (
+                          <span className={`text-[10px] font-bold ${password === confirmPassword ? "text-emerald-600" : "text-rose-600"}`}>
+                            {password === confirmPassword ? "✓ Match" : "✗ Mismatch"}
+                          </span>
+                        )}
+                      </div>
                       <Input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder={centralT(activeLang, "edm.pw_reenter" as never, "Re-enter password")}
-                        className="h-9 text-xs"
+                        className="h-9 text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -1740,6 +1926,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <div>
                         <span className="text-slate-500">{th("Username")}:</span>{" "}
                         <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{centralT(activeLang, "urw2.login_email" as never, "Login Email")}:</span>{" "}
+                        <strong className="text-blue-700 dark:text-blue-300 font-mono font-bold">{personalEmail || `${(userCode || 'user').toLowerCase().replace(/[^a-z0-9]/g, "")}@dgt.llc`}</strong>
                       </div>
                       <div>
                         <span className="text-slate-500">{th("Designation")}:</span> <strong>{designation}</strong>

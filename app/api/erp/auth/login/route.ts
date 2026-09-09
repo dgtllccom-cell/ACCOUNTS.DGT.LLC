@@ -9,6 +9,11 @@ import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
 
+function toEnterpriseRole(role: string): EnterpriseRole {
+  if (role === "staff") return "staff_user";
+  return role as EnterpriseRole;
+}
+
 function dashboardForRoles(roles: EnterpriseRole[]) {
   if (roles.includes("super_admin")) return "/dashboard/super-admin";
   if (roles.includes("country_admin") || roles.includes("country_user")) return "/dashboard/country";
@@ -171,7 +176,7 @@ export async function POST(request: NextRequest) {
 
       if (assignments && assignments.length > 0) {
         roleAssignments = assignments.map((a: any) => ({
-          role: a.role as EnterpriseRole,
+          role: toEnterpriseRole(a.role),
           countryId: a.country_id,
           countryBranchId: a.country_branch_id,
           cityBranchId: a.city_branch_id,
@@ -179,7 +184,7 @@ export async function POST(request: NextRequest) {
           ledgerVisibility: a.ledger_visibility,
           mobileProfile: a.mobile_profile ?? "standard"
         }));
-        userRoles = assignments.map((a: any) => a.role as EnterpriseRole);
+        userRoles = assignments.map((a: any) => toEnterpriseRole(a.role));
       }
     } catch (e) {
       console.warn("Role lookup err:", e);
@@ -187,13 +192,8 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Verify Password.
-  // Primary path: Supabase Auth (hashed credentials) — see step below.
-  // Legacy path: `profiles.raw_password` plaintext compare. DEPRECATED and only
-  // kept so users provisioned by older seed scripts (that never created a
-  // Supabase Auth entry) are not locked out. No new code writes raw_password;
-  // it is scheduled for removal once every active account has a Supabase Auth
-  // credential. There is NO hardcoded password bypass here.
   let isAuthenticated = false;
+  let authenticatedEmail: string | null = null;
 
   if (profileRecord) {
     const hasLegacyRawPwMatch =
@@ -222,11 +222,28 @@ export async function POST(request: NextRequest) {
         "business@dgt.llc": "business.superadmin@dgt.llc",
       };
       const mapped = aliasMap[rawIdentifier.toLowerCase()] || aliasMap[cleanId.toLowerCase()];
+
+      // If profile is known (by user_code or name), retrieve their Supabase Auth email
+      let profileAuthEmail: string | null = null;
+      if (profileRecord?.id) {
+        try {
+          const { data: authUserData } = await admin.auth.admin.getUserById(profileRecord.id);
+          if (authUserData?.user?.email) {
+            profileAuthEmail = authUserData.user.email.toLowerCase();
+          }
+        } catch (e) {
+          console.warn("Auth user lookup by profile ID err:", e);
+        }
+      }
+
       const candidateEmails = Array.from(new Set([
+        profileAuthEmail,
         mapped,
+        rawIdentifier.toLowerCase().includes("@") ? rawIdentifier.toLowerCase() : null,
+        !rawIdentifier.includes("@") ? `${cleanId}@dgt.llc` : null,
+        profileRecord?.user_code && !profileRecord.user_code.includes("@") ? `${profileRecord.user_code.toLowerCase().replace(/[^a-z0-9]/g, "")}@dgt.llc` : null,
         rawIdentifier.toLowerCase(),
         cleanId.toLowerCase(),
-        profileRecord?.user_code?.toLowerCase(),
       ].filter(Boolean) as string[]));
 
       for (const authEmail of candidateEmails) {
@@ -236,6 +253,7 @@ export async function POST(request: NextRequest) {
         });
         if (!sbError && signInData?.user) {
           isAuthenticated = true;
+          authenticatedEmail = signInData.user.email || authEmail;
           if (!profileRecord) {
             const { data: prof } = await admin
               .from("profiles")
@@ -260,7 +278,7 @@ export async function POST(request: NextRequest) {
 
               if (assignments && assignments.length > 0) {
                 roleAssignments = assignments.map((a: any) => ({
-                  role: a.role as EnterpriseRole,
+                  role: toEnterpriseRole(a.role),
                   countryId: a.country_id,
                   countryBranchId: a.country_branch_id,
                   cityBranchId: a.city_branch_id,
@@ -268,7 +286,7 @@ export async function POST(request: NextRequest) {
                   ledgerVisibility: a.ledger_visibility,
                   mobileProfile: a.mobile_profile ?? "standard"
                 }));
-                userRoles = assignments.map((a: any) => a.role as EnterpriseRole);
+                userRoles = assignments.map((a: any) => toEnterpriseRole(a.role));
               }
             } catch (e) {
               console.warn("Role lookup retry err:", e);
@@ -321,7 +339,7 @@ export async function POST(request: NextRequest) {
   // 5. Establish Session Cookie
   await setDirectUserSession({
     userId: profileRecord.id,
-    email: rawIdentifier.toLowerCase(),
+    email: authenticatedEmail || rawIdentifier.toLowerCase(),
     fullName: profileRecord.full_name || rawIdentifier,
     roles: userRoles,
     assignments: roleAssignments,

@@ -178,6 +178,7 @@ export const approvalStatusSchema = z.enum(approvalStatuses);
 export const userCreateSchema = scopeSchema.extend({
   role: roleNameSchema,
   fullName: z.string().trim().min(2).max(200),
+  username: z.string().trim().max(100).nullable().optional(),
   email: z.string().trim().email().max(255),
   password: z.string().min(8).max(200),
   preferredLanguage: supportedLanguageSchema.default("en"),

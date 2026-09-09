@@ -199,6 +199,7 @@ export async function POST(request: NextRequest) {
       email_confirm: true,
       user_metadata: {
         user_code: issuedUserCode,
+        username: body.username ?? null,
         phone: body.phone ?? null,
         company_id: body.companyId ?? null,
         id_type: body.idType ?? null,
@@ -225,6 +226,7 @@ export async function POST(request: NextRequest) {
           email_confirm: true,
           user_metadata: {
             user_code: issuedUserCode,
+            username: body.username ?? null,
             phone: body.phone ?? null,
             company_id: body.companyId ?? null,
             id_type: body.idType ?? null,
@@ -240,6 +242,7 @@ export async function POST(request: NextRequest) {
             email_confirm: true,
             user_metadata: {
               user_code: issuedUserCode,
+              username: body.username ?? null,
               phone: body.phone ?? null,
               company_id: body.companyId ?? null,
               id_type: body.idType ?? null,
@@ -363,7 +366,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    return apiCreated({ userId: newUserId, userCode: issuedUserCode, operationalDomain: domain, mobileProfile });
+    return apiCreated({ userId: newUserId, userCode: issuedUserCode, operationalDomain: domain, mobileProfile, email: targetEmail });
   } catch (error) {
     return handleApiError(error);
   }
