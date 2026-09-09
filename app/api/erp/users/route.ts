@@ -161,6 +161,15 @@ export async function POST(request: NextRequest) {
     );
 
     const mobileProfile = normalizeMobileProfile(body.mobileProfile);
+    if (mobileProfile === "mobile_field") {
+      // The Mobile Field / Munshi profile is not assignable yet: its per-job /
+      // per-record assignment enforcement is not complete, so activating it would
+      // expose every record that uses an assigned form. Blocked until finished.
+      throw new ApiClientError(
+        "Mobile Field / Munshi User is not yet available for assignment. Use Standard ERP Access or Mobile Cash & Ledger.",
+        { status: 400 },
+      );
+    }
 
     const requestedPermissions = normalizePermissions(body.permissions);
     const defaultRolePermissions = [...new Set(enterpriseRolePermissions[body.role] ?? [])];
@@ -474,6 +483,13 @@ export async function PATCH(request: NextRequest) {
       photoUrl: z.string().trim().optional(),
       purpose: z.string().trim().optional()
     }).parse(await request.json());
+
+    if (body.mobileProfile === "mobile_field") {
+      throw new ApiClientError(
+        "Mobile Field / Munshi User is not yet available for assignment. Use Standard ERP Access or Mobile Cash & Ledger.",
+        { status: 400 },
+      );
+    }
 
     // Authorization check:
     // Super Admin can edit any user.
