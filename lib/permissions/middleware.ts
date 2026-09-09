@@ -181,9 +181,18 @@ export function resolveReportScope(session: ErpSession): ReportScope {
     };
   }
 
-  const primaryCountryId = session.countryIds[0] ?? null;
+  // session.countryIds/countryBranchIds are intentionally sparse for a login whose only
+  // assignment is at the city-branch level - getAssignmentRoots() (lib/auth/session.ts)
+  // deliberately does NOT seed them in that case, so the downward hierarchy-expansion in
+  // resolveHierarchyScopes() never widens a branch login's actual DATA ACCESS to its whole
+  // country. But that leaves session.countryIds[0] empty here too, which made this function
+  // return countryId: null for a branch-scoped session - i.e. "no country filter" - which
+  // callers (see enforceScopeFilters below) then read as "show every country". Fall back to
+  // the assignment's own countryId/countryBranchId (always present) for DISPLAY/FILTER
+  // purposes only; this does not touch or widen the access-grant arrays themselves.
+  const primaryCountryId = session.countryIds[0] ?? session.assignments.find((a) => a.countryId)?.countryId ?? null;
   const primaryBranchId = session.cityBranchIds[0] ?? null;
-  const primaryCountryBranchId = session.countryBranchIds[0] ?? null;
+  const primaryCountryBranchId = session.countryBranchIds[0] ?? session.assignments.find((a) => a.countryBranchId)?.countryBranchId ?? null;
 
   const roles = session.roles;
 

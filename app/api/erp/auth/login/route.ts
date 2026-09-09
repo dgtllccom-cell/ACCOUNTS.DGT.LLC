@@ -151,27 +151,23 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
       profileRecord = profile;
 
-      // B. If not found by direct code, search by city name in profiles
+      // B. If not found by direct code, check aliases (.branch <-> .admin)
       if (!profileRecord) {
-        const cityKeywords = [
-          "quetta", "chaman", "karachi", "lahore", "peshawar", "gwadar",
-          "kabul", "kandahar", "herat", "jalalabad", "mazar", "deira",
-          "alras", "jebelali", "dubai", "abudhabi", "sharjah", "riyadh",
-          "jeddah", "dammam", "yiwu", "guangzhou", "shanghai", "istanbul",
-          "mersin", "tehran", "bandarabbas", "chabahar", "delhi", "mumbai"
-        ];
-        
-        const matchedCity = cityKeywords.find(k => cleanId.includes(k));
-        if (matchedCity) {
-          const { data: cityProfile } = await admin
+        const altId = cleanId.endsWith(".branch")
+          ? cleanId.replace(/\.branch$/, ".admin")
+          : cleanId.endsWith(".admin")
+          ? cleanId.replace(/\.admin$/, ".branch")
+          : cleanId;
+        if (altId !== cleanId) {
+          const { data: altProfile } = await admin
             .from("profiles")
             .select(profileSelect)
-            .ilike("full_name", `%${matchedCity}%`)
+            .ilike("user_code", altId)
             .is("deleted_at", null)
             .limit(1)
             .maybeSingle();
-          if (cityProfile) {
-            profileRecord = cityProfile;
+          if (altProfile) {
+            profileRecord = altProfile;
           }
         }
       }

@@ -194,7 +194,7 @@ async function main() {
     {
       email: "quetta.branch@dgt.llc",
       fullName: "Quetta City Admin",
-      userCode: "QUETTA.ADMIN",
+      userCode: "QUETTA.BRANCH",
       role: "city_branch_admin",
       countryId: pkCountry.id,
       countryBranchId: pkMain.id,
@@ -203,7 +203,7 @@ async function main() {
     {
       email: "chaman.branch@dgt.llc",
       fullName: "Chaman City Admin",
-      userCode: "CHAMAN.ADMIN",
+      userCode: "CHAMAN.BRANCH",
       role: "city_branch_admin",
       countryId: pkCountry.id,
       countryBranchId: pkMain.id,
@@ -212,7 +212,7 @@ async function main() {
     {
       email: "dubai.branch@dgt.llc",
       fullName: "Deira Dubai City Admin",
-      userCode: "DUBAI.ADMIN",
+      userCode: "DUBAI.BRANCH",
       role: "city_branch_admin",
       countryId: aeCountry.id,
       countryBranchId: aeMain.id,
@@ -295,6 +295,15 @@ async function main() {
     RETURNING id, user_id, role;
   `;
   console.log(`✓ Deactivated other user role assignments (${deactivatedAssignments.length})`);
+
+  // Soft-delete all OTHER profiles and unset their user_code
+  const deactivatedProfiles = await sql`
+    UPDATE public.profiles
+    SET deleted_at = NOW(), user_code = NULL
+    WHERE id NOT IN ${sql(targetUserIds)} AND deleted_at IS NULL
+    RETURNING id, full_name;
+  `;
+  console.log(`✓ Deactivated other profiles (${deactivatedProfiles.length})`);
 
   console.log("\n==========================================================================");
   console.log("✅ STANDARDIZATION COMPLETE: EXACT 2 COUNTRIES, 3 CITY BRANCHES, 8 USERS");
