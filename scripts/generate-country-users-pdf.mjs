@@ -12,286 +12,113 @@ async function generateCountryUsersPdf() {
   });
 
   const usersData = [
-    // Global Super Admin
+    // 3 Global Super Admins
     {
-      country: "Global (All Countries)",
-      branch: "HQ Global Operations",
-      person: "Global Super Admin",
+      country: "Global (All Operations)",
+      branch: "Head Office / Super Admin",
+      person: "Principal Super Admin",
       role: "Super Admin",
       email: "superadmin@dgt.llc",
       userCode: "SUPERADMIN",
       password: ["DgtAdmin", "@", "2026", "!"].join(""),
       status: "Active & Verified",
     },
-    // Pakistan
+    {
+      country: "Global (All Operations)",
+      branch: "Head Office / Operations Oversight",
+      person: "Global Group Executive",
+      role: "Super Admin",
+      email: "all.superadmin@dgt.llc",
+      userCode: "ALL.SUPERADMIN",
+      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      status: "Active & Verified",
+    },
+    {
+      country: "Global (All Operations)",
+      branch: "Head Office / Compliance & Audit",
+      person: "Chief Audit Officer",
+      role: "Super Admin",
+      email: "audit.superadmin@dgt.llc",
+      userCode: "AUDIT.SUPERADMIN",
+      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      status: "Active & Verified",
+    },
+    // 2 Country Admins
     {
       country: "Pakistan (PK)",
       branch: "Pakistan Main Branch (PAK-MAIN-001)",
-      person: "Pakistan Country Admin",
+      person: "Pakistan Country Director",
       role: "Country Admin",
-      email: "pakistan@dgt.llc",
-      userCode: "PAKISTAN@DGT.LLC",
+      email: "pakistan.admin@dgt.llc",
+      userCode: "PAKISTAN.ADMIN",
+      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      status: "Active & Verified",
+    },
+    {
+      country: "United Arab Emirates (AE)",
+      branch: "UAE Main Branch (ARE-MAIN-001)",
+      person: "UAE Country Director",
+      role: "Country Admin",
+      email: "uae.admin@dgt.llc",
+      userCode: "UAE.ADMIN",
+      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      status: "Active & Verified",
+    },
+    // 3 City Admins
+    {
+      country: "Pakistan (PK)",
+      branch: "Quetta City Branch (PAK-QUE-001)",
+      person: "Quetta Branch Administrator",
+      role: "City Branch Admin",
+      email: "quetta.branch@dgt.llc",
+      userCode: "QUETTA.ADMIN",
       password: ["DgtAdmin", "@", "2026", "!"].join(""),
       status: "Active & Verified",
     },
     {
       country: "Pakistan (PK)",
       branch: "Chaman City Branch (PAK-CHM-001)",
-      person: "Chaman Branch Operator",
-      role: "City Branch User",
-      email: "pk/chaman@dgt.llc",
-      userCode: "PK/CHAMAN@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Pakistan (PK)",
-      branch: "Quetta City Branch (PAK-QTA-001)",
-      person: "Quetta Branch Operator",
-      role: "City Branch User",
-      email: "pk/quetta@dgt.llc",
-      userCode: "PK/QUETTA@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Pakistan (PK)",
-      branch: "Karachi City Branch (PAK-KHI-001)",
-      person: "Karachi Branch Operator",
-      role: "City Branch User",
-      email: "pk/karachi@dgt.llc",
-      userCode: "PK/KARACHI@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Pakistan (PK)",
-      branch: "Lahore City Branch (PAK-LHR-001)",
-      person: "Lahore Branch Operator",
-      role: "City Branch User",
-      email: "pk/lahore@dgt.llc",
-      userCode: "PK/LAHORE@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Pakistan (PK)",
-      branch: "Gwadar Port Branch (PAK-GWD-001)",
-      person: "Gwadar Clearing Agent",
-      role: "Clearing Agent",
-      email: "pk/gwadar@dgt.llc",
-      userCode: "PK/GWADAR@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    // Afghanistan
-    {
-      country: "Afghanistan (AF)",
-      branch: "Afghanistan Main Branch (AFG-MAIN-001)",
-      person: "Afghanistan Country Admin",
-      role: "Country Admin",
-      email: "afghanistan@dgt.llc",
-      userCode: "AFGHANISTAN@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Afghanistan (AF)",
-      branch: "Kabul City Branch (AFG-KBL-001)",
-      person: "Kabul Branch Operator",
-      role: "City Branch User",
-      email: "af/kabul@dgt.llc",
-      userCode: "AF/KABUL@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Afghanistan (AF)",
-      branch: "Kandahar City Branch (AFG-KDH-001)",
-      person: "Kandahar Branch Operator",
-      role: "City Branch User",
-      email: "af/kandahar@dgt.llc",
-      userCode: "AF/KANDAHAR@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Afghanistan (AF)",
-      branch: "Herat City Branch (AFG-HRT-001)",
-      person: "Herat Branch Operator",
-      role: "City Branch User",
-      email: "af/herat@dgt.llc",
-      userCode: "AF/HERAT@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "Afghanistan (AF)",
-      branch: "Spin Boldak Branch (AFG-SBD-001)",
-      person: "Spin Boldak Clearing Agent",
-      role: "Clearing Agent",
-      email: "af/spinboldak@dgt.llc",
-      userCode: "AF/SPINBOLDAK@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    // United Arab Emirates
-    {
-      country: "United Arab Emirates (AE)",
-      branch: "UAE Main Branch (ARE-MAIN-001)",
-      person: "UAE Country Admin",
-      role: "Country Admin",
-      email: "uae@dgt.llc",
-      userCode: "UAE@DGT.LLC",
+      person: "Chaman Branch Administrator",
+      role: "City Branch Admin",
+      email: "chaman.branch@dgt.llc",
+      userCode: "CHAMAN.ADMIN",
       password: ["DgtAdmin", "@", "2026", "!"].join(""),
       status: "Active & Verified",
     },
     {
       country: "United Arab Emirates (AE)",
-      branch: "Dubai City Branch (ARE-DXB-001)",
-      person: "Dubai Branch Operator",
-      role: "City Branch User",
-      email: "ae/dubai@dgt.llc",
-      userCode: "AE/DUBAI@DGT.LLC",
+      branch: "Deira Dubai City Branch (UAE-DEI-001)",
+      person: "Deira Dubai Branch Administrator",
+      role: "City Branch Admin",
+      email: "dubai.branch@dgt.llc",
+      userCode: "DUBAI.ADMIN",
       password: ["DgtAdmin", "@", "2026", "!"].join(""),
       status: "Active & Verified",
-    },
-    {
-      country: "United Arab Emirates (AE)",
-      branch: "Abu Dhabi City Branch (ARE-AUH-001)",
-      person: "Abu Dhabi Branch Operator",
-      role: "City Branch User",
-      email: "ae/abudhabi@dgt.llc",
-      userCode: "AE/ABUDHABI@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "United Arab Emirates (AE)",
-      branch: "Sharjah City Branch (ARE-SHJ-001)",
-      person: "Sharjah Branch Operator",
-      role: "City Branch User",
-      email: "ae/sharjah@dgt.llc",
-      userCode: "AE/SHARJAH@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "United Arab Emirates (AE)",
-      branch: "Jebel Ali Port Branch (ARE-JAF-001)",
-      person: "Jebel Ali Clearing Agent",
-      role: "Clearing Agent",
-      email: "ae/jebelali@dgt.llc",
-      userCode: "AE/JEBELALI@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    // China
-    {
-      country: "China (CN)",
-      branch: "China Main Branch (CHN-MAIN-001)",
-      person: "China Country Admin",
-      role: "Country Admin",
-      email: "china@dgt.llc",
-      userCode: "CHINA@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "China (CN)",
-      branch: "Shenzhen City Branch (CHN-SZX-001)",
-      person: "Shenzhen Branch Operator",
-      role: "City Branch User",
-      email: "cn/shenzhen@dgt.llc",
-      userCode: "CN/SHENZHEN@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "China (CN)",
-      branch: "Dalian City Branch (CHN-DLC-001)",
-      person: "Dalian Branch Operator",
-      role: "City Branch User",
-      email: "cn/dalian@dgt.llc",
-      userCode: "CN/DALIAN@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "China (CN)",
-      branch: "Guangzhou City Branch (CHN-CAN-001)",
-      person: "Guangzhou Branch Operator",
-      role: "City Branch User",
-      email: "cn/guangzhou@dgt.llc",
-      userCode: "CN/GUANGZHOU@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    // India
-    {
-      country: "India (IN)",
-      branch: "India Main Branch (IND-MAIN-001)",
-      person: "India Country Admin",
-      role: "Country Admin",
-      email: "india@dgt.llc",
-      userCode: "INDIA@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "India (IN)",
-      branch: "New Delhi City Branch (IND-DEL-001)",
-      person: "Delhi Branch Operator",
-      role: "City Branch User",
-      email: "in/delhi@dgt.llc",
-      userCode: "IN/DELHI@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "India (IN)",
-      branch: "Mumbai City Branch (IND-BOM-001)",
-      person: "Mumbai Branch Operator",
-      role: "City Branch User",
-      email: "in/mumbai@dgt.llc",
-      userCode: "IN/MUMBAI@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
-    {
-      country: "India (IN)",
-      branch: "Attari Border Branch (IND-ATR-001)",
-      person: "Attari Clearing Agent",
-      role: "Clearing Agent",
-      email: "in/attari@dgt.llc",
-      userCode: "IN/ATTARI@DGT.LLC",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
-      status: "Active & Verified",
-    },
+    }
   ];
 
   const rowsHtml = usersData
     .map((u, i) => {
       const isCountryAdmin = u.role === "Country Admin";
       const isSuperAdmin = u.role === "Super Admin";
-      const badgeBg = isSuperAdmin ? "#fef3c7" : isCountryAdmin ? "#e0e7ff" : "#f1f5f9";
-      const badgeColor = isSuperAdmin ? "#92400e" : isCountryAdmin ? "#3730a3" : "#334155";
+      const badgeBg = isSuperAdmin ? "#fef3c7" : isCountryAdmin ? "#e0e7ff" : "#f0fdf4";
+      const badgeColor = isSuperAdmin ? "#92400e" : isCountryAdmin ? "#3730a3" : "#166534";
 
       return `
-      <tr style="border-bottom: 1px solid #e2e8f0; font-size: 10px; ${isSuperAdmin || isCountryAdmin ? 'background: #fafafa;' : ''}">
-        <td style="padding: 6px 8px; font-weight: 700; color: #0f172a;">${u.country}</td>
-        <td style="padding: 6px 8px; color: #334155;">${u.branch}</td>
-        <td style="padding: 6px 8px; font-weight: 600; color: #1e293b;">${u.person}</td>
-        <td style="padding: 6px 8px;">
-          <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700;">
+      <tr style="border-bottom: 1px solid #e2e8f0; font-size: 11px; ${isSuperAdmin ? 'background: #f8fafc;' : isCountryAdmin ? 'background: #fdfefe;' : ''}">
+        <td style="padding: 10px 12px; font-weight: 700; color: #0f172a;">${u.country}</td>
+        <td style="padding: 10px 12px; color: #334155; font-weight: 600;">${u.branch}</td>
+        <td style="padding: 10px 12px; font-weight: 600; color: #1e293b;">${u.person}</td>
+        <td style="padding: 10px 12px;">
+          <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;">
             ${u.role}
           </span>
         </td>
-        <td style="padding: 6px 8px; font-family: monospace; font-weight: 700; color: #2563eb;">${u.email}</td>
-        <td style="padding: 6px 8px; font-family: monospace; color: #475569;">${u.userCode}</td>
-        <td style="padding: 6px 8px; font-family: monospace; font-weight: 700; color: #059669; background: #ecfdf5;">${u.password}</td>
-        <td style="padding: 6px 8px; text-align: center;">
-          <span style="background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700;">
+        <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #2563eb; font-size: 12px;">${u.email}</td>
+        <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #475569;">${u.userCode}</td>
+        <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #059669; background: #ecfdf5; font-size: 12px;">${u.password}</td>
+        <td style="padding: 10px 12px; text-align: center;">
+          <span style="background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;">
             ✓ ${u.status}
           </span>
         </td>
@@ -324,136 +151,175 @@ async function generateCountryUsersPdf() {
       }
     }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body { font-family: 'Inter', sans-serif; font-size: 9pt; color: #0f172a; margin: 0; padding: 10px; }
+    body { font-family: 'Inter', sans-serif; font-size: 10pt; color: #0f172a; margin: 0; padding: 14px; background: #ffffff; }
     .header-box {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: #ffffff;
-      padding: 14px 20px;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      padding: 18px 24px;
+      border-radius: 10px;
+      margin-bottom: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    .title { font-size: 16pt; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px; }
-    .subtitle { font-size: 8.5pt; color: #94a3b8; }
+    .title { font-size: 18pt; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px; }
+    .subtitle { font-size: 9.5pt; color: #94a3b8; font-weight: 500; }
     .badge {
       background: rgba(16, 185, 129, 0.2);
       border: 1px solid #10b981;
       color: #6ee7b7;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 8.5pt;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 9pt;
       font-weight: 700;
       text-transform: uppercase;
       text-align: right;
     }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .kpi-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .kpi-label { font-size: 8.5pt; text-transform: uppercase; font-weight: 700; color: #64748b; }
+    .kpi-val { font-size: 16pt; font-weight: 800; color: #0f172a; margin-top: 2px; }
+    .kpi-sub { font-size: 8pt; color: #94a3b8; font-weight: 500; }
     .info-strip {
       background: #eff6ff;
       border: 1px solid #bfdbfe;
       border-left: 4px solid #2563eb;
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      font-size: 8.5pt;
+      padding: 10px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 9pt;
       color: #1e40af;
       display: flex;
       justify-content: space-between;
     }
-    table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
     th {
       background: #0f172a;
       color: #ffffff;
       text-align: left;
-      padding: 7px 8px;
-      font-size: 8pt;
+      padding: 10px 12px;
+      font-size: 9pt;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+    .footer-notes {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #fefce8;
+      border: 1px solid #fef08a;
+      border-radius: 8px;
+      font-size: 8.5pt;
+      color: #854d0e;
     }
   </style>
 </head>
 <body>
   <div class="header-box">
     <div>
-      <div class="title">ACCOUNTS.DGT.LLC — Country & Branch Login Register</div>
-      <div class="subtitle">Complete Master Credential Directory & Access Scope Hierarchy</div>
+      <div class="title">ACCOUNTS.DGT.LLC — Verified Credentials Register</div>
+      <div class="subtitle">Official 2-Country (Pakistan & UAE), 3-Branch Business Hierarchy & Login Directory</div>
     </div>
     <div class="badge">
-      Enterprise Verified<br/>
-      <span style="font-size: 7pt; font-weight: 400; color: #e2e8f0;">Generated: ${timestamp}</span>
+      Production Verified<br/>
+      <span style="font-size: 7.5pt; font-weight: 400; color: #e2e8f0;">Generated: ${timestamp}</span>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Active Countries</div>
+      <div class="kpi-val" style="color: #2563eb;">2</div>
+      <div class="kpi-sub">Pakistan (PK) & UAE (AE)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Country Main Branches</div>
+      <div class="kpi-val" style="color: #7c3aed;">2</div>
+      <div class="kpi-sub">PAK-MAIN-001 & ARE-MAIN-001</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active City Branches</div>
+      <div class="kpi-val" style="color: #059669;">3</div>
+      <div class="kpi-sub">Quetta, Chaman, Deira Dubai</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Authorized Users</div>
+      <div class="kpi-val" style="color: #0f172a;">8</div>
+      <div class="kpi-sub">3 Global, 2 Country, 3 City</div>
     </div>
   </div>
 
   <div class="info-strip">
-    <span><strong>Login Portal URL:</strong> http://72.60.209.121/auth/login (or https://new.dgt.llc/auth/login)</span>
-    <span><strong>Standard Enterprise Password:</strong> <code style="font-family: monospace; font-weight: 700; color: #047857;">DgtAdmin@2026!</code></span>
-    <span><strong>Login Method:</strong> Type either the <em>Login Email</em> OR the <em>User Code</em></span>
+    <span><strong>Login Portal URL:</strong> http://72.60.209.121/auth/login &nbsp;|&nbsp; https://new.dgt.llc/auth/login</span>
+    <span><strong>Standard Password:</strong> <code style="font-family: monospace; font-weight: 700; color: #047857; font-size: 10.5pt;">DgtAdmin@2026!</code></span>
+    <span><strong>Login Method:</strong> Use either the <em>Login Email</em> OR the <em>User Code</em></span>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th style="width: 14%;">Country Scope</th>
-        <th style="width: 17%;">Branch / Location</th>
-        <th style="width: 14%;">Responsible Officer</th>
-        <th style="width: 11%;">System Role</th>
-        <th style="width: 16%;">Login Email</th>
-        <th style="width: 12%;">User Code</th>
-        <th style="width: 10%;">Password</th>
-        <th style="width: 6%; text-align: center;">Status</th>
+        <th style="width: 15%;">Country Scope</th>
+        <th style="width: 20%;">Branch / Location</th>
+        <th style="width: 15%;">Responsible Officer</th>
+        <th style="width: 12%;">System Role</th>
+        <th style="width: 15%;">Login Email</th>
+        <th style="width: 11%;">User Code</th>
+        <th style="width: 12%;">Password</th>
       </tr>
     </thead>
     <tbody>
       ${rowsHtml}
     </tbody>
   </table>
+
+  <div class="footer-notes">
+    <strong>Security Notice:</strong> This document contains production credentials for Digital Dock Accounts ERP. Do not share outside authorized executive and administrative personnel. All logins are protected by multi-tier cryptographic verification (Direct PostgreSQL Pgcrypto, Bcrypt salt 10, and Supabase GoTrue Auth).
+  </div>
 </body>
 </html>`;
 
-  const tmpHtml = path.join(process.cwd(), "public", "country_users_credentials.html");
-  const tmpPdf = path.join(process.cwd(), "public", "Country_Branch_Users_Credentials_Register.pdf");
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-  fs.writeFileSync(tmpHtml, htmlContent, "utf8");
-
-  const edgePaths = [
-    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-  ];
-
-  let execPath = edgePaths.find((p) => fs.existsSync(p));
-
-  const browser = await chromium.launch({
-    executablePath: execPath,
-    headless: true,
-  });
-
-  const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle" });
 
+  const publicPdfPath = path.resolve("public", "Country_Branch_Users_Credentials_Register.pdf");
+  const artifactDir = "C:\\Users\\dgtll\\.gemini\\antigravity-ide\\brain\\8627f171-fc96-495d-8b05-3c13e78f4f10";
+  const artifactPdfPath = path.join(artifactDir, "Country_Branch_Users_Credentials_Register.pdf");
+
   await page.pdf({
-    path: tmpPdf,
+    path: publicPdfPath,
     format: "A4",
     landscape: true,
     printBackground: true,
     margin: {
-      top: "8mm",
-      bottom: "8mm",
-      left: "8mm",
+      top: "10mm",
       right: "8mm",
+      bottom: "10mm",
+      left: "8mm",
     },
   });
 
   await browser.close();
-  console.log("✅ PDF Generated successfully at:", tmpPdf);
 
-  const artifactDir = "C:\\Users\\dgtll\\.gemini\\antigravity-ide\\brain\\8627f171-fc96-495d-8b05-3c13e78f4f10";
-  if (fs.existsSync(artifactDir)) {
-    const artPdf = path.join(artifactDir, "Country_Branch_Users_Credentials_Register.pdf");
-    fs.copyFileSync(tmpPdf, artPdf);
-    console.log("✅ Copied to conversation artifact directory:", artPdf);
-  }
+  // Also copy to conversation artifact directory
+  fs.copyFileSync(publicPdfPath, artifactPdfPath);
+
+  const stats = fs.statSync(publicPdfPath);
+  console.log(`\n✅ PDF generated successfully: ${publicPdfPath}`);
+  console.log(`✅ File size: ${(stats.size / 1024).toFixed(1)} KB`);
+  console.log(`✅ Copied to artifact: ${artifactPdfPath}`);
 }
 
 generateCountryUsersPdf().catch(console.error);

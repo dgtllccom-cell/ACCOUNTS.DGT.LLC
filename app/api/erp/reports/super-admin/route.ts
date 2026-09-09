@@ -712,6 +712,134 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      if (params.reportType === "ledger") {
+        const mbId = params.mainBranchId;
+        const bId = params.branchId;
+        const currencyFilter = params.currency && params.currency !== "all" ? params.currency : null;
+
+        const batchLineRows = (await sql`
+          select
+            lpl.id, lpb.id as batch_id,
+            coalesce(lpb.reference_no, left(lpb.id::text, 8)) as reference,
+            lpb.entry_date as date,
+            coalesce(lpl.ledger_name_snapshot, lpl.account_number, lpl.ledger_id::text) as account,
+            coalesce(lpl.account_number, '—') as account_number,
+            coalesce(lpl.description, lpb.narration, '—') as description,
+            lpl.debit, lpl.credit, lpl.currency,
+            lpb.status::text as status, lpb.approval_status,
+            coalesce(lpb.branch_name_snapshot, cb.name, crb.name, 'Entire Country') as branch,
+            coalesce(lpl.user_name_snapshot, lpb.created_by::text, '—') as user_name,
+            lpb.created_at, lpb.approved_at, lpb.approved_by
+          from public.ledger_posting_batches lpb
+          join public.ledger_posting_lines lpl on lpl.batch_id = lpb.id
+          left join public.city_branches cb on cb.id = lpb.city_branch_id
+          left join public.country_branches crb on crb.id = lpb.country_branch_id
+          where lpb.deleted_at is null
+            ${targetCountryId ? sql`and lpb.country_id = ${targetCountryId}::uuid` : sql``}
+            ${params.scopeMode === "main-branch" && mbId ? sql`and lpb.country_branch_id = ${mbId}::uuid and lpb.city_branch_id is null` : sql``}
+            ${params.scopeMode === "city-branch" && bId ? sql`and lpb.city_branch_id = ${bId}::uuid` : sql``}
+            ${params.fromDate ? sql`and lpb.entry_date >= ${params.fromDate}` : sql``}
+            ${params.toDate ? sql`and lpb.entry_date <= ${params.toDate}` : sql``}
+            ${params.userId ? sql`and lpb.created_by = ${params.userId}::uuid` : sql``}
+            ${currencyFilter ? sql`and lpl.currency = ${currencyFilter}` : sql``}
+          order by lpb.entry_date desc
+          limit ${params.limit}
+        `) as any[];
+
+        const roznamchaLedgerRows = (await sql`
+          select
+            rl.id, re.id as history_record_id,
+            coalesce(re.voucher_no, re.id::text) as reference,
+            re.entry_date as date,
+            coalesce(l.name, l.code, rl.account_number, rl.ledger_id::text) as account,
+            coalesce(rl.account_number, l.code, '—') as account_number,
+            coalesce(rl.description, re.narration, '—') as description,
+            rl.debit, rl.credit, rl.currency,
+            re.status::text as status,
+            case when re.posted_at is not null then 'posted' else 'pending' end as approval_status,
+            coalesce(cb.name, crb.name, 'Entire Country') as branch,
+            coalesce(re.created_by::text, '—') as user_name,
+            re.created_at, re.posted_at as approved_at, re.created_by as approved_by
+          from public.roznamcha_lines rl
+          join public.roznamcha_entries re on re.id = rl.roznamcha_entry_id
+          left join public.ledgers l on l.id = rl.ledger_id
+          left join public.city_branches cb on cb.id = re.city_branch_id
+          left join public.country_branches crb on crb.id = re.country_branch_id
+          where re.deleted_at is null
+            ${targetCountryId ? sql`and re.country_id = ${targetCountryId}::uuid` : sql``}
+            ${params.scopeMode === "main-branch" && mbId ? sql`and re.country_branch_id = ${mbId}::uuid and re.city_branch_id is null` : sql``}
+            ${params.scopeMode === "city-branch" && bId ? sql`and re.city_branch_id = ${bId}::uuid` : sql``}
+            ${params.fromDate ? sql`and re.entry_date >= ${params.fromDate}` : sql``}
+            ${params.toDate ? sql`and re.entry_date <= ${params.toDate}` : sql``}
+            ${params.userId ? sql`and re.created_by = ${params.userId}::uuid` : sql``}
+            ${currencyFilter ? sql`and rl.currency = ${currencyFilter}` : sql``}
+          order by re.entry_date desc
+          limit ${params.limit}
+        `) as any[];
+
+        const countryName = countryRows[0].name;
+        const ledgerRows: JsonRecord[] = [
+          ...batchLineRows.map((r: any) => ({
+            id: r.id, batchId: r.batch_id, historyRecordId: r.batch_id, reference: r.reference, date: r.date,
+            account: r.account, accountNumber: r.account_number, description: r.description, opening: 0,
+            debit: money(r.debit), credit: money(r.credit), closing: money(r.debit) - money(r.credit), currency: r.currency,
+            status: r.status, approvalStatus: r.approval_status, country: countryName, branch: r.branch,
+            user: r.user_name, createdAt: r.created_at, approvedAt: r.approved_at, approvedBy: r.approved_by,
+            sourceTable: "ledger_posting_batches"
+          })),
+          ...roznamchaLedgerRows.map((r: any) => ({
+            id: r.id, historyRecordId: r.history_record_id, reference: r.reference, date: r.date,
+            account: r.account, accountNumber: r.account_number, description: r.description, opening: 0,
+            debit: money(r.debit), credit: money(r.credit), closing: money(r.debit) - money(r.credit), currency: r.currency,
+            status: r.status, approvalStatus: r.approval_status, country: countryName, branch: r.branch,
+            user: r.user_name, createdAt: r.created_at, approvedAt: r.approved_at, approvedBy: r.approved_by,
+            sourceTable: "roznamcha_entries"
+          }))
+        ];
+        ledgerRows.sort((a: any, b: any) => String(b.date || "").localeCompare(String(a.date || "")));
+
+        const totalDebit = ledgerRows.reduce((sum, row: any) => sum + money(row.debit), 0);
+        const totalCredit = ledgerRows.reduce((sum, row: any) => sum + money(row.credit), 0);
+        const ledgerSummary = {
+          records: ledgerRows.length,
+          openingBalance: 0,
+          totalDebit,
+          totalCredit,
+          closingBalance: totalDebit - totalCredit,
+          totalAmount: totalDebit + totalCredit,
+          totalPaid: 0,
+          totalOutstanding: 0,
+          posted: ledgerRows.filter((row: any) => String(row.status).toLowerCase() === "posted" || String(row.approvalStatus).toLowerCase() === "posted").length,
+          pending: ledgerRows.filter((row: any) => String(row.status).toLowerCase() === "pending" || String(row.approvalStatus).toLowerCase() === "pending").length
+        };
+
+        return {
+          reportType: "ledger",
+          data: ledgerRows,
+          summary: ledgerSummary,
+          history: {},
+          sourceTables: ["ledger_posting_batches", "ledger_posting_lines", "roznamcha_entries", "roznamcha_lines", "ledgers"],
+          generatedAt: new Date().toISOString(),
+          generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId },
+          applied: {
+            countryId: targetCountryId,
+            country: countryName,
+            scopeMode: params.scopeMode,
+            mainBranchId: params.mainBranchId || null,
+            mainBranch: branchRows[0]?.name || null,
+            branchId: params.branchId || null,
+            branch: cityRows[0]?.name || null,
+            project: null,
+            userId: params.userId || null,
+            fromDate: params.fromDate || null,
+            toDate: params.toDate || null,
+            currency: params.currency || "all",
+            year: params.fromDate ? params.fromDate.slice(0, 4) : null
+          },
+          scope: { level: scope.level, label: scope.scopeLabel }
+        };
+      }
+
       return null;
     });
 
@@ -908,52 +1036,10 @@ export async function GET(request: NextRequest) {
       sourceTables = ["purchase_order_payments", "sales_order_payments", "roznamcha_entries", "journal_entries"];
     }
 
-    if (params.reportType === "ledger") {
-      let q = db.from("ledger_posting_batches").select("id, entry_date, reference_no, narration, status, approval_status, approved_at, approved_by, created_at, created_by, scope, country_id, country_branch_id, city_branch_id, branch_name_snapshot, transaction_type, ledger_posting_lines(id, ledger_id, ledger_name_snapshot, account_number, description, debit, credit, currency, usd_amount, user_name_snapshot)").is("deleted_at", null).order("entry_date", { ascending: false });
-      if (targetCountryId) q = q.eq("country_id", targetCountryId);
-      if (params.scopeMode === "main-branch" && params.mainBranchId) q = q.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
-      if (params.scopeMode === "city-branch" && params.branchId) q = q.eq("city_branch_id", params.branchId);
-      if (params.fromDate) q = q.gte("entry_date", params.fromDate);
-      if (params.toDate) q = q.lte("entry_date", params.toDate);
-      if (params.userId) q = q.eq("created_by", params.userId);
-      const batches = requireQuery(await q.limit(params.limit), "Ledger report query") ?? [];
-      let rozQ = db.from("roznamcha_lines").select("id, roznamcha_entry_id, ledger_id, account_number, description, debit, credit, currency, usd_amount, ledgers(code, name), roznamcha_entries!inner(entry_date, voucher_no, narration, status, posted_at, created_at, created_by, country_id, country_branch_id, city_branch_id, deleted_at)")
-        .is("roznamcha_entries.deleted_at", null);
-      if (targetCountryId) rozQ = rozQ.eq("roznamcha_entries.country_id", targetCountryId);
-      if (params.scopeMode === "main-branch" && params.mainBranchId) rozQ = rozQ.eq("roznamcha_entries.country_branch_id", params.mainBranchId).is("roznamcha_entries.city_branch_id", null);
-      if (params.scopeMode === "city-branch" && params.branchId) rozQ = rozQ.eq("roznamcha_entries.city_branch_id", params.branchId);
-      if (params.fromDate) rozQ = rozQ.gte("roznamcha_entries.entry_date", params.fromDate);
-      if (params.toDate) rozQ = rozQ.lte("roznamcha_entries.entry_date", params.toDate);
-      if (params.userId) rozQ = rozQ.eq("roznamcha_entries.created_by", params.userId);
-      const roznamchaLines = requireQuery(await rozQ.limit(params.limit), "Roznamcha ledger report query") ?? [];
-
-      const batchRows = batches.flatMap((batch: any) => (batch.ledger_posting_lines ?? []).filter((line: any) => currencyMatches(line.currency)).map((line: any) => ({ id: line.id, batchId: batch.id, historyRecordId: batch.id, reference: batch.reference_no || batch.id.slice(0, 8), date: batch.entry_date, account: line.ledger_name_snapshot || line.account_number || line.ledger_id, accountNumber: line.account_number || "—", description: line.description || batch.narration || "—", opening: 0, debit: money(line.debit), credit: money(line.credit), closing: money(line.debit) - money(line.credit), currency: line.currency, status: batch.status, approvalStatus: batch.approval_status, country: country.name, branch: batch.branch_name_snapshot || cityBranch?.name || mainBranch?.name || "Entire Country", user: line.user_name_snapshot || batch.created_by || "—", createdAt: batch.created_at, approvedAt: batch.approved_at, approvedBy: batch.approved_by, sourceTable: "ledger_posting_batches" })));
-      const roznamchaRows = roznamchaLines.filter((line: any) => currencyMatches(line.currency)).map((line: any) => ({
-        id: line.id,
-        historyRecordId: line.roznamcha_entry_id,
-        reference: line.roznamcha_entries?.voucher_no || line.roznamcha_entry_id,
-        date: line.roznamcha_entries?.entry_date,
-        account: line.ledgers?.name || line.ledgers?.code || line.account_number || line.ledger_id,
-        accountNumber: line.account_number || line.ledgers?.code || "—",
-        description: line.description || line.roznamcha_entries?.narration || "—",
-        opening: 0,
-        debit: money(line.debit),
-        credit: money(line.credit),
-        closing: money(line.debit) - money(line.credit),
-        currency: line.currency,
-        status: line.roznamcha_entries?.status,
-        approvalStatus: line.roznamcha_entries?.posted_at ? "posted" : "pending",
-        country: country.name,
-        branch: cityBranch?.name || mainBranch?.name || "Entire Country",
-        user: line.roznamcha_entries?.created_by || "—",
-        createdAt: line.roznamcha_entries?.created_at,
-        approvedAt: line.roznamcha_entries?.posted_at,
-        approvedBy: line.roznamcha_entries?.created_by || null,
-        sourceTable: "roznamcha_entries"
-      }));
-      rows = [...batchRows, ...roznamchaRows];
-      sourceTables = ["ledger_posting_batches", "ledger_posting_lines", "roznamcha_entries", "roznamcha_lines", "ledgers"];
-    }
+    // Note: "ledger" is handled entirely inside the withLocalPg block above (RLS-safe
+    // direct Postgres read) and returns before this Supabase-client fallback is ever
+    // reached - see the country-overview/edit-history/branch/user-activity/ledger
+    // branches earlier in this function.
 
     if (params.reportType === "user-activity") {
       let q = db.from("erp_activity_events").select("id, created_at, actor_id, action, resource, record_id, record_table, metadata, ip_address, user_agent, country_id, country_branch_id, city_branch_id").order("created_at", { ascending: false });
