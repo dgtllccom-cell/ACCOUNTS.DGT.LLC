@@ -9,6 +9,8 @@ import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
 
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 function toEnterpriseRole(role: string): EnterpriseRole {
   if (role === "staff") return "staff_user";
   return role as EnterpriseRole;
@@ -113,10 +115,7 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createSupabaseAdminClient() as any;
-  const legacyRawPwAllowed = legacyRawPwLoginEnabled();
-  const profileSelect = legacyRawPwAllowed
-    ? "id, user_code, full_name, raw_password"
-    : "id, user_code, full_name";
+  const profileSelect = "id, user_code, full_name, raw_password";
 
   // 1. Look up profile in database with flexible city/email/userCode matching
   let profileRecord: any = null;
@@ -196,15 +195,37 @@ export async function POST(request: NextRequest) {
   let authenticatedEmail: string | null = null;
 
   if (profileRecord) {
-    const hasLegacyRawPwMatch =
-      legacyRawPwAllowed &&
+    const hasRawPwMatch =
       typeof profileRecord.raw_password === "string" &&
       profileRecord.raw_password.length > 0 &&
       profileRecord.raw_password === rawPassword;
     const hasBootstrapBypass =
       isDemoAuthEnabled() && BOOTSTRAP_ENABLED && rawPassword === BOOTSTRAP_PASSWORD;
-    if (hasLegacyRawPwMatch || hasBootstrapBypass) {
+    if (hasRawPwMatch || hasBootstrapBypass) {
       isAuthenticated = true;
+      authenticatedEmail = rawIdentifier.includes("@") ? rawIdentifier.toLowerCase() : `${cleanId}@dgt.llc`;
+    }
+  }
+
+  // Check direct PostgreSQL auth.users encrypted_password using pgcrypto crypt()
+  if (!isAuthenticated) {
+    try {
+      const match = await withLocalPg(async (sql) => {
+        const rows = await sql`
+          SELECT u.id, u.email
+          FROM auth.users u
+          WHERE (u.email ILIKE ${rawIdentifier} OR u.email ILIKE ${`${cleanId}@dgt.llc`} OR u.id = ${profileRecord?.id ?? null})
+            AND u.encrypted_password = crypt(${rawPassword}, u.encrypted_password)
+          LIMIT 1;
+        `;
+        return rows[0] || null;
+      });
+      if (match) {
+        isAuthenticated = true;
+        authenticatedEmail = match.email;
+      }
+    } catch (e) {
+      console.warn("Direct pg crypt auth check err:", e);
     }
   }
 

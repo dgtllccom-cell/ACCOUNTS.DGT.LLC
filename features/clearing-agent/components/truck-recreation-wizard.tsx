@@ -43,7 +43,7 @@ type CustomerDetails = {
   id: string;
   customer_name?: string;
   code?: string;
-  customer_code?: string;
+  person_code?: string;
   mobile?: string;
   whatsapp?: string;
   cnic?: string;
@@ -58,9 +58,15 @@ type CompanyDetails = {
   company_code?: string;
   country_name?: string;
   city_name?: string;
-  phone?: string;
   address?: string;
+  contacts?: Array<{ type?: string; value?: string }>;
 };
+
+function companyPhone(company: CompanyDetails | null): string | undefined {
+  if (!company?.contacts?.length) return undefined;
+  const byType = (t: string) => company.contacts!.find((c) => (c.type || "").toLowerCase() === t)?.value;
+  return byType("office") || byType("mobile") || byType("whatsapp") || company.contacts[0]?.value;
+}
 
 type TruckRow = {
   id: string;
@@ -726,7 +732,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               icon={User}
               data={[
                 { label: tt("common.name", "Name"), value: ownerDetails?.customer_name },
-                { label: tt("trk.owner_code_label", "Owner Code"), value: ownerDetails?.customer_code || ownerDetails?.code },
+                { label: tt("trk.owner_code_label", "Owner Code"), value: ownerDetails?.person_code },
                 { label: tt("common.mobile", "Mobile"), value: ownerDetails?.mobile || ownerDetails?.whatsapp },
                 { label: tt("common.address", "Address"), value: ownerDetails?.address },
               ]}
@@ -741,7 +747,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 { label: tt("trk.company_code_label", "Company Code"), value: companyDetails?.company_code },
                 { label: tt("common.country", "Country"), value: companyDetails?.country_name },
                 { label: tt("common.city", "City"), value: companyDetails?.city_name },
-                { label: tt("common.phone", "Phone"), value: companyDetails?.phone },
+                { label: tt("common.phone", "Phone"), value: companyPhone(companyDetails) },
               ]}
             />
           )}
@@ -751,7 +757,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               icon={TruckIcon}
               data={[
                 { label: tt("common.name", "Name"), value: transporterDetails?.customer_name },
-                { label: tt("trk.transporter_code_label", "Transporter Code"), value: transporterDetails?.customer_code || transporterDetails?.code },
+                { label: tt("trk.transporter_code_label", "Transporter Code"), value: transporterDetails?.person_code },
                 { label: tt("common.contact", "Contact"), value: transporterDetails?.mobile || transporterDetails?.whatsapp },
                 { label: tt("common.address", "Address"), value: transporterDetails?.address },
               ]}
