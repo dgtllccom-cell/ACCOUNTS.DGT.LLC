@@ -8,11 +8,45 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 // withLocalPg, not the RLS-gated Supabase admin client — see ../route.ts for the root cause.
 
 const TEXT = [
-  "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
+  "truck_serial", "truck_number", "truck_name", "registration_number", "truck_type", "make", "model",
   "color", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
   "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "notes",
 ];
 const DATES = ["registration_expiry_date", "insurance_expiry_date", "driver_docs_expiry_date"];
+
+export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
+    const { id } = await context.params;
+
+    const data = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select t.*,
+               owner.customer_name as owner_display_name, owner.mobile as owner_display_mobile,
+               owner.cnic as owner_display_cnic, owner.address as owner_display_address,
+               driver.customer_name as driver_display_name, driver.mobile as driver_display_mobile,
+               transporter.customer_name as transporter_display_name, transporter.mobile as transporter_display_mobile,
+               company.name as company_display_name, company.company_code as company_display_code,
+               company.country_id as company_display_country_id
+        from public.trucks t
+        left join public.customers owner on owner.id = t.owner_person_id
+        left join public.customers driver on driver.id = t.driver_person_id
+        left join public.customers transporter on transporter.id = t.transporter_person_id
+        left join public.companies company on company.id = t.transport_company_id
+        where t.id = ${id}::uuid and t.deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
+
+    if (!data) return NextResponse.json({ error: "Truck not found." }, { status: 404 });
+    return NextResponse.json({ truck: data });
+  } catch (err: any) {
+    rethrowIfNextControlFlow(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -34,16 +68,17 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.owner_person_id !== undefined) patch.owner_person_id = body.owner_person_id || null;
     if (body.driver_person_id !== undefined) patch.driver_person_id = body.driver_person_id || null;
     if (body.transport_company_id !== undefined) patch.transport_company_id = body.transport_company_id || null;
+    if (body.transporter_person_id !== undefined) patch.transporter_person_id = body.transporter_person_id || null;
 
     const data = await withLocalPg(async (sql) => {
       const rows = await sql`
         update public.trucks set ${sql(patch as any)}
         where id = ${id}::uuid and deleted_at is null
         returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
-                  branch_serial, entry_serial, truck_serial, truck_number, registration_number,
+                  branch_serial, entry_serial, truck_serial, truck_number, truck_name, registration_number,
                   registration_country_id, truck_type, make, model, manufacturing_year, color,
                   chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
-                  transport_company, transport_company_id, driver_name, driver_mobile, driver_cnic_passport,
+                  transport_company, transport_company_id, transporter_person_id, driver_name, driver_mobile, driver_cnic_passport,
                   driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
                   base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
                   created_at, updated_at

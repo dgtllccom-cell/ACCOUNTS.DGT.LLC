@@ -22,7 +22,7 @@ loadEnv();
 
 const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/postgres";
 const sql = postgres(dbUrl, { max: 10 });
-const DEFAULT_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || (process.env.E2E_SUPERADMIN_PASSWORD || "");
+const DEFAULT_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || process.env.E2E_SUPERADMIN_PASSWORD || "DgtAdmin@2026!";
 
 async function main() {
   console.log("==========================================================================");

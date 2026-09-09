@@ -2213,8 +2213,36 @@ export function CashEntryForm({
         : "City-level cash entry access filtered to assigned city branch operations and transactions.";
 
   const accountOptions = useMemo(() => {
+    // Only show user-created accounts (parties, customers, suppliers, expenses, etc.)
+    // Filter out internal system branch/country bank, cash, clearing, and investment ledgers
+    const userAccounts = ledgers.filter((row) => {
+      const code = (row.accountCode || row.ledgerCode || "").toUpperCase();
+      const name = (row.accountName || row.ledgerName || "").toLowerCase();
+
+      // Exclude automatic system branch/country ledgers
+      if (
+        code.startsWith("BR-BANK") ||
+        code.startsWith("BR-CASH") ||
+        code.startsWith("CT-INTER") ||
+        code.startsWith("CT-MAIN") ||
+        code.startsWith("CT-INVEST") ||
+        name.includes("inter-country") ||
+        name.includes("main branch cash") ||
+        name.includes("main branch bank") ||
+        name.includes("investment account") ||
+        name.includes("clearing account") ||
+        name.includes("inter-city branch clearing") ||
+        name.includes("investment clearing")
+      ) {
+        return false;
+      }
+
+      // Must be an actual user-created account (has accountId or accountCode)
+      return Boolean(row.accountId || row.accountCode);
+    });
+
     // Sort A to Z by account code and name
-    const sorted = [...ledgers].sort((a, b) => {
+    const sorted = [...userAccounts].sort((a, b) => {
       const codeA = (a.accountCode || a.ledgerCode || "").toLowerCase();
       const codeB = (b.accountCode || b.ledgerCode || "").toLowerCase();
       if (codeA && codeB) return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: "base" });

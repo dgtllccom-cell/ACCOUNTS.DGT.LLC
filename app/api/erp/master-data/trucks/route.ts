@@ -19,7 +19,7 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
  */
 
 const TEXT = [
-  "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
+  "truck_serial", "truck_number", "truck_name", "registration_number", "truck_type", "make", "model",
   "color", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
   "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "notes",
 ];
@@ -43,19 +43,31 @@ export async function GET(req: Request) {
     // `authorizeApiScope` check above is the access gate; no per-country filter here.
     const rows = await withLocalPg(async (sql) => {
       return sql`
-        select id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
-               branch_serial, entry_serial, truck_serial, truck_number, registration_number,
-               registration_country_id, truck_type, make, model, manufacturing_year, color,
-               chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
-               transport_company, transport_company_id, driver_name, driver_mobile, driver_cnic_passport,
-               driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
-               base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
-               created_at, updated_at
-        from public.trucks
-        where deleted_at is null
-          and (${selectable ? sql`status = 'active'` : status ? sql`status = ${status}` : sql`true`})
-          and (${searchLike ? sql`(truck_number ilike ${searchLike} or registration_number ilike ${searchLike} or owner_name ilike ${searchLike} or driver_name ilike ${searchLike} or transport_company ilike ${searchLike})` : sql`true`})
-        order by ${prefixLike ? sql`(lower(truck_number) like lower(${prefixLike})) desc,` : sql``} truck_number asc
+        select t.id, t.country_id, t.country_branch_id, t.city_branch_id, t.super_admin_serial, t.country_serial,
+               t.branch_serial, t.entry_serial, t.truck_serial, t.truck_number, t.truck_name, t.registration_number,
+               t.registration_country_id, t.truck_type, t.make, t.model, t.manufacturing_year, t.color,
+               t.chassis_number, t.engine_number, t.capacity, t.owner_name, t.owner_mobile, t.owner_person_id,
+               t.transport_company, t.transport_company_id, t.transporter_person_id,
+               t.driver_name, t.driver_mobile, t.driver_cnic_passport,
+               t.driver_person_id, t.registration_expiry_date, t.insurance_expiry_date, t.driver_docs_expiry_date,
+               t.base_state_province_id, t.base_district_id, t.base_city_id, t.status, t.notes, t.is_active,
+               t.created_at, t.updated_at,
+               owner.customer_name as owner_display_name,
+               driver.customer_name as driver_display_name,
+               transporter.customer_name as transporter_display_name,
+               company.name as company_display_name,
+               coalesce(cb.name, crb.name) as branch_display_name
+        from public.trucks t
+        left join public.customers owner on owner.id = t.owner_person_id
+        left join public.customers driver on driver.id = t.driver_person_id
+        left join public.customers transporter on transporter.id = t.transporter_person_id
+        left join public.companies company on company.id = t.transport_company_id
+        left join public.city_branches cb on cb.id = t.city_branch_id
+        left join public.country_branches crb on crb.id = t.country_branch_id
+        where t.deleted_at is null
+          and (${selectable ? sql`t.status = 'active'` : status ? sql`t.status = ${status}` : sql`true`})
+          and (${searchLike ? sql`(t.truck_number ilike ${searchLike} or t.registration_number ilike ${searchLike} or t.owner_name ilike ${searchLike} or t.driver_name ilike ${searchLike} or t.transport_company ilike ${searchLike})` : sql`true`})
+        order by ${prefixLike ? sql`(lower(t.truck_number) like lower(${prefixLike})) desc,` : sql``} t.truck_number asc
         limit ${limit}
       `;
     });
@@ -108,6 +120,7 @@ export async function POST(req: Request) {
       owner_person_id: body.owner_person_id || null,
       driver_person_id: body.driver_person_id || null,
       transport_company_id: body.transport_company_id || null,
+      transporter_person_id: body.transporter_person_id || null,
       status: ["active", "inactive", "suspended", "expired"].includes(body.status) ? body.status : "active",
       is_active: true,
       created_by: session.userId,
@@ -131,10 +144,10 @@ export async function POST(req: Request) {
       const rows = await sql`
         insert into public.trucks ${sql(row as any)}
         returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
-                  branch_serial, entry_serial, truck_serial, truck_number, registration_number,
+                  branch_serial, entry_serial, truck_serial, truck_number, truck_name, registration_number,
                   registration_country_id, truck_type, make, model, manufacturing_year, color,
                   chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
-                  transport_company, transport_company_id, driver_name, driver_mobile, driver_cnic_passport,
+                  transport_company, transport_company_id, transporter_person_id, driver_name, driver_mobile, driver_cnic_passport,
                   driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
                   base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
                   created_at, updated_at
