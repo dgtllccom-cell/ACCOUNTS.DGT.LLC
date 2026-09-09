@@ -165,7 +165,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
       try {
         const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.ownerId)}`).then((r) => r.json());
         if (cancelled) return;
-        if (res?.customer) setOwnerDetails(res.customer);
+        if (res?.data?.customer) setOwnerDetails(res.data.customer);
       } catch {
         /* ignore */
       }
@@ -185,7 +185,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
       try {
         const res = await fetch(`/api/erp/companies/${encodeURIComponent(form.companyId)}`).then((r) => r.json());
         if (cancelled) return;
-        if (res?.company) setCompanyDetails(res.company);
+        if (res?.data?.company) setCompanyDetails(res.data.company);
       } catch {
         /* ignore */
       }
@@ -205,7 +205,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
       try {
         const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.transporterId)}`).then((r) => r.json());
         if (cancelled) return;
-        if (res?.customer) setTransporterDetails(res.customer);
+        if (res?.data?.customer) setTransporterDetails(res.data.customer);
       } catch {
         /* ignore */
       }
@@ -225,8 +225,8 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
       try {
         const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.driverId)}`).then((r) => r.json());
         if (cancelled) return;
-        if (res?.customer) {
-          const c: CustomerDetails = res.customer;
+        if (res?.data?.customer) {
+          const c: CustomerDetails = res.data.customer;
           setDriverDetails(c);
           setForm((prev) => ({
             ...prev,

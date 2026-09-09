@@ -125,7 +125,7 @@ export async function POST(req: Request) {
       is_active: true,
       created_by: session.userId,
     };
-    for (const f of TEXT) if (body[f] !== undefined) row[f] = body[f] === "" ? null : String(body[f]).trim();
+    for (const f of TEXT) if (body[f] !== undefined) row[f] = body[f] === "" || body[f] === null ? null : String(body[f]).trim();
     for (const d of DATES) if (body[d] !== undefined) row[d] = body[d] || null;
     row.truck_number = truckNumber;
 

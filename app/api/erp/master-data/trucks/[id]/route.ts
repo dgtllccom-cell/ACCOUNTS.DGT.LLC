@@ -56,7 +56,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     const body = await req.json();
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    for (const f of TEXT) if (body[f] !== undefined) patch[f] = body[f] === "" ? null : String(body[f]).trim();
+    for (const f of TEXT) if (body[f] !== undefined) patch[f] = body[f] === "" || body[f] === null ? null : String(body[f]).trim();
     for (const d of DATES) if (body[d] !== undefined) patch[d] = body[d] || null;
     if (body.manufacturing_year !== undefined) patch.manufacturing_year = body.manufacturing_year ? Number(body.manufacturing_year) : null;
     if (body.registration_country_id !== undefined) patch.registration_country_id = body.registration_country_id ?? null;
