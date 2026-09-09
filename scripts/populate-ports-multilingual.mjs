@@ -300,7 +300,7 @@ export async function runSeeder(sql) {
 }
 
 async function main() {
-  const sql = postgres(localDbUrl, { max: 5 });
+  const sql = postgres(localDbUrl, { max: 5, connect_timeout: 4 });
   try {
     await runSeeder(sql);
   } finally {

@@ -279,23 +279,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    // Main Menu Top-Level Item (Red Highlighted):
-    // Historical / temporary tracking ONLY — NOT main ERP accounting. No Ledger /
-    // Roznamcha / Journal / Stock / Voucher posting, no accounting transfer.
-    key: "temp-bills",
-    label: "Temporary (Arzi) Purchase & Sales",
-    icon: FileSpreadsheet,
-    tone: "red",
-    badge: "Arzi",
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      { label: "Arzi Purchase Bills", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
-      { label: "Arzi Sales Bills", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
-      { label: "All Arzi Bills Register", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
-      { label: "Arzi Bills Reports & Search", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
-    ],
-  },
-  {
     key: "journal-stock",
     label: "Journal Stock",
     icon: Boxes,
@@ -509,6 +492,23 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Email Accounts", href: "/dashboard/settings/email-accounts", icon: Mail },
       { label: "ERP Translations & Languages", href: "/dashboard/settings/translations", icon: Globe },
       { label: "Profile & Security", href: "/dashboard/settings/profile", icon: ShieldCheck },
+    ],
+  },
+  {
+    // Main Menu Item Placed Right Below Settings (Red Highlighted):
+    // Historical / temporary tracking ONLY — NOT main ERP accounting. No Ledger /
+    // Roznamcha / Journal / Stock / Voucher posting, no accounting transfer.
+    key: "temp-bills",
+    label: "Temporary (Arzi) Purchase & Sales",
+    icon: FileSpreadsheet,
+    tone: "red",
+    badge: "Arzi",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      { label: "Arzi Purchase Bills", href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
+      { label: "Arzi Sales Bills", href: "/dashboard/temp-bills/sales", icon: TrendingUp },
+      { label: "All Arzi Bills Register", href: "/dashboard/temp-bills", icon: FileSpreadsheet },
+      { label: "Arzi Bills Reports & Search", href: "/dashboard/temp-bills/reports", icon: FileBarChart },
     ],
   },
 ];
