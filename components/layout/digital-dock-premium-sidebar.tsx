@@ -165,9 +165,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Ledgers",
     icon: BookOpen,
     children: [
-      { label: "Super Admin Detailed Ledger", href: "/dashboard/ledger/super-admin/detailed", icon: FileText },
-      { label: "Country Detailed Ledger", href: "/dashboard/ledger/country/detailed", icon: FileText },
-      { label: "Branch Detailed Ledger", href: "/dashboard/ledger/detailed", icon: FileText },
+      { label: "Detailed Ledger Statement", href: "/dashboard/ledger/detailed", icon: FileText },
       { label: "Ledger General Report", href: "/dashboard/ledger/general-report", icon: FileBarChart },
       { label: "Outstanding Ledgers Report", href: "/dashboard/ledger/outstanding", icon: FileSpreadsheet },
     ],

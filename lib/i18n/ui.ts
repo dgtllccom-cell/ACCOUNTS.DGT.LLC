@@ -3277,7 +3277,7 @@ export type UiKey =
   | "nav.super_admin_ledger"
   | "nav.country_ledger"
   | "nav.branch_ledger"
-  | "nav.ledger_general_report"
+  | "nav.ledger_general_report" | "nav.ledger_detailed"
   | "nav.ledger_outstanding"
   | "nav.ledger_super_admin_detailed"
   | "nav.ledger_country_detailed"
@@ -10933,6 +10933,7 @@ const en: Dict = {
   "nav.country_ledger": "Country Ledger",
   "nav.branch_ledger": "City Ledger",
   "nav.ledger_general_report": "Ledger General Report",
+  "nav.ledger_detailed": "Detailed Ledger Statement",
   "nav.ledger_outstanding": "Outstanding & Recovery Ledger",
   "nav.ledger_super_admin_detailed": "Super Admin Ledger (Detailed)",
   "nav.ledger_country_detailed": "Country Ledger (Detailed)",
@@ -29643,6 +29644,7 @@ const ur: Dict = {
   "nav.country_ledger": "کنٹری لیجر",
   "nav.branch_ledger": "سٹی لیجر",
   "nav.ledger_general_report": "لیجر جنرل رپورٹ",
+  "nav.ledger_detailed": "تفصیلی لیجر اسٹیٹمنٹ",
   "nav.ledger_outstanding": "بقایا اور ریکوری لیجر",
   "nav.ledger_super_admin_detailed": "سپر ایڈمن لیجر (تفصیلی)",
   "nav.ledger_country_detailed": "کنٹری لیجر (تفصیلی)",
@@ -47324,6 +47326,7 @@ const ar: Dict = {
   "nav.country_ledger": "دفتر الدولة",
   "nav.branch_ledger": "دفتر الفرع / المدينة",
   "nav.ledger_general_report": "تقرير دفتر الأستاذ العام",
+  "nav.ledger_detailed": "كشف حساب دفتر الأستاذ المفصل",
   "nav.ledger_outstanding": "دفتر الأرصدة المستحقة والتحصيل",
   "nav.ledger_super_admin_detailed": "دفتر الأستاذ للمشرف العام (مفصل)",
   "nav.ledger_country_detailed": "دفتر الأستاذ للبلد (مفصل)",
@@ -65019,6 +65022,7 @@ const fa: Dict = {
   "nav.country_ledger": "دفتر کل کشور",
   "nav.branch_ledger": "دفتر کل شعبه / شهر",
   "nav.ledger_general_report": "گزارش عمومی دفتر کل",
+  "nav.ledger_detailed": "صورت‌حساب تفصیلی دفتر کل",
   "nav.ledger_outstanding": "دفتر مانده‌های معوق و وصول",
   "nav.ledger_super_admin_detailed": "دفتر کل مدیر ارشد (مفصل)",
   "nav.ledger_country_detailed": "دفتر کل کشور (مفصل)",
@@ -82764,6 +82768,7 @@ const ps: Dict = {
   "nav.country_ledger": "د هېواد لېجر",
   "nav.branch_ledger": "د څانګې / ښار لېجر",
   "nav.ledger_general_report": "د لېجر عمومي راپور",
+  "nav.ledger_detailed": "تفصيلي لېجر بیان",
   "nav.ledger_outstanding": "د پاتې او راټولولو لېجر",
   "nav.ledger_super_admin_detailed": "سوپر اډمین لېجر (تفصيلي)",
   "nav.ledger_country_detailed": "هیواد لېجر (تفصيلي)",

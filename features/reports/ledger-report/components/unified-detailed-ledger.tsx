@@ -59,7 +59,8 @@ export function UnifiedDetailedLedgerView() {
     let active = true;
     fetch("/api/erp/auth/session", { credentials: "include" })
       .then((res) => res.json())
-      .then((info: SessionInfo) => {
+      .then((body: { ok?: boolean; data?: SessionInfo }) => {
+        const info = body?.data ?? null;
         if (active) {
           setSessionInfo(info);
           setIsSuperAdmin(info?.roles?.includes("super_admin") || false);
@@ -698,19 +699,19 @@ export function UnifiedDetailedLedgerView() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
-                <Th className="p-2.5 whitespace-nowrap text-center font-bold">Date</Th>
-                <Th className="p-2.5 whitespace-nowrap text-center font-bold">Serial No</Th>
-                <Th className="p-2.5 whitespace-nowrap font-bold">User / Operator</Th>
-                <Th className="p-2.5 whitespace-nowrap font-bold">Branch Name</Th>
-                <Th className="p-2.5 whitespace-nowrap font-bold">Entry Type</Th>
-                <Th className="p-2.5 whitespace-nowrap font-bold">Ref No</Th>
-                <Th className="p-2.5 min-w-[200px] font-bold">Description / Particulars</Th>
-                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-rose-700 dark:text-rose-400">Debit (Dr)</Th>
-                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-emerald-700 dark:text-emerald-400">Credit (Cr)</Th>
-                <Th className="p-2.5 whitespace-nowrap text-right font-black">Running Balance</Th>
-                <Th className="p-2.5 whitespace-nowrap text-center font-bold">USD Rate</Th>
-                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-blue-700 dark:text-blue-400">Dr (USD)</Th>
-                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-amber-600 dark:text-amber-400">Cr (USD)</Th>
+                <Th className="p-2.5 whitespace-nowrap text-center font-bold">{tr("Date")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-center font-bold">{tr("Serial No")}</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">{tr("User / Operator")}</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">{tr("Branch Name")}</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">{tr("Entry Type")}</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">{tr("Ref No")}</Th>
+                <Th className="p-2.5 min-w-[200px] font-bold">{tr("Description / Particulars")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-rose-700 dark:text-rose-400">{tr("Debit (Dr)")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-emerald-700 dark:text-emerald-400">{tr("Credit (Cr)")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-black">{tr("Running Balance")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-center font-bold">{tr("USD Rate")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-blue-700 dark:text-blue-400">{tr("Dr (USD)")}</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-amber-600 dark:text-amber-400">{tr("Cr (USD)")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -726,10 +727,10 @@ export function UnifiedDetailedLedgerView() {
                     {line.branchSerialNo || line.countrySerialNo || line.superAdminSerialNo || "—"}
                   </td>
                   <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                    {line.createdByName || "User"}
+                    {line.createdByName || tr("User")}
                   </td>
                   <td className="p-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                    {line.branchName || "Main Office"}
+                    {line.branchName || tr("Main Office")}
                   </td>
                   <td className="p-2.5 whitespace-nowrap">
                     <span className="inline-block rounded px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
