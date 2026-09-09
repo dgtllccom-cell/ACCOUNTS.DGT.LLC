@@ -1,5 +1,16 @@
 # Digital Dock ERP — Engineering Standards
 
+## MANDATORY DATABASE POLICY: PRODUCTION VS TESTING
+1. **Production / Original Database (`ACCOUNTS.DGT.LLC - Production` / `inmayhrxucimxqhgseqi`)**:
+   - Real business database.
+   - Do NOT add: fake data, demo data, duplicate customers, duplicate accounts, test transactions, test purchases/sales, temporary users, trial stock entries.
+   - Never use Production for testing.
+2. **Testing / Local Database (`dgtllccom-cell's Project` / `csesvyxxjivnkkozgopt`)**:
+   - Use this database for: development testing, sample transactions, UI testing, workflow testing, temporary users, test purchases/sales, test stock, migration verification.
+3. **Deployment**: Production deployment may include verified code and reviewed migrations only. Test/demo business records must NEVER be copied to Production.
+4. **Verification**: Before any database write or migration, confirm which Supabase project / `DATABASE_URL` is connected.
+5. **Protection**: Never reset, truncate, seed, or clean the Production database without explicit owner approval.
+
 ## MANDATORY: 5-language UI (EN / UR / PS / FA / AR) — no exceptions
 
 Every user-visible string in **any** new or edited UI (forms, reports, Shipping/Clearing,
