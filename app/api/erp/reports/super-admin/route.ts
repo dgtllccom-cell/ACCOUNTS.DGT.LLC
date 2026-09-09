@@ -382,8 +382,15 @@ export async function GET(request: NextRequest) {
     // data by omitting countryId or passing "all" - resolveReportScope() alone does
     // NOT do this; it only computes the scope, it must be applied via enforceScopeFilters().
     const requestedCountryId = (!params.countryId || params.countryId === "all") ? null : params.countryId;
-    const { effectiveCountryId } = enforceScopeFilters(scope, requestedCountryId, null);
+    const requestedBranchId = params.scopeMode === "city-branch" ? (params.branchId ?? null) : null;
+    const { effectiveCountryId, effectiveBranchId } = enforceScopeFilters(scope, requestedCountryId, requestedBranchId);
     const targetCountryId = effectiveCountryId;
+    // Non-null only for a branch-scoped session (city_branch_admin/accountant/cashier/
+    // staff_user), or a country-scoped session that explicitly asked for one of its own
+    // branches - enforceScopeFilters() forces this to the caller's OWN city branch when
+    // scope.level is "branch", so they can never see a sibling branch's data even within
+    // their own country.
+    const targetCityBranchId = effectiveBranchId;
     const isGlobalCountry = targetCountryId === null;
 
     if (params.scopeMode === "main-branch" && !params.mainBranchId) throw new Error("Main branch is required for Main Branch scope.");
@@ -401,6 +408,20 @@ export async function GET(request: NextRequest) {
     // scoped by the same enforceScopeFilters() guard as every other report type here.
     if (params.reportType === "country-overview") {
       const overviewRows = await withLocalPg(async (sql) => {
+        // A branch-scoped caller (city_branch_admin/accountant/cashier/staff_user) must
+        // see counts for their OWN branch only, never sibling branches in the same country.
+        if (targetCityBranchId) {
+          return sql`
+            select
+              c.id, c.name, c.iso2, c.currency_code, c.is_active,
+              1 as total_branches,
+              (select count(*) from public.city_branches where id = ${targetCityBranchId}::uuid and deleted_at is null and status = 'active') as active_branches,
+              (select count(distinct user_id) from public.user_role_assignments where city_branch_id = ${targetCityBranchId}::uuid and is_active = true and deleted_at is null) as total_users
+            from public.countries c
+            join public.city_branches cb2 on cb2.id = ${targetCityBranchId}::uuid and cb2.country_id = c.id
+            where c.deleted_at is null
+          `;
+        }
         return sql`
           select
             c.id, c.name, c.iso2, c.currency_code, c.is_active,
@@ -570,7 +591,7 @@ export async function GET(request: NextRequest) {
               from public.city_branches
               where deleted_at is null
                 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
-                ${params.scopeMode === "city-branch" && bId ? sql`and id = ${bId}::uuid` : sql``}
+                ${targetCityBranchId ? sql`and id = ${targetCityBranchId}::uuid` : params.scopeMode === "city-branch" && bId ? sql`and id = ${bId}::uuid` : sql``}
               order by name
             `) as any[]
           : [];
@@ -636,8 +657,7 @@ export async function GET(request: NextRequest) {
           from public.user_role_assignments
           where is_active = true and deleted_at is null
             ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
-            ${params.scopeMode === "main-branch" && mbId ? sql`and country_branch_id = ${mbId}::uuid and city_branch_id is null` : sql``}
-            ${params.scopeMode === "city-branch" && bId ? sql`and city_branch_id = ${bId}::uuid` : sql``}
+            ${targetCityBranchId ? sql`and city_branch_id = ${targetCityBranchId}::uuid` : params.scopeMode === "main-branch" && mbId ? sql`and country_branch_id = ${mbId}::uuid and city_branch_id is null` : sql``}
         `) as any[];
         const userIds = [...new Set(assignments.map((row: any) => row.user_id).filter(Boolean))];
         const profiles = userIds.length
@@ -655,10 +675,10 @@ export async function GET(request: NextRequest) {
           order by created_at desc
           limit ${params.limit}
         `) as any[];
-        if (params.scopeMode === "main-branch") {
+        if (targetCityBranchId) {
+          activities = activities.filter((row: any) => row.city_branch_id === targetCityBranchId);
+        } else if (params.scopeMode === "main-branch") {
           activities = activities.filter((row: any) => row.country_branch_id === params.mainBranchId && !row.city_branch_id);
-        } else if (params.scopeMode === "city-branch") {
-          activities = activities.filter((row: any) => row.city_branch_id === params.branchId);
         }
         if (params.fromDate) {
           const fDate = params.fromDate;
@@ -736,8 +756,7 @@ export async function GET(request: NextRequest) {
           left join public.country_branches crb on crb.id = lpb.country_branch_id
           where lpb.deleted_at is null
             ${targetCountryId ? sql`and lpb.country_id = ${targetCountryId}::uuid` : sql``}
-            ${params.scopeMode === "main-branch" && mbId ? sql`and lpb.country_branch_id = ${mbId}::uuid and lpb.city_branch_id is null` : sql``}
-            ${params.scopeMode === "city-branch" && bId ? sql`and lpb.city_branch_id = ${bId}::uuid` : sql``}
+            ${targetCityBranchId ? sql`and lpb.city_branch_id = ${targetCityBranchId}::uuid` : params.scopeMode === "main-branch" && mbId ? sql`and lpb.country_branch_id = ${mbId}::uuid and lpb.city_branch_id is null` : sql``}
             ${params.fromDate ? sql`and lpb.entry_date >= ${params.fromDate}` : sql``}
             ${params.toDate ? sql`and lpb.entry_date <= ${params.toDate}` : sql``}
             ${params.userId ? sql`and lpb.created_by = ${params.userId}::uuid` : sql``}
@@ -767,8 +786,7 @@ export async function GET(request: NextRequest) {
           left join public.country_branches crb on crb.id = re.country_branch_id
           where re.deleted_at is null
             ${targetCountryId ? sql`and re.country_id = ${targetCountryId}::uuid` : sql``}
-            ${params.scopeMode === "main-branch" && mbId ? sql`and re.country_branch_id = ${mbId}::uuid and re.city_branch_id is null` : sql``}
-            ${params.scopeMode === "city-branch" && bId ? sql`and re.city_branch_id = ${bId}::uuid` : sql``}
+            ${targetCityBranchId ? sql`and re.city_branch_id = ${targetCityBranchId}::uuid` : params.scopeMode === "main-branch" && mbId ? sql`and re.country_branch_id = ${mbId}::uuid and re.city_branch_id is null` : sql``}
             ${params.fromDate ? sql`and re.entry_date >= ${params.fromDate}` : sql``}
             ${params.toDate ? sql`and re.entry_date <= ${params.toDate}` : sql``}
             ${params.userId ? sql`and re.created_by = ${params.userId}::uuid` : sql``}
