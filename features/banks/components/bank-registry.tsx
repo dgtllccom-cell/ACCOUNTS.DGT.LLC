@@ -153,14 +153,17 @@ export function BankRegistry() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>{t(lang, "nav.bank_management", "Bank Management")}</CardTitle>
             <p className="text-sm text-slate-500 mt-1">
               {th("Manage all banks and banking details")}
             </p>
           </div>
-          <Button onClick={() => router.push("/dashboard/settings/bank/new")}>
+          <Button
+            onClick={() => router.push("/dashboard/settings/bank/new")}
+            className="w-full shrink-0 justify-center bg-blue-600 text-white shadow-sm hover:bg-blue-700 sm:w-auto"
+          >
             <Plus className="w-4 h-4 mr-1" /> {t(lang, "bankreg.bankreg_new_bank", "New Bank")}
           </Button>
         </CardHeader>
@@ -224,7 +227,11 @@ export function BankRegistry() {
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center">
                 <p className="text-slate-600">{t(lang, "bankreg.bankreg_no_banks_found", "No banks found")}</p>
-                <Button onClick={() => router.push("/dashboard/settings/bank/new")} className="mt-4">
+                <Button
+                  onClick={() => router.push("/dashboard/settings/bank/new")}
+                  className="mt-4 bg-blue-600 text-white shadow-sm hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
                   {t(lang, "bankreg.bankreg_create_first_bank", "Create First Bank")}
                 </Button>
               </div>
