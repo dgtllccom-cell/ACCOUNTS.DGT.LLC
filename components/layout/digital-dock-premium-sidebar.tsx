@@ -661,7 +661,7 @@ export function DigitalDockPremiumSidebar({
     });
   };
 
-  const displayBrand = brandTitle || companyName || "Damaan Business Group";
+  const displayBrand = (brandTitle || companyName || "Damaan Business Group").replace(/Daman Business Group/gi, "Damaan Business Group");
 
   return (
     <div className="flex h-full w-full flex-col bg-white text-[#0f172a] select-none font-sans overflow-hidden">

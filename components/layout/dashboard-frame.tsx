@@ -457,7 +457,7 @@ export function DashboardFrame({
             </button>
             <DigitalDockPremiumSidebar
               roles={roles ?? null}
-              brandTitle={brandCompany || "Daman Business Group"}
+              brandTitle={brandCompany || "Damaan Business Group"}
               onNavigate={() => {
                 setDrawerOpen(false);
                 setMobileOpen(false);
