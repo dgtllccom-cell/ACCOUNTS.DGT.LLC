@@ -141,7 +141,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: Users,
         children: [
           { label: "User Registration", href: "/dashboard/new-entry/users/registration", icon: Users },
-          { label: "All Users Report", href: "/dashboard/new-entry/users/all", icon: FileText },
+          { label: "All Users Directory", href: "/dashboard/new-entry/users/all", icon: Users },
           { label: "Super Admin User", href: "/dashboard/new-entry/users/super-admin", icon: Users },
           { label: "Country User", href: "/dashboard/new-entry/users/country", icon: Users },
           { label: "Branch User", href: "/dashboard/new-entry/users/branch", icon: Users },
@@ -289,8 +289,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "shipping-cleaning",
     label: "Shipping & Clearing",
     icon: Ship,
+    defaultOpen: true,
     children: [
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
+      { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
       { label: "Clearing Order Trucks", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
       { label: "Shipping Handovers", href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
@@ -522,6 +524,25 @@ export interface DigitalDockPremiumSidebarProps {
  *  drops an accordion that becomes empty. */
 function filterByRoles<T extends { roles?: string[]; children?: any[] }>(items: T[], userRoles: Set<string>): T[] {
   const isSuper = userRoles.has("super_admin");
+  const isShippingAgentOnly =
+    (userRoles.has("agent_user") || userRoles.has("shipping_user")) &&
+    !isSuper &&
+    !userRoles.has("country_admin") &&
+    !userRoles.has("country_user") &&
+    !userRoles.has("main_branch_admin") &&
+    !userRoles.has("city_branch_admin") &&
+    !userRoles.has("accountant") &&
+    !userRoles.has("cashier");
+
+  if (isShippingAgentOnly) {
+    return items
+      .filter((it: any) => it.key === "shipping-cleaning")
+      .map((it) => ({
+        ...it,
+        defaultOpen: true,
+      }));
+  }
+
   const keep = (r?: string[]) => !r || r.length === 0 || isSuper || r.some((x) => userRoles.has(x));
   return items
     .filter((it) => keep(it.roles))

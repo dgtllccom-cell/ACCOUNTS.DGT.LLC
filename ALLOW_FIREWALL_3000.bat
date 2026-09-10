@@ -23,9 +23,14 @@ echo Verifying rule:
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetFirewallRule -DisplayName 'ACCOUNTS ERP Dev 3000' | Format-Table -Property DisplayName, Enabled, Direction, Action"
 
 echo.
+echo.
 echo ========================================================
 echo SUCCESS! Port 3000 is now OPEN for LAN and mobile access.
-echo Access URL: http://192.168.1.141:3000/auth/login
+echo.
+for /f "usebackq tokens=*" %%A in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback' -and $_.IPAddress -notlike '169.254*' -and $_.IPAddress -like '192.168*' } | Select-Object -First 1).IPAddress"`) do set MY_IP=%%A
+if not defined MY_IP set MY_IP=192.168.1.96
+echo Access URL: http://%MY_IP%:3000/auth/login
 echo ========================================================
 echo.
 pause
+

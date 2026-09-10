@@ -123,7 +123,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     // header / back / refresh / print — the generic bar would duplicate them
     // (and humanise the bill UUID into the title).
     pathname?.startsWith("/dashboard/bill-cost-profit/bill/") ||
-    pathname === "/dashboard/bill-cost-profit/reports";
+    pathname === "/dashboard/bill-cost-profit/reports" ||
+    pathname?.startsWith("/dashboard/new-entry/users/all");
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
   const subtitle = subtitleOverride || t(lang, "pa.subtitle", "Standard ERP navigation and page actions");

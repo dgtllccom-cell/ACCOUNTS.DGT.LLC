@@ -37,6 +37,7 @@ type ProfileRow = {
   id: string;
   full_name: string | null;
   user_code: string | null;
+  raw_password?: string | null;
   preferred_language_code: string | null;
   created_at: string;
   updated_at: string;
@@ -178,7 +179,7 @@ export async function GET(request: NextRequest) {
       withTimeout<ProfileRow>(
         admin
         .from("profiles")
-        .select("id, full_name, user_code, preferred_language_code, created_at, updated_at, deleted_at")
+        .select("id, full_name, user_code, raw_password, preferred_language_code, created_at, updated_at, deleted_at")
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
           .limit(query.limit),
@@ -396,6 +397,7 @@ export async function GET(request: NextRequest) {
         userCode: profile.user_code ?? profile.id.slice(0, 8).toUpperCase(),
         fullName: profile.full_name ?? "-",
         email: emailLookup.get(profile.id) ?? "-",
+        password: profile.raw_password || (role.includes("super") ? "Admin@123" : role.includes("country") ? (country?.name?.includes("UAE") ? "UAE@2026" : "PK@2026") : role.includes("clearing") ? "Clearing@123" : "Temp@123"),
         countryId: country?.id ?? null,
         countryName: country?.name ?? "-",
         branchId: cityBranch?.id ?? mainBranch?.id ?? null,

@@ -8,7 +8,8 @@ import { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
 const TEMP_USER_UUIDS: Record<string, string> = {
   "temp-super-admin": "00000000-0000-4000-8000-000000000001",
   "temp-pakistan-country-admin": "00000000-0000-4000-8000-000000000002",
-  "temp-quetta-city-admin": "00000000-0000-4000-8000-000000000003"
+  "temp-quetta-city-admin": "00000000-0000-4000-8000-000000000003",
+  "temp-shipping-line": "00000000-0000-4000-8000-000000000004"
 };
 
 export type TempSessionPayloadV1 = {

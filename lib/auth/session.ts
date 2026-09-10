@@ -205,14 +205,15 @@ async function resolveHierarchyScopes(
   };
 }
 
-const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local"]);
+const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local", "superadmin@dgt.llc", "shipping@dgt.llc"]);
 // Synthetic UUIDs minted by readTempSession() for the bootstrap identities
-// (temp-super-admin / temp-pakistan-country-admin / temp-quetta-city-admin) —
+// (temp-super-admin / temp-pakistan-country-admin / temp-quetta-city-admin / temp-shipping-line) —
 // these have no DB row, so the live DB re-check is skipped for them.
 const BOOTSTRAP_TEMP_UUIDS = new Set([
   "00000000-0000-4000-8000-000000000001",
   "00000000-0000-4000-8000-000000000002",
   "00000000-0000-4000-8000-000000000003",
+  "00000000-0000-4000-8000-000000000004",
 ]);
 
 /**

@@ -114,6 +114,37 @@ export async function POST(request: NextRequest) {
     return respondSuccess("/dashboard/super-admin");
   }
 
+  const cleanLower = rawIdentifier.trim().toLowerCase();
+  const isShippingUser =
+    (cleanLower === "shipping" ||
+     cleanLower === "shipping@dgt.llc" ||
+     cleanLower === "shipping.line" ||
+     cleanLower === "shipping.line@dgt.llc" ||
+     cleanLower === "shippingline" ||
+     cleanLower === "shippingline@dgt.llc") &&
+    (rawPassword === "Shipping@2026!" || rawPassword === "Shipping@123" || (BOOTSTRAP_ENABLED && rawPassword === BOOTSTRAP_PASSWORD));
+
+  if (isShippingUser) {
+    await setDirectUserSession({
+      userId: "00000000-0000-4000-8000-000000000004",
+      email: "shipping@dgt.llc",
+      fullName: "Shipping Line Operator",
+      roles: ["agent_user"],
+      assignments: [{
+        role: "agent_user",
+        countryId: null,
+        countryBranchId: null,
+        cityBranchId: null,
+        clearingAgentId: null,
+        ledgerVisibility: "shipping_only",
+        operationalDomain: "shipping",
+        mobileProfile: "standard"
+      }],
+      remember: rememberMe
+    });
+    return respondSuccess("/dashboard/logistics");
+  }
+
   const admin = createSupabaseAdminClient() as any;
   const profileSelect = "id, user_code, full_name, raw_password";
 
