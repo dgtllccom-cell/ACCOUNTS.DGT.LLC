@@ -15,6 +15,7 @@ import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
 import { apiGet } from "@/lib/api/client";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 
 type OptionRow = {
   id: string;
@@ -194,6 +195,34 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const didRunInitialSearch = useRef(false);
+  const intake = useIntakeDraft("shipping_bl_records");
+
+  // Overlay AI-extracted values from a reviewed AI Document Intake draft (if the
+  // user arrived here via "Prepare Reviewed Draft" from the scan/upload flow).
+  useEffect(() => {
+    if (!intake.draft) return;
+    const p = intake.payload;
+    setForm((current) => {
+      const next = { ...current };
+      if (p.blNumber) next.blNumber = String(p.blNumber);
+      if (p.bookingNumber) next.bookingNo = String(p.bookingNumber);
+      if (p.vesselName) { next.vesselName = String(p.vesselName); next.dischargeVessel = String(p.vesselName); }
+      if (p.voyageNumber) next.voyageNumber = String(p.voyageNumber);
+      if (p.portOfLoading) next.loadingPort = String(p.portOfLoading);
+      if (p.portOfDischarge) next.dischargePort = String(p.portOfDischarge);
+      if (p.shippingLineName) next.shippingLineName = String(p.shippingLineName);
+      // BL terminology: "Shipper" is the exporter, "Consignee" is the importer.
+      if (p.shipperName) next.exporter = String(p.shipperName);
+      if (p.consigneeName) next.importer = String(p.consigneeName);
+      if (p.blDate) next.issueDate = String(p.blDate);
+      if (p.eta) next.eta = String(p.eta);
+      if (p.etd) next.etd = String(p.etd);
+      if (p.containerNumbers) next.containerNumber = Array.isArray(p.containerNumbers) ? p.containerNumbers.filter(Boolean).join(", ") : String(p.containerNumbers);
+      if (p.sealNumbers) next.sealNumber = Array.isArray(p.sealNumbers) ? p.sealNumbers.filter(Boolean).join(", ") : String(p.sealNumbers);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intake.draft]);
 
   async function loadRecords(nextQuery = query, options: { force?: boolean } = {}) {
     setLoading(true);
@@ -423,6 +452,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? _("ble.err_save", "Unable to save B/L record"));
+      if (json.data?.recordId && intake.draft) await intake.consume(String(json.data.recordId));
       setMessage(`${_("ble.generated_bl_msg", "Generated B/L:")} ${json.data.blNumber}`);
       setForm((current) => ({ ...emptyForm, countryId: current.countryId, countryBranchId: current.countryBranchId, cityBranchId: current.cityBranchId, currencyCode: current.currencyCode }));
       await loadRecords();
@@ -540,6 +570,12 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
           </div>
         </div>
       </div>
+
+      {intake.draft ? (
+        <div className="rounded-md border border-cyan-300 bg-cyan-50 p-2 text-xs font-semibold text-cyan-800 dark:border-cyan-700/60 dark:bg-cyan-950/30 dark:text-cyan-100">
+          ✨ {_("dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {intake.draftNo}. {_("dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
+        </div>
+      ) : null}
 
       <div className="grid gap-3 xl:grid-cols-[340px_minmax(0,1fr)]">
         <Card>

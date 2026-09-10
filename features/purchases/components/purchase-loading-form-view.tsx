@@ -14,6 +14,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { LoadingBatchPanel } from "./loading-batch-panel";
 import { VoiceFormFill } from "@/components/voice-form-fill";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
@@ -31,7 +32,12 @@ export function PurchaseLoadingFormView() {
 
   const [activeTab, setActiveTab] = useState<"bill" | "parties" | "goods" | "load">("bill");
   const [nextDestination, setNextDestination] = useState<"warehouse" | "in-transit" | "export" | "re-export" | "local-sale">("warehouse");
-  
+
+  // AI Document Intake bridge: "Prepare Reviewed Draft" stashes extracted
+  // fields for this module and redirects here — pick them up and prefill
+  // instead of leaving the user with a blank form to retype by hand.
+  const intake = useIntakeDraft("purchase_loading_records");
+
   const [loadForm, setLoadForm] = useState({
     containerNumber: "",
     containerType: "40 FT",
@@ -107,6 +113,39 @@ export function PurchaseLoadingFormView() {
     }
   }, [orders, selectedPO]);
 
+  // AI Document Intake bridge: once the reviewed draft's extracted fields are
+  // available and the orders list has loaded, auto-select the matching
+  // purchase order (mirrors the existing ?purchaseOrderNo deep-link above)
+  // and prefill the container/date fields on the New Loading tab, the same
+  // way the "Propose Loading Batch" deep-link above does.
+  useEffect(() => {
+    if (!intake.draft) return;
+    if (selectedPO) return;
+    if (orders.length === 0) return;
+
+    const p = intake.payload;
+    const poNo = String(p.purchaseOrderNo || "").trim();
+    if (poNo) {
+      const match = orders.find(o => o.purchase_order_no === poNo);
+      if (match) {
+        setSelectedPO(match);
+        setActiveTab("load");
+      }
+    }
+
+    const rawContainers = String(p.containerNumbers || "").trim();
+    const firstContainer = rawContainers ? rawContainers.split(/[,\s]+/).filter(Boolean)[0] : "";
+    const rawDate = p.loadingDate ? String(p.loadingDate).slice(0, 10) : "";
+
+    if (firstContainer || rawDate) {
+      setLoadForm(f => ({
+        ...f,
+        containerNumber: firstContainer ? firstContainer.toUpperCase() : f.containerNumber,
+        loadingDate: rawDate || f.loadingDate,
+      }));
+    }
+  }, [intake.draft, intake.payload, orders, selectedPO]);
+
   const dashboardOrders = useMemo(() => {
     return orders.filter(row => {
       const form = row.form_data?.form || {};
@@ -171,7 +210,10 @@ export function PurchaseLoadingFormView() {
       if (!response.ok || !payload.ok) {
         throw new Error(payload.error?.message || payload.error || "Failed to save loading record.");
       }
-      
+
+      const createdLoadingRecordId = payload.data?.loadingRecordId;
+      if (intake.draft && createdLoadingRecordId) await intake.consume(String(createdLoadingRecordId));
+
       alert(`Successfully saved loading for ${selectedPO.purchase_order_no}`);
       setLoadForm({ containerNumber: "", containerType: "40 FT", loadingQuantity: "", loadingDate: "", loadingNote: "" });
       setSelectedPO(null);

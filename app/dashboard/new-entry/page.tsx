@@ -51,23 +51,9 @@ type UserEntryItem = {
 
 const userEntryItems: UserEntryItem[] = [
   {
-    title: "Super Admin User",
-    description: "Create global-level administrators and assign enterprise permissions.",
-    href: "/dashboard/new-entry/users/super-admin" as Route,
-    status: "Ready",
-    allowRoles: ["super_admin"]
-  },
-  {
-    title: "Country User",
-    description: "Create and assign users scoped to a single country.",
-    href: "/dashboard/new-entry/users/country" as Route,
-    status: "Ready",
-    allowRoles: ["super_admin", "country_admin", "main_branch_admin"]
-  },
-  {
-    title: "Branch User",
-    description: "Create and assign users scoped to a selected city branch.",
-    href: "/dashboard/new-entry/users/branch" as Route,
+    title: "User Registration",
+    description: "4-step wizard covering Super Admin, Country, Branch, Accountant, Cashier, and Staff users.",
+    href: "/dashboard/new-entry/users/registration" as Route,
     status: "Ready",
     allowRoles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
   },

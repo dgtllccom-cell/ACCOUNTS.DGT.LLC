@@ -10,6 +10,7 @@ import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { VoiceFormFill } from "@/components/voice-form-fill";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 
 type AgentCustomEntryRow = {
   id: string;
@@ -69,6 +70,42 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
   const [form, setForm] = useState<any>(EMPTY_ENTRY);
   const [isEditing, setIsEditing] = useState(false);
 
+  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  const intake = useIntakeDraft("clearing_agent_custom_entries");
+
+  // If the human reviewer chose to link/update an existing custom entry,
+  // load it into the edit form the same way the manual "Edit" row action does
+  // (once the register has finished loading).
+  useEffect(() => {
+    if (!intake.linkedSourceId || rows.length === 0) return;
+    const row = rows.find((r) => String(r.id) === String(intake.linkedSourceId));
+    if (row) {
+      setForm(row);
+      setIsEditing(true);
+    }
+  }, [intake.linkedSourceId, rows]);
+
+  // Overlay AI-extracted values from the reviewed draft onto the (new or
+  // linked-existing) form. Fields with no dedicated input are folded into
+  // Remarks, same convention already used by the VoiceFormFill onApply below.
+  useEffect(() => {
+    if (!intake.draft) return;
+    const p = intake.payload;
+    setForm((prev: any) => ({
+      ...prev,
+      customs_declaration_no: p.customsReferenceNo ? String(p.customsReferenceNo) : prev.customs_declaration_no,
+      assessed_value: p.assessedValue != null && p.assessedValue !== "" ? (Number(p.assessedValue) || prev.assessed_value) : prev.assessed_value,
+      currency_code: p.currencyCode ? String(p.currencyCode).toUpperCase().slice(0, 3) : prev.currency_code,
+      remarks: [
+        p.blNumber && `BL ${p.blNumber}`,
+        p.declarationDate && `Declaration Date ${p.declarationDate}`,
+        p.portOfDischarge && `Port of Discharge ${p.portOfDischarge}`,
+        p.containerNumbers && `Container ${p.containerNumbers}`,
+        prev.remarks,
+      ].filter(Boolean).join(" · "),
+    }));
+  }, [intake.draft]);
+
   async function loadData() {
     setLoading(true);
     setError(null);
@@ -124,6 +161,8 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to save entry");
+
+      if (intake.draft) await intake.consume(String(json.data.id));
 
       setSuccessMessage(
         `${tt("ace.custom_declaration", "Custom Declaration")} ${json.data.entry_no || ""} ${isEditing ? tt("ace.updated", "updated") : tt("ace.created", "created")} ${tt("ace.successfully", "successfully!")}`.replace(/\s+/g, " ").trim()

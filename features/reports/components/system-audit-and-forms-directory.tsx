@@ -367,16 +367,6 @@ export const ERP_FORMS_CATALOG: ErpFormItem[] = [
     status: "Production Ready"
   },
   {
-    id: "ship-truck-wizard",
-    name: "Truck Recreation Wizard & Manifest",
-    nameUrdu: "ٹرک مینی فیسٹ وزرڈ",
-    category: "Shipping & Clearing",
-    route: "/dashboard/clearing-agent/truck-recreation",
-    roles: ["Super Admin", "Agent User"],
-    description: "Multi-stage wizard to re-allocate cargo shipments, generate road freight manifests, and assign border clearances.",
-    status: "Production Ready"
-  },
-  {
     id: "ship-clearing-bill",
     name: "Clearing Agent Service Bill Entry",
     nameUrdu: "کلیئرنگ ایجنٹ بلنگ فارم",

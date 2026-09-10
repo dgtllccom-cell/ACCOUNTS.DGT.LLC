@@ -55,6 +55,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { t } from "@/lib/i18n/ui";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -385,6 +386,9 @@ export function SalesOrderWizard({ session }) {
   // nextTransactionSerial — never a random client value. Form starts blank.
   const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
   const [goodsEntries, setGoodsEntries] = useState([]);
+
+  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  const intake = useIntakeDraft("sales_orders");
   const [lotPanelOpen, setLotPanelOpen] = useState(false);
   const [lotSearch, setLotSearch] = useState("");
   const [checkedLotNo, setCheckedLotNo] = useState(null);
@@ -1271,11 +1275,41 @@ export function SalesOrderWizard({ session }) {
     });
   }, [activeSession?.id, activeSession?.userId, activeSession?.countryIds?.[0], activeSession?.countryBranchIds?.[0], activeSession?.cityBranchIds?.[0], activeSession?.scopes?.countryIds?.[0], activeSession?.scopes?.countryBranchIds?.[0], activeSession?.scopes?.cityBranchIds?.[0], activeSession?.isSuperAdmin, activeSession?.scopes?.isSuperAdmin]);
 
+  // Overlay AI-extracted values from the reviewed document-intake draft. Runs after
+  // any existing-order load below so the reviewed AI values are what the user edits.
+  // Serial numbers (SO No / Bill No) are always assigned by the server — never
+  // overwritten from the draft here.
+  useEffect(() => {
+    if (!intake.draft) return;
+    const p = intake.payload || {};
+    setForm((prev) => {
+      const next = { ...prev };
+      if (p.salesContractNo) next.salesContractNo = String(p.salesContractNo);
+      if (p.orderDate) next.salesDate = String(p.orderDate);
+      if (p.currencyCode) {
+        const cur = String(p.currencyCode).toUpperCase().slice(0, 3);
+        next.currencyType = cur;
+        next.salesCurrency = cur;
+      }
+      if (p.exchangeRate !== undefined && p.exchangeRate !== null && p.exchangeRate !== "") {
+        const rate = Number(p.exchangeRate);
+        if (!Number.isNaN(rate)) next.exchangeRate = rate;
+      }
+      if (p.customerName) next.customerName = String(p.customerName);
+      if (p.paymentDueDate) next.paymentDate = String(p.paymentDueDate);
+      if (p.deliveryTerms) next.deliveryTerm = String(p.deliveryTerms);
+      if (p.paymentTerms) next.paymentDaysAndMethodDetails = String(p.paymentTerms);
+      return next;
+    });
+  }, [intake.draft]);
+
   // Load existing sales order if salesOrderNo or id is in URL query parameters
+  // (or the human chose "append to / update an existing sales order" during the
+  // AI Document Intake review — intake.linkedSourceId reuses this same load path).
   useEffect(() => {
     if (!activeSession) return;
     const soNo = searchParams.get("salesOrderNo");
-    const orderId = searchParams.get("id") || searchParams.get("salesOrderId");
+    const orderId = searchParams.get("id") || searchParams.get("salesOrderId") || intake.linkedSourceId || undefined;
     if (!soNo && !orderId) return;
     setIsFormOpen(true);
 
@@ -1368,6 +1402,7 @@ export function SalesOrderWizard({ session }) {
     searchParams.get("salesOrderNo"),
     searchParams.get("id"),
     searchParams.get("salesOrderId"),
+    intake.linkedSourceId,
     !!activeSession
   ]);
 
@@ -1444,6 +1479,7 @@ export function SalesOrderWizard({ session }) {
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
       setSavedOrderId(returnedOrderId || "");
       setSavedOrderNo(returnedOrderNo);
+      if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
       setSaveMessage(`Successfully saved Sales Order: ${returnedOrderNo}.`);
       setRegisterRefreshKey((key) => key + 1);
 
@@ -1501,6 +1537,7 @@ export function SalesOrderWizard({ session }) {
 
       setSavedOrderId(returnedOrderId || "");
       setSavedOrderNo(returnedOrderNo);
+      if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
       setSaveMessage(`Transferred Sales Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
       setTransferredData(payload.data || { salesOrderNo: returnedOrderNo });
       setIsTransferred(true);

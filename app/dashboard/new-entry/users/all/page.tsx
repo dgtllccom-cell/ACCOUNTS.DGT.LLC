@@ -104,7 +104,6 @@ const ALL_SYSTEM_FORMS = [
   { id: "form-customs-gd", name: "Customs Declaration (GD Entry)", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/agent-custom-entry" },
   { id: "form-transit-loading", name: "Transit Truck Loading", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/transit-loading" },
   { id: "form-truck-reg", name: "Truck Registration Form", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/truck-registration" },
-  { id: "form-truck-wizard", name: "Truck Recreation Wizard", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/truck-recreation" },
   { id: "form-clearing-bill", name: "Clearing Agent Service Bill", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/bill-entry" },
   
   { id: "form-whatsapp", name: "WhatsApp Multi-Branch Team Inbox", category: "Communication", route: "/dashboard/messages/whatsapp" },
@@ -765,7 +764,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </Button>
 
             {/* New User Form Button */}
-            <Link href="/dashboard/new-entry/users/super-admin">
+            <Link href="/dashboard/new-entry/users/registration">
               <Button className="bg-[#00a86b] hover:bg-[#00905c] text-white font-bold text-xs h-9 px-4 rounded-lg flex items-center gap-1.5 shadow-xs cursor-pointer">
                 <UserPlus className="h-3.5 w-3.5" />
                 <span>{th("+ New User Form")}</span>

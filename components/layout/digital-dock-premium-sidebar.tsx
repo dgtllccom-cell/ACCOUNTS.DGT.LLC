@@ -144,9 +144,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "User Registration", href: "/dashboard/new-entry/users/registration", icon: Users },
           { label: "All Users Directory", href: "/dashboard/new-entry/users/all", icon: Users },
-          { label: "Super Admin User", href: "/dashboard/new-entry/users/super-admin", icon: Users },
-          { label: "Country User", href: "/dashboard/new-entry/users/country", icon: Users },
-          { label: "Branch User", href: "/dashboard/new-entry/users/branch", icon: Users },
         ],
       },
       {
