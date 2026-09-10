@@ -1,6 +1,7 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "acct.agrv_open_bank_registry"
   | "lgr.net_balance"
   | "lgr.financial_summary"
   | "lgr.ledger_summary"
@@ -7463,6 +7464,7 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "acct.agrv_open_bank_registry": "Open Bank Registry",
   "settlement.title": "Settlement & Reconciliation",
   "nav.settlement_reconciliation": "Settlement & Reconciliation",
   "settlement.dashboard": "Settlement Dashboard",
@@ -25543,6 +25545,7 @@ const ur: Dict = {
   "bankreg.bankreg_no_banks_found": "کوئی بینک نہیں ملا",
   "bankreg.bankreg_create_first_bank": "پہلا بینک بنائیں",
   "bankreg.bankreg_search_placeholder": "بینک کا نام، کوڈ، اکاؤنٹ نمبر، IBAN تلاش کریں...",
+  "acct.agrv_open_bank_registry": "بینک رجسٹری کھولیں",
   "bankreg.bankreg_report_title": "بینک رجسٹری رپورٹ",
   "bankreg.bankreg_report_subtitle": "مالیاتی ادارہ اکاؤنٹس اور بینکاری تفصیلات",
   "bankreg.bankreg_status_filter": "حیثیت فلٹر",
@@ -43243,6 +43246,7 @@ const ar: Dict = {
   "bankreg.bankreg_no_banks_found": "لم يتم العثور على بنوك",
   "bankreg.bankreg_create_first_bank": "إنشاء أول بنك",
   "bankreg.bankreg_search_placeholder": "البحث عن اسم البنك أو الرمز أو رقم الحساب أو IBAN...",
+  "acct.agrv_open_bank_registry": "فتح سجل البنوك",
   "bankreg.bankreg_report_title": "تقرير سجل البنوك",
   "bankreg.bankreg_report_subtitle": "حسابات المؤسسات المالية الرئيسية وتفاصيل الخدمات المصرفية",
   "bankreg.bankreg_status_filter": "مرشح الحالة",
@@ -60945,6 +60949,7 @@ const fa: Dict = {
   "bankreg.bankreg_no_banks_found": "هیچ بانکی یافت نشد",
   "bankreg.bankreg_create_first_bank": "ایجاد اولین بانک",
   "bankreg.bankreg_search_placeholder": "جستجوی نام بانک، کد، شماره حساب، IBAN...",
+  "acct.agrv_open_bank_registry": "باز کردن فهرست بانک‌ها",
   "bankreg.bankreg_report_title": "گزارش فهرست بانک‌ها",
   "bankreg.bankreg_report_subtitle": "حساب‌های اصلی مؤسسات مالی و جزئیات بانکی",
   "bankreg.bankreg_status_filter": "فیلتر وضعیت",
@@ -78646,6 +78651,7 @@ const ps: Dict = {
   "bankreg.bankreg_no_banks_found": "هیڅ بانک ونه موندل شو",
   "bankreg.bankreg_create_first_bank": "لومړی بانک جوړ کړئ",
   "bankreg.bankreg_search_placeholder": "د بانک نوم، کوډ، حساب شمیره، IBAN ولټوئ...",
+  "acct.agrv_open_bank_registry": "د بانک ثبت خلاصول",
   "bankreg.bankreg_report_title": "د بانک ثبت راپور",
   "bankreg.bankreg_report_subtitle": "اصلي مالي ادارې حسابونه او بانکي توضیحات",
   "bankreg.bankreg_status_filter": "د حالت فلټر",

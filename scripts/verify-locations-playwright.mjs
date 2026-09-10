@@ -3,6 +3,12 @@ import path from "path";
 
 const outDir = path.resolve("C:/Users/dgtll/.gemini/antigravity-ide/brain/a3f34691-9266-4108-9d58-73a4b9b0aa86");
 
+const TEST_PASSWORD = process.env.DGT_TEST_PASSWORD;
+if (!TEST_PASSWORD) {
+  console.error("Set DGT_TEST_PASSWORD in your local .env (see scripts/rotate-debug-test-password.mjs).");
+  process.exit(1);
+}
+
 async function run() {
   console.log("Launching Chromium browser...");
   const browser = await chromium.launch({ headless: true });
@@ -20,7 +26,7 @@ async function run() {
 
   console.log("   Submitting SuperAdmin credentials...");
   await page.locator('input[name="identifier"], #identifier, input[type="text"]').first().fill("superadmin@dgt.llc");
-  await page.locator('input[name="password"], #password, input[type="password"]').first().fill("DgtAdmin@2026!");
+  await page.locator('input[name="password"], #password, input[type="password"]').first().fill(TEST_PASSWORD);
   await page.locator('button:has-text("SECURE ERP LOGIN"), button[type="submit"]').first().click();
 
   await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30000 });

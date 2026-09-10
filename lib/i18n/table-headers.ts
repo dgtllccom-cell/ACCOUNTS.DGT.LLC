@@ -4,6 +4,20 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  // ── Accounts Report column/group rework (2026-09-10) ──
+  "COMPANY & MASTER LINKS": { ur: "کمپنی اور ماسٹر روابط", ar: "الشركة والروابط الرئيسية", fa: "شرکت و پیوندهای اصلی", ps: "شرکت او اصلي تړاووې" },
+  "CURRENCY & STATUS": { ur: "کرنسی اور حیثیت", ar: "العملة والحالة", fa: "ارز و وضعیت", ps: "اسعار او حالت" },
+  "LINKED COMPANIES": { ur: "منسلک کمپنیاں", ar: "الشركات المرتبطة", fa: "شرکت‌های مرتبط", ps: "تړلې شرکتونه" },
+  "ALL COMPANIES": { ur: "تمام کمپنیاں", ar: "كل الشركات", fa: "همه شرکت‌ها", ps: "ټولې شرکتونه" },
+  "ALL BANKS": { ur: "تمام بینک", ar: "كل البنوك", fa: "همه بانک‌ها", ps: "ټول بانکونه" },
+  "ALL CURRENCIES": { ur: "تمام کرنسیاں", ar: "كل العملات", fa: "همه ارزها", ps: "ټول اسعارونه" },
+  "Warehouse Linked": { ur: "گودام منسلک ہے", ar: "المستودع مرتبط", fa: "انبار متصل است", ps: "ګدام تړلی دی" },
+  "Debit / Credit / Balance totals are available in Ledger and Financial Reports": {
+    ur: "ڈیبٹ / کریڈٹ / بیلنس کے کل لیجر اور مالیاتی رپورٹس میں دستیاب ہیں",
+    ar: "إجماليات المدين / الدائن / الرصيد متوفرة في دفتر الأستاذ والتقارير المالية",
+    fa: "مجموع بدهکار / بستانکار / مانده در دفتر کل و گزارش‌های مالی موجود است",
+    ps: "د ډیبٹ / کریډیټ / بیلانس ټولټال په لیجر او مالي راپورونو کې شتون لري"
+  },
   // ── Main-menu labels for the new modules (2026-09-08) ──
   "SMART OPERATIONS": { ur: "سمارٹ آپریشنز", ar: "العمليات الذكية", fa: "عملیات هوشمند", ps: "سمارټ عملیات" },
   "TEMPORARY PURCHASE & SALES": { ur: "عارضی خرید و فروخت", ar: "المشتريات والمبيعات المؤقتة", fa: "خرید و فروش موقت", ps: "لنډمهاله پیرود او پلور" },

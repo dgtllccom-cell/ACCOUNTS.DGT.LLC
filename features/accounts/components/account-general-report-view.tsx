@@ -83,9 +83,11 @@ type AccountGeneralReportRow = {
   journalActivityCount: number;
   latestJournalNo: string | null;
   latestActivityAt: string | null;
+  companyId?: string | null;
   companyName: string;
   companyCode: string;
   companyOwner: string;
+  bankId?: string | null;
   bankName?: string;
   warehouseName?: string;
   ownerName?: string;
@@ -390,6 +392,7 @@ function MiniChart({
 
 function AccountRowActionsMenu({
   row,
+  lang,
   disabled,
   onView,
   onEdit,
@@ -402,6 +405,7 @@ function AccountRowActionsMenu({
   onDelete
 }: {
   row: AccountGeneralReportRow;
+  lang: SupportedLanguage;
   disabled?: boolean;
   onView: () => void;
   onEdit: () => void;
@@ -475,15 +479,15 @@ function AccountRowActionsMenu({
 
       {open ? (
         <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border bg-background shadow-lg">
-          {item("View", <Eye className="h-4 w-4" aria-hidden />, onView)}
-          {item("Edit", <PencilLine className="h-4 w-4" aria-hidden />, onEdit)}
-          {item("Ledger", <FileText className="h-4 w-4" aria-hidden />, onOpenLedger)}
-          {item("Journal", <Printer className="h-4 w-4" aria-hidden />, onViewJournal)}
-          {item("Print", <Printer className="h-4 w-4" aria-hidden />, onPrint)}
-          {item("PDF", <PdfActionIcon className="h-4 w-4" aria-hidden />, onPdf)}
-          {item("Excel", <FileSpreadsheet className="h-4 w-4" aria-hidden />, onExcel)}
+          {item(t(lang, "common.view", "View"), <Eye className="h-4 w-4" aria-hidden />, onView)}
+          {item(t(lang, "common.edit", "Edit"), <PencilLine className="h-4 w-4" aria-hidden />, onEdit)}
+          {item(t(lang, "roz.ledger", "Ledger"), <FileText className="h-4 w-4" aria-hidden />, onOpenLedger)}
+          {item(t(lang, "utask.mod_journal", "Journal"), <Printer className="h-4 w-4" aria-hidden />, onViewJournal)}
+          {item(t(lang, "report.builder_print", "Print"), <Printer className="h-4 w-4" aria-hidden />, onPrint)}
+          {item(t(lang, "report.builder_pdf", "PDF"), <PdfActionIcon className="h-4 w-4" aria-hidden />, onPdf)}
+          {item(t(lang, "report.builder_excel", "Excel"), <FileSpreadsheet className="h-4 w-4" aria-hidden />, onExcel)}
           {onDelete
-            ? item("Delete", <Trash2 className="h-4 w-4" aria-hidden />, onDelete, "danger")
+            ? item(t(lang, "common.delete", "Delete"), <Trash2 className="h-4 w-4" aria-hidden />, onDelete, "danger")
             : null}
         </div>
       ) : null}
@@ -528,6 +532,10 @@ export function AccountGeneralReportView({
   const [draftBranchCode, setDraftBranchCode] = useState("all");
   const [draftStatus, setDraftStatus] = useState("all");
   const [draftCategory, setDraftCategory] = useState("all");
+  const [draftCompanyName, setDraftCompanyName] = useState("all");
+  const [draftBankName, setDraftBankName] = useState("all");
+  const [draftWarehouseFilter, setDraftWarehouseFilter] = useState("all");
+  const [draftCurrencyFilter, setDraftCurrencyFilter] = useState("all");
   const [draftFromDate, setDraftFromDate] = useState("");
   const [draftToDate, setDraftToDate] = useState("");
   const [query, setQuery] = useState("");
@@ -536,6 +544,10 @@ export function AccountGeneralReportView({
   const [branchCode, setBranchCode] = useState("all");
   const [status, setStatus] = useState("all");
   const [category, setCategory] = useState("all");
+  const [companyName, setCompanyNameFilter] = useState("all");
+  const [bankName, setBankNameFilter] = useState("all");
+  const [warehouseFilter, setWarehouseFilter] = useState("all");
+  const [currencyFilter, setCurrencyFilter] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [dashboardScope, setDashboardScope] = useState<AccountDashboardScope>("super_admin");
@@ -646,6 +658,45 @@ export function AccountGeneralReportView({
     return [{ value: "all", label: tr("ALL BRANCHES"), keywords: "all branches" }, ...map.values()];
   }, [rows, draftCountryName]);
 
+  const companyFilterOptions = useMemo(() => {
+    const map = new Map<string, SearchSelectOption>();
+    for (const row of rows) {
+      if (!row.companyName || row.companyName === "-") continue;
+      if (!map.has(row.companyName)) {
+        map.set(row.companyName, { value: row.companyName, label: row.companyName, keywords: row.companyName });
+      }
+    }
+    return [{ value: "all", label: tr("ALL COMPANIES"), keywords: "all companies" }, ...map.values()];
+  }, [rows]);
+
+  const bankFilterOptions = useMemo(() => {
+    const map = new Map<string, SearchSelectOption>();
+    for (const row of rows) {
+      if (!row.bankName || row.bankName === "-") continue;
+      if (!map.has(row.bankName)) {
+        map.set(row.bankName, { value: row.bankName, label: row.bankName, keywords: row.bankName });
+      }
+    }
+    return [{ value: "all", label: tr("ALL BANKS"), keywords: "all banks" }, ...map.values()];
+  }, [rows]);
+
+  const warehouseFilterOptions = useMemo(
+    () => [
+      { value: "all", label: tr("ALL"), keywords: "all" },
+      { value: "yes", label: t(lang, "common.yes", "Yes"), keywords: "yes" },
+      { value: "no", label: t(lang, "common.no", "No"), keywords: "no" }
+    ],
+    [lang]
+  );
+
+  const currencyFilterOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const row of rows) {
+      if (row.currency) set.add(row.currency);
+    }
+    return [{ value: "all", label: tr("ALL CURRENCIES"), keywords: "all currencies" }, ...Array.from(set).sort().map((c) => ({ value: c, label: c, keywords: c }))];
+  }, [rows]);
+
   // Sync draft states when active states change
   useEffect(() => {
     setDraftCountryName(countryName);
@@ -658,6 +709,22 @@ export function AccountGeneralReportView({
   useEffect(() => {
     setDraftCategory(category);
   }, [category]);
+
+  useEffect(() => {
+    setDraftCompanyName(companyName);
+  }, [companyName]);
+
+  useEffect(() => {
+    setDraftBankName(bankName);
+  }, [bankName]);
+
+  useEffect(() => {
+    setDraftWarehouseFilter(warehouseFilter);
+  }, [warehouseFilter]);
+
+  useEffect(() => {
+    setDraftCurrencyFilter(currencyFilter);
+  }, [currencyFilter]);
 
   // Reset draftBranchCode if it is no longer valid in the selected country's branches list
   useEffect(() => {
@@ -693,13 +760,21 @@ export function AccountGeneralReportView({
         const target = category.toLowerCase();
         return cat.includes(target) || sub.includes(target);
       })
+      .filter((row) => (companyName !== "all" ? row.companyName === companyName : true))
+      .filter((row) => (bankName !== "all" ? row.bankName === bankName : true))
+      .filter((row) => {
+        if (warehouseFilter === "all") return true;
+        const hasWarehouse = !!row.warehouseName && row.warehouseName !== "-";
+        return warehouseFilter === "yes" ? hasWarehouse : !hasWarehouse;
+      })
+      .filter((row) => (currencyFilter !== "all" ? row.currency === currencyFilter : true))
       .filter((row) => {
         if (fromDate && row.createdAt.slice(0, 10) < fromDate) return false;
         if (toDate && row.createdAt.slice(0, 10) > toDate) return false;
         if (!q) return true;
         return safeRowText(row).includes(q);
       });
-  }, [accountId, branchCode, category, fromDate, query, scopedRows, status, toDate]);
+  }, [accountId, bankName, branchCode, category, companyName, currencyFilter, fromDate, query, scopedRows, status, toDate, warehouseFilter]);
 
   const userBranchRows = useMemo(() => {
     const cityBranchIds = session?.scopes?.cityBranchIds || [];
@@ -1005,10 +1080,14 @@ export function AccountGeneralReportView({
     if (branchCode !== "all") count++;
     if (status !== "all") count++;
     if (category !== "all") count++;
+    if (companyName !== "all") count++;
+    if (bankName !== "all") count++;
+    if (warehouseFilter !== "all") count++;
+    if (currencyFilter !== "all") count++;
     if (fromDate) count++;
     if (toDate) count++;
     return count;
-  }, [query, countryName, branchCode, status, category, fromDate, toDate]);
+  }, [query, countryName, branchCode, status, category, companyName, bankName, warehouseFilter, currencyFilter, fromDate, toDate]);
 
   function resetFilters() {
     setDraftQuery("");
@@ -1017,6 +1096,10 @@ export function AccountGeneralReportView({
     setDraftBranchCode("all");
     setDraftStatus("all");
     setDraftCategory("all");
+    setDraftCompanyName("all");
+    setDraftBankName("all");
+    setDraftWarehouseFilter("all");
+    setDraftCurrencyFilter("all");
     setDraftFromDate("");
     setDraftToDate("");
     setQuery("");
@@ -1025,6 +1108,10 @@ export function AccountGeneralReportView({
     setBranchCode("all");
     setStatus("all");
     setCategory("all");
+    setCompanyNameFilter("all");
+    setBankNameFilter("all");
+    setWarehouseFilter("all");
+    setCurrencyFilter("all");
     setFromDate("");
     setToDate("");
     setSelectedCountryForSummary(null);
@@ -1041,6 +1128,10 @@ export function AccountGeneralReportView({
     setBranchCode(draftBranchCode);
     setStatus(draftStatus);
     setCategory(draftCategory);
+    setCompanyNameFilter(draftCompanyName);
+    setBankNameFilter(draftBankName);
+    setWarehouseFilter(draftWarehouseFilter);
+    setCurrencyFilter(draftCurrencyFilter);
     setFromDate(draftFromDate);
     setToDate(draftToDate);
     setSelectedCountryForSummary(null);
@@ -1076,53 +1167,43 @@ export function AccountGeneralReportView({
 
   function exportCsv(scope: "filtered" | "selected" = "filtered") {
     const exportRows = scope === "selected" && selectedRow ? [selectedRow] : filteredRows;
+    const yesLabel = t(lang, "common.yes", "Yes");
+    const noLabel = t(lang, "common.no", "No");
     const csvRows: string[][] = [
       [
-        "Account Code",
-        "Manual Reference Number",
-        "Country Serial Number",
-        "Branch Serial Number",
-        "Account Name",
-        "Company / Owner Name",
-        "Journal Code",
-        "Branch",
-        "Country",
-        "City",
-        "Branch Type / Scope",
-        "Currency",
-        "Category",
-        "Sub Type",
-        "Status",
-        "Created Date",
-        "Opening Balance",
-        "Debit Total",
-        "Credit Total",
-        "Current Balance"
+        tr("Account No."),
+        tr("Account Name"),
+        tr("Country"),
+        tr("Branch Code"),
+        tr("Company"),
+        tr("Linked Companies"),
+        tr("Bank"),
+        tr("Warehouse"),
+        tr("Currency"),
+        tr("Phone"),
+        tr("WhatsApp"),
+        tr("Email"),
+        tr("Status")
       ]
     ];
 
     for (const row of exportRows) {
+      const hasCompany = !!row.companyName && row.companyName !== "-";
+      const hasWarehouse = !!row.warehouseName && row.warehouseName !== "-";
       csvRows.push([
         row.accountCode,
-        row.manualReferenceNumber ?? "",
-        row.countrySerialNumber ?? "",
-        row.branchSerialNumber ?? "",
         row.accountName,
-        row.companyName || row.ownerName || "-",
-        row.journalCode,
-        row.branchName,
         row.countryName,
-        row.cityName,
-        row.branchType,
+        row.branchCode,
+        hasCompany ? yesLabel : noLabel,
+        hasCompany ? row.companyName : "",
+        row.bankName && row.bankName !== "-" ? row.bankName : "",
+        hasWarehouse ? yesLabel : noLabel,
         row.currency,
-        row.accountCategory,
-        row.subType,
-        row.status,
-        row.createdAt,
-        String(row.openingBalance),
-        String(row.debitTotal),
-        String(row.creditTotal),
-        String(row.currentBalance)
+        row.mobile ?? "",
+        row.whatsapp ?? "",
+        row.email ?? "",
+        row.status
       ]);
     }
 
@@ -1780,48 +1861,10 @@ export function AccountGeneralReportView({
       )}
 
       {/* REPORT-3: SEARCH & TRANSACTION REPORT */}
+      {/* Note: the actual Filter UI is the single canonical `SimpleModal` below
+          (also gated on `filtersOpen`) — a second inline drawer used to render
+          here at the same time, which was a real duplicate-UI bug; removed. */}
       <section className="bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-950 p-6 rounded-2xl shadow-sm space-y-6">
-        {filtersOpen ? (
-          <div className="rounded border border-slate-200 bg-slate-50/30 p-4 dark:border-slate-800 dark:bg-slate-955 animate-in fade-in duration-200">
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("COUNTRY SCOPE")}</span>
-                <select value={draftCountryName} onChange={(e) => setDraftCountryName(e.target.value)} disabled={!isSuperAdmin && dashboardScope !== "super_admin"} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-                  {countryOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </label>
-              <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("BRANCH SCOPE")}</span>
-                <select value={draftBranchCode} onChange={(e) => setDraftBranchCode(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-                  {branchOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </label>
-              <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t(lang, "log.tbl_status", "Status")}</span>
-                <select value={draftStatus} onChange={(e) => setDraftStatus(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-                  <option value="all">{t(lang, "report.all_label", "All")}</option>
-                  <option value="active">{t(lang, "god.active", "Active")}</option>
-                  <option value="archived">{t(lang, "acct.agrv_archived", "Archived")}</option>
-                </select>
-              </label>
-              <label className="space-y-1 flex gap-2">
-                <div className="w-1/2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{tr("DATE FROM")}</span>
-                  <input type="date" value={draftFromDate} onChange={(e) => setDraftFromDate(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition dark:border-slate-800 dark:bg-slate-950" />
-                </div>
-                <div className="w-1/2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{tr("DATE TO")}</span>
-                  <input type="date" value={draftToDate} onChange={(e) => setDraftToDate(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition dark:border-slate-800 dark:bg-slate-950" />
-                </div>
-              </label>
-            </div>
-            <div className="mt-3 flex justify-end gap-2 border-t border-slate-150 pt-3 dark:border-slate-800">
-              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[10px] font-bold">{tr("RESET FILTERS")}</Button>
-              <Button size="sm" onClick={applyFilters} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[10px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />{tr("APPLY FILTERS")}</Button>
-            </div>
-          </div>
-        ) : null}
-
         {error ? <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-xs text-red-900 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">{error}</div> : null}
         
         {highlightCreated && selectedRow ? (
@@ -1876,11 +1919,11 @@ export function AccountGeneralReportView({
                 <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-xs">
                   <tr>
                     {[
-                      { label: "MASTER REFERENCE & ACCOUNT OVERVIEW", span: 9, cls: "bg-slate-900 text-white dark:bg-slate-950 dark:text-slate-100 border-r border-slate-700 dark:border-slate-800" },
+                      { label: "MASTER REFERENCE & ACCOUNT OVERVIEW", span: 2, cls: "bg-slate-900 text-white dark:bg-slate-950 dark:text-slate-100 border-r border-slate-700 dark:border-slate-800" },
+                      { label: "BRANCH & LOCATION", span: 2, cls: "bg-indigo-900 text-white dark:bg-indigo-950 dark:text-indigo-200 border-r border-indigo-800 dark:border-indigo-800" },
+                      { label: "COMPANY & MASTER LINKS", span: 4, cls: "bg-purple-900 text-white dark:bg-purple-950 dark:text-purple-200 border-r border-purple-800 dark:border-purple-800" },
                       { label: "CONTACT DETAILS", span: 1, cls: "bg-emerald-800 text-white dark:bg-emerald-950 dark:text-emerald-200 border-r border-emerald-700 dark:border-emerald-800" },
-                      { label: "BRANCH & LOCATION", span: 3, cls: "bg-indigo-900 text-white dark:bg-indigo-950 dark:text-indigo-200 border-r border-indigo-800 dark:border-indigo-800" },
-                      { label: "FINANCIAL INFORMATION", span: 4, cls: "bg-blue-900 text-white dark:bg-blue-950 dark:text-blue-200 border-r border-blue-800 dark:border-blue-800" },
-                      { label: "START & STATUS", span: 2, cls: "bg-amber-800 text-white dark:bg-amber-950 dark:text-amber-200 border-r border-amber-700 dark:border-amber-800" },
+                      { label: "CURRENCY & STATUS", span: 2, cls: "bg-amber-800 text-white dark:bg-amber-950 dark:text-amber-200 border-r border-amber-700 dark:border-amber-800" },
                       { label: "ACTIONS", span: 1, cls: "bg-slate-800 text-white dark:bg-slate-900 dark:text-slate-200" },
                     ].map((group) => (
                       <Th
@@ -1894,24 +1937,16 @@ export function AccountGeneralReportView({
                   </tr>
                   <tr className="bg-slate-100/90 dark:bg-slate-900 text-[10.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 border-b-2 border-slate-300 dark:border-slate-700">
                     {[
-                      { label: "MANUAL REF", align: "text-center", width: "min-w-[100px]" },
-                      { label: "ACCOUNT CODE", align: "text-center", width: "min-w-[130px]" },
+                      { label: "ACCOUNT NO.", align: "text-center", width: "min-w-[130px]" },
                       { label: "ACCOUNT NAME", align: "text-left", width: "min-w-[210px]" },
-                      { label: "CATEGORY", align: "text-center", width: "min-w-[105px]" },
-                      { label: "ACCOUNT TYPE", align: "text-center", width: "min-w-[110px]" },
-                      { label: "COMPANY NAME", align: "text-left", width: "min-w-[160px]" },
-                      { label: "BANK NAME", align: "text-left", width: "min-w-[140px]" },
-                      { label: "WAREHOUSE NAME", align: "text-left", width: "min-w-[140px]" },
-                      { label: "OWNER NAME", align: "text-left", width: "min-w-[150px]" },
-                      { label: "CONTACTS", align: "text-center", width: "min-w-[95px]" },
                       { label: "COUNTRY", align: "text-center", width: "min-w-[140px]" },
-                      { label: "MAIN BRANCH", align: "text-left", width: "min-w-[150px]" },
-                      { label: "CITY BRANCH", align: "text-left", width: "min-w-[140px]" },
+                      { label: "BRANCH CODE", align: "text-center", width: "min-w-[110px]" },
+                      { label: "COMPANY", align: "text-center", width: "min-w-[90px]" },
+                      { label: "LINKED COMPANIES", align: "text-left", width: "min-w-[160px]" },
+                      { label: "BANK", align: "text-left", width: "min-w-[140px]" },
+                      { label: "WAREHOUSE", align: "text-center", width: "min-w-[100px]" },
+                      { label: "CONTACTS", align: "text-center", width: "min-w-[95px]" },
                       { label: "CURRENCY", align: "text-center", width: "min-w-[85px]" },
-                      { label: "DEBIT", align: "text-right", width: "min-w-[115px]" },
-                      { label: "CREDIT", align: "text-right", width: "min-w-[115px]" },
-                      { label: "BALANCE", align: "text-right", width: "min-w-[125px]" },
-                      { label: "START DATE", align: "text-center", width: "min-w-[100px]" },
                       { label: "STATUS", align: "text-center", width: "min-w-[95px]" },
                       { label: "ACTIONS", align: "text-center", width: "min-w-[65px]" }
                     ].map((col, i) => (
@@ -1931,7 +1966,7 @@ export function AccountGeneralReportView({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                   {loading ? (
                     <tr>
-                      <td colSpan={20} className="px-5 py-12 text-center text-sm text-slate-500 font-medium">
+                      <td colSpan={12} className="px-5 py-12 text-center text-sm text-slate-500 font-medium">
                         <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
                         {t(lang, "acct.agrv_loading_accounts_registry", "Loading accounts registry...")}
                       </td>
@@ -1953,26 +1988,18 @@ export function AccountGeneralReportView({
                             highlighted && "!bg-emerald-50 dark:!bg-emerald-950/30"
                           )}
                         >
-                          {/* 1. Manual Ref */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center font-mono align-middle">
-                            {row.manualReferenceNumber ? (
-                              <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                                {row.manualReferenceNumber}
-                              </span>
-                            ) : (
-                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
-                            )}
-                          </td>
-
-                          {/* 2. Account Code */}
+                          {/* 1. Account No. */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors">
                               <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                               <span>{row.accountCode}</span>
                             </div>
+                            {row.manualReferenceNumber ? (
+                              <div className="mt-0.5 font-mono text-[9px] font-medium text-slate-400 dark:text-slate-500">{row.manualReferenceNumber}</div>
+                            ) : null}
                           </td>
 
-                          {/* 3. Account Name */}
+                          {/* 2. Account Name */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             <div className="flex flex-col">
                               <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
@@ -1986,85 +2013,7 @@ export function AccountGeneralReportView({
                             </div>
                           </td>
 
-                          {/* 4. Category */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            {(() => {
-                              const cat = (row.accountCategory || "Asset").toLowerCase();
-                              let badgeCls = "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-                              if (cat.includes("asset")) badgeCls = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
-                              else if (cat.includes("liability")) badgeCls = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
-                              else if (cat.includes("equity")) badgeCls = "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800";
-                              else if (cat.includes("income") || cat.includes("revenue")) badgeCls = "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800";
-                              else if (cat.includes("expense")) badgeCls = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800";
-
-                              return (
-                                <span className={cn("inline-block px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider border shadow-2xs", badgeCls)}>
-                                  {localizeTerm(row.accountCategory || "Asset", lang)}
-                                </span>
-                              );
-                            })()}
-                          </td>
-
-                          {/* 5. Account Type */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 text-[10px] font-bold border border-slate-200/70 dark:border-slate-700">
-                              {localizeTerm(row.subType || "Normal Account", lang)}
-                            </span>
-                          </td>
-
-                          {/* 6. Company Name */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] block">
-                              {row.companyName ? localizeTerm(row.companyName, lang) : "—"}
-                            </span>
-                          </td>
-
-                          {/* 7. Bank Name */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            {row.bankName && row.bankName !== "-" ? (
-                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[10px] font-bold">
-                                <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                <span className="truncate max-w-[120px]">{localizeTerm(row.bankName, lang)}</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
-                            )}
-                          </td>
-
-                          {/* 8. Warehouse Name */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            {row.warehouseName && row.warehouseName !== "-" ? (
-                              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800 text-[10px] font-bold">
-                                <Building className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                                <span className="truncate max-w-[120px]">{localizeTerm(row.warehouseName, lang)}</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
-                            )}
-                          </td>
-
-                          {/* 9. Owner Name */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            <div className="flex items-center gap-1 text-left font-bold text-slate-900 dark:text-slate-100 text-[11px]">
-                              <User className="h-3 w-3 text-slate-400 shrink-0" />
-                              <span className="truncate max-w-[130px]">
-                                {transliterateProperNoun(
-                                  (row.ownerName && row.ownerName !== "-" && !row.ownerName.toLowerCase().includes("import export") ? row.ownerName : "") ||
-                                  ((row as any).customerName && (row as any).customerName !== "-" ? (row as any).customerName : "") ||
-                                  (row.companyOwner && row.companyOwner !== "-" && !row.companyOwner.toLowerCase().includes("import export") ? row.companyOwner : "") ||
-                                  "—",
-                                  lang
-                                )}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* 10. Contacts */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <ContactIconPopup row={row} />
-                          </td>
-
-                          {/* 11. Country */}
+                          {/* 3. Country */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[10.5px] font-bold shadow-2xs">
                               <span>{getFlag(row.countryName)}</span>
@@ -2072,59 +2021,76 @@ export function AccountGeneralReportView({
                             </div>
                           </td>
 
-                          {/* 12. Main Branch */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] block">
-                              {localizeTerm(row.mainBranchName ?? (row.branchType === "Main Branch" ? row.branchName : "-"), lang)}
+                          {/* 4. Branch Code */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800 font-mono font-bold text-[10.5px] text-indigo-700 dark:text-indigo-300">
+                              {row.branchCode || "—"}
                             </span>
                           </td>
 
-                          {/* 13. City Branch */}
+                          {/* 5. Company (Yes/No) */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            {row.companyName && row.companyName !== "-" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[9.5px] font-black uppercase">
+                                {t(lang, "common.yes", "Yes")}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[9.5px] font-black uppercase">
+                                {t(lang, "common.no", "No")}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* 6. Linked Companies */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            <span className="font-medium text-slate-600 dark:text-slate-400 text-[10.5px] block">
-                              {localizeTerm(row.cityBranchName ?? (row.branchType === "City Branch" ? row.branchName : "-"), lang)}
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] block truncate max-w-[160px]">
+                              {row.companyName ? localizeTerm(row.companyName, lang) : "—"}
                             </span>
                           </td>
 
-                          {/* 14. Currency */}
+                          {/* 7. Bank (clickable -> existing Bank Registry) */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            {row.bankName && row.bankName !== "-" ? (
+                              <button
+                                type="button"
+                                title={t(lang, "acct.agrv_open_bank_registry", "Open Bank Registry")}
+                                onClick={(e) => { e.stopPropagation(); router.push("/dashboard/settings/bank" as Route); }}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[10px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors"
+                              >
+                                <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span className="truncate max-w-[120px]">{localizeTerm(row.bankName, lang)}</span>
+                              </button>
+                            ) : (
+                              <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>
+                            )}
+                          </td>
+
+                          {/* 8. Warehouse (Yes/No) */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            {row.warehouseName && row.warehouseName !== "-" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[9.5px] font-black uppercase">
+                                {t(lang, "common.yes", "Yes")}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[9.5px] font-black uppercase">
+                                {t(lang, "common.no", "No")}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* 9. Contacts */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <ContactIconPopup row={row} />
+                          </td>
+
+                          {/* 10. Currency */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[10.5px] text-slate-700 dark:text-slate-300">
                               {row.currency}
                             </span>
                           </td>
 
-                          {/* 15. Debit */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-850 text-right font-mono font-bold text-[11px] text-rose-600 dark:text-rose-400 tabular-nums align-middle">
-                            {row.debitTotal > 0 ? fmtNumber(row.debitTotal) : <span className="text-slate-300 dark:text-slate-600 font-normal">0.00</span>}
-                          </td>
-
-                          {/* 16. Credit */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-850 text-right font-mono font-bold text-[11px] text-emerald-600 dark:text-emerald-400 tabular-nums align-middle">
-                            {row.creditTotal > 0 ? fmtNumber(row.creditTotal) : <span className="text-slate-300 dark:text-slate-600 font-normal">0.00</span>}
-                          </td>
-
-                          {/* 17. Balance */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-850 text-right font-mono font-black text-[11px] tabular-nums align-middle">
-                            <span className={cn(
-                              "inline-block px-2 py-0.5 rounded font-black",
-                              row.currentBalance < 0
-                                ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900"
-                                : row.currentBalance > 0
-                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900"
-                                : "text-slate-400 dark:text-slate-500 font-normal"
-                            )}>
-                              {fmtNumber(row.currentBalance)}
-                            </span>
-                          </td>
-
-                          {/* 18. Start Date */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <span className="font-mono text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                              {row.createdAt ? row.createdAt.slice(0, 10) : "—"}
-                            </span>
-                          </td>
-
-                          {/* 19. Status */}
+                          {/* 11. Status */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <span className={cn(
                               "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wide border shadow-2xs",
@@ -2137,10 +2103,11 @@ export function AccountGeneralReportView({
                             </span>
                           </td>
 
-                          {/* 20. Actions */}
+                          {/* 12. Actions */}
                           <td className="px-3 py-2.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                             <AccountRowActionsMenu
                               row={row}
+                              lang={lang}
                               disabled={loadingDeleting}
                               onView={() => {
                                 if (showProfilePanel) setSelectedAccountId(row.accountId);
@@ -2166,7 +2133,7 @@ export function AccountGeneralReportView({
                     })
                   ) : (
                     <tr>
-                      <td colSpan={20} className="px-5 py-12 text-center text-sm text-slate-500">
+                      <td colSpan={12} className="px-5 py-12 text-center text-sm text-slate-500">
                         {tr("NO ACCOUNTS MATCH THE SELECTED FILTERS")}
                       </td>
                     </tr>
@@ -2174,39 +2141,15 @@ export function AccountGeneralReportView({
                 </tbody>
                 <tfoot className="sticky bottom-0 z-10 bg-slate-100/95 dark:bg-slate-900/95 border-t-2 border-slate-300 dark:border-slate-700 backdrop-blur-xs font-bold text-[11px] text-slate-800 dark:text-slate-200 shadow-md">
                   <tr>
-                    <td colSpan={14} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-800">
+                    <td colSpan={12} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300">
                       <div className="flex items-center gap-3">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-black">
                           {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("TOTAL ACCOUNTS")}
                         </span>
                         <span className="text-[10.5px] text-slate-600 dark:text-slate-300 font-extrabold">
-                          {tr("GRAND FINANCIAL SUMMARY (ALL VISIBLE ACCOUNTS)")}
+                          {tr("Debit / Credit / Balance totals are available in Ledger and Financial Reports")}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono font-black text-rose-600 dark:text-rose-400 border-r border-slate-200 dark:border-slate-800 text-[11.5px] tabular-nums">
-                      {fmtNumber(sortedRows.reduce((sum, r) => sum + r.debitTotal, 0))}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-800 text-[11.5px] tabular-nums">
-                      {fmtNumber(sortedRows.reduce((sum, r) => sum + r.creditTotal, 0))}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono font-black border-r border-slate-200 dark:border-slate-800 text-[11.5px] tabular-nums">
-                      {(() => {
-                        const net = sortedRows.reduce((sum, r) => sum + r.currentBalance, 0);
-                        return (
-                          <span className={cn(
-                            "inline-block px-2 py-0.5 rounded font-black",
-                            net < 0
-                              ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
-                              : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                          )}>
-                            {fmtNumber(net)}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td colSpan={3} className="px-3 py-2.5 text-center text-[10px] text-slate-400 font-medium">
-                      {/* Empty space for status & actions */}
                     </td>
                   </tr>
                 </tfoot>
@@ -2375,6 +2318,58 @@ export function AccountGeneralReportView({
                   <option value="company">{tr("Company")}</option>
                   <option value="employee">{tr("Employee")}</option>
                   <option value="personal">{tr("Personal")}</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  {tr("Company")}
+                </Label>
+                <SearchSelect
+                  value={draftCompanyName}
+                  options={companyFilterOptions}
+                  onValueChange={(val: string) => setDraftCompanyName(val)}
+                  placeholder={tr("ALL COMPANIES")}
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  {tr("Bank")}
+                </Label>
+                <SearchSelect
+                  value={draftBankName}
+                  options={bankFilterOptions}
+                  onValueChange={(val: string) => setDraftBankName(val)}
+                  placeholder={tr("ALL BANKS")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  {tr("Warehouse Linked")}
+                </Label>
+                <select
+                  value={draftWarehouseFilter}
+                  onChange={(e) => setDraftWarehouseFilter(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
+                >
+                  {warehouseFilterOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  {tr("Currency")}
+                </Label>
+                <select
+                  value={draftCurrencyFilter}
+                  onChange={(e) => setDraftCurrencyFilter(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
+                >
+                  {currencyFilterOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
             </div>

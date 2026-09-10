@@ -2,6 +2,12 @@ import { chromium } from "playwright";
 import fs from "fs";
 import path from "path";
 
+const TEST_PASSWORD = process.env.DGT_TEST_PASSWORD;
+if (!TEST_PASSWORD) {
+  console.error("Set DGT_TEST_PASSWORD in your local .env (see scripts/rotate-debug-test-password.mjs).");
+  process.exit(1);
+}
+
 async function run() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -13,7 +19,7 @@ async function run() {
   console.log("Logging in...");
   await page.goto("http://localhost:3000/login", { waitUntil: "domcontentloaded" });
   await page.locator('input[name="identifier"], #identifier, input[type="text"]').first().fill("superadmin@dgt.llc");
-  await page.locator('input[name="password"], #password, input[type="password"]').first().fill("DgtAdmin@2026!");
+  await page.locator('input[name="password"], #password, input[type="password"]').first().fill(TEST_PASSWORD);
   await page.locator('button:has-text("SECURE ERP LOGIN")').click();
   await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30000 });
 

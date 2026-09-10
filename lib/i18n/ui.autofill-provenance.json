@@ -1,0 +1,322 @@
+[
+  {
+    "key": "god.yes",
+    "lang": "ur",
+    "value": "ییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.yes",
+    "lang": "ar",
+    "value": "ییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.yes",
+    "lang": "fa",
+    "value": "ییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.yes",
+    "lang": "ps",
+    "value": "ییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.no",
+    "lang": "ur",
+    "value": "نو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.no",
+    "lang": "ar",
+    "value": "نو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.no",
+    "lang": "fa",
+    "value": "نو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "god.no",
+    "lang": "ps",
+    "value": "نو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_view",
+    "lang": "ur",
+    "value": "وایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_view",
+    "lang": "ar",
+    "value": "وایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_view",
+    "lang": "fa",
+    "value": "وایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_view",
+    "lang": "ps",
+    "value": "وایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_edit",
+    "lang": "ur",
+    "value": "یدیت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_edit",
+    "lang": "ar",
+    "value": "یدیت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_edit",
+    "lang": "fa",
+    "value": "یدیت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_edit",
+    "lang": "ps",
+    "value": "یدیت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_ledger",
+    "lang": "ur",
+    "value": "لیجر",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_ledger",
+    "lang": "ar",
+    "value": "دفتر الأستاذ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_ledger",
+    "lang": "fa",
+    "value": "دفتر کل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_ledger",
+    "lang": "ps",
+    "value": "لیجر",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_journal",
+    "lang": "ur",
+    "value": "جرنل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_journal",
+    "lang": "ar",
+    "value": "دفتر اليومية",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_journal",
+    "lang": "fa",
+    "value": "روزنامه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_journal",
+    "lang": "ps",
+    "value": "جورنال",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_print",
+    "lang": "ur",
+    "value": "پرینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_print",
+    "lang": "ar",
+    "value": "برینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_print",
+    "lang": "fa",
+    "value": "پرینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_print",
+    "lang": "ps",
+    "value": "پرینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_pdf",
+    "lang": "ur",
+    "value": "پدف",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_pdf",
+    "lang": "ar",
+    "value": "بدف",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_pdf",
+    "lang": "fa",
+    "value": "پدف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_pdf",
+    "lang": "ps",
+    "value": "پدف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_excel",
+    "lang": "ur",
+    "value": "یکسکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_excel",
+    "lang": "ar",
+    "value": "یکسکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_excel",
+    "lang": "fa",
+    "value": "یکسکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_excel",
+    "lang": "ps",
+    "value": "یکسکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_delete",
+    "lang": "ur",
+    "value": "دیلیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_delete",
+    "lang": "ar",
+    "value": "دیلیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_delete",
+    "lang": "fa",
+    "value": "دیلیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "acct.agrv_action_delete",
+    "lang": "ps",
+    "value": "دیلیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T17:54:18.849Z"
+  }
+]
