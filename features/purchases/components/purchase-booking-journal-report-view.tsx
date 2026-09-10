@@ -65,6 +65,7 @@ import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report"
 import { Th } from "@/components/ui/translated-th";
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 type PurchaseReport = {
@@ -2947,7 +2948,7 @@ export function PurchaseBookingJournalReportView({
                     <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{report.unit || "KG"}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{translateValue(activeLang, report.unit || "KG")}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalNetWeight || 0)}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{report.currency || "USD"}</Td>
@@ -2959,18 +2960,18 @@ export function PurchaseBookingJournalReportView({
                     <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(totalAmtLc)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(advLc)}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{invPercent}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{payCondition}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{routeMode}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{translateValue(activeLang, payCondition)}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{translateValue(activeLang, routeMode)}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "loadingCountry", loadCountry)}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{loadPort}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{loadDate}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "receivedCountry", rcvCountry)}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{rcvPort}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{rcvDate}</Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-black")}>{!isPosted ? "NO (PENDING)" : "YES (TRANSFERRED)"}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-black")}>{!isPosted ? t(activeLang, "pb_register.status_no_pending", "NO (PENDING)") : t(activeLang, "pb_register.status_yes_transferred", "YES (TRANSFERRED)")}</span></Td>
                     <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", !isPosted ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800 font-bold")}>{!isPosted ? t(activeLang, "pb_register.status_accepted", "Accepted (Not Transferred)") : t(activeLang, "pb_register.status_transferred", "Transferred")}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{payStatus}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{loadStatus}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{translateValue(activeLang, payStatus)}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{translateValue(activeLang, loadStatus)}</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"

@@ -5088,7 +5088,7 @@ export type UiKey =
   | "pb_register.select_status_all"
   | "pb_register.status_draft"
   | "pb_register.status_accepted"
-  | "pb_register.status_transferred"
+  | "pb_register.status_transferred" | "pb_register.status_no_pending" | "pb_register.status_yes_transferred"
   | "pb_register.status_completed"
   | "pb_register.search_placeholder"
   | "pb_register.reset_refresh"
@@ -9534,6 +9534,8 @@ const en: Dict = {
   "pb_register.status_draft": "Draft",
   "pb_register.status_accepted": "Accepted",
   "pb_register.status_transferred": "Transferred",
+  "pb_register.status_no_pending": "NO (PENDING)",
+  "pb_register.status_yes_transferred": "YES (TRANSFERRED)",
   "pb_register.status_completed": "Completed",
   "sales.sbjr_title": "Sales Booking Journal Report",
   "sales.sbjr_subtitle": "Master Sales Register & Country Scope Overview",
@@ -28219,6 +28221,8 @@ const ur: Dict = {
   "pb_register.status_draft": "مسودہ",
   "pb_register.status_accepted": "منظور شدہ",
   "pb_register.status_transferred": "منتقل شدہ",
+  "pb_register.status_no_pending": "نہیں (زیر التواء)",
+  "pb_register.status_yes_transferred": "ہاں (منتقل شدہ)",
   "pb_register.status_completed": "مکمل",
   "sales.sbjr_title": "سیلز بکنگ جرنل رپورٹ",
   "sales.sbjr_subtitle": "ماسٹر سیلز رجسٹر اور ملکی دائرہ کار کا جائزہ",
@@ -45903,6 +45907,8 @@ const ar: Dict = {
   "pb_register.status_draft": "مسودة",
   "pb_register.status_accepted": "مقبول",
   "pb_register.status_transferred": "محوّل",
+  "pb_register.status_no_pending": "لا (معلق)",
+  "pb_register.status_yes_transferred": "نعم (محوّل)",
   "pb_register.status_completed": "مكتمل",
   "sales.sbjr_title": "تقرير دفتر حجز المبيعات",
   "sales.sbjr_subtitle": "سجل المبيعات الرئيسي ونظرة عامة على نطاق البلد",
@@ -63594,6 +63600,8 @@ const fa: Dict = {
   "pb_register.status_draft": "پیش‌نویس",
   "pb_register.status_accepted": "پذیرفته شده",
   "pb_register.status_transferred": "منتقل شده",
+  "pb_register.status_no_pending": "خیر (در انتظار)",
+  "pb_register.status_yes_transferred": "بله (منتقل‌شده)",
   "pb_register.status_completed": "تکمیل شده",
   "sales.sbjr_title": "گزارش دفتر ثبت فروش",
   "sales.sbjr_subtitle": "دفتر ثبت اصلی فروش و بررسی کلی دامنه کشور",
@@ -81274,6 +81282,8 @@ const ps: Dict = {
   "pb_register.status_draft": "مسوده",
   "pb_register.status_accepted": "منل شوی",
   "pb_register.status_transferred": "لیږدول شوی",
+  "pb_register.status_no_pending": "نه (په تمه)",
+  "pb_register.status_yes_transferred": "هو (لېږدول شوی)",
   "pb_register.status_completed": "بشپړ شوی",
   "sales.sbjr_title": "د پلور بکینګ ژورنال راپور",
   "sales.sbjr_subtitle": "د پلور اصلي راجستر او د هیواد د ساحې عمومي کتنه",
