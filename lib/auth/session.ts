@@ -48,6 +48,9 @@ export type ErpSession = {
   // "mobile_cash_ledger" / "mobile_field" route the user to a simple mobile
   // screen and hard-cap what the server will allow (see lib/permissions/mobile-profiles).
   mobileProfile: MobileProfile;
+  // True right after an admin-issued temporary password reset - the dashboard
+  // layout redirects to /auth/set-new-password until the user sets their own.
+  mustChangePassword: boolean;
 };
 
 /** True when this session may see data in the given operational domain. */
@@ -237,10 +240,11 @@ async function resolveErpSessionFromDb(
   // 1. Current profile — a soft-deleted profile is a disabled account.
   //    An infrastructure error (client misconfigured) THROWS so the caller can
   //    fall back to the signed cookie rather than nuking every session.
-  let profile: { full_name: string | null; preferred_language_code: SupportedLanguage | null; deleted_at?: string | null } | null = null;
+  let profile: { full_name: string | null; preferred_language_code: SupportedLanguage | null; deleted_at?: string | null; must_change_password?: boolean | null } | null = null;
   let profileErrored = false;
   {
-    let r = await db.from("profiles").select("full_name, preferred_language_code, deleted_at").eq("id", identity.userId).maybeSingle();
+    let r = await db.from("profiles").select("full_name, preferred_language_code, deleted_at, must_change_password").eq("id", identity.userId).maybeSingle();
+    if (r?.error) r = await db.from("profiles").select("full_name, preferred_language_code, deleted_at").eq("id", identity.userId).maybeSingle();
     if (r?.error) r = await db.from("profiles").select("full_name, preferred_language_code").eq("id", identity.userId).maybeSingle();
     if (r?.error) profileErrored = true;
     else profile = (r?.data as any) ?? null;
@@ -330,6 +334,7 @@ async function resolveErpSessionFromDb(
     isSuperAdmin,
     ...resolveShippingScope(assignments, isSuperAdmin),
     mobileProfile: resolveMobileProfile(assignments, isSuperAdmin),
+    mustChangePassword: Boolean(profile?.must_change_password) && !isBootstrapEmail,
   };
 }
 
@@ -406,6 +411,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         isSuperAdmin,
         ...resolveShippingScope(tempAssignments, isSuperAdmin),
         mobileProfile: resolveMobileProfile(tempAssignments, isSuperAdmin),
+        mustChangePassword: false,
       };
     }
 

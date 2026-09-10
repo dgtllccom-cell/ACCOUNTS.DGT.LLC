@@ -37,6 +37,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect(MOBILE_PROFILE_HOME[session.mobileProfile]);
   }
 
+  // An admin-issued temporary password reset must be replaced before the user
+  // can use the rest of the ERP.
+  if (session.mustChangePassword) {
+    redirect("/auth/set-new-password");
+  }
+
   return (
     <DashboardShell
       userEmail={session.email ?? "User"}

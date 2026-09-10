@@ -2464,6 +2464,13 @@ export type UiKey =
   | "fpw.subtitle"
   | "fpw.email_ph"
   | "fpw.send_reset"
+  | "snp.title"
+  | "snp.subtitle"
+  | "snp.new_password"
+  | "snp.new_password_ph"
+  | "snp.confirm_password"
+  | "snp.confirm_password_ph"
+  | "snp.save_and_continue"
   | "settr.title"
   | "settr.subtitle"
   | "settr.report_scope"
@@ -22818,6 +22825,13 @@ const en: Dict = {
 
 
   "fpw.send_reset": "Send Reset Link",
+  "snp.title": "Set a New Password",
+  "snp.subtitle": "Your account was reset with a temporary password. Please create your own private password to continue.",
+  "snp.new_password": "New Password",
+  "snp.new_password_ph": "Enter a new password (min 8 characters)",
+  "snp.confirm_password": "Confirm New Password",
+  "snp.confirm_password_ph": "Re-enter the new password",
+  "snp.save_and_continue": "Save Password & Continue",
 
 
   "settr.title": "Settlement & Reconciliation Reports",
@@ -40511,6 +40525,13 @@ const ur: Dict = {
 
 
   "fpw.send_reset": "ری سیٹ لنک بھیجیں",
+  "snp.title": "نیا پاس ورڈ سیٹ کریں",
+  "snp.subtitle": "آپ کا اکاؤنٹ عارضی پاس ورڈ کے ساتھ ری سیٹ کیا گیا ہے۔ براہ کرم جاری رکھنے کے لیے اپنا نجی پاس ورڈ بنائیں۔",
+  "snp.new_password": "نیا پاس ورڈ",
+  "snp.new_password_ph": "نیا پاس ورڈ درج کریں (کم از کم 8 حروف)",
+  "snp.confirm_password": "نئے پاس ورڈ کی تصدیق کریں",
+  "snp.confirm_password_ph": "نیا پاس ورڈ دوبارہ درج کریں",
+  "snp.save_and_continue": "پاس ورڈ محفوظ کریں اور جاری رکھیں",
 
 
   "settr.title": "سیٹلمنٹ اور مصالحت رپورٹس",
@@ -58206,6 +58227,13 @@ const ar: Dict = {
 
 
   "fpw.send_reset": "إرسال رابط إعادة التعيين",
+  "snp.title": "تعيين كلمة مرور جديدة",
+  "snp.subtitle": "تمت إعادة تعيين حسابك بكلمة مرور مؤقتة. يرجى إنشاء كلمة مرور خاصة بك للمتابعة.",
+  "snp.new_password": "كلمة المرور الجديدة",
+  "snp.new_password_ph": "أدخل كلمة مرور جديدة (8 أحرف على الأقل)",
+  "snp.confirm_password": "تأكيد كلمة المرور الجديدة",
+  "snp.confirm_password_ph": "أعد إدخال كلمة المرور الجديدة",
+  "snp.save_and_continue": "حفظ كلمة المرور والمتابعة",
 
 
   "settr.title": "تقارير التسوية والمطابقة",
@@ -75900,6 +75928,13 @@ const fa: Dict = {
 
 
   "fpw.send_reset": "ارسال لینک بازنشانی",
+  "snp.title": "تنظیم رمز عبور جدید",
+  "snp.subtitle": "حساب شما با رمز عبور موقت بازنشانی شده است. لطفاً برای ادامه، رمز عبور خصوصی خود را ایجاد کنید.",
+  "snp.new_password": "رمز عبور جدید",
+  "snp.new_password_ph": "رمز عبور جدید را وارد کنید (حداقل ۸ کاراکتر)",
+  "snp.confirm_password": "تأیید رمز عبور جدید",
+  "snp.confirm_password_ph": "رمز عبور جدید را دوباره وارد کنید",
+  "snp.save_and_continue": "ذخیره رمز عبور و ادامه",
 
 
   "settr.title": "گزارش‌های تسویه و مغایرت‌گیری",
@@ -93600,6 +93635,13 @@ const ps: Dict = {
 
 
   "fpw.send_reset": "د بیا تنظیم لینک واستوئ",
+  "snp.title": "نوی پاسورډ تنظیم کړئ",
+  "snp.subtitle": "ستاسو حساب د لنډمهاله پاسورډ سره بیا تنظیم شوی دی. مهرباني وکړئ د دوام لپاره خپل شخصي پاسورډ جوړ کړئ.",
+  "snp.new_password": "نوی پاسورډ",
+  "snp.new_password_ph": "نوی پاسورډ ولیکئ (لږترلږه 8 توري)",
+  "snp.confirm_password": "د نوي پاسورډ تایید",
+  "snp.confirm_password_ph": "نوی پاسورډ بیا ولیکئ",
+  "snp.save_and_continue": "پاسورډ خوندي کړئ او دوام ورکړئ",
 
 
   "settr.title": "د تصفیې او پخلاینې راپورونه",
