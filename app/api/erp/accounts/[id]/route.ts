@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -63,11 +64,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "update" });
+    const { id } = await params;
 
     const body = await request.json();
     const { code, name, accountTypeId, isActive } = body;
 
     const db = createSupabaseAdminClient() as any;
+    const { data: before } = await db.from("accounts").select("*").eq("id", id).maybeSingle();
     const { data, error } = await db
       .from("accounts")
       .update({
@@ -77,11 +80,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         is_active: isActive !== undefined ? isActive : undefined,
         updated_at: new Date().toISOString()
       })
-      .eq("id", (await params).id)
+      .eq("id", id)
       .select()
       .single();
 
     if (error) throw error;
+
+    void writeRecordChangeHistory({
+      recordTable: "accounts",
+      recordId: id,
+      action: "update",
+      actorId: session.userId,
+      countryId: data?.country_id ?? before?.country_id ?? null,
+      beforeData: before ?? null,
+      afterData: data
+    }).catch(() => {});
+
     return apiOk({ account: data });
   } catch (error) {
     return handleApiError(error);
@@ -92,21 +106,39 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "delete" });
+    const { id } = await params;
 
     const db = createSupabaseAdminClient() as any;
 
+    // Capture the full record before it's permanently removed — this table has
+    // no soft-delete column, so this audit-log snapshot is the only trace left
+    // once the row is gone (see docs note in the audit investigation: this is
+    // a genuinely hard delete, unlike enterprise_accounts' archive-in-place).
+    const { data: before } = await db.from("accounts").select("*").eq("id", id).maybeSingle();
+
     // Delete all associations first
     await Promise.all([
-      db.from("account_companies").delete().eq("account_id", (await params).id),
-      db.from("account_banks").delete().eq("account_id", (await params).id),
-      db.from("account_warehouses").delete().eq("account_id", (await params).id),
-      db.from("account_customer_owners").delete().eq("account_id", (await params).id)
+      db.from("account_companies").delete().eq("account_id", id),
+      db.from("account_banks").delete().eq("account_id", id),
+      db.from("account_warehouses").delete().eq("account_id", id),
+      db.from("account_customer_owners").delete().eq("account_id", id)
     ]);
 
     // Then delete the account
-    const { error } = await db.from("accounts").delete().eq("id", (await params).id);
+    const { error } = await db.from("accounts").delete().eq("id", id);
 
     if (error) throw error;
+
+    void writeRecordChangeHistory({
+      recordTable: "accounts",
+      recordId: id,
+      action: "delete",
+      actorId: session.userId,
+      countryId: before?.country_id ?? null,
+      beforeData: before ?? null,
+      afterData: { deleted_at: new Date().toISOString() }
+    }).catch(() => {});
+
     return apiOk({ success: true });
   } catch (error) {
     return handleApiError(error);

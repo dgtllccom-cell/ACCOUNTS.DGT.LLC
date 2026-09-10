@@ -7,6 +7,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -281,6 +282,17 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       });
     }
 
+    void writeRecordChangeHistory({
+      recordTable: "enterprise_accounts",
+      recordId: id,
+      action: "update",
+      actorId,
+      countryId: (updatedAccount as any)?.country_id ?? current.country_id ?? null,
+      cityBranchId: (updatedAccount as any)?.city_branch_id ?? current.city_branch_id ?? null,
+      beforeData: current,
+      afterData: updatedAccount
+    }).catch(() => {});
+
     return apiOk({ account: updatedAccount });
   } catch (error) {
     return handleApiError(error);
@@ -345,6 +357,17 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
       .eq("enterprise_account_id", id);
 
     if (ledgerError) throw new Error(ledgerError.message);
+
+    void writeRecordChangeHistory({
+      recordTable: "enterprise_accounts",
+      recordId: id,
+      action: "delete",
+      actorId,
+      countryId: current.country_id ?? null,
+      cityBranchId: current.city_branch_id ?? null,
+      beforeData: current,
+      afterData: { status: "archived", deleted_at: timestamp }
+    }).catch(() => {});
 
     return apiOk({ deleted: true });
   } catch (error) {

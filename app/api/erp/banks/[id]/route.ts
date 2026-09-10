@@ -7,6 +7,7 @@ import { banksService } from "@/lib/services/banks-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 type BankRow = {
   id: string;
@@ -279,6 +280,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       record: bank as unknown as Record<string, unknown>,
       originalLanguage: session.preferredLanguage ?? "en",
       actorId: session.userId
+    }).catch(() => {});
+
+    // Bank edits were silently not reaching the central Edit History audit —
+    // this route updates public.banks directly (no banks-service layer), so
+    // the write has to happen here, matching the same call companies/customers/
+    // goods already make from their own services.
+    void writeRecordChangeHistory({
+      recordTable: "banks",
+      recordId: id,
+      action: "update",
+      actorId: session.userId,
+      countryId: bank.country_id ?? existing.country_id ?? null,
+      beforeData: existing,
+      afterData: bank
     }).catch(() => {});
 
     return apiOk({ bank });

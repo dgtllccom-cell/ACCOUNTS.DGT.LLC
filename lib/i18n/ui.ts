@@ -1,6 +1,29 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "roz.serial_numbers_exchange"
+  | "roz.selected_account"
+  | "roz.account_name"
+  | "roz.owner_customer"
+  | "roz.entry_summary"
+  | "roz.cef_transaction"
+  | "roz.search_entries_placeholder"
+  | "roz.no_entries_match_search"
+  | "roz.tab_cash_entry"
+  | "roz.tab_roznamcha"
+  | "roz.hide_form"
+  | "roz.show_form"
+  | "common.load_more"
+  | "common.showing_of_results"
+  | "hr.pp_print_title"
+  | "hr.pp_print_subtitle"
+  | "hr.pp_code"
+  | "hr.pp_section_details"
+  | "hr.pp_father_name"
+  | "creg.cp_print_title"
+  | "creg.cp_print_subtitle"
+  | "hr.pp_owner"
+  | "urw2.add_new_employee"
   | "acct.agrv_open_bank_registry"
   | "lgr.net_balance"
   | "lgr.financial_summary"
@@ -7464,6 +7487,29 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "roz.serial_numbers_exchange": "Serial Numbers & Exchange Rate",
+  "roz.selected_account": "Selected Account",
+  "roz.account_name": "Account Name",
+  "roz.owner_customer": "Owner / Customer",
+  "roz.entry_summary": "Entry Summary",
+  "roz.cef_transaction": "Transaction",
+  "roz.search_entries_placeholder": "Search entries...",
+  "roz.no_entries_match_search": "No entries match your search.",
+  "roz.tab_cash_entry": "Cash Entry",
+  "roz.tab_roznamcha": "Roznamcha",
+  "roz.hide_form": "Hide Form",
+  "roz.show_form": "Show Form",
+  "common.load_more": "Load more",
+  "common.showing_of_results": "Showing {shown} of {total} results",
+  "hr.pp_print_title": "Person / Customer Master",
+  "hr.pp_print_subtitle": "Person Master Profile",
+  "hr.pp_code": "Person Code",
+  "hr.pp_section_details": "Details",
+  "hr.pp_father_name": "Father / S/O",
+  "creg.cp_print_title": "Company Master",
+  "creg.cp_print_subtitle": "Company Profile",
+  "hr.pp_owner": "Owner",
+  "urw2.add_new_employee": "+ Add New Employee",
   "acct.agrv_open_bank_registry": "Open Bank Registry",
   "settlement.title": "Settlement & Reconciliation",
   "nav.settlement_reconciliation": "Settlement & Reconciliation",
@@ -42884,6 +42930,29 @@ const ur: Dict = {
   "shl.create_account": "نیا اکاؤنٹ سیٹ اپ",
   "shl.register_new": "شپنگ لائن رجسٹر کریں",
   "shl.search_lines": "نام، کوڈ، رابطہ سے شپنگ لائن تلاش کریں...",
+  "roz.account_name": "اکاؤنٹ",
+  "roz.entry_summary": "اندراج کا خلاصہ",
+  "roz.cef_transaction": "لین دین",
+  "roz.search_entries_placeholder": "اندراجات تلاش کریں...",
+  "roz.tab_cash_entry": "کیش انٹری",
+  "roz.tab_roznamcha": "روزنامچہ",
+  "roz.hide_form": "فارم چھپائیں",
+  "roz.show_form": "فارم دکھائیں",
+  "common.load_more": "مزید لوڈ کریں",
+  "hr.pp_code": "فرد کا کوڈ",
+  "hr.pp_section_details": "تفصیلات",
+  "creg.cp_print_subtitle": "کمپنی",
+  "hr.pp_owner": "مالک",
+  "roz.serial_numbers_exchange": "سیریل نمبرز اور شرح تبادلہ",
+  "roz.selected_account": "منتخب شدہ اکاؤنٹ",
+  "roz.owner_customer": "مالک / کسٹمر",
+  "roz.no_entries_match_search": "آپ کی تلاش سے کوئی اندراج مطابقت نہیں رکھتا۔",
+  "common.showing_of_results": "{total} میں سے {shown} نتائج دکھائے جا رہے ہیں",
+  "hr.pp_print_title": "پرسن / کسٹمر ماسٹر",
+  "hr.pp_print_subtitle": "پرسن ماسٹر پروفائل",
+  "hr.pp_father_name": "ولدیت",
+  "creg.cp_print_title": "کمپنی ماسٹر",
+  "urw2.add_new_employee": "+ نیا ملازم شامل کریں",
 };
 
 const ar: Dict = {
@@ -60587,6 +60656,29 @@ const ar: Dict = {
   "shl.create_account": "إعداد حساب جديد",
   "shl.register_new": "تسجيل خط شحن",
   "shl.search_lines": "ابحث عن خط شحن بالاسم أو الرمز أو جهة الاتصال...",
+  "roz.account_name": "حساب",
+  "roz.entry_summary": "ملخص الإدخال",
+  "roz.cef_transaction": "معاملة",
+  "roz.search_entries_placeholder": "ابحث عن الإدخالات...",
+  "roz.tab_cash_entry": "إدخال نقدي",
+  "roz.tab_roznamcha": "روزنامچه",
+  "roz.hide_form": "إخفاء النموذج",
+  "roz.show_form": "إظهار النموذج",
+  "common.load_more": "تحميل المزيد",
+  "hr.pp_code": "رمز الشخص",
+  "hr.pp_section_details": "التفاصيل",
+  "creg.cp_print_subtitle": "الشركة",
+  "hr.pp_owner": "المالك",
+  "roz.serial_numbers_exchange": "الأرقام التسلسلية وسعر الصرف",
+  "roz.selected_account": "الحساب المحدد",
+  "roz.owner_customer": "المالك / العميل",
+  "roz.no_entries_match_search": "لا توجد إدخالات تطابق بحثك.",
+  "common.showing_of_results": "عرض {shown} من {total} نتيجة",
+  "hr.pp_print_title": "الشخص / العميل الرئيسي",
+  "hr.pp_print_subtitle": "الملف الرئيسي للشخص",
+  "hr.pp_father_name": "اسم الأب",
+  "creg.cp_print_title": "الشركة الرئيسية",
+  "urw2.add_new_employee": "+ إضافة موظف جديد",
 };
 
 const fa: Dict = {
@@ -78289,6 +78381,29 @@ const fa: Dict = {
   "shl.create_account": "تنظیم حساب جدید",
   "shl.register_new": "ثبت خط کشتیرانی",
   "shl.search_lines": "جستجوی خط کشتیرانی بر اساس نام، کد، تماس...",
+  "roz.account_name": "حساب",
+  "roz.entry_summary": "خلاصه ورودی",
+  "roz.cef_transaction": "تراکنش",
+  "roz.search_entries_placeholder": "جستجوی ورودی‌ها...",
+  "roz.tab_cash_entry": "ثبت نقدی",
+  "roz.tab_roznamcha": "روزنامچه",
+  "roz.hide_form": "پنهان کردن فرم",
+  "roz.show_form": "نمایش فرم",
+  "common.load_more": "بارگذاری بیشتر",
+  "hr.pp_code": "کد شخص",
+  "hr.pp_section_details": "جزئیات",
+  "creg.cp_print_subtitle": "شرکت",
+  "hr.pp_owner": "مالک",
+  "roz.serial_numbers_exchange": "شماره‌های سریال و نرخ ارز",
+  "roz.selected_account": "حساب انتخاب‌شده",
+  "roz.owner_customer": "مالک / مشتری",
+  "roz.no_entries_match_search": "هیچ ورودی با جستجوی شما مطابقت ندارد.",
+  "common.showing_of_results": "نمایش {shown} از {total} نتیجه",
+  "hr.pp_print_title": "شخص / مشتری اصلی",
+  "hr.pp_print_subtitle": "پروفایل اصلی شخص",
+  "hr.pp_father_name": "نام پدر",
+  "creg.cp_print_title": "شرکت اصلی",
+  "urw2.add_new_employee": "+ افزودن پرسنل جدید",
 };
 
 const ps: Dict = {
@@ -95997,6 +96112,29 @@ const ps: Dict = {
   "shl.create_account": "د نوي حساب تنظیم",
   "shl.register_new": "بحري لیکه ثبت کړئ",
   "shl.search_lines": "بحري لیکه د نوم، کوډ، اړیکې له مخې ولټوئ...",
+  "roz.account_name": "حساب",
+  "roz.entry_summary": "د ننوتنې لنډیز",
+  "roz.cef_transaction": "راکړه ورکړه",
+  "roz.search_entries_placeholder": "ننوتنې ولټوئ...",
+  "roz.tab_cash_entry": "نغدي داخله",
+  "roz.tab_roznamcha": "روزنامچه",
+  "roz.hide_form": "فورمه پټول",
+  "roz.show_form": "فورمه ښکاره کړئ",
+  "common.load_more": "نور بار کړئ",
+  "hr.pp_code": "د کس کوډ",
+  "hr.pp_section_details": "تفصیلات",
+  "creg.cp_print_subtitle": "شرکت",
+  "hr.pp_owner": "مالک",
+  "roz.serial_numbers_exchange": "سیریل شمېرې او د تبادلې نرخ",
+  "roz.selected_account": "ټاکل شوی اکاونټ",
+  "roz.owner_customer": "مالک / پیرودونکی",
+  "roz.no_entries_match_search": "ستاسو له لټون سره هېڅ ننوتنه سمون نه خوري.",
+  "common.showing_of_results": "د {total} څخه {shown} پایلې ښودل کیږي",
+  "hr.pp_print_title": "فرد / پیرودونکی ماسټر",
+  "hr.pp_print_subtitle": "د فرد اصلي پروفایل",
+  "hr.pp_father_name": "د پلار نوم",
+  "creg.cp_print_title": "اصلي شرکت",
+  "urw2.add_new_employee": "+ نوی کارمند اضافه کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -9,6 +9,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
 type PersonRow = {
   id: string;
@@ -25,6 +26,8 @@ type PersonRow = {
   whatsapp: string | null;
   email: string | null;
   address: string | null;
+  country_name?: string | null;
+  city_name?: string | null;
 };
 
 /** Prefer the localized customer_name if present; fall back to first + last name. */
@@ -57,9 +60,20 @@ function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
   const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
     name, rawName, row.customer_name, row.first_name, row.last_name, row.person_code,
-    father, fatherRaw, company, companyRaw, row.mobile, row.whatsapp, row.email
+    father, fatherRaw, company, companyRaw, row.mobile, row.whatsapp, row.email,
+    row.country_name, row.city_name
   ].filter(Boolean).join(" ");
-  return { value: row.id, label, keywords };
+  const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "الوالد:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "S/O:";
+  return {
+    value: row.id,
+    label,
+    keywords,
+    primaryText: name,
+    secondaryText: father ? `${fatherPrefix} ${father}` : company || undefined,
+    code: row.person_code || undefined,
+    branch: row.city_name || undefined,
+    country: row.country_name || undefined
+  };
 }
 
 export function PersonPicker({
@@ -257,6 +271,38 @@ export function PersonPicker({
   }, [people, lang]);
   const [viewPerson, setViewPerson] = useState<PersonRow | null>(null);
 
+  function handlePrintPerson(personId: string) {
+    const row = people.find((p) => p.id === personId);
+    if (!row) return;
+    const name = personFullName(row);
+    openMasterProfileReportWindow({
+      lang,
+      title: t(lang, "hr.pp_print_title", "Person / Customer Master"),
+      subtitle: t(lang, "hr.pp_print_subtitle", "Person Master Profile"),
+      name,
+      status: t(lang, "god.active", "Active"),
+      meta: [
+        { label: t(lang, "hr.pp_code", "Person Code"), value: row.person_code || "-" },
+        { label: t(lang, "roz.owner_customer", "Owner / Customer"), value: name },
+        { label: t(lang, "common.country", "Country"), value: row.country_name || "-" },
+        { label: t(lang, "company_form.section_location", "Location"), value: row.city_name || "-" },
+      ],
+      sections: [
+        {
+          title: t(lang, "hr.pp_section_details", "Details"),
+          rows: [
+            { label: t(lang, "hr.pp_father_name", "Father / S/O"), value: row.father_name || "-" },
+            { label: t(lang, "hr.pp_company", "Company"), value: row.company_name || "-" },
+            { label: t(lang, "roz.cef_mobile_ph", "Mobile / Ph"), value: row.mobile || "-" },
+            { label: t(lang, "purchase.dd_whatsapp", "WhatsApp"), value: row.whatsapp || "-" },
+            { label: t(lang, "purchase.dd_email", "Email"), value: row.email || "-" },
+            { label: t(lang, "company_form.section_location", "Address"), value: row.address || "-" },
+          ],
+        },
+      ],
+    });
+  }
+
   return (
     <>
       <SearchSelect
@@ -267,8 +313,10 @@ export function PersonPicker({
         emptyLabel={t(lang, "hr.pp_no_matches", "No matches found.")}
         viewTitle={t(lang, "common.view", "View Details")}
         editTitle={t(lang, "common.edit", "Edit")}
+        printTitle={t(lang, "common.print", "Print")}
         disabled={disabled || loading}
         options={options}
+        richList
         onValueChange={onValueChange}
         onSearchValueChange={handleSearchChange}
         onViewOption={(personId) => {
@@ -276,6 +324,7 @@ export function PersonPicker({
           if (found) setViewPerson(found);
         }}
         onEditOption={(personId) => setEditPersonId(personId)}
+        onPrintOption={handlePrintPerson}
         createLabel={t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
         createButtonPlacement="both"
         onCreateWithSearch={handleQuickCreatePerson}

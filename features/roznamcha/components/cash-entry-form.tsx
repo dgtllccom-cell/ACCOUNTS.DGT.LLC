@@ -30,7 +30,8 @@ import {
   Paperclip,
   Trash2,
   Hash,
-  Users
+  Users,
+  CircleDollarSign
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
 import { translateNarrationBlock } from "@/lib/i18n/table-headers";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
+import { localizeTerm } from "@/lib/i18n/transliteration";
 
 function getRoznamchaCategoryLabel(row: any) {
   const sm = (row.source_module || "").toLowerCase();
@@ -97,6 +99,27 @@ function getCountryFlag(name?: string) {
 
 const SAVED_BANKS_KEY = "erp_saved_banks_v1";
 const SAVED_METHODS_KEY = "erp_saved_payment_methods_v1";
+
+// Display-only currency full names for the "Selected Account" bar — presentation
+// data, not a new master/lookup table, so this is safe alongside the "no DB/API
+// changes" rule for this redesign.
+const CURRENCY_FULL_NAMES: Record<string, string> = {
+  USD: "United States Dollar",
+  PKR: "Pakistani Rupee",
+  AED: "United Arab Emirates Dirham",
+  AFN: "Afghan Afghani",
+  EUR: "Euro",
+  GBP: "British Pound",
+  SAR: "Saudi Riyal",
+  INR: "Indian Rupee",
+  CNY: "Chinese Yuan",
+  TRY: "Turkish Lira",
+  IRR: "Iranian Rial",
+  OMR: "Omani Rial",
+  KWD: "Kuwaiti Dinar",
+  QAR: "Qatari Riyal",
+  BHD: "Bahraini Dinar"
+};
 
 type SessionResponse = {
   user: { id: string; email: string | null; fullName: string | null };
@@ -412,6 +435,8 @@ export function CashEntryForm({
   } | null>(null);
 
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
+  const [tableSearchQuery, setTableSearchQuery] = useState("");
+  const [showFormSection, setShowFormSection] = useState(true);
 
   // ── AI Document Intake → Cash Entry bridge ──
   // When the reviewer chose "Continue Saved Draft" for a roznamcha document, the
@@ -616,6 +641,34 @@ export function CashEntryForm({
       balanceType
     };
   }, [recentEntries]);
+
+  // Compact top-bar search — client-side filter over the already-loaded entries
+  // (no new API call), matching against whatever's already visible in the table.
+  const filteredRecentEntries = useMemo(() => {
+    const q = tableSearchQuery.trim().toLowerCase();
+    if (!q) return recentEntries;
+    return recentEntries.filter((row) => {
+      const haystack = [
+        row.voucher_no,
+        row.journal_no,
+        row.super_admin_serial_number,
+        row.country_transaction_serial_number,
+        row.branch_transaction_serial_number,
+        row.narration,
+        row.created_by,
+        row.profiles?.full_name,
+        ...(row.roznamcha_lines || []).flatMap((line: any) => [
+          line.account_number,
+          line.ledgers?.name,
+          line.entry_serial_number
+        ])
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [recentEntries, tableSearchQuery]);
 
   const [showRoznamcha, setShowRoznamcha] = useState(false);
   const [roznamchaType, setRoznamchaType] = useState("Cash Book No.");
@@ -1753,6 +1806,32 @@ export function CashEntryForm({
     }
   };
 
+  // Compact top-bar Print/PDF — print the currently-loaded/filtered register as
+  // one A4 report (reuses the same openA4ReportWindow print engine as the
+  // per-row "Print A4" action; autoPrint controls whether the browser print
+  // dialog opens immediately or the user picks "Save as PDF" themselves).
+  const handlePrintRegister = (autoPrint: boolean) => {
+    const rows: Array<{ label: string; value: string }> = [];
+    filteredRecentEntries.forEach((row) => {
+      (row.roznamcha_lines || []).forEach((line: any) => {
+        const isDebit = Number(line.debit || 0) > 0;
+        const amountVal = isDebit ? Number(line.debit) : Number(line.credit || 0);
+        const sign = isDebit ? t(lang, "roz.col_debit", "Debit") : t(lang, "roz.col_credit", "Credit");
+        rows.push({
+          label: `${new Date(row.created_at).toLocaleDateString()} · ${row.voucher_no || row.journal_no || "-"}`,
+          value: `${line.ledgers?.name || "-"} (${line.account_number || "-"}) — ${sign} ${fmtAmount(amountVal)} ${line.currency || branchCurrency}`
+        });
+      });
+    });
+    openA4ReportWindow({
+      title: t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry"),
+      subtitle: `${selectedCountry?.name || ""} ${selectedMainBranch ? "· " + selectedMainBranch.name : ""} ${selectedCityBranch ? "· " + selectedCityBranch.name : ""}`.trim(),
+      rows,
+      autoPrint,
+      lang
+    });
+  };
+
   const handleEditEntry = (row: any) => {
     setEditEntryId(row.id);
     setShowPaymentWorkReport(true);
@@ -2077,7 +2156,35 @@ export function CashEntryForm({
 
   const actionButtons = (
     <div id="erp-page-actions-portal-content" className="flex items-center gap-2">
-      <RoznamchaReportsDropdown lang={lang} />
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+        <input
+          value={tableSearchQuery}
+          onChange={(e) => setTableSearchQuery(e.target.value)}
+          placeholder={t(lang, "roz.search_entries_placeholder", "Search entries...")}
+          className="h-8 w-[160px] rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 shadow-sm"
+        />
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold border-slate-250 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+        onClick={() => handlePrintRegister(true)}
+      >
+        <Printer className="h-3.5 w-3.5" />
+        {t(lang, "common.print", "Print")}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold border-slate-250 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+        onClick={() => handlePrintRegister(false)}
+      >
+        <Download className="h-3.5 w-3.5" />
+        {t(lang, "purchase.download_pdf", "PDF")}
+      </Button>
       <Button
         type="button"
         size="sm"
@@ -2105,6 +2212,7 @@ export function CashEntryForm({
         <RefreshCw className={cn("h-3.5 w-3.5", loadingEntries ? "animate-spin" : "")} />
         {t(lang, "common.refresh", "Refresh")}
       </Button>
+      <RoznamchaReportsDropdown lang={lang} />
     </div>
   );
 
@@ -2337,10 +2445,11 @@ export function CashEntryForm({
       ============================================================ */}
 
 
-      {/* Scope & Session Cards - Branch/User Info, Serial Numbers, Daily Cash Position,
-          Customer/Account Details - same card style as the Ledger General Report so the
-          two screens read as one design language. */}
-      <div className="mx-4 mt-4 mb-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* Scope & Session Cards - Branch/User Info, Serial Numbers, Daily Cash Position -
+          same card style as the Ledger General Report so the two screens read as one
+          design language. Collapsible via the "Hide Form" toggle in the bar below. */}
+      {showFormSection && (
+      <div className="mx-4 mt-4 mb-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
           {/* Card 1: Branch & User Information */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
@@ -2468,7 +2577,7 @@ export function CashEntryForm({
             </div>
           </div>
 
-          {/* Group 2: User Context & Exchange Rates */}
+          {/* Group 2: User Context */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_name", "User Name")}</span>
@@ -2491,46 +2600,23 @@ export function CashEntryForm({
                 {loginTimeText || "—"}
               </span>
             </div>
-
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
-              <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
-              </span>
-
-            </div>
           </div>
             </div>
           </div>
 
-          {/* Card 2: Serial Numbers */}
+          {/* Card 2: Serial Numbers & Exchange Rate */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
               <div className="bg-indigo-600 p-1 rounded-full text-white">
                 <Hash className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
-                {t(lang, "roz.serial_numbers", "Serial Numbers")}
+                {t(lang, "roz.serial_numbers_exchange", "Serial Numbers & Exchange Rate")}
               </h4>
             </div>
             <div className="p-4">
           {/* Group 3: Serials */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.journal_serial", "Journal Serial")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
@@ -2566,6 +2652,32 @@ export function CashEntryForm({
               <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                 {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
                 {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+              </span>
+            </div>
+          </div>
+
+          {/* Group 4: Exchange Rate — moved here from the Branch/User card so this
+              card's title ("Serial Numbers & Exchange Rate") matches its content. */}
+          <div className="flex flex-col gap-1.5 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
+              <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
+              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
+                {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
+              <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
               </span>
             </div>
           </div>
@@ -2625,90 +2737,113 @@ export function CashEntryForm({
             </div>
           </div>
 
-          {/* Card 4: Customer / Account Details - only shown once a counter-ledger is picked */}
-          {selectedCounterLedger && (
-          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
-              <div className="bg-purple-600 p-1 rounded-full text-white">
-                <Users className="h-3.5 w-3.5" />
-              </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-                {t(lang, "roz.customer_account_details", "Customer / Account Details")}
-              </h4>
-            </div>
-            <div className="p-4 flex flex-col gap-4">
-          {/* Group 3: Customer Details */}
-          {selectedCounterLedger && (
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "bdash.customer", "Customer")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
-                {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
-              </span>
+      </div>
+      )}
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "rozrep.account_no", "Account No")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
+      {/* Selected Account bar — a single compact strip (not a 4th grid card) showing
+          exactly which account the next entry will post against. Only real fields
+          already returned by the ledger-lookup API are shown (accountKind for
+          Category, companyName for Company, ledgerCurrency for Currency) — no
+          API/DB changes. */}
+      {selectedCounterLedger && (
+        <div className="mx-4 mb-3 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+            <div className="bg-purple-600 p-1 rounded-full text-white">
+              <Users className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+              {t(lang, "roz.selected_account", "Selected Account")}
+            </h4>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3">
+            <div className="flex flex-col">
+              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "rozrep.account_no", "Account No")}</span>
+              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono text-xs">
                 {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
               </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.cef_customer_no", "Customer No")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                {selectedCounterLedger.customerNumber || "-"}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "roz.account_name", "Account Name")}</span>
+              <span className="font-extrabold text-slate-850 dark:text-slate-150 text-xs truncate max-w-[180px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
+                {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
               </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "hr.f_currency", "Currency")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
+            </div>
+            {selectedCounterLedger.accountKind && (
+              <div className="flex flex-col">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "common.category", "Category")}</span>
+                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                  {localizeTerm(selectedCounterLedger.accountKind, lang)}
+                </span>
+              </div>
+            )}
+            <div className="h-8 w-px bg-slate-150 dark:bg-slate-800" />
+            <div className="flex flex-col">
+              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "roz.owner_customer", "Owner / Customer")}</span>
+              <span className="inline-flex items-center gap-1.5 font-extrabold text-slate-850 dark:text-slate-150 text-xs">
+                <User className="h-3 w-3 text-slate-400" />
+                <span className="truncate max-w-[160px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
+                  {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
+                </span>
+                {selectedCounterLedger.customerNumber && (
+                  <span className="font-mono text-[10px] text-slate-400">({selectedCounterLedger.customerNumber})</span>
+                )}
+              </span>
+            </div>
+            {selectedCounterLedger.companyName && (
+              <div className="flex flex-col">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "hr.pp_company", "Company")}</span>
+                <span className="inline-flex items-center gap-1.5 font-extrabold text-slate-850 dark:text-slate-150 text-xs">
+                  <Building2 className="h-3 w-3 text-slate-400" />
+                  <span className="truncate max-w-[160px]" title={selectedCounterLedger.companyName}>{selectedCounterLedger.companyName}</span>
+                </span>
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>
+              <span className="inline-flex items-center gap-1.5 font-extrabold text-slate-850 dark:text-slate-150 text-xs">
+                <CircleDollarSign className="h-3 w-3 text-slate-400" />
                 {selectedCounterLedger.ledgerCurrency || "-"}
+                {selectedCounterLedger.ledgerCurrency && CURRENCY_FULL_NAMES[selectedCounterLedger.ledgerCurrency] && (
+                  <span className="font-medium text-slate-400">— {CURRENCY_FULL_NAMES[selectedCounterLedger.ledgerCurrency]}</span>
+                )}
               </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "cdash.col_balance", "Balance")}</span>
-              <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
-                {fmtAmount(selectedCounterLedger.currentBalance || 0)}
-              </span>
-            </div>
-          )}
-
-          {/* Group 4: Company & Contact Details */}
-          {selectedCounterLedger && (
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold pt-3 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "hr.pp_company", "Company")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCounterLedger.companyName || "-"}>
-                {selectedCounterLedger.companyName || "-"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.cef_mobile_ph", "Mobile / Ph")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]">
-                {Array.isArray(selectedCounterLedger.contacts) ? selectedCounterLedger.contacts.find((c: any) => c.type === "mobile")?.value || selectedCounterLedger.contacts.find((c: any) => c.type === "phone")?.value || "-" : "-"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "purchase.dd_email", "Email")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]">
-                {Array.isArray(selectedCounterLedger.contacts) ? selectedCounterLedger.contacts.find((c: any) => c.type === "email")?.value || "-" : "-"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "company_form.section_location", "Location")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]">
-                {selectedCounterLedger.countryName || selectedCountry?.name || "-"} / {selectedCounterLedger.cityBranchName || "-"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "bdash.branch_code", "Branch Code")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                {selectedCounterLedger.branchSerialNumber || "-"}
-              </span>
-            </div>
-          )}
             </div>
           </div>
-          )}
-
-      </div>
+        </div>
+      )}
 
       <div className="space-y-4 px-4 pb-4">
         <LocationBackdrop
           selection={backdropSelection}
           title={t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry")}
-          subtitle={pageTitle}
-          className="min-h-[92px]"
-        />
+          className="min-h-[56px]"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
+                <FileText className="h-3 w-3" />
+                {t(lang, "roz.tab_cash_entry", "Cash Entry")}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/80 backdrop-blur-sm">
+                <Hash className="h-3 w-3" />
+                {t(lang, "roz.tab_roznamcha", "Roznamcha")}
+              </span>
+              {(selectedCountry || selectedMainBranch || selectedCityBranch) && (
+                <span className="text-[11px] font-semibold text-white/70">
+                  {[selectedCountry?.name, selectedCityBranch?.name, selectedMainBranch?.name].filter(Boolean).join(" > ")}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowFormSection((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm transition-colors"
+            >
+              <ChevronDown className={cn("h-3 w-3 transition-transform", !showFormSection && "-rotate-90")} />
+              {showFormSection ? t(lang, "roz.hide_form", "Hide Form") : t(lang, "roz.show_form", "Show Form")}
+            </button>
+          </div>
+        </LocationBackdrop>
 
         <VoiceFormFill
           context="roznamcha"
@@ -3343,19 +3478,65 @@ export function CashEntryForm({
             </Card>
           </div>
 
-          {/* Right Column: Live Report Preview & Position Summary */}
+          {/* Right Column: Entry Summary — live Account info + Transaction summary */}
           <div className="space-y-4">
             <Card className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
               <div className="border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:from-slate-900 dark:to-slate-950">
                 <CardTitle className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                  <span>📄 {t(lang, "roz.live_payment_report", "Professional Live Payment Report")}</span>
+                  <span>📄 {t(lang, "roz.entry_summary", "Entry Summary")}</span>
                 </CardTitle>
               </div>
               <CardContent className="p-3 space-y-3">
+                {selectedCounterLedger && (
+                  <div className="rounded-lg border border-slate-150 dark:border-slate-800 p-2.5">
+                    <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 mb-1.5">{t(lang, "rozrep.account_no", "Account No")}</div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+                        <Building2 className="h-3.5 w-3.5" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="font-mono font-black text-xs text-slate-850 dark:text-slate-150">
+                          {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
+                        </div>
+                        <div className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
+                          {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] font-semibold pt-2 border-t border-slate-100 dark:border-slate-800">
+                      {selectedCounterLedger.accountKind && (
+                        <div className="col-span-2">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "common.category", "Category")}</span>
+                          <span className="font-bold text-slate-850 dark:text-slate-150">{localizeTerm(selectedCounterLedger.accountKind, lang)}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "roz.owner_customer", "Owner / Customer")}</span>
+                        <span className="font-bold text-slate-850 dark:text-slate-150 truncate block" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
+                          {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
+                        </span>
+                      </div>
+                      {selectedCounterLedger.companyName && (
+                        <div>
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "hr.pp_company", "Company")}</span>
+                          <span className="font-bold text-slate-850 dark:text-slate-150 truncate block" title={selectedCounterLedger.companyName}>{selectedCounterLedger.companyName}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "hr.f_currency", "Currency")}</span>
+                        <span className="font-bold text-slate-850 dark:text-slate-150">{selectedCounterLedger.ledgerCurrency || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <ReportBox
+                  title={t(lang, "roz.cef_transaction", "Transaction")}
                   rows={[
                     ["Amount", finalPayment ? `${fmtAmount(Number(finalPayment))} ${branchCurrency}` : "-"],
-                    ["Payment Type", paymentType ? `${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}` : "-"]
+                    ["Payment Type", paymentType ? `${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}` : "-"],
+                    ["Roznamcha Type", roznamchaType || "-"],
+                    ["Date", entryDate ? entryDate.split("-").reverse().join("/") : "-"],
+                    ["Status", t(lang, "roz.draft", "Draft")]
                   ].filter(Boolean) as Array<[string, string]>}
                 />
                 {paymentMode && (
@@ -3563,14 +3744,14 @@ export function CashEntryForm({
                     {t(lang, "roz.loading_entries", "Loading entries...")}
                   </td>
                 </tr>
-              ) : recentEntries.length === 0 ? (
+              ) : filteredRecentEntries.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
-                    {t(lang, "roz.no_entries", "No entries found.")}
+                    {tableSearchQuery ? t(lang, "roz.no_entries_match_search", "No entries match your search.") : t(lang, "roz.no_entries", "No entries found.")}
                   </td>
                 </tr>
               ) : (
-                recentEntries.flatMap((row) => {
+                filteredRecentEntries.flatMap((row) => {
                   return (row.roznamcha_lines || []).map((line: any, idx: number) => {
                     const isDebit = Number(line.debit || 0) > 0;
                     const isCredit = Number(line.credit || 0) > 0;

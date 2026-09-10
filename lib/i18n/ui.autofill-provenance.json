@@ -318,5 +318,421 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-10T17:54:18.849Z"
+  },
+  {
+    "key": "roz.account_name",
+    "lang": "ur",
+    "value": "اکاؤنٹ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.account_name",
+    "lang": "ar",
+    "value": "حساب",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.account_name",
+    "lang": "fa",
+    "value": "حساب",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.account_name",
+    "lang": "ps",
+    "value": "حساب",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.entry_summary",
+    "lang": "ur",
+    "value": "ینتری سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.entry_summary",
+    "lang": "ar",
+    "value": "ینتری سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.entry_summary",
+    "lang": "fa",
+    "value": "ینتری سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.entry_summary",
+    "lang": "ps",
+    "value": "ینتری سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.cef_transaction",
+    "lang": "ur",
+    "value": "ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.cef_transaction",
+    "lang": "ar",
+    "value": "ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.cef_transaction",
+    "lang": "fa",
+    "value": "ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.cef_transaction",
+    "lang": "ps",
+    "value": "ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.search_entries_placeholder",
+    "lang": "ur",
+    "value": "سیرچ ینترایس...",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.search_entries_placeholder",
+    "lang": "ar",
+    "value": "سیرتش ینترایس...",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.search_entries_placeholder",
+    "lang": "fa",
+    "value": "سیرچ ینترایس...",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.search_entries_placeholder",
+    "lang": "ps",
+    "value": "سیرچ ینترایس...",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_cash_entry",
+    "lang": "ur",
+    "value": "روزنامچہ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_cash_entry",
+    "lang": "ar",
+    "value": "دفتر اليومية (روزنامچه)",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_cash_entry",
+    "lang": "fa",
+    "value": "روزنامچه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_cash_entry",
+    "lang": "ps",
+    "value": "روزنامچه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_roznamcha",
+    "lang": "ur",
+    "value": "روزنامچہ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_roznamcha",
+    "lang": "ar",
+    "value": "دفتر اليومية (روزنامچه)",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_roznamcha",
+    "lang": "fa",
+    "value": "روزنامچه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.tab_roznamcha",
+    "lang": "ps",
+    "value": "روزنامچه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.hide_form",
+    "lang": "ur",
+    "value": "ہیدی فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.hide_form",
+    "lang": "ar",
+    "value": "ہیدی فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.hide_form",
+    "lang": "fa",
+    "value": "ہیدی فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.hide_form",
+    "lang": "ps",
+    "value": "ہیدی فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.show_form",
+    "lang": "ur",
+    "value": "شاور فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.show_form",
+    "lang": "ar",
+    "value": "شو فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.show_form",
+    "lang": "fa",
+    "value": "شو فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "roz.show_form",
+    "lang": "ps",
+    "value": "شاو فورم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "common.load_more",
+    "lang": "ur",
+    "value": "لواد موری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "common.load_more",
+    "lang": "ar",
+    "value": "لواد موری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "common.load_more",
+    "lang": "fa",
+    "value": "لواد موری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "common.load_more",
+    "lang": "ps",
+    "value": "لواد موری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_code",
+    "lang": "ur",
+    "value": "پرسون کودی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_code",
+    "lang": "ar",
+    "value": "برسون إلىدی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_code",
+    "lang": "fa",
+    "value": "پرسون بهدی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_code",
+    "lang": "ps",
+    "value": "پرسون تهدی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_section_details",
+    "lang": "ur",
+    "value": "دیتایلس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_section_details",
+    "lang": "ar",
+    "value": "دیتایلس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_section_details",
+    "lang": "fa",
+    "value": "دیتایلس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_section_details",
+    "lang": "ps",
+    "value": "دیتایلس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "creg.cp_print_subtitle",
+    "lang": "ur",
+    "value": "کمپنی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "creg.cp_print_subtitle",
+    "lang": "ar",
+    "value": "الشركة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "creg.cp_print_subtitle",
+    "lang": "fa",
+    "value": "شرکت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "creg.cp_print_subtitle",
+    "lang": "ps",
+    "value": "شرکت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_owner",
+    "lang": "ur",
+    "value": "اورنر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_owner",
+    "lang": "ar",
+    "value": "ونر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_owner",
+    "lang": "fa",
+    "value": "ونر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
+  },
+  {
+    "key": "hr.pp_owner",
+    "lang": "ps",
+    "value": "اونر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-10T22:03:14.219Z"
   }
 ]

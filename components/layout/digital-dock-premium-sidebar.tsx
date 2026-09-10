@@ -363,6 +363,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: FileText,
         children: [
           { label: "Customer KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
+        ],
+      },
+      {
+        key: "sub-audit",
+        label: "Audit & Compliance",
+        icon: ShieldAlert,
+        children: [
           { label: "Compliance & Audit Monitoring", href: "/dashboard/audit-monitoring", icon: ShieldAlert },
           { label: "All Edit / Version History", href: "/dashboard/super-admin/edit-history", icon: History, roles: ["super_admin"] },
           { label: "Deleted Entries Audit", href: "/dashboard/super-admin/deleted-records", icon: Trash2, roles: ["super_admin"] },

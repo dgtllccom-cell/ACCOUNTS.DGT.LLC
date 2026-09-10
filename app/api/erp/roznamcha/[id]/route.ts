@@ -8,6 +8,7 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { revalidatePath } from "next/cache";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 import { getRequestLanguage } from "@/lib/i18n/server";
 
 type RoznamchaHeader = {
@@ -260,7 +261,7 @@ export async function DELETE(
 
     const { data: header, error: headerError } = await adminSupabase
       .from("roznamcha_entries")
-      .select("country_id, country_branch_id, city_branch_id")
+      .select("id, type, entry_category, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, entry_date, reference_no, narration, status, created_by")
       .eq("id", id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -304,6 +305,21 @@ export async function DELETE(
     });
 
     if (error) throw new Error(error.message);
+
+    // Roznamcha deletes go through a reversal RPC (a real reversing ledger
+    // entry, not a physical delete) but that RPC never wrote to the central
+    // Edit History / Deleted Records audit table — closing that gap here,
+    // matching the same call every other module's delete path makes.
+    void writeRecordChangeHistory({
+      recordTable: "roznamcha_entries",
+      recordId: id,
+      action: "delete",
+      actorId: session.userId ?? null,
+      countryId: (header.country_id as string | null) ?? null,
+      cityBranchId: (header.city_branch_id as string | null) ?? null,
+      beforeData: header,
+      afterData: { reversed: true, reversal_id: data, reversed_at: new Date().toISOString() }
+    }).catch(() => {});
 
     // Requirement 9 & 11: Real-time Synchronization
     revalidatePath("/dashboard/roznamcha", "layout");

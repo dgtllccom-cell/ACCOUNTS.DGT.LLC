@@ -4,6 +4,8 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  // ── Audit menu relocation (2026-09-11) — split out of "KYC Reports" ──
+  "Audit & Compliance": { ur: "آڈٹ اور تعمیل", ar: "التدقيق والامتثال", fa: "حسابرسی و انطباق", ps: "پلټنه او مطابقت" },
   // ── Accounts Report column/group rework (2026-09-10) ──
   "COMPANY & MASTER LINKS": { ur: "کمپنی اور ماسٹر روابط", ar: "الشركة والروابط الرئيسية", fa: "شرکت و پیوندهای اصلی", ps: "شرکت او اصلي تړاووې" },
   "CURRENCY & STATUS": { ur: "کرنسی اور حیثیت", ar: "العملة والحالة", fa: "ارز و وضعیت", ps: "اسعار او حالت" },

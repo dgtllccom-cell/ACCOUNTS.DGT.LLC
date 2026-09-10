@@ -632,10 +632,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         const lName = e.last_name || e.person?.last_name || (pNames.length > 1 ? pNames.slice(1).join(" ") : "");
 
         // Clean label: Gender Badge, Name, Code, and Designation. Branch clutter removed as requested.
+        const branchName = e.city_branch?.name || e.country_branch?.name || undefined;
         return {
           value: e.id,
           label: `${fName} ${lName ? lName + " " : ""}(${empCode}${desig})${genderBadge}`,
-          keywords: `${empName} ${fName} ${lName} ${empCode} ${e.designation ?? ""} ${e.gender ?? ""}`
+          keywords: `${empName} ${fName} ${lName} ${empCode} ${e.designation ?? ""} ${e.gender ?? ""} ${branchName ?? ""}`,
+          primaryText: `${fName} ${lName}`.trim() || empName,
+          secondaryText: e.designation || undefined,
+          code: empCode,
+          branch: branchName
         };
       }),
     [uniqueHrEmployees]
@@ -1473,9 +1478,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       emptyLabel={tr("noEmployeesFound")}
                       options={employeeOptions}
                       disabled={hrEmployeesLoading}
+                      richList
                       onValueChange={setSelectedEmployeeId}
                       onViewOption={(empId) => setViewEmployeeId(empId)}
                       onEditOption={(empId) => setEditEmployeeId(empId)}
+                      createLabel={centralT(activeLang, "urw2.add_new_employee" as never, "+ Add New Employee")}
+                      createButtonPlacement="both"
+                      onCreateNew={async () => setShowEmployeeModal(true)}
                     />
                   </div>
 

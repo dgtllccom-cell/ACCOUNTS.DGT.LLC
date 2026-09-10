@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
 export type CompanyRow = {
   id: string;
@@ -44,7 +45,16 @@ function toOption(row: CompanyRow, lang: SupportedLanguage = "en"): SearchSelect
   const ownerName = row.owner_name ? transliterateProperNoun(row.owner_name, lang) : null;
   const label = legalName ? `${name} (${legalName})` : name;
   const keywords = [name, row.name, legalName, row.legal_name, ownerName, row.owner_name, row.country_name, row.city_name, row.base_currency].filter(Boolean).join(" ");
-  return { value: row.id, label, keywords };
+  return {
+    value: row.id,
+    label,
+    keywords,
+    primaryText: name,
+    secondaryText: ownerName || legalName || undefined,
+    code: row.company_code || undefined,
+    branch: row.city_name || undefined,
+    country: row.country_name || undefined
+  };
 }
 
 function guessOriginalLanguage(): "en" | "ar" | "ur" | "fa" | "ps" {
@@ -137,6 +147,34 @@ export function CompanyPicker({
     return matches.length > 0 ? matches : [viewCompany];
   }, [viewCompany, companies]);
 
+  function handlePrintCompany(companyId: string) {
+    const row = companies.find((c) => c.id === companyId);
+    if (!row) return;
+    openMasterProfileReportWindow({
+      lang,
+      title: t(lang, "creg.cp_print_title", "Company Master"),
+      subtitle: t(lang, "creg.cp_print_subtitle", "Company Profile"),
+      name: localizeTerm(row.name, lang),
+      status: row.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive"),
+      meta: [
+        { label: t(lang, "common.code", "Code"), value: row.company_code || "-" },
+        { label: t(lang, "hr.pp_owner", "Owner"), value: row.owner_name || "-" },
+        { label: t(lang, "common.country", "Country"), value: row.country_name || "-" },
+        { label: t(lang, "company_form.section_location", "Location"), value: row.city_name || "-" },
+      ],
+      sections: [
+        {
+          title: t(lang, "hr.pp_section_details", "Details"),
+          rows: [
+            { label: t(lang, "creg.cp_legal_name_colon", "Legal Name:").replace(":", ""), value: row.legal_name ? localizeTerm(row.legal_name, lang) : "-" },
+            { label: t(lang, "common.currency", "Currency"), value: row.base_currency || "-" },
+            { label: t(lang, "company_form.section_location", "Address"), value: row.address || "-" },
+          ],
+        },
+      ],
+    });
+  }
+
   return (
     <>
       <SearchSelect
@@ -145,12 +183,14 @@ export function CompanyPicker({
         placeholder={placeholder ?? (loading ? t(lang, "common.loading", "Loading...") : t(lang, "branch.search_company", "Search company"))}
         disabled={disabled || loading}
         options={options}
+        richList
         onValueChange={onValueChange}
         createLabel={t(lang, "purchase.card_new_company_btn", "New Company")}
         createButtonPlacement={createButtonPlacement}
         onCreateNew={async () => setOpenCreate(true)}
         viewTitle={t(lang, "creg.cp_view_company_owner_details", "View Company & Owner Details")}
         editTitle={t(lang, "creg.cp_edit_company_master", "Edit Company Master")}
+        printTitle={t(lang, "common.print", "Print")}
         onViewOption={(companyId) => {
           const found = companies.find((c) => c.id === companyId);
           if (found) setViewCompany(found);
@@ -158,6 +198,7 @@ export function CompanyPicker({
         onEditOption={(companyId) => {
           setEditCompanyId(companyId);
         }}
+        onPrintOption={handlePrintCompany}
       />
 
       {/* View Detail Modal */}
