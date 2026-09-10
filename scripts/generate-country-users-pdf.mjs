@@ -1,9 +1,32 @@
+// Generates a TEST-DB-only credentials reference sheet for local onboarding.
+// The PDF is written to a local, git-ignored output directory ONLY — it must
+// never be written into `public/`, since anything there is served publicly,
+// unauthenticated, by the deployed app. (A prior version of this script did
+// write into public/, and the resulting PDF — with a shared plaintext
+// password baked in — was reachable by anyone with the URL; that file has
+// been deleted and the password rotated. See docs/security-incidents.md.)
 import { chromium } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 
+function loadEnvFile(p) { if (!fs.existsSync(p)) return {}; return Object.fromEntries(fs.readFileSync(p, "utf8").split(/\r?\n/).filter((l) => l.includes("=") && !l.trim().startsWith("#")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1)]; })); }
+const env = { ...loadEnvFile(".env"), ...loadEnvFile(".env.local"), ...process.env };
+
+const TEST_PROJECT_REF = "csesvyxxjivnkkozgopt";
+if (!env.DATABASE_URL || !env.DATABASE_URL.includes(TEST_PROJECT_REF)) {
+  console.error(`Refusing to run: DATABASE_URL does not point at the test project (${TEST_PROJECT_REF}).`);
+  process.exit(1);
+}
+
+const TEST_PASSWORD = env.DGT_TEST_PASSWORD;
+const DEMO_USERS_PASSWORD = env.DGT_DEMO_USERS_PASSWORD;
+if (!TEST_PASSWORD || !DEMO_USERS_PASSWORD) {
+  console.error("Set DGT_TEST_PASSWORD and DGT_DEMO_USERS_PASSWORD in your local .env (see scripts/rotate-debug-test-password.mjs).");
+  process.exit(1);
+}
+
 async function generateCountryUsersPdf() {
-  console.log("Generating Country & Branch Users Credentials Register PDF...");
+  console.log("Generating Country & Branch Users Credentials Register PDF (local reference only)...");
 
   const timestamp = new Date().toLocaleString("en-US", {
     timeZone: "Asia/Dubai",
@@ -20,7 +43,7 @@ async function generateCountryUsersPdf() {
       role: "Super Admin",
       email: "superadmin@dgt.llc",
       userCode: "SUPERADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: TEST_PASSWORD,
       status: "Active & Verified",
     },
     {
@@ -30,7 +53,7 @@ async function generateCountryUsersPdf() {
       role: "Super Admin",
       email: "all.superadmin@dgt.llc",
       userCode: "ALL.SUPERADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     },
     {
@@ -40,7 +63,7 @@ async function generateCountryUsersPdf() {
       role: "Super Admin",
       email: "audit.superadmin@dgt.llc",
       userCode: "AUDIT.SUPERADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     },
     // 2 Country Admins
@@ -51,7 +74,7 @@ async function generateCountryUsersPdf() {
       role: "Country Admin",
       email: "pakistan.admin@dgt.llc",
       userCode: "PAKISTAN.ADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     },
     {
@@ -61,7 +84,7 @@ async function generateCountryUsersPdf() {
       role: "Country Admin",
       email: "uae.admin@dgt.llc",
       userCode: "UAE.ADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     },
     // 3 City Admins
@@ -72,7 +95,7 @@ async function generateCountryUsersPdf() {
       role: "City Branch Admin",
       email: "quetta.branch@dgt.llc",
       userCode: "QUETTA.ADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     },
     {
@@ -82,7 +105,7 @@ async function generateCountryUsersPdf() {
       role: "City Branch Admin",
       email: "chaman.branch@dgt.llc",
       userCode: "CHAMAN.ADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     },
     {
@@ -92,7 +115,7 @@ async function generateCountryUsersPdf() {
       role: "City Branch Admin",
       email: "dubai.branch@dgt.llc",
       userCode: "DUBAI.ADMIN",
-      password: ["DgtAdmin", "@", "2026", "!"].join(""),
+      password: DEMO_USERS_PASSWORD,
       status: "Active & Verified",
     }
   ];
@@ -261,7 +284,7 @@ async function generateCountryUsersPdf() {
 
   <div class="info-strip">
     <span><strong>Login Portal URL:</strong> http://72.60.209.121/auth/login &nbsp;|&nbsp; https://new.dgt.llc/auth/login</span>
-    <span><strong>Standard Password:</strong> <code style="font-family: monospace; font-weight: 700; color: #047857; font-size: 10.5pt;">DgtAdmin@2026!</code></span>
+    <span><strong>Password:</strong> see the Password column per row — each row's password is per-user, not shared</span>
     <span><strong>Login Method:</strong> Use either the <em>Login Email</em> OR the <em>User Code</em></span>
   </div>
 
@@ -283,7 +306,7 @@ async function generateCountryUsersPdf() {
   </table>
 
   <div class="footer-notes">
-    <strong>Security Notice:</strong> This document contains production credentials for Digital Dock Accounts ERP. Do not share outside authorized executive and administrative personnel. All logins are protected by multi-tier cryptographic verification (Direct PostgreSQL Pgcrypto, Bcrypt salt 10, and Supabase GoTrue Auth).
+    <strong>Security Notice:</strong> This document contains TEST/DEV-environment credentials for Digital Dock Accounts ERP (project ${TEST_PROJECT_REF} — never production). Do not share outside authorized development personnel, and never commit or publicly host this file.
   </div>
 </body>
 </html>`;
@@ -294,12 +317,13 @@ async function generateCountryUsersPdf() {
 
   await page.setContent(htmlContent, { waitUntil: "networkidle" });
 
-  const publicPdfPath = path.resolve("public", "Country_Branch_Users_Credentials_Register.pdf");
-  const artifactDir = "C:\\Users\\dgtll\\.gemini\\antigravity-ide\\brain\\8627f171-fc96-495d-8b05-3c13e78f4f10";
-  const artifactPdfPath = path.join(artifactDir, "Country_Branch_Users_Credentials_Register.pdf");
+  // git-ignored local-only output directory — never `public/` (see header note).
+  const outputDir = path.resolve("local-output");
+  fs.mkdirSync(outputDir, { recursive: true });
+  const outputPdfPath = path.join(outputDir, "Country_Branch_Users_Credentials_Register.pdf");
 
   await page.pdf({
-    path: publicPdfPath,
+    path: outputPdfPath,
     format: "A4",
     landscape: true,
     printBackground: true,
@@ -313,13 +337,9 @@ async function generateCountryUsersPdf() {
 
   await browser.close();
 
-  // Also copy to conversation artifact directory
-  fs.copyFileSync(publicPdfPath, artifactPdfPath);
-
-  const stats = fs.statSync(publicPdfPath);
-  console.log(`\n✅ PDF generated successfully: ${publicPdfPath}`);
+  const stats = fs.statSync(outputPdfPath);
+  console.log(`\n✅ PDF generated successfully (local only, not deployed): ${outputPdfPath}`);
   console.log(`✅ File size: ${(stats.size / 1024).toFixed(1)} KB`);
-  console.log(`✅ Copied to artifact: ${artifactPdfPath}`);
 }
 
 generateCountryUsersPdf().catch(console.error);

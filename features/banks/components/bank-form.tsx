@@ -19,7 +19,7 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import { createBank, type BankRecord } from "@/features/banks/bank-api";
+import { createBank, updateBank, getBankById, type BankRecord } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -170,16 +170,20 @@ export type BankFormProps = {
 
 export function BankForm({
   mode = "standalone",
+  initialBankId,
   onSave,
   onCancel
 }: BankFormProps) {
   const lang = useActiveLanguage();
   const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+  const isEditMode = !!initialBankId;
   const [form, setForm] = useState<BankFormState>(emptyForm);
+  const [loadingExisting, setLoadingExisting] = useState(isEditMode);
 
   // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
   const intake = useIntakeDraft("banks");
   useEffect(() => {
+    if (isEditMode) return;
     if (!intake.draft) return;
     const p = intake.payload;
     setForm((prev) => ({
@@ -204,6 +208,59 @@ export function BankForm({
   const [ownerType, setOwnerType] = useState<"person" | "company" | "none">("none");
   const [ownerPersonId, setOwnerPersonId] = useState("");
   const [ownerCompanyId, setOwnerCompanyId] = useState("");
+
+  // Edit mode: load the existing bank record and prefill the whole form.
+  useEffect(() => {
+    if (!initialBankId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const bank = await getBankById(initialBankId);
+        if (cancelled || !bank) return;
+        setForm({
+          bankType: bank.bank_type ?? "",
+          accountType: bank.account_type ?? "",
+          bankName: bank.bank_name ?? "",
+          branchName: bank.branch_name ?? "",
+          branchCodeType: bank.branch_code_type ?? "SWIFT Code",
+          branchCode: bank.branch_code ?? "",
+          shortName: bank.short_name ?? "",
+          accountTitle: bank.account_title ?? "",
+          accountNumber: bank.account_number ?? "",
+          ibanNumber: bank.iban_number ?? "",
+          currency: bank.currency ?? "USD",
+          accountStatus: bank.account_status ?? "Active",
+          countryId: bank.country_id ?? "",
+          stateProvinceId: bank.state_province_id ?? "",
+          districtId: bank.district_id ?? "",
+          cityId: bank.city_id ?? "",
+          fullAddress: bank.full_address ?? "",
+          phone: bank.phone ?? "",
+          email: bank.email ?? "",
+          swiftBic: bank.swift_bic ?? "",
+          website: bank.website ?? "",
+          remarks: bank.remarks ?? ""
+        });
+        setLocation({
+          countryId: bank.country_id ?? "",
+          stateProvinceId: bank.state_province_id ?? "",
+          districtId: bank.district_id ?? "",
+          cityId: bank.city_id ?? ""
+        });
+        if (bank.owner_person_id) {
+          setOwnerType("person");
+          setOwnerPersonId(bank.owner_person_id);
+        } else if (bank.owner_company_id) {
+          setOwnerType("company");
+          setOwnerCompanyId(bank.owner_company_id);
+        }
+      } finally {
+        if (!cancelled) setLoadingExisting(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [initialBankId]);
+
   const [saving, setSaving] = useState(false);
   const [savedBank, setSavedBank] = useState<BankRecord | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -272,7 +329,7 @@ export function BankForm({
     setMessage(null);
     try {
       const computedBranchName = `${form.branchCodeType} - ${form.branchCode}`;
-      const bankId = await createBank({
+      const payload = {
         ownerPersonId: ownerType === "person" ? ownerPersonId || null : null,
         ownerCompanyId: ownerType === "company" ? ownerCompanyId || null : null,
         bankType: form.bankType,
@@ -297,7 +354,10 @@ export function BankForm({
         swiftBic: form.swiftBic || null,
         website: form.website || null,
         remarks: form.remarks || null
-      });
+      };
+      const bankId = isEditMode && initialBankId
+        ? await updateBank(initialBankId, payload).then(() => initialBankId)
+        : await createBank(payload);
 
       const saved: BankRecord = {
         id: bankId,
@@ -771,11 +831,15 @@ export function BankForm({
                 <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={saving || !isReady}
+                  disabled={saving || loadingExisting || !isReady}
                   className="rounded-lg bg-primary text-white hover:bg-primary-dark transition gap-2 shadow-sm font-medium h-10 px-5"
                 >
                   <Save className="h-4 w-4" aria-hidden />
-                  {saving ? tr("bank.saving", "Saving...") : tr("bank.save_bank", "Save Bank")}
+                  {saving
+                    ? tr("bank.saving", "Saving...")
+                    : isEditMode
+                    ? tr("common.update", "Update")
+                    : tr("bank.save_bank", "Save Bank")}
                 </Button>
               )}
             </div>

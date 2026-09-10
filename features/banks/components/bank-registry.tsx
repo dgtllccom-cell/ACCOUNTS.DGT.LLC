@@ -275,13 +275,15 @@ export function BankRegistry() {
                       <td className="p-3 text-center">
                         <div className="flex gap-1 justify-center">
                           <button
-                            onClick={() => router.push(`/dashboard/settings/bank/${bank.id}/view`)}
+                            onClick={() => router.push(`/dashboard/settings/bank/${bank.id}/edit`)}
+                            title={t(lang, "common.view", "View")}
                             className="p-1 hover:bg-blue-100 rounded transition"
                           >
                             <Eye className="w-4 h-4 text-blue-600" />
                           </button>
                           <button
                             onClick={() => router.push(`/dashboard/settings/bank/${bank.id}/edit`)}
+                            title={t(lang, "common.edit", "Edit")}
                             className="p-1 hover:bg-amber-100 rounded transition"
                           >
                             <PencilLine className="w-4 h-4 text-amber-600" />

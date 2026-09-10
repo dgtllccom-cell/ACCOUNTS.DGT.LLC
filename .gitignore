@@ -42,6 +42,9 @@ api-error-log.txt
 !env_backups/*.example
 !.env.example
 
+# Local-only script output (never deploy — see scripts/generate-country-users-pdf.mjs)
+/local-output/
+
 # IDE & OS
 .DS_Store
 Thumbs.db

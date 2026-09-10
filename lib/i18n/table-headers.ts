@@ -10,7 +10,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "LINKED COMPANIES": { ur: "منسلک کمپنیاں", ar: "الشركات المرتبطة", fa: "شرکت‌های مرتبط", ps: "تړلې شرکتونه" },
   "ALL COMPANIES": { ur: "تمام کمپنیاں", ar: "كل الشركات", fa: "همه شرکت‌ها", ps: "ټولې شرکتونه" },
   "ALL BANKS": { ur: "تمام بینک", ar: "كل البنوك", fa: "همه بانک‌ها", ps: "ټول بانکونه" },
-  "ALL CURRENCIES": { ur: "تمام کرنسیاں", ar: "كل العملات", fa: "همه ارزها", ps: "ټول اسعارونه" },
+  // "ALL CURRENCIES" already exists further down (login/vault search filter) — reused as-is.
   "Warehouse Linked": { ur: "گودام منسلک ہے", ar: "المستودع مرتبط", fa: "انبار متصل است", ps: "ګدام تړلی دی" },
   "Debit / Credit / Balance totals are available in Ledger and Financial Reports": {
     ur: "ڈیبٹ / کریڈٹ / بیلنس کے کل لیجر اور مالیاتی رپورٹس میں دستیاب ہیں",

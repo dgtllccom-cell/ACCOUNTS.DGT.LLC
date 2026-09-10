@@ -46,6 +46,8 @@ type LegacyBankRecord = {
   account_code: string | null;
   owner_person_id: string | null;
   owner_company_id: string | null;
+  // Legacy names — kept for existing consumers (bank-registry.tsx list,
+  // new-account-setup.tsx's linked-bank display). Never rename these.
   bank_code: string | null;
   bank_name: string;
   branch_name: string | null;
@@ -59,6 +61,26 @@ type LegacyBankRecord = {
   created_at: string;
   updated_at: string;
   country?: { name: string } | null;
+  // Full field set (added 2026-09-10 so the Bank Edit form can load and save
+  // every field the create form captures) — same names as `createBank`'s
+  // payload in features/banks/bank-api.ts.
+  bank_type: string | null;
+  account_type: string | null;
+  branch_code: string | null;
+  branch_code_type: string | null;
+  short_name: string | null;
+  iban_number: string | null;
+  swift_bic: string | null;
+  currency: string;
+  account_status: string | null;
+  state_province_id: string | null;
+  district_id: string | null;
+  city_id: string | null;
+  full_address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  remarks: string | null;
 };
 
 function mapBank(row: BankRow): LegacyBankRecord {
@@ -79,7 +101,24 @@ function mapBank(row: BankRow): LegacyBankRecord {
     is_active: row.is_active,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    country: row.country_name ? { name: row.country_name } : null
+    country: row.country_name ? { name: row.country_name } : null,
+    bank_type: row.bank_type ?? null,
+    account_type: row.account_type ?? null,
+    branch_code: row.branch_code ?? null,
+    branch_code_type: row.branch_code_type ?? null,
+    short_name: row.short_name ?? null,
+    iban_number: row.iban_number ?? null,
+    swift_bic: row.swift_bic ?? null,
+    currency: row.currency ?? "USD",
+    account_status: row.account_status ?? null,
+    state_province_id: row.state_province_id ?? null,
+    district_id: row.district_id ?? null,
+    city_id: row.city_id ?? null,
+    full_address: row.full_address ?? null,
+    phone: row.phone ?? null,
+    email: row.email ?? null,
+    website: row.website ?? null,
+    remarks: row.remarks ?? null
   };
 }
 
@@ -168,15 +207,28 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         UPDATE public.banks SET
           owner_person_id = COALESCE(${body.ownerPersonId !== undefined ? (body.ownerPersonId || null) : null}::uuid, owner_person_id),
           owner_company_id = COALESCE(${body.ownerCompanyId !== undefined ? (body.ownerCompanyId || null) : null}::uuid, owner_company_id),
+          bank_type = COALESCE(${body.bankType ?? null}, bank_type),
+          account_type = COALESCE(${body.accountType ?? null}, account_type),
           bank_name = COALESCE(${body.bankName ?? null}, bank_name),
           branch_name = COALESCE(${body.branchName ?? null}, branch_name),
-          branch_code = COALESCE(${body.bankCode ?? null}, branch_code),
+          branch_code = COALESCE(${body.branchCode ?? body.bankCode ?? null}, branch_code),
+          branch_code_type = COALESCE(${body.branchCodeType ?? null}, branch_code_type),
+          short_name = COALESCE(${body.shortName ?? null}, short_name),
           account_title = COALESCE(${body.accountTitle ?? null}, account_title),
           account_number = COALESCE(${body.accountNumber ?? null}, account_number),
-          iban_number = COALESCE(${body.iban ?? null}, iban_number),
-          swift_bic = COALESCE(${body.swiftCode ?? null}, swift_bic),
-          currency = COALESCE(${body.currencyCode ?? null}, currency),
+          iban_number = COALESCE(${body.ibanNumber ?? body.iban ?? null}, iban_number),
+          swift_bic = COALESCE(${body.swiftBic ?? body.swiftCode ?? null}, swift_bic),
+          currency = COALESCE(${body.currency ?? body.currencyCode ?? null}, currency),
           account_status = COALESCE(${body.accountStatus ?? null}, account_status),
+          country_id = COALESCE(${body.countryId !== undefined ? (body.countryId || null) : null}::uuid, country_id),
+          state_province_id = COALESCE(${body.stateProvinceId !== undefined ? (body.stateProvinceId || null) : null}::uuid, state_province_id),
+          district_id = COALESCE(${body.districtId !== undefined ? (body.districtId || null) : null}::uuid, district_id),
+          city_id = COALESCE(${body.cityId !== undefined ? (body.cityId || null) : null}::uuid, city_id),
+          full_address = COALESCE(${body.fullAddress ?? null}, full_address),
+          phone = COALESCE(${body.phone ?? null}, phone),
+          email = COALESCE(${body.email ?? null}, email),
+          website = COALESCE(${body.website ?? null}, website),
+          remarks = COALESCE(${body.remarks ?? null}, remarks),
           is_active = COALESCE(${body.isActive !== undefined ? body.isActive : null}, is_active),
           updated_at = ${new Date().toISOString()}
         WHERE id = ${id}::uuid AND deleted_at IS NULL

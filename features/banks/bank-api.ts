@@ -1,12 +1,19 @@
 "use client";
 
-import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api/client";
 
 export type BankRecord = {
   id: string;
   account_code?: string | null;
   owner_person_id?: string | null;
   owner_company_id?: string | null;
+  // Legacy names returned by GET /api/erp/banks and /api/erp/banks/[id] —
+  // consumed by bank-registry.tsx's list and new-account-setup.tsx's linked-
+  // bank display. Kept alongside the full names below (never rename).
+  bank_code?: string | null;
+  iban?: string | null;
+  swift_code?: string | null;
+  currency_code?: string;
   bank_type: string;
   account_type: string;
   bank_name: string;
@@ -88,7 +95,10 @@ export async function createBank(data: {
 }
 
 export async function updateBank(id: string, data: Partial<Parameters<typeof createBank>[0]>) {
-  return await apiPatch(`/api/erp/banks/${id}`, data);
+  // The route only implements PUT (no PATCH handler exists) — this previously
+  // called apiPatch, which silently 404'd since nothing ever exercised this
+  // function until the Bank Edit page was wired up.
+  return await apiPut<{ bank: BankRecord }>(`/api/erp/banks/${id}`, data);
 }
 
 export async function deleteBank(id: string) {

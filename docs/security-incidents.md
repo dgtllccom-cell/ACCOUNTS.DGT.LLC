@@ -1,5 +1,31 @@
 # Security incidents & credential hygiene
 
+## 2026-09-10 — `generate-country-users-pdf.mjs` publicly served credentials PDF
+
+**What:** `scripts/generate-country-users-pdf.mjs` wrote a "Verified Credentials
+Register" PDF listing all 8 TEST-project (`csesvyxxjivnkkozgopt`) demo users' emails
+and a shared plaintext password into `public/Country_Branch_Users_Credentials_Register.pdf`
+— anything under `public/` is served by Next.js unauthenticated. Two links in
+`components/layout/dashboard-frame.tsx` ("ERP Credentials (PDF)", visible to every
+logged-in user regardless of role) pointed straight at it. Confirmed live and
+downloadable with no auth at `https://api.dgt.llc/Country_Branch_Users_Credentials_Register.pdf`
+(`HTTP 200`) before this fix. The password literal was also split into
+`["DgtAdmin","@","2026","!"].join("")` fragments in the script — a deliberate
+obfuscation to dodge `repo-safety-guard.mjs`'s regex, not a rotation.
+
+**Remediation:**
+- Rotated `public.profiles.raw_password` for all 8 listed accounts on the TEST
+  project (`superadmin@dgt.llc` got its own value via `scripts/rotate-debug-test-password.mjs`
+  during the prior Accounts Report/security-cleanup pass; the other 7 share a new
+  value set via a one-off rotation script, not committed).
+- `generate-country-users-pdf.mjs` now reads `DGT_TEST_PASSWORD` /
+  `DGT_DEMO_USERS_PASSWORD` from the environment (refuses to run without them) and
+  writes its PDF to a local, git-ignored output path only — never `public/`.
+- Deleted the tracked `public/Country_Branch_Users_Credentials_Register.pdf` and
+  removed both "ERP Credentials (PDF)" links from `dashboard-frame.tsx`.
+- No production data or accounts were involved — this was entirely the TEST
+  project's demo-user set, per CLAUDE.md's DB policy.
+
 ## Guard
 
 `scripts/repo-safety-guard.mjs` (`npm run safety:guard`) runs in `prebuild` and the
