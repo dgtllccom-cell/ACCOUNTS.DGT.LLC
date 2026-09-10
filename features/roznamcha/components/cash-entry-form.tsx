@@ -273,11 +273,11 @@ export function CashEntryForm({
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
 
-  // Load Countries
+  // Load Countries (Only countries with active branches)
   useEffect(() => {
     let cancelled = false;
     setLoadingCountries(true);
-    fetch("/api/erp/locations/countries")
+    fetch("/api/erp/locations/countries?withBranchesOnly=true")
       .then((r) => r.json())
       .then((res) => {
         if (cancelled) return;
@@ -1153,7 +1153,7 @@ export function CashEntryForm({
     (async () => {
       setLoadingCountries(true);
       try {
-        const rows = await listCountries();
+        const rows = await listCountries({ withBranchesOnly: true });
         if (!cancelled) setCountries(rows);
       } finally {
         if (!cancelled) setLoadingCountries(false);

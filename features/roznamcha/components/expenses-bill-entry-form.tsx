@@ -592,9 +592,9 @@ export function ExpensesBillEntryForm({
     }
   }, [viewMode]);
 
-  // Fetch initial countries
+  // Fetch initial countries (operational entry: branches only)
   useEffect(() => {
-    apiGet<any>("/api/erp/locations/countries")
+    apiGet<any>("/api/erp/locations/countries?withBranchesOnly=true")
       .then((res) => {
         const list = res?.countries || res?.data || [];
         setCountries(list);

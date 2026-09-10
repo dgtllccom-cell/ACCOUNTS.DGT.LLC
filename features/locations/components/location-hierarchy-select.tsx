@@ -192,7 +192,7 @@ export function LocationHierarchySelect({
     (async () => {
       setLoadingCountries(true);
       try {
-        const rows = await listCountries();
+        const rows = await listCountries({ all: true });
         if (!cancelled) setCountries(rows);
       } catch {
         if (!cancelled) setCountries([]);
@@ -470,8 +470,8 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("city")}
               value={value.cityId}
-              placeholder={loadingCities ? loc("loadingCities") : (showState && !value.stateProvinceId) ? loc("selectStateFirst") : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
-              disabled={disabled || !value.countryId || (showState && !value.stateProvinceId) || loadingCities}
+              placeholder={loadingCities ? loc("loadingCities") : (showState && states.length > 0 && !value.stateProvinceId) ? loc("selectStateFirst") : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
+              disabled={disabled || !value.countryId || (showState && states.length > 0 && !value.stateProvinceId) || loadingCities}
               loading={loadingCities}
               options={toOptions(cities)}
               onValueChange={(cityId) => {

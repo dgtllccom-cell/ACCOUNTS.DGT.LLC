@@ -79,10 +79,11 @@ export function invalidateLocationCache() {
   cache.clear();
 }
 
-export async function listCountries(params?: { q?: string; withBranchesOnly?: boolean }) {
+export async function listCountries(params?: { q?: string; withBranchesOnly?: boolean; all?: boolean }) {
   const qp = new URLSearchParams();
   if (params?.q) qp.set("q", params.q);
   if (params?.withBranchesOnly) qp.set("withBranchesOnly", "true");
+  if (params?.all) qp.set("all", "true");
   const cacheKey = `countries:${qp.toString()}`;
   const cached = getCached<LocationCountry[]>(cacheKey);
   if (cached) return cached;

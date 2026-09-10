@@ -637,10 +637,10 @@ export function PurchaseOrderWizard({ session }) {
     return (countries || []).filter(c => branchCountryIds.has(c.id));
   }, [countries, allMainBranches]);
 
-  // Load Countries
+  // Load Countries (operational: branches only)
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/erp/locations/countries?lang=${lang}`)
+    fetch(`/api/erp/locations/countries?withBranchesOnly=true&lang=${lang}`)
       .then((r) => r.json())
       .then((res) => {
         if (cancelled) return;

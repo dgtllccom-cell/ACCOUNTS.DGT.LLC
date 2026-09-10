@@ -513,7 +513,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     (async () => {
       setLoadingCountries(true);
       try {
-        const rows = await listCountries();
+        const rows = await listCountries({ withBranchesOnly: true });
         if (!cancelled) {
           setCountries(rows);
           if (rows.length > 0 && !countryId) {

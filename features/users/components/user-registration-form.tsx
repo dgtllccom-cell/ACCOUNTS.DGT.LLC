@@ -169,7 +169,7 @@ export function UserRegistrationForm() {
     (async () => {
       setLoadingCountries(true);
       try {
-        const rows = await listCountries();
+        const rows = await listCountries({ withBranchesOnly: true });
         if (!cancelled) setCountries(rows);
       } finally {
         if (!cancelled) setLoadingCountries(false);

@@ -215,7 +215,7 @@ export function UserEditPage({ userId }: Props) {
   // Load countries
   useEffect(() => {
     setLoadingCountries(true);
-    listCountries()
+    listCountries({ withBranchesOnly: true })
       .then(setCountries)
       .finally(() => setLoadingCountries(false));
   }, []);

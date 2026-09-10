@@ -141,7 +141,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
     let active = true;
     Promise.all([
       apiGet<any>("/api/erp/auth/session"),
-      apiGet<any>("/api/erp/locations/countries"),
+      apiGet<any>("/api/erp/locations/countries?withBranchesOnly=true"),
       apiGet<any>("/api/branch-management/city-branches")
     ]).then(([sess, cRes, bRes]) => {
       if (!active) return;
