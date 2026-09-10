@@ -2,7 +2,8 @@
 // the local debug/Playwright scripts (scripts/debug-after-click.mjs,
 // scripts/debug-roznamcha.mjs, scripts/verify-all-flows-playwright.mjs,
 // scripts/verify-locations-playwright.mjs, scripts/verify-roznamcha-playwright.mjs)
-// after the previous literal ("DgtAdmin@2026!") was found committed in plaintext.
+// after the previous literal password was found committed in plaintext (see
+// git history for scripts/debug-after-click.mjs prior to this commit).
 //
 // Safety:
 //  - Refuses to run unless DATABASE_URL points at the TEST project
