@@ -1,10 +1,6 @@
-import { Metadata } from "next";
-import { DeletedRecordDetailView } from "@/features/audit/components/deleted-record-detail-view";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Deleted Record Details",
-  description: "Detailed deleted record snapshot, evidence, and version lifecycle"
-};
+export const metadata = { title: "Redirecting — Deleted Record" };
 
 export default async function DeletedRecordDetailPage({
   params
@@ -12,5 +8,5 @@ export default async function DeletedRecordDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <DeletedRecordDetailView recordId={id} />;
+  redirect(`/dashboard/super-admin/deleted-records/${id}`);
 }

@@ -87,7 +87,7 @@ export async function DELETE(_request: NextRequest, ctx: { params: Promise<{ id:
     if (!exists) return apiError("NOT_FOUND", "Goods record not found.", 404);
 
     // Soft delete the goods row (writes record-change history) + its variations.
-    await goodsService.softDelete(id);
+    await goodsService.softDelete(id, session.userId);
     await withLocalPg(async (sql) => {
       await sql`UPDATE public.goods_variations SET deleted_at = NOW(), updated_at = NOW() WHERE goods_id = ${id} AND deleted_at IS NULL`;
     });

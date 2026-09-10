@@ -81,7 +81,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       action: "delete"
     });
 
-    await goodsService.softDelete(id);
+    await goodsService.softDelete(id, session.userId);
 
     await auditApiAction(request, {
       action: "goods.delete.api",

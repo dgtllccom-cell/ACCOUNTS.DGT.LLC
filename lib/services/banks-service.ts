@@ -71,14 +71,14 @@ export class BanksService {
     });
   }
 
-  async softDelete(id: string) {
+  async softDelete(id: string, actorId?: string | null) {
     const before = await banksRepository.getById(id);
     await banksRepository.softDelete(id);
     await writeRecordChangeHistory({
       recordTable: "banks",
       recordId: id,
       action: "delete",
-      actorId: null,
+      actorId: actorId ?? null,
       countryId: before?.country_id ?? null,
       cityBranchId: null,
       beforeData: before ?? null,

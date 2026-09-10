@@ -134,7 +134,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "DD",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
     passwordVaultRef: "VAULT-DGT-ARE-DBA",
-    passwordKey: "DGT@2026",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-20T10:00:00Z"
@@ -155,7 +155,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "CA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
     passwordVaultRef: "VAULT-DGT-PAK-CHM",
-    passwordKey: "Temp@123",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-21T10:00:00Z"
@@ -176,7 +176,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "QA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
     passwordVaultRef: "VAULT-DGT-PAK-QUE",
-    passwordKey: "Temp@123",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-21T11:00:00Z"
@@ -197,7 +197,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "UA",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
     passwordVaultRef: "VAULT-DGT-ARE-CA",
-    passwordKey: "UAE@2026",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z"
@@ -218,7 +218,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "PA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
     passwordVaultRef: "VAULT-DGT-PAK-CA",
-    passwordKey: "PK@2026",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z"
@@ -239,7 +239,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "AU",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
     passwordVaultRef: "VAULT-DGT-SA-AUD",
-    passwordKey: "Audit@123",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z"
@@ -260,7 +260,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "SU",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
     passwordVaultRef: "VAULT-DGT-SA-ALL",
-    passwordKey: "DGT@2026",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z"
@@ -281,7 +281,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     avatarInitials: "SA",
     avatarColor: "bg-[#e0f2fe] text-[#0369a1]",
     passwordVaultRef: "VAULT-DGT-SA-ROOT",
-    passwordKey: "Admin@123",
+    passwordKey: "Not displayed — managed by Supabase Auth",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-14T10:00:00Z"

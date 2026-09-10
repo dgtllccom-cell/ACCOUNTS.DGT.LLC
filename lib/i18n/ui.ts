@@ -2694,6 +2694,7 @@ export type UiKey =
   | "port.col_border_type"
   | "audit.vcm_desc"
   | "audit.vcm_high_risk"
+  | "audit.vcm_no_changes"
   | "audit.vcm_immutable"
   | "hr.cat_accountant"
   | "hr.cat_branch_admin"
@@ -8110,7 +8111,7 @@ const en: Dict = {
   "go.go_no_employees_found": "No employees found",
   "go.go_adjust_search_filters": "Try adjusting your search or filters",
   "go.go_system_online": "System Online",
-  "go.go_copyright_footer": "© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.",
+  "go.go_copyright_footer": "© 2026 Damaan Business Group (DGT.LLC). All rights reserved.",
   "jr.jr_all_salespeople": "All Salespeople",
   "jr.jr_csv_export": "CSV Export",
   "jr.jr_currency_colon": "CURRENCY:",
@@ -23384,6 +23385,7 @@ const en: Dict = {
   "audit.vcm_desc": "Detailed Before & After field level comparison with immutable Super Admin audit evidence.",
 
   "audit.vcm_high_risk": "High-Risk Financial Field",
+  "audit.vcm_no_changes": "No field-level changes recorded for this version.",
 
   "audit.vcm_immutable": "Immutable Audit Log Authenticated",
   "hr.cat_accountant": "Accountant",
@@ -41070,6 +41072,7 @@ const ur: Dict = {
   "audit.vcm_desc": "غیر قابل تبدیل سپر ایڈمن آڈٹ ثبوت کے ساتھ تفصیلی پہلے اور بعد فیلڈ سطح کا موازنہ۔",
 
   "audit.vcm_high_risk": "زیادہ خطرے والا مالیاتی فیلڈ",
+  "audit.vcm_no_changes": "اس ورژن کے لیے کوئی فیلڈ کی سطح کی تبدیلی ریکارڈ نہیں ہوئی۔",
 
   "audit.vcm_immutable": "غیر قابل تبدیل آڈٹ لاگ تصدیق شدہ",
   "hr.cat_accountant": "اکاؤنٹنٹ",
@@ -58758,6 +58761,7 @@ const ar: Dict = {
   "audit.vcm_desc": "مقارنة تفصيلية على مستوى الحقول قبل وبعد مع أدلة تدقيق غير قابلة للتغيير للمشرف العام.",
 
   "audit.vcm_high_risk": "حقل مالي عالي الخطورة",
+  "audit.vcm_no_changes": "لم يتم تسجيل أي تغييرات على مستوى الحقل لهذا الإصدار.",
 
   "audit.vcm_immutable": "سجل تدقيق غير قابل للتغيير موثّق",
   "hr.cat_accountant": "محاسب",
@@ -76445,6 +76449,7 @@ const fa: Dict = {
   "audit.vcm_desc": "مقایسه تفصیلی سطح فیلد قبل و بعد با شواهد حسابرسی تغییرناپذیر سوپر ادمین.",
 
   "audit.vcm_high_risk": "فیلد مالی پرخطر",
+  "audit.vcm_no_changes": "برای این نسخه هیچ تغییری در سطح فیلد ثبت نشده است.",
 
   "audit.vcm_immutable": "گزارش حسابرسی تغییرناپذیر احراز هویت شد",
   "hr.cat_accountant": "حسابدار",
@@ -94138,6 +94143,7 @@ const ps: Dict = {
   "audit.vcm_desc": "د سوپر اډمین د نه بدلېدونکي پلټنې شواهدو سره د ساحې په کچه مفصله د مخکې او وروسته پرتله.",
 
   "audit.vcm_high_risk": "د لوړ خطر مالي ساحه",
+  "audit.vcm_no_changes": "د دې نسخې لپاره د ساحې په کچه هیڅ بدلون ثبت شوی نه دی.",
 
   "audit.vcm_immutable": "د نه بدلېدونکي پلټنې ثبت تصدیق شو",
   "hr.cat_accountant": "محاسب",

@@ -1,11 +1,7 @@
-import { Metadata } from "next";
-import { AllEditVersionHistoryView } from "@/features/audit/components/all-edit-version-history-view";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "All Edit & Version History",
-  description: "Enterprise audit control, version history timeline, and before/after comparisons"
-};
+export const metadata = { title: "Redirecting — Edit History" };
 
 export default function EditHistoryPage() {
-  return <AllEditVersionHistoryView />;
+  redirect("/dashboard/super-admin/edit-history");
 }

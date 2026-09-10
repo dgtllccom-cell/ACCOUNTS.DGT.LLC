@@ -39,6 +39,7 @@ import {
   Globe,
   Globe2,
   Headphones,
+  History,
   Home,
   Landmark,
   Layers,
@@ -62,6 +63,7 @@ import {
   Split,
   Star,
   TrendingUp,
+  Trash2,
   Truck,
   Users,
   Wallet,
@@ -178,8 +180,12 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Daily Cash Entry (Roznamcha)", href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
       { label: "Purchase Order Payment (Advance)", href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt },
       { label: "Purchase Order Payment (Remaining)", href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard },
+      { label: "Purchase Order Payment (Credit)", href: "/dashboard/journal/purchase-order-payment/charges", icon: CreditCard },
       { label: "Purchase Payment History", href: "/dashboard/journal/purchase-order-payment/history", icon: Clock },
-      { label: "Sales Order Payment", href: "/dashboard/journal/sales-order-payment/advance", icon: CircleDollarSign },
+      { label: "Sales Order Payment (Advance)", href: "/dashboard/journal/sales-order-payment/advance", icon: CircleDollarSign },
+      { label: "Sales Order Payment (Remaining)", href: "/dashboard/journal/sales-order-payment/remaining", icon: CircleDollarSign },
+      { label: "Sales Order Payment (Final Credit)", href: "/dashboard/journal/sales-order-payment/charges", icon: CircleDollarSign },
+      { label: "Sales Payment History", href: "/dashboard/journal/sales-order-payment/history", icon: Clock },
       { label: "Daily Operational Expenses", href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
       { label: "Office / Home Expenses Bill", href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
     ],
@@ -188,7 +194,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "purchase-sales-trade",
     label: "Purchase, Sales & Trade",
     icon: ShoppingCart,
-    defaultOpen: true,
     children: [
       {
         key: "sub-purchase-booking",
@@ -289,7 +294,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "shipping-cleaning",
     label: "Shipping & Clearing",
     icon: Ship,
-    defaultOpen: true,
     children: [
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
@@ -341,7 +345,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "reports-all",
     label: "Reports and All Reporting Page",
     icon: BarChart3,
-    defaultOpen: true,
     children: [
       {
         key: "sub-kyc",
@@ -350,6 +353,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "Customer KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
           { label: "Compliance & Audit Monitoring", href: "/dashboard/audit-monitoring", icon: ShieldAlert },
+          { label: "All Edit / Version History", href: "/dashboard/super-admin/edit-history", icon: History, roles: ["super_admin"] },
+          { label: "Deleted Entries Audit", href: "/dashboard/super-admin/deleted-records", icon: Trash2, roles: ["super_admin"] },
         ],
       },
       {
@@ -572,22 +577,28 @@ export function DigitalDockPremiumSidebar({
     fetchBranding(null).then((b) => {
       if (!alive) return;
       const resolved = brandingName(b, lang);
-      if (resolved) setCompanyName(resolved);
+      if (resolved) {
+        setCompanyName(resolved.replace(/Daman Business Group/gi, "Damaan Business Group"));
+      }
     });
     return () => { alive = false; };
   }, [lang]);
 
-  // Track expanded accordion keys (Level 1 and Level 2)
+  // Track expanded accordion keys (Level 1 and Level 2). A group the user has
+  // not clicked stays closed - the only groups open on load are whichever
+  // contains the current page (`defaultOpen` is gone; see the narrow
+  // shipping-agent-only exception in filterByRoles above, which is the sole
+  // remaining forced-open case, for a role whose entire menu IS that group).
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     for (const item of menuItems) {
       if (item.defaultOpen || hasActiveDescendant(item, pathname)) {
         initial.add(item.key);
-      }
-      if (item.children) {
-        for (const sub of item.children) {
-          if (sub.key && hasActiveDescendant(sub, pathname)) {
-            initial.add(sub.key);
+        if (item.children) {
+          for (const sub of item.children) {
+            if (sub.key && hasActiveDescendant(sub, pathname)) {
+              initial.add(sub.key);
+            }
           }
         }
       }
@@ -595,52 +606,85 @@ export function DigitalDockPremiumSidebar({
     return initial;
   });
 
-  // Auto-expand when navigating to a deep route
+  // On navigation, open the group (and sub-group) containing the new active
+  // page and close every OTHER top-level group - an accordion driven by
+  // location, not an ever-growing set of every group ever visited.
   useEffect(() => {
-    setOpenKeys((prev) => {
-      const next = new Set(prev);
+    setOpenKeys(() => {
+      const next = new Set<string>();
       for (const item of menuItems) {
         if (hasActiveDescendant(item, pathname)) {
           next.add(item.key);
-        }
-        if (item.children) {
-          for (const sub of item.children) {
-            if (sub.key && hasActiveDescendant(sub, pathname)) {
-              next.add(sub.key);
+          if (item.children) {
+            for (const sub of item.children) {
+              if (sub.key && hasActiveDescendant(sub, pathname)) {
+                next.add(sub.key);
+              }
             }
           }
         }
       }
       return next;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  const toggleKey = (key: string) => {
+  // Clicking a top-level group opens it and closes every other top-level
+  // group (plus that group's own sub-groups); clicking a level-2 sub-group
+  // closes its sibling sub-groups under the same parent. Clicking an
+  // already-open group just closes it.
+  const toggleKey = (key: string, level: 1 | 2 = 1, parentKey?: string) => {
     setOpenKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
+      const willOpen = !next.has(key);
+
+      if (level === 1) {
+        for (const item of menuItems) {
+          if (item.key === key) continue;
+          next.delete(item.key);
+          if (item.children) {
+            for (const sub of item.children) if (sub.key) next.delete(sub.key);
+          }
+        }
+      } else if (parentKey) {
+        const parent = menuItems.find((m) => m.key === parentKey);
+        if (parent?.children) {
+          for (const sub of parent.children) {
+            if (sub.key && sub.key !== key) next.delete(sub.key);
+          }
+        }
       }
+
+      if (willOpen) next.add(key);
+      else next.delete(key);
       return next;
     });
   };
 
-  const displayBrand = brandTitle || companyName || "Daman Business Group";
+  const displayBrand = brandTitle || companyName || "Damaan Business Group";
 
   return (
     <div className="flex h-full w-full flex-col bg-white text-[#0f172a] select-none font-sans overflow-hidden">
-      {/* 1. Header: Daman Business Group */}
-      <div className="px-5 pt-5 pb-3">
+      {/* 1. Header: Damaan Business Group */}
+      <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800/80">
         <Link
           href="/dashboard"
           onClick={onNavigate}
-          className="block group"
+          className="flex items-center gap-3 group"
         >
-          <h1 className="text-[17px] font-extrabold tracking-tight text-[#0a192f] group-hover:text-[#2563eb] transition-colors leading-snug">
-            {displayBrand}
-          </h1>
+          <img
+            src="/images/damaan-logo.png"
+            alt="Damaan Business Group"
+            className="h-10 w-10 rounded-full object-contain shadow-md border border-amber-500/30 shrink-0 group-hover:scale-105 transition-transform"
+          />
+          <div className="min-w-0">
+            <h1 className="text-[15px] font-black tracking-tight text-[#0a192f] group-hover:text-[#2563eb] transition-colors leading-tight truncate">
+              {displayBrand}
+            </h1>
+            <p className="text-[10px] font-bold text-amber-700 dark:text-amber-500 tracking-wider uppercase truncate mt-0.5">
+              DGT.LLC • Super Quality
+            </p>
+          </div>
         </Link>
       </div>
 
@@ -662,7 +706,7 @@ export function DigitalDockPremiumSidebar({
                 <div>
                   <button
                     type="button"
-                    onClick={() => toggleKey(item.key)}
+                    onClick={() => toggleKey(item.key, 1)}
                     className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
                       isHighlighted
                         ? isRed
@@ -734,7 +778,7 @@ export function DigitalDockPremiumSidebar({
                               {/* Level 2 with Level 3 children (e.g. Purchase -> Purchase Booking, Local Purchase...) */}
                               <button
                                 type="button"
-                                onClick={() => toggleKey(subKey)}
+                                onClick={() => toggleKey(subKey, 2, item.key)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 cursor-pointer ${
                                   isSubActive || isSubOpen
                                     ? isRed

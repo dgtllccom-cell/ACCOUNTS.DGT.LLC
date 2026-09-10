@@ -74,10 +74,11 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
 export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const session = await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
 
-    await companiesService.softDelete(id);
+    await companiesService.softDelete(id, session.userId);
     return apiOk({ success: true, id });
   } catch (error) {
     return handleApiError(error);

@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
      cleanLower === "shipping.line@dgt.llc" ||
      cleanLower === "shippingline" ||
      cleanLower === "shippingline@dgt.llc") &&
-    (rawPassword === "Shipping@2026!" || rawPassword === "Shipping@123" || (BOOTSTRAP_ENABLED && rawPassword === BOOTSTRAP_PASSWORD));
+    (BOOTSTRAP_ENABLED && rawPassword === BOOTSTRAP_PASSWORD);
 
   if (isShippingUser) {
     await setDirectUserSession({

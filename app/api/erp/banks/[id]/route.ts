@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { banksService } from "@/lib/services/banks-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
@@ -246,10 +247,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       throw new Error("Not authorized");
     }
 
-    await withLocalPg(async (sql) => {
-      await sql`UPDATE public.banks SET deleted_at = ${new Date().toISOString()}, updated_at = ${new Date().toISOString()}, is_active = false WHERE id = ${id}::uuid AND deleted_at IS NULL`;
-      return true;
-    });
+    await banksService.softDelete(id, session.userId);
     return apiOk({ message: "Deleted" });
   } catch (error) {
     return handleApiError(error);

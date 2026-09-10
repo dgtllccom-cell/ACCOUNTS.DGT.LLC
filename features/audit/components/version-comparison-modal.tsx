@@ -55,38 +55,10 @@ export function VersionComparisonModal({
   const currentVer = lifecycleTimeline[selectedVersionIdx] || versionData;
   const prevVer = selectedVersionIdx > 0 ? lifecycleTimeline[selectedVersionIdx - 1] : null;
 
-  const diffs = Array.isArray(currentVer?.diff_changes) && currentVer.diff_changes.length > 0
-    ? currentVer.diff_changes
-    : [
-        {
-          field: "purchase_amount",
-          label: "Purchase Amount",
-          oldValue: "380,000.00",
-          newValue: "450,000.00",
-          isHighRisk: true
-        },
-        {
-          field: "quantity",
-          label: "Quantity",
-          oldValue: "850.00",
-          newValue: "1,000.00",
-          isHighRisk: false
-        },
-        {
-          field: "debit_account",
-          label: "Debit Account",
-          oldValue: "1200 - Inventory - General",
-          newValue: "1205 - Purchases - Raw Materials",
-          isHighRisk: true
-        },
-        {
-          field: "narration",
-          label: "Narration",
-          oldValue: "Initial purchase order",
-          newValue: "Purchase of raw materials as per PO-2826",
-          isHighRisk: false
-        }
-      ];
+  // Real diff data only - never a fabricated fallback. A version with no
+  // recorded field-level changes (e.g. the Original entry) shows an honest
+  // empty state instead of invented numbers.
+  const diffs = Array.isArray(currentVer?.diff_changes) ? currentVer.diff_changes : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -178,6 +150,11 @@ export function VersionComparisonModal({
           </div>
 
           <div className="space-y-2.5">
+            {diffs.length === 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t(lang, "audit.vcm_no_changes", "No field-level changes recorded for this version.")}
+              </p>
+            )}
             {diffs.map((diff: any, index: number) => {
               const oldText = diff.oldValue === null || diff.oldValue === undefined ? "— (None)" : String(diff.oldValue);
               const newText = diff.newValue === null || diff.newValue === undefined ? "— (None)" : String(diff.newValue);

@@ -705,7 +705,7 @@ export function AllDeletedRecordsView() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => router.push(`/dashboard/audit/deleted-records/${encodeURIComponent(row.id)}`)}
+                          onClick={() => router.push(`/dashboard/super-admin/deleted-records/${encodeURIComponent(row.id)}`)}
                           className="h-7.5 px-2.5 text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400"
                         >
                           <Eye className="h-3 w-3 mr-1" />

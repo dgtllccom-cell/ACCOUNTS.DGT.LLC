@@ -137,13 +137,14 @@ export class GoodsService {
     }
   }
 
-  async softDelete(id: string) {
+  async softDelete(id: string, actorId?: string | null) {
     const before = await goodsRepository.getById(id);
     await goodsRepository.softDelete(id);
     await writeRecordChangeHistory({
       recordTable: "goods",
       recordId: id,
       action: "delete",
+      actorId: actorId ?? null,
       beforeData: before ?? null,
       afterData: { deleted_at: new Date().toISOString() },
       countryId: before?.origin_country_id ?? null

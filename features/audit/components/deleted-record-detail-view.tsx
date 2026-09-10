@@ -161,15 +161,17 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
   const lifecycle = data.lifecycleTimeline || [];
   const snapshot = rec.previous_snapshot || rec.current_snapshot || {};
 
+  // Real data only - a field with no recorded value shows "—", never a
+  // plausible-looking fabricated number or name.
   const billNo = rec.reference_no || rec.entity_id;
-  const partyName = rec.party_name || snapshot.party || snapshot.party_name || snapshot.customer_name || snapshot.supplier_name || "Al Noor Traders";
-  const amount = rec.amount ?? snapshot.purchase_amount ?? snapshot.sales_amount ?? snapshot.total_amount ?? snapshot.amount ?? 450000;
-  const currency = rec.currency || snapshot.currency || "PKR";
-  const exchangeRate = snapshot.exchange_rate || "1.0000";
-  const quantity = snapshot.quantity || snapshot.qty_no || "1,000.00";
-  const debitAccount = snapshot.debit_account || snapshot.debit_account_name || "1205 - Purchases - Raw Materials";
-  const creditAccount = snapshot.credit_account || snapshot.credit_account_name || "2101 - Accounts Payable - Local";
-  const narration = snapshot.narration || rec.reason || "Purchase of raw materials as per PO.";
+  const partyName = rec.party_name || snapshot.party || snapshot.party_name || snapshot.customer_name || snapshot.supplier_name || null;
+  const amount = rec.amount ?? snapshot.purchase_amount ?? snapshot.sales_amount ?? snapshot.total_amount ?? snapshot.amount ?? null;
+  const currency = rec.currency || snapshot.currency || null;
+  const exchangeRate = snapshot.exchange_rate || null;
+  const quantity = snapshot.quantity || snapshot.qty_no || null;
+  const debitAccount = snapshot.debit_account || snapshot.debit_account_name || null;
+  const creditAccount = snapshot.credit_account || snapshot.credit_account_name || null;
+  const narration = snapshot.narration || rec.reason || null;
 
   return (
     <div className="mx-auto w-full max-w-[1720px] p-4 lg:p-6 space-y-6 font-sans antialiased text-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
@@ -179,7 +181,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         <div>
           <button
             type="button"
-            onClick={() => router.push("/dashboard/audit/deleted-records")}
+            onClick={() => router.push("/dashboard/super-admin/deleted-records")}
             className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 mb-2 transition"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -421,43 +423,43 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Party")}</span>
-              <span className="font-bold text-slate-900 dark:text-white">{partyName}</span>
+              <span className="font-bold text-slate-900 dark:text-white">{partyName || "—"}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Purchase Amount")}</span>
-              <span className="font-mono font-black text-slate-900 dark:text-white">{Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white">{amount === null ? "—" : Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Currency")}</span>
-              <span className="font-bold text-slate-900 dark:text-white">{currency}</span>
+              <span className="font-bold text-slate-900 dark:text-white">{currency || "—"}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Exchange Rate")}</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{exchangeRate}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{exchangeRate || "—"}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Quantity")}</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{quantity}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{quantity || "—"}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Debit Account")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{debitAccount}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{debitAccount || "—"}</span>
             </div>
 
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-500">{th("Credit Account")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{creditAccount}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{creditAccount || "—"}</span>
             </div>
 
             <div className="py-1">
               <span className="block font-bold text-slate-500 mb-0.5">{th("Narration")}</span>
               <p className="text-slate-700 dark:text-slate-300 italic text-[11px] bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                {narration}
+                {narration || "—"}
               </p>
             </div>
           </div>
