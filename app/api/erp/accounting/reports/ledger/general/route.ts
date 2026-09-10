@@ -529,6 +529,16 @@ export async function GET(request: NextRequest) {
         ? dailyLocalByCcy.get(dailyCurrencies[0])!
         : { debit: daily.debit, credit: daily.credit };
 
+    // Real, already-fetched (not a new query) entry-source split - how many of this
+    // period's postings came from the Ledger/Journal module vs Roznamcha - used by the
+    // summary cards instead of a fabricated Purchase/Sales/Bank breakdown this data
+    // model doesn't track.
+    const lastEntryDateOverall = finalRows.reduce<string | null>((max, row) => {
+      const d = (row as any).lastEntryDate as string | null;
+      if (!d) return max;
+      return !max || d > max ? d : max;
+    }, null);
+
     Object.assign(summary, {
       // daily (single day = dailyDate)
       dailyDate,
@@ -544,6 +554,9 @@ export async function GET(request: NextRequest) {
       dominantCurrency,
       mixedLocalCurrency,
       reportScope: query.reportScope,
+      ledgerPostingsCount: batchLinesData.length,
+      roznamchaEntriesCount: rozLinesData.length,
+      lastEntryDateOverall
     });
 
     const selectedLedger = query.ledgerId ? finalRows.find((row) => row.ledgerId === query.ledgerId) ?? null : null;

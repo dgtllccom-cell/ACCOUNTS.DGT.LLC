@@ -1,6 +1,12 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "lgr.net_balance"
+  | "lgr.financial_summary"
+  | "lgr.ledger_summary"
+  | "roz.branch_user_info"
+  | "roz.serial_numbers"
+  | "roz.customer_account_details"
   | "acct.shipping_carrier_desc"
   | "acct.countries_linked"
   | "shl.master_title"
@@ -12247,6 +12253,12 @@ const en: Dict = {
   "lgr.global_summary": "Global Financial Summary",
   "lgr.country_summary": "Country Financial Summary",
   "lgr.branch_summary": "Branch Financial Summary",
+  "lgr.net_balance": "Net Balance",
+  "lgr.financial_summary": "Financial Summary",
+  "lgr.ledger_summary": "Ledger Summary",
+  "roz.branch_user_info": "Branch / User Information",
+  "roz.serial_numbers": "Serial Numbers",
+  "roz.customer_account_details": "Customer / Account Details",
   "lgr.orig_currency": "Original Currency",
   "ledger.no_ledger_accounts_found": "No ledger accounts found.",
   "ledger.showing_to_of_ledgers": "Showing {from} to {to} of {count} ledgers",
@@ -29941,6 +29953,12 @@ const ur: Dict = {
   "lgr.global_summary": "عالمی مالی خلاصہ",
   "lgr.country_summary": "ملکی مالی خلاصہ",
   "lgr.branch_summary": "برانچ مالی خلاصہ",
+  "lgr.net_balance": "خالص بیلنس",
+  "lgr.financial_summary": "مالی خلاصہ",
+  "lgr.ledger_summary": "لیجر خلاصہ",
+  "roz.branch_user_info": "برانچ / صارف کی معلومات",
+  "roz.serial_numbers": "سیریل نمبرز",
+  "roz.customer_account_details": "کسٹمر / اکاؤنٹ کی تفصیلات",
   "lgr.orig_currency": "اصل کرنسی",
   "ledger.no_ledger_accounts_found": "کوئی لیجر اکاؤنٹ نہیں ملا۔",
   "ledger.showing_to_of_ledgers": "{count} لیجرز میں سے {from} سے {to} تک دکھایا جا رہا ہے",
@@ -47613,6 +47631,12 @@ const ar: Dict = {
   "lgr.global_summary": "الملخص المالي العالمي",
   "lgr.country_summary": "الملخص المالي للدولة",
   "lgr.branch_summary": "الملخص المالي للفرع",
+  "lgr.net_balance": "صافي الرصيد",
+  "lgr.financial_summary": "الملخص المالي",
+  "lgr.ledger_summary": "ملخص دفتر الأستاذ",
+  "roz.branch_user_info": "معلومات الفرع / المستخدم",
+  "roz.serial_numbers": "الأرقام التسلسلية",
+  "roz.customer_account_details": "تفاصيل العميل / الحساب",
   "lgr.orig_currency": "العملة الأصلية",
   "ledger.no_ledger_accounts_found": "لم يتم العثور على حسابات دفتر الأستاذ.",
   "ledger.showing_to_of_ledgers": "عرض {from} إلى {to} من {count} دفتر أستاذ",
@@ -65249,6 +65273,12 @@ const fa: Dict = {
   "lgr.global_summary": "خلاصه مالی جهانی",
   "lgr.country_summary": "خلاصه مالی کشور",
   "lgr.branch_summary": "خلاصه مالی شعبه",
+  "lgr.net_balance": "موجودی خالص",
+  "lgr.financial_summary": "خلاصه مالی",
+  "lgr.ledger_summary": "خلاصه دفتر کل",
+  "roz.branch_user_info": "اطلاعات شعبه / کاربر",
+  "roz.serial_numbers": "شماره‌های سریال",
+  "roz.customer_account_details": "جزئیات مشتری / حساب",
   "lgr.orig_currency": "ارز اصلی",
   "ledger.no_ledger_accounts_found": "هیچ حساب دفتر کلی یافت نشد.",
   "ledger.showing_to_of_ledgers": "نمایش {from} تا {to} از {count} دفتر کل",
@@ -82911,6 +82941,12 @@ const ps: Dict = {
   "lgr.global_summary": "نړیوال مالي لنډیز",
   "lgr.country_summary": "د هېواد مالي لنډیز",
   "lgr.branch_summary": "د څانګې مالي لنډیز",
+  "lgr.net_balance": "خالص بیلانس",
+  "lgr.financial_summary": "مالي لنډیز",
+  "lgr.ledger_summary": "د لیجر لنډیز",
+  "roz.branch_user_info": "د څانګې / کارونکي معلومات",
+  "roz.serial_numbers": "سیریل شمېرې",
+  "roz.customer_account_details": "د پیرودونکي / حساب توضیحات",
   "lgr.orig_currency": "اصلي اسعارو",
   "ledger.no_ledger_accounts_found": "هیڅ لیجر حساب ونه موندل شو.",
   "ledger.showing_to_of_ledgers": "{count} لیجرونو کې څخه {from} تر {to} ښودل کیږي",

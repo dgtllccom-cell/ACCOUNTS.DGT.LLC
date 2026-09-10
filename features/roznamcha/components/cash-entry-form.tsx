@@ -28,7 +28,9 @@ import {
   Share2,
   Plus,
   Paperclip,
-  Trash2
+  Trash2,
+  Hash,
+  Users
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -2335,10 +2337,22 @@ export function CashEntryForm({
       ============================================================ */}
 
 
-      {/* Horizontal Scope & Session Grid */}
-      <div className="mx-4 mt-4 mb-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800 flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-        <div className="flex flex-wrap items-start gap-x-10 gap-y-6">
-          
+      {/* Scope & Session Cards - Branch/User Info, Serial Numbers, Daily Cash Position,
+          Customer/Account Details - same card style as the Ledger General Report so the
+          two screens read as one design language. */}
+      <div className="mx-4 mt-4 mb-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+          {/* Card 1: Branch & User Information */}
+          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+              <div className="bg-blue-600 p-1 rounded-full text-white">
+                <Building2 className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+                {t(lang, "roz.branch_user_info", "Branch / User Information")}
+              </h4>
+            </div>
+            <div className="p-4 flex flex-col gap-6">
           {/* Group 1: Branch Details & Transaction Info */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
@@ -2501,7 +2515,20 @@ export function CashEntryForm({
 
             </div>
           </div>
+            </div>
+          </div>
 
+          {/* Card 2: Serial Numbers */}
+          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
+              <div className="bg-indigo-600 p-1 rounded-full text-white">
+                <Hash className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
+                {t(lang, "roz.serial_numbers", "Serial Numbers")}
+              </h4>
+            </div>
+            <div className="p-4">
           {/* Group 3: Serials */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
@@ -2542,12 +2569,16 @@ export function CashEntryForm({
               </span>
             </div>
           </div>
-          
-          {/* Group 4: Compact Daily Cash Summary (Report Format in Header Curtain) */}
-          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-950/60 min-w-[230px] shadow-xs">
-            <div className="flex items-center justify-between border-b border-slate-200/80 pb-2 mb-1 dark:border-slate-800">
-              <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5 text-blue-600" />
+            </div>
+          </div>
+
+          {/* Card 3: Daily Cash Position */}
+          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                <span className="bg-emerald-600 p-1 rounded-full text-white flex items-center justify-center">
+                  <FileText className="h-3.5 w-3.5" />
+                </span>
                 {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
               </span>
               <button
@@ -2561,6 +2592,7 @@ export function CashEntryForm({
               </button>
             </div>
 
+            <div className="p-4">
             <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 text-right self-center">
                 {t(lang, "roz.total_credit_label", "Total Credit")}
@@ -2590,10 +2622,24 @@ export function CashEntryForm({
                 {loadingSummary ? "…" : (cashSummary?.entryCount || recentEntries.length || 0)}
               </span>
             </div>
+            </div>
           </div>
+
+          {/* Card 4: Customer / Account Details - only shown once a counter-ledger is picked */}
+          {selectedCounterLedger && (
+          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+              <div className="bg-purple-600 p-1 rounded-full text-white">
+                <Users className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+                {t(lang, "roz.customer_account_details", "Customer / Account Details")}
+              </h4>
+            </div>
+            <div className="p-4 flex flex-col gap-4">
           {/* Group 3: Customer Details */}
           {selectedCounterLedger && (
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold border-l pl-6 border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "bdash.customer", "Customer")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
                 {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
@@ -2623,7 +2669,7 @@ export function CashEntryForm({
 
           {/* Group 4: Company & Contact Details */}
           {selectedCounterLedger && (
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold border-l pl-6 border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold pt-3 border-t border-slate-100 dark:border-slate-800">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "hr.pp_company", "Company")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCounterLedger.companyName || "-"}>
                 {selectedCounterLedger.companyName || "-"}
@@ -2650,10 +2696,11 @@ export function CashEntryForm({
               </span>
             </div>
           )}
+            </div>
+          </div>
+          )}
 
-        </div>
-
-        </div>
+      </div>
 
       <div className="space-y-4 px-4 pb-4">
         <LocationBackdrop

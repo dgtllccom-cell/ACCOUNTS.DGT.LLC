@@ -18,7 +18,7 @@ export default async function LedgerGeneralReportPage({
   return (
     <LedgerReportView
       lang={lang}
-      reportScope="super_admin"
+      reportScope="auto"
       pageTitle={t(lang, "nav.ledger_general_report")}
       initialLedgerId={params?.ledgerId ?? null}
       initialFromDate={params?.fromDate ?? null}

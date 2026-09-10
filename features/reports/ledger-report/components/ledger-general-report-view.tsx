@@ -84,6 +84,9 @@ type GeneralReportResponse = {
     dominantCurrency?: string;
     mixedLocalCurrency?: boolean;
     reportScope?: LedgerReportScope;
+    ledgerPostingsCount?: number;
+    roznamchaEntriesCount?: number;
+    lastEntryDateOverall?: string | null;
   };
   rows: GeneralReportRow[];
   selectedLedger: GeneralReportRow | null;
@@ -281,7 +284,11 @@ export function LedgerReportView({
   initialToDate
 }: {
   lang: SupportedLanguage;
-  reportScope: LedgerReportScope;
+  /** "auto" resolves to the caller's real role (super_admin/country/branch) once the
+   *  session loads - use this from the single canonical sidebar-linked route so every
+   *  role sees the summary cards/labels for their OWN real scope, never a hard-coded one.
+   *  Pass an explicit scope only from a page that intentionally forces one view. */
+  reportScope: LedgerReportScope | "auto";
   pageTitle: string;
   initialLedgerId?: string | null;
   initialFromDate?: string | null;
@@ -308,12 +315,44 @@ export function LedgerReportView({
   const [ledgerId, setLedgerId] = useState(initialLedgerId ?? "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpenedForScope, setFiltersOpenedForScope] = useState(false);
   const [printMode, setPrintMode] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
-  const canViewConversionColumns = useMemo(() => {
+  // Resolve "auto" to the caller's REAL role, derived from the same session info already
+  // fetched for canViewConversionColumns - not the (previously hard-coded) prop. This is
+  // what makes the one canonical sidebar route show the correct Super Admin / Country
+  // Admin / Branch summary for whoever is actually signed in, instead of always the
+  // Super Admin labels regardless of role.
+  const effectiveScope: LedgerReportScope = useMemo(() => {
+    if (reportScope !== "auto") return reportScope;
     const roles = (sessionInfo?.roles ?? []).map((role) => String(role).toLowerCase());
-    return Boolean(sessionInfo?.scopes?.isSuperAdmin || roles.includes("super_admin"));
-  }, [sessionInfo]);
+    if (sessionInfo?.scopes?.isSuperAdmin || roles.includes("super_admin")) return "super_admin";
+    if (roles.some((r) => ["country_admin", "country_user"].includes(r))) return "country";
+    if (!sessionInfo) return "branch"; // safest default before the session loads
+    return "branch";
+  }, [reportScope, sessionInfo]);
+  const canViewConversionColumns = effectiveScope === "super_admin";
+  // Super Admin / Country Admin see the full filter row open by default (matches the
+  // approved reference design); Branch keeps the compact collapsed-behind-a-button style.
+  // Only auto-opens ONCE per scope resolution so a manual "Hide Filters" click sticks.
+  useEffect(() => {
+    if (filtersOpenedForScope) return;
+    if (effectiveScope === "super_admin" || effectiveScope === "country") {
+      setFiltersOpen(true);
+      setFiltersOpenedForScope(true);
+    }
+  }, [effectiveScope, filtersOpenedForScope]);
+  const [scopeOverview, setScopeOverview] = useState<{ totalCountries: number; totalBranches: number; totalUsers: number; activeBranches: number } | null>(null);
+  // Rendered only after mount so the server-rendered markup never disagrees with the
+  // client's "now" (a live clock read during SSR vs. hydration a moment later was
+  // triggering a React hydration-mismatch warning on every load).
+  const [nowLabel, setNowLabel] = useState("");
+  useEffect(() => {
+    const update = () => setNowLabel(`${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}`);
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, []);
   const [rows, setRows] = useState<GeneralReportRow[]>([]);
   const [summary, setSummary] = useState<GeneralReportResponse["summary"] | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
@@ -390,7 +429,7 @@ export function LedgerReportView({
     setLoading(true);
     try {
       const qp = new URLSearchParams();
-      qp.set("reportScope", reportScope);
+      qp.set("reportScope", effectiveScope);
       qp.set("fromDate", fromDate);
       qp.set("toDate", toDate);
       qp.set("limit", "250");
@@ -450,9 +489,32 @@ export function LedgerReportView({
   useEffect(() => {
     fetch("/api/erp/auth/session", { credentials: "include" })
       .then((r) => r.json())
-      .then((info) => setSessionInfo(info))
+      // The endpoint replies { ok, data }, not the session object directly - reading
+      // `info` itself (as this previously did) left roles/scopes always undefined, so
+      // canViewConversionColumns (and now effectiveScope) silently fell back to the
+      // most restrictive branch for every user, Super Admin included.
+      .then((info) => setSessionInfo(info?.data ?? info))
       .catch(() => null);
   }, []);
+
+  // Real, already-scoped (Super Admin=all / Country Admin=own country) country/branch/user
+  // counts for the summary cards - reuses the existing country-overview report instead of
+  // inventing a second aggregation, so the numbers always match Reports Hub exactly.
+  useEffect(() => {
+    apiGet<{ data: Array<{ totalBranches: number; activeBranches: number; totalUsers: number }> }>(
+      `/api/erp/reports/super-admin?reportType=country-overview&lang=${lang}`
+    )
+      .then((json) => {
+        const data = json?.data ?? [];
+        setScopeOverview({
+          totalCountries: data.length,
+          totalBranches: data.reduce((sum, c) => sum + (c.totalBranches || 0), 0),
+          activeBranches: data.reduce((sum, c) => sum + (c.activeBranches || 0), 0),
+          totalUsers: data.reduce((sum, c) => sum + (c.totalUsers || 0), 0)
+        });
+      })
+      .catch(() => null);
+  }, [lang]);
 
   useEffect(() => {
     if (datePreset === "custom") return;
@@ -474,6 +536,11 @@ export function LedgerReportView({
   }, [datePreset]);
 
   useEffect(() => {
+    // For reportScope="auto", effectiveScope defaults to "branch" until the real
+    // session loads - skip the first fetch rather than firing it with a guessed scope
+    // and never re-fetching once the real (possibly wider) scope is known.
+    if (reportScope === "auto" && !sessionInfo) return;
+
     void loadReport(initialLedgerId ?? ledgerId, accountSearch);
 
     const handleSaved = () => {
@@ -486,7 +553,7 @@ export function LedgerReportView({
       window.removeEventListener("erp:posting-saved", handleSaved);
       window.removeEventListener("erp:posting-deleted", handleSaved);
     };
-  }, []);
+  }, [reportScope === "auto" ? Boolean(sessionInfo) : true]);
 
   const displayRows = useMemo(() => {
     const q = normalizeForSearch(accountSearch.trim());
@@ -631,6 +698,22 @@ export function LedgerReportView({
   }, [displayRows]);
 
 
+  // Real account-type breakdown for the Branch-scope "Branch Scope Report" card, grouped
+  // by the actual account_kind enum (asset/liability/equity/income/expense) rather than a
+  // Customer/Supplier split this data model doesn't record.
+  const accountKindCounts = useMemo(() => {
+    let asset = 0;
+    let liability = 0;
+    let other = 0;
+    for (const row of displayRows) {
+      const kind = String(row.accountKind || "").toLowerCase();
+      if (kind === "asset") asset += 1;
+      else if (kind === "liability") liability += 1;
+      else other += 1;
+    }
+    return { total: displayRows.length, asset, liability, other };
+  }, [displayRows]);
+
   function openPrint(autoPrint: boolean) {
     const tt = (key: string, fallback: string) => t(activeLang as never, key as never, fallback);
     const tr = (label: string) => translateHeader(activeLang, label);
@@ -649,7 +732,7 @@ export function LedgerReportView({
         branch: (sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "",
       },
       kpis: (() => {
-        const g = reportScope === "super_admin";
+        const g = effectiveScope === "super_admin";
         const c = g ? "USD" : (summary?.displayCurrency || "");
         const sfx = c ? ` (${c})` : "";
         return [
@@ -663,7 +746,7 @@ export function LedgerReportView({
         ];
       })(),
       filters: [
-        { label: tr("Report Scope"), value: reportScope === "super_admin" ? tt("report.scope_global", "Global") : reportScope === "country" ? tt("report.scope_country", "Country") : tt("report.scope_branch", "Branch") },
+        { label: tr("Report Scope"), value: effectiveScope === "super_admin" ? tt("report.scope_global", "Global") : effectiveScope === "country" ? tt("report.scope_country", "Country") : tt("report.scope_branch", "Branch") },
         { label: tr("Date Range"), value: `${fromDate} → ${toDate}` },
         { label: tt("lgr.daily_for", "Daily · for"), value: summary?.dailyDate || toDate },
       ],
@@ -678,7 +761,7 @@ export function LedgerReportView({
         { key: "debit", label: tt("rozrep.debit", "Debit"), align: "right", format: "currency", width: "9%" },
         { key: "credit", label: tt("rozrep.credit", "Credit"), align: "right", format: "currency", width: "9%" },
         { key: "balance", label: tt("rozrep.balance", "Balance"), align: "right", format: "currency", width: "9%" },
-        ...(reportScope === "super_admin"
+        ...(effectiveScope === "super_admin"
           ? [
               { key: "usdDebit", label: tt("lgr.debit_usd", "Debit (USD)"), align: "right" as const, format: "currency" as const, width: "9%" },
               { key: "usdCredit", label: tt("lgr.credit_usd", "Credit (USD)"), align: "right" as const, format: "currency" as const, width: "9%" },
@@ -702,7 +785,7 @@ export function LedgerReportView({
         usdBalance: row.usdBalance ?? 0,
       })),
       totals:
-        reportScope === "super_admin"
+        effectiveScope === "super_admin"
           ? { debit: summary?.usdDebit ?? 0, credit: summary?.usdCredit ?? 0, balance: summary?.usdBalance ?? 0 }
           : { debit: summary?.debit ?? 0, credit: summary?.credit ?? 0, balance: summary?.balance ?? 0 },
       showSignatures: false,
@@ -825,6 +908,16 @@ export function LedgerReportView({
 
       {filtersOpen ? (
         <div className="rounded-lg border bg-card p-3 shadow-sm print:hidden">
+          {effectiveScope !== "branch" ? (
+            <div className="mb-2 flex flex-wrap items-center gap-2 pb-2 border-b border-dashed border-slate-200 dark:border-slate-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+                <Globe className="h-3.5 w-3.5" />
+                {effectiveScope === "super_admin"
+                  ? th("REPORT CONTEXT: GLOBAL (SUPER ADMIN)")
+                  : `${th("REPORT CONTEXT: COUNTRY")} — ${(sessionInfo as any)?.scopes?.summary?.countryName || "—"}`}
+              </span>
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-2">
             {/* 1. Account Search select */}
             <div className="w-full md:w-[320px]">
@@ -1014,38 +1107,100 @@ export function LedgerReportView({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              {th("1. BRANCH & USER DETAILS")}
+              {effectiveScope === "super_admin"
+                ? th("1. BRANCH & USER DETAILS")
+                : effectiveScope === "country"
+                  ? th("1. COUNTRY & USER DETAILS")
+                  : th("1. BRANCH & USER DETAILS")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-start gap-3">
-              <span className="shrink-0">{th("COUNTRY:")}</span>
-              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 break-words">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
-            </div>
-            <div className="flex justify-between items-start gap-3">
-              <span className="shrink-0">{th("BRANCH NAME:")}</span>
-              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "—"}</span>
-            </div>
-            <div className="flex justify-between items-start gap-3">
-              <span className="shrink-0">{th("USER ID:")}</span>
-              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono break-all no-underline">{sessionInfo?.user?.id || "—"}</span>
-            </div>
-            <div className="flex justify-between items-start gap-3">
-              <span className="shrink-0">{th("USER NAME:")}</span>
-              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
-            </div>
-            <div className="flex justify-between items-start gap-3">
-              <span className="shrink-0">{th("ROLE:")}</span>
-              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "—"}</span>
-            </div>
-            <div className="flex justify-between items-start gap-3">
-              <span className="shrink-0">{th("DATE & TIME:")}</span>
-              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
-            </div>
-            <div className="flex justify-between items-center gap-3 mt-auto pt-1">
-              <span className="shrink-0">{th("STATUS:")}</span>
-              <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
-            </div>
+            {effectiveScope === "super_admin" ? (
+              <>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("TOTAL COUNTRIES:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{scopeOverview?.totalCountries ?? countryDashboardData.length}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("TOTAL BRANCHES:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{scopeOverview?.totalBranches ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("TOTAL USERS:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{scopeOverview?.totalUsers ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("REPORT PERIOD:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{fromDate} → {toDate}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("GENERATED BY:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 break-words">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
+                </div>
+                <div className="flex justify-between items-center gap-3 mt-auto pt-1">
+                  <span className="shrink-0">{th("DATE & TIME:")}</span>
+                  <span className="shrink-0 font-bold text-slate-800 dark:text-slate-200">{nowLabel}</span>
+                </div>
+              </>
+            ) : effectiveScope === "country" ? (
+              <>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("COUNTRY:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 break-words">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("TOTAL USERS:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{scopeOverview?.totalUsers ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("TOTAL BRANCHES:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{scopeOverview?.totalBranches ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("REPORT PERIOD:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{fromDate} → {toDate}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("GENERATED BY:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 break-words">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
+                </div>
+                <div className="flex justify-between items-center gap-3 mt-auto pt-1">
+                  <span className="shrink-0">{th("DATE & TIME:")}</span>
+                  <span className="shrink-0 font-bold text-slate-800 dark:text-slate-200">{nowLabel}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("COUNTRY:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 break-words">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("BRANCH NAME:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("USER ID:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono break-all no-underline">{sessionInfo?.user?.id || "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("USER NAME:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("ROLE:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "—"}</span>
+                </div>
+                <div className="flex justify-between items-start gap-3">
+                  <span className="shrink-0">{th("DATE & TIME:")}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{nowLabel}</span>
+                </div>
+                <div className="flex justify-between items-center gap-3 mt-auto pt-1">
+                  <span className="shrink-0">{th("STATUS:")}</span>
+                  <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -1056,49 +1211,43 @@ export function LedgerReportView({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              {"2. " + (reportScope === "super_admin"
-                ? t(effectiveLang, "lgr.global_summary", "Global Financial Summary")
-                : reportScope === "country"
-                  ? t(effectiveLang, "lgr.country_summary", "Country Financial Summary")
-                  : t(effectiveLang, "lgr.branch_summary", "Branch Financial Summary"))}
+              {effectiveScope === "super_admin"
+                ? "2. " + t(effectiveLang, "lgr.global_summary", "Global Financial Summary")
+                : effectiveScope === "country"
+                  ? "2. " + t(effectiveLang, "lgr.financial_summary", "Financial Summary")
+                  : t(effectiveLang, "lgr.ledger_summary", "Ledger Summary")}
             </h4>
           </div>
           {(() => {
-            const isGlobal = reportScope === "super_admin";
+            const isGlobal = effectiveScope === "super_admin";
             const ccy = isGlobal ? "USD" : (summary?.displayCurrency || summary?.dominantCurrency || "");
             const totEntries = summary?.entries ?? displayRows.reduce((a, r) => a + (r.entries || 0), 0);
             const totCredit = isGlobal ? (summary?.usdCredit ?? 0) : (summary?.credit ?? displayRows.reduce((a, r) => a + (r.credit || 0), 0));
             const totDebit = isGlobal ? (summary?.usdDebit ?? 0) : (summary?.debit ?? displayRows.reduce((a, r) => a + (r.debit || 0), 0));
             const totBalance = isGlobal ? (summary?.usdBalance ?? 0) : (summary?.balance ?? displayRows.reduce((a, r) => a + (r.balance || 0), 0));
-            const dCredit = isGlobal ? (summary?.dailyUsdCredit ?? 0) : (summary?.dailyCredit ?? 0);
-            const dDebit = isGlobal ? (summary?.dailyUsdDebit ?? 0) : (summary?.dailyDebit ?? 0);
-            const dBalance = isGlobal ? (summary?.dailyUsdBalance ?? 0) : (summary?.dailyBalance ?? 0);
             const cLabel = (base: string) => `${base}${ccy ? ` (${ccy})` : ""}`;
+            const debitRow = (
+              <div className="flex justify-between items-center" key="debit">
+                <span className={Number(totDebit) ? "text-rose-600 dark:text-rose-400" : ""}>{cLabel(t(effectiveLang, "lgr.total_debit", "Total Debit"))}</span>
+                <span className={`font-black font-mono ${Number(totDebit) ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>{fmtNumber(totDebit)}</span>
+              </div>
+            );
+            const creditRow = (
+              <div className="flex justify-between items-center" key="credit">
+                <span className={Number(totCredit) ? "text-emerald-600 dark:text-emerald-400" : ""}>{cLabel(t(effectiveLang, "lgr.total_credit", "Total Credit"))}</span>
+                <span className={`font-black font-mono ${Number(totCredit) ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}>{fmtNumber(totCredit)}</span>
+              </div>
+            );
             return (
               <div className="p-4 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
                 <div className="flex justify-between items-center">
                   <span>{isGlobal ? cLabel(t(effectiveLang, "lgr.total_entries", "Total Entries")).replace(` (${ccy})`, "") : t(effectiveLang, "lgr.total_entries", "Total Entries")}</span>
                   <span className="font-black text-slate-800 dark:text-slate-200">{totEntries}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className={Number(totCredit) ? "text-emerald-600 dark:text-emerald-400" : ""}>{cLabel(t(effectiveLang, "lgr.total_credit", "Total Credit"))}</span>
-                  <span className={`font-black font-mono ${Number(totCredit) ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}>{fmtNumber(totCredit)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className={Number(totDebit) ? "text-rose-600 dark:text-rose-400" : ""}>{cLabel(t(effectiveLang, "lgr.total_debit", "Total Debit"))}</span>
-                  <span className={`font-black font-mono ${Number(totDebit) ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>{fmtNumber(totDebit)}</span>
-                </div>
+                {isGlobal ? [debitRow, creditRow] : [creditRow, debitRow]}
                 <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-700 dark:text-slate-300 font-bold">{cLabel(t(effectiveLang, "lgr.balance", "Balance"))}</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-bold">{cLabel(isGlobal ? t(effectiveLang, "lgr.net_balance", "Net Balance") : t(effectiveLang, "lgr.balance", "Balance"))}</span>
                   <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(totBalance)}</span>
-                </div>
-                <div className="mt-1.5 pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-700 text-[10px]">
-                  <div className="mb-0.5 font-bold uppercase tracking-wide text-slate-400">
-                    {t(effectiveLang, "lgr.daily_for", "Daily · for")} {summary?.dailyDate || toDate}
-                  </div>
-                  <div className="flex justify-between"><span>{cLabel(t(effectiveLang, "lgr.daily_credit", "Daily Credit"))}</span><span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(dCredit)}</span></div>
-                  <div className="flex justify-between"><span>{cLabel(t(effectiveLang, "lgr.daily_debit", "Daily Debit"))}</span><span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(dDebit)}</span></div>
-                  <div className="flex justify-between"><span className="font-bold text-slate-600 dark:text-slate-300">{cLabel(t(effectiveLang, "lgr.daily_balance", "Daily Balance"))}</span><span className="font-black text-blue-600 dark:text-blue-400 font-mono">{fmtNumber(dBalance)}</span></div>
                 </div>
                 {!isGlobal && summary?.mixedLocalCurrency ? (
                   <div className="mt-1 rounded bg-amber-50/70 dark:bg-amber-950/30 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 text-center">
@@ -1122,26 +1271,64 @@ export function LedgerReportView({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              {th("3. BILL ENTRIES SUMMARY")}
+              {effectiveScope === "super_admin"
+                ? th("3. BILL ENTRIES SUMMARY")
+                : effectiveScope === "country"
+                  ? th("3. ENTRIES SUMMARY")
+                  : th("3. ENTRY STATUS SUMMARY")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-center">
-              <span>{th("TOTAL BILL ENTRIES:")}</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{displayRows.length}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>{th("CLEARED ENTRIES:")}</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400">0</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-rose-600">{th("REMAINING ENTRIES:")}</span>
-              <span className="font-black text-rose-600">{displayRows.length}</span>
-            </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-              <span>{th("STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{th("ACTIVE")}</span>
-            </div>
+            {effectiveScope === "super_admin" ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{th("TOTAL ENTRIES:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{summary?.entries ?? 0}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("LEDGER POSTINGS:")}</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">{summary?.ledgerPostingsCount ?? 0}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ROZNAMCHA ENTRIES:")}</span>
+                  <span className="font-black text-blue-600 dark:text-blue-400">{summary?.roznamchaEntriesCount ?? 0}</span>
+                </div>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                  <span>{th("STATUS:")}</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{th("ACTIVE")}</span>
+                </div>
+              </>
+            ) : effectiveScope === "country" ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{th("TOTAL LEDGER ENTRIES:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{summary?.entries ?? displayRows.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE LEDGERS:")}</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">{activeLedgers}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-amber-600">{th("INACTIVE LEDGERS:")}</span>
+                  <span className="font-black text-amber-600">{inactiveLedgers}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE ACCOUNTS:")}</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">{activeLedgers}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-rose-600">{th("INACTIVE ACCOUNTS:")}</span>
+                  <span className="font-black text-rose-600">{inactiveLedgers}</span>
+                </div>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                  <span>{th("TOTAL ACCOUNTS:")}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{totalLedgers}</span>
+                </div>
+              </>
+            )}
             {displayRows.length === 0 && !loading && (
               <div className="mt-1 rounded bg-purple-50/60 dark:bg-purple-950/30 p-1.5 text-[10px] text-purple-800 dark:text-purple-300 font-medium text-center">
                 {th("NO FINANCIAL ENTRIES AVAILABLE FOR THE SELECTED DATE RANGE.")}
@@ -1170,36 +1357,95 @@ export function LedgerReportView({
                 <Globe className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
-                {th("4. ALL COUNTRIES REPORT")}
+                {effectiveScope === "super_admin"
+                  ? th("4. ALL COUNTRIES REPORT")
+                  : effectiveScope === "country"
+                    ? th("4. COUNTRY OVERVIEW")
+                    : th("4. BRANCH SCOPE REPORT")}
               </h4>
             </div>
           </div>
           <div className="p-4 flex flex-col justify-between flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-center">
-              <span>{th("TOTAL COUNTRIES:")}</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.length || countryOptions.length || 1}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>{th("TOTAL ENTRIES:")}</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.reduce((acc, c) => acc + c.entries, 0)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>{`${t(effectiveLang, "lgr.total_credit", "Total Credit")} (${reportScope === "super_admin" ? "USD" : (summary?.displayCurrency || "")})`}</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + (reportScope === "super_admin" ? c.usdCredit : c.credit), 0))}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-400">{`${t(effectiveLang, "lgr.total_debit", "Total Debit")} (${reportScope === "super_admin" ? "USD" : (summary?.displayCurrency || "")})`}</span>
-              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + (reportScope === "super_admin" ? c.usdDebit : c.debit), 0))}</span>
-            </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setShowAllCountries(!showAllCountries)}
-                className="w-full text-center text-[10.5px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
-              >
-                {showAllCountries ? th("HIDE ALL ENTRIES REPORT") : th("SHOW ALL ENTRIES REPORT")}
-              </button>
-            </div>
+            {effectiveScope === "super_admin" ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE COUNTRIES:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{scopeOverview?.totalCountries ?? countryDashboardData.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE BRANCHES:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{scopeOverview?.activeBranches ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE USERS:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{scopeOverview?.totalUsers ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("LAST ENTRY DATE:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{formatDateString(summary?.lastEntryDateOverall)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllCountries(!showAllCountries)}
+                    className="w-full text-center text-[10.5px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    {showAllCountries ? th("HIDE COUNTRY-WISE REPORT") : th("VIEW COUNTRY-WISE REPORT")} <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </>
+            ) : effectiveScope === "country" ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{th("COUNTRY:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE BRANCHES:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{scopeOverview?.activeBranches ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ACTIVE USERS:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{scopeOverview?.totalUsers ?? "—"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("LAST ENTRY DATE:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{formatDateString(summary?.lastEntryDateOverall)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllCountries(!showAllCountries)}
+                    className="w-full text-center text-[10.5px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    {showAllCountries ? th("HIDE BRANCH-WISE REPORT") : th("VIEW BRANCH-WISE REPORT")} <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{th("TOTAL ACCOUNTS:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{accountKindCounts.total}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("ASSET ACCOUNTS:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{accountKindCounts.asset}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("LIABILITY ACCOUNTS:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{accountKindCounts.liability}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{th("OTHER ACCOUNTS:")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{accountKindCounts.other}</span>
+                </div>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                  <span>{th("REPORT VIEW:")}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{th("BRANCH ONLY")}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -1237,7 +1483,7 @@ export function LedgerReportView({
                       <span className="text-xs font-bold text-slate-500 uppercase">{th("BALANCE")}</span>
                       <span className="text-lg font-black text-slate-900 dark:text-slate-100">{fmtNumber(item.balance)}</span>
                     </div>
-                    {reportScope === "super_admin" ? (
+                    {effectiveScope === "super_admin" ? (
                       <div className="flex justify-between items-center text-[10px] text-slate-400">
                         <span className="font-semibold">{t(effectiveLang, "lgr.balance_usd", "Balance (USD)")}</span>
                         <span className="font-bold font-mono">{fmtNumber(item.usdBalance)}</span>
@@ -1452,30 +1698,30 @@ export function LedgerReportView({
                         lang={effectiveLang}
                         title={t(effectiveLang, "ledger.hub_general_report_title", "Ledger General Report")}
                         subtitle={
-                          reportScope === "super_admin"
+                          effectiveScope === "super_admin"
                             ? t(effectiveLang, "report.scope_global", "Global")
-                            : reportScope === "country"
+                            : effectiveScope === "country"
                               ? t(effectiveLang, "report.scope_country", "Country")
-                              : reportScope === "branch"
+                              : effectiveScope === "branch"
                                 ? t(effectiveLang, "report.scope_branch", "Branch")
-                                : reportScope
+                                : effectiveScope
                         }
                         data={tableRows}
                         columns={columns}
                         filters={{
                           Scope:
-                            reportScope === "super_admin"
+                            effectiveScope === "super_admin"
                               ? t(effectiveLang, "report.scope_global", "Global")
-                              : reportScope === "country"
+                              : effectiveScope === "country"
                                 ? t(effectiveLang, "report.scope_country", "Country")
-                                : reportScope === "branch"
+                                : effectiveScope === "branch"
                                   ? t(effectiveLang, "report.scope_branch", "Branch")
-                                  : reportScope,
+                                  : effectiveScope,
                           "Date From": fromDate,
                           "Date To": toDate,
                         }}
                         summary={
-                          reportScope === "super_admin"
+                          effectiveScope === "super_admin"
                             ? {
                                 [t(effectiveLang, "lgr.total_entries", "Total Entries")]: summary?.entries || 0,
                                 [`${t(effectiveLang, "lgr.total_credit", "Total Credit")} (USD)`]: summary?.usdCredit || 0,
@@ -1671,7 +1917,7 @@ function ReportHeader({
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
           <span>
-            {th("REPORT GENERATED:")} <span className="font-semibold text-foreground">{generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString()}</span>
+            {th("REPORT GENERATED:")} <span className="font-semibold text-foreground">{generatedAt ? new Date(generatedAt).toLocaleString() : "—"}</span>
           </span>
           {fromDate && toDate && (
             <>
