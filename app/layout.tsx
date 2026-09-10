@@ -7,20 +7,20 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { getHtmlLanguage, getLanguageDirection } from "@/lib/i18n/languages";
 
 export const metadata: Metadata = {
-  applicationName: "Digital Dock ERP",
+  applicationName: "Damaan Business Group",
   title: {
-    default: "Digital Dock ERP",
-    template: "%s | Digital Dock ERP"
+    default: "Damaan Business Group",
+    template: "%s | Damaan Business Group"
   },
-  description: "Multi-country ERP for accounts, ledgers, purchases, sales, roznamcha, stock, and reports.",
+  description: "Damaan Business Group (DGT.LLC) Multi-country ERP for accounts, ledgers, purchases, sales, roznamcha, stock, and reports.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icons/digital-dock-icon.svg",
-    apple: "/icons/digital-dock-icon.svg"
+    icon: "/images/damaan-logo.png",
+    apple: "/images/damaan-logo.png"
   },
   appleWebApp: {
     capable: true,
-    title: "Digital Dock ERP",
+    title: "Damaan Business Group",
     statusBarStyle: "default"
   },
   formatDetection: {

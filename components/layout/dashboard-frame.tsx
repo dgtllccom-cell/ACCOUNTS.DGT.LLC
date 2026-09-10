@@ -138,8 +138,8 @@ export function DashboardFrame({
     let alive = true;
     fetchBranding(null)
       .then((b) => {
-        if (!alive) return;
-        setBrandCompany(brandingName(b, lang) || null);
+        const resolved = brandingName(b, lang);
+        setBrandCompany(resolved ? resolved.replace(/Daman Business Group/gi, "Damaan Business Group") : null);
         const scope = [b?.countryName].filter(Boolean).join(" · ");
         setBrandScopeLine(scope || null);
       })
@@ -428,7 +428,7 @@ export function DashboardFrame({
         <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-r border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
           <DigitalDockPremiumSidebar
             roles={roles ?? null}
-            brandTitle={brandCompany || "Daman Business Group"}
+            brandTitle={brandCompany || "Damaan Business Group"}
             onToggleCollapse={() => setSidebarCollapsed(true)}
           />
         </aside>

@@ -22,22 +22,17 @@ export function AuthPortalShell({
           <section className="relative flex min-h-screen flex-col justify-between border-slate-200/70 bg-white px-4 py-6 shadow-[0_0_0_1px_rgba(148,163,184,0.06)] sm:px-8 sm:py-10 lg:border-r lg:px-12 xl:px-16 dark:border-slate-900/70 dark:bg-slate-950 dark:shadow-none">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-[0_10px_30px_rgba(37,99,235,0.12)] dark:border-blue-900/40 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-none sm:h-12 sm:w-12">
-                  <svg viewBox="0 0 40 40" width="40" height="40" className="h-7 w-7 sm:h-8 sm:w-8" fill="none" aria-hidden>
-                    <rect width="40" height="40" rx="10" fill="#EFF6FF" />
-                    <path d="M10 28 L10 14 L20 8 L30 14 L30 28 L20 34 Z" fill="#1e3a8a" opacity="0.15" />
-                    <path d="M10 20 L20 14 L30 20" stroke="#1e40af" strokeWidth="2.5" strokeLinecap="round" />
-                    <path d="M10 25 L20 19 L30 25" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-                    <path d="M15 28 L25 22 L30 25" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-                    <rect x="17" y="22" width="6" height="8" rx="1" fill="#1e40af" />
-                  </svg>
-                </div>
+                <img
+                  src="/images/damaan-logo.png"
+                  alt="Damaan Business Group"
+                  className="h-11 w-11 shrink-0 rounded-full object-contain shadow-lg border border-amber-500/30 sm:h-12 sm:w-12"
+                />
                 <div>
-                  <div className="text-lg font-black tracking-[0.16em] text-[#06122d] dark:text-white sm:text-xl sm:tracking-[0.2em]">
-                    {tt("go.brand_wordmark", "Digital Dock")}
+                  <div className="text-base font-black tracking-wide text-[#06122d] dark:text-white sm:text-lg">
+                    Damaan Business Group
                   </div>
-                  <div className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400 sm:text-[9px] sm:tracking-[0.34em]">
-                    ERP
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400 sm:text-[10px]">
+                    DGT.LLC • Super Quality
                   </div>
                 </div>
               </div>
@@ -52,7 +47,17 @@ export function AuthPortalShell({
             <div className="my-auto mx-auto w-full max-w-[460px] py-6">{children}</div>
 
             <div className="flex flex-col items-center justify-between gap-2 border-t border-slate-100 pt-4 text-[10px] font-semibold text-slate-400 sm:flex-row dark:border-slate-900">
-              <span>{tt("go.go_copyright_footer", "© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.")}</span>
+              <span>
+                {lang === "ur"
+                  ? "© 2026 دامان بزنس گروپ (DGT.LLC)۔ جملہ حقوق محفوظ ہیں۔"
+                  : lang === "ar"
+                  ? "© 2026 مجموعة ضمان للأعمال (DGT.LLC). جميع الحقوق محفوظة."
+                  : lang === "fa"
+                  ? "© 2026 گروه تجاری دامان (DGT.LLC). تمامی حقوق محفوظ است."
+                  : lang === "ps"
+                  ? "© 2026 د دامان سوداګریزه ډله (DGT.LLC). ټول حقوق خوندي دي."
+                  : "© 2026 Damaan Business Group (DGT.LLC). All rights reserved."}
+              </span>
               <div className="flex gap-4">
                 <a href="#" className="transition-colors hover:text-slate-600 dark:hover:text-slate-300">
                   {tt("mbl.privacy_policy", "Privacy Policy")}

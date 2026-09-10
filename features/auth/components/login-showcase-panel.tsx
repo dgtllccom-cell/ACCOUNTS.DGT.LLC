@@ -262,7 +262,7 @@ export function LoginShowcasePanel({ lang }: { lang: SupportedLanguage }) {
                 </>
               ) : (
                 <>
-                  <span className="text-amber-300 font-extrabold">DAMAN BUSINESS GROUP</span>
+                  <span className="text-amber-300 font-extrabold">DAMAAN BUSINESS GROUP</span>
                   <span className="text-white/40 mx-1.5">•</span>
                   <span>GLOBAL SUPER ADMIN</span>
                 </>
@@ -288,7 +288,7 @@ export function LoginShowcasePanel({ lang }: { lang: SupportedLanguage }) {
               <span>ENTERPRISE ERP</span>
             </div>
             <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white leading-snug">
-              Daman Business Group
+              Damaan Business Group
             </h2>
             <p className="mt-1.5 text-xs lg:text-sm text-slate-300 font-medium leading-relaxed">
               {countryData
@@ -448,7 +448,7 @@ export function LoginShowcasePanel({ lang }: { lang: SupportedLanguage }) {
                 : "Authorized Personnel Access Only"}
             </span>
           </div>
-          <span>Digital Dock ERP v2.4</span>
+          <span>Damaan Business Group (DGT.LLC)</span>
         </div>
       </div>
     </div>

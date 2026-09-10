@@ -51,6 +51,7 @@ export function InstallAppBanner() {
       setDismissed(true);
     }
 
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
@@ -64,20 +65,20 @@ export function InstallAppBanner() {
       const downloadUrl = `/api/download/app?type=${type}&t=${Date.now()}`;
       const link = document.createElement("a");
       link.href = downloadUrl;
-      if (type === "installer") link.download = "Install-Digital-Dock-ERP.bat";
-      else if (type === "cmd") link.download = "Digital-Dock-ERP-Launcher.cmd";
-      else link.download = "Digital Dock ERP.url";
+      if (type === "installer") link.download = "Install-Damaan-Business-Group-ERP.bat";
+      else if (type === "cmd") link.download = "Damaan-Business-Group-Launcher.cmd";
+      else link.download = "Damaan Business Group ERP.url";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch {
       // Fallback inline download
       const origin = typeof window !== "undefined" ? window.location.origin : "http://72.60.209.121";
-      const urlContent = `[InternetShortcut]\nURL=${origin}/auth/login\nIconIndex=0\nIconFile=${origin}/icons/digital-dock-icon.svg\n`;
+      const urlContent = `[InternetShortcut]\nURL=${origin}/auth/login\nIconIndex=0\nIconFile=${origin}/images/damaan-logo.png\n`;
       const blob = new Blob([urlContent], { type: "application/x-mswinurl" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "Digital Dock ERP.url";
+      link.download = "Damaan Business Group ERP.url";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -124,12 +125,16 @@ export function InstallAppBanner() {
         style={{ backgroundColor: "#06122d", color: "#ffffff" }}
       >
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
-            <Smartphone className="h-4 w-4 text-blue-300" />
-          </div>
+          <img
+            src="/images/damaan-logo.png"
+            alt="Damaan Business Group"
+            className="h-8 w-8 rounded-full object-contain shadow-xs border border-amber-500/30 shrink-0"
+          />
           <div>
             <div className="font-extrabold flex items-center gap-2 leading-normal">
-              <span className="tracking-tight text-sm font-black">{tb("iab.title", "Install Digital Dock ERP Mobile & Desktop App")}</span>
+              <span className="tracking-tight text-sm font-black">
+                {lang === "ur" ? "دامان بزنس گروپ ایپ انسٹال کریں (DGT ERP)" : "Install Damaan Business Group App (DGT ERP)"}
+              </span>
               <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap">
                 {tb("iab.auto_dl_ready", "Automatic Download Ready")}
               </span>
@@ -140,9 +145,8 @@ export function InstallAppBanner() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2">
           <Button
-            type="button"
             onClick={handleInstallClick}
             className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] px-3.5 rounded-lg gap-1.5 shadow-sm transition-all"
           >

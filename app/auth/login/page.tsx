@@ -6,8 +6,8 @@ import { LoginScopeProvider } from "@/features/auth/components/login-scope-conte
 import { LoginShowcasePanel } from "@/features/auth/components/login-showcase-panel";
 
 export const metadata = {
-  title: "ERP Access Portal | Digital Dock ERP",
-  description: "Secure Enterprise Login Portal for Digital Dock ERP.",
+  title: "ERP Access Portal | Damaan Business Group",
+  description: "Secure Enterprise Login Portal for Damaan Business Group (DGT.LLC).",
 };
 
 export const dynamic = "force-dynamic";

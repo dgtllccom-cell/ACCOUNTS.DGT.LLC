@@ -356,13 +356,36 @@ export function LoginForm({
       </div>
 
       {/* ── Welcome Heading ── */}
-      <div className="mb-4 text-center sm:text-left">
-        <h2 className="text-xl sm:text-2xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-          {tt("login.welcome_title", "Welcome to Digital Dock ERP")}
-        </h2>
-        <p className="mt-1 hidden text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-          {tt("login.welcome_sub", "Authorized Multi-Country Enterprise Management System")}
-        </p>
+      <div className="mb-5 flex items-center gap-3.5">
+        <img
+          src="/images/damaan-logo.png"
+          alt="Damaan Business Group"
+          className="h-12 w-12 shrink-0 rounded-full object-contain shadow-md border border-amber-500/30"
+        />
+        <div>
+          <h2 className="text-lg sm:text-xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+            {lang === "ur"
+              ? "دامان بزنس گروپ میں خوش آمدید"
+              : lang === "ar"
+              ? "مرحباً بكم في مجموعة ضمان للأعمال"
+              : lang === "fa"
+              ? "به گروه تجاری دامان خوش آمدید"
+              : lang === "ps"
+              ? "د دامان سوداګریزې ډلې ته ښه راغلاست"
+              : "Welcome to Damaan Business Group"}
+          </h2>
+          <p className="mt-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            {lang === "ur"
+              ? "DGT.LLC • دامان جنرل ٹریڈنگ"
+              : lang === "ar"
+              ? "DGT.LLC • شركة ضمان للتجارة العامة"
+              : lang === "fa"
+              ? "DGT.LLC • شرکت تجارت عمومی دامان"
+              : lang === "ps"
+              ? "DGT.LLC • د دامان عمومي سوداګریز شرکت"
+              : "DGT.LLC • Damaan General Trading LLC"}
+          </p>
+        </div>
       </div>
 
       {/* ── 5-Language Switcher Pills ── */}

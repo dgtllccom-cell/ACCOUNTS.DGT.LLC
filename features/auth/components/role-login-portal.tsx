@@ -30,13 +30,22 @@ export function RoleLoginPortal({
   const rightPanel = (
     <div className="mx-auto flex w-full max-w-[560px] flex-col items-stretch justify-center">
       <div className="rounded-[28px] border border-white/10 bg-white/95 p-6 shadow-2xl shadow-black/20 backdrop-blur-sm lg:p-8">
-        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
-          {config.badge}
-        </p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">
-          {config.title}
-        </h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 font-medium text-slate-600 lg:text-base">
+        <div className="flex items-center gap-4 mb-4">
+          <img
+            src="/images/damaan-logo.png"
+            alt="Damaan Business Group"
+            className="h-16 w-16 rounded-full object-contain shadow-xl border-2 border-amber-500/40 shrink-0"
+          />
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">
+              {config.badge}
+            </p>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 lg:text-3xl">
+              {config.title}
+            </h1>
+          </div>
+        </div>
+        <p className="max-w-xl text-sm leading-6 font-medium text-slate-600 lg:text-base">
           {config.subtitle}
         </p>
 
