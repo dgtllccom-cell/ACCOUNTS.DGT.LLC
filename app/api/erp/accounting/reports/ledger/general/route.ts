@@ -515,10 +515,23 @@ export async function GET(request: NextRequest) {
       const c = String((r as any).ledgerCurrency || "").toUpperCase();
       if (c) ccyCount.set(c, (ccyCount.get(c) || 0) + 1);
     }
-    const dominantCurrency =
+    let dominantCurrency =
       [...ccyCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ||
       (finalRows[0] as any)?.ledgerCurrency ||
-      "USD";
+      null;
+    // No ledger rows to read a currency off of (e.g. a branch/country with zero activity
+    // in the selected range) - fall back to the caller's OWN registered country currency,
+    // never a hard-coded "USD" that would mislabel a PKR/AED branch's empty state.
+    if (!dominantCurrency && query.reportScope !== "super_admin") {
+      const fallbackCountryId = query.countryId ?? session.countryIds[0] ?? session.assignments.find((a) => a.countryId)?.countryId ?? null;
+      if (fallbackCountryId) {
+        const countryCurrencyRows = await withLocalPg(async (sql) => sql`
+          select currency_code from public.countries where id = ${fallbackCountryId}::uuid and deleted_at is null limit 1
+        `);
+        dominantCurrency = (countryCurrencyRows as any[])?.[0]?.currency_code ?? null;
+      }
+    }
+    dominantCurrency = dominantCurrency || "USD";
     const displayCurrency = query.reportScope === "super_admin" ? "USD" : dominantCurrency;
     const mixedLocalCurrency = ccyCount.size > 1;
 
