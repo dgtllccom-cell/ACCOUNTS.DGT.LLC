@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
@@ -236,6 +237,19 @@ function normalizeOrder(row: any) {
       });
       const effectiveScope = getEffectiveScope(session, query);
 
+      // The real, server-enforced scope for the withLocalPg query below - a requested
+      // countryId/cityBranchId only narrows further within the caller's own scope
+      // (authorizeApiScope above already rejects an out-of-scope id); a non-super-admin
+      // who passes nothing still gets their own scope, never every country's orders.
+      // Reuses the same enforceScopeFilters() guard already fixed and proven in the
+      // Super Admin Reports Hub, instead of hand-rolling scope logic a third time.
+      const reportScope = resolveReportScope(session);
+      const { effectiveCountryId: scopedCountryId, effectiveBranchId: scopedCityBranchId } = enforceScopeFilters(
+        reportScope,
+        query.countryId ?? null,
+        query.cityBranchId ?? null
+      );
+
       // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
       // carry a real service-role key that bypasses RLS on its own - reads through it can
       // silently return an empty array. Prefer a direct Postgres read first (same proven
@@ -261,9 +275,9 @@ function normalizeOrder(row: any) {
             LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
             LEFT JOIN public.city_branches cib ON cib.id = po.city_branch_id
             WHERE po.deleted_at IS NULL
-              AND (${query.cityBranchId ? sql`po.city_branch_id = ${query.cityBranchId}::uuid` : sql`true`})
-              AND (${!query.cityBranchId && query.countryBranchId ? sql`po.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
-              AND (${!query.cityBranchId && !query.countryBranchId && query.countryId ? sql`po.country_id = ${query.countryId}::uuid` : sql`true`})
+              AND (${scopedCityBranchId ? sql`po.city_branch_id = ${scopedCityBranchId}::uuid` : sql`true`})
+              AND (${!scopedCityBranchId && query.countryBranchId ? sql`po.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
+              AND (${scopedCountryId ? sql`po.country_id = ${scopedCountryId}::uuid` : sql`true`})
             ORDER BY po.created_at DESC
             LIMIT ${query.limit}
           `;
