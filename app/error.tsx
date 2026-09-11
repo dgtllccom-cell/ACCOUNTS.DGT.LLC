@@ -39,7 +39,11 @@ export default function GlobalClientError({
         error.message.includes("Failed to fetch dynamically imported module") ||
         error.message.includes("error loading chunk") ||
         error.message.includes("client-side exception has occurred") ||
-        error.message.includes("ChunkLoadError")));
+        error.message.includes("ChunkLoadError") ||
+        (error.message.includes("Cannot read properties of undefined") &&
+          (error.message.includes("'call'") ||
+            String(error?.stack || "").includes("webpack") ||
+            String(error?.stack || "").includes("options.factory")))));
 
   useEffect(() => {
     console.error(`[GlobalClientError ${refId}] Uncaught client-side application error:`, error);

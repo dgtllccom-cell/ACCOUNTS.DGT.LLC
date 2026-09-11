@@ -25,13 +25,16 @@ const ACCENT_CLASSES: Record<string, { bg: string; text: string; button: string 
 
 function isChunkLoadError(error: Error & { digest?: string }): boolean {
   const msg = String(error?.message || error || "");
+  const stack = String(error?.stack || "");
   return (
     error?.name === "ChunkLoadError" ||
     msg.includes("Loading chunk") ||
     msg.includes("ChunkLoadError") ||
     msg.includes("failed to fetch") ||
     msg.includes("Failed to fetch dynamically imported module") ||
-    (msg.toLowerCase().includes("failed to fetch") && msg.includes("_next/static"))
+    (msg.toLowerCase().includes("failed to fetch") && msg.includes("_next/static")) ||
+    (msg.includes("Cannot read properties of undefined") &&
+      (msg.includes("'call'") || stack.includes("webpack") || stack.includes("options.factory")))
   );
 }
 

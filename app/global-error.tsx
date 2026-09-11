@@ -35,7 +35,11 @@ export default function GlobalError({
         (error.message.includes("Loading chunk") ||
           error.message.includes("timeout") ||
           error.message.includes("failed to fetch") ||
-          error.message.includes("ChunkLoadError")));
+          error.message.includes("ChunkLoadError") ||
+          (error.message.includes("Cannot read properties of undefined") &&
+            (error.message.includes("'call'") ||
+              String(error?.stack || "").includes("webpack") ||
+              String(error?.stack || "").includes("options.factory")))));
 
     if (isChunkErr) {
       (async () => {
