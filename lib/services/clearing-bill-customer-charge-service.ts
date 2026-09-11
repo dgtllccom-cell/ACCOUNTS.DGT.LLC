@@ -211,14 +211,20 @@ export async function postBillCustomerCharge(
   const journalNo = `SHPC-${billRef}-${uniq}`.slice(0, 118);
   const voucherNo = `SHPCV-${billRef}-${uniq}`.slice(0, 118);
 
+  // The customer shipping-AR and Shipping Revenue ledgers are deliberately
+  // single shared control accounts (super_admin scope, not per-country) — see
+  // ensureCustomerShippingLedger/ensureShippingRevenueLedger. A roznamcha
+  // entry's `type` must match the SCOPE of the ledgers it posts to
+  // (isLedgerScopeCompatible in posting.ts rejects a super_admin-scoped
+  // ledger under a country/branch-type entry), so this posting is always
+  // super_admin-type regardless of the order's own country/branch — the
+  // order's real scope is still enforced separately via authorizeApiScope/
+  // canAccessOrder in the API route before this service is ever called.
   const { entryId } = await postRoznamchaWithErpSession({
     sessionUserId: actorId,
     body: {
       mode: "post",
-      type: scope.cityBranchId ? "branch" : scope.countryId ? "country" : "super_admin",
-      countryId: scope.countryId ?? undefined,
-      countryBranchId: scope.countryBranchId ?? undefined,
-      cityBranchId: scope.cityBranchId ?? undefined,
+      type: "super_admin",
       entryDate,
       journalNo,
       voucherNo,
@@ -226,8 +232,8 @@ export async function postBillCustomerCharge(
       referenceNo: billRef,
       roznamchaCategory: "shipping",
       sourceModule: "clearing_bill_customer_charges",
-      sourceTransactionType: "clearing_bill",
-      sourceTransactionId: charge.bill_id,
+      sourceTransactionType: "clearing_bill_customer_charge",
+      sourceTransactionId: charge.id,
       lines: [
         {
           ledgerId: customerAccountId,

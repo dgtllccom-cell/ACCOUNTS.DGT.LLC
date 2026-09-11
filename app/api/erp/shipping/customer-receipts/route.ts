@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         FROM public.customer_receipts r
         WHERE r.deleted_at IS NULL
           AND (${customerId ? sql`r.customer_id = ${customerId}` : sql`true`})
-          AND (${session.isSuperAdmin ? sql`true` : sql`(r.country_id = ANY(${session.countryIds}) OR r.country_id IS NULL)`})
+          AND (${session.isSuperAdmin ? sql`true` : sql`r.country_id = ANY(${session.countryIds})`})
         ORDER BY r.created_at DESC
         LIMIT 500
       `;
@@ -51,9 +51,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "allocations are required" }, { status: 400 });
     }
 
-    const countryId = body.countryId ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
+    // A receipt's scope must always be a real value — never left null "because
+    // Super Admin doesn't have one" — or every country admin sees it (a null
+    // scope reads as "unscoped legacy row", which is meaningless for a table
+    // that starts empty today). Fall back to the customer's own country.
+    let countryId = body.countryId ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
     const countryBranchId = body.countryBranchId ?? session.countryBranchIds?.[0] ?? null;
     const cityBranchId = body.cityBranchId ?? session.cityBranchIds?.[0] ?? null;
+    if (!countryId) {
+      const customerRow = await withLocalPg((sql) => sql`SELECT country_id FROM public.customers WHERE id = ${body.customerId} LIMIT 1`);
+      countryId = customerRow?.[0]?.country_id ?? null;
+    }
 
     const receipt = await createReceipt({
       customerId: body.customerId,

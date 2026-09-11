@@ -10,11 +10,16 @@ import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
+import { CustomerPicker } from "@/features/customers/components/customer-picker";
+import { CustomerChargesPanel } from "@/features/clearing-agent/components/customer-charges-panel";
 
 type PaymentBillRow = {
   id: string;
   bill_no: string;
   order_no: string | null;
+  order_id: string | null;
+  customer_id: string | null;
+  customer_name?: string;
   bl_number: string | null;
   gd_number: string | null;
   agent_name: string;
@@ -38,6 +43,9 @@ const EMPTY_BILL: any = {
   id: "",
   bill_no: "",
   order_no: "",
+  order_id: "",
+  customer_id: "",
+  customer_name: "",
   bl_number: "",
   gd_number: "",
   agent_name: "",
@@ -317,7 +325,26 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.customer", "Customer (for billing)")}</label>
+              <CustomerPicker
+                label=""
+                value={form.customer_id || ""}
+                onValueChange={async (customerId: string) => {
+                  setForm({ ...form, customer_id: customerId });
+                  if (!customerId) return;
+                  try {
+                    const res = await fetch(`/api/erp/customers/${customerId}`);
+                    const json = await res.json();
+                    const name = json?.data?.customer?.customer_name;
+                    if (name) setForm((prev: any) => ({ ...prev, customer_name: name }));
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+              />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.clearing_agent", "Clearing Agent / Company Name")} *</label>
               <ClearingAgentPicker
@@ -494,6 +521,11 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
           </div>
         </form>
 
+        {/* Customer Charges (revenue side) — only for an existing, saved bill */}
+        {isEditing && form.id ? (
+          <CustomerChargesPanel billId={form.id} customerId={form.customer_id || null} orderId={form.order_id || null} lang={lang} />
+        ) : null}
+
         {/* Payment Bill Register Table */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -540,6 +572,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
                 <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 text-xs uppercase font-bold border-b border-slate-200 dark:border-slate-700">
                   <tr>
                     <Th className="px-4 py-3">Bill No</Th>
+                    <Th className="px-4 py-3">{tt("clbill.customer", "Customer")}</Th>
                     <Th className="px-4 py-3">Agent / Port</Th>
                     <Th className="px-4 py-3">Ref B/L / GD</Th>
                     <Th className="px-4 py-3">Duty & Port</Th>
@@ -556,6 +589,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
                         {r.bill_no}
                         {r.order_no && <span className="block text-[11px] text-slate-500">{r.order_no}</span>}
                       </td>
+                      <td className="px-4 py-3 text-slate-300">{r.customer_name || "-"}</td>
                       <td className="px-4 py-3">
                         <div className="font-medium text-white">{r.agent_name}</div>
                         <div className="text-xs text-slate-400">{r.port_name}</div>

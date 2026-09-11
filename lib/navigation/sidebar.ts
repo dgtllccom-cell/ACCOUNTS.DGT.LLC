@@ -785,6 +785,26 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.payment_bill_entry",
         href: "/dashboard/clearing-agent/payment-bill-entry" as Route,
         roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "shipping-customer-receipts",
+        labelKey: "nav.customer_receipts",
+        href: "/dashboard/shipping/customer-receipts" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "agent_user"],
+        permission: { resource: "customer_receipts", action: "read" }
+      },
+      {
+        key: "shipping-customer-statement",
+        labelKey: "nav.customer_statement",
+        href: "/dashboard/reports/customer-statement" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "agent_user"]
+      },
+      {
+        key: "shipping-job-cost",
+        labelKey: "nav.shipping_job_cost",
+        href: "/dashboard/reports/shipping-job-cost" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "agent_user"],
+        permission: { resource: "shipping_transfers", action: "read" }
       }
     ]
   },

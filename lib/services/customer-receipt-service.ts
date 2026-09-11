@@ -128,14 +128,19 @@ export async function postReceipt(
   const voucherNo = `SHPRV-${receiptRef}-${uniq}`.slice(0, 118);
   const hasShipping = allocations.some((a: any) => a.domain === "shipping" || a.domain === "unallocated");
 
+  // type: "super_admin" is a deliberate wildcard here (isLedgerScopeCompatible
+  // treats it as compatible with ANY ledger scope) — a receipt's debit side is
+  // a real branch-scoped cash/bank ledger the user picked, while shipping/
+  // unallocated credit sides are the shared control ledgers from
+  // clearing-bill-customer-charge-service.ts (super_admin scope); a
+  // country/branch-type entry would reject whichever side doesn't match its
+  // own scope. The order/receipt's real scope is still enforced separately
+  // via authorizeApiScope before this service is called.
   const { entryId } = await postRoznamchaWithErpSession({
     sessionUserId: actorId,
     body: {
       mode: "post",
-      type: scope.cityBranchId ? "branch" : scope.countryId ? "country" : "super_admin",
-      countryId: scope.countryId ?? undefined,
-      countryBranchId: scope.countryBranchId ?? undefined,
-      cityBranchId: scope.cityBranchId ?? undefined,
+      type: "super_admin",
       entryDate,
       journalNo,
       voucherNo,

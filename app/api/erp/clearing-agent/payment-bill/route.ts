@@ -18,15 +18,17 @@ export async function GET(req: NextRequest) {
 
     const rows = await withLocalPg(async (sql) => {
       return sql`
-        select id, country_id, country_branch_id, city_branch_id, bill_no, order_no, order_id, customer_id, bl_number, gd_number,
-               agent_name, agent_id, port_name, customs_duty, port_charges, demurrage_charges, clearance_fee,
-               freight_charges, other_charges, total_amount, currency_code, payment_status, payment_method,
-               remarks, status, is_active, created_at, updated_at
-        from public.clearing_payment_bills
-        where deleted_at is null
-          and (${status && status !== "all" ? sql`payment_status = ${status}` : sql`true`})
-          and (${session.isSuperAdmin ? sql`true` : sql`(country_id = any(${session.countryIds}) or country_id is null)`})
-        order by created_at desc
+        select b.id, b.country_id, b.country_branch_id, b.city_branch_id, b.bill_no, b.order_no, b.order_id, b.customer_id,
+               c.customer_name, b.bl_number, b.gd_number,
+               b.agent_name, b.agent_id, b.port_name, b.customs_duty, b.port_charges, b.demurrage_charges, b.clearance_fee,
+               b.freight_charges, b.other_charges, b.total_amount, b.currency_code, b.payment_status, b.payment_method,
+               b.remarks, b.status, b.is_active, b.created_at, b.updated_at
+        from public.clearing_payment_bills b
+        left join public.customers c on c.id = b.customer_id
+        where b.deleted_at is null
+          and (${status && status !== "all" ? sql`b.payment_status = ${status}` : sql`true`})
+          and (${session.isSuperAdmin ? sql`true` : sql`(b.country_id = any(${session.countryIds}) or (b.country_id is null and b.customer_id is null))`})
+        order by b.created_at desc
       `;
     });
 
@@ -51,9 +53,16 @@ export async function POST(req: NextRequest) {
     const otherCharges = Number(body.other_charges || 0);
     const totalAmount = customsDuty + portCharges + demurrageCharges + clearanceFee + freightCharges + otherCharges;
 
-    const countryId = body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
+    // Never leave scope null "because Super Admin doesn't have one" when a
+    // real customer is on the bill — a null country_id reads as an unscoped
+    // legacy row and every country admin's GET filter lets it through.
+    let countryId = body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
     const countryBranchId = body.country_branch_id ?? session.countryBranchIds?.[0] ?? null;
     const cityBranchId = body.city_branch_id ?? session.cityBranchIds?.[0] ?? null;
+    if (!countryId && body.customer_id) {
+      const customerRow = await withLocalPg((sql) => sql`SELECT country_id FROM public.customers WHERE id = ${body.customer_id} LIMIT 1`);
+      countryId = customerRow?.[0]?.country_id ?? null;
+    }
 
     const data = await withLocalPg(async (sql) => {
       const countRows = await sql`select count(*)::int as c from public.clearing_payment_bills`;

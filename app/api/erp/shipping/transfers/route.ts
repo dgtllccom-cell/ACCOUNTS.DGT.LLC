@@ -8,6 +8,7 @@ import { createShippingTransfer } from "@/lib/services/shipping-transfer-service
 import { uuidSchema, optionalUuidSchema } from "@/lib/api/erp-validation";
 
 const createSchema = z.object({
+  orderId: optionalUuidSchema,
   sourceTable: z.string().trim().min(2).max(80),
   sourceId: uuidSchema,
   sourceReferenceNo: z.string().trim().max(120).nullable().optional(),
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
     });
     const result = await createShippingTransfer({
       session,
+      orderId: body.orderId ?? null,
       sourceTable: body.sourceTable,
       sourceId: body.sourceId,
       sourceReferenceNo: body.sourceReferenceNo ?? null,
