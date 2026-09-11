@@ -1824,6 +1824,22 @@ export type UiKey =
   | "com.serial_country"
   | "com.serial_branch"
   | "com.serial_order_entry"
+  | "com.search_customer_ph"
+  | "com.no_customers"
+  | "com.print_title"
+  | "com.kpi_order_summary"
+  | "com.kpi_movements"
+  | "com.kpi_locations"
+  | "com.kpi_this_month"
+  | "com.kpi_quick_info"
+  | "com.th_order_no"
+  | "com.th_step_status"
+  | "com.th_party"
+  | "com.th_goods"
+  | "com.th_movement"
+  | "com.th_route"
+  | "com.th_actions"
+  | "com.no_orders_found"
   | "comv.customer_person_name"
   | "comv.select_customer_account"
   | "comv.company_business_name"
@@ -1840,6 +1856,7 @@ export type UiKey =
   | "comv.importer_exporter_notify"
   | "comv.ports_route_container_review"
   | "comv.four_step_wizard"
+  | "comv.intro_subtitle"
   | "comv.step_x_of_4"
   | "comv.customer_ledger_account_req"
   | "comv.search_customer_full_ph"
@@ -21269,6 +21286,22 @@ const en: Dict = {
   "com.serial_branch": "Branch Serial",
 
   "com.serial_order_entry": "Order / Entry",
+  "com.search_customer_ph": "Search by customer name, company, contact...",
+  "com.no_customers": "No matching customers found",
+  "com.print_title": "Clearing Order",
+  "com.kpi_order_summary": "Order Summary",
+  "com.kpi_movements": "Movements",
+  "com.kpi_locations": "Locations & Ports",
+  "com.kpi_this_month": "This Month",
+  "com.kpi_quick_info": "Quick Info",
+  "com.th_order_no": "Order No",
+  "com.th_step_status": "Progress",
+  "com.th_party": "Supplier / Order Party",
+  "com.th_goods": "Goods",
+  "com.th_movement": "Movement",
+  "com.th_route": "Route / Ports",
+  "com.th_actions": "Actions",
+  "com.no_orders_found": "No customer orders found. Fill out the 4-step form on the left to create one.",
   "comv.customer_person_name": "Customer / Person Name",
 
   "comv.select_customer_account": "Select Customer Account",
@@ -21300,6 +21333,7 @@ const en: Dict = {
   "comv.ports_route_container_review": "Ports, Route, Container, Review",
 
   "comv.four_step_wizard": "4-Step Progressive Wizard",
+  "comv.intro_subtitle": "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later.",
 
   "comv.step_x_of_4": "Step {n} of 4",
 
@@ -39143,6 +39177,22 @@ const ur: Dict = {
   "com.serial_branch": "برانچ سیریل",
 
   "com.serial_order_entry": "آرڈر / اندراج",
+  "com.search_customer_ph": "کسٹمر نام، کمپنی، رابطہ سے تلاش کریں...",
+  "com.no_customers": "کوئی مماثل کسٹمر نہیں ملا",
+  "com.print_title": "کلیئرنگ آرڈر",
+  "com.kpi_order_summary": "آرڈر کا خلاصہ",
+  "com.kpi_movements": "نقل و حرکت",
+  "com.kpi_locations": "مقامات اور بندرگاہیں",
+  "com.kpi_this_month": "اس مہینے",
+  "com.kpi_quick_info": "فوری معلومات",
+  "com.th_order_no": "آرڈر نمبر",
+  "com.th_step_status": "پیش رفت",
+  "com.th_party": "سپلائر / آرڈر پارٹی",
+  "com.th_goods": "سامان",
+  "com.th_movement": "نقل و حرکت",
+  "com.th_route": "روٹ / بندرگاہیں",
+  "com.th_actions": "کارروائیاں",
+  "com.no_orders_found": "کوئی کسٹمر آرڈر نہیں ملا۔ ایک بنانے کے لیے بائیں طرف 4 مرحلہ وار فارم مکمل کریں۔",
   "comv.customer_person_name": "کسٹمر / لیجر نام",
 
   "comv.select_customer_account": "کسٹمر اکاؤنٹ منتخب کریں",
@@ -39174,6 +39224,7 @@ const ur: Dict = {
   "comv.ports_route_container_review": "روٹ، پورٹس، کنٹینر اور ریویو",
 
   "comv.four_step_wizard": "۴ مرحلہ وار وزرڈ",
+  "comv.intro_subtitle": "چار آسان مراحل میں کسٹمر آرڈر درج کریں، کسی بھی مرحلے پر بغیر مکمل کیے محفوظ کریں اور بعد میں مکمل کریں۔",
 
   "comv.step_x_of_4": "مرحلہ {n} از ۴",
 
@@ -43241,14 +43292,14 @@ const ur: Dict = {
   "urw2.add_new_employee": "+ نیا ملازم شامل کریں",
   "comv.back": "کے ساتھک",
   "comv.confirm_booking": "کونفیرم بوکینگ",
-  "comv.serial_super_admin": "سوپر ادمین",
+  "comv.serial_super_admin": "سپر ایڈمن",
   "comv.serial_entry": "ینتری نومبر",
   "comv.acc_name": "اکاؤنٹ:",
   "comv.acc_company": "کمپنی:",
   "comv.acc_country": "ملک:",
   "comv.mv_transit": "ٹرانزٹ",
   "comv.mv_down_transit": "داورن ترانسیت",
-  "comv.tm_by_rail": "بی رایل",
+  "comv.tm_by_rail": "بذریعہ ریل",
   "comv.ls_customer_warehouse": "کسٹمر گودام",
   "comv.ls_container": "کنٹینر",
   "comv.ls_other": "وثر",
@@ -56982,6 +57033,22 @@ const ar: Dict = {
   "com.serial_branch": "الرقم التسلسلي للفرع",
 
   "com.serial_order_entry": "الطلب / الإدخال",
+  "com.search_customer_ph": "البحث باسم العميل أو الشركة أو جهة الاتصال...",
+  "com.no_customers": "لم يتم العثور على عملاء مطابقين",
+  "com.print_title": "طلب التخليص",
+  "com.kpi_order_summary": "ملخص الطلب",
+  "com.kpi_movements": "الحركات",
+  "com.kpi_locations": "المواقع والموانئ",
+  "com.kpi_this_month": "هذا الشهر",
+  "com.kpi_quick_info": "معلومات سريعة",
+  "com.th_order_no": "رقم الطلب",
+  "com.th_step_status": "التقدم",
+  "com.th_party": "المورد / طرف الطلب",
+  "com.th_goods": "البضائع",
+  "com.th_movement": "الحركة",
+  "com.th_route": "المسار / الموانئ",
+  "com.th_actions": "الإجراءات",
+  "com.no_orders_found": "لم يتم العثور على طلبات عملاء. أكمل النموذج المكون من 4 خطوات على اليسار لإنشاء طلب.",
   "comv.customer_person_name": "اسم العميل / الشخص",
 
   "comv.select_customer_account": "اختر حساب العميل",
@@ -57013,6 +57080,7 @@ const ar: Dict = {
   "comv.ports_route_container_review": "الموانئ، المسار، الحاوية، المراجعة",
 
   "comv.four_step_wizard": "معالج تدريجي من 4 خطوات",
+  "comv.intro_subtitle": "أدخل طلبات شحن العملاء في 4 خطوات سهلة. احفظ التقدم في أي خطوة وأكمل لاحقًا.",
 
   "comv.step_x_of_4": "الخطوة {n} من 4",
 
@@ -61080,14 +61148,14 @@ const ar: Dict = {
   "urw2.add_new_employee": "+ إضافة موظف جديد",
   "comv.back": "معک",
   "comv.confirm_booking": "إلىنفیرم بوکینج",
-  "comv.serial_super_admin": "سوبر ادمین",
+  "comv.serial_super_admin": "المشرف الأعلى",
   "comv.serial_entry": "ینتری نومبر",
   "comv.acc_name": "حساب:",
   "comv.acc_company": "الشركة:",
   "comv.acc_country": "الدولة:",
   "comv.mv_transit": "العبور",
   "comv.mv_down_transit": "دون ترانسیت",
-  "comv.tm_by_rail": "بی رایل",
+  "comv.tm_by_rail": "بالسكك الحديدية",
   "comv.ls_customer_warehouse": "العميل المستودع",
   "comv.ls_container": "حاوية",
   "comv.ls_other": "وثر",
@@ -74820,6 +74888,22 @@ const fa: Dict = {
   "com.serial_branch": "سریال شعبه",
 
   "com.serial_order_entry": "سفارش / ثبت",
+  "com.search_customer_ph": "جستجو بر اساس نام مشتری، شرکت، تماس...",
+  "com.no_customers": "مشتری مطابقی یافت نشد",
+  "com.print_title": "سفارش ترخیص",
+  "com.kpi_order_summary": "خلاصه سفارش",
+  "com.kpi_movements": "جابجایی‌ها",
+  "com.kpi_locations": "مکان‌ها و بنادر",
+  "com.kpi_this_month": "این ماه",
+  "com.kpi_quick_info": "اطلاعات سریع",
+  "com.th_order_no": "شماره سفارش",
+  "com.th_step_status": "پیشرفت",
+  "com.th_party": "تأمین‌کننده / طرف سفارش",
+  "com.th_goods": "کالا",
+  "com.th_movement": "جابجایی",
+  "com.th_route": "مسیر / بنادر",
+  "com.th_actions": "اقدامات",
+  "com.no_orders_found": "هیچ سفارش مشتری یافت نشد. برای ایجاد یکی، فرم ۴ مرحله‌ای سمت چپ را تکمیل کنید.",
   "comv.customer_person_name": "نام مشتری / شخص",
 
   "comv.select_customer_account": "انتخاب حساب مشتری",
@@ -74851,6 +74935,7 @@ const fa: Dict = {
   "comv.ports_route_container_review": "بنادر، مسیر، کانتینر، بازبینی",
 
   "comv.four_step_wizard": "ویزارد تدریجی 4 مرحله‌ای",
+  "comv.intro_subtitle": "سفارش‌های حمل مشتری را در 4 مرحله آسان وارد کنید. پیشرفت را در هر مرحله ذخیره کرده و بعداً تکمیل کنید.",
 
   "comv.step_x_of_4": "مرحله {n} از 4",
 
@@ -78918,14 +79003,14 @@ const fa: Dict = {
   "urw2.add_new_employee": "+ افزودن پرسنل جدید",
   "comv.back": "باک",
   "comv.confirm_booking": "بهنفیرم بوکینگ",
-  "comv.serial_super_admin": "سوپر ادمین",
+  "comv.serial_super_admin": "مدیر ارشد",
   "comv.serial_entry": "ینتری نومبر",
   "comv.acc_name": "حساب:",
   "comv.acc_company": "شرکت:",
   "comv.acc_country": "کشور:",
   "comv.mv_transit": "ترانزیت",
   "comv.mv_down_transit": "دون ترانسیت",
-  "comv.tm_by_rail": "بی رایل",
+  "comv.tm_by_rail": "با راه‌آهن",
   "comv.ls_customer_warehouse": "مشتری انبار",
   "comv.ls_container": "کانتینر",
   "comv.ls_other": "وثر",
@@ -92664,6 +92749,22 @@ const ps: Dict = {
   "com.serial_branch": "د څانګې سیریل",
 
   "com.serial_order_entry": "امر / ننوتنه",
+  "com.search_customer_ph": "د پیرودونکي نوم، شرکت، اړیکه له مخې ولټوئ...",
+  "com.no_customers": "هېڅ مطابق پیرودونکی ونه موندل شو",
+  "com.print_title": "د تخلیې امر",
+  "com.kpi_order_summary": "د امر لنډیز",
+  "com.kpi_movements": "حرکتونه",
+  "com.kpi_locations": "ځایونه او بندرونه",
+  "com.kpi_this_month": "دا میاشت",
+  "com.kpi_quick_info": "چټک معلومات",
+  "com.th_order_no": "د امر شمېره",
+  "com.th_step_status": "پرمختګ",
+  "com.th_party": "عرضه کوونکی / د امر اړخ",
+  "com.th_goods": "توکي",
+  "com.th_movement": "حرکت",
+  "com.th_route": "لاره / بندرونه",
+  "com.th_actions": "کړنې",
+  "com.no_orders_found": "هېڅ پیرودونکي امر ونه موندل شو. د یو جوړولو لپاره کیڼ اړخ د ۴ ګامي فورمه بشپړه کړئ.",
   "comv.customer_person_name": "د پیرودونکي / شخص نوم",
 
   "comv.select_customer_account": "د پیرودونکي حساب وټاکئ",
@@ -92695,6 +92796,7 @@ const ps: Dict = {
   "comv.ports_route_container_review": "بندرونه، لاره، کانتینر، بیاکتنه",
 
   "comv.four_step_wizard": "4-مرحلوی وزرډ",
+  "comv.intro_subtitle": "د پیرودونکي بار لېږد امرونه په 4 اسانه ګامونو کې دننه کړئ. پرمختګ په هر ګام کې خوندي کړئ او وروسته یې بشپړ کړئ.",
 
   "comv.step_x_of_4": "مرحله {n} د 4 څخه",
 
@@ -96762,14 +96864,14 @@ const ps: Dict = {
   "urw2.add_new_employee": "+ نوی کارمند اضافه کړئ",
   "comv.back": "سرهک",
   "comv.confirm_booking": "تهنفیرم بوکینگ",
-  "comv.serial_super_admin": "سوپر ادمین",
+  "comv.serial_super_admin": "سوپر ایډمین",
   "comv.serial_entry": "ینتری نومبر",
   "comv.acc_name": "حساب:",
   "comv.acc_company": "شرکت:",
   "comv.acc_country": "هیواد:",
   "comv.mv_transit": "ترانزیت",
   "comv.mv_down_transit": "داون ترانسیت",
-  "comv.tm_by_rail": "بی رایل",
+  "comv.tm_by_rail": "د اورګاډي له لارې",
   "comv.ls_customer_warehouse": "پیرودونکی ګدام",
   "comv.ls_container": "کانټینر",
   "comv.ls_other": "وثر",

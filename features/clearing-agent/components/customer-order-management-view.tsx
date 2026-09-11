@@ -1257,9 +1257,7 @@ export function CustomerOrderManagementView() {
             </div>
             <h1 className="text-xl font-black text-slate-900 dark:text-white">{tt("title", "Customer Order")}</h1>
             <p className="max-w-4xl text-xs text-slate-500 dark:text-slate-400">
-              {lang === "ur"
-                ? "چار آسان مراحل میں کسٹمر آرڈر درج کریں، کسی بھی مرحلے پر بغیر مکمل کیے محفوظ کریں اور بعد میں مکمل کریں۔"
-                : "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later."}
+              {t(lang, "comv.intro_subtitle", "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later.")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
