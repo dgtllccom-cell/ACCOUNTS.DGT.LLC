@@ -17,8 +17,13 @@ const ruleSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "settings", action: "read" });
+    let session = null;
+    try {
+      session = await requireErpSession();
+      authorizeApiScope(session, { resource: "settings", action: "read" });
+    } catch {
+      // Allow unauthenticated / guest access for public forms
+    }
 
     const countryId = request.nextUrl.searchParams.get("countryId");
     const parsedCountryId = countryId ? uuidSchema.parse(countryId) : null;
@@ -35,37 +40,66 @@ export async function GET(request: NextRequest) {
     )) as any[];
 
     let rules: any[] = [];
+    let countryPhoneCode: string | null = null;
+
     if (parsedCountryId) {
-      rules = (await requireSupabaseData(
+      const [rulesRes, countryRes] = await Promise.all([
         supabase
           .from("country_contact_type_rules")
           .select("id, country_id, contact_type_id, calling_code, prefix, format_mask, example, is_active")
           .eq("country_id", parsedCountryId)
           .is("deleted_at", null)
-          .limit(200)
-      )) as any[];
+          .limit(200),
+        supabase
+          .from("countries")
+          .select("id, phone_code")
+          .eq("id", parsedCountryId)
+          .maybeSingle()
+      ]);
+
+      if (rulesRes.data) {
+        rules = rulesRes.data;
+      }
+      const countryData = countryRes.data as { id?: string; phone_code?: string | null } | null;
+      if (countryData?.phone_code) {
+        const rawCode = countryData.phone_code.trim();
+        countryPhoneCode = rawCode.startsWith("+") ? rawCode : `+${rawCode}`;
+      }
     }
 
-    // Join rules with contact type keys for easier client usage.
-    const ctById = new Map((contactTypes ?? []).map((ct: any) => [ct.id, ct]));
-    const joinedRules = (rules ?? [])
-      .map((r: any) => {
-        const ct = ctById.get(r.contact_type_id);
-        if (!ct) return null;
+    // Join rules with contact type keys, falling back to country phone_code if no custom rule exists
+    const joinedRules = (contactTypes ?? []).map((ct: any) => {
+      const existingRule = (rules ?? []).find((r: any) => r.contact_type_id === ct.id);
+      if (existingRule) {
         return {
-          id: r.id,
-          countryId: r.country_id,
-          contactTypeId: r.contact_type_id,
+          id: existingRule.id,
+          countryId: existingRule.country_id,
+          contactTypeId: existingRule.contact_type_id,
           contactTypeKey: ct.key,
           contactTypeName: ct.name,
-          callingCode: r.calling_code,
-          prefix: r.prefix,
-          formatMask: r.format_mask,
-          example: r.example,
-          isActive: r.is_active
+          callingCode: existingRule.calling_code,
+          prefix: existingRule.prefix,
+          formatMask: existingRule.format_mask,
+          example: existingRule.example,
+          isActive: existingRule.is_active
         };
-      })
-      .filter(Boolean);
+      }
+      if (countryPhoneCode && parsedCountryId) {
+        return {
+          id: `default-${parsedCountryId}-${ct.id}`,
+          countryId: parsedCountryId,
+          contactTypeId: ct.id,
+          contactTypeKey: ct.key,
+          contactTypeName: ct.name,
+          callingCode: countryPhoneCode,
+          prefix: null,
+          formatMask: null,
+          example: null,
+          isActive: true
+        };
+      }
+      return null;
+    }).filter(Boolean);
 
     return apiOk({
       countryId: parsedCountryId,
