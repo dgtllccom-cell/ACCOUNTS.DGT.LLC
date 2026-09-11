@@ -3,6 +3,9 @@ node_modules/
 /.pnp
 .pnp.js
 
+# Personal Claude Code settings overrides (never shared/committed)
+.claude/settings.local.json
+
 # Next.js build & cache
 .next/
 out/

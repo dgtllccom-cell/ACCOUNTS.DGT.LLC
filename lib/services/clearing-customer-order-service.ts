@@ -1,7 +1,6 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type PartyRoleKey = "supplier" | "importer" | "exporter" | "notify_party" | "buyer";
 
@@ -396,11 +395,28 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       };
       if (!orderId) {
         try {
-          allocatedSerials = await allocateFormSerials("clearing_customer_orders", {
-            countryId: input.countryId ?? null,
-            branchKey: input.cityBranchId ?? input.countryBranchId ?? null,
-            prefix: "CCO"
-          });
+          // Must run on the SAME transaction connection (tx), not a fresh pool connection —
+          // allocate_4level_serials() upserts the identical (scope_type, scope_key, entity_type)
+          // row in transaction_serial_sequences that next_entity_serial() just locked above.
+          // A separate connection would block on that row until this transaction commits,
+          // while this transaction is itself awaiting that same call: a guaranteed deadlock.
+          const [serialRow] = await tx`
+            select allocate_4level_serials(
+              'clearing_customer_orders',
+              ${input.countryId ?? "GLOBAL"},
+              ${input.cityBranchId ?? input.countryBranchId ?? "GLOBAL"},
+              'CCO'
+            ) as res
+          `;
+          const res = serialRow?.res;
+          if (res) {
+            allocatedSerials = {
+              superAdminSerial: res.super_admin_serial ?? null,
+              countrySerial: res.country_serial ?? null,
+              branchSerial: res.branch_serial ?? null,
+              entrySerial: res.entry_serial ?? null
+            };
+          }
         } catch (err) {
           console.warn("Serial allocation failed for customer order (non-fatal):", err);
         }
@@ -445,7 +461,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         country_branch_id: trimOrNull(input.countryBranchId),
         city_branch_id: trimOrNull(input.cityBranchId),
         clearing_agent_id: trimOrNull(input.clearingAgentId),
-        load_type: input.loadType ?? null,
+        load_type: trimOrNull(input.loadType),
         loading_state_province_id: trimOrNull(input.loadingStateProvinceId),
         loading_district_id: trimOrNull(input.loadingDistrictId),
         loading_city_id: trimOrNull(input.loadingCityId),
