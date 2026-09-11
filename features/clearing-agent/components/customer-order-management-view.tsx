@@ -560,6 +560,7 @@ export function CustomerOrderManagementView() {
   const [saving, setSaving] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [approvalActionOrderId, setApprovalActionOrderId] = useState<string | null>(null);
   const [filterState, setFilterState] = useState<SmartFilterState>({
     query: "",
     country: "all",
@@ -1215,6 +1216,32 @@ export function CustomerOrderManagementView() {
     }
   };
 
+  const handleOrderApprovalAction = async (orderId: string, action: "submit" | "approve" | "reject") => {
+    if (action === "reject") {
+      const reason = window.prompt(tt("reject_reason_prompt", "Reason for rejection (optional):") ?? "") ?? "";
+      return handleOrderApprovalActionWithReason(orderId, action, reason);
+    }
+    return handleOrderApprovalActionWithReason(orderId, action, null);
+  };
+
+  const handleOrderApprovalActionWithReason = async (orderId: string, action: "submit" | "approve" | "reject", reason: string | null) => {
+    setApprovalActionOrderId(orderId);
+    try {
+      const response = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/approval`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason: reason || undefined })
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || tt("approval_action_failed", "Action failed"));
+      await fetchInitialData();
+    } catch (error: any) {
+      alert(`${tt("approval_action_failed", "Action failed")}: ${error?.message || error}`);
+    } finally {
+      setApprovalActionOrderId(null);
+    }
+  };
+
   const stepsList = [
     {
       num: 1,
@@ -1625,6 +1652,21 @@ export function CustomerOrderManagementView() {
                             <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${prog.color}`}>
                               {prog.label}
                             </span>
+                            {order.status === "pending_approval" || order.status === "approved" || order.status === "rejected" ? (
+                              <span className={`ms-1 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                order.status === "approved"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                  : order.status === "rejected"
+                                  ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                                  : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                              }`}>
+                                {order.status === "approved"
+                                  ? t(lang, "comv.approval_approved", "Approved")
+                                  : order.status === "rejected"
+                                  ? t(lang, "comv.approval_rejected", "Rejected")
+                                  : t(lang, "comv.approval_pending", "Pending Approval")}
+                              </span>
+                            ) : null}
                           </td>
                           <td className="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-200">
                             {order.customer_name || "-"}
@@ -1666,6 +1708,39 @@ export function CustomerOrderManagementView() {
                               >
                                 <Printer className="h-3.5 w-3.5 text-amber-600" />
                               </button>
+                              {order.status === "booking_confirmed" ? (
+                                <button
+                                  type="button"
+                                  onClick={() => void handleOrderApprovalAction(order.id, "submit")}
+                                  disabled={approvalActionOrderId === order.id}
+                                  className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
+                                  title={tt("submit_for_approval", "Submit for Approval")}
+                                >
+                                  {tt("submit_for_approval", "Submit for Approval")}
+                                </button>
+                              ) : null}
+                              {order.status === "pending_approval" ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleOrderApprovalAction(order.id, "approve")}
+                                    disabled={approvalActionOrderId === order.id}
+                                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                    title={tt("approve_order", "Approve")}
+                                  >
+                                    {tt("approve_order", "Approve")}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleOrderApprovalAction(order.id, "reject")}
+                                    disabled={approvalActionOrderId === order.id}
+                                    className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-[10px] font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
+                                    title={tt("reject_order", "Reject")}
+                                  >
+                                    {tt("reject_order", "Reject")}
+                                  </button>
+                                </>
+                              ) : null}
                             </div>
                           </td>
                         </tr>

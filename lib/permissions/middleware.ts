@@ -74,6 +74,7 @@ const RESOURCE_DOMAIN: Record<string, "business" | "shipping"> = {
   shipping_records: "shipping", shipping: "shipping", bl_records: "shipping",
   clearing_agents: "shipping", clearing_agent: "shipping", clearing: "shipping",
   clearing_agent_branches: "shipping", customs_entries: "shipping",
+  clearing_bill_customer_charges: "shipping", customer_receipts: "shipping",
 };
 
 export function assertResourceDomain(session: ErpSession, resource: string) {

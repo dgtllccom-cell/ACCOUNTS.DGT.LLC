@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { canAccessCountry, canAccessCityBranch, canAccessCountryBranch } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import {
   deleteCustomerOrder,
   getCustomerOrderById,
   saveCustomerOrder
 } from "@/lib/services/clearing-customer-order-service";
+import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 
 async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> | { id: string }) {
   try {
@@ -20,23 +20,6 @@ async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> 
 
   const parts = new URL(req.url).pathname.split("/").filter(Boolean);
   return parts[parts.length - 1] || "";
-}
-
-// A record scoped to a country/branch a non-super-admin doesn't belong to must
-// never be readable/writable by them, even if they know the id — mirrors the
-// canAccessCountry/CityBranch checks every other hardened module in this ERP uses.
-function canAccessOrder(session: any, order: Record<string, any>) {
-  if (session.isSuperAdmin) return true;
-  if (order.clearing_agent_id && (session.clearingAgentIds ?? []).includes(order.clearing_agent_id)) return true;
-  if (order.city_branch_id && canAccessCityBranch(session, order.city_branch_id)) return true;
-  if (order.country_branch_id && canAccessCountryBranch(session, order.country_branch_id)) return true;
-  if (order.country_id && canAccessCountry(session, order.country_id)) return true;
-  if (order.created_by && order.created_by === session.userId) return true;
-  // An order created before this scope model existed has no scope columns set at
-  // all — fail open only for that legacy case so existing data stays reachable,
-  // never for a row that has a scope which simply doesn't match this session.
-  if (!order.country_id && !order.country_branch_id && !order.city_branch_id && !order.clearing_agent_id && !order.created_by) return true;
-  return false;
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

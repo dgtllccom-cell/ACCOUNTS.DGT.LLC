@@ -154,7 +154,7 @@ export const roznamchaPostingSchema = scopeSchema
     sourceTransactionType: z.string().max(60).optional().nullable(),
     sourceTransactionId: optionalUuidSchema,
     sourceReferenceNo: z.string().max(120).optional().nullable(),
-    roznamchaCategory: z.enum(["business", "bank", "cash", "invoice", "transfer"]).optional().nullable(),
+    roznamchaCategory: z.enum(["business", "bank", "cash", "invoice", "transfer", "shipping"]).optional().nullable(),
     originalLanguage: supportedLanguageSchema.default("en"),
     translations: z.record(z.string(), z.record(supportedLanguageSchema, z.string().trim())).optional()
   })

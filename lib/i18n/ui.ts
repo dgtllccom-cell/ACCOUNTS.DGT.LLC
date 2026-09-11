@@ -1980,6 +1980,14 @@ export type UiKey =
   | "comv.review_booking"
   | "comv.review_pickup_goods_truck"
   | "comv.review_route_legs"
+  | "comv.approval_approved"
+  | "comv.approval_rejected"
+  | "comv.approval_pending"
+  | "com.submit_for_approval"
+  | "com.approve_order"
+  | "com.reject_order"
+  | "com.reject_reason_prompt"
+  | "com.approval_action_failed"
   | "gm.goods"
   | "gm.search_goods"
   | "gm.variation"
@@ -21472,6 +21480,14 @@ const en: Dict = {
   "comv.review_booking": "Booking & Customer",
   "comv.review_pickup_goods_truck": "Pickup, Goods & Truck",
   "comv.review_route_legs": "Route Legs",
+  "comv.approval_approved": "Approved",
+  "comv.approval_rejected": "Rejected",
+  "comv.approval_pending": "Pending Approval",
+  "com.submit_for_approval": "Submit for Approval",
+  "com.approve_order": "Approve",
+  "com.reject_order": "Reject",
+  "com.reject_reason_prompt": "Reason for rejection (optional):",
+  "com.approval_action_failed": "Action failed",
 
   "gm.goods": "Goods",
   "gm.search_goods": "Search goods by name, CHS code, brand or size...",
@@ -43346,6 +43362,14 @@ const ur: Dict = {
   "comv.handover_reference": "حوالگی حوالہ نمبر",
   "comv.review_references": "حوالہ جات",
   "comv.review_route_legs": "روٹ مراحل",
+  "comv.approval_approved": "منظور شدہ",
+  "comv.approval_rejected": "مسترد",
+  "comv.approval_pending": "منظوری کے منتظر",
+  "com.submit_for_approval": "منظوری کے لیے جمع کرائیں",
+  "com.approve_order": "منظور کریں",
+  "com.reject_order": "مسترد کریں",
+  "com.reject_reason_prompt": "استرداد کی وجہ (اختیاری):",
+  "com.approval_action_failed": "کارروائی ناکام ہوگئی",
 };
 
 const ar: Dict = {
@@ -61202,6 +61226,14 @@ const ar: Dict = {
   "comv.handover_reference": "مرجع التسليم",
   "comv.review_references": "المراجع",
   "comv.review_route_legs": "مراحل المسار",
+  "comv.approval_approved": "تمت الموافقة",
+  "comv.approval_rejected": "مرفوض",
+  "comv.approval_pending": "بانتظار الموافقة",
+  "com.submit_for_approval": "إرسال للموافقة",
+  "com.approve_order": "موافقة",
+  "com.reject_order": "رفض",
+  "com.reject_reason_prompt": "سبب الرفض (اختياري):",
+  "com.approval_action_failed": "فشل الإجراء",
 };
 
 const fa: Dict = {
@@ -79057,6 +79089,14 @@ const fa: Dict = {
   "comv.handover_reference": "مرجع تحویل",
   "comv.review_references": "مراجع",
   "comv.review_route_legs": "مراحل مسیر",
+  "comv.approval_approved": "تأیید شده",
+  "comv.approval_rejected": "رد شده",
+  "comv.approval_pending": "در انتظار تأیید",
+  "com.submit_for_approval": "ارسال برای تأیید",
+  "com.approve_order": "تأیید",
+  "com.reject_order": "رد",
+  "com.reject_reason_prompt": "دلیل رد (اختیاری):",
+  "com.approval_action_failed": "عملیات ناموفق بود",
 };
 
 const ps: Dict = {
@@ -96918,6 +96958,14 @@ const ps: Dict = {
   "comv.handover_reference": "د لېږد حواله",
   "comv.review_references": "حوالې",
   "comv.review_route_legs": "د لارې پړاوونه",
+  "comv.approval_approved": "تایید شوی",
+  "comv.approval_rejected": "رد شوی",
+  "comv.approval_pending": "د تایید په تمه",
+  "com.submit_for_approval": "د تایید لپاره وسپارئ",
+  "com.approve_order": "تصویب",
+  "com.reject_order": "رد کول",
+  "com.reject_reason_prompt": "د ردولو دلیل (اختیاري):",
+  "com.approval_action_failed": "کړنه ناکامه شوه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
