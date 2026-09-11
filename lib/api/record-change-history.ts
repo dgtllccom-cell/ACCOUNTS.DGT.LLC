@@ -36,8 +36,8 @@ export async function writeRecordChangeHistory(input: {
     const viaPg = await withLocalPg(async (sql) => {
       let validActorId: string | null = null;
       if (row.actor_id) {
-        const users = await sql`SELECT id FROM public.users WHERE id = ${row.actor_id}::uuid LIMIT 1`;
-        if (users.length > 0) validActorId = users[0].id;
+        const profiles = await sql`SELECT id FROM public.profiles WHERE id = ${row.actor_id}::uuid LIMIT 1`;
+        if (profiles.length > 0) validActorId = profiles[0].id;
       }
       let validCountryId: string | null = null;
       if (row.country_id) {
