@@ -395,7 +395,7 @@ export async function GET(request: NextRequest) {
       let businessType = "General Business";
       let businessId = branchCode && branchCode !== "-" ? branchCode : "GB-001";
       if (role === "super_admin") {
-        businessType = "Global";
+        businessType = "Global Business";
         businessId = profile.user_code?.toLowerCase().includes("superadmin") ? "GG-000" : "GG-001";
       } else if (branchType === "Clearing HQ" || role.toLowerCase().includes("ship") || profile.full_name?.toLowerCase().includes("shipping")) {
         businessType = "Shipping Line";

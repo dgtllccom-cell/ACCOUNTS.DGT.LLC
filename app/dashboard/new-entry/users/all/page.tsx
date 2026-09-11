@@ -69,6 +69,7 @@ interface UserDirectoryItem {
   isActive: boolean;
   avatarInitials?: string;
   avatarColor?: string;
+  avatarUrl?: string;
   permissions?: string[];
   permissionsCount?: number;
   passwordVaultRef?: string;
@@ -131,7 +132,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-1",
     userCode: "dubai.admin",
-    fullName: "Dubai Dubai City Admin",
+    fullName: "Ismat Ullah (عصمت اللہ)",
     subtitle: "Dubai City Administration",
     email: "dubai.admin@dgt.llc",
     countryId: "c-are",
@@ -144,7 +145,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "General Business",
     businessId: "DB-001",
     isActive: true,
-    avatarInitials: "DA",
+    avatarInitials: "IU",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
     passwordKey: "Admin@Dgt2026!",
     loginUrl: "/auth/login/city",
@@ -155,7 +156,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-2",
     userCode: "chaman.admin",
-    fullName: "Chaman City Admin",
+    fullName: "Izzat Ullah Khan (عزت اللہ خان)",
     subtitle: "Chaman City Office",
     email: "chaman.admin@dgt.llc",
     countryId: "c-pak",
@@ -168,7 +169,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "General Business",
     businessId: "CH-001",
     isActive: true,
-    avatarInitials: "CA",
+    avatarInitials: "IK",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
     passwordKey: "Chaman@Dgt2026!",
     loginUrl: "/auth/login/city",
@@ -179,7 +180,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-3",
     userCode: "quetta.admin",
-    fullName: "Quetta City Admin",
+    fullName: "Ahmad Shah Durrani (احمد شاہ)",
     subtitle: "Quetta City Office",
     email: "quetta.admin@dgt.llc",
     countryId: "c-pak",
@@ -192,7 +193,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "General Business",
     businessId: "QT-001",
     isActive: true,
-    avatarInitials: "QA",
+    avatarInitials: "AD",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
     passwordKey: "Quetta@Dgt2026!",
     loginUrl: "/auth/login/city",
@@ -203,7 +204,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-4",
     userCode: "usa.country",
-    fullName: "USA Country Admin",
+    fullName: "John S. Khan (جان سمتھ خان)",
     subtitle: "USA Country Operations",
     email: "usa.admin@dgt.llc",
     countryId: "c-usa",
@@ -216,7 +217,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "USA-001",
     isActive: true,
-    avatarInitials: "UA",
+    avatarInitials: "JK",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
     passwordKey: "Usa@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -227,7 +228,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-5",
     userCode: "pakistan.admin",
-    fullName: "Pakistan Country Admin",
+    fullName: "Rashid Mehmood (راشد محمود)",
     subtitle: "Pakistan Country Operations",
     email: "pakistan.admin@dgt.llc",
     countryId: "c-pak",
@@ -240,7 +241,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "PK-001",
     isActive: true,
-    avatarInitials: "PA",
+    avatarInitials: "RM",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
     passwordKey: "Pak@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -251,7 +252,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-6",
     userCode: "asad.s",
-    fullName: "Asad S (Global Group)",
+    fullName: "Muhammad Asad (محمد اسد)",
     subtitle: "Group Administration",
     email: "asad@dgt.llc",
     countryId: null,
@@ -261,10 +262,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     branchName: "Global Access",
     role: "super_admin",
     roleLabel: "SUPER ADMIN",
-    businessType: "Global",
+    businessType: "Global Business",
     businessId: "GG-001",
     isActive: true,
-    avatarInitials: "AG",
+    avatarInitials: "MA",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
     passwordKey: "Asad@Dgt2026!",
     loginUrl: "/auth/login/admin",
@@ -275,7 +276,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-7",
     userCode: "mr.sports",
-    fullName: "M.R Sports Admin",
+    fullName: "M. Ramzan Sports (محمد رمضان)",
     subtitle: "Sports Division",
     email: "mr.sports@dgt.llc",
     countryId: null,
@@ -285,10 +286,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     branchName: "Global Access",
     role: "super_admin",
     roleLabel: "SUPER ADMIN",
-    businessType: "Global",
+    businessType: "Global Business",
     businessId: "GG-002",
     isActive: false,
-    avatarInitials: "MA",
+    avatarInitials: "MR",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
     passwordKey: "MrSports@Dgt2026!",
     loginUrl: "/auth/login/admin",
@@ -299,7 +300,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-8",
     userCode: "superadmin",
-    fullName: "Super Admin (Main)",
+    fullName: "Izzatullah Admin (عزت اللہ ایڈمن)",
     subtitle: "System Administrator",
     email: "admin@damaan.com",
     countryId: null,
@@ -309,10 +310,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     branchName: "Global Access",
     role: "super_admin",
     roleLabel: "SUPER ADMIN",
-    businessType: "Global",
+    businessType: "Global Business",
     businessId: "GG-000",
     isActive: true,
-    avatarInitials: "SA",
+    avatarInitials: "IA",
     avatarColor: "bg-[#e0f2fe] text-[#0369a1]",
     passwordKey: "Admin@Damaan2026!",
     loginUrl: "/auth/login/admin",
@@ -323,7 +324,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-9",
     userCode: "ship.user",
-    fullName: "Shipping Line User",
+    fullName: "Sohail Ahmad (سہیل احمد)",
     subtitle: "Shipping Line Operations",
     email: "ship.user@dgt.llc",
     countryId: "c-are",
@@ -336,7 +337,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Shipping Line",
     businessId: "SL-001",
     isActive: true,
-    avatarInitials: "SH",
+    avatarInitials: "SA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
     passwordKey: "Ship@Dgt2026!",
     loginUrl: "/auth/login/clearing-agent",
@@ -347,7 +348,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-10",
     userCode: "transport.user",
-    fullName: "Transport User",
+    fullName: "Tariq Jameel (طارق جمیل)",
     subtitle: "Transport Operations",
     email: "transport@dgt.llc",
     countryId: "c-pak",
@@ -360,7 +361,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Transport Business",
     businessId: "TR-001",
     isActive: true,
-    avatarInitials: "TR",
+    avatarInitials: "TJ",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
     passwordKey: "Transport@Dgt2026!",
     loginUrl: "/auth/login",
@@ -372,7 +373,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-11",
     userCode: "bombay.admin",
-    fullName: "Bombay - Bombay City Branch Admin",
+    fullName: "Bilal Bashir (بلال بشیر)",
     subtitle: "Bombay City Office",
     email: "bombay.admin@dgt.llc",
     countryId: "c-ind",
@@ -396,7 +397,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-12",
     userCode: "kandahar.admin",
-    fullName: "Kandahar - Kandahar City Branch Admin",
+    fullName: "Khalid Balkhi (خالد بلخی)",
     subtitle: "Kandahar City Office",
     email: "kandahar.admin@dgt.llc",
     countryId: "c-afg",
@@ -420,7 +421,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-13",
     userCode: "bombay.agent",
-    fullName: "Bombay Clearing Agent",
+    fullName: "Babar Chaudhry (بابر چوہدری)",
     subtitle: "Clearing Agent Operations",
     email: "agent.bombay@dgt.llc",
     countryId: "c-ind",
@@ -444,7 +445,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-14",
     userCode: "chaman.agent",
-    fullName: "Chaman Clearing Agent",
+    fullName: "Zafar Iqbal (ظفر اقبال)",
     subtitle: "Border Clearing Operations",
     email: "agent.chaman@dgt.llc",
     countryId: "c-pak",
@@ -457,7 +458,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Transport Business",
     businessId: "CL-003",
     isActive: true,
-    avatarInitials: "CC",
+    avatarInitials: "ZI",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
     passwordKey: "Agent@Dgt2026!",
     loginUrl: "/auth/login/clearing-agent",
@@ -468,7 +469,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-15",
     userCode: "dubai.agent",
-    fullName: "Dubai Clearing Agent",
+    fullName: "Dawood Shah (داؤد شاہ)",
     subtitle: "Customs Clearing Operations",
     email: "agent.dubai@dgt.llc",
     countryId: "c-are",
@@ -481,7 +482,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Shipping Line",
     businessId: "CL-001",
     isActive: true,
-    avatarInitials: "DC",
+    avatarInitials: "DS",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
     passwordKey: "Agent@Dgt2026!",
     loginUrl: "/auth/login/clearing-agent",
@@ -492,7 +493,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-16",
     userCode: "kandahar.agent",
-    fullName: "Kandahar Clearing Agent",
+    fullName: "Kamran Siddiqui (کامران صدیقی)",
     subtitle: "Border Clearing Operations",
     email: "agent.kandahar@dgt.llc",
     countryId: "c-afg",
@@ -505,7 +506,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Transport Business",
     businessId: "CL-004",
     isActive: true,
-    avatarInitials: "KC",
+    avatarInitials: "KS",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
     passwordKey: "Agent@Dgt2026!",
     loginUrl: "/auth/login/clearing-agent",
@@ -516,7 +517,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-17",
     userCode: "pak.cashier",
-    fullName: "Test Brother User",
+    fullName: "Tahir Mehmood (طاہر محمود)",
     subtitle: "Cash & Roznamcha Operations",
     email: "cashier.pak@dgt.llc",
     countryId: "c-pak",
@@ -529,7 +530,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "General Business",
     businessId: "CSH-002",
     isActive: true,
-    avatarInitials: "TB",
+    avatarInitials: "TM",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
     passwordKey: "Cashier@Dgt2026!",
     loginUrl: "/auth/login",
@@ -540,7 +541,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-18",
     userCode: "usr.9159",
-    fullName: "Test Operator 9159",
+    fullName: "Noman Ali (نعمان علی)",
     subtitle: "Data Entry Operations",
     email: "operator9159@dgt.llc",
     countryId: "c-are",
@@ -553,7 +554,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "General Business",
     businessId: "STF-001",
     isActive: true,
-    avatarInitials: "TO",
+    avatarInitials: "NA",
     avatarColor: "bg-[#f1f5f9] text-[#475569]",
     passwordKey: "Staff@Dgt2026!",
     loginUrl: "/auth/login",
@@ -564,7 +565,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-19",
     userCode: "audit.admin",
-    fullName: "Audit SuperAdmin (Global Group)",
+    fullName: "Farooq Khattak (فاروق خٹک)",
     subtitle: "Internal Audit Division",
     email: "audit.admin@dgt.llc",
     countryId: null,
@@ -574,10 +575,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     branchName: "Global Access",
     role: "super_admin",
     roleLabel: "SUPER ADMIN",
-    businessType: "Global",
+    businessType: "Global Business",
     businessId: "GG-003",
     isActive: true,
-    avatarInitials: "AU",
+    avatarInitials: "FK",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
     passwordKey: "Audit@Dgt2026!",
     loginUrl: "/auth/login/admin",
@@ -588,7 +589,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-20",
     userCode: "all.superadmin",
-    fullName: "All SuperAdmin (Global Group)",
+    fullName: "Haji Abdul Malik (حاجی عبدالمالک)",
     subtitle: "Executive Management",
     email: "super.admin@dgt.llc",
     countryId: null,
@@ -598,10 +599,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     branchName: "Global Access",
     role: "super_admin",
     roleLabel: "SUPER ADMIN",
-    businessType: "Global",
+    businessType: "Global Business",
     businessId: "GG-004",
     isActive: true,
-    avatarInitials: "SU",
+    avatarInitials: "AM",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
     passwordKey: "Super@Dgt2026!",
     loginUrl: "/auth/login/admin",
@@ -612,7 +613,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-21",
     userCode: "afg.country",
-    fullName: "Afghanistan Country Admin",
+    fullName: "Arif Alvi (عارف علوی)",
     subtitle: "Afghanistan Operations",
     email: "afg.admin@dgt.llc",
     countryId: "c-afg",
@@ -625,7 +626,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "AF-001",
     isActive: true,
-    avatarInitials: "AC",
+    avatarInitials: "AA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
     passwordKey: "Afg@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -636,7 +637,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-22",
     userCode: "ind.country",
-    fullName: "India Country Admin",
+    fullName: "Sunil Sharma (سنیل شرما)",
     subtitle: "India Operations",
     email: "ind.admin@dgt.llc",
     countryId: "c-ind",
@@ -649,7 +650,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "IND-001",
     isActive: true,
-    avatarInitials: "IC",
+    avatarInitials: "SS",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
     passwordKey: "Ind@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -660,7 +661,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-23",
     userCode: "saudi.admin",
-    fullName: "Saudi Arabia Country Admin",
+    fullName: "Saud Abdullah (سعود عبداللہ)",
     subtitle: "Saudi Arabia Operations",
     email: "saudi.admin@dgt.llc",
     countryId: "c-sau",
@@ -673,7 +674,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "SA-001",
     isActive: true,
-    avatarInitials: "SC",
+    avatarInitials: "SA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
     passwordKey: "Saudi@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -684,7 +685,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-24",
     userCode: "uzb.admin",
-    fullName: "Uzbekistan Country Admin",
+    fullName: "Usman Tashkendi (عثمان تاشقندی)",
     subtitle: "Uzbekistan Operations",
     email: "uzb.admin@dgt.llc",
     countryId: "c-uzb",
@@ -697,7 +698,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "UZ-001",
     isActive: true,
-    avatarInitials: "UC",
+    avatarInitials: "UT",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
     passwordKey: "Uzb@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -708,7 +709,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-25",
     userCode: "tjk.admin",
-    fullName: "Tajikistan Country Admin",
+    fullName: "Timur Dushanbe (تیمور دوشنبے)",
     subtitle: "Tajikistan Operations",
     email: "tjk.admin@dgt.llc",
     countryId: "c-tjk",
@@ -721,7 +722,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "TJ-001",
     isActive: true,
-    avatarInitials: "TC",
+    avatarInitials: "TD",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
     passwordKey: "Tjk@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -732,7 +733,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-26",
     userCode: "iran.admin",
-    fullName: "Iran Country Admin",
+    fullName: "Ismail Tehrani (اسماعیل تہرانی)",
     subtitle: "Iran Operations",
     email: "iran.admin@dgt.llc",
     countryId: "c-irn",
@@ -745,7 +746,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Trading Business",
     businessId: "IR-001",
     isActive: true,
-    avatarInitials: "IC",
+    avatarInitials: "IT",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
     passwordKey: "Iran@Dgt2026!",
     loginUrl: "/auth/login/country",
@@ -756,7 +757,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-27",
     userCode: "bandar.port",
-    fullName: "Bandar Abbas Port Operator",
+    fullName: "Bahram Abbasi (بہرام عباسی)",
     subtitle: "Port & Customs Operations",
     email: "bandar.port@dgt.llc",
     countryId: "c-irn",
@@ -769,7 +770,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "Shipping Line",
     businessId: "SL-002",
     isActive: true,
-    avatarInitials: "BP",
+    avatarInitials: "BA",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
     passwordKey: "Port@Dgt2026!",
     loginUrl: "/auth/login/clearing-agent",
@@ -780,7 +781,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   {
     userId: "ref-usr-28",
     userCode: "jeddah.admin",
-    fullName: "Jeddah Wholesale Market Admin",
+    fullName: "Ilyas Jameeli (الیاس جمیلی)",
     subtitle: "Wholesale Market Operations",
     email: "jeddah.admin@dgt.llc",
     countryId: "c-sau",
@@ -793,7 +794,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     businessType: "General Business",
     businessId: "SA-002",
     isActive: true,
-    avatarInitials: "JA",
+    avatarInitials: "IJ",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
     passwordKey: "Jeddah@Dgt2026!",
     loginUrl: "/auth/login/city",
@@ -918,6 +919,161 @@ function BusinessTypeIcon({ type }: { type: string }) {
     return <Globe className="w-4 h-4 text-blue-500 shrink-0" />;
   }
   return <Building2 className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />;
+}
+
+function EmployeeAvatar({
+  name,
+  avatarUrl,
+  initials,
+  colorClass,
+  index
+}: {
+  name: string;
+  avatarUrl?: string;
+  initials: string;
+  colorClass: string;
+  index: number;
+}) {
+  const [imgError, setImgError] = useState(false);
+
+  if (avatarUrl && !imgError) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="w-full h-full object-cover rounded-full"
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  // Realistic employee portrait illustrations with distinct styles, business suits, accessories & grooming
+  const portraits = [
+    // 0: Corporate executive with suit & sky blue tie (Ismat Ullah)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#e0f2fe" />
+        <circle cx="32" cy="24" r="14" fill="#fcd34d" />
+        <path d="M18 20 C18 10 46 10 46 20 C46 13 40 8 32 8 C24 8 18 13 18 20 Z" fill="#1e293b" />
+        <path d="M12 60 C12 44 22 38 32 38 C42 38 52 44 52 60 Z" fill="#0f172a" />
+        <path d="M28 38 L32 48 L36 38 Z" fill="#ffffff" />
+        <path d="M31 42 L33 42 L34 54 L32 57 L30 54 Z" fill="#0284c7" />
+      </svg>
+    ),
+    // 1: Executive Leader with beard & traditional dignitary style (Izzat Ullah Khan)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#ede9fe" />
+        <circle cx="32" cy="25" r="13" fill="#fbcfe8" />
+        <path d="M18 18 C18 9 46 9 46 18 C43 11 37 9 32 9 C27 9 21 11 18 18 Z" fill="#312e81" />
+        <path d="M22 28 C22 36 42 36 42 28 C42 38 38 42 32 42 C26 42 22 38 22 28 Z" fill="#1e1b4b" />
+        <path d="M12 60 C12 45 22 41 32 41 C42 41 52 45 52 60 Z" fill="#4338ca" />
+        <path d="M29 41 L32 49 L35 41 Z" fill="#f8fafc" />
+      </svg>
+    ),
+    // 2: Executive with beard & glasses (Ahmad Shah Durrani)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#fef3c7" />
+        <circle cx="32" cy="25" r="13" fill="#fed7aa" />
+        <path d="M20 18 C20 10 44 10 44 18 C41 12 37 10 32 10 C27 10 23 12 20 18 Z" fill="#292524" />
+        <path d="M23 27 C23 35 41 35 41 27 C41 37 37 40 32 40 C27 40 23 37 23 27 Z" fill="#1c1917" />
+        <circle cx="27" cy="23" r="4" fill="none" stroke="#0f172a" strokeWidth="1.5" />
+        <circle cx="37" cy="23" r="4" fill="none" stroke="#0f172a" strokeWidth="1.5" />
+        <line x1="31" y1="23" x2="33" y2="23" stroke="#0f172a" strokeWidth="1.5" />
+        <path d="M12 60 C12 45 22 40 32 40 C42 40 52 45 52 60 Z" fill="#78350f" />
+        <path d="M29 40 L32 49 L35 40 Z" fill="#ffffff" />
+      </svg>
+    ),
+    // 3: Corporate manager in sleek blazer (John S. Khan)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#fee2e2" />
+        <circle cx="32" cy="24" r="14" fill="#fed7aa" />
+        <path d="M19 19 C19 11 45 11 45 19 C42 12 37 10 32 10 C27 10 22 12 19 19 Z" fill="#451a03" />
+        <path d="M12 60 C12 44 22 39 32 39 C42 39 52 44 52 60 Z" fill="#991b1b" />
+        <path d="M28 39 L32 49 L36 39 Z" fill="#ffffff" />
+        <path d="M31 43 L33 43 L33.5 54 L32 57 L30.5 54 Z" fill="#1e293b" />
+      </svg>
+    ),
+    // 4: Branch Director in emerald business suit (Rashid Mehmood)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#dcfce7" />
+        <circle cx="32" cy="25" r="13" fill="#fde68a" />
+        <path d="M20 18 C20 11 44 11 44 18 C41 12 37 10 32 10 C27 10 23 12 20 18 Z" fill="#14532d" />
+        <path d="M12 60 C12 45 22 40 32 40 C42 40 52 45 52 60 Z" fill="#065f46" />
+        <path d="M29 40 L32 50 L35 40 Z" fill="#ffffff" />
+        <path d="M31 44 L33 44 L33.5 55 L32 57 L30.5 55 Z" fill="#047857" />
+      </svg>
+    ),
+    // 5: Global Group Executive with dark navy suit & crest (Muhammad Asad)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#e0e7ff" />
+        <circle cx="32" cy="24" r="14" fill="#fed7aa" />
+        <path d="M18 19 C18 10 46 10 46 19 C42 12 37 9 32 9 C27 9 22 12 18 19 Z" fill="#0f172a" />
+        <path d="M12 60 C12 44 22 38 32 38 C42 38 52 44 52 60 Z" fill="#1e1b4b" />
+        <circle cx="42" cy="48" r="2" fill="#fbbf24" />
+        <path d="M28 38 L32 49 L36 38 Z" fill="#ffffff" />
+        <path d="M31 43 L33 43 L34 54 L32 57 L30 54 Z" fill="#e11d48" />
+      </svg>
+    ),
+    // 6: Sports Director with athletic sport coat (M. Ramzan Sports)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#fce7f3" />
+        <circle cx="32" cy="24" r="14" fill="#fde68a" />
+        <path d="M19 18 C19 11 45 11 45 18 C42 12 37 10 32 10 C27 10 22 12 19 18 Z" fill="#831843" />
+        <path d="M12 60 C12 44 22 39 32 39 C42 39 52 44 52 60 Z" fill="#9d174d" />
+        <path d="M30 39 L32 46 L34 39 Z" fill="#fdf2f8" />
+      </svg>
+    ),
+    // 7: Super Administrator with distinguished crest suit (Izzatullah Admin)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#fae8ff" />
+        <circle cx="32" cy="24" r="14" fill="#fed7aa" />
+        <path d="M18 19 C18 10 46 10 46 19 C42 12 37 9 32 9 C27 9 22 12 18 19 Z" fill="#3b0764" />
+        <path d="M22 28 C22 35 42 35 42 28 C42 37 38 41 32 41 C26 41 22 37 22 28 Z" fill="#3b0764" />
+        <path d="M12 60 C12 44 22 38 32 38 C42 38 52 44 52 60 Z" fill="#581c87" />
+        <polygon points="43,45 45,49 41,49" fill="#f59e0b" />
+        <path d="M28 38 L32 48 L36 38 Z" fill="#ffffff" />
+        <path d="M31 42 L33 42 L34 54 L32 57 L30 54 Z" fill="#c026d3" />
+      </svg>
+    ),
+    // 8: Shipping Line Officer in maritime crest blazer (Sohail Ahmad)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#ccfbf1" />
+        <circle cx="32" cy="24" r="13" fill="#fde68a" />
+        <path d="M18 18 C18 10 46 10 46 18 C42 12 37 9 32 9 C27 9 22 12 18 18 Z" fill="#0f766e" />
+        <path d="M12 60 C12 44 22 39 32 39 C42 39 52 44 52 60 Z" fill="#134e4a" />
+        <circle cx="43" cy="48" r="2" fill="#38bdf8" />
+        <path d="M28 39 L32 49 L36 39 Z" fill="#ffffff" />
+        <path d="M31 43 L33 43 L33.5 54 L32 57 L30.5 54 Z" fill="#0284c7" />
+      </svg>
+    ),
+    // 9: Transport & Fleet Director (Tariq Jameel)
+    (
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <rect width="64" height="64" fill="#ffedd5" />
+        <circle cx="32" cy="24" r="14" fill="#fed7aa" />
+        <path d="M19 19 C19 11 45 11 45 19 C42 12 37 10 32 10 C27 10 22 12 19 19 Z" fill="#7c2d12" />
+        <path d="M12 60 C12 44 22 39 32 39 C42 39 52 44 52 60 Z" fill="#9a3412" />
+        <path d="M28 39 L32 49 L36 39 Z" fill="#ffffff" />
+        <path d="M31 43 L33 43 L33.5 54 L32 57 L30.5 54 Z" fill="#15803d" />
+      </svg>
+    )
+  ];
+
+  const chosenPortrait = portraits[index % portraits.length];
+
+  return (
+    <div data-employee-avatar="true" className="w-full h-full relative overflow-hidden rounded-full ring-1 ring-black/10 dark:ring-white/10 shadow-2xs">
+      {chosenPortrait}
+    </div>
+  );
 }
 
 export default function SuperAdminAllUsersDirectoryPage() {
@@ -1661,7 +1817,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <th className="py-3 px-3.5 min-w-[210px]">{th("Employee Name")}</th>
                 <th className="py-3 px-3.5 min-w-[130px]">{th("Username")}</th>
                 <th className="py-3 px-3.5 min-w-[170px]">{th("Role / Level")}</th>
-                <th className="py-3 px-3.5 min-w-[160px]">{th("Business Type")}</th>
+                <th className="py-3 px-3.5 min-w-[170px]">{th("ID Type / Business Scope")}</th>
                 <th className="py-3 px-3.5 min-w-[190px]">{th("Business ID / Shipping Line ID")}</th>
                 <th className="py-3 px-3.5 min-w-[160px]">{th("Country")}</th>
                 <th className="py-3 px-3.5 min-w-[140px]">{th("Branch / City")}</th>
@@ -1703,11 +1859,17 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         {rowNumber}
                       </td>
 
-                      {/* 2. Employee Name with Avatar Initials + Subtitle */}
+                      {/* 2. Employee Name with Picture Avatar + Subtitle */}
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-2.5">
-                          <div className={cn("h-9 w-9 rounded-full flex items-center justify-center font-black text-xs shrink-0 shadow-xs", u.avatarColor || getAvatarColor(index))}>
-                            {u.avatarInitials || getAvatarInitials(u.fullName, u.userCode)}
+                          <div className="relative h-10 w-10 rounded-full shrink-0 shadow-xs">
+                            <EmployeeAvatar
+                              name={u.fullName}
+                              avatarUrl={u.avatarUrl}
+                              initials={u.avatarInitials || getAvatarInitials(u.fullName, u.userCode)}
+                              colorClass={u.avatarColor || getAvatarColor(index)}
+                              index={rowNumber - 1}
+                            />
                           </div>
                           <div className="min-w-0">
                             <div className="font-bold text-slate-900 dark:text-slate-100 truncate text-[12px] leading-tight">

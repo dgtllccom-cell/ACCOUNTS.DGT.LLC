@@ -1949,6 +1949,8 @@ export type UiKey =
   | "comv.planned_arrival"
   | "comv.leg_status"
   | "comv.legstatus_pending"
+  | "comv.legstatus_pickup_assigned"
+  | "comv.legstatus_loaded"
   | "comv.legstatus_in_transit"
   | "comv.legstatus_arrived"
   | "comv.legstatus_customs_pending"
@@ -21422,6 +21424,8 @@ const en: Dict = {
   "comv.planned_arrival": "Planned Arrival",
   "comv.leg_status": "Leg Status",
   "comv.legstatus_pending": "Pending",
+  "comv.legstatus_pickup_assigned": "Pickup Assigned",
+  "comv.legstatus_loaded": "Loaded",
   "comv.legstatus_in_transit": "In Transit",
   "comv.legstatus_arrived": "Arrived",
   "comv.legstatus_customs_pending": "Customs Pending",
@@ -43281,6 +43285,8 @@ const ur: Dict = {
   "comv.planned_arrival": "پلاآجید رریوال",
   "comv.leg_status": "لیگ ستاتوس",
   "comv.legstatus_pending": "زیرِ التوا",
+  "comv.legstatus_pickup_assigned": "پک اپ تفویض",
+  "comv.legstatus_loaded": "لوڈ شدہ",
   "comv.legstatus_in_transit": "ین ترانسیت",
   "comv.legstatus_arrived": "رریوید",
   "comv.legstatus_cleared": "کلیرید",
@@ -61118,6 +61124,8 @@ const ar: Dict = {
   "comv.planned_arrival": "بلااليومید رریوال",
   "comv.leg_status": "لیج ستاتوس",
   "comv.legstatus_pending": "قيد الانتظار",
+  "comv.legstatus_pickup_assigned": "تم تعيين الاستلام",
+  "comv.legstatus_loaded": "تم التحميل",
   "comv.legstatus_in_transit": "ین ترانسیت",
   "comv.legstatus_arrived": "رریوید",
   "comv.legstatus_cleared": "الإجماليیرید",
@@ -78954,6 +78962,8 @@ const fa: Dict = {
   "comv.planned_arrival": "پلاامروزید رریوال",
   "comv.leg_status": "لیگ ستاتوس",
   "comv.legstatus_pending": "در انتظار",
+  "comv.legstatus_pickup_assigned": "تحویل‌گیری تخصیص یافت",
+  "comv.legstatus_loaded": "بارگیری شد",
   "comv.legstatus_in_transit": "ین ترانسیت",
   "comv.legstatus_arrived": "رریوید",
   "comv.legstatus_cleared": "مجموعیرید",
@@ -96796,6 +96806,8 @@ const ps: Dict = {
   "comv.planned_arrival": "پلاننید رریوال",
   "comv.leg_status": "لیگ ستاتوس",
   "comv.legstatus_pending": "پاتې",
+  "comv.legstatus_pickup_assigned": "راټولول ټاکل شوي",
+  "comv.legstatus_loaded": "بار شوی",
   "comv.legstatus_in_transit": "ین ترانسیت",
   "comv.legstatus_arrived": "رریوید",
   "comv.legstatus_cleared": "ټولیرید",
