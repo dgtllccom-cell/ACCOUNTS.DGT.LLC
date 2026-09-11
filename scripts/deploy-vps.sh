@@ -30,6 +30,16 @@ echo "==> Sync working tree"
 git checkout -- api-error-log.txt 2>/dev/null || true
 git pull origin main
 
+# Self-modifying-script guard: `git pull` above can rewrite THIS file while bash
+# has already buffered it into memory, so the rest of this run would silently
+# execute stale pre-pull content (confirmed: a heap-limit fix landed here via
+# git pull but the same run's build step still ran the old unpatched command).
+# Re-exec once against the just-pulled file so every remaining line is fresh.
+if [ -z "${DEPLOY_VPS_REEXECED:-}" ]; then
+  export DEPLOY_VPS_REEXECED=1
+  exec bash "$0" "$@"
+fi
+
 echo "==> Clear compiler cache only (keep served .next output live during build)"
 rm -rf .next/cache
 
