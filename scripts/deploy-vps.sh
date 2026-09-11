@@ -34,7 +34,12 @@ echo "==> Clear compiler cache only (keep served .next output live during build)
 rm -rf .next/cache
 
 echo "==> Build (old server still serving the previous build)"
-npm run build
+# Node's default old-space heap (~2GB) is no longer enough for this codebase's
+# production build (14,931 i18n keys x 5 languages, ~450 API routes) and can OOM
+# mid-build on the VPS, leaving .next in a half-written state while set -e aborts
+# before pm2 reload (safe, but the next deploy attempt must retry the build).
+# Match the dev script's --max-old-space-size=4096 (already used by `npm run dev`).
+NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 test -f .next/BUILD_ID || { echo "!! build produced no BUILD_ID — aborting, server untouched"; exit 1; }
 
