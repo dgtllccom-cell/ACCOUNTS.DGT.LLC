@@ -7,6 +7,7 @@ import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
 const ROLE_KEY_MAP: Record<string, string> = {
   "staff user": "role.staff_user",
@@ -25,12 +26,15 @@ function localizeRoleDesc(role: string, lang: string): string {
 type OwnerCustomerRow = {
   id: string;
   customer_name: string;
+  person_code?: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
   whatsapp: string | null;
   email: string | null;
   address?: string | null;
+  country_name?: string | null;
+  city_name?: string | null;
 };
 
 type OwnerProfileRow = {
@@ -43,8 +47,13 @@ type OwnerProfileRow = {
   role: string;
 };
 
-function toOwnerOption(value: string, label: string, keywords?: string): SearchSelectOption {
-  return { value, label, keywords };
+function toOwnerOption(
+  value: string,
+  label: string,
+  keywords?: string,
+  rich?: { primaryText?: string; secondaryText?: string; code?: string; branch?: string; country?: string }
+): SearchSelectOption {
+  return { value, label, keywords, ...rich };
 }
 
 // Some bootstrap/demo profiles (dev seed users) carry non-UUID ids like "temp-super-admin"
@@ -81,6 +90,9 @@ export function BranchOwnerPicker({
   const [options, setOptions] = useState<SearchSelectOption[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [ownerKindById, setOwnerKindById] = useState<Map<string, OwnerKind>>(new Map());
+  const [customerRowById, setCustomerRowById] = useState<Map<string, OwnerCustomerRow>>(new Map());
+  const [viewOwner, setViewOwner] = useState<OwnerCustomerRow | null>(null);
+  const [editOwnerId, setEditOwnerId] = useState<string | null>(null);
 
   const defaultPlaceholder = t(lang as never, "bop.search_owner" as never, "Search owner");
   const defaultCreateLabel = t(lang as never, "bop.new_owner" as never, "New Owner");
@@ -96,23 +108,45 @@ export function BranchOwnerPicker({
 
       const next: SearchSelectOption[] = [];
       const kindById = new Map<string, OwnerKind>();
+      const customerRows = new Map<string, OwnerCustomerRow>();
       for (const row of customersRes.customers ?? []) {
         const label = row.company_name ? `${row.customer_name} (${row.company_name})` : row.customer_name;
         next.push(
           toOwnerOption(
             row.id,
             label,
-            [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email].filter(Boolean).join(" ")
+            [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email].filter(Boolean).join(" "),
+            {
+              primaryText: row.customer_name,
+              secondaryText: row.company_name || undefined,
+              code: row.person_code || undefined,
+              branch: row.city_name || undefined,
+              country: row.country_name || undefined
+            }
           )
         );
         kindById.set(row.id, "customer");
+        customerRows.set(row.id, row);
       }
       for (const row of usersRes.rows ?? []) {
         if (!UUID_RE.test(row.userId)) continue;
         const localizedRole = localizeRoleDesc(row.role, lang);
         const localizedBranch = row.branchName === "Global" ? localizeRoleDesc("Global", lang) : row.branchName;
         const label = [row.fullName, localizedRole, localizedBranch].filter(Boolean).join(" · ");
-        next.push(toOwnerOption(row.userId, label, [row.userCode, row.fullName, row.countryName, row.branchName, row.role].join(" ")));
+        next.push(
+          toOwnerOption(
+            row.userId,
+            label,
+            [row.userCode, row.fullName, row.countryName, row.branchName, row.role].join(" "),
+            {
+              primaryText: row.fullName,
+              secondaryText: localizedRole || undefined,
+              code: row.userCode || undefined,
+              branch: row.branchName === "Global" ? undefined : row.branchName || undefined,
+              country: row.countryName || undefined
+            }
+          )
+        );
         kindById.set(row.userId, "profile");
       }
 
@@ -122,6 +156,7 @@ export function BranchOwnerPicker({
       }
       setOptions(Array.from(unique.values()));
       setOwnerKindById(kindById);
+      setCustomerRowById(customerRows);
     } finally {
       setLoading(false);
     }
@@ -147,6 +182,52 @@ export function BranchOwnerPicker({
         placeholder={placeholder ?? (loading ? t(lang as never, "common.loading" as never, "Loading...") : defaultPlaceholder)}
         disabled={disabled || loading}
         options={finalOptions}
+        richList
+        viewTitle={t(lang as never, "common.view" as never, "View Details")}
+        editTitle={t(lang as never, "common.edit" as never, "Edit")}
+        printTitle={t(lang as never, "common.print" as never, "Print")}
+        onViewOption={(id) => {
+          const kind = ownerKindById.get(id);
+          if (kind !== "customer") return;
+          const row = customerRowById.get(id);
+          if (row) setViewOwner(row);
+        }}
+        onEditOption={(id) => {
+          const kind = ownerKindById.get(id);
+          if (kind !== "customer") return;
+          setEditOwnerId(id);
+        }}
+        onPrintOption={(id) => {
+          const kind = ownerKindById.get(id);
+          if (kind !== "customer") return;
+          const row = customerRowById.get(id);
+          if (!row) return;
+          openMasterProfileReportWindow({
+            lang,
+            title: t(lang as never, "hr.pp_print_title" as never, "Person / Customer Master"),
+            subtitle: t(lang as never, "hr.pp_print_subtitle" as never, "Person Master Profile"),
+            name: row.customer_name,
+            status: t(lang as never, "god.active" as never, "Active"),
+            meta: [
+              { label: t(lang as never, "hr.pp_code" as never, "Person Code"), value: row.person_code || "-" },
+              { label: t(lang as never, "roz.owner_customer" as never, "Owner / Customer"), value: row.customer_name },
+              { label: t(lang as never, "common.country" as never, "Country"), value: row.country_name || "-" },
+              { label: t(lang as never, "company_form.section_location" as never, "Location"), value: row.city_name || "-" }
+            ],
+            sections: [
+              {
+                title: t(lang as never, "hr.pp_section_details" as never, "Details"),
+                rows: [
+                  { label: t(lang as never, "hr.pp_company" as never, "Company"), value: row.company_name || "-" },
+                  { label: t(lang as never, "roz.cef_mobile_ph" as never, "Mobile / Ph"), value: row.mobile || "-" },
+                  { label: t(lang as never, "purchase.dd_whatsapp" as never, "WhatsApp"), value: row.whatsapp || "-" },
+                  { label: t(lang as never, "purchase.dd_email" as never, "Email"), value: row.email || "-" },
+                  { label: t(lang as never, "company_form.section_location" as never, "Address"), value: row.address || "-" }
+                ]
+              }
+            ]
+          });
+        }}
         onValueChange={(id) => {
           onValueChange(id);
           if (!onOwnerResolved) return;
@@ -245,6 +326,85 @@ export function BranchOwnerPicker({
                   setOpenCreate(false);
                 }
               })();
+            }}
+          />
+        </SimpleModal>
+      ) : null}
+
+      {viewOwner ? (
+        <SimpleModal
+          title={`${t(lang as never, "hr.pp_view_title" as never, "Person / Account Details")} — ${viewOwner.customer_name}`}
+          onClose={() => setViewOwner(null)}
+          className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl font-sans shadow-2xl"
+        >
+          <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
+            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+              <div>
+                <h3 className="text-base font-black tracking-wide text-slate-900 dark:text-white">{viewOwner.customer_name}</h3>
+                {viewOwner.person_code ? (
+                  <p className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewOwner.person_code}</p>
+                ) : null}
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  {t(lang as never, "hr.pp_company" as never, "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewOwner.company_name || t(lang as never, "hr.pp_independent" as never, "Independent Account")}</span>
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_mobile_phone" as never, "Mobile Phone")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-white text-sm" dir="ltr">{viewOwner.mobile || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "sed.f_whatsapp" as never, "WhatsApp")}</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">{viewOwner.whatsapp || viewOwner.mobile || "—"}</span>
+              </div>
+              <div className="sm:col-span-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_email_address" as never, "Email Address")}</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs" dir="ltr">{viewOwner.email || "—"}</span>
+              </div>
+              <div className="sm:col-span-3">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_address_location" as never, "Address / Location")}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200 text-xs">{viewOwner.address || "—"}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditOwnerId(viewOwner.id);
+                  setViewOwner(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 rounded-xl transition"
+              >
+                {t(lang as never, "hr.pp_edit_master" as never, "Edit Master")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewOwner(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
+              >
+                {t(lang as never, "common.close" as never, "Close")}
+              </button>
+            </div>
+          </div>
+        </SimpleModal>
+      ) : null}
+
+      {editOwnerId ? (
+        <SimpleModal
+          title={t(lang as never, "hr.pp_edit_person_registry" as never, "Edit Person Registry — Customer Master")}
+          onClose={() => setEditOwnerId(null)}
+          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        >
+          <CustomerForm
+            lang={guessOriginalLanguage()}
+            mode="embedded"
+            initialCustomerId={editOwnerId}
+            onClose={() => setEditOwnerId(null)}
+            onSave={async (savedId) => {
+              setEditOwnerId(null);
+              onValueChange(savedId);
+              await loadList();
             }}
           />
         </SimpleModal>

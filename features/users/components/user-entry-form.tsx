@@ -19,6 +19,7 @@ import { listCountries, type LocationCountry } from "@/features/locations/locati
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { EmployeeForm } from "@/features/hr-payroll/components/employee-form";
 import { personFullName } from "@/features/hr-payroll/components/person-picker";
+import { EmployeeDetailModal } from "@/features/users/components/user-registration-wizard";
 
 export type UserEntryKind = "super_admin" | "country" | "branch" | "agent" | "staff";
 
@@ -69,6 +70,8 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [viewEmployeeId, setViewEmployeeId] = useState<string | null>(null);
+  const [editEmployeeId, setEditEmployeeId] = useState<string | null>(null);
 
   // Location / Scope Data
   const [countries, setCountries] = useState<LocationCountry[]>([]);
@@ -207,6 +210,26 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
     }
   };
 
+  const employeeOptions = useMemo(
+    () =>
+      employees.map((emp) => {
+        const empName = personFullName(emp.person || {}) || emp.name || emp.employee_code;
+        const empCode = emp.employee_code || "EMP";
+        const branchName = emp.city_branch?.name || emp.country_branch?.name || undefined;
+        return {
+          value: emp.id,
+          label: `${empName} (${empCode}) - ${emp.department || "General"} / ${emp.designation || "Staff"}`,
+          keywords: `${empName} ${empCode} ${emp.department ?? ""} ${emp.designation ?? ""} ${branchName ?? ""}`,
+          primaryText: empName,
+          secondaryText: emp.designation || undefined,
+          code: empCode,
+          branch: branchName,
+          country: emp.country?.name || undefined
+        };
+      }),
+    [employees]
+  );
+
   const selectedCountry = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
   const selectedMainBranch = useMemo(() => mainBranches.find((b) => b.id === countryBranchId) ?? null, [mainBranches, countryBranchId]);
   const selectedCityBranch = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
@@ -300,21 +323,18 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 </Button>
               </div>
 
-              <select
+              <SearchSelect
                 value={selectedEmployeeId}
-                onChange={(e) => handleSelectEmployee(e.target.value)}
-                className="h-9 w-full rounded-lg border border-sky-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-xs dark:bg-slate-950 dark:text-slate-200"
-              >
-                <option value="">{tt("uf.choose_employee", "-- Choose Employee (or type manually below) --")}</option>
-                {employees.map((emp) => {
-                  const empName = personFullName(emp.person || {}) || emp.name || emp.employee_code;
-                  return (
-                    <option key={emp.id} value={emp.id}>
-                      {empName} ({emp.employee_code}) - {emp.department || "General"} / {emp.designation || "Staff"}
-                    </option>
-                  );
-                })}
-              </select>
+                placeholder={loadingEmployees ? tt("common.loading", "Loading...") : tt("uf.choose_employee", "-- Choose Employee (or type manually below) --")}
+                disabled={loadingEmployees}
+                options={employeeOptions}
+                richList
+                viewTitle={tt("common.view", "View Details")}
+                editTitle={tt("common.edit", "Edit")}
+                onValueChange={handleSelectEmployee}
+                onViewOption={(empId) => setViewEmployeeId(empId)}
+                onEditOption={(empId) => setEditEmployeeId(empId)}
+              />
             </div>
 
             {/* Basic Info Inputs */}
@@ -621,6 +641,38 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
           onCancel={() => setShowNewEmployeeModal(false)}
         />
       </SimpleModal>
+
+      {editEmployeeId ? (
+        <SimpleModal
+          isOpen
+          onClose={() => setEditEmployeeId(null)}
+          title={tt("urw2.edit_employee_record", "Edit Employee Master Record")}
+          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        >
+          <EmployeeForm
+            employeeId={editEmployeeId}
+            onSave={(savedId) => {
+              setEditEmployeeId(null);
+              fetchEmployees().then(() => {
+                if (savedId) handleSelectEmployee(savedId);
+              });
+            }}
+            onCancel={() => setEditEmployeeId(null)}
+          />
+        </SimpleModal>
+      ) : null}
+
+      {viewEmployeeId ? (
+        <EmployeeDetailModal
+          employeeId={viewEmployeeId}
+          employees={employees}
+          onClose={() => setViewEmployeeId(null)}
+          onEdit={(empId) => {
+            setViewEmployeeId(null);
+            setEditEmployeeId(empId);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

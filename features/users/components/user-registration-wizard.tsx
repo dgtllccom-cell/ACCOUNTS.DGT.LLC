@@ -640,7 +640,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           primaryText: `${fName} ${lName}`.trim() || empName,
           secondaryText: e.designation || undefined,
           code: empCode,
-          branch: branchName
+          branch: branchName,
+          country: e.country?.name || undefined
         };
       }),
     [uniqueHrEmployees]
@@ -2253,7 +2254,7 @@ export function UserRegistrationWizard(props: { userIdProp?: string }) {
   return <UserRegistrationWizardContent {...props} />;
 }
 
-function EmployeeDetailModal({
+export function EmployeeDetailModal({
   employeeId,
   employees,
   onClose,

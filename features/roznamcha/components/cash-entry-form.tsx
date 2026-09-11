@@ -2183,7 +2183,7 @@ export function CashEntryForm({
         onClick={() => handlePrintRegister(false)}
       >
         <Download className="h-3.5 w-3.5" />
-        {t(lang, "purchase.download_pdf", "PDF")}
+        {t(lang, "urs.a_download_pdf", "Download PDF")}
       </Button>
       <Button
         type="button"
@@ -2445,9 +2445,7 @@ export function CashEntryForm({
       ============================================================ */}
 
 
-      {/* Scope & Session Cards - Branch/User Info, Serial Numbers, Daily Cash Position -
-          same card style as the Ledger General Report so the two screens read as one
-          design language. Collapsible via the "Hide Form" toggle in the bar below. */}
+      {/* Scope & Session Cards - Branch/User Info, Serial Numbers, Daily Cash Position */}
       {showFormSection && (
       <div className="mx-4 mt-4 mb-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
@@ -2461,290 +2459,338 @@ export function CashEntryForm({
                 {t(lang, "roz.branch_user_info", "Branch / User Information")}
               </h4>
             </div>
-            <div className="p-4 flex flex-col gap-6">
-          {/* Group 1: Branch Details & Transaction Info */}
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "common.country", "Country")}</span>
-              <div className="relative flex items-center">
-                <select
-                  value={countryId}
-                  disabled={loadingCountries || (effectiveScopeMode !== "super_admin" && !isSuperAdmin)}
-                  onChange={(e) => setCountryId(e.target.value)}
-                  className="bg-transparent border-none p-0 outline-none font-bold text-blue-600 dark:text-blue-400 cursor-pointer appearance-none text-xs hover:underline"
-                >
-                  <option value="" className="text-slate-900">
-                    {isSuperAdmin
-                      ? t(lang, "roz.all_countries_super_admin", "All Countries (Super Admin View)")
-                      : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0)
-                      ? t(lang, "roz.no_country_assigned", "No Country Assigned")
-                      : t(lang, "roz.select_country", "Select Country")}
-                  </option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>
-                  ))}
-                </select>
-              </div>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Left Column: Branch Details */}
+              <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "common.country", "Country")}</span>
+                <div className="relative flex items-center">
+                  <select
+                    value={countryId}
+                    disabled={loadingCountries || (effectiveScopeMode !== "super_admin" && !isSuperAdmin)}
+                    onChange={(e) => setCountryId(e.target.value)}
+                    className="bg-transparent border-none p-0 outline-none font-bold text-blue-600 dark:text-blue-400 cursor-pointer appearance-none text-xs hover:underline"
+                  >
+                    <option value="" className="text-slate-900">
+                      {isSuperAdmin
+                        ? t(lang, "roz.all_countries_super_admin", "All Countries (Super Admin View)")
+                        : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0)
+                        ? t(lang, "roz.no_country_assigned", "No Country Assigned")
+                        : t(lang, "roz.select_country", "Select Country")}
+                    </option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_category", "Category")}</span>
-              <div className="relative flex items-center">
-                <select
-                  value={branchCategory}
-                  onChange={(e) => {
-                    setBranchCategory(e.target.value as "business" | "agent");
-                    setCityBranchId("");
-                  }}
-                  className="bg-transparent border-none p-0 outline-none font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer appearance-none text-xs hover:underline"
-                >
-                  <option value="business" className="text-slate-900">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
-                  <option value="agent" className="text-slate-900">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
-                </select>
-              </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_category", "Category")}</span>
+                <div className="relative flex items-center">
+                  <select
+                    value={branchCategory}
+                    onChange={(e) => {
+                      setBranchCategory(e.target.value as "business" | "agent");
+                      setCityBranchId("");
+                    }}
+                    className="bg-transparent border-none p-0 outline-none font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer appearance-none text-xs hover:underline"
+                  >
+                    <option value="business" className="text-slate-900">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
+                    <option value="agent" className="text-slate-900">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
+                  </select>
+                </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_name", "Branch Name")}</span>
-              <div className="relative flex items-center">
-                <select
-                  value={countryBranchId}
-                  disabled={!countryId}
-                  onChange={(e) => setCountryBranchId(e.target.value)}
-                  className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline"
-                >
-                  <option value="" className="text-slate-900">{t(lang, "roz.select_branch", "Select Branch")}</option>
-                  {mainBranches.map((b) => (
-                    <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
-                  ))}
-                </select>
-              </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_name", "Branch Name")}</span>
+                <div className="relative flex items-center">
+                  <select
+                    value={countryBranchId}
+                    disabled={!countryId}
+                    onChange={(e) => setCountryBranchId(e.target.value)}
+                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline"
+                  >
+                    <option value="" className="text-slate-900">{t(lang, "roz.select_branch", "Select Branch")}</option>
+                    {mainBranches.map((b) => (
+                      <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.branch_code", "Branch Code")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {selectedMainBranch?.code || "—"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.city_branch", "City Branch")}</span>
-              <div className="relative flex items-center">
-                <select
-                  value={cityBranchId}
-                  disabled={!countryBranchId}
-                  onChange={(e) => setCityBranchId(e.target.value)}
-                  className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate max-w-[200px]"
-                >
-                  <option value="" className="text-slate-900">{t(lang, "roz.select_city_branch", "Select City Branch")}</option>
-                  {cityBranches.map((b) => (
-                    <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.city_code", "City Code")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {selectedCityBranch?.code || "—"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.date", "Date")}</span>
-              <input
-                type="date"
-                value={entryDate}
-                onChange={(e) => setEntryDate(e.target.value)}
-                className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-150 cursor-pointer text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.created_by", "Created By")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}>
-                {activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.approved_by", "Approved By")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeApprover || t(lang, "roz.pending", "Pending")}>
-                {activeApprover || t(lang, "roz.pending", "Pending")}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.status", "Status")}</span>
-              <div>
-                <span className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border",
-                  activeStatus === "approved"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400"
-                    : activeStatus === "cancelled"
-                    ? "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
-                    : "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400"
-                )}>
-                  {activeStatus || t(lang, "roz.draft", "Draft")}
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.branch_code", "Branch Code")}</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                  {selectedMainBranch?.code || "—"}
                 </span>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.city_branch", "City Branch")}</span>
+                <div className="relative flex items-center">
+                  <select
+                    value={cityBranchId}
+                    disabled={!countryBranchId}
+                    onChange={(e) => setCityBranchId(e.target.value)}
+                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate max-w-[200px]"
+                  >
+                    <option value="" className="text-slate-900">{t(lang, "roz.select_city_branch", "Select City Branch")}</option>
+                    {cityBranches.map((b) => (
+                      <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.city_code", "City Code")}</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                  {selectedCityBranch?.code || "—"}
+                </span>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.date", "Date")}</span>
+                <input
+                  type="date"
+                  value={entryDate}
+                  onChange={(e) => setEntryDate(e.target.value)}
+                  className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-150 cursor-pointer text-xs"
+                />
               </div>
-            </div>
-          </div>
 
-          {/* Group 2: User Context */}
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_name", "User Name")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {session?.user?.fullName || t(lang, "roz.system_user", "System User")}
-              </span>
+              {/* Right Column: Transaction Info & User Context */}
+              <div className="flex flex-col justify-between gap-3">
+                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.created_by", "Created By")}</span>
+                  <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}>
+                    {activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}
+                  </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_id", "User ID")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                {session?.user?.id?.slice(0, 8).toUpperCase() || "ADM-001"}
-              </span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.approved_by", "Approved By")}</span>
+                  <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeApprover || t(lang, "roz.pending", "Pending")}>
+                    {activeApprover || t(lang, "roz.pending", "Pending")}
+                  </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.team", "Team")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {t(lang, "roz.accounts_team", "Accounts Team")}
-              </span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.status", "Status")}</span>
+                  <div>
+                    <span className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border",
+                      activeStatus === "approved"
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400"
+                        : activeStatus === "cancelled"
+                        ? "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
+                        : "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400"
+                    )}>
+                      {activeStatus || t(lang, "roz.draft", "Draft")}
+                    </span>
+                  </div>
+                </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.time", "Time")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {loginTimeText || "—"}
-              </span>
-            </div>
-          </div>
+                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_name", "User Name")}</span>
+                  <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate">
+                    {session?.user?.fullName || t(lang, "roz.system_user", "System User")}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_id", "User ID")}</span>
+                  <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
+                    {session?.user?.id?.slice(0, 8).toUpperCase() || "ADM-001"}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.team", "Team")}</span>
+                  <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                    {t(lang, "roz.accounts_team", "Accounts Team")}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.time", "Time")}</span>
+                  <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                    {loginTimeText || "—"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Card 2: Serial Numbers & Exchange Rate */}
-          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
-              <div className="bg-indigo-600 p-1 rounded-full text-white">
-                <Hash className="h-3.5 w-3.5" />
+          <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div>
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
+                <div className="bg-indigo-600 p-1 rounded-full text-white">
+                  <Hash className="h-3.5 w-3.5" />
+                </div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
+                  {t(lang, "roz.serial_numbers_exchange", "Serial Numbers & Exchange Rate")}
+                </h4>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
-                {t(lang, "roz.serial_numbers_exchange", "Serial Numbers & Exchange Rate")}
-              </h4>
+
+              <div className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Left sub-column: Serials */}
+                  <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.journal_serial", "Journal Serial")}</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {savedSerials?.superAdmin || liveSerials.superAdmin}
+                      {!savedSerials?.superAdmin && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.country_serial", "Country Serial")}</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {savedSerials?.country || liveSerials.country}
+                      {!savedSerials?.country && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.branch_serial", "Branch Serial")}</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {savedSerials?.branch || liveSerials.branch}
+                      {!savedSerials?.branch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.main_branch_sr", "Main Branch Sr")}</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {(savedSerials as any)?.mainBranch || liveSerials.mainBranch}
+                      {!(savedSerials as any)?.mainBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.city_branch_sr", "City Branch Sr")}</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {(savedSerials as any)?.cityBranch || liveSerials.cityBranch}
+                      {!(savedSerials as any)?.cityBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.entry_serial", "Entry Serial")}</span>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                      {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
+                      {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+                    </span>
+                  </div>
+
+                  {/* Right sub-column: Exchange Rate */}
+                  <div className="grid grid-cols-[75px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
+                    <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                      {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
+                    <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
+                      {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                      {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
+                    </span>
+
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                      {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="p-4">
-          {/* Group 3: Serials */}
+
+            {/* Voice Form Fill embedded at bottom of Card 2 */}
+            <div className="p-3 pt-0">
+              <VoiceFormFill
+                context="roznamcha"
+                lang={lang}
+                compact={true}
+                fieldLabels={{
+                  finalAmount: t(lang, "roz.cef_amount", "Amount"),
+                  originalCurrency: t(lang, "roz.cef_currency", "Currency"),
+                  counterpartyName: t(lang, "roz.cef_party", "Party"),
+                  transactionType: t(lang, "roz.cef_direction", "Direction"),
+                }}
+                onApply={(f) => {
+                  if (f.finalAmount != null && f.finalAmount !== "") setCalcAmount(String(f.finalAmount));
+                  if (typeof f.originalCurrency === "string" && f.originalCurrency) setCurrency(f.originalCurrency.toUpperCase());
+                  if (f.transactionType === "debit") setPaymentMode("DEBIT");
+                  else if (f.transactionType === "credit") setPaymentMode("CREDIT");
+                  const bits = [
+                    f.counterpartyName ? `${t(lang, "roz.cef_party", "Party")}: ${f.counterpartyName}` : null,
+                    `(${t(lang, "roz.cef_voice_source", "entered by voice")})`,
+                  ].filter(Boolean);
+                  setNarration((prev) => prev || bits.join(" · "));
+                  setShowPaymentWorkReport(true);
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Column 3: Daily Cash Position + Location Backdrop */}
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.journal_serial", "Journal Serial")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {savedSerials?.superAdmin || liveSerials.superAdmin}
-                {!savedSerials?.superAdmin && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.country_serial", "Country Serial")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {savedSerials?.country || liveSerials.country}
-                {!savedSerials?.country && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.branch_serial", "Branch Serial")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {savedSerials?.branch || liveSerials.branch}
-                {!savedSerials?.branch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.main_branch_sr", "Main Branch Sr")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {(savedSerials as any)?.mainBranch || liveSerials.mainBranch}
-                {!(savedSerials as any)?.mainBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.city_branch_sr", "City Branch Sr")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {(savedSerials as any)?.cityBranch || liveSerials.cityBranch}
-                {!(savedSerials as any)?.cityBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.entry_serial", "Entry Serial")}</span>
-              <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
-                {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-              </span>
-            </div>
-          </div>
-
-          {/* Group 4: Exchange Rate — moved here from the Branch/User card so this
-              card's title ("Serial Numbers & Exchange Rate") matches its content. */}
-          <div className="flex flex-col gap-1.5 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
-              <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
-              </span>
-            </div>
-          </div>
-            </div>
-          </div>
-
-          {/* Card 3: Daily Cash Position */}
-          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-              <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                <span className="bg-emerald-600 p-1 rounded-full text-white flex items-center justify-center">
-                  <FileText className="h-3.5 w-3.5" />
+            {/* Card 3A: Daily Cash Position */}
+            <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                  <span className="bg-emerald-600 p-1 rounded-full text-white flex items-center justify-center">
+                    <FileText className="h-3.5 w-3.5" />
+                  </span>
+                  {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
                 </span>
-                {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
-              </span>
-              <button
-                type="button"
-                onClick={() => { fetchCashSummary(); fetchDailyRate(); }}
-                disabled={loadingSummary || !countryId}
-                className="text-[9.5px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
-                {t(lang, "common.refresh", "Refresh")}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => { fetchCashSummary(); fetchDailyRate(); }}
+                  disabled={loadingSummary || !countryId}
+                  className="text-[9.5px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 inline-flex items-center gap-1"
+                >
+                  <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
+                  {t(lang, "common.refresh", "Refresh")}
+                </button>
+              </div>
+
+              <div className="p-4">
+                <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 text-right self-center">
+                    {t(lang, "roz.total_credit_label", "Total Credit")}
+                  </span>
+                  <span className="font-extrabold text-emerald-700 dark:text-emerald-300 font-mono text-right tabular-nums text-sm">
+                    {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit || recentEntriesSummary?.totalCredit || 0)}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 text-right self-center">
+                    {t(lang, "roz.total_debit_label", "Total Debit")}
+                  </span>
+                  <span className="font-extrabold text-rose-700 dark:text-rose-300 font-mono text-right tabular-nums text-sm">
+                    {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit || recentEntriesSummary?.totalDebit || 0)}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 text-right self-center">
+                    {t(lang, "roz.current_balance", "Current Balance")}
+                  </span>
+                  <span className="font-extrabold text-blue-700 dark:text-blue-300 font-mono text-right tabular-nums text-sm">
+                    {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? (recentEntriesSummary?.balance || 0))}
+                  </span>
+
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right self-center">
+                    {t(lang, "roz.total_entries", "Total Entries")}
+                  </span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-150 font-mono text-right tabular-nums text-sm">
+                    {loadingSummary ? "…" : (cashSummary?.entryCount || recentEntries.length || 0)}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="p-4">
-            <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 text-right self-center">
-                {t(lang, "roz.total_credit_label", "Total Credit")}
-              </span>
-              <span className="font-extrabold text-emerald-700 dark:text-emerald-300 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit || recentEntriesSummary?.totalCredit || 0)}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 text-right self-center">
-                {t(lang, "roz.total_debit_label", "Total Debit")}
-              </span>
-              <span className="font-extrabold text-rose-700 dark:text-rose-300 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit || recentEntriesSummary?.totalDebit || 0)}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 text-right self-center">
-                {t(lang, "roz.current_balance", "Current Balance")}
-              </span>
-              <span className="font-extrabold text-blue-700 dark:text-blue-300 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? (recentEntriesSummary?.balance || 0))}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right self-center">
-                {t(lang, "roz.total_entries", "Total Entries")}
-              </span>
-              <span className="font-extrabold text-slate-800 dark:text-slate-100 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : (cashSummary?.entryCount || recentEntries.length || 0)}
-              </span>
-            </div>
-            </div>
+            {/* Card 3B: Location Backdrop (Cash / Roznamcha Entry) */}
+            <LocationBackdrop
+              selection={backdropSelection}
+              title={t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry")}
+              subtitle={selectedCountry ? `${selectedCountry.name}${selectedMainBranch ? ` - ${selectedMainBranch.name}` : ""}` : pageTitle}
+              className="min-h-[96px] rounded-xl overflow-hidden shadow-sm"
+            >
+              <div className="flex flex-wrap items-center gap-2 px-3 pb-2.5">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
+                  <FileText className="h-3 w-3" />
+                  {t(lang, "roz.tab_cash_entry", "Cash Entry")}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/80 backdrop-blur-sm">
+                  <Hash className="h-3 w-3" />
+                  {t(lang, "roz.tab_roznamcha", "Roznamcha")}
+                </span>
+                {(selectedCountry || selectedMainBranch || selectedCityBranch) && (
+                  <span className="text-[11px] font-semibold text-white/70 truncate">
+                    {[selectedCountry?.name, selectedCityBranch?.name || selectedMainBranch?.name].filter(Boolean).join(" > ")}
+                  </span>
+                )}
+              </div>
+            </LocationBackdrop>
           </div>
 
       </div>
       )}
 
-      {/* Selected Account bar — a single compact strip (not a 4th grid card) showing
-          exactly which account the next entry will post against. Only real fields
-          already returned by the ledger-lookup API are shown (accountKind for
-          Category, companyName for Company, ledgerCurrency for Currency) — no
-          API/DB changes. */}
+      {/* Selected Account bar — shown when counter ledger is picked */}
       {selectedCounterLedger && (
         <div className="mx-4 mb-3 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
@@ -2813,59 +2859,6 @@ export function CashEntryForm({
       )}
 
       <div className="space-y-4 px-4 pb-4">
-        <LocationBackdrop
-          selection={backdropSelection}
-          title={t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry")}
-          className="min-h-[56px]"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
-                <FileText className="h-3 w-3" />
-                {t(lang, "roz.tab_cash_entry", "Cash Entry")}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/80 backdrop-blur-sm">
-                <Hash className="h-3 w-3" />
-                {t(lang, "roz.tab_roznamcha", "Roznamcha")}
-              </span>
-              {(selectedCountry || selectedMainBranch || selectedCityBranch) && (
-                <span className="text-[11px] font-semibold text-white/70">
-                  {[selectedCountry?.name, selectedCityBranch?.name, selectedMainBranch?.name].filter(Boolean).join(" > ")}
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowFormSection((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm transition-colors"
-            >
-              <ChevronDown className={cn("h-3 w-3 transition-transform", !showFormSection && "-rotate-90")} />
-              {showFormSection ? t(lang, "roz.hide_form", "Hide Form") : t(lang, "roz.show_form", "Show Form")}
-            </button>
-          </div>
-        </LocationBackdrop>
-
-        <VoiceFormFill
-          context="roznamcha"
-          lang={lang}
-          fieldLabels={{
-            finalAmount: t(lang, "roz.cef_amount", "Amount"),
-            originalCurrency: t(lang, "roz.cef_currency", "Currency"),
-            counterpartyName: t(lang, "roz.cef_party", "Party"),
-            transactionType: t(lang, "roz.cef_direction", "Direction"),
-          }}
-          onApply={(f) => {
-            if (f.finalAmount != null && f.finalAmount !== "") setCalcAmount(String(f.finalAmount));
-            if (typeof f.originalCurrency === "string" && f.originalCurrency) setCurrency(f.originalCurrency.toUpperCase());
-            if (f.transactionType === "debit") setPaymentMode("DEBIT");
-            else if (f.transactionType === "credit") setPaymentMode("CREDIT");
-            const bits = [
-              f.counterpartyName ? `${t(lang, "roz.cef_party", "Party")}: ${f.counterpartyName}` : null,
-              `(${t(lang, "roz.cef_voice_source", "entered by voice")})`,
-            ].filter(Boolean);
-            setNarration((prev) => prev || bits.join(" · "));
-          }}
-        />
 
         {intakeDraft.draft && !intakeBannerDismissed ? (
           <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-xs dark:border-violet-800 dark:bg-violet-950/20">
