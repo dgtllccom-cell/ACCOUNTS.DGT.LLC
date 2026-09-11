@@ -1,6 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type PartyRoleKey = "supplier" | "importer" | "exporter" | "notify_party" | "buyer";
 
@@ -55,6 +56,8 @@ export type ClearingCustomerOrderInput = {
   countryId?: string | null;
   countryBranchId?: string | null;
   cityBranchId?: string | null;
+  clearingAgentId?: string | null;
+  createdBy?: string | null;
   // By Road truck (either a registered/permanent truck or a temporary one)
   truckId?: string | null;
   truckRegistrationType?: "registered" | "temporary" | null;
@@ -64,7 +67,74 @@ export type ClearingCustomerOrderInput = {
   truckOwnerName?: string | null;
   truckTransportCompany?: string | null;
   truckDetails?: Record<string, unknown> | null;
+  loadType?: "full_truck" | "partial_load" | "container_haulage" | null;
+  loadingStateProvinceId?: string | null;
+  loadingDistrictId?: string | null;
+  loadingCityId?: string | null;
+  loadingAreaId?: string | null;
+  receivingStateProvinceId?: string | null;
+  receivingDistrictId?: string | null;
+  receivingCityId?: string | null;
+  receivingAreaId?: string | null;
+  loadingSourceWarehouseId?: string | null;
+  loadingSourceContainerRef?: string | null;
+  goodsQuantity?: number | null;
+  goodsUnit?: string | null;
+  goodsBagsCartons?: number | null;
+  goodsGrossWeight?: number | null;
+  goodsEmptyWeight?: number | null;
+  goodsNetWeight?: number | null;
+  legs?: OrderLegInput[];
 };
+
+export type OrderLegInput = {
+  id?: string | null;
+  legNo?: number | null;
+  fromCountryId?: string | null;
+  fromCountryName?: string | null;
+  toCountryId?: string | null;
+  toCountryName?: string | null;
+  fromLocationText?: string | null;
+  toLocationText?: string | null;
+  transportMode?: "by_sea" | "by_road" | "by_air" | "by_rail" | null;
+  responsibleCountryBranchId?: string | null;
+  responsibleCityBranchId?: string | null;
+  responsibleClearingAgentId?: string | null;
+  truckId?: string | null;
+  truckRegistrationType?: "registered" | "temporary" | null;
+  truckNumber?: string | null;
+  truckDriverName?: string | null;
+  truckDriverMobile?: string | null;
+  shippingLineId?: string | null;
+  vesselName?: string | null;
+  voyageNumber?: string | null;
+  containerNumber?: string | null;
+  sealNumber?: string | null;
+  blNumber?: string | null;
+  portOfLoading?: string | null;
+  portOfDischarge?: string | null;
+  etd?: string | null;
+  eta?: string | null;
+  customsCountryId?: string | null;
+  customsPointText?: string | null;
+  customsClearingAgentId?: string | null;
+  clearanceType?: "import" | "export" | "transit" | null;
+  dutyTreatment?: "duty_payable" | "no_duty_exempt" | "transit_bonded" | "pending" | null;
+  dutyAmount?: number | null;
+  dutyCurrency?: string | null;
+  dutyPayer?: string | null;
+  customsReceiptRef?: string | null;
+  customsClearanceDate?: string | null;
+  plannedDeparture?: string | null;
+  actualDeparture?: string | null;
+  plannedArrival?: string | null;
+  actualArrival?: string | null;
+  status?: string | null;
+  handoverId?: string | null;
+  remarks?: string | null;
+};
+
+export type ClearingCustomerOrderLegRow = Record<string, any> & { id: string; order_id: string };
 
 export type ClearingCustomerOrderPartyRow = {
   id: string;
@@ -121,6 +191,61 @@ function normalizeLinks(links: PartyLinkInput[] | undefined | null, fallbackPart
   return Array.from(unique.values());
 }
 
+const LEG_TRANSPORT_MODES = new Set(["by_sea", "by_road", "by_air", "by_rail"]);
+const LEG_TRUCK_REG_TYPES = new Set(["registered", "temporary"]);
+const LEG_CLEARANCE_TYPES = new Set(["import", "export", "transit"]);
+const LEG_DUTY_TREATMENTS = new Set(["duty_payable", "no_duty_exempt", "transit_bonded", "pending"]);
+
+function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[] {
+  return (legs ?? [])
+    .map((leg, index) => ({
+      legNo: leg.legNo && leg.legNo > 0 ? leg.legNo : index + 1,
+      fromCountryId: trimOrNull(leg.fromCountryId),
+      fromCountryName: trimOrNull(leg.fromCountryName),
+      toCountryId: trimOrNull(leg.toCountryId),
+      toCountryName: trimOrNull(leg.toCountryName),
+      fromLocationText: trimOrNull(leg.fromLocationText),
+      toLocationText: trimOrNull(leg.toLocationText),
+      transportMode: LEG_TRANSPORT_MODES.has(String(leg.transportMode)) ? (leg.transportMode as OrderLegInput["transportMode"]) : null,
+      responsibleCountryBranchId: trimOrNull(leg.responsibleCountryBranchId),
+      responsibleCityBranchId: trimOrNull(leg.responsibleCityBranchId),
+      responsibleClearingAgentId: trimOrNull(leg.responsibleClearingAgentId),
+      truckId: trimOrNull(leg.truckId),
+      truckRegistrationType: LEG_TRUCK_REG_TYPES.has(String(leg.truckRegistrationType)) ? (leg.truckRegistrationType as OrderLegInput["truckRegistrationType"]) : null,
+      truckNumber: trimOrNull(leg.truckNumber),
+      truckDriverName: trimOrNull(leg.truckDriverName),
+      truckDriverMobile: trimOrNull(leg.truckDriverMobile),
+      shippingLineId: trimOrNull(leg.shippingLineId),
+      vesselName: trimOrNull(leg.vesselName),
+      voyageNumber: trimOrNull(leg.voyageNumber),
+      containerNumber: trimOrNull(leg.containerNumber),
+      sealNumber: trimOrNull(leg.sealNumber),
+      blNumber: trimOrNull(leg.blNumber),
+      portOfLoading: trimOrNull(leg.portOfLoading),
+      portOfDischarge: trimOrNull(leg.portOfDischarge),
+      etd: leg.etd || null,
+      eta: leg.eta || null,
+      customsCountryId: trimOrNull(leg.customsCountryId),
+      customsPointText: trimOrNull(leg.customsPointText),
+      customsClearingAgentId: trimOrNull(leg.customsClearingAgentId),
+      clearanceType: LEG_CLEARANCE_TYPES.has(String(leg.clearanceType)) ? (leg.clearanceType as OrderLegInput["clearanceType"]) : null,
+      dutyTreatment: LEG_DUTY_TREATMENTS.has(String(leg.dutyTreatment)) ? (leg.dutyTreatment as OrderLegInput["dutyTreatment"]) : null,
+      dutyAmount: typeof leg.dutyAmount === "number" ? leg.dutyAmount : null,
+      dutyCurrency: trimOrNull(leg.dutyCurrency),
+      dutyPayer: trimOrNull(leg.dutyPayer),
+      customsReceiptRef: trimOrNull(leg.customsReceiptRef),
+      customsClearanceDate: leg.customsClearanceDate || null,
+      plannedDeparture: leg.plannedDeparture || null,
+      actualDeparture: leg.actualDeparture || null,
+      plannedArrival: leg.plannedArrival || null,
+      actualArrival: leg.actualArrival || null,
+      status: trimOrNull(leg.status) ?? "pending",
+      handoverId: trimOrNull(leg.handoverId),
+      remarks: trimOrNull(leg.remarks)
+    }))
+    .filter((leg) => leg.fromCountryId || leg.toCountryId || leg.fromLocationText || leg.toLocationText || leg.transportMode);
+}
+
 async function withOrderDb<T>(fn: (sql: any) => Promise<T>): Promise<T> {
   const result = await withLocalPg(async (sql) => fn(sql));
   if (result === null) {
@@ -132,6 +257,7 @@ async function withOrderDb<T>(fn: (sql: any) => Promise<T>): Promise<T> {
 async function syncOrderTranslations(
   order: Record<string, any>,
   links: ClearingCustomerOrderPartyRow[],
+  legs: ClearingCustomerOrderLegRow[],
   originalLanguage: SupportedLanguage
 ) {
   await syncRecordTranslations({
@@ -148,46 +274,83 @@ async function syncOrderTranslations(
       originalLanguage
     });
   }
+  for (const leg of legs) {
+    await syncRecordTranslations({
+      table: "clearing_customer_order_legs",
+      recordId: leg.id,
+      record: leg,
+      originalLanguage
+    });
+  }
 }
 
-function groupLinksByOrder(links: ClearingCustomerOrderPartyRow[]) {
-  const map = new Map<string, ClearingCustomerOrderPartyRow[]>();
-  for (const link of links) {
-    if (!map.has(link.order_id)) map.set(link.order_id, []);
-    map.get(link.order_id)!.push(link);
+function groupByOrder<T extends { order_id: string }>(rows: T[]) {
+  const map = new Map<string, T[]>();
+  for (const row of rows) {
+    if (!map.has(row.order_id)) map.set(row.order_id, []);
+    map.get(row.order_id)!.push(row);
   }
   return map;
 }
 
-export async function listCustomerOrders(status?: string | null) {
+export type CustomerOrderScopeFilter = {
+  isSuperAdmin: boolean;
+  countryIds?: string[] | null;
+  countryBranchIds?: string[] | null;
+  cityBranchIds?: string[] | null;
+  clearingAgentIds?: string[] | null;
+  createdByUserId?: string | null;
+};
+
+export async function listCustomerOrders(status?: string | null, scope?: CustomerOrderScopeFilter | null) {
   return await withOrderDb(async (sql) => {
-    const orders = status && status !== "all"
-      ? await sql`
-          select *
-          from public.clearing_customer_orders
-          where deleted_at is null and status = ${status}
-          order by created_at desc
-        `
-      : await sql`
-          select *
-          from public.clearing_customer_orders
-          where deleted_at is null
-          order by created_at desc
-        `;
+    const conditions: any[] = [sql`deleted_at is null`];
+    if (status && status !== "all") conditions.push(sql`status = ${status}`);
+
+    if (scope && !scope.isSuperAdmin) {
+      // Priority order matches enforceScopeFilter: clearing-agent isolation first (shipping-scoped
+      // logins), then city branch, then country branch, then country, then "only what I created"
+      // for a plain agent/staff user with no elevated scope of their own — narrowest available wins.
+      if (scope.clearingAgentIds && scope.clearingAgentIds.length > 0) {
+        conditions.push(sql`clearing_agent_id = ANY(${scope.clearingAgentIds}::uuid[])`);
+      } else if (scope.cityBranchIds && scope.cityBranchIds.length > 0) {
+        conditions.push(sql`city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
+      } else if (scope.countryBranchIds && scope.countryBranchIds.length > 0) {
+        conditions.push(sql`country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
+      } else if (scope.countryIds && scope.countryIds.length > 0) {
+        conditions.push(sql`country_id = ANY(${scope.countryIds}::uuid[])`);
+      } else if (scope.createdByUserId) {
+        conditions.push(sql`created_by = ${scope.createdByUserId}::uuid`);
+      } else {
+        // No scope at all — fail safe to nothing, matching enforceScopeFilter's own fail-safe.
+        conditions.push(sql`id = '00000000-0000-0000-0000-000000000000'::uuid`);
+      }
+    }
+
+    let whereClause = conditions[0];
+    for (let i = 1; i < conditions.length; i++) whereClause = sql`${whereClause} and ${conditions[i]}`;
+
+    const orders = await sql`
+      select * from public.clearing_customer_orders
+      where ${whereClause}
+      order by created_at desc
+    `;
 
     const orderIds = (orders ?? []).map((row: any) => row.id).filter(Boolean);
-    const links = orderIds.length
-      ? await sql`
-          select *
-          from public.clearing_customer_order_parties
-          where deleted_at is null
-            and order_id = ANY(${orderIds}::uuid[])
-          order by created_at asc
-        `
-      : [];
+    const [links, legs] = orderIds.length
+      ? await Promise.all([
+          sql`select * from public.clearing_customer_order_parties where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by created_at asc`,
+          sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by leg_no asc`
+        ])
+      : [[], []];
 
-    const linksByOrder = groupLinksByOrder(links as ClearingCustomerOrderPartyRow[]);
-    return (orders ?? []).map((row: any) => ({ ...row, party_links: linksByOrder.get(row.id) ?? [] })) as ClearingCustomerOrderRow[];
+    const linksByOrder = groupByOrder(links as ClearingCustomerOrderPartyRow[]);
+    const legsByOrder = groupByOrder(legs as ClearingCustomerOrderLegRow[]);
+    return (orders ?? []).map((row: any) => ({
+      ...row,
+      party_links: linksByOrder.get(row.id) ?? [],
+      legs: legsByOrder.get(row.id) ?? []
+    })) as ClearingCustomerOrderRow[];
   });
 }
 
@@ -200,13 +363,15 @@ export async function getCustomerOrderById(id: string) {
       limit 1
     `;
     if (!order) return null;
-    const links = await sql`
-      select *
-      from public.clearing_customer_order_parties
-      where deleted_at is null and order_id = ${id}::uuid
-      order by created_at asc
-    `;
-    return { ...(order as Record<string, any>), party_links: links as ClearingCustomerOrderPartyRow[] } as ClearingCustomerOrderRow;
+    const [links, legs] = await Promise.all([
+      sql`select * from public.clearing_customer_order_parties where deleted_at is null and order_id = ${id}::uuid order by created_at asc`,
+      sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ${id}::uuid order by leg_no asc`
+    ]);
+    return {
+      ...(order as Record<string, any>),
+      party_links: links as ClearingCustomerOrderPartyRow[],
+      legs: legs as ClearingCustomerOrderLegRow[]
+    } as ClearingCustomerOrderRow;
   });
 }
 
@@ -216,12 +381,29 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       const now = new Date().toISOString();
       const orderId = input.id ?? null;
       const hasPartyLinksPayload = input.partyLinks !== undefined;
+      const hasLegsPayload = input.legs !== undefined;
       let orderNo = trimOrNull(input.orderNo);
 
+      // The permanent "Global Bill / Shipping Number" — a single atomic, never-reused
+      // sequence (not a count(*)+1 scheme, which is race-prone and rebases on delete).
       if (!orderId && !orderNo) {
-        const [countRow] = await tx`select count(*)::int as count from public.clearing_customer_orders where deleted_at is null`;
-        const year = new Date().getFullYear();
-        orderNo = `CL-ORD-${year}-${String(Number(countRow?.count || 0) + 1).padStart(4, "0")}`;
+        const [seqRow] = await tx`select public.next_entity_serial('global', 'GLOBAL', 'clearing_customer_orders', 'CL-ORD') as serial`;
+        orderNo = seqRow?.serial ?? null;
+      }
+
+      let allocatedSerials: { superAdminSerial: string | null; countrySerial: string | null; branchSerial: string | null; entrySerial: string | null } = {
+        superAdminSerial: null, countrySerial: null, branchSerial: null, entrySerial: null
+      };
+      if (!orderId) {
+        try {
+          allocatedSerials = await allocateFormSerials("clearing_customer_orders", {
+            countryId: input.countryId ?? null,
+            branchKey: input.cityBranchId ?? input.countryBranchId ?? null,
+            prefix: "CCO"
+          });
+        } catch (err) {
+          console.warn("Serial allocation failed for customer order (non-fatal):", err);
+        }
       }
 
       const orderPayload = {
@@ -259,11 +441,32 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         expected_loading_date: input.expectedLoadingDate || new Date().toISOString(),
         remarks: trimOrNull(input.remarks),
         status: trimOrNull(input.status) ?? "pending",
+        country_id: trimOrNull(input.countryId),
+        country_branch_id: trimOrNull(input.countryBranchId),
+        city_branch_id: trimOrNull(input.cityBranchId),
+        clearing_agent_id: trimOrNull(input.clearingAgentId),
+        load_type: input.loadType ?? null,
+        loading_state_province_id: trimOrNull(input.loadingStateProvinceId),
+        loading_district_id: trimOrNull(input.loadingDistrictId),
+        loading_city_id: trimOrNull(input.loadingCityId),
+        loading_area_id: trimOrNull(input.loadingAreaId),
+        receiving_state_province_id: trimOrNull(input.receivingStateProvinceId),
+        receiving_district_id: trimOrNull(input.receivingDistrictId),
+        receiving_city_id: trimOrNull(input.receivingCityId),
+        receiving_area_id: trimOrNull(input.receivingAreaId),
+        loading_source_warehouse_id: trimOrNull(input.loadingSourceWarehouseId),
+        loading_source_container_ref: trimOrNull(input.loadingSourceContainerRef),
+        goods_quantity: typeof input.goodsQuantity === "number" ? input.goodsQuantity : null,
+        goods_unit: trimOrNull(input.goodsUnit),
+        goods_bags_cartons: typeof input.goodsBagsCartons === "number" ? input.goodsBagsCartons : null,
+        goods_gross_weight: typeof input.goodsGrossWeight === "number" ? input.goodsGrossWeight : null,
+        goods_empty_weight: typeof input.goodsEmptyWeight === "number" ? input.goodsEmptyWeight : null,
+        goods_net_weight: typeof input.goodsNetWeight === "number" ? input.goodsNetWeight : null,
         updated_at: now
       };
 
-      // By Road truck linkage — only kept for road/truck transport modes.
-      const isRoad = ["by_road", "by_truck"].includes(orderPayload.transport_mode);
+      // By Road truck linkage — only kept for road transport.
+      const isRoad = orderPayload.transport_mode === "by_road";
       const regType = input.truckRegistrationType === "registered" || input.truckRegistrationType === "temporary"
         ? input.truckRegistrationType : null;
       const truckPayload = isRoad ? {
@@ -319,6 +522,27 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               expected_loading_date = ${orderPayload.expected_loading_date},
               remarks = ${orderPayload.remarks},
               status = ${orderPayload.status},
+              country_id = coalesce(${orderPayload.country_id}::uuid, country_id),
+              country_branch_id = coalesce(${orderPayload.country_branch_id}::uuid, country_branch_id),
+              city_branch_id = coalesce(${orderPayload.city_branch_id}::uuid, city_branch_id),
+              clearing_agent_id = coalesce(${orderPayload.clearing_agent_id}::uuid, clearing_agent_id),
+              load_type = ${orderPayload.load_type},
+              loading_state_province_id = ${orderPayload.loading_state_province_id}::uuid,
+              loading_district_id = ${orderPayload.loading_district_id}::uuid,
+              loading_city_id = ${orderPayload.loading_city_id}::uuid,
+              loading_area_id = ${orderPayload.loading_area_id}::uuid,
+              receiving_state_province_id = ${orderPayload.receiving_state_province_id}::uuid,
+              receiving_district_id = ${orderPayload.receiving_district_id}::uuid,
+              receiving_city_id = ${orderPayload.receiving_city_id}::uuid,
+              receiving_area_id = ${orderPayload.receiving_area_id}::uuid,
+              loading_source_warehouse_id = ${orderPayload.loading_source_warehouse_id}::uuid,
+              loading_source_container_ref = ${orderPayload.loading_source_container_ref},
+              goods_quantity = ${orderPayload.goods_quantity},
+              goods_unit = ${orderPayload.goods_unit},
+              goods_bags_cartons = ${orderPayload.goods_bags_cartons},
+              goods_gross_weight = ${orderPayload.goods_gross_weight},
+              goods_empty_weight = ${orderPayload.goods_empty_weight},
+              goods_net_weight = ${orderPayload.goods_net_weight},
               truck_id = ${truckPayload.truck_id},
               truck_registration_type = ${truckPayload.truck_registration_type},
               truck_number = ${truckPayload.truck_number},
@@ -349,6 +573,12 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             receiving_country_id, receiving_country_name, loading_port_id, loading_port_name,
             destination_port_id, destination_port_name, cargo_details, expected_loading_date, remarks,
             status,
+            country_id, country_branch_id, city_branch_id, clearing_agent_id, created_by,
+            super_admin_serial, country_serial, branch_serial, entry_serial,
+            load_type, loading_state_province_id, loading_district_id, loading_city_id, loading_area_id,
+            receiving_state_province_id, receiving_district_id, receiving_city_id, receiving_area_id,
+            loading_source_warehouse_id, loading_source_container_ref,
+            goods_quantity, goods_unit, goods_bags_cartons, goods_gross_weight, goods_empty_weight, goods_net_weight,
             truck_id, truck_registration_type, truck_number, truck_driver_name, truck_driver_mobile,
             truck_owner_name, truck_transport_company, truck_details,
             created_at, updated_at
@@ -365,6 +595,16 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.loading_port_name}, ${orderPayload.destination_port_id}, ${orderPayload.destination_port_name},
             ${orderPayload.cargo_details}, ${orderPayload.expected_loading_date}, ${orderPayload.remarks},
             ${orderPayload.status},
+            ${orderPayload.country_id}::uuid, ${orderPayload.country_branch_id}::uuid, ${orderPayload.city_branch_id}::uuid,
+            ${orderPayload.clearing_agent_id}::uuid, ${trimOrNull(input.createdBy)}::uuid,
+            ${allocatedSerials.superAdminSerial}, ${allocatedSerials.countrySerial}, ${allocatedSerials.branchSerial}, ${allocatedSerials.entrySerial},
+            ${orderPayload.load_type}, ${orderPayload.loading_state_province_id}::uuid, ${orderPayload.loading_district_id}::uuid,
+            ${orderPayload.loading_city_id}::uuid, ${orderPayload.loading_area_id}::uuid,
+            ${orderPayload.receiving_state_province_id}::uuid, ${orderPayload.receiving_district_id}::uuid,
+            ${orderPayload.receiving_city_id}::uuid, ${orderPayload.receiving_area_id}::uuid,
+            ${orderPayload.loading_source_warehouse_id}::uuid, ${orderPayload.loading_source_container_ref},
+            ${orderPayload.goods_quantity}, ${orderPayload.goods_unit}, ${orderPayload.goods_bags_cartons},
+            ${orderPayload.goods_gross_weight}, ${orderPayload.goods_empty_weight}, ${orderPayload.goods_net_weight},
             ${truckPayload.truck_id}, ${truckPayload.truck_registration_type}, ${truckPayload.truck_number},
             ${truckPayload.truck_driver_name}, ${truckPayload.truck_driver_mobile}, ${truckPayload.truck_owner_name},
             ${truckPayload.truck_transport_company}, ${truckPayload.truck_details}::jsonb,
@@ -416,11 +656,84 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         `;
       }
 
-      return { order: orderRow, partyLinks: partyRows as ClearingCustomerOrderPartyRow[] };
+      let legRows: ClearingCustomerOrderLegRow[] = [];
+      if (hasLegsPayload) {
+        const normalizedLegs = normalizeLegs(input.legs).map((leg) => ({
+          order_id: orderRow.id,
+          leg_no: leg.legNo,
+          from_country_id: leg.fromCountryId,
+          from_country_name: leg.fromCountryName,
+          to_country_id: leg.toCountryId,
+          to_country_name: leg.toCountryName,
+          from_location_text: leg.fromLocationText,
+          to_location_text: leg.toLocationText,
+          transport_mode: leg.transportMode,
+          responsible_country_branch_id: leg.responsibleCountryBranchId,
+          responsible_city_branch_id: leg.responsibleCityBranchId,
+          responsible_clearing_agent_id: leg.responsibleClearingAgentId,
+          truck_id: leg.truckRegistrationType === "registered" ? leg.truckId : null,
+          truck_registration_type: leg.truckRegistrationType,
+          truck_number: leg.truckNumber,
+          truck_driver_name: leg.truckDriverName,
+          truck_driver_mobile: leg.truckDriverMobile,
+          shipping_line_id: leg.shippingLineId,
+          vessel_name: leg.vesselName,
+          voyage_number: leg.voyageNumber,
+          container_number: leg.containerNumber,
+          seal_number: leg.sealNumber,
+          bl_number: leg.blNumber,
+          port_of_loading: leg.portOfLoading,
+          port_of_discharge: leg.portOfDischarge,
+          etd: leg.etd,
+          eta: leg.eta,
+          customs_country_id: leg.customsCountryId,
+          customs_point_text: leg.customsPointText,
+          customs_clearing_agent_id: leg.customsClearingAgentId,
+          clearance_type: leg.clearanceType,
+          duty_treatment: leg.dutyTreatment,
+          duty_amount: leg.dutyAmount,
+          duty_currency: leg.dutyCurrency,
+          duty_payer: leg.dutyPayer,
+          customs_receipt_ref: leg.customsReceiptRef,
+          customs_clearance_date: leg.customsClearanceDate,
+          planned_departure: leg.plannedDeparture,
+          actual_departure: leg.actualDeparture,
+          planned_arrival: leg.plannedArrival,
+          actual_arrival: leg.actualArrival,
+          status: leg.status,
+          handover_id: leg.handoverId,
+          remarks: leg.remarks,
+          created_at: now,
+          updated_at: now
+        }));
+
+        if (orderId) {
+          await tx`
+            delete from public.clearing_customer_order_legs
+            where order_id = ${orderId}::uuid
+          `;
+        }
+
+        if (normalizedLegs.length) {
+          legRows = await tx`
+            insert into public.clearing_customer_order_legs ${tx(normalizedLegs)}
+            returning *
+          `;
+        }
+      } else {
+        legRows = await tx`
+          select *
+          from public.clearing_customer_order_legs
+          where deleted_at is null and order_id = ${orderRow.id}::uuid
+          order by leg_no asc
+        `;
+      }
+
+      return { order: orderRow, partyLinks: partyRows as ClearingCustomerOrderPartyRow[], legs: legRows };
     });
   }).then(async (result) => {
     try {
-      await syncOrderTranslations(result.order, result.partyLinks, input.originalLanguage ?? "en");
+      await syncOrderTranslations(result.order, result.partyLinks, result.legs, input.originalLanguage ?? "en");
     } catch (error) {
       console.warn("Customer-order translation sync failed after save; preserving saved shipping order.", error);
     }
@@ -442,6 +755,12 @@ export async function deleteCustomerOrder(id: string) {
       if (!updated) throw new Error("Customer order not found.");
       await tx`
         update public.clearing_customer_order_parties
+        set deleted_at = ${now},
+            updated_at = ${now}
+        where order_id = ${id}::uuid and deleted_at is null
+      `;
+      await tx`
+        update public.clearing_customer_order_legs
         set deleted_at = ${now},
             updated_at = ${now}
         where order_id = ${id}::uuid and deleted_at is null

@@ -389,11 +389,23 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "destination_port_name", mode: "transliterate" },
     { field: "loading_source_name", mode: "transliterate" },
     { field: "cargo_details", mode: "translate" },
+    // Operational shipping remarks (not financial ledger narration) — the 5-language
+    // cross-country handover spec explicitly requires these to translate.
+    { field: "remarks", mode: "translate" },
   ],
   clearing_customer_order_parties: [
     { field: "party_customer_name", mode: "transliterate" },
     { field: "party_company_name", mode: "transliterate" },
     { field: "selected_address_text", mode: "translate" },
+  ],
+  clearing_customer_order_legs: [
+    { field: "from_country_name", mode: "transliterate" },
+    { field: "to_country_name", mode: "transliterate" },
+    { field: "from_location_text", mode: "transliterate" },
+    { field: "to_location_text", mode: "transliterate" },
+    { field: "customs_point_text", mode: "transliterate" },
+    { field: "duty_payer", mode: "transliterate" },
+    { field: "remarks", mode: "translate" },
   ],
 };
 

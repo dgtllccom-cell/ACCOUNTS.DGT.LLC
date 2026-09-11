@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   Anchor,
   ArrowLeft,
@@ -39,10 +39,82 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import type { ClearingCustomerOrderRow, PartyLinkInput, PartyRoleKey } from "@/lib/services/clearing-customer-order-service";
 import { TruckEntryPicker, type TruckEntryValue } from "@/features/clearing-agent/components/truck-entry-picker";
+import { GoodsPicker, type GoodsPickerValue } from "@/features/goods-master/components/goods-picker";
+import { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
+import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
+import { listCities } from "@/features/locations/location-api";
 
-type TransportMode = "by_sea" | "by_road" | "by_truck" | "by_air";
-type MovementType = "import" | "export" | "domestic" | "up_transit";
-type LoadingSource = "warehouse" | "truck_transfer" | "container_transfer";
+type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
+type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
+type LoadingSource = "shipping_warehouse" | "customer_warehouse" | "container" | "port_terminal" | "border_yard" | "other";
+type LoadType = "full_truck" | "partial_load" | "container_haulage";
+type LegTransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
+type ClearanceType = "import" | "export" | "transit";
+type DutyTreatment = "duty_payable" | "no_duty_exempt" | "transit_bonded" | "pending";
+
+type RouteLeg = {
+  id?: string;
+  legNo: number;
+  fromCountryId: string;
+  fromCountryName: string;
+  toCountryId: string;
+  toCountryName: string;
+  fromLocationText: string;
+  toLocationText: string;
+  transportMode: LegTransportMode | "";
+  responsibleCountryBranchId: string;
+  responsibleCityBranchId: string;
+  responsibleClearingAgentId: string;
+  truckId: string;
+  truckRegistrationType: "registered" | "temporary" | "";
+  truckNumber: string;
+  truckDriverName: string;
+  truckDriverMobile: string;
+  shippingLineId: string;
+  vesselName: string;
+  voyageNumber: string;
+  containerNumber: string;
+  sealNumber: string;
+  blNumber: string;
+  portOfLoading: string;
+  portOfDischarge: string;
+  etd: string;
+  eta: string;
+  customsCountryId: string;
+  customsPointText: string;
+  customsClearingAgentId: string;
+  clearanceType: ClearanceType | "";
+  dutyTreatment: DutyTreatment | "";
+  dutyAmount: string;
+  dutyCurrency: string;
+  dutyPayer: string;
+  customsReceiptRef: string;
+  customsClearanceDate: string;
+  plannedDeparture: string;
+  actualDeparture: string;
+  plannedArrival: string;
+  actualArrival: string;
+  status: string;
+  handoverId: string;
+  remarks: string;
+};
+
+function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): RouteLeg {
+  return {
+    legNo, fromCountryId: "", fromCountryName: "", toCountryId: "", toCountryName: "",
+    fromLocationText: "", toLocationText: "", transportMode,
+    responsibleCountryBranchId: "", responsibleCityBranchId: "", responsibleClearingAgentId: "",
+    truckId: "", truckRegistrationType: "", truckNumber: "", truckDriverName: "", truckDriverMobile: "",
+    shippingLineId: "", vesselName: "", voyageNumber: "", containerNumber: "", sealNumber: "", blNumber: "",
+    portOfLoading: "", portOfDischarge: "", etd: "", eta: "",
+    customsCountryId: "", customsPointText: "", customsClearingAgentId: "", clearanceType: "", dutyTreatment: "",
+    dutyAmount: "", dutyCurrency: "", dutyPayer: "", customsReceiptRef: "", customsClearanceDate: "",
+    plannedDeparture: "", actualDeparture: "", plannedArrival: "", actualArrival: "",
+    status: "pending", handoverId: "", remarks: ""
+  };
+}
 
 type CustomerRow = {
   id: string;
@@ -54,7 +126,14 @@ type CustomerRow = {
   email: string | null;
   address: string | null;
   country_id?: string | null;
+  person_code?: string | null;
+  country_name?: string | null;
+  city_name?: string | null;
 };
+
+type CityRow = { id: string; name: string };
+type ClearingAgentRow = { id: string; name: string };
+type ShippingLineRow = { id: string; name: string };
 
 type CompanyRow = {
   id: string;
@@ -68,14 +147,6 @@ type CompanyRow = {
 
 type CountryRow = { id: string; name: string };
 type PortRow = { id: string; port_name: string };
-type GoodsVariationRow = { id: string; goods_id: string; size: string; brand: string };
-type GoodsRow = {
-  id: string;
-  chs_code: string;
-  goods_name: string;
-  origin_country_id?: string | null;
-  variations?: GoodsVariationRow[];
-};
 
 type PartySelection = {
   customerId: string;
@@ -104,13 +175,25 @@ const EMPTY_FORM = {
   goods_variation_label: "",
   goods_brand: "",
   goods_size: "",
+  goods_category: "",
+  goods_variety: "",
+  goods_origin_country_id: "",
   goods_origin_country_name: "",
+  goods_quantity: "",
+  goods_unit: "",
+  goods_bags_cartons: "",
+  goods_gross_weight: "",
+  goods_empty_weight: "",
+  goods_net_weight: "",
   route_name: "",
   shipment_type: "FCL",
   transport_mode: "by_sea" as TransportMode,
   movement_type: "import" as MovementType,
-  loading_source: "warehouse" as LoadingSource,
+  load_type: "" as LoadType | "",
+  loading_source: "shipping_warehouse" as LoadingSource,
   loading_source_name: "",
+  loading_source_warehouse_id: "",
+  loading_source_container_ref: "",
   exporter_name: "",
   importer_name: "",
   notify_party_required: false,
@@ -118,8 +201,16 @@ const EMPTY_FORM = {
   buyer_name: "",
   loading_country_id: "",
   loading_country_name: "",
+  loading_state_province_id: "",
+  loading_district_id: "",
+  loading_city_id: "",
+  loading_area_id: "",
   receiving_country_id: "",
   receiving_country_name: "",
+  receiving_state_province_id: "",
+  receiving_district_id: "",
+  receiving_city_id: "",
+  receiving_area_id: "",
   loading_port_id: "",
   loading_port_name: "",
   destination_port_id: "",
@@ -128,6 +219,11 @@ const EMPTY_FORM = {
   expected_loading_date: new Date().toISOString().split("T")[0],
   remarks: "",
   order_no: "",
+  status: "pending",
+  super_admin_serial: "",
+  country_serial: "",
+  branch_serial: "",
+  entry_serial: "",
   // By Road truck
   truck_registration_type: "registered" as "registered" | "temporary",
   truck_id: "",
@@ -135,8 +231,12 @@ const EMPTY_FORM = {
   truck_driver_name: "",
   truck_driver_mobile: "",
   truck_owner_name: "",
-  truck_transport_company: ""
+  truck_transport_company: "",
+  legs: [] as RouteLeg[]
 };
+
+type FormDataState = typeof EMPTY_FORM;
+type SetFormData = Dispatch<SetStateAction<FormDataState>>;
 
 function emptyPartySelection(): PartySelection {
   return {
@@ -174,17 +274,6 @@ function optionLabelFromCustomer(row: CustomerRow) {
 
 function optionLabelFromCompany(row: CompanyRow) {
   return row.legal_name ? `${row.name} (${row.legal_name})` : row.name;
-}
-
-function optionLabelFromGoods(row: GoodsRow) {
-  const variationCount = Array.isArray(row.variations) ? row.variations.length : 0;
-  return [row.goods_name, row.chs_code ? `CHS ${row.chs_code}` : "", variationCount ? `${variationCount} variation${variationCount === 1 ? "" : "s"}` : ""]
-    .filter(Boolean)
-    .join(" • ");
-}
-
-function optionLabelFromGoodsVariation(row: GoodsVariationRow) {
-  return [row.size, row.brand].filter(Boolean).join(" • ");
 }
 
 function guessAddressOptions(
@@ -456,13 +545,17 @@ function PartyRolePanel({
 
 export function CustomerOrderManagementView() {
   const lang = useActiveLanguage();
+  const userContext = useBranchUserContext();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [orders, setOrders] = useState<ClearingCustomerOrderRow[]>([]);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
-  const [goods, setGoods] = useState<GoodsRow[]>([]);
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [ports, setPorts] = useState<PortRow[]>([]);
+  const [clearingAgents, setClearingAgents] = useState<ClearingAgentRow[]>([]);
+  const [shippingLines, setShippingLines] = useState<ShippingLineRow[]>([]);
+  const [loadingCities, setLoadingCities] = useState<CityRow[]>([]);
+  const [receivingCities, setReceivingCities] = useState<CityRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
@@ -488,22 +581,24 @@ export function CustomerOrderManagementView() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [orderRes, customerRes, companyRes, countryRes, portRes, goodsRes] = await Promise.all([
+      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes] = await Promise.all([
         fetch("/api/erp/clearing-agent/customer-order"),
         fetch("/api/erp/customers?limit=250"),
         fetch("/api/erp/companies?limit=250"),
         fetch("/api/erp/locations/countries"),
         fetch("/api/erp/ports"),
-        fetch("/api/erp/goods?limit=250")
+        fetch("/api/erp/clearing-agents?limit=200"),
+        fetch("/api/erp/shipping-lines?limit=200")
       ]);
 
-      const [orderJson, customerJson, companyJson, countryJson, portJson, goodsJson] = await Promise.all([
+      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson] = await Promise.all([
         orderRes.json(),
         customerRes.json(),
         companyRes.json(),
         countryRes.json(),
         portRes.json(),
-        goodsRes.json()
+        agentRes.json(),
+        lineRes.json()
       ]);
 
       const extractArray = (json: any, keys: string[]) => {
@@ -524,9 +619,10 @@ export function CustomerOrderManagementView() {
       setOrders(extractArray(orderJson, ["data", "orders", "entries"]));
       setCustomers(extractArray(customerJson, ["customers", "data"]));
       setCompanies(extractArray(companyJson, ["companies", "data"]));
-      setGoods(extractArray(goodsJson, ["goods", "data"]));
       setCountries(extractArray(countryJson, ["countries", "data"]));
       setPorts(extractArray(portJson, ["ports", "data"]));
+      setClearingAgents(extractArray(agentJson, ["clearingAgents", "data"]));
+      setShippingLines(extractArray(lineJson, ["shippingLines", "data"]));
     } catch (error) {
       console.error("Error loading customer-order data:", error);
     } finally {
@@ -543,7 +639,8 @@ export function CustomerOrderManagementView() {
     setFormData((current) => ({
       ...current,
       loading_country_id: countryId,
-      loading_country_name: row?.name || ""
+      loading_country_name: row?.name || "",
+      loading_city_id: ""
     }));
   };
 
@@ -552,9 +649,46 @@ export function CustomerOrderManagementView() {
     setFormData((current) => ({
       ...current,
       receiving_country_id: countryId,
-      receiving_country_name: row?.name || ""
+      receiving_country_name: row?.name || "",
+      receiving_city_id: ""
     }));
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!formData.loading_country_id) {
+      setLoadingCities([]);
+      return;
+    }
+    listCities({ countryId: formData.loading_country_id })
+      .then((rows) => {
+        if (!cancelled) setLoadingCities(rows as unknown as CityRow[]);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadingCities([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.loading_country_id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!formData.receiving_country_id) {
+      setReceivingCities([]);
+      return;
+    }
+    listCities({ countryId: formData.receiving_country_id })
+      .then((rows) => {
+        if (!cancelled) setReceivingCities(rows as unknown as CityRow[]);
+      })
+      .catch(() => {
+        if (!cancelled) setReceivingCities([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.receiving_country_id]);
 
   const handleLoadingPortChange = (portId: string) => {
     const row = ports.find((item) => item.id === portId);
@@ -598,68 +732,67 @@ export function CustomerOrderManagementView() {
     [companies]
   );
 
-  const handleGoodsChange = (goodsId: string) => {
-    const row = goods.find((item) => item.id === goodsId);
-    const originCountry = countries.find((country) => country.id === row?.origin_country_id);
-    const firstVariation = row?.variations?.[0];
+  const handleGoodsSelect = (value: GoodsPickerValue) => {
+    const originCountry = countries.find((country) => country.id === value.originCountryId);
     setFormData((current) => ({
       ...current,
-      goods_id: goodsId,
-      goods_name: row?.goods_name || "",
-      goods_chs_code: row?.chs_code || "",
-      goods_origin_country_name: originCountry?.name || "",
-      goods_variation_id: row?.variations?.length === 1 ? firstVariation?.id || "" : "",
-      goods_variation_label: row?.variations?.length === 1 && firstVariation ? optionLabelFromGoodsVariation(firstVariation) : "",
-      goods_brand: row?.variations?.length === 1 ? firstVariation?.brand || "" : "",
-      goods_size: row?.variations?.length === 1 ? firstVariation?.size || "" : ""
+      goods_id: value.goodsId,
+      goods_variation_id: value.goodsVariationId || "",
+      goods_name: value.goodsName,
+      goods_chs_code: value.goodsChsCode,
+      goods_variation_label: value.variationLabel || "",
+      goods_brand: value.brand || "",
+      goods_size: value.size || "",
+      goods_category: value.category || "",
+      goods_variety: value.variety || "",
+      goods_origin_country_id: value.originCountryId || "",
+      goods_origin_country_name: originCountry?.name || ""
     }));
   };
 
-  const handleGoodsVariationChange = (variationId: string) => {
-    const selectedGoods = goods.find((item) => item.id === formData.goods_id);
-    const variation = selectedGoods?.variations?.find((item) => item.id === variationId);
+  const updateLeg = (index: number, patch: Partial<RouteLeg>) => {
+    setFormData((current) => {
+      const legs = current.legs.map((leg, i) => (i === index ? { ...leg, ...patch } : leg));
+      return { ...current, legs };
+    });
+  };
+
+  const addLeg = (transportMode: LegTransportMode | "" = "") => {
     setFormData((current) => ({
       ...current,
-      goods_variation_id: variationId,
-      goods_variation_label: variation ? optionLabelFromGoodsVariation(variation) : "",
-      goods_brand: variation?.brand || "",
-      goods_size: variation?.size || ""
+      legs: [...current.legs, emptyLeg(current.legs.length + 1, transportMode)]
     }));
   };
 
-  const goodsOptions = useMemo(
-    () =>
-      goods.map((row) => ({
-        value: row.id,
-        label: optionLabelFromGoods(row),
-        keywords: [
-          row.goods_name,
-          row.chs_code,
-          row.origin_country_id ? countries.find((country) => country.id === row.origin_country_id)?.name : "",
-          ...(row.variations ?? []).flatMap((variation) => [variation.size, variation.brand, optionLabelFromGoodsVariation(variation)])
-        ]
-          .filter(Boolean)
-          .join(" ")
-      })),
-    [goods, countries]
-  );
+  const removeLeg = (index: number) => {
+    setFormData((current) => ({
+      ...current,
+      legs: current.legs.filter((_, i) => i !== index).map((leg, i) => ({ ...leg, legNo: i + 1 }))
+    }));
+  };
 
-  const selectedGoods = useMemo(() => goods.find((item) => item.id === formData.goods_id) || null, [goods, formData.goods_id]);
-
-  const variationOptions = useMemo(
-    () =>
-      (selectedGoods?.variations ?? []).map((variation) => ({
-        value: variation.id,
-        label: optionLabelFromGoodsVariation(variation),
-        keywords: [variation.size, variation.brand, optionLabelFromGoodsVariation(variation)].filter(Boolean).join(" ")
-      })),
-    [selectedGoods]
-  );
-
-  const selectedGoodsVariation = useMemo(
-    () => selectedGoods?.variations?.find((item) => item.id === formData.goods_variation_id) || null,
-    [selectedGoods, formData.goods_variation_id]
-  );
+  const seedLegsForSeaWithPreCarriage = () => {
+    setFormData((current) => {
+      if (current.legs.length > 0) return current;
+      const roadLeg = emptyLeg(1, "by_road");
+      roadLeg.fromLocationText = current.loading_source_name || "";
+      roadLeg.fromCountryId = current.loading_country_id;
+      roadLeg.fromCountryName = current.loading_country_name;
+      roadLeg.toLocationText = current.loading_port_name || "";
+      roadLeg.toCountryId = current.loading_country_id;
+      roadLeg.toCountryName = current.loading_country_name;
+      const seaLeg = emptyLeg(2, "by_sea");
+      seaLeg.fromLocationText = current.loading_port_name || "";
+      seaLeg.fromCountryId = current.loading_country_id;
+      seaLeg.fromCountryName = current.loading_country_name;
+      seaLeg.toLocationText = current.destination_port_name || "";
+      seaLeg.toCountryId = current.receiving_country_id;
+      seaLeg.toCountryName = current.receiving_country_name;
+      seaLeg.portOfLoading = current.loading_port_name || "";
+      seaLeg.portOfDischarge = current.destination_port_name || "";
+      return { ...current, legs: [roadLeg, seaLeg] };
+    });
+  };
 
   const visibleOrders = useMemo(() => {
     let list = orders;
@@ -723,15 +856,7 @@ export function CustomerOrderManagementView() {
   );
 
   const isSeaMode = formData.transport_mode === "by_sea";
-  const isRoadMode = formData.transport_mode === "by_road" || formData.transport_mode === "by_truck";
-  const shouldShowBuyer = isSeaMode || formData.notify_party_required;
-  const nextActionLabel = isSeaMode || formData.notify_party_required ? tt("step_bill_entry", "Bill Entry") : isRoadMode ? tt("step_truck_entry", "Truck Entry") : tt("step_review", "Review");
-  const loadingSourceLabel =
-    formData.loading_source === "warehouse"
-      ? tt("ls_warehouse", "Warehouse")
-      : formData.loading_source === "truck_transfer"
-        ? tt("transfer_from_truck", "Transfer from Truck")
-        : tt("transfer_from_container", "Transfer from Container");
+  const isRoadMode = formData.transport_mode === "by_road";
 
   const resetForm = () => {
     setFormData({ ...EMPTY_FORM });
@@ -741,6 +866,7 @@ export function CustomerOrderManagementView() {
   };
 
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
+    const o = order as Record<string, any>;
     setEditingOrderId(order.id);
     setFormData({
       customer_id: order.customer_id || "",
@@ -752,13 +878,25 @@ export function CustomerOrderManagementView() {
       goods_variation_label: order.goods_variation_label || "",
       goods_brand: order.goods_brand || "",
       goods_size: order.goods_size || "",
+      goods_category: o.goods_category || "",
+      goods_variety: o.goods_variety || "",
+      goods_origin_country_id: o.goods_origin_country_id || "",
       goods_origin_country_name: order.goods_origin_country_name || "",
+      goods_quantity: o.goods_quantity != null ? String(o.goods_quantity) : "",
+      goods_unit: o.goods_unit || "",
+      goods_bags_cartons: o.goods_bags_cartons != null ? String(o.goods_bags_cartons) : "",
+      goods_gross_weight: o.goods_gross_weight != null ? String(o.goods_gross_weight) : "",
+      goods_empty_weight: o.goods_empty_weight != null ? String(o.goods_empty_weight) : "",
+      goods_net_weight: o.goods_net_weight != null ? String(o.goods_net_weight) : "",
       route_name: order.route_name || "",
       shipment_type: order.shipment_type || "FCL",
       transport_mode: (order.transport_mode || "by_sea") as TransportMode,
       movement_type: (order.movement_type || "import") as MovementType,
-      loading_source: (order.loading_source || "warehouse") as LoadingSource,
+      load_type: (o.load_type as LoadType) || "",
+      loading_source: (order.loading_source || "shipping_warehouse") as LoadingSource,
       loading_source_name: order.loading_source_name || "",
+      loading_source_warehouse_id: o.loading_source_warehouse_id || "",
+      loading_source_container_ref: o.loading_source_container_ref || "",
       exporter_name: order.exporter_name || "",
       importer_name: order.importer_name || "",
       notify_party_required: Boolean(order.notify_party_required),
@@ -766,8 +904,16 @@ export function CustomerOrderManagementView() {
       buyer_name: order.buyer_name || "",
       loading_country_id: order.loading_country_id || "",
       loading_country_name: order.loading_country_name || "",
+      loading_state_province_id: o.loading_state_province_id || "",
+      loading_district_id: o.loading_district_id || "",
+      loading_city_id: o.loading_city_id || "",
+      loading_area_id: o.loading_area_id || "",
       receiving_country_id: order.receiving_country_id || "",
       receiving_country_name: order.receiving_country_name || "",
+      receiving_state_province_id: o.receiving_state_province_id || "",
+      receiving_district_id: o.receiving_district_id || "",
+      receiving_city_id: o.receiving_city_id || "",
+      receiving_area_id: o.receiving_area_id || "",
       loading_port_id: order.loading_port_id || "",
       loading_port_name: order.loading_port_name || "",
       destination_port_id: order.destination_port_id || "",
@@ -776,13 +922,66 @@ export function CustomerOrderManagementView() {
       expected_loading_date: order.expected_loading_date ? order.expected_loading_date.split("T")[0] : new Date().toISOString().split("T")[0],
       remarks: order.remarks || "",
       order_no: order.order_no || "",
-      truck_registration_type: ((order as Record<string, unknown>).truck_registration_type as "registered" | "temporary") || "registered",
-      truck_id: ((order as Record<string, unknown>).truck_id as string) || "",
-      truck_number: ((order as Record<string, unknown>).truck_number as string) || "",
-      truck_driver_name: ((order as Record<string, unknown>).truck_driver_name as string) || "",
-      truck_driver_mobile: ((order as Record<string, unknown>).truck_driver_mobile as string) || "",
-      truck_owner_name: ((order as Record<string, unknown>).truck_owner_name as string) || "",
-      truck_transport_company: ((order as Record<string, unknown>).truck_transport_company as string) || ""
+      status: o.status || "pending",
+      super_admin_serial: o.super_admin_serial || "",
+      country_serial: o.country_serial || "",
+      branch_serial: o.branch_serial || "",
+      entry_serial: o.entry_serial || "",
+      truck_registration_type: (o.truck_registration_type as "registered" | "temporary") || "registered",
+      truck_id: o.truck_id || "",
+      truck_number: o.truck_number || "",
+      truck_driver_name: o.truck_driver_name || "",
+      truck_driver_mobile: o.truck_driver_mobile || "",
+      truck_owner_name: o.truck_owner_name || "",
+      truck_transport_company: o.truck_transport_company || "",
+      legs: Array.isArray(o.legs)
+        ? o.legs.map((leg: Record<string, any>, idx: number) => ({
+            id: leg.id,
+            legNo: leg.leg_no ?? idx + 1,
+            fromCountryId: leg.from_country_id || "",
+            fromCountryName: leg.from_country_name || "",
+            toCountryId: leg.to_country_id || "",
+            toCountryName: leg.to_country_name || "",
+            fromLocationText: leg.from_location_text || "",
+            toLocationText: leg.to_location_text || "",
+            transportMode: (leg.transport_mode as LegTransportMode) || "",
+            responsibleCountryBranchId: leg.responsible_country_branch_id || "",
+            responsibleCityBranchId: leg.responsible_city_branch_id || "",
+            responsibleClearingAgentId: leg.responsible_clearing_agent_id || "",
+            truckId: leg.truck_id || "",
+            truckRegistrationType: (leg.truck_registration_type as "registered" | "temporary") || "",
+            truckNumber: leg.truck_number || "",
+            truckDriverName: leg.truck_driver_name || "",
+            truckDriverMobile: leg.truck_driver_mobile || "",
+            shippingLineId: leg.shipping_line_id || "",
+            vesselName: leg.vessel_name || "",
+            voyageNumber: leg.voyage_number || "",
+            containerNumber: leg.container_number || "",
+            sealNumber: leg.seal_number || "",
+            blNumber: leg.bl_number || "",
+            portOfLoading: leg.port_of_loading || "",
+            portOfDischarge: leg.port_of_discharge || "",
+            etd: leg.etd ? String(leg.etd).split("T")[0] : "",
+            eta: leg.eta ? String(leg.eta).split("T")[0] : "",
+            customsCountryId: leg.customs_country_id || "",
+            customsPointText: leg.customs_point_text || "",
+            customsClearingAgentId: leg.customs_clearing_agent_id || "",
+            clearanceType: (leg.clearance_type as ClearanceType) || "",
+            dutyTreatment: (leg.duty_treatment as DutyTreatment) || "",
+            dutyAmount: leg.duty_amount != null ? String(leg.duty_amount) : "",
+            dutyCurrency: leg.duty_currency || "",
+            dutyPayer: leg.duty_payer || "",
+            customsReceiptRef: leg.customs_receipt_ref || "",
+            customsClearanceDate: leg.customs_clearance_date ? String(leg.customs_clearance_date).split("T")[0] : "",
+            plannedDeparture: leg.planned_departure ? String(leg.planned_departure).split("T")[0] : "",
+            actualDeparture: leg.actual_departure ? String(leg.actual_departure).split("T")[0] : "",
+            plannedArrival: leg.planned_arrival ? String(leg.planned_arrival).split("T")[0] : "",
+            actualArrival: leg.actual_arrival ? String(leg.actual_arrival).split("T")[0] : "",
+            status: leg.status || "pending",
+            handoverId: leg.handover_id || "",
+            remarks: leg.remarks || ""
+          }))
+        : []
     });
 
     const nextState = emptyPartyState();
@@ -894,8 +1093,10 @@ export function CustomerOrderManagementView() {
     setSuccessMessage("");
     try {
       const supplier = partySelections.supplier;
+      const isFinalConfirm = advanceStep && currentStep === 4;
       const payload = {
         ...formData,
+        status: isFinalConfirm ? "booking_confirmed" : formData.status || "pending",
         customer_id: supplier.customerId || formData.customer_id || null,
         customer_name: supplier.customerName || formData.customer_name || null,
         goods_id: formData.goods_id || null,
@@ -906,6 +1107,11 @@ export function CustomerOrderManagementView() {
         goods_brand: formData.goods_brand || null,
         goods_size: formData.goods_size || null,
         goods_origin_country_name: formData.goods_origin_country_name || null,
+        goods_quantity: formData.goods_quantity ? Number(formData.goods_quantity) : null,
+        goods_bags_cartons: formData.goods_bags_cartons ? Number(formData.goods_bags_cartons) : null,
+        goods_gross_weight: formData.goods_gross_weight ? Number(formData.goods_gross_weight) : null,
+        goods_empty_weight: formData.goods_empty_weight ? Number(formData.goods_empty_weight) : null,
+        goods_net_weight: formData.goods_net_weight ? Number(formData.goods_net_weight) : null,
         exporter_name: partySelections.exporter.customerName || formData.exporter_name || null,
         importer_name: partySelections.importer.customerName || formData.importer_name || null,
         buyer_name: partySelections.buyer.customerName || formData.buyer_name || null,
@@ -920,7 +1126,56 @@ export function CustomerOrderManagementView() {
             partyCompanyName: selection.companyName || null,
             selectedAddressText: selection.addressText || null,
             selectedAddressSource: selection.addressSource || null
-          } satisfies PartyLinkInput))
+          } satisfies PartyLinkInput)),
+        legs: formData.legs.map((leg) => ({
+          id: leg.id,
+          legNo: leg.legNo,
+          fromCountryId: leg.fromCountryId || null,
+          fromCountryName: leg.fromCountryName || null,
+          toCountryId: leg.toCountryId || null,
+          toCountryName: leg.toCountryName || null,
+          fromLocationText: leg.fromLocationText || null,
+          toLocationText: leg.toLocationText || null,
+          transportMode: leg.transportMode || null,
+          responsibleCountryBranchId: leg.responsibleCountryBranchId || null,
+          responsibleCityBranchId: leg.responsibleCityBranchId || null,
+          responsibleClearingAgentId: leg.responsibleClearingAgentId || null,
+          truckId: leg.truckId || null,
+          truckRegistrationType: leg.truckRegistrationType || null,
+          truckNumber: leg.truckNumber || null,
+          truckDriverName: leg.truckDriverName || null,
+          truckDriverMobile: leg.truckDriverMobile || null,
+          shippingLineId: leg.shippingLineId || null,
+          vesselName: leg.vesselName || null,
+          voyageNumber: leg.voyageNumber || null,
+          containerNumber: leg.containerNumber || null,
+          sealNumber: leg.sealNumber || null,
+          blNumber: leg.blNumber || null,
+          portOfLoading: leg.portOfLoading || null,
+          portOfDischarge: leg.portOfDischarge || null,
+          etd: leg.etd || null,
+          eta: leg.eta || null,
+          customsCountryId: leg.customsCountryId || null,
+          customsPointText: leg.customsPointText || null,
+          customsClearingAgentId: leg.customsClearingAgentId || null,
+          clearanceType: leg.clearanceType || null,
+          dutyTreatment: leg.dutyTreatment || null,
+          dutyAmount: leg.dutyAmount ? Number(leg.dutyAmount) : null,
+          dutyCurrency: leg.dutyCurrency || null,
+          dutyPayer: leg.dutyPayer || null,
+          customsReceiptRef: leg.customsReceiptRef || null,
+          customsClearanceDate: leg.customsClearanceDate || null,
+          plannedDeparture: leg.plannedDeparture || null,
+          actualDeparture: leg.actualDeparture || null,
+          plannedArrival: leg.plannedArrival || null,
+          actualArrival: leg.actualArrival || null,
+          status: leg.status || "pending",
+          // handover_id is a real FK into business_shipping_handovers — only forward it
+          // if it actually looks like a UUID, otherwise a pasted free-text reference
+          // would fail the column's uuid cast at insert time.
+          handoverId: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leg.handoverId) ? leg.handoverId : null,
+          remarks: leg.remarks || null
+        }))
       };
 
       const response = await fetch(
@@ -963,23 +1218,23 @@ export function CustomerOrderManagementView() {
   const stepsList = [
     {
       num: 1,
-      title: lang === "ur" ? "آرڈر و سامان" : lang === "ar" ? "الطلب والبضائع" : lang === "fa" ? "سفارش و کالا" : lang === "ps" ? "فرمایش او توکي" : "Order & Goods",
-      desc: t(lang, "comv.movement_mode_goods", "Movement, Mode & Goods")
+      title: t(lang, "comv.step1_name", "Booking & Customer"),
+      desc: t(lang, "comv.step1_desc", "Customer, Movement, Mode & Route")
     },
     {
       num: 2,
-      title: lang === "ur" ? "بنیادی پارٹیاں" : lang === "ar" ? "الأطراف الأساسية" : lang === "fa" ? "طرف‌های اصلی" : lang === "ps" ? "اصلي لوري" : "Core Parties",
-      desc: t(lang, "comv.supplier_buyer", "Supplier & Buyer")
+      title: t(lang, "comv.step2_name", "Pickup, Goods & Truck"),
+      desc: t(lang, "comv.step2_desc", "Pickup Source, Goods & Transport")
     },
     {
       num: 3,
-      title: lang === "ur" ? "لاجسٹک پارٹیاں" : lang === "ar" ? "أطراف الشحن" : lang === "fa" ? "طرف‌های گمرکی" : lang === "ps" ? "د بار وړلو لوري" : "Shipping Parties",
-      desc: t(lang, "comv.importer_exporter_notify", "Importer, Exporter, Notify")
+      title: t(lang, "comv.step3_name", "Route, Vessel & Customs"),
+      desc: t(lang, "comv.step3_desc", "Parties, Legs, Vessel & Clearance")
     },
     {
       num: 4,
-      title: lang === "ur" ? "روٹ، پورٹس و تواریخ" : lang === "ar" ? "المسار والموانئ" : lang === "fa" ? "مسیر، بنادر و تاریخ" : lang === "ps" ? "لارې او بندرونه" : "Logistics & Review",
-      desc: t(lang, "comv.ports_route_container_review", "Ports, Route, Container, Review")
+      title: t(lang, "comv.step4_name", "Review & Confirm"),
+      desc: t(lang, "comv.step4_desc", "Full Summary & Confirmation")
     }
   ];
 
@@ -997,7 +1252,7 @@ export function CustomerOrderManagementView() {
                 {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
               </span>
               <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
-                {tt("header_next", "Next")}: {nextActionLabel}
+                {tt("header_next", "Next")}: {currentStep < 4 ? stepsList[currentStep]?.title : t(lang, "comv.confirm_booking", "Confirm Booking")}
               </span>
             </div>
             <h1 className="text-xl font-black text-slate-900 dark:text-white">{tt("title", "Customer Order")}</h1>
@@ -1088,522 +1343,79 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
-          {/* STEP 1: SERIALS, CUSTOMER LEDGER, ROUTE & GOODS */}
+          {/* STEP 1: BOOKING & CUSTOMER */}
           {currentStep === 1 && (
-            <div className="space-y-3.5 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                <Boxes className="h-4 w-4" />
-                <span>1. {tt("step1_title", "Order Serials, Customer & Goods Master")}</span>
-              </div>
-
-              {/* 4 Serial Numbers Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
-                <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">1. {tt("serial_super_admin", "Super Admin")}</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">{"—"}</div>
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">2. {tt("serial_country", "Country Serial")}</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">{"—"}</div>
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">3. {tt("serial_branch", "Branch Serial")}</div>
-                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">{"—"}</div>
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase">4. {tt("serial_order_entry", "Order / Entry")}</div>
-                  <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || "CL-ORD-AUTO"}</div>
-                </div>
-              </div>
-
-              {/* Customer / Ledger Account Search & Select */}
-              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-blue-600" />
-                    <span>{t(lang, "comv.customer_ledger_account_req", "Customer / Ledger Account *")}</span>
-                  </label>
-                  {formData.customer_name ? (
-                    <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
-                      ✓ {formData.customer_name}
-                    </span>
-                  ) : null}
-                </div>
-                <SearchSelect
-                  label={t(lang, "comv.select_customer_account", "Select Customer Account")}
-                  value={formData.customer_id}
-                  options={customerOptions}
-                  placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
-                  onValueChange={(cid) => {
-                    const cust = customers.find((c) => c.id === cid);
-                    if (cust) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        customer_id: cust.id,
-                        customer_name: cust.customer_name,
-                      }));
-                      setPartySelections((prev) => ({
-                        ...prev,
-                        supplier: {
-                          ...prev.supplier,
-                          customerId: cust.id,
-                          customerName: cust.customer_name,
-                          addressText: prev.supplier.addressText || cust.address || "",
-                        }
-                      }));
-                    }
-                  }}
-                  disabled={loading}
-                  searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
-                  emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
-                />
-              </div>
-
-              {/* Route Countries (2 Clear Dropdowns: Loading Country & Receiving Country) */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2 dark:border-slate-800 dark:bg-slate-800/40">
-                <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Route className="h-3.5 w-3.5 text-blue-600" />
-                  <span>{t(lang, "comv.route_countries_req", "Route Countries (Origin & Destination) *")}</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      {t(lang, "comv.loading_country_step", "1. Loading Country *")}
-                    </label>
-                    <select
-                      value={formData.loading_country_id}
-                      onChange={(e) => {
-                        const cId = e.target.value;
-                        const cName = countries.find((c) => c.id === cId)?.name || "";
-                        setFormData((prev) => ({
-                          ...prev,
-                          loading_country_id: cId,
-                          loading_country_name: cName,
-                          route_name: cName && prev.receiving_country_name ? `${cName} ➔ ${prev.receiving_country_name}` : prev.route_name
-                        }));
-                      }}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                    >
-                      <option value="">{t(lang, "comv.select_loading_country_ph", "— Select Loading Country —")}</option>
-                      {countries.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      {t(lang, "comv.receiving_country_step", "2. Receiving Country *")}
-                    </label>
-                    <select
-                      value={formData.receiving_country_id}
-                      onChange={(e) => {
-                        const cId = e.target.value;
-                        const cName = countries.find((c) => c.id === cId)?.name || "";
-                        setFormData((prev) => ({
-                          ...prev,
-                          receiving_country_id: cId,
-                          receiving_country_name: cName,
-                          route_name: prev.loading_country_name && cName ? `${prev.loading_country_name} ➔ ${cName}` : prev.route_name
-                        }));
-                      }}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                    >
-                      <option value="">{t(lang, "comv.select_receiving_country_ph", "— Select Receiving Country —")}</option>
-                      {countries.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Movement Type & Shipment Type */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("movement_type", "Movement Type")} *</label>
-                  <select
-                    value={formData.movement_type}
-                    onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  >
-                    <option value="import">{tt("mv_import", "Import")}</option>
-                    <option value="export">{tt("mv_export", "Export")}</option>
-                    <option value="domestic">{tt("mv_domestic", "Domestic")}</option>
-                    <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("shipment_type", "Shipment Type")}</label>
-                  <select
-                    value={formData.shipment_type}
-                    onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  >
-                    <option value="FCL">{tt("ship_fcl", "FCL (Full Container Load)")}</option>
-                    <option value="LCL">{tt("ship_lcl", "LCL (Less than Container)")}</option>
-                    <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
-                    <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Transport Mode */}
-              <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { key: "by_sea", label: tt("tm_by_sea", "By Sea"), icon: Anchor },
-                    { key: "by_road", label: tt("tm_by_road", "By Road"), icon: MapPin },
-                    { key: "by_truck", label: tt("tm_by_truck", "By Truck"), icon: Truck },
-                    { key: "by_air", label: tt("tm_by_air", "By Air"), icon: Plane }
-                  ].map(({ key, label, icon: Icon }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setFormData((current) => ({ ...current, transport_mode: key as TransportMode }))}
-                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${
-                        formData.transport_mode === key
-                          ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
-                          : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Loading Source */}
-              <div>
-                <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_source", "Loading Source")}</label>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {[
-                    { key: "warehouse", label: tt("ls_warehouse", "Warehouse"), icon: Warehouse },
-                    { key: "truck_transfer", label: tt("ls_truck_transfer", "Truck Transfer"), icon: Repeat2 },
-                    { key: "container_transfer", label: tt("ls_container_transfer", "Container Transfer"), icon: Container }
-                  ].map(({ key, label, icon: Icon }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() =>
-                        setFormData((current) => ({
-                          ...current,
-                          loading_source: key as LoadingSource,
-                          loading_source_name: label
-                        }))
-                      }
-                      className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-bold transition-all ${
-                        formData.loading_source === key
-                          ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
-                          : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span className="truncate">{label}</span>
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  placeholder={tt("ls_name_ph", "Source name / truck number / container reference")}
-                  value={formData.loading_source_name}
-                  onChange={(e) => setFormData((current) => ({ ...current, loading_source_name: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                />
-              </div>
-
-              {/* Goods Master Selection Card */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  <Boxes className="h-4 w-4 text-emerald-600" />
-                  {tt("goods_master_card", "Goods / Item Master")}
-                </div>
-                <SearchSelect
-                  label={tt("goods_master", "Goods Master")}
-                  value={formData.goods_id}
-                  placeholder={tt("goods_master_ph", "Search existing Goods Master by name / CHS code")}
-                  options={goodsOptions}
-                  onValueChange={handleGoodsChange}
-                  disabled={loading}
-                  searchPlaceholder={tt("goods_search_ph", "Search goods / CHS code / variation")}
-                  emptyLabel={tt("no_goods", "No matching goods found")}
-                />
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
-                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("selected_goods", "Selected Goods")}</div>
-                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? ` • ${formData.goods_chs_code}` : ""}` : "-"}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("origin_variation", "Origin / Variation")}</div>
-                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {formData.goods_origin_country_name || "-"}
-                      {selectedGoodsVariation ? ` • ${selectedGoodsVariation.size} / ${selectedGoodsVariation.brand}` : ""}
-                    </div>
-                  </div>
-                </div>
-                {variationOptions.length > 0 ? (
-                  <SearchSelect
-                    label={tt("goods_variation", "Goods Variation")}
-                    value={formData.goods_variation_id}
-                    placeholder={tt("variation_ph", "Search variation size / brand")}
-                    options={variationOptions}
-                    onValueChange={handleGoodsVariationChange}
-                    disabled={loading}
-                    searchPlaceholder={tt("variation_search_ph", "Search size / brand")}
-                    emptyLabel={tt("no_variations", "No matching variations found")}
-                  />
-                ) : null}
-              </div>
-            </div>
+            <Step1BookingCustomer
+              lang={lang}
+              tt={tt}
+              userContext={userContext}
+              formData={formData}
+              setFormData={setFormData}
+              customers={customers}
+              customerOptions={customerOptions}
+              countries={countries}
+              ports={ports}
+              loadingCities={loadingCities}
+              receivingCities={receivingCities}
+              partySelections={partySelections}
+              companies={companies}
+              companyOptions={companyOptions}
+              orders={orders}
+              loading={loading}
+              handlePartyChange={handlePartyChange}
+              handleLoadingCountryChange={handleLoadingCountryChange}
+              handleReceivingCountryChange={handleReceivingCountryChange}
+              handleLoadingPortChange={handleLoadingPortChange}
+              handleDestinationPortChange={handleDestinationPortChange}
+            />
           )}
 
-          {/* STEP 2: CORE PARTIES (SUPPLIER & BUYER) */}
+          {/* STEP 2: PICKUP, GOODS & TRUCK */}
           {currentStep === 2 && (
-            <div className="space-y-3.5 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                <Building2 className="h-4 w-4" />
-                <span>2. {tt("step2_title", "Core Parties (Supplier & Buyer)")}</span>
-              </div>
-
-              <PartyRolePanel
-                roleKey="supplier"
-                label={tt("role_supplier", "Supplier / Order Party")}
-                required
-                selection={partySelections.supplier}
-                customers={customers}
-                companies={companies}
-                customerOptions={customerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onChange={(next) => handlePartyChange("supplier", next)}
-              />
-
-              <PartyRolePanel
-                roleKey="buyer"
-                label={tt("role_buyer", "Buyer")}
-                selection={partySelections.buyer}
-                customers={customers}
-                companies={companies}
-                customerOptions={customerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onChange={(next) => handlePartyChange("buyer", next)}
-              />
-            </div>
+            <Step2PickupGoodsTruck
+              lang={lang}
+              tt={tt}
+              formData={formData}
+              setFormData={setFormData}
+              handleGoodsSelect={handleGoodsSelect}
+              saving={saving}
+            />
           )}
 
-          {/* STEP 3: LOGISTICS & BORDER PARTIES */}
+          {/* STEP 3: ROUTE, VESSEL & CUSTOMS */}
           {currentStep === 3 && (
-            <div className="space-y-3.5 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                <Route className="h-4 w-4" />
-                <span>3. {tt("step3_title", "Shipping & Border Parties")}</span>
-              </div>
-
-              <PartyRolePanel
-                roleKey="importer"
-                label={tt("role_importer", "Importer")}
-                required
-                selection={partySelections.importer}
-                customers={customers}
-                companies={companies}
-                customerOptions={customerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onChange={(next) => handlePartyChange("importer", next)}
-              />
-
-              <PartyRolePanel
-                roleKey="exporter"
-                label={tt("role_exporter", "Exporter")}
-                required
-                selection={partySelections.exporter}
-                customers={customers}
-                companies={companies}
-                customerOptions={customerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onChange={(next) => handlePartyChange("exporter", next)}
-              />
-
-              <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/40 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{tt("notify_party_required", "Notify Party Required?")}</label>
-                  <select
-                    value={formData.notify_party_required ? "yes" : "no"}
-                    onChange={(e) => setFormData((current) => ({ ...current, notify_party_required: e.target.value === "yes" }))}
-                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-900 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  >
-                    <option value="no">{tt("no_opt", "No")}</option>
-                    <option value="yes">{tt("yes", "Yes")}</option>
-                  </select>
-                </div>
-
-                {formData.notify_party_required ? (
-                  <PartyRolePanel
-                    roleKey="notify_party"
-                    label={tt("role_notify_party", "Notify Party")}
-                    selection={partySelections.notify_party}
-                    customers={customers}
-                    companies={companies}
-                    customerOptions={customerOptions}
-                    companyOptions={companyOptions}
-                    orders={orders}
-                    disabled={loading}
-                    lang={lang}
-                    onChange={(next) => handlePartyChange("notify_party", next)}
-                  />
-                ) : null}
-              </div>
-            </div>
+            <Step3RouteVesselCustoms
+              lang={lang}
+              tt={tt}
+              formData={formData}
+              setFormData={setFormData}
+              countries={countries}
+              partySelections={partySelections}
+              customers={customers}
+              companies={companies}
+              customerOptions={customerOptions}
+              companyOptions={companyOptions}
+              orders={orders}
+              loading={loading}
+              handlePartyChange={handlePartyChange}
+              updateLeg={updateLeg}
+              addLeg={addLeg}
+              removeLeg={removeLeg}
+              seedLegsForSeaWithPreCarriage={seedLegsForSeaWithPreCarriage}
+            />
           )}
 
-          {/* STEP 4: LOGISTICS, PORTS, ROUTE, DATES & REVIEW */}
+          {/* STEP 4: REVIEW & CONFIRM */}
           {currentStep === 4 && (
-            <div className="space-y-3.5 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                <MapPin className="h-4 w-4" />
-                <span>4. {tt("step4_title", "Logistics, Ports & Review")}</span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_country", "Loading Country")}</label>
-                  <select
-                    value={formData.loading_country_id}
-                    onChange={(e) => handleLoadingCountryChange(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  >
-                    <option value="">{tt("select_loading_country", "Select Loading Country")}</option>
-                    {countries.map((country) => (
-                      <option key={country.id} value={country.id}>
-                        {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("receiving_country", "Receiving Country")}</label>
-                  <select
-                    value={formData.receiving_country_id}
-                    onChange={(e) => handleReceivingCountryChange(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  >
-                    <option value="">{tt("select_receiving_country", "Select Receiving Country")}</option>
-                    {countries.map((country) => (
-                      <option key={country.id} value={country.id}>
-                        {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_port", "Loading Port")}</label>
-                  <select
-                    value={formData.loading_port_id}
-                    onChange={(e) => handleLoadingPortChange(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  >
-                    <option value="">{tt("select_loading_port", "Select Loading Port")}</option>
-                    {ports.map((port) => (
-                      <option key={port.id} value={port.id}>
-                        {port.port_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("destination_port", "Destination Port")}</label>
-                  <select
-                    value={formData.destination_port_id}
-                    onChange={(e) => handleDestinationPortChange(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  >
-                    <option value="">{tt("select_destination_port", "Select Destination Port")}</option>
-                    {ports.map((port) => (
-                      <option key={port.id} value={port.id}>
-                        {port.port_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("expected_loading_date", "Expected Loading Date")}</label>
-                  <input
-                    type="date"
-                    value={formData.expected_loading_date}
-                    onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("route_reference", "Route / Reference")}</label>
-                  <input
-                    type="text"
-                    placeholder={tt("route_ph", "e.g. Karachi to Kabul via Torkham")}
-                    value={formData.route_name}
-                    onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("cargo_container_details", "Cargo / Container Details")}</label>
-                <input
-                  type="text"
-                  placeholder={tt("cargo_ph", "e.g. 40ft High Cube Container")}
-                  value={formData.cargo_details}
-                  onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                />
-              </div>
-
-              {(formData.transport_mode === "by_road" || formData.transport_mode === "by_truck") && (
-                <TruckEntryPicker
-                  langProp={lang}
-                  disabled={saving}
-                  value={{
-                    truck_registration_type: formData.truck_registration_type,
-                    truck_id: formData.truck_id,
-                    truck_number: formData.truck_number,
-                    truck_driver_name: formData.truck_driver_name,
-                    truck_driver_mobile: formData.truck_driver_mobile,
-                    truck_owner_name: formData.truck_owner_name,
-                    truck_transport_company: formData.truck_transport_company,
-                  }}
-                  onChange={(next: TruckEntryValue) => setFormData((current) => ({ ...current, ...next }))}
-                />
-              )}
-
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("remarks", "Remarks")}</label>
-                <textarea
-                  rows={2}
-                  placeholder={tt("remarks_ph", "Additional instructions or notes...")}
-                  value={formData.remarks}
-                  onChange={(e) => setFormData((current) => ({ ...current, remarks: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
-                />
-              </div>
-            </div>
+            <Step4ReviewConfirm
+              lang={lang}
+              tt={tt}
+              formData={formData}
+              partySelections={partySelections}
+              clearingAgents={clearingAgents}
+              shippingLines={shippingLines}
+              userContext={userContext}
+            />
           )}
 
           {/* Stepper Action Buttons (Previous, Save Progress, Next / Complete) */}
@@ -1616,7 +1428,7 @@ export function CustomerOrderManagementView() {
                   className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
-                  {t(lang, "comv.previous", "Previous")}
+                  {t(lang, "comv.back", "Back")}
                 </button>
               ) : editingOrderId ? (
                 <button
@@ -1639,10 +1451,10 @@ export function CustomerOrderManagementView() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
               >
                 {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                <span>{t(lang, "comv.save_progress", "Save Progress")}</span>
+                <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
               </button>
 
-              {/* Next or Complete Button */}
+              {/* Next or Confirm Booking Button */}
               {currentStep < 4 ? (
                 <button
                   type="button"
@@ -1661,7 +1473,7 @@ export function CustomerOrderManagementView() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
                 >
                   {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  <span>{t(lang, "comv.complete_save_order", "Complete & Save Order")}</span>
+                  <span>{t(lang, "comv.confirm_booking", "Confirm Booking")}</span>
                 </button>
               )}
             </div>
@@ -1920,6 +1732,1124 @@ export function CustomerOrderManagementView() {
           </div>
         </SimpleModal>
       ) : null}
+    </div>
+  );
+}
+
+// Role-based serial visibility (spec point 2): every serial is always stored on the
+// row regardless of who is viewing — this only gates what's shown in the UI, mirroring
+// the precedent already used on the Roznamcha report view.
+function canSeeSerial(tier: "super" | "country" | "branch", ctx: BranchUserContext | null): boolean {
+  if (!ctx) return false;
+  if (ctx.isSuperAdmin) return true;
+  const roles = ctx.roles || [];
+  if (tier === "country") return roles.some((r) => ["country_admin", "country_user", "main_branch_admin"].includes(r));
+  if (tier === "branch") return roles.some((r) => ["country_admin", "country_user", "main_branch_admin", "city_branch_admin"].includes(r));
+  return false;
+}
+
+const selectClass =
+  "w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans";
+const inputClass = selectClass;
+const labelClass = "mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300";
+
+function Step1BookingCustomer({
+  lang,
+  tt,
+  userContext,
+  formData,
+  setFormData,
+  customers,
+  customerOptions,
+  countries,
+  ports,
+  loadingCities,
+  receivingCities,
+  partySelections,
+  companies,
+  companyOptions,
+  orders,
+  loading,
+  handlePartyChange,
+  handleLoadingCountryChange,
+  handleReceivingCountryChange,
+  handleLoadingPortChange,
+  handleDestinationPortChange
+}: {
+  lang: ReturnType<typeof useActiveLanguage>;
+  tt: (k: string, f: string) => string;
+  userContext: { context: BranchUserContext | null; loading: boolean; error: string | null };
+  formData: FormDataState;
+  setFormData: SetFormData;
+  customers: CustomerRow[];
+  customerOptions: SearchSelectOption[];
+  countries: CountryRow[];
+  ports: PortRow[];
+  loadingCities: CityRow[];
+  receivingCities: CityRow[];
+  partySelections: Record<PartyRoleKey, PartySelection>;
+  companies: CompanyRow[];
+  companyOptions: SearchSelectOption[];
+  orders: ClearingCustomerOrderRow[];
+  loading: boolean;
+  handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
+  handleLoadingCountryChange: (countryId: string) => void;
+  handleReceivingCountryChange: (countryId: string) => void;
+  handleLoadingPortChange: (portId: string) => void;
+  handleDestinationPortChange: (portId: string) => void;
+}) {
+  const ctx = userContext.context;
+  const selectedCustomer = customers.find((c) => c.id === formData.customer_id);
+
+  return (
+    <div className="space-y-3.5 animate-in fade-in duration-150">
+      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+        <Boxes className="h-4 w-4" />
+        <span>1. {t(lang, "comv.step1_title", "Booking & Customer")}</span>
+      </div>
+
+      {/* Serial bar — role-gated visibility (spec point 2); Global Bill/Shipping No. always shown */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
+        {canSeeSerial("super", ctx) ? (
+          <div className="space-y-0.5">
+            <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_super_admin", "Super Admin")}</div>
+            <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.super_admin_serial || "—"}</div>
+          </div>
+        ) : null}
+        {canSeeSerial("country", ctx) ? (
+          <div className="space-y-0.5">
+            <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_country", "Country Serial")}</div>
+            <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.country_serial || "—"}</div>
+          </div>
+        ) : null}
+        {canSeeSerial("branch", ctx) ? (
+          <div className="space-y-0.5">
+            <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_branch", "Branch Serial")}</div>
+            <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.branch_serial || "—"}</div>
+          </div>
+        ) : null}
+        <div className="space-y-0.5">
+          <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_global_bill", "Global Bill / Shipping No.")}</div>
+          <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || t(lang, "comv.serial_auto", "Auto on Save")}</div>
+        </div>
+      </div>
+
+      {/* Customer / Ledger Account Search & Select */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5 text-blue-600" />
+            <span>{t(lang, "comv.customer_ledger_account_req", "Customer / Ledger Account *")}</span>
+          </label>
+          {formData.customer_name ? (
+            <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
+              ✓ {formData.customer_name}
+            </span>
+          ) : null}
+        </div>
+        <SearchSelect
+          label={t(lang, "comv.select_customer_account", "Select Customer Account")}
+          value={formData.customer_id}
+          options={customerOptions}
+          placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
+          onValueChange={(cid) => {
+            const cust = customers.find((c) => c.id === cid);
+            if (cust) {
+              setFormData((prev) => ({ ...prev, customer_id: cust.id, customer_name: cust.customer_name }));
+              handlePartyChange("supplier", {
+                ...partySelections.supplier,
+                customerId: cust.id,
+                customerName: cust.customer_name,
+                addressText: partySelections.supplier.addressText || cust.address || ""
+              });
+            }
+          }}
+          disabled={loading}
+          searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
+          emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
+        />
+
+        {/* Live account details side panel — spec point 3 */}
+        {selectedCustomer ? (
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 text-[11px] dark:border-slate-800 dark:bg-slate-800/50">
+            <div>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_name", "Account Name:")}</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.customer_name}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_number", "Account No.:")}</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.person_code || "-"}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_company", "Company:")}</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.company_name || "-"}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_country", "Country:")}</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.country_name || "-"}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_branch", "Branch / City:")}</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.city_name || "-"}</span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <PartyRolePanel
+        roleKey="supplier"
+        label={tt("role_supplier", "Supplier / Order Party")}
+        required
+        selection={partySelections.supplier}
+        customers={customers}
+        companies={companies}
+        customerOptions={customerOptions}
+        companyOptions={companyOptions}
+        orders={orders}
+        disabled={loading}
+        lang={lang}
+        onChange={(next) => handlePartyChange("supplier", next)}
+      />
+
+      <PartyRolePanel
+        roleKey="buyer"
+        label={tt("role_buyer", "Buyer")}
+        selection={partySelections.buyer}
+        customers={customers}
+        companies={companies}
+        customerOptions={customerOptions}
+        companyOptions={companyOptions}
+        orders={orders}
+        disabled={loading}
+        lang={lang}
+        onChange={(next) => handlePartyChange("buyer", next)}
+      />
+
+      {/* Movement Type & Shipment Type — movement kept fully independent from transport mode (spec point 4) */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>{tt("movement_type", "Movement Type")} *</label>
+          <select
+            value={formData.movement_type}
+            onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
+            className={selectClass}
+          >
+            <option value="import">{tt("mv_import", "Import")}</option>
+            <option value="export">{tt("mv_export", "Export")}</option>
+            <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+            <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
+            <option value="down_transit">{t(lang, "comv.mv_down_transit", "Down Transit")}</option>
+            <option value="domestic">{t(lang, "comv.mv_local_domestic", "Local / Domestic")}</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>{tt("shipment_type", "Shipment Type")}</label>
+          <select
+            value={formData.shipment_type}
+            onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
+            className={selectClass}
+          >
+            <option value="FCL">{tt("ship_fcl", "FCL (Full Container Load)")}</option>
+            <option value="LCL">{tt("ship_lcl", "LCL (Less than Container)")}</option>
+            <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
+            <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Transport Mode — Sea / Road / Air / Rail only (spec point 4: never mixed with movement type) */}
+      <div>
+        <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { key: "by_sea", label: tt("tm_by_sea", "By Sea"), icon: Anchor },
+            { key: "by_road", label: tt("tm_by_road", "By Road"), icon: MapPin },
+            { key: "by_air", label: tt("tm_by_air", "By Air"), icon: Plane },
+            { key: "by_rail", label: t(lang, "comv.tm_by_rail", "By Rail"), icon: Route }
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFormData((current) => ({ ...current, transport_mode: key as TransportMode }))}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${
+                formData.transport_mode === key
+                  ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                  : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Loading / Receiving Country + Location (spec point 4) */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <Route className="h-3.5 w-3.5 text-blue-600" />
+          <span>{t(lang, "comv.route_countries_req", "Loading & Destination *")}</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="space-y-2">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+              {t(lang, "comv.loading_country_step", "Loading Country *")}
+            </label>
+            <select value={formData.loading_country_id} onChange={(e) => handleLoadingCountryChange(e.target.value)} className={selectClass}>
+              <option value="">{t(lang, "comv.select_loading_country_ph", "— Select Loading Country —")}</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <select
+              value={formData.loading_city_id}
+              onChange={(e) => setFormData((current) => ({ ...current, loading_city_id: e.target.value }))}
+              disabled={!formData.loading_country_id}
+              className={selectClass}
+            >
+              <option value="">{t(lang, "comv.select_loading_location_ph", "— Select Location / City —")}</option>
+              {loadingCities.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+              {t(lang, "comv.receiving_country_step", "Final Destination Country *")}
+            </label>
+            <select value={formData.receiving_country_id} onChange={(e) => handleReceivingCountryChange(e.target.value)} className={selectClass}>
+              <option value="">{t(lang, "comv.select_receiving_country_ph", "— Select Receiving Country —")}</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <select
+              value={formData.receiving_city_id}
+              onChange={(e) => setFormData((current) => ({ ...current, receiving_city_id: e.target.value }))}
+              disabled={!formData.receiving_country_id}
+              className={selectClass}
+            >
+              <option value="">{t(lang, "comv.select_receiving_location_ph", "— Select Location / City —")}</option>
+              {receivingCities.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>{tt("loading_port", "Loading Port")}</label>
+          <select value={formData.loading_port_id} onChange={(e) => handleLoadingPortChange(e.target.value)} className={selectClass}>
+            <option value="">{tt("select_loading_port", "Select Loading Port")}</option>
+            {ports.map((port) => (
+              <option key={port.id} value={port.id}>{port.port_name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>{tt("destination_port", "Destination Port")}</label>
+          <select value={formData.destination_port_id} onChange={(e) => handleDestinationPortChange(e.target.value)} className={selectClass}>
+            <option value="">{tt("select_destination_port", "Select Destination Port")}</option>
+            {ports.map((port) => (
+              <option key={port.id} value={port.id}>{port.port_name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>{tt("expected_loading_date", "Expected Loading Date")}</label>
+          <input
+            type="date"
+            value={formData.expected_loading_date}
+            onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>{tt("route_reference", "Route / Reference")}</label>
+          <input
+            type="text"
+            placeholder={tt("route_ph", "e.g. Karachi to Kabul via Torkham")}
+            value={formData.route_name}
+            onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>{tt("cargo_container_details", "Cargo / Container Details")}</label>
+        <input
+          type="text"
+          placeholder={tt("cargo_ph", "e.g. 40ft High Cube Container")}
+          value={formData.cargo_details}
+          onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
+          className={inputClass}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Step2PickupGoodsTruck({
+  lang,
+  tt,
+  formData,
+  setFormData,
+  handleGoodsSelect,
+  saving
+}: {
+  lang: ReturnType<typeof useActiveLanguage>;
+  tt: (k: string, f: string) => string;
+  formData: FormDataState;
+  setFormData: SetFormData;
+  handleGoodsSelect: (value: GoodsPickerValue) => void;
+  saving: boolean;
+}) {
+  const isRoad = formData.transport_mode === "by_road";
+  const [showTruckSection, setShowTruckSection] = useState(false);
+
+  return (
+    <div className="space-y-3.5 animate-in fade-in duration-150">
+      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+        <Warehouse className="h-4 w-4" />
+        <span>2. {t(lang, "comv.step2_title", "Pickup, Goods & Truck")}</span>
+      </div>
+
+      {/* Pickup Source — spec point 5: Customer Warehouse must never create internal stock */}
+      <div>
+        <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_source", "Pickup Source")}</label>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {(
+            [
+              { key: "shipping_warehouse", label: t(lang, "comv.ls_shipping_warehouse", "Shipping Link Warehouse"), icon: Warehouse },
+              { key: "customer_warehouse", label: t(lang, "comv.ls_customer_warehouse", "Customer Warehouse"), icon: Building2 },
+              { key: "container", label: t(lang, "comv.ls_container", "Container"), icon: Container },
+              { key: "port_terminal", label: t(lang, "comv.ls_port_terminal", "Port / Terminal"), icon: Anchor },
+              { key: "border_yard", label: t(lang, "comv.ls_border_yard", "Border / Yard"), icon: MapPin },
+              { key: "other", label: t(lang, "comv.ls_other", "Other"), icon: Repeat2 }
+            ] as const
+          ).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFormData((current) => ({ ...current, loading_source: key, loading_source_name: current.loading_source === key ? current.loading_source_name : "" }))}
+              className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-bold transition-all ${
+                formData.loading_source === key
+                  ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                  : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span className="truncate">{label}</span>
+            </button>
+          ))}
+        </div>
+
+        {formData.loading_source === "shipping_warehouse" ? (
+          <div className="mt-2">
+            <WarehousePicker
+              label={t(lang, "comv.select_shipping_warehouse", "Select Shipping Link Warehouse")}
+              value={formData.loading_source_warehouse_id}
+              onSelectRecord={(record) =>
+                setFormData((current) => ({
+                  ...current,
+                  loading_source_warehouse_id: record?.id || "",
+                  loading_source_name: record?.warehouse_name || ""
+                }))
+              }
+            />
+          </div>
+        ) : formData.loading_source === "customer_warehouse" ? (
+          <div className="mt-2 space-y-1">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              {t(lang, "comv.customer_warehouse_note", "Uses the customer's own address — this never creates internal Shipping Link stock.")}
+            </p>
+            <input
+              type="text"
+              placeholder={t(lang, "comv.customer_warehouse_ph", "Customer warehouse / delivery address")}
+              value={formData.loading_source_name}
+              onChange={(e) => setFormData((current) => ({ ...current, loading_source_name: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+        ) : formData.loading_source === "container" ? (
+          <input
+            type="text"
+            placeholder={t(lang, "comv.container_ref_ph", "Container number / reference")}
+            value={formData.loading_source_container_ref}
+            onChange={(e) => setFormData((current) => ({ ...current, loading_source_container_ref: e.target.value }))}
+            className={`mt-2 ${inputClass}`}
+          />
+        ) : (
+          <input
+            type="text"
+            placeholder={tt("ls_name_ph", "Source name / location details")}
+            value={formData.loading_source_name}
+            onChange={(e) => setFormData((current) => ({ ...current, loading_source_name: e.target.value }))}
+            className={`mt-2 ${inputClass}`}
+          />
+        )}
+      </div>
+
+      {/* Goods Master Selection Card */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <Boxes className="h-4 w-4 text-emerald-600" />
+          {tt("goods_master_card", "Goods / Item Master")}
+        </div>
+        <GoodsPicker
+          value={formData.goods_id}
+          variationValue={formData.goods_variation_id}
+          onSelect={handleGoodsSelect}
+        />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
+          <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("selected_goods", "Selected Goods")}</div>
+            <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 truncate">
+              {formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? ` • ${formData.goods_chs_code}` : ""}` : "-"}
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("origin_variation", "Origin / Variation")}</div>
+            <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 truncate">
+              {formData.goods_origin_country_name || "-"}
+              {formData.goods_variation_label ? ` • ${formData.goods_variation_label}` : ""}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_quantity", "Quantity")}</label>
+            <input
+              type="number"
+              value={formData.goods_quantity}
+              onChange={(e) => setFormData((current) => ({ ...current, goods_quantity: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_unit", "Unit")}</label>
+            <input
+              type="text"
+              placeholder={t(lang, "comv.goods_unit_ph", "e.g. KG, TON, PCS")}
+              value={formData.goods_unit}
+              onChange={(e) => setFormData((current) => ({ ...current, goods_unit: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_bags_cartons", "Bags / Cartons")}</label>
+            <input
+              type="number"
+              value={formData.goods_bags_cartons}
+              onChange={(e) => setFormData((current) => ({ ...current, goods_bags_cartons: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_gross_weight", "Gross Weight")}</label>
+            <input
+              type="number"
+              value={formData.goods_gross_weight}
+              onChange={(e) => setFormData((current) => ({ ...current, goods_gross_weight: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_empty_weight", "Empty Weight")}</label>
+            <input
+              type="number"
+              value={formData.goods_empty_weight}
+              onChange={(e) => setFormData((current) => ({ ...current, goods_empty_weight: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_net_weight", "Net Weight")}</label>
+            <input
+              type="number"
+              value={formData.goods_net_weight}
+              onChange={(e) => setFormData((current) => ({ ...current, goods_net_weight: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Truck Requirement — spec point 7 */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <Truck className="h-4 w-4 text-blue-600" />
+            {t(lang, "comv.truck_requirement", "Truck Requirement")}
+            {isRoad ? <span className="text-rose-500">*</span> : null}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{t(lang, "comv.load_type", "Load Type")}</label>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {(
+              [
+                { key: "full_truck", label: t(lang, "comv.load_type_full_truck", "Full Truck") },
+                { key: "partial_load", label: t(lang, "comv.load_type_partial_load", "Partial Load") },
+                { key: "container_haulage", label: t(lang, "comv.load_type_container_haulage", "Container Haulage") }
+              ] as const
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setFormData((current) => ({ ...current, load_type: key }))}
+                className={`rounded-xl border px-2 py-1.5 text-xs font-bold transition-all ${
+                  formData.load_type === key
+                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                    : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {isRoad || showTruckSection || formData.truck_id || formData.truck_number ? (
+          <TruckEntryPicker
+            langProp={lang}
+            disabled={saving}
+            value={{
+              truck_registration_type: formData.truck_registration_type,
+              truck_id: formData.truck_id,
+              truck_number: formData.truck_number,
+              truck_driver_name: formData.truck_driver_name,
+              truck_driver_mobile: formData.truck_driver_mobile,
+              truck_owner_name: formData.truck_owner_name,
+              truck_transport_company: formData.truck_transport_company
+            }}
+            onChange={(next: TruckEntryValue) => setFormData((current) => ({ ...current, ...next }))}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowTruckSection(true)}
+            className="text-xs font-bold text-blue-600 hover:underline"
+          >
+            + {t(lang, "comv.add_truck_details", "Add Truck Details")}
+          </button>
+        )}
+      </div>
+
+      <div>
+        <label className={labelClass}>{tt("remarks", "Remarks")}</label>
+        <textarea
+          rows={2}
+          placeholder={tt("remarks_ph", "Additional instructions or notes...")}
+          value={formData.remarks}
+          onChange={(e) => setFormData((current) => ({ ...current, remarks: e.target.value }))}
+          className={inputClass}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LegPartyMini({
+  label,
+  value,
+  rows,
+  onChange
+}: {
+  label: string;
+  value: string;
+  rows: Array<{ id: string; name: string }>;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
+        <option value="">-</option>
+        {rows.map((r) => (
+          <option key={r.id} value={r.id}>{r.name}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function Step3RouteVesselCustoms({
+  lang,
+  tt,
+  formData,
+  setFormData,
+  countries,
+  partySelections,
+  customers,
+  companies,
+  customerOptions,
+  companyOptions,
+  orders,
+  loading,
+  handlePartyChange,
+  updateLeg,
+  addLeg,
+  removeLeg,
+  seedLegsForSeaWithPreCarriage
+}: {
+  lang: ReturnType<typeof useActiveLanguage>;
+  tt: (k: string, f: string) => string;
+  formData: FormDataState;
+  setFormData: SetFormData;
+  countries: CountryRow[];
+  partySelections: Record<PartyRoleKey, PartySelection>;
+  customers: CustomerRow[];
+  companies: CompanyRow[];
+  customerOptions: SearchSelectOption[];
+  companyOptions: SearchSelectOption[];
+  orders: ClearingCustomerOrderRow[];
+  loading: boolean;
+  handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
+  updateLeg: (index: number, patch: Partial<RouteLeg>) => void;
+  addLeg: (transportMode?: LegTransportMode | "") => void;
+  removeLeg: (index: number) => void;
+  seedLegsForSeaWithPreCarriage: () => void;
+}) {
+  const showAutoSeed =
+    formData.transport_mode === "by_sea" && formData.loading_source !== "port_terminal" && formData.legs.length === 0;
+
+  return (
+    <div className="space-y-3.5 animate-in fade-in duration-150">
+      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+        <Route className="h-4 w-4" />
+        <span>3. {t(lang, "comv.step3_title", "Route, Vessel & Customs")}</span>
+      </div>
+
+      <PartyRolePanel
+        roleKey="importer"
+        label={tt("role_importer", "Importer")}
+        required
+        selection={partySelections.importer}
+        customers={customers}
+        companies={companies}
+        customerOptions={customerOptions}
+        companyOptions={companyOptions}
+        orders={orders}
+        disabled={loading}
+        lang={lang}
+        onChange={(next) => handlePartyChange("importer", next)}
+      />
+
+      <PartyRolePanel
+        roleKey="exporter"
+        label={tt("role_exporter", "Exporter")}
+        required
+        selection={partySelections.exporter}
+        customers={customers}
+        companies={companies}
+        customerOptions={customerOptions}
+        companyOptions={companyOptions}
+        orders={orders}
+        disabled={loading}
+        lang={lang}
+        onChange={(next) => handlePartyChange("exporter", next)}
+      />
+
+      <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/40 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{tt("notify_party_required", "Notify Party Required?")}</label>
+          <select
+            value={formData.notify_party_required ? "yes" : "no"}
+            onChange={(e) => setFormData((current) => ({ ...current, notify_party_required: e.target.value === "yes" }))}
+            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-900 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+          >
+            <option value="no">{tt("no_opt", "No")}</option>
+            <option value="yes">{tt("yes", "Yes")}</option>
+          </select>
+        </div>
+
+        {formData.notify_party_required ? (
+          <PartyRolePanel
+            roleKey="notify_party"
+            label={tt("role_notify_party", "Notify Party")}
+            selection={partySelections.notify_party}
+            customers={customers}
+            companies={companies}
+            customerOptions={customerOptions}
+            companyOptions={companyOptions}
+            orders={orders}
+            disabled={loading}
+            lang={lang}
+            onChange={(next) => handlePartyChange("notify_party", next)}
+          />
+        ) : null}
+      </div>
+
+      {/* Route Legs — spec point 8: ONE master shipment, multiple legs (not a new shipment per crossing) */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <Route className="h-4 w-4 text-blue-600" />
+            {t(lang, "comv.route_legs", "Route Legs")}
+          </div>
+          <div className="flex gap-2">
+            {showAutoSeed ? (
+              <button
+                type="button"
+                onClick={seedLegsForSeaWithPreCarriage}
+                className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
+              >
+                {t(lang, "comv.auto_add_road_sea", "+ Auto-add Road + Sea Legs")}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => addLeg(formData.transport_mode as LegTransportMode)}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <Plus className="inline h-3 w-3 mr-0.5" />
+              {t(lang, "comv.add_leg", "Add Leg")}
+            </button>
+          </div>
+        </div>
+
+        {formData.legs.length === 0 ? (
+          <p className="text-[11px] text-slate-400">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>
+        ) : (
+          formData.legs.map((leg, idx) => (
+            <div key={idx} className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-blue-700 dark:text-blue-400">{t(lang, "comv.leg_no", "Leg")} #{leg.legNo}</span>
+                <button type="button" onClick={() => removeLeg(idx)} className="text-rose-500 hover:text-rose-700">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.leg_from", "From Country")}</label>
+                  <select
+                    value={leg.fromCountryId}
+                    onChange={(e) => {
+                      const row = countries.find((c) => c.id === e.target.value);
+                      updateLeg(idx, { fromCountryId: e.target.value, fromCountryName: row?.name || "" });
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">-</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder={t(lang, "comv.leg_from_location_ph", "From location / port / border")}
+                    value={leg.fromLocationText}
+                    onChange={(e) => updateLeg(idx, { fromLocationText: e.target.value })}
+                    className={`mt-1.5 ${inputClass}`}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.leg_to", "To Country")}</label>
+                  <select
+                    value={leg.toCountryId}
+                    onChange={(e) => {
+                      const row = countries.find((c) => c.id === e.target.value);
+                      updateLeg(idx, { toCountryId: e.target.value, toCountryName: row?.name || "" });
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">-</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder={t(lang, "comv.leg_to_location_ph", "To location / port / border")}
+                    value={leg.toLocationText}
+                    onChange={(e) => updateLeg(idx, { toLocationText: e.target.value })}
+                    className={`mt-1.5 ${inputClass}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.leg_transport_mode", "Leg Transport Mode")}</label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(["by_sea", "by_road", "by_air", "by_rail"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => updateLeg(idx, { transportMode: mode })}
+                      className={`rounded-lg border px-2 py-1 text-[10px] font-bold ${
+                        leg.transportMode === mode
+                          ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                          : "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                      }`}
+                    >
+                      {mode === "by_sea" ? tt("tm_by_sea", "Sea") : mode === "by_road" ? tt("tm_by_road", "Road") : mode === "by_air" ? tt("tm_by_air", "Air") : t(lang, "comv.tm_by_rail", "Rail")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <ClearingAgentPicker
+                label={t(lang, "comv.responsible_agent", "Responsible Clearing Agent")}
+                value={leg.responsibleClearingAgentId}
+                onValueChange={(id) => updateLeg(idx, { responsibleClearingAgentId: id })}
+              />
+
+              {leg.transportMode === "by_road" ? (
+                <TruckEntryPicker
+                  langProp={lang}
+                  disabled={loading}
+                  value={{
+                    truck_registration_type: (leg.truckRegistrationType || "registered") as "registered" | "temporary",
+                    truck_id: leg.truckId,
+                    truck_number: leg.truckNumber,
+                    truck_driver_name: leg.truckDriverName,
+                    truck_driver_mobile: leg.truckDriverMobile,
+                    truck_owner_name: "",
+                    truck_transport_company: ""
+                  }}
+                  onChange={(next: TruckEntryValue) =>
+                    updateLeg(idx, {
+                      truckRegistrationType: next.truck_registration_type,
+                      truckId: next.truck_id,
+                      truckNumber: next.truck_number,
+                      truckDriverName: next.truck_driver_name,
+                      truckDriverMobile: next.truck_driver_mobile
+                    })
+                  }
+                />
+              ) : null}
+
+              {/* Vessel/Sea details — spec point 9: never forced onto a non-sea leg */}
+              {leg.transportMode === "by_sea" ? (
+                <div className="space-y-2 rounded-lg border border-slate-100 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900">
+                  <ShippingLinePicker
+                    label={t(lang, "comv.shipping_line", "Shipping Line")}
+                    value={leg.shippingLineId}
+                    onValueChange={(id) => updateLeg(idx, { shippingLineId: id })}
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder={t(lang, "comv.vessel_name", "Vessel Name")} value={leg.vesselName} onChange={(e) => updateLeg(idx, { vesselName: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.voyage_number", "Voyage No.")} value={leg.voyageNumber} onChange={(e) => updateLeg(idx, { voyageNumber: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.container_number", "Container No.")} value={leg.containerNumber} onChange={(e) => updateLeg(idx, { containerNumber: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.seal_number", "Seal No.")} value={leg.sealNumber} onChange={(e) => updateLeg(idx, { sealNumber: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.bl_number", "B/L Number")} value={leg.blNumber} onChange={(e) => updateLeg(idx, { blNumber: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.port_of_loading", "Port of Loading")} value={leg.portOfLoading} onChange={(e) => updateLeg(idx, { portOfLoading: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.port_of_discharge", "Port of Discharge")} value={leg.portOfDischarge} onChange={(e) => updateLeg(idx, { portOfDischarge: e.target.value })} className={inputClass} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
+                      <input type="date" value={leg.etd} onChange={(e) => updateLeg(idx, { etd: e.target.value })} className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
+                      <input type="date" value={leg.eta} onChange={(e) => updateLeg(idx, { eta: e.target.value })} className={inputClass} />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Customs — spec point 10 */}
+              <div className="space-y-2 rounded-lg border border-amber-100 bg-amber-50/40 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/10">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">{t(lang, "comv.customs", "Customs")}</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <LegPartyMini
+                    label={t(lang, "comv.customs_country", "Customs Country")}
+                    value={leg.customsCountryId}
+                    rows={countries.map((c) => ({ id: c.id, name: c.name }))}
+                    onChange={(id) => updateLeg(idx, { customsCountryId: id })}
+                  />
+                  <div>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.customs_point", "Port / Border / Customs Point")}</label>
+                    <input type="text" value={leg.customsPointText} onChange={(e) => updateLeg(idx, { customsPointText: e.target.value })} className={inputClass} />
+                  </div>
+                </div>
+                <ClearingAgentPicker
+                  label={t(lang, "comv.customs_clearing_agent", "Clearing Agent")}
+                  value={leg.customsClearingAgentId}
+                  onValueChange={(id) => updateLeg(idx, { customsClearingAgentId: id })}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.clearance_type", "Clearance Type")}</label>
+                    <select value={leg.clearanceType} onChange={(e) => updateLeg(idx, { clearanceType: e.target.value as ClearanceType })} className={selectClass}>
+                      <option value="">-</option>
+                      <option value="import">{tt("mv_import", "Import")}</option>
+                      <option value="export">{tt("mv_export", "Export")}</option>
+                      <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.duty_treatment", "Duty Treatment")}</label>
+                    <select value={leg.dutyTreatment} onChange={(e) => updateLeg(idx, { dutyTreatment: e.target.value as DutyTreatment })} className={selectClass}>
+                      <option value="">-</option>
+                      <option value="duty_payable">{t(lang, "comv.duty_payable", "Duty Payable")}</option>
+                      <option value="no_duty_exempt">{t(lang, "comv.duty_exempt", "No Duty / Exempt")}</option>
+                      <option value="transit_bonded">{t(lang, "comv.duty_transit_bonded", "Transit / Bonded")}</option>
+                      <option value="pending">{t(lang, "comv.duty_pending", "Pending")}</option>
+                    </select>
+                  </div>
+                </div>
+
+                {leg.dutyTreatment === "duty_payable" ? (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <input type="number" placeholder={t(lang, "comv.duty_amount", "Duty Amount")} value={leg.dutyAmount} onChange={(e) => updateLeg(idx, { dutyAmount: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.duty_currency", "Currency")} value={leg.dutyCurrency} onChange={(e) => updateLeg(idx, { dutyCurrency: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.duty_payer", "Payer")} value={leg.dutyPayer} onChange={(e) => updateLeg(idx, { dutyPayer: e.target.value })} className={inputClass} />
+                    <input type="text" placeholder={t(lang, "comv.customs_receipt_ref", "Receipt / Reference")} value={leg.customsReceiptRef} onChange={(e) => updateLeg(idx, { customsReceiptRef: e.target.value })} className={inputClass} />
+                    <input type="date" value={leg.customsClearanceDate} onChange={(e) => updateLeg(idx, { customsClearanceDate: e.target.value })} className={inputClass} />
+                  </div>
+                ) : leg.dutyTreatment === "no_duty_exempt" || leg.dutyTreatment === "transit_bonded" ? (
+                  <input
+                    type="text"
+                    placeholder={t(lang, "comv.supporting_reference", "Supporting reference / document")}
+                    value={leg.customsReceiptRef}
+                    onChange={(e) => updateLeg(idx, { customsReceiptRef: e.target.value })}
+                    className={inputClass}
+                  />
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_departure", "Planned Departure")}</label>
+                  <input type="date" value={leg.plannedDeparture} onChange={(e) => updateLeg(idx, { plannedDeparture: e.target.value })} className={inputClass} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_arrival", "Planned Arrival")}</label>
+                  <input type="date" value={leg.plannedArrival} onChange={(e) => updateLeg(idx, { plannedArrival: e.target.value })} className={inputClass} />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.leg_status", "Leg Status")}</label>
+                <select value={leg.status} onChange={(e) => updateLeg(idx, { status: e.target.value })} className={selectClass}>
+                  {["pending", "pickup_assigned", "loaded", "in_transit", "arrived", "customs_pending", "cleared", "handed_over", "completed"].map((s) => (
+                    <option key={s} value={s}>{t(lang, ("comv.legstatus_" + s) as never, s.replace(/_/g, " "))}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.handover_reference", "Handover Reference")}</label>
+                <input
+                  type="text"
+                  placeholder={t(lang, "comv.handover_reference_ph", "Link to an existing handover record (optional)")}
+                  value={leg.handoverId}
+                  onChange={(e) => updateLeg(idx, { handoverId: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("remarks", "Remarks")}</label>
+                <textarea rows={2} value={leg.remarks} onChange={(e) => updateLeg(idx, { remarks: e.target.value })} className={inputClass} />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Step4ReviewConfirm({
+  lang,
+  tt,
+  formData,
+  partySelections,
+  clearingAgents,
+  shippingLines,
+  userContext
+}: {
+  lang: ReturnType<typeof useActiveLanguage>;
+  tt: (k: string, f: string) => string;
+  formData: FormDataState;
+  partySelections: Record<PartyRoleKey, PartySelection>;
+  clearingAgents: ClearingAgentRow[];
+  shippingLines: ShippingLineRow[];
+  userContext: { context: BranchUserContext | null; loading: boolean; error: string | null };
+}) {
+  const ctx = userContext.context;
+  const agentName = (id: string) => clearingAgents.find((a) => a.id === id)?.name || summaryValue(id);
+  const lineName = (id: string) => shippingLines.find((l) => l.id === id)?.name || summaryValue(id);
+
+  const row = (label: string, value?: string | null) => (
+    <div className="flex justify-between gap-3 py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
+      <span className="text-slate-500 font-semibold">{label}</span>
+      <span className="font-bold text-slate-900 dark:text-slate-100 text-right">{summaryValue(value)}</span>
+    </div>
+  );
+
+  return (
+    <div className="space-y-3.5 animate-in fade-in duration-150">
+      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+        <CheckCircle2 className="h-4 w-4" />
+        <span>4. {t(lang, "comv.step4_title", "Review & Confirm")}</span>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_references", "References")}</div>
+        {canSeeSerial("super", ctx) ? row(t(lang, "comv.serial_super_admin", "Super Admin"), formData.super_admin_serial) : null}
+        {canSeeSerial("country", ctx) ? row(t(lang, "comv.serial_country", "Country Serial"), formData.country_serial) : null}
+        {canSeeSerial("branch", ctx) ? row(t(lang, "comv.serial_branch", "Branch Serial"), formData.branch_serial) : null}
+        {row(t(lang, "comv.serial_entry", "Entry Number"), formData.entry_serial)}
+        {row(t(lang, "comv.serial_global_bill", "Global Bill / Shipping No."), formData.order_no)}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_booking", "Booking & Customer")}</div>
+        {row(tt("role_supplier", "Supplier / Order Party"), partySelections.supplier.customerName || formData.customer_name)}
+        {row(tt("role_buyer", "Buyer"), partySelections.buyer.customerName)}
+        {row(tt("movement_type", "Movement Type"), formData.movement_type)}
+        {row(tt("transport_mode", "Transport Mode"), formData.transport_mode)}
+        {row(t(lang, "comv.loading_country_step", "Loading Country"), formData.loading_country_name)}
+        {row(t(lang, "comv.receiving_country_step", "Final Destination Country"), formData.receiving_country_name)}
+        {row(tt("loading_port", "Loading Port"), formData.loading_port_name)}
+        {row(tt("destination_port", "Destination Port"), formData.destination_port_name)}
+        {row(tt("route_reference", "Route / Reference"), formData.route_name)}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_pickup_goods_truck", "Pickup, Goods & Truck")}</div>
+        {row(tt("loading_source", "Pickup Source"), formData.loading_source_name || formData.loading_source)}
+        {row(tt("goods_master", "Goods"), formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? " • " + formData.goods_chs_code : ""}` : null)}
+        {row(t(lang, "comv.goods_quantity", "Quantity"), formData.goods_quantity ? `${formData.goods_quantity} ${formData.goods_unit}` : null)}
+        {row(t(lang, "comv.goods_bags_cartons", "Bags / Cartons"), formData.goods_bags_cartons)}
+        {row(t(lang, "comv.goods_gross_weight", "Gross Weight"), formData.goods_gross_weight)}
+        {row(t(lang, "comv.load_type", "Load Type"), formData.load_type)}
+        {row(t(lang, "comv.truck_requirement", "Truck"), formData.truck_number)}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-2">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "comv.review_route_legs", "Route Legs")}</div>
+        {formData.legs.length === 0 ? (
+          <p className="text-slate-400">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>
+        ) : (
+          formData.legs.map((leg, idx) => (
+            <div key={idx} className="rounded-lg border border-slate-100 bg-slate-50/60 p-2 dark:border-slate-800 dark:bg-slate-800/40 space-y-0.5">
+              <div className="font-black text-blue-700 dark:text-blue-400">
+                {t(lang, "comv.leg_no", "Leg")} #{leg.legNo}: {summaryValue(leg.fromCountryName || leg.fromLocationText)} → {summaryValue(leg.toCountryName || leg.toLocationText)} ({leg.transportMode || "-"})
+              </div>
+              {row(t(lang, "comv.responsible_agent", "Responsible Clearing Agent"), leg.responsibleClearingAgentId ? agentName(leg.responsibleClearingAgentId) : null)}
+              {leg.transportMode === "by_sea" ? row(t(lang, "comv.shipping_line", "Shipping Line"), leg.shippingLineId ? lineName(leg.shippingLineId) : null) : null}
+              {row(t(lang, "comv.clearance_type", "Clearance Type"), leg.clearanceType)}
+              {row(t(lang, "comv.duty_treatment", "Duty Treatment"), leg.dutyTreatment)}
+              {row(t(lang, "comv.leg_status", "Leg Status"), leg.status)}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

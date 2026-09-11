@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { canAccessCountry, canAccessCityBranch, canAccessCountryBranch } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import {
   deleteCustomerOrder,
@@ -20,9 +22,27 @@ async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> 
   return parts[parts.length - 1] || "";
 }
 
+// A record scoped to a country/branch a non-super-admin doesn't belong to must
+// never be readable/writable by them, even if they know the id — mirrors the
+// canAccessCountry/CityBranch checks every other hardened module in this ERP uses.
+function canAccessOrder(session: any, order: Record<string, any>) {
+  if (session.isSuperAdmin) return true;
+  if (order.clearing_agent_id && (session.clearingAgentIds ?? []).includes(order.clearing_agent_id)) return true;
+  if (order.city_branch_id && canAccessCityBranch(session, order.city_branch_id)) return true;
+  if (order.country_branch_id && canAccessCountryBranch(session, order.country_branch_id)) return true;
+  if (order.country_id && canAccessCountry(session, order.country_id)) return true;
+  if (order.created_by && order.created_by === session.userId) return true;
+  // An order created before this scope model existed has no scope columns set at
+  // all — fail open only for that legacy case so existing data stays reachable,
+  // never for a row that has a scope which simply doesn't match this session.
+  if (!order.country_id && !order.country_branch_id && !order.city_branch_id && !order.clearing_agent_id && !order.created_by) return true;
+  return false;
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const id = await resolveOrderId(req, params);
     if (!id) {
       return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
@@ -30,6 +50,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const order = await getCustomerOrderById(id);
     if (!order) {
       return NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 });
+    }
+    if (!canAccessOrder(session, order)) {
+      return NextResponse.json({ success: false, error: "Not authorized to view this order" }, { status: 403 });
     }
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
@@ -40,10 +63,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const id = await resolveOrderId(req, params);
     if (!id) {
       return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
+    }
+    const existing = await getCustomerOrderById(id);
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 });
+    }
+    if (!canAccessOrder(session, existing)) {
+      return NextResponse.json({ success: false, error: "Not authorized to edit this order" }, { status: 403 });
     }
     const body = await req.json();
     const result = await saveCustomerOrder({
@@ -82,10 +113,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       remarks: body.remarks ?? null,
       status: body.status ?? "pending",
       partyLinks: body.party_links ?? body.partyLinks ?? undefined,
+      legs: body.legs ?? undefined,
       originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
-      countryId: body.country_id ?? body.countryId ?? null,
-      countryBranchId: body.country_branch_id ?? body.countryBranchId ?? null,
-      cityBranchId: body.city_branch_id ?? body.cityBranchId ?? null,
+      // Scope columns are never re-writable via PATCH by a non-super-admin — a
+      // scoped user editing their own order keeps its existing scope untouched;
+      // only super admin can re-tag an order to a different country/branch/agent.
+      countryId: session.isSuperAdmin ? (body.country_id ?? body.countryId ?? existing.country_id) : existing.country_id,
+      countryBranchId: session.isSuperAdmin ? (body.country_branch_id ?? body.countryBranchId ?? existing.country_branch_id) : existing.country_branch_id,
+      cityBranchId: session.isSuperAdmin ? (body.city_branch_id ?? body.cityBranchId ?? existing.city_branch_id) : existing.city_branch_id,
+      clearingAgentId: session.isSuperAdmin ? (body.clearing_agent_id ?? body.clearingAgentId ?? existing.clearing_agent_id) : existing.clearing_agent_id,
       truckId: body.truck_id ?? body.truckId ?? null,
       truckRegistrationType: body.truck_registration_type ?? body.truckRegistrationType ?? null,
       truckNumber: body.truck_number ?? body.truckNumber ?? null,
@@ -93,10 +129,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       truckDriverMobile: body.truck_driver_mobile ?? body.truckDriverMobile ?? null,
       truckOwnerName: body.truck_owner_name ?? body.truckOwnerName ?? null,
       truckTransportCompany: body.truck_transport_company ?? body.truckTransportCompany ?? null,
-      truckDetails: body.truck_details ?? body.truckDetails ?? null
+      truckDetails: body.truck_details ?? body.truckDetails ?? null,
+      loadType: body.load_type ?? body.loadType ?? null,
+      loadingStateProvinceId: body.loading_state_province_id ?? body.loadingStateProvinceId ?? null,
+      loadingDistrictId: body.loading_district_id ?? body.loadingDistrictId ?? null,
+      loadingCityId: body.loading_city_id ?? body.loadingCityId ?? null,
+      loadingAreaId: body.loading_area_id ?? body.loadingAreaId ?? null,
+      receivingStateProvinceId: body.receiving_state_province_id ?? body.receivingStateProvinceId ?? null,
+      receivingDistrictId: body.receiving_district_id ?? body.receivingDistrictId ?? null,
+      receivingCityId: body.receiving_city_id ?? body.receivingCityId ?? null,
+      receivingAreaId: body.receiving_area_id ?? body.receivingAreaId ?? null,
+      loadingSourceWarehouseId: body.loading_source_warehouse_id ?? body.loadingSourceWarehouseId ?? null,
+      loadingSourceContainerRef: body.loading_source_container_ref ?? body.loadingSourceContainerRef ?? null,
+      goodsQuantity: body.goods_quantity ?? body.goodsQuantity ?? null,
+      goodsUnit: body.goods_unit ?? body.goodsUnit ?? null,
+      goodsBagsCartons: body.goods_bags_cartons ?? body.goodsBagsCartons ?? null,
+      goodsGrossWeight: body.goods_gross_weight ?? body.goodsGrossWeight ?? null,
+      goodsEmptyWeight: body.goods_empty_weight ?? body.goodsEmptyWeight ?? null,
+      goodsNetWeight: body.goods_net_weight ?? body.goodsNetWeight ?? null
     });
 
-    return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks });
+    return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -105,10 +158,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const id = await resolveOrderId(req, params);
     if (!id) {
       return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
+    }
+    const existing = await getCustomerOrderById(id);
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 });
+    }
+    if (!canAccessOrder(session, existing)) {
+      return NextResponse.json({ success: false, error: "Not authorized to delete this order" }, { status: 403 });
     }
     const deleted = await deleteCustomerOrder(id);
     return NextResponse.json({ success: true, data: deleted });

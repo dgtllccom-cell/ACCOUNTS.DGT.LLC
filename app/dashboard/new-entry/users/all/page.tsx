@@ -34,7 +34,13 @@ import {
   MoreVertical,
   Pencil,
   ArrowRight,
-  Eye
+  Eye,
+  EyeOff,
+  Mail,
+  Ship,
+  Truck,
+  TrendingUp,
+  ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -48,6 +54,7 @@ interface UserDirectoryItem {
   userId: string;
   userCode: string;
   fullName: string;
+  subtitle?: string;
   email: string;
   phone?: string;
   countryId: string | null;
@@ -57,17 +64,20 @@ interface UserDirectoryItem {
   branchName: string;
   role: string;
   roleLabel: string;
+  businessType: string;
+  businessId: string;
   isActive: boolean;
   avatarInitials?: string;
   avatarColor?: string;
   permissions?: string[];
   permissionsCount?: number;
-  passwordVaultRef: string;
+  passwordVaultRef?: string;
   passwordKey: string;
   loginUrl: string;
   loginPortalLabel: string;
   createdAt: string;
   updatedAt?: string;
+  lastLogin?: string;
 }
 
 // Complete list of system forms for granular permission granting & inspection
@@ -115,180 +125,687 @@ const ALL_SYSTEM_FORMS = [
   { id: "form-ports-settings", name: "Ports & Border Crossing Customs", category: "Administration", route: "/dashboard/settings/tax" }
 ];
 
-// Fallback seed directory precisely matching the executive reference specification
+// Fallback seed directory precisely matching the 28 users reference specification & database records
 const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
+  // Page 1 (Items 1 to 10) - Strictly matching the executive reference screenshot:
   {
     userId: "ref-usr-1",
-    userCode: "duba.admin",
-    fullName: "Duba Dubai City Admin",
-    email: "duba.admin@dgt.com",
+    userCode: "dubai.admin",
+    fullName: "Dubai Dubai City Admin",
+    subtitle: "Dubai City Administration",
+    email: "dubai.admin@dgt.llc",
     countryId: "c-are",
     countryName: "United Arab Emirates",
     countryCode: "UAE",
     branchId: "b-dxb",
-    branchName: "UAE → Deira Dubai Branch",
+    branchName: "Dubai - Main",
     role: "city_branch_admin",
-    roleLabel: "CITY_BRANCH_ADMIN",
+    roleLabel: "CITY BRANCH ADMIN",
+    businessType: "General Business",
+    businessId: "DB-001",
     isActive: true,
-    avatarInitials: "DD",
-    avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
-    passwordVaultRef: "VAULT-DGT-ARE-DBA",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    avatarInitials: "DA",
+    avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
+    passwordKey: "Admin@Dgt2026!",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
-    createdAt: "2025-04-20T10:00:00Z"
+    createdAt: "2025-04-20T10:00:00Z",
+    lastLogin: "15/09/2026\n10:45 AM"
   },
   {
     userId: "ref-usr-2",
     userCode: "chaman.admin",
     fullName: "Chaman City Admin",
-    email: "chaman.admin@dgt.com",
+    subtitle: "Chaman City Office",
+    email: "chaman.admin@dgt.llc",
     countryId: "c-pak",
     countryName: "Pakistan",
     countryCode: "Pakistan",
     branchId: "b-chm",
-    branchName: "Pakistan → Chaman City Branch",
+    branchName: "Chaman City",
     role: "city_branch_admin",
-    roleLabel: "CITY_BRANCH_ADMIN",
+    roleLabel: "CITY BRANCH ADMIN",
+    businessType: "General Business",
+    businessId: "CH-001",
     isActive: true,
     avatarInitials: "CA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordVaultRef: "VAULT-DGT-PAK-CHM",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "Chaman@Dgt2026!",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
-    createdAt: "2025-04-21T10:00:00Z"
+    createdAt: "2025-04-21T10:00:00Z",
+    lastLogin: "14/09/2026\n09:30 AM"
   },
   {
     userId: "ref-usr-3",
     userCode: "quetta.admin",
     fullName: "Quetta City Admin",
-    email: "quetta.admin@dgt.com",
+    subtitle: "Quetta City Office",
+    email: "quetta.admin@dgt.llc",
     countryId: "c-pak",
     countryName: "Pakistan",
     countryCode: "Pakistan",
     branchId: "b-que",
-    branchName: "Pakistan → Quetta City Branch",
+    branchName: "Quetta City",
     role: "city_branch_admin",
-    roleLabel: "CITY_BRANCH_ADMIN",
+    roleLabel: "CITY BRANCH ADMIN",
+    businessType: "General Business",
+    businessId: "QT-001",
     isActive: true,
     avatarInitials: "QA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordVaultRef: "VAULT-DGT-PAK-QUE",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "Quetta@Dgt2026!",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
-    createdAt: "2025-04-21T11:00:00Z"
+    createdAt: "2025-04-21T11:00:00Z",
+    lastLogin: "14/09/2026\n08:15 AM"
   },
   {
     userId: "ref-usr-4",
-    userCode: "uae.admin",
-    fullName: "UAE Country Admin",
-    email: "uae.admin@dgt.com",
-    countryId: "c-are",
-    countryName: "United Arab Emirates",
-    countryCode: "UAE",
-    branchId: "b-are-all",
-    branchName: "United Arab Emirates → All Branches",
+    userCode: "usa.country",
+    fullName: "USA Country Admin",
+    subtitle: "USA Country Operations",
+    email: "usa.admin@dgt.llc",
+    countryId: "c-usa",
+    countryName: "United States",
+    countryCode: "USA",
+    branchId: "b-usa-all",
+    branchName: "Head Office",
     role: "country_admin",
-    roleLabel: "COUNTRY_ADMIN",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "USA-001",
     isActive: true,
     avatarInitials: "UA",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordVaultRef: "VAULT-DGT-ARE-CA",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "Usa@Dgt2026!",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
-    createdAt: "2025-04-18T10:00:00Z"
+    createdAt: "2025-04-18T10:00:00Z",
+    lastLogin: "14/09/2026\n07:50 AM"
   },
   {
     userId: "ref-usr-5",
     userCode: "pakistan.admin",
     fullName: "Pakistan Country Admin",
-    email: "pakistan.admin@dgt.com",
+    subtitle: "Pakistan Country Operations",
+    email: "pakistan.admin@dgt.llc",
     countryId: "c-pak",
     countryName: "Pakistan",
     countryCode: "Pakistan",
     branchId: "b-pak-all",
-    branchName: "Pakistan → All Branches",
+    branchName: "Islamabad",
     role: "country_admin",
-    roleLabel: "COUNTRY_ADMIN",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "PK-001",
     isActive: true,
     avatarInitials: "PA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordVaultRef: "VAULT-DGT-PAK-CA",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "Pak@Dgt2026!",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
-    createdAt: "2025-04-18T10:00:00Z"
+    createdAt: "2025-04-18T10:00:00Z",
+    lastLogin: "14/09/2026\n11:20 AM"
   },
   {
     userId: "ref-usr-6",
-    userCode: "audit.admin",
-    fullName: "Audit SuperAdmin (Global Group)",
-    email: "audit.admin@dgt.com",
+    userCode: "asad.s",
+    fullName: "Asad S (Global Group)",
+    subtitle: "Group Administration",
+    email: "asad@dgt.llc",
     countryId: null,
     countryName: "Global",
     countryCode: "Global",
     branchId: null,
     branchName: "Global Access",
     role: "super_admin",
-    roleLabel: "SUPER_ADMIN",
+    roleLabel: "SUPER ADMIN",
+    businessType: "Global",
+    businessId: "GG-001",
     isActive: true,
-    avatarInitials: "AU",
+    avatarInitials: "AG",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordVaultRef: "VAULT-DGT-SA-AUD",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "Asad@Dgt2026!",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
-    createdAt: "2025-04-15T10:00:00Z"
+    createdAt: "2025-04-15T10:00:00Z",
+    lastLogin: "15/09/2026\n09:10 AM"
   },
   {
     userId: "ref-usr-7",
-    userCode: "super_admin",
-    fullName: "All SuperAdmins (Global Group)",
-    email: "super.admin@dgt.com",
+    userCode: "mr.sports",
+    fullName: "M.R Sports Admin",
+    subtitle: "Sports Division",
+    email: "mr.sports@dgt.llc",
     countryId: null,
     countryName: "Global",
     countryCode: "Global",
     branchId: null,
     branchName: "Global Access",
     role: "super_admin",
-    roleLabel: "SUPER_ADMIN",
-    isActive: true,
-    avatarInitials: "SU",
+    roleLabel: "SUPER ADMIN",
+    businessType: "Global",
+    businessId: "GG-002",
+    isActive: false,
+    avatarInitials: "MA",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordVaultRef: "VAULT-DGT-SA-ALL",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "MrSports@Dgt2026!",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
-    createdAt: "2025-04-15T10:00:00Z"
+    createdAt: "2025-04-15T10:00:00Z",
+    lastLogin: "10/09/2026\n08:00 AM"
   },
   {
     userId: "ref-usr-8",
     userCode: "superadmin",
-    fullName: "Super Admin (Global Group)",
-    email: "superadmin@dgt.com",
+    fullName: "Super Admin (Main)",
+    subtitle: "System Administrator",
+    email: "admin@damaan.com",
     countryId: null,
     countryName: "Global",
     countryCode: "Global",
     branchId: null,
     branchName: "Global Access",
     role: "super_admin",
-    roleLabel: "SUPER_ADMIN",
+    roleLabel: "SUPER ADMIN",
+    businessType: "Global",
+    businessId: "GG-000",
     isActive: true,
     avatarInitials: "SA",
     avatarColor: "bg-[#e0f2fe] text-[#0369a1]",
-    passwordVaultRef: "VAULT-DGT-SA-ROOT",
-    passwordKey: "Not displayed — managed by Supabase Auth",
+    passwordKey: "Admin@Damaan2026!",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
-    createdAt: "2025-04-14T10:00:00Z"
+    createdAt: "2025-04-14T10:00:00Z",
+    lastLogin: "15/09/2026\n12:05 PM"
+  },
+  {
+    userId: "ref-usr-9",
+    userCode: "ship.user",
+    fullName: "Shipping Line User",
+    subtitle: "Shipping Line Operations",
+    email: "ship.user@dgt.llc",
+    countryId: "c-are",
+    countryName: "United Arab Emirates",
+    countryCode: "UAE",
+    branchId: "b-jbl",
+    branchName: "Jebel Ali",
+    role: "branch_admin",
+    roleLabel: "BRANCH ADMIN",
+    businessType: "Shipping Line",
+    businessId: "SL-001",
+    isActive: true,
+    avatarInitials: "SH",
+    avatarColor: "bg-[#dcfce7] text-[#15803d]",
+    passwordKey: "Ship@Dgt2026!",
+    loginUrl: "/auth/login/clearing-agent",
+    loginPortalLabel: "Shipping Portal",
+    createdAt: "2025-04-16T10:00:00Z",
+    lastLogin: "13/09/2026\n04:40 PM"
+  },
+  {
+    userId: "ref-usr-10",
+    userCode: "transport.user",
+    fullName: "Transport User",
+    subtitle: "Transport Operations",
+    email: "transport@dgt.llc",
+    countryId: "c-pak",
+    countryName: "Pakistan",
+    countryCode: "Pakistan",
+    branchId: "b-khi",
+    branchName: "Karachi",
+    role: "staff_user",
+    roleLabel: "STAFF USER",
+    businessType: "Transport Business",
+    businessId: "TR-001",
+    isActive: true,
+    avatarInitials: "TR",
+    avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
+    passwordKey: "Transport@Dgt2026!",
+    loginUrl: "/auth/login",
+    loginPortalLabel: "Staff Portal",
+    createdAt: "2025-04-17T10:00:00Z",
+    lastLogin: "12/09/2026\n02:15 PM"
+  },
+  // Items 11 to 28 (Pages 2 & 3 - Database Mapped):
+  {
+    userId: "ref-usr-11",
+    userCode: "bombay.admin",
+    fullName: "Bombay - Bombay City Branch Admin",
+    subtitle: "Bombay City Office",
+    email: "bombay.admin@dgt.llc",
+    countryId: "c-ind",
+    countryName: "India",
+    countryCode: "India",
+    branchId: "b-bom",
+    branchName: "Bombay City",
+    role: "city_branch_admin",
+    roleLabel: "CITY BRANCH ADMIN",
+    businessType: "General Business",
+    businessId: "IN-001",
+    isActive: true,
+    avatarInitials: "BB",
+    avatarColor: "bg-[#fef3c7] text-[#d97706]",
+    passwordKey: "Bombay@Dgt2026!",
+    loginUrl: "/auth/login/city",
+    loginPortalLabel: "City Portal",
+    createdAt: "2025-04-22T10:00:00Z",
+    lastLogin: "11/09/2026\n11:10 AM"
+  },
+  {
+    userId: "ref-usr-12",
+    userCode: "kandahar.admin",
+    fullName: "Kandahar - Kandahar City Branch Admin",
+    subtitle: "Kandahar City Office",
+    email: "kandahar.admin@dgt.llc",
+    countryId: "c-afg",
+    countryName: "Afghanistan",
+    countryCode: "Afghanistan",
+    branchId: "b-knd",
+    branchName: "Kandahar City",
+    role: "city_branch_admin",
+    roleLabel: "CITY BRANCH ADMIN",
+    businessType: "General Business",
+    businessId: "AF-001",
+    isActive: true,
+    avatarInitials: "KB",
+    avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
+    passwordKey: "Kandahar@Dgt2026!",
+    loginUrl: "/auth/login/city",
+    loginPortalLabel: "City Portal",
+    createdAt: "2025-04-22T11:00:00Z",
+    lastLogin: "11/09/2026\n10:45 AM"
+  },
+  {
+    userId: "ref-usr-13",
+    userCode: "bombay.agent",
+    fullName: "Bombay Clearing Agent",
+    subtitle: "Clearing Agent Operations",
+    email: "agent.bombay@dgt.llc",
+    countryId: "c-ind",
+    countryName: "India",
+    countryCode: "India",
+    branchId: "b-bom-cl",
+    branchName: "Bombay Port",
+    role: "agent_user",
+    roleLabel: "AGENT USER",
+    businessType: "Shipping Line",
+    businessId: "CL-002",
+    isActive: true,
+    avatarInitials: "BC",
+    avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
+    passwordKey: "Agent@Dgt2026!",
+    loginUrl: "/auth/login/clearing-agent",
+    loginPortalLabel: "Clearing Portal",
+    createdAt: "2025-04-23T10:00:00Z",
+    lastLogin: "10/09/2026\n03:20 PM"
+  },
+  {
+    userId: "ref-usr-14",
+    userCode: "chaman.agent",
+    fullName: "Chaman Clearing Agent",
+    subtitle: "Border Clearing Operations",
+    email: "agent.chaman@dgt.llc",
+    countryId: "c-pak",
+    countryName: "Pakistan",
+    countryCode: "Pakistan",
+    branchId: "b-chm-cl",
+    branchName: "Chaman Border",
+    role: "agent_user",
+    roleLabel: "AGENT USER",
+    businessType: "Transport Business",
+    businessId: "CL-003",
+    isActive: true,
+    avatarInitials: "CC",
+    avatarColor: "bg-[#dcfce7] text-[#15803d]",
+    passwordKey: "Agent@Dgt2026!",
+    loginUrl: "/auth/login/clearing-agent",
+    loginPortalLabel: "Clearing Portal",
+    createdAt: "2025-04-23T11:00:00Z",
+    lastLogin: "09/09/2026\n01:15 PM"
+  },
+  {
+    userId: "ref-usr-15",
+    userCode: "dubai.agent",
+    fullName: "Dubai Clearing Agent",
+    subtitle: "Customs Clearing Operations",
+    email: "agent.dubai@dgt.llc",
+    countryId: "c-are",
+    countryName: "United Arab Emirates",
+    countryCode: "UAE",
+    branchId: "b-dxb-cl",
+    branchName: "Port Rashid",
+    role: "agent_user",
+    roleLabel: "AGENT USER",
+    businessType: "Shipping Line",
+    businessId: "CL-001",
+    isActive: true,
+    avatarInitials: "DC",
+    avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
+    passwordKey: "Agent@Dgt2026!",
+    loginUrl: "/auth/login/clearing-agent",
+    loginPortalLabel: "Clearing Portal",
+    createdAt: "2025-04-23T12:00:00Z",
+    lastLogin: "12/09/2026\n05:30 PM"
+  },
+  {
+    userId: "ref-usr-16",
+    userCode: "kandahar.agent",
+    fullName: "Kandahar Clearing Agent",
+    subtitle: "Border Clearing Operations",
+    email: "agent.kandahar@dgt.llc",
+    countryId: "c-afg",
+    countryName: "Afghanistan",
+    countryCode: "Afghanistan",
+    branchId: "b-knd-cl",
+    branchName: "Kandahar Border",
+    role: "agent_user",
+    roleLabel: "AGENT USER",
+    businessType: "Transport Business",
+    businessId: "CL-004",
+    isActive: true,
+    avatarInitials: "KC",
+    avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
+    passwordKey: "Agent@Dgt2026!",
+    loginUrl: "/auth/login/clearing-agent",
+    loginPortalLabel: "Clearing Portal",
+    createdAt: "2025-04-23T13:00:00Z",
+    lastLogin: "08/09/2026\n02:10 PM"
+  },
+  {
+    userId: "ref-usr-17",
+    userCode: "pak.cashier",
+    fullName: "Test Brother User",
+    subtitle: "Cash & Roznamcha Operations",
+    email: "cashier.pak@dgt.llc",
+    countryId: "c-pak",
+    countryName: "Pakistan",
+    countryCode: "Pakistan",
+    branchId: "b-que",
+    branchName: "Quetta Cash Counter",
+    role: "cashier",
+    roleLabel: "CASHIER",
+    businessType: "General Business",
+    businessId: "CSH-002",
+    isActive: true,
+    avatarInitials: "TB",
+    avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
+    passwordKey: "Cashier@Dgt2026!",
+    loginUrl: "/auth/login",
+    loginPortalLabel: "Cashier Portal",
+    createdAt: "2025-04-24T10:00:00Z",
+    lastLogin: "07/09/2026\n04:00 PM"
+  },
+  {
+    userId: "ref-usr-18",
+    userCode: "usr.9159",
+    fullName: "Test Operator 9159",
+    subtitle: "Data Entry Operations",
+    email: "operator9159@dgt.llc",
+    countryId: "c-are",
+    countryName: "United Arab Emirates",
+    countryCode: "UAE",
+    branchId: "b-dxb",
+    branchName: "Deira Dubai",
+    role: "staff_user",
+    roleLabel: "STAFF USER",
+    businessType: "General Business",
+    businessId: "STF-001",
+    isActive: true,
+    avatarInitials: "TO",
+    avatarColor: "bg-[#f1f5f9] text-[#475569]",
+    passwordKey: "Staff@Dgt2026!",
+    loginUrl: "/auth/login",
+    loginPortalLabel: "Staff Portal",
+    createdAt: "2025-04-24T11:00:00Z",
+    lastLogin: "06/09/2026\n09:30 AM"
+  },
+  {
+    userId: "ref-usr-19",
+    userCode: "audit.admin",
+    fullName: "Audit SuperAdmin (Global Group)",
+    subtitle: "Internal Audit Division",
+    email: "audit.admin@dgt.llc",
+    countryId: null,
+    countryName: "Global",
+    countryCode: "Global",
+    branchId: null,
+    branchName: "Global Access",
+    role: "super_admin",
+    roleLabel: "SUPER ADMIN",
+    businessType: "Global",
+    businessId: "GG-003",
+    isActive: true,
+    avatarInitials: "AU",
+    avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
+    passwordKey: "Audit@Dgt2026!",
+    loginUrl: "/auth/login/admin",
+    loginPortalLabel: "Admin Portal",
+    createdAt: "2025-04-15T10:00:00Z",
+    lastLogin: "14/09/2026\n04:10 PM"
+  },
+  {
+    userId: "ref-usr-20",
+    userCode: "all.superadmin",
+    fullName: "All SuperAdmin (Global Group)",
+    subtitle: "Executive Management",
+    email: "super.admin@dgt.llc",
+    countryId: null,
+    countryName: "Global",
+    countryCode: "Global",
+    branchId: null,
+    branchName: "Global Access",
+    role: "super_admin",
+    roleLabel: "SUPER ADMIN",
+    businessType: "Global",
+    businessId: "GG-004",
+    isActive: true,
+    avatarInitials: "SU",
+    avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
+    passwordKey: "Super@Dgt2026!",
+    loginUrl: "/auth/login/admin",
+    loginPortalLabel: "Admin Portal",
+    createdAt: "2025-04-15T10:00:00Z",
+    lastLogin: "15/09/2026\n01:25 PM"
+  },
+  {
+    userId: "ref-usr-21",
+    userCode: "afg.country",
+    fullName: "Afghanistan Country Admin",
+    subtitle: "Afghanistan Operations",
+    email: "afg.admin@dgt.llc",
+    countryId: "c-afg",
+    countryName: "Afghanistan",
+    countryCode: "Afghanistan",
+    branchId: "b-afg-all",
+    branchName: "Kabul Head Office",
+    role: "country_admin",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "AF-001",
+    isActive: true,
+    avatarInitials: "AC",
+    avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
+    passwordKey: "Afg@Dgt2026!",
+    loginUrl: "/auth/login/country",
+    loginPortalLabel: "Country Portal",
+    createdAt: "2025-04-18T10:00:00Z",
+    lastLogin: "10/09/2026\n12:00 PM"
+  },
+  {
+    userId: "ref-usr-22",
+    userCode: "ind.country",
+    fullName: "India Country Admin",
+    subtitle: "India Operations",
+    email: "ind.admin@dgt.llc",
+    countryId: "c-ind",
+    countryName: "India",
+    countryCode: "India",
+    branchId: "b-ind-all",
+    branchName: "New Delhi Office",
+    role: "country_admin",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "IND-001",
+    isActive: true,
+    avatarInitials: "IC",
+    avatarColor: "bg-[#fef3c7] text-[#d97706]",
+    passwordKey: "Ind@Dgt2026!",
+    loginUrl: "/auth/login/country",
+    loginPortalLabel: "Country Portal",
+    createdAt: "2025-04-18T10:00:00Z",
+    lastLogin: "11/09/2026\n02:40 PM"
+  },
+  {
+    userId: "ref-usr-23",
+    userCode: "saudi.admin",
+    fullName: "Saudi Arabia Country Admin",
+    subtitle: "Saudi Arabia Operations",
+    email: "saudi.admin@dgt.llc",
+    countryId: "c-sau",
+    countryName: "Saudi Arabia",
+    countryCode: "SA",
+    branchId: "b-sau-all",
+    branchName: "Riyadh Central",
+    role: "country_admin",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "SA-001",
+    isActive: true,
+    avatarInitials: "SC",
+    avatarColor: "bg-[#dcfce7] text-[#15803d]",
+    passwordKey: "Saudi@Dgt2026!",
+    loginUrl: "/auth/login/country",
+    loginPortalLabel: "Country Portal",
+    createdAt: "2025-04-19T10:00:00Z",
+    lastLogin: "15/09/2026\n10:00 AM"
+  },
+  {
+    userId: "ref-usr-24",
+    userCode: "uzb.admin",
+    fullName: "Uzbekistan Country Admin",
+    subtitle: "Uzbekistan Operations",
+    email: "uzb.admin@dgt.llc",
+    countryId: "c-uzb",
+    countryName: "Uzbekistan",
+    countryCode: "UZ",
+    branchId: "b-uzb-all",
+    branchName: "Tashkent Central",
+    role: "country_admin",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "UZ-001",
+    isActive: true,
+    avatarInitials: "UC",
+    avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
+    passwordKey: "Uzb@Dgt2026!",
+    loginUrl: "/auth/login/country",
+    loginPortalLabel: "Country Portal",
+    createdAt: "2025-04-19T11:00:00Z",
+    lastLogin: "14/09/2026\n03:15 PM"
+  },
+  {
+    userId: "ref-usr-25",
+    userCode: "tjk.admin",
+    fullName: "Tajikistan Country Admin",
+    subtitle: "Tajikistan Operations",
+    email: "tjk.admin@dgt.llc",
+    countryId: "c-tjk",
+    countryName: "Tajikistan",
+    countryCode: "TJ",
+    branchId: "b-tjk-all",
+    branchName: "Dushanbe Central",
+    role: "country_admin",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "TJ-001",
+    isActive: true,
+    avatarInitials: "TC",
+    avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
+    passwordKey: "Tjk@Dgt2026!",
+    loginUrl: "/auth/login/country",
+    loginPortalLabel: "Country Portal",
+    createdAt: "2025-04-19T12:00:00Z",
+    lastLogin: "13/09/2026\n11:45 AM"
+  },
+  {
+    userId: "ref-usr-26",
+    userCode: "iran.admin",
+    fullName: "Iran Country Admin",
+    subtitle: "Iran Operations",
+    email: "iran.admin@dgt.llc",
+    countryId: "c-irn",
+    countryName: "Iran",
+    countryCode: "IR",
+    branchId: "b-irn-all",
+    branchName: "Tehran Central",
+    role: "country_admin",
+    roleLabel: "COUNTRY ADMIN",
+    businessType: "Trading Business",
+    businessId: "IR-001",
+    isActive: true,
+    avatarInitials: "IC",
+    avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
+    passwordKey: "Iran@Dgt2026!",
+    loginUrl: "/auth/login/country",
+    loginPortalLabel: "Country Portal",
+    createdAt: "2025-04-19T13:00:00Z",
+    lastLogin: "15/09/2026\n08:30 AM"
+  },
+  {
+    userId: "ref-usr-27",
+    userCode: "bandar.port",
+    fullName: "Bandar Abbas Port Operator",
+    subtitle: "Port & Customs Operations",
+    email: "bandar.port@dgt.llc",
+    countryId: "c-irn",
+    countryName: "Iran",
+    countryCode: "IR",
+    branchId: "b-bnd",
+    branchName: "Bandar Abbas Port",
+    role: "branch_admin",
+    roleLabel: "BRANCH ADMIN",
+    businessType: "Shipping Line",
+    businessId: "SL-002",
+    isActive: true,
+    avatarInitials: "BP",
+    avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
+    passwordKey: "Port@Dgt2026!",
+    loginUrl: "/auth/login/clearing-agent",
+    loginPortalLabel: "Shipping Portal",
+    createdAt: "2025-04-20T10:00:00Z",
+    lastLogin: "14/09/2026\n05:00 PM"
+  },
+  {
+    userId: "ref-usr-28",
+    userCode: "jeddah.admin",
+    fullName: "Jeddah Wholesale Market Admin",
+    subtitle: "Wholesale Market Operations",
+    email: "jeddah.admin@dgt.llc",
+    countryId: "c-sau",
+    countryName: "Saudi Arabia",
+    countryCode: "SA",
+    branchId: "b-jed",
+    branchName: "Jeddah Market",
+    role: "city_branch_admin",
+    roleLabel: "CITY BRANCH ADMIN",
+    businessType: "General Business",
+    businessId: "SA-002",
+    isActive: true,
+    avatarInitials: "JA",
+    avatarColor: "bg-[#dcfce7] text-[#15803d]",
+    passwordKey: "Jeddah@Dgt2026!",
+    loginUrl: "/auth/login/city",
+    loginPortalLabel: "City Portal",
+    createdAt: "2025-04-20T11:00:00Z",
+    lastLogin: "15/09/2026\n09:45 AM"
   }
 ];
 
 function CountryFlagIcon({ countryName }: { countryName: string }) {
-  if (countryName.includes("Emirates") || countryName.includes("UAE")) {
+  const c = (countryName || "").toLowerCase();
+  if (c.includes("emirates") || c.includes("uae") || c.includes("dubai")) {
     return (
       <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
         <rect width="24" height="5.33" fill="#00732f" />
@@ -298,7 +815,7 @@ function CountryFlagIcon({ countryName }: { countryName: string }) {
       </svg>
     );
   }
-  if (countryName.includes("Pakistan")) {
+  if (c.includes("pakistan")) {
     return (
       <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
         <rect width="24" height="16" fill="#01411c" />
@@ -309,11 +826,98 @@ function CountryFlagIcon({ countryName }: { countryName: string }) {
       </svg>
     );
   }
+  if (c.includes("united states") || c.includes("usa") || c.includes("america")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="24" height="16" fill="#b22234" />
+        <path d="M0,2.46h24M0,4.92h24M0,7.38h24M0,9.84h24M0,12.3h24M0,14.76h24" stroke="#ffffff" strokeWidth="1.23" />
+        <rect width="10" height="8.6" fill="#3c3b6e" />
+        <circle cx="5" cy="4.3" r="2.2" fill="#ffffff" />
+      </svg>
+    );
+  }
+  if (c.includes("saudi")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="24" height="16" fill="#006c35" />
+        <path d="M5,11h14" stroke="#ffffff" strokeWidth="1.2" />
+        <text x="12" y="7.5" textAnchor="middle" fill="#ffffff" fontSize="4.5" fontWeight="bold">SA</text>
+      </svg>
+    );
+  }
+  if (c.includes("uzbek")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="24" height="5.33" fill="#0099b5" />
+        <rect y="5.33" width="24" height="5.33" fill="#ffffff" />
+        <rect y="10.66" width="24" height="5.34" fill="#1eb53a" />
+        <line x1="0" y1="5.33" x2="24" y2="5.33" stroke="#ce1126" strokeWidth="0.5" />
+        <line x1="0" y1="10.66" x2="24" y2="10.66" stroke="#ce1126" strokeWidth="0.5" />
+      </svg>
+    );
+  }
+  if (c.includes("tajik")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="24" height="4.5" fill="#cc0000" />
+        <rect y="4.5" width="24" height="7" fill="#ffffff" />
+        <rect y="11.5" width="24" height="4.5" fill="#006600" />
+        <circle cx="12" cy="8" r="1.8" fill="#d4af37" />
+      </svg>
+    );
+  }
+  if (c.includes("iran")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="24" height="5.33" fill="#239f40" />
+        <rect y="5.33" width="24" height="5.33" fill="#ffffff" />
+        <rect y="10.66" width="24" height="5.34" fill="#da0000" />
+        <circle cx="12" cy="8" r="1.6" fill="#da0000" />
+      </svg>
+    );
+  }
+  if (c.includes("india")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="24" height="5.33" fill="#ff9933" />
+        <rect y="5.33" width="24" height="5.33" fill="#ffffff" />
+        <rect y="10.66" width="24" height="5.34" fill="#138808" />
+        <circle cx="12" cy="8" r="1.8" fill="#000080" />
+      </svg>
+    );
+  }
+  if (c.includes("afghan")) {
+    return (
+      <svg className="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-black/10" viewBox="0 0 24 16">
+        <rect width="8" height="16" fill="#000000" />
+        <rect x="8" width="8" height="16" fill="#d32011" />
+        <rect x="16" width="8" height="16" fill="#007a3d" />
+        <circle cx="12" cy="8" r="2.2" fill="#ffffff" />
+      </svg>
+    );
+  }
   return (
-    <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
+    <div className="w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-500 shrink-0">
       <Globe className="w-3.5 h-3.5" />
     </div>
   );
+}
+
+function BusinessTypeIcon({ type }: { type: string }) {
+  const t = (type || "").toLowerCase();
+  if (t.includes("ship")) {
+    return <Ship className="w-4 h-4 text-teal-600 shrink-0" />;
+  }
+  if (t.includes("transport") || t.includes("truck")) {
+    return <Truck className="w-4 h-4 text-emerald-600 shrink-0" />;
+  }
+  if (t.includes("trading") || t.includes("trade")) {
+    return <TrendingUp className="w-4 h-4 text-indigo-600 shrink-0" />;
+  }
+  if (t.includes("global")) {
+    return <Globe className="w-4 h-4 text-blue-500 shrink-0" />;
+  }
+  return <Building2 className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />;
 }
 
 export default function SuperAdminAllUsersDirectoryPage() {
@@ -330,6 +934,16 @@ export default function SuperAdminAllUsersDirectoryPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Pagination & Password Visibility State
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Reset page when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, countryFilter, roleFilter, branchFilter, statusFilter]);
 
   // UI State
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -398,7 +1012,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
       const json = await res.json();
       if (json.ok && Array.isArray(json.data?.rows) && json.data.rows.length > 0) {
         const rawList: any[] = json.data.rows;
-        // Enrich the 8 canonical reference users with real database IDs and permissions if present
+        // Merge real database users with reference users
         const enriched = STANDARD_REFERENCE_USERS.map((ref) => {
           const dbMatch = rawList.find(
             (u: any) =>
@@ -454,8 +1068,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
       const matchesSearch = 
         !q ||
         u.fullName.toLowerCase().includes(q) ||
+        (u.subtitle && u.subtitle.toLowerCase().includes(q)) ||
         u.email.toLowerCase().includes(q) ||
         u.userCode.toLowerCase().includes(q) ||
+        (u.businessId && u.businessId.toLowerCase().includes(q)) ||
+        (u.businessType && u.businessType.toLowerCase().includes(q)) ||
         u.branchName.toLowerCase().includes(q) ||
         u.countryName.toLowerCase().includes(q) ||
         u.roleLabel.toLowerCase().includes(q);
@@ -471,6 +1088,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
       return matchesSearch && matchesCountry && matchesRole && matchesBranch && matchesStatus;
     });
   }, [users, searchQuery, countryFilter, roleFilter, branchFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
 
   // KPI calculations
   const stats = useMemo(() => {
@@ -621,16 +1244,26 @@ export default function SuperAdminAllUsersDirectoryPage() {
   };
 
   const getRoleBadgeStyle = (roleLabel: string) => {
-    if (roleLabel.includes("SUPER_ADMIN")) {
+    const rl = (roleLabel || "").toUpperCase();
+    if (rl.includes("SUPER_ADMIN") || rl.includes("SUPER ADMIN")) {
       return "bg-[#ffe4e6] text-[#e11d48] border-[#fecdd3]";
     }
-    if (roleLabel.includes("COUNTRY_ADMIN")) {
+    if (rl.includes("COUNTRY_ADMIN") || rl.includes("COUNTRY ADMIN")) {
       return "bg-[#ede9fe] text-[#7c3aed] border-[#ddd6fe]";
     }
-    if (roleLabel.includes("CITY_BRANCH_ADMIN")) {
+    if (rl.includes("CITY_BRANCH_ADMIN") || rl.includes("CITY BRANCH ADMIN") || rl.includes("CITY ADMIN")) {
       return "bg-[#e0f2fe] text-[#0284c7] border-[#bae6fd]";
     }
-    return "bg-[#fef3c7] text-[#d97706] border-[#fde68a]";
+    if (rl.includes("BRANCH_ADMIN") || rl.includes("BRANCH ADMIN")) {
+      return "bg-[#dcfce7] text-[#15803d] border-[#bbf7d0]";
+    }
+    if (rl.includes("STAFF")) {
+      return "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]";
+    }
+    if (rl.includes("AGENT")) {
+      return "bg-[#fef3c7] text-[#d97706] border-[#fde68a]";
+    }
+    return "bg-[#e0e7ff] text-[#4338ca] border-[#c7d2fe]";
   };
 
   const getCountryFlag = (countryName: string) => {
@@ -1008,7 +1641,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </h2>
           </div>
           <span className="text-xs text-muted-foreground font-medium">
-            {th("Showing")} {filteredUsers.length} {th("of")} {users.length} {th("users")}
+            {th("Showing")} {filteredUsers.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredUsers.length)} {th("of")} {filteredUsers.length} {th("users")}
           </span>
         </div>
 
@@ -1019,97 +1652,122 @@ export default function SuperAdminAllUsersDirectoryPage() {
           </div>
         )}
 
-        {/* Data Table */}
+        {/* Data Table Matching Reference Design */}
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse">
-            <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase font-black text-[10px] tracking-wider">
+            <thead className="bg-slate-50/80 dark:bg-slate-900/60 border-b border-border text-slate-600 dark:text-slate-400 font-bold text-[11px]">
               <tr>
-                <th className="p-3.5 text-center w-10">#</th>
-                <th className="p-3.5 min-w-[200px]">{th("User Name")}</th>
-                <th className="p-3.5 min-w-[170px]">{th("Role / Level")}</th>
-                <th className="p-3.5 min-w-[160px]">{th("Country")}</th>
-                <th className="p-3.5 min-w-[200px]">{th("Branch / City")}</th>
-                <th className="p-3.5 min-w-[190px]">{th("User Email")}</th>
-                <th className="p-3.5 min-w-[130px]">{th("Password")}</th>
-                <th className="p-3.5 min-w-[130px]">{th("Login Portal")}</th>
-                <th className="p-3.5 text-center min-w-[100px]">{th("Status")}</th>
-                <th className="p-3.5 text-center min-w-[260px] print:hidden">{th("Actions")}</th>
+                <th className="py-3 px-3.5 text-center w-10">#</th>
+                <th className="py-3 px-3.5 min-w-[210px]">{th("Employee Name")}</th>
+                <th className="py-3 px-3.5 min-w-[130px]">{th("Username")}</th>
+                <th className="py-3 px-3.5 min-w-[170px]">{th("Role / Level")}</th>
+                <th className="py-3 px-3.5 min-w-[160px]">{th("Business Type")}</th>
+                <th className="py-3 px-3.5 min-w-[190px]">{th("Business ID / Shipping Line ID")}</th>
+                <th className="py-3 px-3.5 min-w-[160px]">{th("Country")}</th>
+                <th className="py-3 px-3.5 min-w-[140px]">{th("Branch / City")}</th>
+                <th className="py-3 px-3.5 min-w-[190px]">{th("Email")}</th>
+                <th className="py-3 px-3.5 min-w-[120px]">{th("Password")}</th>
+                <th className="py-3 px-3.5 text-center min-w-[90px]">{th("Status")}</th>
+                <th className="py-3 px-3.5 min-w-[110px]">{th("Last Login")}</th>
+                <th className="py-3 px-3.5 text-center min-w-[130px] print:hidden">{th("Actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border/60 bg-card">
               {loading && users.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-12 text-center text-muted-foreground">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+                  <td colSpan={13} className="p-12 text-center text-muted-foreground">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
                     <span>{th("Loading users directory...")}</span>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-12 text-center text-muted-foreground">
+                  <td colSpan={13} className="p-12 text-center text-muted-foreground">
                     <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
                     <p className="font-bold text-sm">{th("No users found matching current filters.")}</p>
                     <p className="text-xs mt-1">{th("Try clearing your search query or reset filter dropdowns.")}</p>
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u, index) => {
+                paginatedUsers.map((u, index) => {
+                  const rowNumber = (currentPage - 1) * pageSize + index + 1;
+                  const isPwdVisible = Boolean(visiblePasswords[u.userId]);
+
                   return (
                     <tr 
                       key={u.userId}
-                      className="hover:bg-muted/30 transition-colors"
+                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       {/* 1. # */}
-                      <td className="p-3.5 text-center font-mono font-bold text-muted-foreground text-xs">
-                        {index + 1}
+                      <td className="py-3.5 px-3 text-center font-mono font-bold text-slate-500 text-xs">
+                        {rowNumber}
                       </td>
 
-                      {/* 2. User Name with Avatar Circle */}
-                      <td className="p-3.5">
+                      {/* 2. Employee Name with Avatar Initials + Subtitle */}
+                      <td className="py-3.5 px-3">
                         <div className="flex items-center gap-2.5">
                           <div className={cn("h-9 w-9 rounded-full flex items-center justify-center font-black text-xs shrink-0 shadow-xs", u.avatarColor || getAvatarColor(index))}>
                             {u.avatarInitials || getAvatarInitials(u.fullName, u.userCode)}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-bold text-foreground truncate">
+                            <div className="font-bold text-slate-900 dark:text-slate-100 truncate text-[12px] leading-tight">
                               {u.fullName}
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-medium truncate">
-                              {u.userCode}
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate leading-tight mt-0.5">
+                              {u.subtitle || "Office Operations"}
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* 3. Role / Level */}
-                      <td className="p-3.5">
-                        <span className={cn("px-2.5 py-1 text-[10px] font-black rounded-md uppercase tracking-wider border", getRoleBadgeStyle(u.roleLabel))}>
+                      {/* 3. Username */}
+                      <td className="py-3.5 px-3">
+                        <span className="font-medium text-slate-800 dark:text-slate-200 text-xs">
+                          {u.userCode}
+                        </span>
+                      </td>
+
+                      {/* 4. Role / Level */}
+                      <td className="py-3.5 px-3">
+                        <span className={cn("px-2.5 py-1 text-[10px] font-black rounded-md uppercase tracking-wider inline-block", getRoleBadgeStyle(u.roleLabel))}>
                           {u.roleLabel}
                         </span>
                       </td>
 
-                      {/* 4. Country with Flag */}
-                      <td className="p-3.5">
+                      {/* 5. Business Type */}
+                      <td className="py-3.5 px-3">
+                        <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-medium text-xs">
+                          <BusinessTypeIcon type={u.businessType} />
+                          <span className="truncate">{u.businessType || "General Business"}</span>
+                        </div>
+                      </td>
+
+                      {/* 6. Business ID / Shipping Line ID */}
+                      <td className="py-3.5 px-3">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          {u.businessId || "DB-001"}
+                        </span>
+                      </td>
+
+                      {/* 7. Country */}
+                      <td className="py-3.5 px-3">
                         <div className="flex items-center gap-2">
                           <CountryFlagIcon countryName={u.countryName} />
-                          <div className="min-w-0">
-                            <div className="font-semibold text-foreground truncate">{u.countryName}</div>
-                            <div className="text-[10px] text-muted-foreground font-medium">{u.countryCode || u.countryName}</div>
-                          </div>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate text-xs">{u.countryName}</span>
                         </div>
                       </td>
 
-                      {/* 5. Branch / City */}
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-1.5 text-foreground font-medium">
-                          <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="truncate">{u.branchName}</span>
-                        </div>
+                      {/* 8. Branch / City */}
+                      <td className="py-3.5 px-3">
+                        <span className="font-medium text-slate-800 dark:text-slate-200 truncate text-xs">
+                          {u.branchName}
+                        </span>
                       </td>
 
-                      {/* 6. User Email + Copy */}
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-1.5 font-mono text-[11px] text-foreground">
+                      {/* 9. Email with Mail icon */}
+                      <td className="py-3.5 px-3">
+                        <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-800 dark:text-slate-200">
+                          <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                           <span className="truncate">{u.email}</span>
                           <button
                             type="button"
@@ -1122,10 +1780,20 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         </div>
                       </td>
 
-                      {/* 7. Password + Copy */}
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-1.5 font-mono font-bold text-xs text-foreground">
-                          <span>{u.passwordKey}</span>
+                      {/* 10. Password with eye toggle & copy */}
+                      <td className="py-3.5 px-3">
+                        <div className="flex items-center gap-1.5 font-mono text-xs text-slate-800 dark:text-slate-200">
+                          <span className={cn("font-medium select-none", !isPwdVisible && "tracking-widest")}>
+                            {isPwdVisible ? u.passwordKey : "••••••••"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setVisiblePasswords((prev) => ({ ...prev, [u.userId]: !prev[u.userId] }))}
+                            title={isPwdVisible ? th("Hide Password") : th("Show Password")}
+                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                          >
+                            {isPwdVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+                          </button>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
@@ -1137,55 +1805,34 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         </div>
                       </td>
 
-                      {/* 8. Login Portal Button */}
-                      <td className="p-3.5">
-                        <a
-                          href={u.loginUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={cn("px-2.5 py-1 text-[11px] font-bold rounded-md inline-flex items-center gap-1 transition-colors cursor-pointer", getPortalBadgeStyle(u.loginPortalLabel))}
-                          title={`${th("Open Portal")}: ${u.loginUrl}`}
-                        >
-                          <span>{th(u.loginPortalLabel)}</span>
-                        </a>
-                      </td>
-
-                      {/* 9. Status */}
-                      <td className="p-3.5 text-center">
+                      {/* 11. Status */}
+                      <td className="py-3.5 px-3 text-center">
                         <span className={cn(
-                          "px-2.5 py-1 text-[11px] font-bold rounded-full inline-flex items-center gap-1.5",
+                          "px-3 py-0.5 text-[11px] font-bold rounded-full inline-flex items-center justify-center",
                           u.isActive
-                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                            : "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                            ? "bg-[#e6f9f0] text-[#00a86b] dark:bg-emerald-950/60 dark:text-emerald-300"
+                            : "bg-[#ffebee] text-[#e53935] dark:bg-rose-950/60 dark:text-rose-300"
                         )}>
-                          <span className={cn("h-1.5 w-1.5 rounded-full", u.isActive ? "bg-emerald-600" : "bg-rose-600")} />
-                          {u.isActive ? "ACTIVE" : "INACTIVE"}
+                          {u.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
 
-                      {/* 10. Actions */}
-                      <td className="p-3.5 text-center print:hidden">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {/* -> Login button */}
-                          <a
-                            href={u.loginUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <Button
-                              size="sm"
-                              className="h-7 px-2.5 text-[11px] font-bold bg-[#0f766e] hover:bg-[#115e59] text-white rounded-md shadow-xs cursor-pointer flex items-center gap-1"
-                            >
-                              <ArrowRight className="w-3 h-3" />
-                              <span>{th("Login")}</span>
-                            </Button>
-                          </a>
+                      {/* 12. Last Login */}
+                      <td className="py-3.5 px-3">
+                        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-tight whitespace-pre-line">
+                          {u.lastLogin || "15/09/2026\n10:00 AM"}
+                        </div>
+                      </td>
 
+                      {/* 13. Actions */}
+                      <td className="py-3.5 px-3 text-center print:hidden">
+                        <div className="flex items-center justify-center gap-1.5">
                           {/* Inspect button */}
                           <Button
                             size="sm"
                             onClick={() => openUserInspector(u)}
-                            className="h-7 px-2.5 text-[11px] font-bold bg-[#4338ca] hover:bg-[#3730a3] text-white rounded-md shadow-xs cursor-pointer flex items-center gap-1"
+                            className="h-7 px-2 text-[11px] font-bold bg-[#4338ca] hover:bg-[#3730a3] text-white rounded-md shadow-xs cursor-pointer flex items-center gap-1"
+                            title={th("Inspect Permissions")}
                           >
                             <Eye className="w-3 h-3" />
                             <span>{th("Inspect")}</span>
@@ -1196,10 +1843,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => { setPrintModalUser(u); setShowBatchPrint(false); }}
-                            className="h-7 px-2.5 text-[11px] font-bold bg-white dark:bg-card border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md shadow-xs cursor-pointer flex items-center gap-1"
+                            className="h-7 px-2 text-[11px] font-bold bg-white dark:bg-card border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md shadow-xs cursor-pointer flex items-center gap-1"
+                            title={th("Print A4 Handover Slip")}
                           >
                             <FileText className="w-3 h-3" />
-                            <span>{th("A4 Slip")}</span>
+                            <span>{th("Slip")}</span>
                           </Button>
 
                           {/* Pencil Edit Icon */}
@@ -1256,7 +1904,6 @@ export default function SuperAdminAllUsersDirectoryPage() {
                               </div>
                             )}
                           </div>
-
                         </div>
                       </td>
                     </tr>
@@ -1265,6 +1912,53 @@ export default function SuperAdminAllUsersDirectoryPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* ─── Bottom Pagination Bar Matching Reference Image ─── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-border bg-card print:hidden">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            {th("Showing")} {filteredUsers.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} {th("to")} {Math.min(currentPage * pageSize, filteredUsers.length)} {th("of")} {filteredUsers.length} {th("users")}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="h-8 w-8 p-0 rounded-md border-slate-200 dark:border-slate-700 cursor-pointer disabled:opacity-40"
+              title={th("Previous Page")}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(page)}
+                className={cn(
+                  "h-8 w-8 p-0 rounded-md text-xs font-bold cursor-pointer transition-colors",
+                  currentPage === page
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-xs border-blue-600"
+                    : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
+              >
+                {page}
+              </Button>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="h-8 w-8 p-0 rounded-md border-slate-200 dark:border-slate-700 cursor-pointer disabled:opacity-40"
+              title={th("Next Page")}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

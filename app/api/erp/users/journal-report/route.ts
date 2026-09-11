@@ -391,10 +391,50 @@ export async function GET(request: NextRequest) {
         { logins: 0, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
       );
 
+      // Compute business type, businessId, and subtitle
+      let businessType = "General Business";
+      let businessId = branchCode && branchCode !== "-" ? branchCode : "GB-001";
+      if (role === "super_admin") {
+        businessType = "Global";
+        businessId = profile.user_code?.toLowerCase().includes("superadmin") ? "GG-000" : "GG-001";
+      } else if (branchType === "Clearing HQ" || role.toLowerCase().includes("ship") || profile.full_name?.toLowerCase().includes("shipping")) {
+        businessType = "Shipping Line";
+        businessId = "SL-001";
+      } else if (role.toLowerCase().includes("transport") || profile.full_name?.toLowerCase().includes("transport")) {
+        businessType = "Transport Business";
+        businessId = "TR-001";
+      } else if (role === "country_admin" || branchType === "Country") {
+        businessType = "Trading Business";
+        businessId = country?.iso2 === "US" ? "USA-001" : country?.iso2 === "PK" ? "PK-001" : `${country?.iso2 ?? "CT"}-001`;
+      } else if (cityBranch?.code) {
+        businessId = cityBranch.code;
+      }
+
+      // Department/Office subtitle
+      let subtitle = "General Administration";
+      if (role === "super_admin") {
+        subtitle = profile.user_code?.toLowerCase().includes("superadmin") ? "System Administrator" : "Group Administration";
+      } else if (role === "country_admin") {
+        subtitle = `${country?.name ?? "Country"} Operations`;
+      } else if (role === "city_branch_admin") {
+        subtitle = `${cityBranch?.city_name ?? "City"} Administration`;
+      } else if (businessType === "Shipping Line") {
+        subtitle = "Shipping Line Operations";
+      } else if (businessType === "Transport Business") {
+        subtitle = "Transport Operations";
+      }
+
+      // Formatted Last Login
+      const lastLoginAudit = auditsByUser.get(profile.id)?.find((a) => a.action.startsWith("auth.login"));
+      const lastLoginDate = lastLoginAudit?.created_at ?? lastActivityDate;
+
       return {
         userId: profile.id,
         userCode: profile.user_code ?? profile.id.slice(0, 8).toUpperCase(),
         fullName: profile.full_name ?? "-",
+        subtitle,
+        businessType,
+        businessId,
         email: emailLookup.get(profile.id) ?? "-",
         countryId: country?.id ?? null,
         countryName: country?.name ?? "-",
@@ -408,6 +448,7 @@ export async function GET(request: NextRequest) {
         permissions,
         lastActivity: lastActivityDate,
         lastActivityAction: lastActivity?.action ?? null,
+        lastLogin: lastLoginDate,
         activityCounts,
       };
     });

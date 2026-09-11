@@ -1854,6 +1854,115 @@ export type UiKey =
   | "comv.save_progress"
   | "comv.next_step"
   | "comv.complete_save_order"
+  | "comv.back"
+  | "comv.save_draft"
+  | "comv.confirm_booking"
+  | "comv.step1_name"
+  | "comv.step1_desc"
+  | "comv.step1_title"
+  | "comv.step2_name"
+  | "comv.step2_desc"
+  | "comv.step2_title"
+  | "comv.step3_name"
+  | "comv.step3_desc"
+  | "comv.step3_title"
+  | "comv.step4_name"
+  | "comv.step4_desc"
+  | "comv.step4_title"
+  | "comv.serial_super_admin"
+  | "comv.serial_country"
+  | "comv.serial_branch"
+  | "comv.serial_entry"
+  | "comv.serial_global_bill"
+  | "comv.serial_auto"
+  | "comv.acc_name"
+  | "comv.acc_number"
+  | "comv.acc_company"
+  | "comv.acc_country"
+  | "comv.acc_branch"
+  | "comv.mv_transit"
+  | "comv.mv_down_transit"
+  | "comv.mv_local_domestic"
+  | "comv.tm_by_rail"
+  | "comv.select_loading_location_ph"
+  | "comv.select_receiving_location_ph"
+  | "comv.ls_shipping_warehouse"
+  | "comv.ls_customer_warehouse"
+  | "comv.ls_container"
+  | "comv.ls_port_terminal"
+  | "comv.ls_border_yard"
+  | "comv.ls_other"
+  | "comv.select_shipping_warehouse"
+  | "comv.customer_warehouse_note"
+  | "comv.customer_warehouse_ph"
+  | "comv.container_ref_ph"
+  | "comv.goods_quantity"
+  | "comv.goods_unit"
+  | "comv.goods_unit_ph"
+  | "comv.goods_bags_cartons"
+  | "comv.goods_gross_weight"
+  | "comv.goods_empty_weight"
+  | "comv.goods_net_weight"
+  | "comv.truck_requirement"
+  | "comv.load_type"
+  | "comv.load_type_full_truck"
+  | "comv.load_type_partial_load"
+  | "comv.load_type_container_haulage"
+  | "comv.add_truck_details"
+  | "comv.route_legs"
+  | "comv.add_leg"
+  | "comv.auto_add_road_sea"
+  | "comv.no_legs_yet"
+  | "comv.leg_no"
+  | "comv.leg_from"
+  | "comv.leg_from_location_ph"
+  | "comv.leg_to"
+  | "comv.leg_to_location_ph"
+  | "comv.leg_transport_mode"
+  | "comv.responsible_agent"
+  | "comv.shipping_line"
+  | "comv.vessel_name"
+  | "comv.voyage_number"
+  | "comv.container_number"
+  | "comv.seal_number"
+  | "comv.bl_number"
+  | "comv.port_of_loading"
+  | "comv.port_of_discharge"
+  | "comv.etd"
+  | "comv.eta"
+  | "comv.customs"
+  | "comv.customs_country"
+  | "comv.customs_point"
+  | "comv.customs_clearing_agent"
+  | "comv.clearance_type"
+  | "comv.duty_treatment"
+  | "comv.duty_payable"
+  | "comv.duty_exempt"
+  | "comv.duty_transit_bonded"
+  | "comv.duty_pending"
+  | "comv.duty_amount"
+  | "comv.duty_currency"
+  | "comv.duty_payer"
+  | "comv.customs_receipt_ref"
+  | "comv.supporting_reference"
+  | "comv.planned_departure"
+  | "comv.planned_arrival"
+  | "comv.leg_status"
+  | "comv.legstatus_pending"
+  | "comv.legstatus_pickup_assigned"
+  | "comv.legstatus_loaded"
+  | "comv.legstatus_in_transit"
+  | "comv.legstatus_arrived"
+  | "comv.legstatus_customs_pending"
+  | "comv.legstatus_cleared"
+  | "comv.legstatus_handed_over"
+  | "comv.legstatus_completed"
+  | "comv.handover_reference"
+  | "comv.handover_reference_ph"
+  | "comv.review_references"
+  | "comv.review_booking"
+  | "comv.review_pickup_goods_truck"
+  | "comv.review_route_legs"
   | "cif.company_name_en_ph"
   | "cif.business_trading_name_ph"
   | "cif.currency_aed"
@@ -21215,6 +21324,117 @@ const en: Dict = {
   "comv.next_step": "Next Step",
 
   "comv.complete_save_order": "Complete & Save Order",
+
+  "comv.back": "Back",
+  "comv.save_draft": "Save Draft",
+  "comv.confirm_booking": "Confirm Booking",
+  "comv.step1_name": "Booking & Customer",
+  "comv.step1_desc": "Customer, Movement, Mode & Route",
+  "comv.step1_title": "Booking & Customer",
+  "comv.step2_name": "Pickup, Goods & Truck",
+  "comv.step2_desc": "Pickup Source, Goods & Transport",
+  "comv.step2_title": "Pickup, Goods & Truck",
+  "comv.step3_name": "Route, Vessel & Customs",
+  "comv.step3_desc": "Parties, Legs, Vessel & Clearance",
+  "comv.step3_title": "Route, Vessel & Customs",
+  "comv.step4_name": "Review & Confirm",
+  "comv.step4_desc": "Full Summary & Confirmation",
+  "comv.step4_title": "Review & Confirm",
+  "comv.serial_super_admin": "Super Admin",
+  "comv.serial_country": "Country Serial",
+  "comv.serial_branch": "Branch Serial",
+  "comv.serial_entry": "Entry Number",
+  "comv.serial_global_bill": "Global Bill / Shipping No.",
+  "comv.serial_auto": "Auto on Save",
+  "comv.acc_name": "Account Name:",
+  "comv.acc_number": "Account No.:",
+  "comv.acc_company": "Company:",
+  "comv.acc_country": "Country:",
+  "comv.acc_branch": "Branch / City:",
+  "comv.mv_transit": "Transit",
+  "comv.mv_down_transit": "Down Transit",
+  "comv.mv_local_domestic": "Local / Domestic",
+  "comv.tm_by_rail": "By Rail",
+  "comv.select_loading_location_ph": "— Select Location / City —",
+  "comv.select_receiving_location_ph": "— Select Location / City —",
+  "comv.ls_shipping_warehouse": "Shipping Link Warehouse",
+  "comv.ls_customer_warehouse": "Customer Warehouse",
+  "comv.ls_container": "Container",
+  "comv.ls_port_terminal": "Port / Terminal",
+  "comv.ls_border_yard": "Border / Yard",
+  "comv.ls_other": "Other",
+  "comv.select_shipping_warehouse": "Select Shipping Link Warehouse",
+  "comv.customer_warehouse_note": "Uses the customer's own address — this never creates internal Shipping Link stock.",
+  "comv.customer_warehouse_ph": "Customer warehouse / delivery address",
+  "comv.container_ref_ph": "Container number / reference",
+  "comv.goods_quantity": "Quantity",
+  "comv.goods_unit": "Unit",
+  "comv.goods_unit_ph": "e.g. KG, TON, PCS",
+  "comv.goods_bags_cartons": "Bags / Cartons",
+  "comv.goods_gross_weight": "Gross Weight",
+  "comv.goods_empty_weight": "Empty Weight",
+  "comv.goods_net_weight": "Net Weight",
+  "comv.truck_requirement": "Truck Requirement",
+  "comv.load_type": "Load Type",
+  "comv.load_type_full_truck": "Full Truck",
+  "comv.load_type_partial_load": "Partial Load",
+  "comv.load_type_container_haulage": "Container Haulage",
+  "comv.add_truck_details": "Add Truck Details",
+  "comv.route_legs": "Route Legs",
+  "comv.add_leg": "Add Leg",
+  "comv.auto_add_road_sea": "+ Auto-add Road + Sea Legs",
+  "comv.no_legs_yet": "No route legs added yet. Add a leg for each country/mode crossing.",
+  "comv.leg_no": "Leg",
+  "comv.leg_from": "From Country",
+  "comv.leg_from_location_ph": "From location / port / border",
+  "comv.leg_to": "To Country",
+  "comv.leg_to_location_ph": "To location / port / border",
+  "comv.leg_transport_mode": "Leg Transport Mode",
+  "comv.responsible_agent": "Responsible Clearing Agent",
+  "comv.shipping_line": "Shipping Line",
+  "comv.vessel_name": "Vessel Name",
+  "comv.voyage_number": "Voyage No.",
+  "comv.container_number": "Container No.",
+  "comv.seal_number": "Seal No.",
+  "comv.bl_number": "B/L Number",
+  "comv.port_of_loading": "Port of Loading",
+  "comv.port_of_discharge": "Port of Discharge",
+  "comv.etd": "ETD",
+  "comv.eta": "ETA",
+  "comv.customs": "Customs",
+  "comv.customs_country": "Customs Country",
+  "comv.customs_point": "Port / Border / Customs Point",
+  "comv.customs_clearing_agent": "Clearing Agent",
+  "comv.clearance_type": "Clearance Type",
+  "comv.duty_treatment": "Duty Treatment",
+  "comv.duty_payable": "Duty Payable",
+  "comv.duty_exempt": "No Duty / Exempt",
+  "comv.duty_transit_bonded": "Transit / Bonded",
+  "comv.duty_pending": "Pending",
+  "comv.duty_amount": "Duty Amount",
+  "comv.duty_currency": "Currency",
+  "comv.duty_payer": "Payer",
+  "comv.customs_receipt_ref": "Receipt / Reference",
+  "comv.supporting_reference": "Supporting reference / document",
+  "comv.planned_departure": "Planned Departure",
+  "comv.planned_arrival": "Planned Arrival",
+  "comv.leg_status": "Leg Status",
+  "comv.legstatus_pending": "Pending",
+  "comv.legstatus_pickup_assigned": "Pickup Assigned",
+  "comv.legstatus_loaded": "Loaded",
+  "comv.legstatus_in_transit": "In Transit",
+  "comv.legstatus_arrived": "Arrived",
+  "comv.legstatus_customs_pending": "Customs Pending",
+  "comv.legstatus_cleared": "Cleared",
+  "comv.legstatus_handed_over": "Handed Over",
+  "comv.legstatus_completed": "Completed",
+  "comv.handover_reference": "Handover Reference",
+  "comv.handover_reference_ph": "Link to an existing handover record (optional)",
+  "comv.review_references": "References",
+  "comv.review_booking": "Booking & Customer",
+  "comv.review_pickup_goods_truck": "Pickup, Goods & Truck",
+  "comv.review_route_legs": "Route Legs",
+
   "cif.company_name_en_ph": "e.g. Trading Company LLC",
 
   "cif.business_trading_name_ph": "e.g. Trading Company",
