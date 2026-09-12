@@ -301,7 +301,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "Bill Cost & Profit Overview", href: "/dashboard/bill-cost-profit", icon: BarChart3 },
           { label: "Bill Expenses Entry", href: "/dashboard/expenses/bill-expenses", icon: Banknote },
-          { label: "Business Edit Invoice", href: "/dashboard/business-edit-invoice", icon: FileText },
+          { label: "Business Edit Invoice", href: "/dashboard/business-edit-invoice?source=bcp", icon: FileText },
           { label: "BCP Purchase Cost Audit", href: "/dashboard/bill-cost-profit/purchase", icon: ShoppingCart },
           { label: "BCP Sales Profit Analytics", href: "/dashboard/bill-cost-profit/sales", icon: TrendingUp },
           { label: "BCP Operational Expenses", href: "/dashboard/bill-cost-profit/expenses", icon: Receipt },
@@ -376,7 +376,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Layers,
     children: [
       { label: "Settlement & Reconciliation Engine", href: "/dashboard/settlement", icon: Layers },
-      { label: "Inter-Country Claims & Settlements", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
+      { label: "Inter-Country Claims & Settlements", href: "/dashboard/inter-country-transfers?tab=accepted", icon: ArrowRightLeft },
       { label: "Daily Settlement", href: "/dashboard/settlement/daily", icon: CalendarCheck },
       { label: "Payment Settlement", href: "/dashboard/settlement/payment", icon: Receipt },
     ],
@@ -391,7 +391,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: "KYC Reports",
         icon: FileText,
         children: [
-          { label: "Customer KYC Reports", href: "/dashboard/reports/kyc", icon: FileText },
+          { label: "Customers KYC Report", href: "/dashboard/settings/customers?tab=kyc-report", icon: Users },
+          { label: "Employees KYC Report", href: "/dashboard/general-office/employee-kyc?tab=report", icon: FileText },
         ],
       },
       {
@@ -400,8 +401,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ShieldAlert,
         children: [
           { label: "Compliance & Audit Monitoring", href: "/dashboard/audit-monitoring", icon: ShieldAlert },
-          { label: "All Edit / Version History", href: "/dashboard/super-admin/edit-history", icon: History, roles: ["super_admin"] },
-          { label: "Deleted Entries Audit", href: "/dashboard/super-admin/deleted-records", icon: Trash2, roles: ["super_admin"] },
+          { label: "All Edit / Version History", href: "/dashboard/super-admin/edit-history?view=all", icon: History, roles: ["super_admin"] },
+          { label: "Deleted Entries Audit", href: "/dashboard/super-admin/deleted-records?view=all", icon: Trash2, roles: ["super_admin"] },
         ],
       },
       {

@@ -5,6 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ERP_MODULE_DEFINITIONS, getRoleDefaultPermissions } from "@/lib/permissions/rbac-matrix-builder";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 // Schema for updating module-level permissions
 const updateModuleAccessSchema = z.object({
@@ -39,6 +40,7 @@ function getModulePermSpecs(moduleKey: string) {
 
 export async function GET(request: NextRequest) {
   try {
+    const lang = await getRequestLanguage();
     const session = await requireErpSession();
     if (!session.isSuperAdmin && !session.roles.includes("country_admin")) {
       throw new ApiClientError("Only Super Admin or Country Admin can manage module permissions.", { status: 403 });

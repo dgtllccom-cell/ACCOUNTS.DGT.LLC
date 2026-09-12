@@ -475,6 +475,17 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                         <div className="inline-flex items-center justify-center gap-2">
                           <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={loadOrders} />
                           <AddExpenseBillButton sourceId={order.id} lang={activeLang} size="icon" variant="outline" className="h-8 w-8 p-0" />
+                          {!["transferred", "finalized", "completed"].includes(String(order.sales_status || "").toLowerCase()) && (
+                            <Button
+                              onClick={() => router.push(`/dashboard/sales/new-sales-booking-order?id=${encodeURIComponent(order.id)}`)}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0 border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                              title={t(activeLang, "common.edit", "Edit Sales Order")}
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           <Button
                             onClick={() => handlePrint(order)}
                             variant="outline"

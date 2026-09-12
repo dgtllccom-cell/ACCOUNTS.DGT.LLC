@@ -5657,24 +5657,24 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 </div>
                                 <div>
                                   <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                                    {t(lang, "purchase.dest_branch_title", "Destination Branch (Country-to-Country Purchase)")}
+                                    {t(lang, "ctransfer.destination", "Destination Country / Branch")}
                                   </h5>
                                   <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
-                                    {t(lang, "purchase.dest_branch_subtitle", "Optional. Set only when this purchase is being made on behalf of a different country/branch.")}
+                                    {t(lang, "ctransfer.subtitle", "Purchase orders scoped for transfer from a source country/branch to a destination country/branch.")}
                                   </p>
                                 </div>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 <div>
                                   <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    {t(lang, "purchase.dest_country_label", "Destination Country")}
+                                    {t(lang, "purchase.destination_country_colon", "Destination Country:")}
                                   </label>
                                   <select
                                     value={form.destCountryId || ""}
                                     onChange={(e) => setForm(p => ({ ...p, destCountryId: e.target.value, destCountryBranchId: "", destCityBranchId: "" }))}
                                     className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
                                   >
-                                    <option value="">{t(lang, "purchase.dest_country_none", "None (same-country purchase)")}</option>
+                                    <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
                                     {(allCountries.length ? allCountries : countries).map((c) => (
                                       <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
@@ -5682,7 +5682,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 </div>
                                 <div>
                                   <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    {t(lang, "purchase.dest_branch_label", "Destination Main Branch")}
+                                    {t(lang, "common.branch", "Main Branch")}
                                   </label>
                                   <select
                                     value={form.destCountryBranchId || ""}
@@ -5698,7 +5698,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 </div>
                                 <div>
                                   <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    {t(lang, "purchase.dest_city_branch_label", "Destination City Branch")}
+                                    {t(lang, "common.branch", "City Branch")}
                                   </label>
                                   <select
                                     value={form.destCityBranchId || ""}
