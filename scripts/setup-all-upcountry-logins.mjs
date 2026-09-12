@@ -83,8 +83,7 @@ async function main() {
     { countryIso: "PK", name: "Pakistan Main Branch", code: "PAK-MAIN-001" },
     { countryIso: "AF", name: "Afghanistan Main Branch", code: "AFG-MAIN-001" },
     { countryIso: "AE", name: "United Arab Emirates Main Branch", code: "ARE-MAIN-001" },
-    { countryIso: "IN", name: "India Main Branch", code: "IND-MAIN-001" },
-    { countryIso: "CN", name: "China Main Branch", code: "CHN-MAIN-001" }
+    { countryIso: "IN", name: "India Main Branch", code: "IND-MAIN-001" }
   ];
 
   for (const smb of stdMainBranches) {

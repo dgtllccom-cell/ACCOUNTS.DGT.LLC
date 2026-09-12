@@ -420,12 +420,10 @@ export function CashEntryForm({
   const [roznamchaBookType, setRoznamchaBookType] = useState("branch_payment_voucher");
   const [referenceNo, setReferenceNo] = useState("");
   const [narration, setNarration] = useState("");
-  const [remarks, setRemarks] = useState(
-    "Cash payment to Rex Trading LLC for invoice #INV-2026-001. Receiver: Amrullah Abdullah | Mobile: 05643616644 | WhatsApp: 1321"
-  );
+  const [remarks, setRemarks] = useState("");
 
-  const [currency, setCurrency] = useState("USD");
-  const [exchangeRate, setExchangeRate] = useState("3.6730");
+  const [currency, setCurrency] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("1");
   const [exchangeRateSource, setExchangeRateSource] = useState("default");
   const [exchangeRateEffectiveAt, setExchangeRateEffectiveAt] = useState<string | null>(null);
   const [currencyError, setCurrencyError] = useState(false);
@@ -451,18 +449,14 @@ export function CashEntryForm({
 
   const [paymentType, setPaymentType] = useState<"" | "bank" | "business" | "invoice" | "cash" | "transfer">("cash");
   const [paymentMode, setPaymentMode] = useState<"" | "DEBIT" | "CREDIT">("DEBIT");
-  const [finalPayment, setFinalPayment] = useState("165375.00");
+  const [finalPayment, setFinalPayment] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
-  // Payment-type details (reference design panel).
-  const [typeDetails, setTypeDetails] = useState<Record<string, string>>({
-    receiverSenderName: "Amrullah Abdullah",
-    mobileNumber: "05643616644",
-    whatsappNumber: "1321"
-  });
+  // Payment-type details (clean initial state)
+  const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
 
-  // Currency calculation panel (reference design): amount/price/op.
-  const [calcAmount, setCalcAmount] = useState("45000.00");
+  // Currency calculation panel
+  const [calcAmount, setCalcAmount] = useState("");
   const [calcPrice, setCalcPrice] = useState("");
   const [calcOp, setCalcOp] = useState<"mul" | "div">("mul");
 
@@ -2106,7 +2100,7 @@ export function CashEntryForm({
         sourceReferenceNo: roznamchaNumber,
         paymentDetails: {
           roznamchaBookType,
-          paymentType: paymentMode === "DEBIT" ? "money_received" : "money_paid",
+          paymentType: paymentMode === "DEBIT" ? "money_paid" : "money_received",
           roznamchaCategory: paymentType || null,
           paymentMode,
           quantity: 1,
@@ -2143,7 +2137,7 @@ export function CashEntryForm({
         },
         lines: [
           {
-            paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_deposit" : "bank_cheque") : (paymentMode === "DEBIT" ? "cash_receipt" : "cash_payment"),
+            paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_cheque" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
             enterpriseAccountId: selectedCounterLedger?.accountId || null,
             ledgerId: counterLedgerId || "",
             description: finalNarration.trim() ? finalNarration.trim() : undefined,
