@@ -1,63 +1,32 @@
+const host = process.env.LIVE_HOST || '72.60.209.121';
+const pwd = process.env.LIVE_PASSWORD || process.argv[2] || '';
+
 async function testLive() {
-  const host = '72.60.209.121';
-
-  // 1. Login with chaman.branch@dgt.llc / Chaman@9090
-  const loginRes = await fetch(`http://${host}/api/erp/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({
-      identifier: 'chaman.branch@dgt.llc',
-      password: 'Chaman@9090',
-      login_type: 'branch'
-    })
-  });
-
-  const cookieHeader = loginRes.headers.get('set-cookie');
-
-  // 2. Fetch General Accounts report as chaman.branch
-  const accountsRes = await fetch(`http://${host}/api/erp/accounting/reports/accounts/general?limit=200`, {
-    headers: {
-      'Cookie': cookieHeader
-    }
-  });
-
-  const accountsData = await accountsRes.json();
-  console.log('[accountsData.data KEYS]:', accountsData.data ? Object.keys(accountsData.data) : typeof accountsData.data);
-  const rows = Array.isArray(accountsData.data) 
-    ? accountsData.data 
-    : (accountsData.data?.rows || accountsData.data?.items || []);
-  console.log('[ROW COUNT]:', rows.length);
-
-  const countryAccounts = rows.filter(r => 
-    r.isCountryAccount || 
-    r.code?.startsWith('CT-INTER-') || 
-    r.code?.startsWith('PAK-CORP-') ||
-    r.code?.startsWith('UAE-CORP-') ||
-    r.code?.startsWith('AFG-CORP-') ||
-    r.code?.startsWith('IND-CORP-') ||
-    r.name?.toLowerCase().includes('country') ||
-    r.name?.toLowerCase().includes('clearing')
-  );
-
-  console.log(`\n======================================================`);
-  console.log(`[VERIFICATION] Country Accounts Found for chaman.branch: ${countryAccounts.length}`);
-  console.log(`======================================================`);
-  for (const acc of countryAccounts) {
-    console.log(`- Code: ${acc.code} | Name: ${acc.name} | isCountryAccount: ${acc.isCountryAccount} | branchType: ${acc.branchType}`);
+  if (!pwd) {
+    console.error('Usage: node scripts/test-live-country-accounts.mjs <password>');
+    return;
   }
+  console.log(`[TEST] Testing live VPS at http://${host}...`);
 
-  // 3. Test superadmin login
-  const adminRes = await fetch(`http://${host}/api/erp/auth/login`, {
+  // 1. Chaman.branch fetch
+  const chamanRes = await fetch(`http://${host}/api/erp/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ identifier: 'superadmin', password: 'Chaman@9090' })
+    body: JSON.stringify({ identifier: 'chaman.branch@dgt.llc', password: pwd, login_type: 'branch' })
   });
-  console.log(`\n[SUPERADMIN] Login status:`, adminRes.status);
-  const adminData = await adminRes.json();
-  console.log(`[SUPERADMIN] Result:`, adminData);
+  const chamanCookie = chamanRes.headers.get('set-cookie');
+  const chamanAccountsRes = await fetch(`http://${host}/api/erp/accounting/reports/accounts/general?limit=200`, {
+    headers: { 'Cookie': chamanCookie }
+  });
+  console.log('CHAMAN ACCOUNTS STATUS:', chamanAccountsRes.status);
+  const chamanData = await chamanAccountsRes.json();
+  const rows = chamanData?.data?.rows || [];
+  console.log(`[CHAMAN TOTAL ROWS]:`, rows.length);
+  const countryAccounts = rows.filter((r) => r.isCountryAccount);
+  console.log(`[CHAMAN COUNTRY ACCOUNTS]:`, countryAccounts.length);
+  for (const a of countryAccounts) {
+    console.log(`- Code: ${a.rawAccountCode || a.accountCode} | Name: ${a.accountName} | BranchType: ${a.branchType} | SubType: ${a.subType}`);
+  }
 }
 
 testLive().catch(console.error);
