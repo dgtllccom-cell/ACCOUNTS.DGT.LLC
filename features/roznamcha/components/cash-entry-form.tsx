@@ -126,6 +126,48 @@ const CURRENCY_FULL_NAMES: Record<string, string> = {
   BHD: "Bahraini Dinar"
 };
 
+const COUNTRY_BANKS: Record<string, string[]> = {
+  AE: [
+    "Dubai Islamic Bank",
+    "Emirates NBD",
+    "Abu Dhabi Commercial Bank (ADCB)",
+    "Mashreq Bank",
+    "First Abu Dhabi Bank (FAB)",
+    "Abu Dhabi Islamic Bank (ADIB)",
+    "RAKBANK",
+    "Commercial Bank of Dubai (CBD)",
+    "Sharjah Islamic Bank"
+  ],
+  PK: [
+    "Habib Bank Limited (HBL)",
+    "Meezan Bank",
+    "MCB Bank",
+    "United Bank Limited (UBL)",
+    "Bank Alfalah",
+    "Allied Bank Limited (ABL)",
+    "Faysal Bank",
+    "Askari Bank",
+    "Bank of Punjab (BOP)"
+  ],
+  IN: [
+    "State Bank of India (SBI)",
+    "HDFC Bank",
+    "ICICI Bank",
+    "Axis Bank",
+    "Punjab National Bank (PNB)",
+    "Bank of Baroda",
+    "Kotak Mahindra Bank"
+  ],
+  AF: [
+    "Da Afghanistan Bank",
+    "Afghanistan International Bank (AIB)",
+    "Azizi Bank",
+    "Kabul Bank / New Kabul Bank",
+    "Maiwand Bank",
+    "Ghazanfar Bank"
+  ]
+};
+
 type SessionResponse = {
   user: { id: string; email: string | null; fullName: string | null };
   roles: string[];
@@ -583,6 +625,14 @@ export function CashEntryForm({
     [cityBranchId, cityBranches]
   );
 
+  const activeCountryIso = useMemo(() => {
+    return ((selectedCountry as any)?.iso2 || (selectedCountry as any)?.code || "AE").toUpperCase();
+  }, [selectedCountry]);
+
+  const countryBankList = useMemo(() => {
+    return COUNTRY_BANKS[activeCountryIso] || COUNTRY_BANKS["AE"] || [];
+  }, [activeCountryIso]);
+
   const backdropSelection = useMemo(() => ({
     iso2: (selectedCountry as { iso2?: string } | null)?.iso2 ?? null,
     countryName: (selectedCountry as { name?: string } | null)?.name ?? null,
@@ -928,33 +978,40 @@ export function CashEntryForm({
 
   const showCalcPanel =
     Boolean(currency) &&
-    !isLocalCurrency &&
     ["USD", "AED", "AFN", "INR", "IRR", "PKR"].includes(currency.toUpperCase());
 
   const calcFinal = useMemo(() => {
-    if (!showCalcPanel) return null;
-    const a = Number(calcAmount);
-    const p = Number(exchangeRate);
-    if (!Number.isFinite(a) || !Number.isFinite(p) || a <= 0 || p <= 0) return null;
-    if (calcOp === "div" && p === 0) return null;
-    const v = calcOp === "mul" ? a * p : a / p;
+    const cleanAmt = String(calcAmount || "").replace(/,/g, "").trim();
+    const a = Number(cleanAmt);
+    if (!Number.isFinite(a) || a <= 0) return null;
+
+    const cleanRate = String(exchangeRate || "").replace(/,/g, "").trim();
+    const p = Number(cleanRate);
+    const rate = Number.isFinite(p) && p > 0 ? p : 1;
+
+    if (calcOp === "div" && rate === 0) return null;
+    const v = calcOp === "mul" ? a * rate : a / rate;
     return Number.isFinite(v) ? v : null;
-  }, [calcAmount, calcOp, exchangeRate, showCalcPanel]);
+  }, [calcAmount, calcOp, exchangeRate]);
 
   const amount = useMemo(() => {
-    if (showCalcPanel && calcFinal !== null) return calcFinal;
+    if (calcFinal !== null) return calcFinal;
+    const cleanAmt = String(calcAmount || "").replace(/,/g, "").trim();
+    const a = Number(cleanAmt);
+    if (Number.isFinite(a) && a > 0) return a;
     return Number(finalPayment || 0);
-  }, [finalPayment, showCalcPanel, calcFinal]);
+  }, [calcFinal, calcAmount, finalPayment]);
 
   const txAmount = useMemo(() => {
-    if (showCalcPanel) {
-      if (calcAmount) return Number(calcAmount);
-      const rate = Number(exchangeRate);
-      if (rate > 0) return amount / rate;
-      return 0;
+    if (calcAmount) {
+      const cleanAmt = String(calcAmount).replace(/,/g, "").trim();
+      const a = Number(cleanAmt);
+      if (Number.isFinite(a)) return a;
     }
+    const rate = Number(String(exchangeRate || "1").replace(/,/g, ""));
+    if (rate > 0) return amount / rate;
     return amount;
-  }, [showCalcPanel, calcAmount, exchangeRate, amount]);
+  }, [calcAmount, exchangeRate, amount]);
 
   useEffect(() => {
     if (!selectedCounterLedger) return;
@@ -2359,32 +2416,51 @@ export function CashEntryForm({
         : "City-level cash entry access filtered to assigned city branch operations and transactions.";
 
   const accountOptions = useMemo(() => {
-    // Only show user-created accounts (parties, customers, suppliers, expenses, etc.)
-    // Filter out internal system branch/country bank, cash, clearing, and investment ledgers
+    // Authorized country account codes across PK, AE, AF, IN
+    const ALLOWED_COUNTRY_ACCOUNT_CODES = new Set([
+      "PAK-CORP-GEN-001", "CT-INTER-PK",
+      "UAE-CORP-GEN-001", "CT-INTER-AE",
+      "AFG-CORP-GEN-001", "CT-INTER-AF",
+      "IND-CORP-GEN-001", "0005-IND-HUB", "CT-INTER-IN"
+    ]);
+
+    // Filter user accounts: Include user-created accounts and all 4 authorized Country Accounts
     const userAccounts = ledgers.filter((row) => {
       const code = (row.accountCode || row.ledgerCode || "").toUpperCase();
+      const rawCode = (row.rawAccountCode || "").toUpperCase();
       const name = (row.accountName || row.ledgerName || "").toLowerCase();
 
-      // Exclude automatic system branch/country ledgers
+      // Explicitly allow authorized Country Accounts
+      const isCountryAcc =
+        ALLOWED_COUNTRY_ACCOUNT_CODES.has(code) ||
+        ALLOWED_COUNTRY_ACCOUNT_CODES.has(rawCode) ||
+        (row as any).isCountryAccount === true ||
+        (row as any).branchType === "Country" ||
+        code.startsWith("CT-INTER-") ||
+        code.startsWith("PAK-CORP-") ||
+        code.startsWith("UAE-CORP-") ||
+        code.startsWith("AFG-CORP-") ||
+        code.startsWith("IND-CORP-");
+
+      if (isCountryAcc) return true;
+
+      // Exclude automatic internal branch system ledgers
       if (
         code.startsWith("BR-BANK") ||
         code.startsWith("BR-CASH") ||
-        code.startsWith("CT-INTER") ||
         code.startsWith("CT-MAIN") ||
         code.startsWith("CT-INVEST") ||
-        name.includes("inter-country") ||
         name.includes("main branch cash") ||
         name.includes("main branch bank") ||
         name.includes("investment account") ||
-        name.includes("clearing account") ||
         name.includes("inter-city branch clearing") ||
         name.includes("investment clearing")
       ) {
         return false;
       }
 
-      // Must be an actual user-created account (has accountId or accountCode)
-      return Boolean(row.accountId || row.accountCode);
+      // Must be an actual user-created account or ledger
+      return Boolean(row.accountId || row.accountCode || row.ledgerId);
     });
 
     // Sort A to Z by account code and name
@@ -2399,16 +2475,46 @@ export function CashEntryForm({
 
     return sorted.map((row) => {
       const code = row.accountCode || row.ledgerCode || "";
+      const rawCode = row.rawAccountCode || "";
       const name = row.accountName || row.ledgerName || "";
       const manualRef = row.manualReferenceNumber ? ` [Ref: ${row.manualReferenceNumber}]` : "";
       const branchName = row.cityBranchName || row.countryBranchName || "";
       const country = row.countryName || "";
       const locPart = branchName ? ` (${branchName})` : country ? ` (${country})` : "";
-      const currency = row.ledgerCurrency ? ` • ${row.ledgerCurrency}` : "";
+      const curr = row.ledgerCurrency ? ` • ${row.ledgerCurrency}` : "";
       const kind = row.accountKind ? ` [${row.accountKind.toUpperCase()}]` : "";
-      const label = `${code ? `${code} — ` : ""}${name}${manualRef}${locPart}${currency}${kind}`;
-      const keywords = `${code} ${row.rawAccountCode || ""} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name} ${row.companyName || ""} ${branchName} ${country} ${row.ledgerCurrency || ""} ${row.accountKind || ""}`;
-      return { value: row.ledgerId, label, keywords };
+      const label = `${code ? `${code} — ` : ""}${name}${manualRef}${locPart}${curr}${kind}`;
+
+      // Country keywords matching for searches like "Pakistan", "Afghanistan", "India", "Dubai", "UAE", "PK", "AF", "IN", "AE"
+      const upperCode = (code || "").toUpperCase();
+      const lowerName = (name || "").toLowerCase();
+      const lowerCtry = (country || "").toLowerCase();
+
+      const isPak = upperCode.includes("PAK") || upperCode.includes("-PK") || lowerCtry.includes("pakistan") || lowerName.includes("pakistan");
+      const isUae = upperCode.includes("UAE") || upperCode.includes("-AE") || lowerCtry.includes("emirates") || lowerCtry.includes("uae") || lowerName.includes("dubai") || lowerName.includes("emirates");
+      const isAfg = upperCode.includes("AFG") || upperCode.includes("-AF") || lowerCtry.includes("afghanistan") || lowerName.includes("afghanistan") || lowerName.includes("kabul");
+      const isInd = upperCode.includes("IND") || upperCode.includes("-IN") || lowerCtry.includes("india") || lowerName.includes("india") || lowerName.includes("delhi") || lowerName.includes("mumbai");
+
+      const countrySynonyms = [
+        isPak ? "Pakistan Pakistani Pak PK" : "",
+        isUae ? "UAE United Arab Emirates Emirates Dubai Abu Dhabi AE" : "",
+        isAfg ? "Afghanistan Afghan Kabul AF" : "",
+        isInd ? "India Indian Bharat IN" : "",
+        upperCode.startsWith("CT-INTER-") || (row as any).isCountryAccount ? "Country Account Inter Country Inter-Country" : ""
+      ].filter(Boolean).join(" ");
+
+      const keywords = `${code} ${rawCode} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name} ${row.companyName || ""} ${branchName} ${country} ${countrySynonyms} ${row.ledgerCurrency || ""} ${row.accountKind || ""}`;
+
+      return {
+        value: row.ledgerId,
+        label,
+        keywords,
+        primaryText: name,
+        secondaryText: `${locPart ? `${locPart} • ` : ""}${manualRef ? `${manualRef} • ` : ""}${curr || ""}`.trim(),
+        code: code,
+        country: country || (isPak ? "Pakistan" : isUae ? "United Arab Emirates" : isAfg ? "Afghanistan" : isInd ? "India" : undefined),
+        branch: branchName
+      };
     });
   }, [ledgers]);
 
@@ -3230,7 +3336,7 @@ export function CashEntryForm({
                       </div>
                     </div>
 
-                    {/* Step 4: Cash Details */}
+                    {/* Step 4: Category Details (Dynamic based on Roznamcha Category) */}
                     <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
                       <div className="flex items-center gap-2">
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
@@ -3238,63 +3344,259 @@ export function CashEntryForm({
                         </span>
                         <div>
                           <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                            Cash Details
+                            {paymentType === "bank"
+                              ? "Bank Details"
+                              : paymentType === "business" || paymentType === "invoice"
+                              ? "Business / Invoice Details"
+                              : paymentType === "transfer"
+                              ? "Transfer Details"
+                              : "Cash Details"}
                           </h4>
                           <p className="text-[10px] text-slate-400 font-medium">
-                            Receiver / Sender information
+                            {paymentType === "bank"
+                              ? `Bank account, method and reference for ${activeCountryIso || "local"} banking`
+                              : paymentType === "business" || paymentType === "invoice"
+                              ? "Invoice number, vendor and receipt information"
+                              : paymentType === "transfer"
+                              ? "Transfer source, destination and reference"
+                              : "Receiver / Sender identification and contact information"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                        <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Receiver / Sender Name</Label>
-                          <Input
-                            value={typeDetails.receiverSenderName || ""}
-                            onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
-                            placeholder="Amrullah Abdullah"
-                            className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
-                          />
-                        </div>
+                      {paymentType === "bank" ? (
+                        <div className="space-y-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                                Bank Name ({activeCountryIso || "Bank"}) <span className="text-red-500">*</span>
+                              </Label>
+                              <select
+                                value={typeDetails.bankName || ""}
+                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankName: e.target.value }))}
+                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                              >
+                                <option value="">Select Bank...</option>
+                                {countryBankList.map((b) => (
+                                  <option key={b} value={b}>{b}</option>
+                                ))}
+                                <option value="CUSTOM">Other / Custom Bank...</option>
+                              </select>
+                            </div>
 
-                        <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Mobile Number</Label>
-                          <Input
-                            value={typeDetails.mobileNumber || ""}
-                            onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))}
-                            placeholder="05643616644"
-                            className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                            dir="ltr"
-                          />
-                        </div>
+                            {typeDetails.bankName === "CUSTOM" || (!countryBankList.includes(typeDetails.bankName || "") && typeDetails.bankName) ? (
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-bold text-slate-500 uppercase">Custom Bank Name</Label>
+                                <Input
+                                  value={typeDetails.customBankName || (typeDetails.bankName === "CUSTOM" ? "" : typeDetails.bankName) || ""}
+                                  onChange={(e) => setTypeDetails((p) => ({ ...p, customBankName: e.target.value, bankName: e.target.value }))}
+                                  placeholder="Enter bank name"
+                                  className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                                />
+                              </div>
+                            ) : null}
 
-                        <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">WhatsApp Number</Label>
-                          <Input
-                            value={typeDetails.whatsappNumber || ""}
-                            onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))}
-                            placeholder="1321"
-                            className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                            dir="ltr"
-                          />
-                        </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Bank Account / IBAN</Label>
+                              <Input
+                                value={typeDetails.bankAccount || ""}
+                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankAccount: e.target.value }))}
+                                placeholder="AE00 0000 0000 0000 0000"
+                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                              />
+                            </div>
 
-                        <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">ID Card Copy Upload</Label>
-                          <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
-                            <Paperclip className="h-3.5 w-3.5" />
-                            <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : "Attach File"}</span>
-                            <input
-                              type="file"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0] ?? null;
-                                setAttachmentFile(file);
-                              }}
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Transfer Method</Label>
+                              <select
+                                value={typeDetails.method || "Online Transfer"}
+                                onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
+                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                              >
+                                <option value="Online Transfer">Online Transfer</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Wire Transfer / TT">Wire Transfer / TT</option>
+                                <option value="Cash Deposit">Cash Deposit Slip</option>
+                                <option value="RTGS / NEFT">RTGS / NEFT</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Cheque / Ref Number</Label>
+                              <Input
+                                value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
+                                onChange={(e) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: e.target.value, refNo: e.target.value }))}
+                                placeholder="CHK-883492 or TXN-99482"
+                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Bank Receipt / Slip Upload</Label>
+                              <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
+                                <Paperclip className="h-3.5 w-3.5" />
+                                <span>{attachmentFile ? attachmentFile.name.slice(0, 16) : "Upload Deposit / Cheque Slip"}</span>
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0] ?? null;
+                                    setAttachmentFile(file);
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      ) : paymentType === "business" || paymentType === "invoice" ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Invoice / Bill Number</Label>
+                            <Input
+                              value={typeDetails.invoiceNumber || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))}
+                              placeholder="INV-2026-001"
+                              className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
                             />
-                          </label>
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Business / Vendor Name</Label>
+                            <Input
+                              value={typeDetails.purchaseInfo || typeDetails.businessName || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))}
+                              placeholder="Supplier LLC"
+                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Contact Person</Label>
+                            <Input
+                              value={typeDetails.receiverSenderName || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
+                              placeholder="Representative name"
+                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Invoice Copy Upload</Label>
+                            <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
+                              <Paperclip className="h-3.5 w-3.5" />
+                              <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : "Attach File"}</span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] ?? null;
+                                  setAttachmentFile(file);
+                                }}
+                              />
+                            </label>
+                          </div>
                         </div>
-                      </div>
+                      ) : paymentType === "transfer" ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">From Account / Branch</Label>
+                            <Input
+                              value={typeDetails.from || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))}
+                              placeholder="Source"
+                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">To Account / Branch</Label>
+                            <Input
+                              value={typeDetails.to || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))}
+                              placeholder="Destination"
+                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Reference Number</Label>
+                            <Input
+                              value={typeDetails.ref || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))}
+                              placeholder="TRF-00123"
+                              className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Transfer Advice Upload</Label>
+                            <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
+                              <Paperclip className="h-3.5 w-3.5" />
+                              <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : "Attach File"}</span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] ?? null;
+                                  setAttachmentFile(file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Receiver / Sender Name</Label>
+                            <Input
+                              value={typeDetails.receiverSenderName || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
+                              placeholder="Amrullah Abdullah"
+                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Mobile Number</Label>
+                            <Input
+                              value={typeDetails.mobileNumber || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))}
+                              placeholder="05643616644"
+                              className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                              dir="ltr"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">WhatsApp Number</Label>
+                            <Input
+                              value={typeDetails.whatsappNumber || ""}
+                              onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))}
+                              placeholder="1321"
+                              className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                              dir="ltr"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">ID Card Copy Upload</Label>
+                            <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
+                              <Paperclip className="h-3.5 w-3.5" />
+                              <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : "Attach File"}</span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] ?? null;
+                                  setAttachmentFile(file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Step 5: Transaction Conversion (Local Calculation) */}

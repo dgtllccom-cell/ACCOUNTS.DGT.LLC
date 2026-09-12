@@ -1984,6 +1984,9 @@ export type UiKey =
   | "comv.live_customs" | "comv.live_duty" | "comv.live_goods" | "comv.live_remarks"
   | "comv.customsstatus_not_applicable" | "comv.customsstatus_pending" | "comv.customsstatus_submitted"
   | "comv.customsstatus_cleared" | "comv.customsstatus_held" | "comv.customsstatus_rejected"
+  | "com.editing_label" | "com.editing_fallback_order" | "com.csv_chs_code" | "com.csv_transport"
+  | "com.csv_shipment" | "com.csv_loading_source" | "com.csv_supplier" | "com.csv_importer"
+  | "com.csv_exporter" | "com.csv_buyer" | "com.csv_created_date"
   | "comv.review_references"
   | "comv.review_booking"
   | "comv.review_pickup_goods_truck"
@@ -21667,6 +21670,17 @@ const en: Dict = {
   "comv.customsstatus_cleared": "Cleared",
   "comv.customsstatus_held": "Held",
   "comv.customsstatus_rejected": "Rejected",
+  "com.editing_label": "Editing:",
+  "com.editing_fallback_order": "Order",
+  "com.csv_chs_code": "CHS Code",
+  "com.csv_transport": "Transport",
+  "com.csv_shipment": "Shipment",
+  "com.csv_loading_source": "Loading Source",
+  "com.csv_supplier": "Supplier",
+  "com.csv_importer": "Importer",
+  "com.csv_exporter": "Exporter",
+  "com.csv_buyer": "Buyer",
+  "com.csv_created_date": "Created Date",
   "comv.review_references": "References",
   "comv.review_booking": "Booking & Customer",
   "comv.review_pickup_goods_truck": "Pickup, Goods & Truck",
@@ -25936,6 +25950,17 @@ const ur: Dict = {
   "comv.customsstatus_cleared": "کلیئر",
   "comv.customsstatus_held": "روکا گیا",
   "comv.customsstatus_rejected": "مسترد",
+  "com.editing_label": "ترمیم جاری:",
+  "com.editing_fallback_order": "آرڈر",
+  "com.csv_chs_code": "CHS کوڈ",
+  "com.csv_transport": "ٹرانسپورٹ",
+  "com.csv_shipment": "شپمنٹ",
+  "com.csv_loading_source": "لوڈنگ ذریعہ",
+  "com.csv_supplier": "سپلائر",
+  "com.csv_importer": "درآمد کنندہ",
+  "com.csv_exporter": "برآمد کنندہ",
+  "com.csv_buyer": "خریدار",
+  "com.csv_created_date": "تخلیق کی تاریخ",
   "comv.review_booking": "بکنگ اور کسٹمر",
   "comv.review_pickup_goods_truck": "پک اپ، سامان اور ٹرک",
   "gm.goods": "سامان",
@@ -61942,7 +61967,24 @@ const ar: Dict = {
   "comv.live_customs": "الجمارك",
   "comv.live_duty": "رسوم / بدون رسوم",
   "comv.live_goods": "البضائع",
-  "comv.live_remarks": "ملاحظات"
+  "comv.live_remarks": "ملاحظات",
+  "comv.customsstatus_not_applicable": "غير قابل للتطبيق",
+  "comv.customsstatus_pending": "قيد الانتظار",
+  "comv.customsstatus_submitted": "تم التقديم",
+  "comv.customsstatus_cleared": "تم التخليص",
+  "comv.customsstatus_held": "موقوف",
+  "comv.customsstatus_rejected": "مرفوض",
+  "com.editing_label": "التعديل:",
+  "com.editing_fallback_order": "الطلب",
+  "com.csv_chs_code": "رمز CHS",
+  "com.csv_transport": "النقل",
+  "com.csv_shipment": "الشحنة",
+  "com.csv_loading_source": "مصدر التحميل",
+  "com.csv_supplier": "المورد",
+  "com.csv_importer": "المستورد",
+  "com.csv_exporter": "المصدّر",
+  "com.csv_buyer": "المشتري",
+  "com.csv_created_date": "تاريخ الإنشاء"
 };
 
 const fa: Dict = {
@@ -79982,7 +80024,24 @@ const fa: Dict = {
   "comv.live_customs": "گمرک",
   "comv.live_duty": "عوارض / بدون عوارض",
   "comv.live_goods": "کالا",
-  "comv.live_remarks": "ملاحظات"
+  "comv.live_remarks": "ملاحظات",
+  "comv.customsstatus_not_applicable": "قابل اجرا نیست",
+  "comv.customsstatus_pending": "در انتظار",
+  "comv.customsstatus_submitted": "ارسال شده",
+  "comv.customsstatus_cleared": "ترخیص شده",
+  "comv.customsstatus_held": "متوقف شده",
+  "comv.customsstatus_rejected": "رد شده",
+  "com.editing_label": "در حال ویرایش:",
+  "com.editing_fallback_order": "سفارش",
+  "com.csv_chs_code": "کد CHS",
+  "com.csv_transport": "حمل و نقل",
+  "com.csv_shipment": "محموله",
+  "com.csv_loading_source": "منبع بارگیری",
+  "com.csv_supplier": "تأمین‌کننده",
+  "com.csv_importer": "واردکننده",
+  "com.csv_exporter": "صادرکننده",
+  "com.csv_buyer": "خریدار",
+  "com.csv_created_date": "تاریخ ایجاد"
 };
 
 const ps: Dict = {
@@ -98028,7 +98087,24 @@ const ps: Dict = {
   "comv.live_customs": "ګمرک",
   "comv.live_duty": "محصول / پرته له محصول",
   "comv.live_goods": "توکي",
-  "comv.live_remarks": "یادښتونه"
+  "comv.live_remarks": "یادښتونه",
+  "comv.customsstatus_not_applicable": "د تطبیق وړ نه ده",
+  "comv.customsstatus_pending": "پاتې",
+  "comv.customsstatus_submitted": "وسپارل شو",
+  "comv.customsstatus_cleared": "خلاص شو",
+  "comv.customsstatus_held": "ودرول شوی",
+  "comv.customsstatus_rejected": "رد شو",
+  "com.editing_label": "سمون:",
+  "com.editing_fallback_order": "امر",
+  "com.csv_chs_code": "د CHS کوډ",
+  "com.csv_transport": "لېږد",
+  "com.csv_shipment": "بار",
+  "com.csv_loading_source": "د بارونې سرچینه",
+  "com.csv_supplier": "عرضه کوونکی",
+  "com.csv_importer": "واردوونکی",
+  "com.csv_exporter": "صادروونکی",
+  "com.csv_buyer": "پیرودونکی",
+  "com.csv_created_date": "د جوړولو نېټه"
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

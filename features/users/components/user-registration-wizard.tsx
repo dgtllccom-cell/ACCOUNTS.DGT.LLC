@@ -2458,8 +2458,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           <EmployeeForm
             onSave={async (newEmployeeId) => {
               setShowEmployeeModal(false);
-              const freshList = await fetchHrEmployees();
-              if (newEmployeeId && freshList.some((e) => e.id === newEmployeeId)) {
+              const freshList = await fetchMasterProfiles();
+              if (newEmployeeId && freshList.some((e: any) => e.id === newEmployeeId)) {
                 setSelectedEmployeeId(newEmployeeId);
               }
             }}
@@ -2478,8 +2478,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             employeeId={editEmployeeId}
             onSave={async (savedId) => {
               setEditEmployeeId(null);
-              const freshList = await fetchHrEmployees();
-              if (savedId && freshList.some((e) => e.id === savedId)) {
+              const freshList = await fetchMasterProfiles();
+              if (savedId && freshList.some((e: any) => e.id === savedId)) {
                 setSelectedEmployeeId(savedId);
               }
             }}

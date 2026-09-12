@@ -1089,20 +1089,20 @@ export function CustomerOrderManagementView() {
   const handleExportCsv = () => {
     if (!orders.length) return;
     const headers = [
-      "Order No",
-      "Party",
-      "Goods",
-      "CHS Code",
-      "Movement",
-      "Transport",
-      "Shipment",
-      "Loading Source",
-      "Route",
-      "Supplier",
-      "Importer",
-      "Exporter",
-      "Buyer",
-      "Created Date"
+      tt("th_order_no", "Order No"),
+      tt("th_party", "Party"),
+      tt("th_goods", "Goods"),
+      tt("csv_chs_code", "CHS Code"),
+      tt("th_movement", "Movement"),
+      tt("csv_transport", "Transport"),
+      tt("csv_shipment", "Shipment"),
+      tt("csv_loading_source", "Loading Source"),
+      tt("th_route", "Route"),
+      tt("csv_supplier", "Supplier"),
+      tt("csv_importer", "Importer"),
+      tt("csv_exporter", "Exporter"),
+      tt("csv_buyer", "Buyer"),
+      tt("csv_created_date", "Created Date")
     ];
     const rows = orders.map((o) => [
       o.order_no || "-",
@@ -1445,7 +1445,7 @@ export function CustomerOrderManagementView() {
               </span>
               {editingOrderId ? (
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-300">
-                  Editing: {formData.customer_name || "Order"}
+                  {tt("editing_label", "Editing:")} {formData.customer_name || tt("editing_fallback_order", "Order")}
                 </span>
               ) : null}
             </div>
