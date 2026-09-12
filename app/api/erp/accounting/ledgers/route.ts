@@ -40,10 +40,20 @@ export async function GET(request: NextRequest) {
             credit_total, normal_balance, is_active, created_at, updated_at
           from public.ledgers
           where deleted_at is null
-            and (city_branch_id = any(${cityIds}) or country_branch_id = any(${countryBranchIds}) or country_id = any(${countryIds}))
-            and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
-            and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
-            and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
+            and (
+              (
+                (city_branch_id = any(${cityIds}) or country_branch_id = any(${countryBranchIds}) or country_id = any(${countryIds}))
+                and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
+                and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
+                and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
+              )
+              or (
+                code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
+                or name ilike '%Inter-Country%'
+                or name ilike '%Central Clearing%'
+                or name ilike '%Main Country Clearing%'
+              )
+            )
           order by code asc
           limit 300
         `;
@@ -86,12 +96,11 @@ export async function GET(request: NextRequest) {
         if (session.countryIds && session.countryIds.length > 0) {
           conditions.push(`country_id.in.(${session.countryIds.join(",")})`);
         }
+        conditions.push("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE)");
+        conditions.push("name.ilike.%Inter-Country%");
+        conditions.push("name.ilike.%Central Clearing%");
 
-        if (conditions.length > 0) {
-          query = query.or(conditions.join(","));
-        } else {
-          query = query.eq("id", "00000000-0000-0000-0000-000000000000");
-        }
+        query = query.or(conditions.join(","));
       }
 
       if (scope.countryId) query = query.eq("country_id", scope.countryId);

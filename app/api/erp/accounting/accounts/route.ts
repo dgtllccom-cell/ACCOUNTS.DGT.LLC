@@ -74,14 +74,24 @@ async function buildAccountListViaLocalPg(
       from public.enterprise_accounts ea
       where ea.deleted_at is null
         and (
-          ${session.isSuperAdmin}
-          or ea.country_id = any(${session.countryIds ?? []}::uuid[])
-          or ea.country_branch_id = any(${session.countryBranchIds ?? []}::uuid[])
-          or ea.city_branch_id = any(${session.cityBranchIds ?? []}::uuid[])
+          (
+            (
+              ${session.isSuperAdmin}
+              or ea.country_id = any(${session.countryIds ?? []}::uuid[])
+              or ea.country_branch_id = any(${session.countryBranchIds ?? []}::uuid[])
+              or ea.city_branch_id = any(${session.cityBranchIds ?? []}::uuid[])
+            )
+            ${scope.countryId ? sql`and (ea.country_id = ${scope.countryId}::uuid or ea.country_id is null)` : sql``}
+            ${scope.countryBranchId ? sql`and (ea.country_branch_id = ${scope.countryBranchId}::uuid or ea.country_branch_id is null)` : sql``}
+            ${scope.cityBranchId ? sql`and (ea.city_branch_id = ${scope.cityBranchId}::uuid or ea.city_branch_id is null)` : sql``}
+          )
+          or (
+            ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
+            or ea.name ilike '%Inter-Country%'
+            or ea.name ilike '%Central Clearing%'
+            or ea.name ilike '%Main Country Clearing%'
+          )
         )
-        ${scope.countryId ? sql`and (ea.country_id = ${scope.countryId}::uuid or ea.country_id is null)` : sql``}
-        ${scope.countryBranchId ? sql`and (ea.country_branch_id = ${scope.countryBranchId}::uuid or ea.country_branch_id is null)` : sql``}
-        ${scope.cityBranchId ? sql`and (ea.city_branch_id = ${scope.cityBranchId}::uuid or ea.city_branch_id is null)` : sql``}
       order by ea.code asc, ea.created_at desc
       limit ${limit}
     `;
@@ -346,6 +356,9 @@ export async function GET(request: NextRequest) {
       if (session.countryIds && session.countryIds.length > 0) {
         conditions.push(`country_id.in.(${session.countryIds.join(",")})`);
       }
+      conditions.push("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE)");
+      conditions.push("name.ilike.%Inter-Country%");
+      conditions.push("name.ilike.%Central Clearing%");
 
       query = query.or(conditions.join(","));
     }

@@ -6675,7 +6675,7 @@ export type UiKey =
   | "transit.col_total_amount" | "transit.col_export_import"
   | "transit.loading_entries" | "transit.no_entries_found"
   | "transit.doc_removed" | "transit.docs_uploaded" | "transit.draft_saved"
-  | "transit.entry_saved_prefix" | "transit.entry_saved_suffix" | "transit.entry_deleted_suffix"
+  | "transit.entry_saved_prefix" | "transit.entry_saved_suffix" | "transit.entry_updated_suffix" | "transit.entry_deleted_suffix"
   | "transit.err_goods_name" | "transit.err_invoice_no"
   | "transit.loaded_entry" | "transit.editing_entry" | "transit.new_initialized"
   | "transit.err_delete" | "transit.err_save" | "transit.delete_entry_confirm"
@@ -14777,6 +14777,7 @@ const en: Dict = {
   "transit.draft_saved": "Draft saved to browser storage!",
   "transit.entry_saved_prefix": "Transit Entry",
   "transit.entry_saved_suffix": "saved to ERP Database!",
+  "transit.entry_updated_suffix": "updated successfully!",
   "transit.entry_deleted_suffix": "deleted successfully",
   "transit.err_goods_name": "Please enter Goods Name",
   "transit.err_invoice_no": "Please enter Invoice Number",
@@ -32801,6 +32802,7 @@ const ur: Dict = {
   "transit.draft_saved": "ڈرافٹ براؤزر اسٹوریج میں محفوظ ہو گیا!",
   "transit.entry_saved_prefix": "ٹرانزٹ اندراج",
   "transit.entry_saved_suffix": "ERP ڈیٹا بیس میں محفوظ ہو گیا!",
+  "transit.entry_updated_suffix": "کامیابی سے اپ ڈیٹ ہو گیا!",
   "transit.entry_deleted_suffix": "کامیابی سے حذف ہو گیا",
   "transit.err_goods_name": "براہ کرم مال کا نام درج کریں",
   "transit.err_invoice_no": "براہ کرم انوائس نمبر درج کریں",
@@ -50802,6 +50804,7 @@ const ar: Dict = {
   "transit.draft_saved": "تم حفظ المسودة في تخزين المتصفح!",
   "transit.entry_saved_prefix": "قيد العبور",
   "transit.entry_saved_suffix": "تم حفظه في قاعدة بيانات ERP!",
+  "transit.entry_updated_suffix": "تم التحديث بنجاح!",
   "transit.entry_deleted_suffix": "تم الحذف بنجاح",
   "transit.err_goods_name": "الرجاء إدخال اسم البضاعة",
   "transit.err_invoice_no": "الرجاء إدخال رقم الفاتورة",
@@ -68790,6 +68793,7 @@ const fa: Dict = {
   "transit.draft_saved": "پیش‌نویس در حافظه مرورگر ذخیره شد!",
   "transit.entry_saved_prefix": "ثبت ترانزیت",
   "transit.entry_saved_suffix": "در پایگاه داده ERP ذخیره شد!",
+  "transit.entry_updated_suffix": "با موفقیت به‌روزرسانی شد!",
   "transit.entry_deleted_suffix": "با موفقیت حذف شد",
   "transit.err_goods_name": "لطفاً نام کالا را وارد کنید",
   "transit.err_invoice_no": "لطفاً شماره فاکتور را وارد کنید",
@@ -86784,6 +86788,7 @@ const ps: Dict = {
   "transit.draft_saved": "مسوده د براوزر ذخیره کې خوندي شوه!",
   "transit.entry_saved_prefix": "د ترانزیټ اندراج",
   "transit.entry_saved_suffix": "ERP ډیټابیس ته خوندي شو!",
+  "transit.entry_updated_suffix": "په بریالیتوب سره تازه شو!",
   "transit.entry_deleted_suffix": "بریالیتوب سره ړنګ شو",
   "transit.err_goods_name": "مهرباني وکړئ د مال نوم ولیکئ",
   "transit.err_invoice_no": "مهرباني وکړئ د انوایس شمیره ولیکئ",

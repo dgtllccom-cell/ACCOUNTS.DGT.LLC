@@ -102,14 +102,18 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
 
     try {
       const res = await fetch("/api/erp/shipping-line/agent-entry", {
-        method: "POST",
+        method: isEditing && form.id ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to save shipping agent");
 
-      setSuccessMessage(`Shipping Agent ${json.data.agent_name || "saved"} created successfully!`);
+      setSuccessMessage(
+        isEditing && form.id
+          ? `Shipping Agent ${json.data.agent_name || "record"} updated successfully!`
+          : `Shipping Agent ${json.data.agent_name || "saved"} created successfully!`
+      );
       setForm(EMPTY_AGENT);
       setIsEditing(false);
       loadData();

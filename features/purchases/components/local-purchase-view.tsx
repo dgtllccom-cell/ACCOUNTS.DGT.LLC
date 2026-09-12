@@ -253,6 +253,9 @@ export function LocalPurchaseView({
   // Stepper state: Step 1 (Items Entry) -> Step 2 (Settlement & Logistics) -> Step 3 (Printable A4 Voucher)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  // Set by "Edit Draft" so handleSubmit updates this SAME row (PATCH by id)
+  // instead of POSTing a brand-new duplicate purchase record.
+  const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(null);
   const [showCountryReport, setShowCountryReport] = useState(false);
   // Tabs for Local Purchase & Payment modules workflow
   const [activeTab, setActiveTab] = useState<"all" | "accepted" | "posted">("all");
@@ -452,6 +455,7 @@ export function LocalPurchaseView({
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("create") === "true") {
+        setEditingPurchaseId(null);
         setIsFormOpen(true);
         setCurrentStep(1);
       }
@@ -1077,11 +1081,18 @@ export function LocalPurchaseView({
         finalCost: primaryFinalCost
       };
 
-      const res = await fetch("/api/erp/purchases/local-purchase", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      // editingPurchaseId is set only via "Edit Draft" — update that SAME row
+      // by id instead of POSTing, which would otherwise create a brand-new
+      // duplicate purchase record and leave the original draft orphaned.
+      const isEditingDraft = Boolean(editingPurchaseId);
+      const res = await fetch(
+        isEditingDraft ? `/api/erp/purchases/local-purchase/${editingPurchaseId}` : "/api/erp/purchases/local-purchase",
+        {
+          method: isEditingDraft ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to save purchase.");
 
@@ -1107,6 +1118,7 @@ export function LocalPurchaseView({
 
       // Reset form
       setIsFormOpen(false);
+      setEditingPurchaseId(null);
       setDraftItems([]);
       setCurrentStep(1);
       setGoodsId("");
@@ -3099,12 +3111,41 @@ export function LocalPurchaseView({
                                         onClick={() => {
                                           setIsFormOpen(true);
                                           setCurrentStep(1);
+                                          setEditingPurchaseId(row.id || null);
                                           setGoodsId(row.goods_id || row.goodsId || "");
+                                          setCustomGoodsName(row.goods_name || row.goodsName || "");
                                           setSupplierName(row.supplier_name || row.supplierName || "");
                                           setSupplierPersonId(row.supplier_person_id || row.supplierPersonId || "");
                                           setPurchaseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
                                           setSalesAccountNo(row.sales_account_no || row.salesAccountNo || "");
                                           setBrokerAccountNo(row.broker_account_no || row.brokerAccountNo || "");
+                                          setChassisCode(row.chassis_code || row.chassisCode || "");
+                                          setLotNo(row.lot_no || row.lotNo || "");
+                                          setPaymentMode(row.payment_mode || row.paymentMode || "Cash");
+                                          setShippingMode(row.shipping_mode || row.shippingMode || "Loading");
+                                          setOriginCountryId(row.origin_country_id || row.originCountryId || "");
+                                          setAdvancePercentage(String(row.advance_percentage ?? row.advancePercentage ?? "20"));
+                                          setWarehouseName(row.warehouse_name || row.warehouseName || "");
+                                          setSelectedWarehouseId(row.warehouse_id || row.warehouseId || "");
+                                          setWarehouseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
+                                          setWarehousePlotNo(row.warehouse_plot_no || row.warehousePlotNo || "");
+                                          setTransferDate(row.transfer_date || row.transferDate || new Date().toISOString().slice(0, 10));
+                                          setLoadingDate(row.loading_date || row.loadingDate || new Date().toISOString().slice(0, 10));
+                                          setTruckNo(row.truck_no || row.truckNo || "");
+                                          setDriverName(row.driver_name || row.driverName || "");
+                                          setRemarks(row.remarks || "");
+                                          setQuantityName(row.quantity_name || row.quantityName || "Bags");
+                                          setQuantityCount(String(row.quantity_kgs ?? row.quantityKgs ?? ""));
+                                          setEmptyKgs(String(row.empty_kgs ?? row.emptyKgs ?? ""));
+                                          setDivideKgs(String(row.divide_kgs ?? row.divideKgs ?? "50"));
+                                          setRateType(row.rate_type || row.rateType || "per_kg");
+                                          setPurchaseRate(String(row.purchase_rate ?? row.purchaseRate ?? ""));
+                                          setPurchaseCurrency(row.purchase_currency || row.purchaseCurrency || "USD");
+                                          setApplyTax(row.apply_tax || row.applyTax || "No");
+                                          setTaxType(row.tax_type || row.taxType || "VAT");
+                                          setTaxPercentage(String(row.tax_percentage ?? row.taxPercentage ?? "0"));
+                                          if (row.country_branch_id || row.countryBranchId) setSelectedBranchId(row.country_branch_id || row.countryBranchId);
+                                          if (row.city_branch_id || row.cityBranchId) setSelectedCityBranchId(row.city_branch_id || row.cityBranchId);
                                           setActiveActionMenuId(null);
                                         }}
                                         className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition"
@@ -3294,6 +3335,7 @@ export function LocalPurchaseView({
                   if (scopeBranchId) setSelectedBranchId(scopeBranchId);
                   if (scopeCityBranchId) setSelectedCityBranchId(scopeCityBranchId);
                   setIsScopeModalOpen(false);
+                  setEditingPurchaseId(null);
                   setIsFormOpen(true);
                   setCurrentStep(1);
                 }}

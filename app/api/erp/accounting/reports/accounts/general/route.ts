@@ -338,10 +338,21 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       left join public.customers cust on cust.id = ea.customer_id and cust.deleted_at is null
       left join public.banks bank on bank.id = ea.bank_id and bank.deleted_at is null
       where ea.deleted_at is null
-        ${scopeWhere}
-        ${countryWhere}
-        ${countryBranchWhere}
-        ${cityBranchWhere}
+        and (
+          (
+            true
+            ${scopeWhere}
+            ${countryWhere}
+            ${countryBranchWhere}
+            ${cityBranchWhere}
+          )
+          or (
+            ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
+            or ea.name ilike '%Inter-Country%'
+            or ea.name ilike '%Central Clearing%'
+            or ea.name ilike '%Main Country Clearing%'
+          )
+        )
         ${statusWhere}
         ${fromWhere}
         ${toWhere}
@@ -453,6 +464,11 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       const calcCredit = movements.reduce((s, m) => s + m.credit, 0);
       const openBal = toNumber(account.opening_balance);
       const currBal = calcDebit > 0 || calcCredit > 0 ? openBal + calcDebit - calcCredit : toNumber(account.current_balance);
+      const isCountryAccount =
+        account.scope === "country" ||
+        /^(PAK|UAE|AFG|IND|CHN)-CORP-GEN|^(CT-INTER-)/i.test(account.code ?? "") ||
+        /inter-country|central clearing|main country clearing/i.test(account.name ?? "") ||
+        /inter-country|central clearing/i.test(account.ledger_name ?? "");
 
       return {
         accountId: account.id,
@@ -483,7 +499,8 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         cityCode: account.city_code ?? "-",
         currency: account.currency ?? "-",
         accountCategory: titleCase(account.kind ?? "account"),
-        subType: account.is_control_account ? "Control Account" : "Normal Account",
+        subType: isCountryAccount ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Normal Account",
+        isCountryAccount,
         status: account.status ?? "active",
         createdAt: account.creation_date || account.created_at,
         openingBalance: openBal,
@@ -695,7 +712,31 @@ export async function GET(request: NextRequest) {
     if (profileRes.error) throw new Error(profileRes.error.message);
     if (accountRes.error) throw new Error(accountRes.error.message);
 
-    const accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
+    let accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
+    if (effectiveQuery.cityBranchId || effectiveQuery.countryBranchId || (effectiveQuery.countryId && !session.isSuperAdmin)) {
+      try {
+        const { data: coreCountryData } = await supabase
+          .from("enterprise_accounts")
+          .select(
+            "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
+          )
+          .is("deleted_at", null)
+          .or("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE,CHN-CORP-GEN-001),name.ilike.%Inter-Country%,name.ilike.%Central Clearing%,name.ilike.%Main Country Clearing%")
+          .limit(20);
+
+        if (coreCountryData && coreCountryData.length > 0) {
+          const existingIds = new Set(accountRows.map((r) => r.id));
+          for (const coreAcc of coreCountryData as EnterpriseAccountRow[]) {
+            if (!existingIds.has(coreAcc.id)) {
+              accountRows.push(coreAcc);
+              existingIds.add(coreAcc.id);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load core country accounts alongside branch accounts:", err);
+      }
+    }
     const accountIds = accountRows.map((row) => row.id);
 
     // Helper to chunk arrays to avoid URL length limits (> 16KB)
@@ -1004,7 +1045,8 @@ export async function GET(request: NextRequest) {
         cityCode: cityBranch?.code ?? "-",
         currency: account.currency,
         accountCategory: titleCase(account.kind),
-        subType: account.is_control_account ? "Control Account" : "Normal Account",
+        subType: (account.scope === "country" || /^(PAK|UAE|AFG|IND|CHN)-CORP-GEN|^(CT-INTER-)/i.test(account.code ?? "") || /inter-country|central clearing|main country clearing/i.test(account.name ?? "") || /inter-country|central clearing/i.test(linkedLedger?.name ?? "")) ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Normal Account",
+        isCountryAccount: account.scope === "country" || /^(PAK|UAE|AFG|IND|CHN)-CORP-GEN|^(CT-INTER-)/i.test(account.code ?? "") || /inter-country|central clearing|main country clearing/i.test(account.name ?? "") || /inter-country|central clearing/i.test(linkedLedger?.name ?? ""),
         status: account.status,
         createdAt: account.creation_date || account.created_at,
         openingBalance: toNumber(account.opening_balance),

@@ -8,9 +8,25 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const { id } = await context.params;
     const body = await req.json();
+
+    const existingForScope = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select country_id, country_branch_id, city_branch_id
+        from public.clearing_payment_bills where id = ${id}::uuid and deleted_at is null limit 1
+      `;
+      return rows[0] ?? null;
+    });
+    if (!existingForScope) return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "update",
+      countryId: (existingForScope as any).country_id,
+      countryBranchId: (existingForScope as any).country_branch_id,
+      cityBranchId: (existingForScope as any).city_branch_id
+    });
 
     const data = await withLocalPg(async (sql) => {
       const existingRows = await sql`
@@ -75,8 +91,25 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const { id } = await context.params;
+
+    const existingForScope = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select country_id, country_branch_id, city_branch_id
+        from public.clearing_payment_bills where id = ${id}::uuid and deleted_at is null limit 1
+      `;
+      return rows[0] ?? null;
+    });
+    if (!existingForScope) return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "delete",
+      countryId: (existingForScope as any).country_id,
+      countryBranchId: (existingForScope as any).country_branch_id,
+      cityBranchId: (existingForScope as any).city_branch_id
+    });
+
     await withLocalPg(async (sql) => {
       await sql`
         update public.clearing_payment_bills

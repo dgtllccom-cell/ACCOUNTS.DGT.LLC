@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 // Fallback in-memory store in case of offline / local development without DB connection
 const defaultRecords = [
@@ -52,6 +55,8 @@ function parseNumeric(val: any): number {
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const supabase = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.toLowerCase();
@@ -118,12 +123,15 @@ export async function GET(req: NextRequest) {
       source: "memory"
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "create" });
     const supabase = createSupabaseAdminClient() as any;
     const body = await req.json();
 
@@ -193,12 +201,75 @@ export async function POST(req: NextRequest) {
       message: "Transit Entry saved successfully"
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+/**
+ * Updates an EXISTING transit entry by its real primary key `id`. POST above
+ * upserts on the `entry_serial` UNIQUE constraint, which only behaves like an
+ * update when the client resends the same serial — but `entry_serial` is a
+ * directly editable text field in the form (transit-entry-management.tsx),
+ * so a user changing it while editing silently orphaned the old row and
+ * inserted a new one instead of updating. Updating by `id` is immune to that.
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
+    const supabase = createSupabaseAdminClient() as any;
+    const body = await req.json();
+    const id = body.id;
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Missing id" }, { status: 400 });
+    }
+
+    const patch: Record<string, any> = {
+      updated_at: new Date().toISOString()
+    };
+    for (const key of [
+      "super_agent", "super_agent_name", "country", "country_name", "branch", "branch_name",
+      "entry_serial", "invoice_no", "invoice_date", "supplier_no", "supplier_date", "python_no",
+      "python_date", "transit_no", "transit_date", "goods_name", "unit", "created_by", "delivered_to",
+      "export_company", "import_company", "notify_party", "notes"
+    ]) {
+      if (body[key] !== undefined) patch[key] = body[key];
+    }
+    for (const key of ["quantity", "gross_weight", "net_weight", "price_per_unit", "total_amount"]) {
+      if (body[key] !== undefined) patch[key] = parseNumeric(body[key]);
+    }
+    if (body.documents !== undefined) patch.documents = Array.isArray(body.documents) ? body.documents : [];
+
+    const { data, error } = await supabase
+      .from("transit_entries")
+      .update(patch)
+      .eq("id", id)
+      .is("deleted_at", null)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ success: false, error: error?.message || "Transit entry not found." }, { status: error ? 500 : 404 });
+    }
+
+    memoryStore = [data, ...memoryStore.filter((m) => m.id !== id && m.entry_serial !== data.entry_serial)];
+
+    return NextResponse.json({
+      success: true,
+      data,
+      message: "Transit Entry updated successfully"
+    });
+  } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const supabase = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -223,6 +294,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Deleted successfully" });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

@@ -17,7 +17,6 @@ const DATES = ["registration_expiry_date", "insurance_expiry_date", "driver_docs
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { id } = await context.params;
 
     const data = await withLocalPg(async (sql) => {
@@ -41,6 +40,15 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
     });
 
     if (!data) return NextResponse.json({ error: "Truck not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "read",
+      countryId: (data as any).country_id,
+      countryBranchId: (data as any).country_branch_id,
+      cityBranchId: (data as any).city_branch_id
+    });
+
     return NextResponse.json({ truck: data });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
@@ -51,9 +59,25 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const { id } = await context.params;
     const body = await req.json();
+
+    const existing = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select country_id, country_branch_id, city_branch_id
+        from public.trucks where id = ${id}::uuid and deleted_at is null limit 1
+      `;
+      return rows[0] ?? null;
+    });
+    if (!existing) return NextResponse.json({ error: "Truck not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "update",
+      countryId: (existing as any).country_id,
+      countryBranchId: (existing as any).country_branch_id,
+      cityBranchId: (existing as any).city_branch_id
+    });
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const f of TEXT) if (body[f] !== undefined) patch[f] = body[f] === "" || body[f] === null ? null : String(body[f]).trim();
@@ -112,8 +136,25 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const { id } = await context.params;
+
+    const existing = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select country_id, country_branch_id, city_branch_id
+        from public.trucks where id = ${id}::uuid and deleted_at is null limit 1
+      `;
+      return rows[0] ?? null;
+    });
+    if (!existing) return NextResponse.json({ error: "Truck not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "delete",
+      countryId: (existing as any).country_id,
+      countryBranchId: (existing as any).country_branch_id,
+      cityBranchId: (existing as any).city_branch_id
+    });
+
     await withLocalPg(async (sql) => {
       await sql`
         update public.trucks

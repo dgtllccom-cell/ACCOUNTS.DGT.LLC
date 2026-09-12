@@ -12,9 +12,23 @@ const COLS =
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "warehouses", action: "update" });
     const { id } = await context.params;
     const body = await req.json();
+
+    const adminForScope = createSupabaseAdminClient() as any;
+    const { data: existing } = await adminForScope
+      .from("warehouses")
+      .select("country_id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .single();
+    if (!existing) return NextResponse.json({ error: "Warehouse not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "warehouses",
+      action: "update",
+      countryId: existing.country_id
+    });
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     const setStr = (k: string, col: string) => { if (body[k] !== undefined) patch[col] = body[k] ? String(body[k]).trim() : null; };
@@ -58,9 +72,22 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "warehouses", action: "delete" });
     const { id } = await context.params;
     const supabase = createSupabaseAdminClient();
+
+    const { data: existing } = await (supabase as any)
+      .from("warehouses")
+      .select("country_id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .single();
+    if (!existing) return NextResponse.json({ error: "Warehouse not found." }, { status: 404 });
+
+    authorizeApiScope(session, {
+      resource: "warehouses",
+      action: "delete",
+      countryId: existing.country_id
+    });
     const { error } = await supabase
       .from("warehouses")
       .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false })

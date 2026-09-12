@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 // shipping_agent_entries has RLS enabled, gated to is_super_admin() (Person Master
 // Phase 2 migration). SUPABASE_SERVICE_ROLE_KEY resolves to the anon key in this
@@ -10,6 +13,8 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 // go through a direct Postgres connection (withLocalPg) when available.
 export async function GET(req: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const viaPg = await withLocalPg(async (sql) => {
       return sql`
         SELECT * FROM public.shipping_agent_entries
@@ -29,12 +34,15 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: data || [] });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message, data: [] }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "create" });
     const body = await req.json();
 
     const {
@@ -122,6 +130,78 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+/**
+ * Updates an EXISTING shipping agent by id. POST above always INSERTs with no
+ * conflict handling at all, so the "Edit" flow in shipping-agent-entry-view.tsx
+ * (which pre-fills the form including the row's id and even relabels the
+ * heading to "Edit Shipping Agent Registration") was silently creating a
+ * brand-new duplicate row on every save instead of updating the original.
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
+    const body = await req.json();
+    const id = body.id;
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Missing id" }, { status: 400 });
+    }
+
+    const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+    const TEXT_FIELDS = [
+      "agent_name", "shipping_line_name", "contact_person", "email", "phone",
+      "city_name", "country_name", "status", "remarks"
+    ];
+    for (const key of TEXT_FIELDS) {
+      if (body[key] !== undefined) patch[key] = body[key] === "" ? null : String(body[key]).trim();
+    }
+    if (body.email !== undefined && body.email) patch.email = String(body.email).trim().toLowerCase();
+    if (body.clearing_agent_id !== undefined) patch.clearing_agent_id = body.clearing_agent_id || null;
+    if (body.shipping_line_id !== undefined) patch.shipping_line_id = body.shipping_line_id || null;
+
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        UPDATE public.shipping_agent_entries SET ${sql(patch as any)}
+        WHERE id = ${id}::uuid AND deleted_at IS NULL
+        RETURNING *
+      `;
+      return rows[0] ?? null;
+    });
+
+    let data = viaPg;
+    if (!data) {
+      const supabase = createSupabaseAdminClient() as any;
+      const res = await supabase
+        .from("shipping_agent_entries")
+        .update(patch)
+        .eq("id", id)
+        .is("deleted_at", null)
+        .select("*")
+        .single();
+      if (res.error) {
+        return NextResponse.json({ success: false, error: res.error.message }, { status: 500 });
+      }
+      data = res.data;
+    }
+
+    if (!data) {
+      return NextResponse.json({ success: false, error: "Shipping agent not found." }, { status: 404 });
+    }
+
+    void syncRecordTranslations({
+      table: "shipping_agent_entries",
+      recordId: data.id,
+      record: data,
+    }).catch(() => null);
+
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

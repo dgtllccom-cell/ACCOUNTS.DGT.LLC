@@ -95,6 +95,7 @@ type AccountGeneralReportRow = {
   whatsapp?: string;
   email?: string;
   contacts?: Array<{ type: string; value: string }>;
+  isCountryAccount?: boolean;
   recentActivityLabel: string | null;
   recentActivityAt: string | null;
   accountSerialNumber?: number;
@@ -282,6 +283,29 @@ function buildBranchOption(row: AccountGeneralReportRow) {
   };
 }
 
+function isCountryAccountRow(row: AccountGeneralReportRow): boolean {
+  if (row.isCountryAccount) return true;
+  if (row.branchType === "Country") return true;
+  const code = (row.rawAccountCode || row.accountCode || "").toUpperCase();
+  if (/^(PAK|UAE|AFG|IND|CHN)-CORP-GEN/i.test(code) || /^CT-INTER-/i.test(code) || code === "0005-IND-HUB") return true;
+  const name = (row.accountName || "").toLowerCase();
+  if (
+    name.includes("inter-country") ||
+    name.includes("central clearing") ||
+    name.includes("main country clearing") ||
+    name.includes("clearing general account") ||
+    name.includes("clearing ledger")
+  ) return true;
+  const lName = (row.ledgerName || "").toLowerCase();
+  if (
+    lName.includes("inter-country") ||
+    lName.includes("central clearing") ||
+    lName.includes("clearing account") ||
+    lName.includes("clearing ledger")
+  ) return true;
+  return false;
+}
+
 function safeRowText(row: AccountGeneralReportRow) {
   return normalizeSearch(
     [
@@ -307,7 +331,8 @@ function safeRowText(row: AccountGeneralReportRow) {
       row.companyName,
       row.companyOwner,
       row.latestJournalNo ?? "",
-      row.recentActivityLabel ?? ""
+      row.recentActivityLabel ?? "",
+      isCountryAccountRow(row) ? "inter-country country clearing global central account بین ملکی" : ""
     ]
       .filter(Boolean)
       .join(" ")
@@ -734,14 +759,19 @@ export function AccountGeneralReportView({
     }
   }, [branchOptions, draftBranchCode]);
 
+  const [showCountryAccountsOnly, setShowCountryAccountsOnly] = useState(false);
+  const countryAccountsCount = useMemo(() => rows.filter(isCountryAccountRow).length, [rows]);
+
   const scopedRows = useMemo(() => {
     return rows
       .filter((row) => {
+        if (isCountryAccountRow(row)) return true;
         if (dashboardScope === "super_admin") return true;
         if (dashboardScope === "country") return row.branchType === "Country" || row.branchType === "Main Branch" || row.branchType === "City Branch";
         return row.branchType === "Main Branch" || row.branchType === "City Branch";
       })
       .filter((row) => {
+        if (isCountryAccountRow(row) && countryName === "all") return true;
         if (countryName !== "all") return row.countryName === countryName;
         return true;
       });
@@ -781,6 +811,7 @@ export function AccountGeneralReportView({
     const countryBranchIds = session?.scopes?.countryBranchIds || [];
     
     let matched = allFilteredRows.filter(row => {
+      if (isCountryAccountRow(row)) return true;
       if (row.cityId && cityBranchIds.includes(row.cityId)) return true;
       return false;
     });
@@ -788,17 +819,18 @@ export function AccountGeneralReportView({
     // Fallback: if super admin or no matches, use the first row's branch or default branch
     if (matched.length === 0 && allFilteredRows.length > 0) {
       const firstBranchCode = allFilteredRows[0].branchCode;
-      matched = allFilteredRows.filter(row => row.branchCode === firstBranchCode);
+      matched = allFilteredRows.filter(row => row.branchCode === firstBranchCode || isCountryAccountRow(row));
     }
     
     return matched;
   }, [allFilteredRows, session]);
 
   const filteredRows = useMemo(() => {
+    if (showCountryAccountsOnly) return allFilteredRows.filter(isCountryAccountRow);
     if (selectedUserBranchOnly) return userBranchRows;
     if (!selectedCountryForSummary) return allFilteredRows;
     return allFilteredRows.filter((row) => row.countryName === selectedCountryForSummary);
-  }, [allFilteredRows, selectedUserBranchOnly, selectedCountryForSummary, userBranchRows]);
+  }, [allFilteredRows, selectedUserBranchOnly, selectedCountryForSummary, userBranchRows, showCountryAccountsOnly]);
 
   const sortedRows = useMemo(() => {
     return [...filteredRows].sort((a, b) => {
@@ -1116,6 +1148,7 @@ export function AccountGeneralReportView({
     setToDate("");
     setSelectedCountryForSummary(null);
     setSelectedUserBranchOnly(false);
+    setShowCountryAccountsOnly(false);
     setExpandedCountries({});
     setFiltersOpen(false);
     setDatePickerOpen(false);
@@ -1370,36 +1403,37 @@ export function AccountGeneralReportView({
     <div className={containerClassName}>
       {actionsPortal && createPortal(pageActionsContent, actionsPortal)}
 
-      {/* 5 Primary Reports & Scopes Navigation Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* Primary Reports & Scopes Navigation Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Report 1: User & Branch Reports (Position 1 / Leftmost) */}
         <button
           type="button"
           onClick={() => {
             setDashboardScope("branch");
             setSelectedUserBranchOnly(true);
+            setShowCountryAccountsOnly(false);
           }}
           className={cn(
             "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
-            dashboardScope === "branch" && selectedUserBranchOnly
+            dashboardScope === "branch" && selectedUserBranchOnly && !showCountryAccountsOnly
               ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/20"
               : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-300"
           )}
         >
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", dashboardScope === "branch" && selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600 dark:bg-blue-950/40")}>
+            <div className={cn("p-2 rounded-lg", dashboardScope === "branch" && selectedUserBranchOnly && !showCountryAccountsOnly ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600 dark:bg-blue-950/40")}>
               <User className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[11px] font-black uppercase tracking-wider">
                 {tr("USER & BRANCH REPORTS")}
               </div>
-              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "branch" && selectedUserBranchOnly ? "text-blue-100" : "text-slate-500")}>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "branch" && selectedUserBranchOnly && !showCountryAccountsOnly ? "text-blue-100" : "text-slate-500")}>
                 {tr("Active Operator & Local Branch")}
               </div>
             </div>
           </div>
-          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "branch" && selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "branch" && selectedUserBranchOnly && !showCountryAccountsOnly ? "text-white" : "text-slate-400")} />
         </button>
 
         {/* Report 2: Super Admin Reports */}
@@ -1408,120 +1442,162 @@ export function AccountGeneralReportView({
           onClick={() => {
             setDashboardScope("super_admin");
             setSelectedUserBranchOnly(false);
+            setShowCountryAccountsOnly(false);
             setCountryName("all");
             setBranchCode("all");
           }}
           className={cn(
             "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
-            dashboardScope === "super_admin" && !selectedUserBranchOnly
+            dashboardScope === "super_admin" && !selectedUserBranchOnly && !showCountryAccountsOnly
               ? "bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-500/20"
               : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-300"
           )}
         >
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", dashboardScope === "super_admin" && !selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40")}>
+            <div className={cn("p-2 rounded-lg", dashboardScope === "super_admin" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40")}>
               <Landmark className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[11px] font-black uppercase tracking-wider">
                 {tr("SUPER ADMIN REPORTS")}
               </div>
-              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "super_admin" && !selectedUserBranchOnly ? "text-indigo-100" : "text-slate-500")}>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "super_admin" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "text-indigo-100" : "text-slate-500")}>
                 {tr("Multi-Country & Global Capital")}
               </div>
             </div>
           </div>
-          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "super_admin" && !selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "super_admin" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "text-white" : "text-slate-400")} />
         </button>
 
-        {/* Report 3: Country Reports */}
+        {/* Report 3: 4 Country Accounts (Inter-Country Clearing) */}
+        <button
+          type="button"
+          onClick={() => {
+            setShowCountryAccountsOnly(true);
+            setSelectedUserBranchOnly(false);
+            setCountryName("all");
+            setBranchCode("all");
+            setCategory("all");
+          }}
+          className={cn(
+            "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
+            showCountryAccountsOnly
+              ? "bg-teal-600 text-white border-teal-600 shadow-md ring-2 ring-teal-500/20"
+              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-teal-300"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", showCountryAccountsOnly ? "bg-white/20 text-white" : "bg-teal-50 text-teal-600 dark:bg-teal-950/40")}>
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-black uppercase tracking-wider">
+                  {tr("4 COUNTRY ACCOUNTS")}
+                </span>
+                <span className={cn("px-1.5 py-0.5 rounded-full text-[9.5px] font-black", showCountryAccountsOnly ? "bg-white/30 text-white" : "bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300")}>
+                  {countryAccountsCount || 4}
+                </span>
+              </div>
+              <div className={cn("text-[10px] font-semibold mt-0.5", showCountryAccountsOnly ? "text-teal-100" : "text-slate-500")}>
+                {tr("Pakistan • Dubai • Afghanistan • India")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className={cn("h-4 w-4 shrink-0", showCountryAccountsOnly ? "text-white" : "text-slate-400")} />
+        </button>
+
+        {/* Report 4: Country Reports */}
         <button
           type="button"
           onClick={() => {
             setDashboardScope("country");
             setSelectedUserBranchOnly(false);
+            setShowCountryAccountsOnly(false);
           }}
           className={cn(
             "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
-            dashboardScope === "country" && !selectedUserBranchOnly
+            dashboardScope === "country" && !selectedUserBranchOnly && !showCountryAccountsOnly
               ? "bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-500/20"
               : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-300"
           )}
         >
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", dashboardScope === "country" && !selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40")}>
+            <div className={cn("p-2 rounded-lg", dashboardScope === "country" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40")}>
               <Globe className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[11px] font-black uppercase tracking-wider">
                 {tr("COUNTRY REPORTS")}
               </div>
-              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "country" && !selectedUserBranchOnly ? "text-emerald-100" : "text-slate-500")}>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "country" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "text-emerald-100" : "text-slate-500")}>
                 {tr("National & Regional Hubs")}
               </div>
             </div>
           </div>
-          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "country" && !selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "country" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "text-white" : "text-slate-400")} />
         </button>
 
-        {/* Report 4: Branch Reports */}
+        {/* Report 5: Branch Reports */}
         <button
           type="button"
           onClick={() => {
             setDashboardScope("branch");
             setSelectedUserBranchOnly(false);
+            setShowCountryAccountsOnly(false);
           }}
           className={cn(
             "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
-            dashboardScope === "branch" && !selectedUserBranchOnly
+            dashboardScope === "branch" && !selectedUserBranchOnly && !showCountryAccountsOnly
               ? "bg-purple-600 text-white border-purple-600 shadow-md ring-2 ring-purple-500/20"
               : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-purple-300"
           )}
         >
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", dashboardScope === "branch" && !selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-purple-50 text-purple-600 dark:bg-purple-950/40")}>
+            <div className={cn("p-2 rounded-lg", dashboardScope === "branch" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "bg-white/20 text-white" : "bg-purple-50 text-purple-600 dark:bg-purple-950/40")}>
               <Building className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[11px] font-black uppercase tracking-wider">
                 {tr("BRANCH REPORTS")}
               </div>
-              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "branch" && !selectedUserBranchOnly ? "text-purple-100" : "text-slate-500")}>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "branch" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "text-purple-100" : "text-slate-500")}>
                 {tr("Local Branch Ledgers")}
               </div>
             </div>
           </div>
-          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "branch" && !selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "branch" && !selectedUserBranchOnly && !showCountryAccountsOnly ? "text-white" : "text-slate-400")} />
         </button>
 
-        {/* Report 5: Shipping & Clearing */}
+        {/* Report 6: Shipping & Clearing */}
         <button
           type="button"
           onClick={() => {
+            setShowCountryAccountsOnly(false);
             setDraftQuery("shipping");
             setQuery("shipping");
           }}
           className={cn(
             "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
-            query.toLowerCase().includes("shipping")
+            query.toLowerCase().includes("shipping") && !showCountryAccountsOnly
               ? "bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-500/20"
               : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-300"
           )}
         >
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", query.toLowerCase().includes("shipping") ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600 dark:bg-amber-950/40")}>
+            <div className={cn("p-2 rounded-lg", query.toLowerCase().includes("shipping") && !showCountryAccountsOnly ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600 dark:bg-amber-950/40")}>
               <Truck className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[11px] font-black uppercase tracking-wider">
                 {tr("SHIPPING & CLEARING")}
               </div>
-              <div className={cn("text-[10px] font-semibold mt-0.5", query.toLowerCase().includes("shipping") ? "text-amber-100" : "text-slate-500")}>
+              <div className={cn("text-[10px] font-semibold mt-0.5", query.toLowerCase().includes("shipping") && !showCountryAccountsOnly ? "text-amber-100" : "text-slate-500")}>
                 {tr("Shipping Line & Freight Ledgers")}
               </div>
             </div>
           </div>
-          <ChevronRight className={cn("h-4 w-4 shrink-0", query.toLowerCase().includes("shipping") ? "text-white" : "text-slate-400")} />
+          <ChevronRight className={cn("h-4 w-4 shrink-0", query.toLowerCase().includes("shipping") && !showCountryAccountsOnly ? "text-white" : "text-slate-400")} />
         </button>
       </div>
 
@@ -2002,9 +2078,17 @@ export function AccountGeneralReportView({
                           {/* 2. Account Name */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             <div className="flex flex-col">
-                              <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
-                                {localizeTerm(row.accountName, lang)}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
+                                  {localizeTerm(row.accountName, lang)}
+                                </span>
+                                {isCountryAccountRow(row) && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[9px] uppercase tracking-wider">
+                                    <Globe className="h-2.5 w-2.5" />
+                                    {tr("INTER-COUNTRY")}
+                                  </span>
+                                )}
+                              </div>
                               {row.journalCode && row.journalCode !== "-" ? (
                                 <span className="text-[9.5px] font-mono font-medium text-slate-400 dark:text-slate-500 mt-0.5">
                                   {row.journalCode}

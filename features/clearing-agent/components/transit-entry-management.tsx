@@ -278,14 +278,24 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
 
     setIsSaving(true);
     try {
+      // formData.id is only set when an existing row was loaded via Edit (see
+      // setFormData(row) below) — update that SAME record by id rather than
+      // POSTing, which upserts on entry_serial and would silently orphan the
+      // original row if the (directly editable) serial field was also changed.
+      const isEditing = Boolean(formData.id);
       const res = await fetch("/api/erp/clearing-agent/transit-entry", {
-        method: "POST",
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
       const json = await res.json();
       if (json.success) {
-        showNotification(`${tt("transit.entry_saved_prefix", "Transit Entry")} ${json.data.entry_serial} ${tt("transit.entry_saved_suffix", "saved to ERP Database!")}`);
+        showNotification(
+          isEditing
+            ? `${tt("transit.entry_saved_prefix", "Transit Entry")} ${json.data.entry_serial} ${tt("transit.entry_updated_suffix", "updated successfully!")}`
+            : `${tt("transit.entry_saved_prefix", "Transit Entry")} ${json.data.entry_serial} ${tt("transit.entry_saved_suffix", "saved to ERP Database!")}`
+        );
+        setFormData(json.data);
         await loadRecords();
       } else {
         throw new Error(json.error || "Failed to save");
