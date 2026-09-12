@@ -44,6 +44,7 @@ import { WarehousePicker } from "@/features/warehouses/components/warehouse-pick
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
 import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
+import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { listCities } from "@/features/locations/location-api";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
@@ -53,6 +54,25 @@ type LoadType = "full_truck" | "partial_load" | "container_haulage";
 type LegTransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type ClearanceType = "import" | "export" | "transit";
 type DutyTreatment = "duty_payable" | "no_duty_exempt" | "transit_bonded" | "pending";
+type LegCustomsStatus = "not_applicable" | "pending" | "submitted" | "cleared" | "held" | "rejected";
+
+// One goods line, sourced from more than one warehouse/location — the order's own
+// goods_id/goods_name/goods_quantity remains the single order-level total; this is
+// only the breakdown of WHERE that total quantity is being picked up from.
+type LoadingAllocation = {
+  id?: string;
+  rowSerial: number;
+  warehouseId: string;
+  warehouseName: string;
+  sourceLocationText: string;
+  quantity: string;
+  unit: string;
+  remarks: string;
+};
+
+function emptyLoadingAllocation(rowSerial: number): LoadingAllocation {
+  return { rowSerial, warehouseId: "", warehouseName: "", sourceLocationText: "", quantity: "", unit: "", remarks: "" };
+}
 
 type RouteLeg = {
   id?: string;
@@ -99,6 +119,17 @@ type RouteLeg = {
   status: string;
   handoverId: string;
   remarks: string;
+  responsibleUserId: string;
+  billOfEntryNo: string;
+  pgmNumber: string;
+  declarationReference: string;
+  taxAmount: string;
+  otherCharges: string;
+  customsStatus: LegCustomsStatus | "";
+  estimatedExpenseAmount: string;
+  actualExpenseAmount: string;
+  expenseCurrency: string;
+  currentTaskId?: string | null;
 };
 
 function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): RouteLeg {
@@ -112,7 +143,10 @@ function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): Rou
     customsCountryId: "", customsPointText: "", customsClearingAgentId: "", clearanceType: "", dutyTreatment: "",
     dutyAmount: "", dutyCurrency: "", dutyPayer: "", customsReceiptRef: "", customsClearanceDate: "",
     plannedDeparture: "", actualDeparture: "", plannedArrival: "", actualArrival: "",
-    status: "pending", handoverId: "", remarks: ""
+    status: "pending", handoverId: "", remarks: "",
+    responsibleUserId: "", billOfEntryNo: "", pgmNumber: "", declarationReference: "",
+    taxAmount: "", otherCharges: "", customsStatus: "not_applicable",
+    estimatedExpenseAmount: "", actualExpenseAmount: "", expenseCurrency: "", currentTaskId: null
   };
 }
 
@@ -232,7 +266,8 @@ const EMPTY_FORM = {
   truck_driver_mobile: "",
   truck_owner_name: "",
   truck_transport_company: "",
-  legs: [] as RouteLeg[]
+  legs: [] as RouteLeg[],
+  loadingAllocations: [] as LoadingAllocation[]
 };
 
 type FormDataState = typeof EMPTY_FORM;
@@ -554,6 +589,9 @@ export function CustomerOrderManagementView() {
   const [ports, setPorts] = useState<PortRow[]>([]);
   const [clearingAgents, setClearingAgents] = useState<ClearingAgentRow[]>([]);
   const [shippingLines, setShippingLines] = useState<ShippingLineRow[]>([]);
+  const [countryBranches, setCountryBranches] = useState<{ id: string; name: string; countryId: string }[]>([]);
+  const [cityBranches, setCityBranches] = useState<{ id: string; name: string; countryBranchId: string }[]>([]);
+  const [assignableUsers, setAssignableUsers] = useState<{ id: string; name: string }[]>([]);
   const [loadingCities, setLoadingCities] = useState<CityRow[]>([]);
   const [receivingCities, setReceivingCities] = useState<CityRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -582,24 +620,30 @@ export function CustomerOrderManagementView() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes] = await Promise.all([
+      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes] = await Promise.all([
         fetch("/api/erp/clearing-agent/customer-order"),
         fetch("/api/erp/customers?limit=250"),
         fetch("/api/erp/companies?limit=250"),
         fetch("/api/erp/locations/countries"),
         fetch("/api/erp/ports"),
         fetch("/api/erp/clearing-agents?limit=200"),
-        fetch("/api/erp/shipping-lines?limit=200")
+        fetch("/api/erp/shipping-lines?limit=200"),
+        fetch("/api/branch-management/country-branches"),
+        fetch("/api/branch-management/city-branches"),
+        fetch("/api/erp/user-tasks/assignees")
       ]);
 
-      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson] = await Promise.all([
+      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson] = await Promise.all([
         orderRes.json(),
         customerRes.json(),
         companyRes.json(),
         countryRes.json(),
         portRes.json(),
         agentRes.json(),
-        lineRes.json()
+        lineRes.json(),
+        countryBranchRes.json().catch(() => null),
+        cityBranchRes.json().catch(() => null),
+        assigneeRes.json().catch(() => null)
       ]);
 
       const extractArray = (json: any, keys: string[]) => {
@@ -624,6 +668,15 @@ export function CustomerOrderManagementView() {
       setPorts(extractArray(portJson, ["ports", "data"]));
       setClearingAgents(extractArray(agentJson, ["clearingAgents", "data"]));
       setShippingLines(extractArray(lineJson, ["shippingLines", "data"]));
+      setCountryBranches(
+        extractArray(countryBranchJson, ["countryBranches", "data"]).map((b: any) => ({ id: b.id, name: b.name, countryId: b.country_id }))
+      );
+      setCityBranches(
+        extractArray(cityBranchJson, ["cityBranches", "data"]).map((b: any) => ({ id: b.id, name: b.name, countryBranchId: b.country_branch_id }))
+      );
+      setAssignableUsers(
+        extractArray(assigneeJson, ["users", "data"]).map((u: any) => ({ id: u.id, name: u.fullName || u.full_name || u.name || u.email || u.id }))
+      );
     } catch (error) {
       console.error("Error loading customer-order data:", error);
     } finally {
@@ -980,7 +1033,30 @@ export function CustomerOrderManagementView() {
             actualArrival: leg.actual_arrival ? String(leg.actual_arrival).split("T")[0] : "",
             status: leg.status || "pending",
             handoverId: leg.handover_id || "",
-            remarks: leg.remarks || ""
+            remarks: leg.remarks || "",
+            responsibleUserId: leg.responsible_user_id || "",
+            billOfEntryNo: leg.bill_of_entry_no || "",
+            pgmNumber: leg.pgm_number || "",
+            declarationReference: leg.declaration_reference || "",
+            taxAmount: leg.tax_amount != null ? String(leg.tax_amount) : "",
+            otherCharges: leg.other_charges != null ? String(leg.other_charges) : "",
+            customsStatus: (leg.customs_status as LegCustomsStatus) || "not_applicable",
+            estimatedExpenseAmount: leg.estimated_expense_amount != null ? String(leg.estimated_expense_amount) : "",
+            actualExpenseAmount: leg.actual_expense_amount != null ? String(leg.actual_expense_amount) : "",
+            expenseCurrency: leg.expense_currency || "",
+            currentTaskId: leg.current_task_id || null
+          }))
+        : [],
+      loadingAllocations: Array.isArray(order.loading_allocations)
+        ? order.loading_allocations.map((row: Record<string, any>, idx: number) => ({
+            id: row.id,
+            rowSerial: row.row_serial ?? idx + 1,
+            warehouseId: row.warehouse_id || "",
+            warehouseName: row.warehouse_name || "",
+            sourceLocationText: row.source_location_text || "",
+            quantity: row.quantity != null ? String(row.quantity) : "",
+            unit: row.unit || "",
+            remarks: row.remarks || ""
           }))
         : []
     });
@@ -1090,6 +1166,27 @@ export function CustomerOrderManagementView() {
   };
 
   const handleSaveProgress = async (advanceStep: boolean = false) => {
+    // Cross-border road rule: a real registered truck (Truck Master) is required
+    // once the leg actually crosses a country border; a temporary one-time truck
+    // is only for local/short transfers (warehouse<->port, yard<->warehouse, etc).
+    const invalidCrossBorderLeg = formData.legs.find(
+      (leg) =>
+        leg.transportMode === "by_road" &&
+        leg.fromCountryId &&
+        leg.toCountryId &&
+        leg.fromCountryId !== leg.toCountryId &&
+        leg.truckRegistrationType === "temporary"
+    );
+    if (invalidCrossBorderLeg) {
+      alert(
+        tt(
+          "err_cross_border_truck",
+          `Leg #${invalidCrossBorderLeg.legNo} crosses a country border by road and must use a registered truck from the Truck Master, not a temporary one-time truck.`
+        )
+      );
+      return;
+    }
+
     setSaving(true);
     setSuccessMessage("");
     try {
@@ -1175,8 +1272,27 @@ export function CustomerOrderManagementView() {
           // if it actually looks like a UUID, otherwise a pasted free-text reference
           // would fail the column's uuid cast at insert time.
           handoverId: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leg.handoverId) ? leg.handoverId : null,
-          remarks: leg.remarks || null
-        }))
+          remarks: leg.remarks || null,
+          responsibleUserId: leg.responsibleUserId || null,
+          billOfEntryNo: leg.billOfEntryNo || null,
+          pgmNumber: leg.pgmNumber || null,
+          declarationReference: leg.declarationReference || null,
+          taxAmount: leg.taxAmount ? Number(leg.taxAmount) : null,
+          otherCharges: leg.otherCharges ? Number(leg.otherCharges) : null,
+          customsStatus: leg.customsStatus || "not_applicable",
+          estimatedExpenseAmount: leg.estimatedExpenseAmount ? Number(leg.estimatedExpenseAmount) : null,
+          actualExpenseAmount: leg.actualExpenseAmount ? Number(leg.actualExpenseAmount) : null,
+          expenseCurrency: leg.expenseCurrency || null
+        })),
+        loadingAllocations: formData.loadingAllocations?.map((alloc) => ({
+          id: alloc.id,
+          rowSerial: alloc.rowSerial,
+          warehouseId: alloc.warehouseId || null,
+          sourceLocationText: alloc.sourceLocationText || null,
+          quantity: alloc.quantity ? Number(alloc.quantity) : 0,
+          unit: alloc.unit || null,
+          remarks: alloc.remarks || null
+        })) ?? []
       };
 
       const response = await fetch(
@@ -1267,31 +1383,33 @@ export function CustomerOrderManagementView() {
 
   return (
     <div className="w-full space-y-4 pb-12">
-      {/* Top Header Card */}
-      <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      {/* Workspace header: entry and live report share one visual system. */}
+      <div className="relative isolate overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 p-4 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none sm:p-5">
+        <div className="pointer-events-none absolute -end-20 -top-24 -z-10 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 start-1/3 -z-10 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+              <span className="rounded-full border border-blue-400/30 bg-blue-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-200">
                 {tt("header_entry", "Customer Order Entry")}
               </span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+              <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
                 {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
               </span>
-              <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
+              <span className="rounded-full border border-sky-400/30 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-200">
                 {tt("header_next", "Next")}: {currentStep < 4 ? stepsList[currentStep]?.title : t(lang, "comv.confirm_booking", "Confirm Booking")}
               </span>
             </div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white">{tt("title", "Customer Order")}</h1>
-            <p className="max-w-4xl text-xs text-slate-500 dark:text-slate-400">
+            <h1 className="text-xl font-black tracking-tight text-white sm:text-2xl">{tt("title", "Customer Order")}</h1>
+            <p className="max-w-4xl text-xs leading-5 text-slate-300">
               {t(lang, "comv.intro_subtitle", "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later.")}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <button
               type="button"
               onClick={fetchInitialData}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-bold text-slate-100 transition hover:bg-white/20"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               {refreshLabel}
@@ -1299,7 +1417,7 @@ export function CustomerOrderManagementView() {
             <button
               type="button"
               onClick={resetForm}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500 px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-400"
             >
               <Plus className="h-3.5 w-3.5" />
               {tt("new", "New Order")}
@@ -1315,20 +1433,26 @@ export function CustomerOrderManagementView() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start">
         {/* Left Form: Compact 4-Step Wizard */}
-        <div className="space-y-4 self-start rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 xl:col-span-5 xl:sticky xl:top-4">
+        <div className="space-y-4 self-start rounded-2xl border border-slate-200/90 border-t-4 border-t-blue-600 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:border-t-blue-500 dark:bg-slate-900 dark:shadow-none xl:col-span-5 xl:sticky xl:top-4">
           {/* Stepper Navigation Bar */}
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3 space-y-2">
+          <div className="space-y-3 border-b border-slate-100 pb-3 dark:border-slate-800">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
                 {t(lang, "comv.step_x_of_4", "Step {n} of 4").replace("{n}", String(currentStep))}
               </span>
               {editingOrderId ? (
-                <span className="rounded-full bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 text-[10px] font-bold">
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-300">
                   Editing: {formData.customer_name || "Order"}
                 </span>
               ) : null}
+            </div>
+
+            <div className="flex items-center gap-1.5 px-1" aria-label={t(lang, "comv.progress_label", "Order completion progress")}>
+              {stepsList.map((st) => (
+                <div key={st.num} className={`h-1.5 flex-1 rounded-full transition-colors ${currentStep >= st.num ? "bg-blue-600 dark:bg-blue-500" : "bg-slate-100 dark:bg-slate-800"}`} />
+              ))}
             </div>
 
             <div className="grid grid-cols-4 gap-1.5">
@@ -1340,7 +1464,7 @@ export function CustomerOrderManagementView() {
                     key={st.num}
                     type="button"
                     onClick={() => setCurrentStep(st.num as any)}
-                    className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all ${
+                    className={`flex min-h-[56px] flex-col items-start rounded-xl border p-2 text-left transition-all ${
                       isActive
                         ? "border-blue-600 bg-blue-50/80 text-blue-800 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-200 shadow-xs"
                         : isPast
@@ -1427,6 +1551,10 @@ export function CustomerOrderManagementView() {
               addLeg={addLeg}
               removeLeg={removeLeg}
               seedLegsForSeaWithPreCarriage={seedLegsForSeaWithPreCarriage}
+              countryBranches={countryBranches}
+              cityBranches={cityBranches}
+              assignableUsers={assignableUsers}
+              editingOrderId={editingOrderId}
             />
           )}
 
@@ -1508,10 +1636,20 @@ export function CustomerOrderManagementView() {
         {/* Right Side Register & Live Report (Prominent, High Visibility) */}
         <div className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 xl:self-start h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
           {/* Top KPI Cards */}
-          <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20"><Route className="h-4 w-4" /></span>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">{tt("report_workspace", "Operations Workspace")}</p>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white">{tt("live_report", "Live Customer Order Report")}</h2>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{tt("live", "Live")}</span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {/* 1. Order Summary */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+              <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-3 dark:border-blue-900/50 dark:from-blue-950/40 dark:to-slate-900 flex flex-col justify-between">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   <span>{tt("kpi_order_summary", "Order Summary")}</span>
@@ -1525,7 +1663,7 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 2. Movements */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+              <div className="rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-3 dark:border-purple-900/50 dark:from-purple-950/40 dark:to-slate-900 flex flex-col justify-between">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <Route className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   <span>{tt("kpi_movements", "Movements")}</span>
@@ -1539,7 +1677,7 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 3. Locations & Ports */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+              <div className="rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-3 dark:border-sky-900/50 dark:from-sky-950/40 dark:to-slate-900 flex flex-col justify-between">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <Anchor className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   <span>{tt("kpi_locations", "Locations & Ports")}</span>
@@ -1551,7 +1689,7 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 4. This Month */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between">
+              <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-3 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-slate-900 flex flex-col justify-between">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <Boxes className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>{tt("kpi_this_month", "This Month")}</span>
@@ -1563,7 +1701,7 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 5. Quick Info */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 flex flex-col justify-between col-span-2 sm:col-span-1">
+              <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 dark:border-slate-800 dark:from-slate-800/70 dark:to-slate-900 flex flex-col justify-between col-span-2 sm:col-span-1">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <BadgeInfo className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
                   <span>{tt("kpi_quick_info", "Quick Info")}</span>
@@ -1611,7 +1749,11 @@ export function CustomerOrderManagementView() {
           </div>
 
           {/* Live Orders Table */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-800 dark:text-slate-100"><FileText className="h-4 w-4 text-blue-600" />{tt("order_register", "Order Register")}</div>
+              <span className="text-[10px] font-bold text-slate-500">{visibleOrders.length} / {orders.length} {tt("visible", "visible")}</span>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
@@ -2455,6 +2597,93 @@ function LegPartyMini({
   );
 }
 
+/**
+ * "Send to next user" per leg — reuses the EXISTING generic user_tasks engine
+ * (lib/user-tasks/service.ts, app/api/erp/user-tasks/route.ts) rather than a new
+ * assignment system. Creates one task linked to this leg via the polymorphic
+ * related_record_table/related_record_id columns already built for that purpose,
+ * and stores the new task id back on the leg (current_task_id) so the Live Report
+ * can show who is presently responsible without a second query round-trip.
+ */
+function ShippingLegHandoffAction({
+  lang,
+  leg,
+  assignableUsers,
+  onAssigned
+}: {
+  lang: ReturnType<typeof useActiveLanguage>;
+  leg: RouteLeg;
+  assignableUsers: { id: string; name: string }[];
+  onAssigned: (taskId: string, userId: string) => void;
+}) {
+  const [nextUserId, setNextUserId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function handleAssign() {
+    if (!nextUserId || !leg.id) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/erp/user-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `Shipping Order — Leg #${leg.legNo} (${leg.fromCountryName || "?"} → ${leg.toCountryName || "?"})`,
+          assignedTo: nextUserId,
+          relatedModule: "shipping",
+          relatedRecordTable: "clearing_customer_order_legs",
+          relatedRecordId: leg.id,
+          relatedRecordLabel: `Leg #${leg.legNo}`,
+          priority: "normal"
+        })
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error?.message || "Failed to assign leg.");
+      onAssigned(json.data.id, nextUserId);
+      setMessage(t(lang, "comv.assigned_ok", "Assigned. The next user now sees this leg in their tasks."));
+      setNextUserId("");
+    } catch (err: any) {
+      setMessage(err?.message || t(lang, "comv.assign_failed", "Could not assign this leg."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const currentUserName = leg.responsibleUserId ? assignableUsers.find((u) => u.id === leg.responsibleUserId)?.name : null;
+
+  return (
+    <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2.5 space-y-1.5 dark:border-indigo-900/40 dark:bg-indigo-950/10">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+        {t(lang, "comv.stage_handoff", "Stage Handoff")}
+      </div>
+      {currentUserName ? (
+        <p className="text-[11px] text-slate-600 dark:text-slate-300">
+          {t(lang, "comv.currently_with", "Currently with:")} <span className="font-bold">{currentUserName}</span>
+          {leg.currentTaskId ? <span className="ms-1 text-emerald-600 dark:text-emerald-400">({t(lang, "comv.task_open", "task open")})</span> : null}
+        </p>
+      ) : null}
+      <div className="flex gap-2">
+        <select value={nextUserId} onChange={(e) => setNextUserId(e.target.value)} className={`${selectClass} flex-1`}>
+          <option value="">{t(lang, "comv.select_next_user", "Send to next user…")}</option>
+          {assignableUsers.map((u) => (
+            <option key={u.id} value={u.id}>{u.name}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={!nextUserId || busy}
+          onClick={handleAssign}
+          className="rounded-lg bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {t(lang, "comv.assign_send", "Assign")}
+        </button>
+      </div>
+      {message ? <p className="text-[10px] text-slate-500 dark:text-slate-400">{message}</p> : null}
+    </div>
+  );
+}
+
 function Step3RouteVesselCustoms({
   lang,
   tt,
@@ -2472,7 +2701,11 @@ function Step3RouteVesselCustoms({
   updateLeg,
   addLeg,
   removeLeg,
-  seedLegsForSeaWithPreCarriage
+  seedLegsForSeaWithPreCarriage,
+  countryBranches,
+  cityBranches,
+  assignableUsers,
+  editingOrderId
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
@@ -2491,6 +2724,10 @@ function Step3RouteVesselCustoms({
   addLeg: (transportMode?: LegTransportMode | "") => void;
   removeLeg: (index: number) => void;
   seedLegsForSeaWithPreCarriage: () => void;
+  countryBranches: { id: string; name: string; countryId: string }[];
+  cityBranches: { id: string; name: string; countryBranchId: string }[];
+  assignableUsers: { id: string; name: string }[];
+  editingOrderId: string | null;
 }) {
   const showAutoSeed =
     formData.transport_mode === "by_sea" && formData.loading_source !== "port_terminal" && formData.legs.length === 0;
@@ -2677,6 +2914,40 @@ function Step3RouteVesselCustoms({
                 onValueChange={(id) => updateLeg(idx, { responsibleClearingAgentId: id })}
               />
 
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <LegPartyMini
+                  label={t(lang, "comv.responsible_country_branch", "Responsible Branch")}
+                  value={leg.responsibleCountryBranchId}
+                  rows={countryBranches}
+                  onChange={(id) => updateLeg(idx, { responsibleCountryBranchId: id, responsibleCityBranchId: "" })}
+                />
+                <LegPartyMini
+                  label={t(lang, "comv.responsible_city_branch", "Responsible City Branch")}
+                  value={leg.responsibleCityBranchId}
+                  rows={cityBranches.filter((b) => !leg.responsibleCountryBranchId || b.countryBranchId === leg.responsibleCountryBranchId)}
+                  onChange={(id) => updateLeg(idx, { responsibleCityBranchId: id })}
+                />
+                <LegPartyMini
+                  label={t(lang, "comv.responsible_user", "Responsible User")}
+                  value={leg.responsibleUserId}
+                  rows={assignableUsers}
+                  onChange={(id) => updateLeg(idx, { responsibleUserId: id })}
+                />
+              </div>
+
+              {leg.id && editingOrderId ? (
+                <ShippingLegHandoffAction
+                  lang={lang}
+                  leg={leg}
+                  assignableUsers={assignableUsers}
+                  onAssigned={(taskId: string, userId: string) => updateLeg(idx, { currentTaskId: taskId, responsibleUserId: userId })}
+                />
+              ) : (
+                <p className="text-[10px] italic text-slate-400">
+                  {t(lang, "comv.save_to_assign", "Save the order once to enable stage handoff/assignment for this leg.")}
+                </p>
+              )}
+
               {leg.transportMode === "by_road" ? (
                 <TruckEntryPicker
                   langProp={lang}
@@ -2700,6 +2971,22 @@ function Step3RouteVesselCustoms({
                     })
                   }
                 />
+              ) : null}
+
+              {/* Cross-border road move — a real registered truck (not a one-time temporary
+                  entry) is required once the leg actually crosses a country border. */}
+              {leg.transportMode === "by_road" &&
+              leg.fromCountryId &&
+              leg.toCountryId &&
+              leg.fromCountryId !== leg.toCountryId &&
+              leg.truckRegistrationType === "temporary" ? (
+                <p className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-bold text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+                  {t(
+                    lang,
+                    "comv.cross_border_truck_warning",
+                    "This leg crosses a country border — use a registered truck from the Truck Master, not a temporary one-time entry."
+                  )}
+                </p>
               ) : null}
 
               {/* Vessel/Sea details — spec point 9: never forced onto a non-sea leg */}
@@ -2774,11 +3061,36 @@ function Step3RouteVesselCustoms({
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.customs_status", "Customs Status")}</label>
+                    <select value={leg.customsStatus} onChange={(e) => updateLeg(idx, { customsStatus: e.target.value as LegCustomsStatus })} className={selectClass}>
+                      {(["not_applicable", "pending", "submitted", "cleared", "held", "rejected"] as const).map((s) => (
+                        <option key={s} value={s}>{t(lang, ("comv.customsstatus_" + s) as never, s.replace(/_/g, " "))}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {leg.id ? (
+                    <div>
+                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.customs_documents", "Customs Documents")}</label>
+                      <DocumentAttachmentIcon entityType="clearing_customer_order_leg" entityId={leg.id} />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <input type="text" placeholder={t(lang, "comv.bill_of_entry_no", "Bill of Entry No.")} value={leg.billOfEntryNo} onChange={(e) => updateLeg(idx, { billOfEntryNo: e.target.value })} className={inputClass} />
+                  <input type="text" placeholder={t(lang, "comv.pgm_number", "PGM Number")} value={leg.pgmNumber} onChange={(e) => updateLeg(idx, { pgmNumber: e.target.value })} className={inputClass} />
+                  <input type="text" placeholder={t(lang, "comv.declaration_reference", "Declaration / Reference No.")} value={leg.declarationReference} onChange={(e) => updateLeg(idx, { declarationReference: e.target.value })} className={inputClass} />
+                </div>
+
                 {leg.dutyTreatment === "duty_payable" ? (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <input type="number" placeholder={t(lang, "comv.duty_amount", "Duty Amount")} value={leg.dutyAmount} onChange={(e) => updateLeg(idx, { dutyAmount: e.target.value })} className={inputClass} />
                     <input type="text" placeholder={t(lang, "comv.duty_currency", "Currency")} value={leg.dutyCurrency} onChange={(e) => updateLeg(idx, { dutyCurrency: e.target.value })} className={inputClass} />
                     <input type="text" placeholder={t(lang, "comv.duty_payer", "Payer")} value={leg.dutyPayer} onChange={(e) => updateLeg(idx, { dutyPayer: e.target.value })} className={inputClass} />
+                    <input type="number" placeholder={t(lang, "comv.tax_amount", "Tax Amount")} value={leg.taxAmount} onChange={(e) => updateLeg(idx, { taxAmount: e.target.value })} className={inputClass} />
+                    <input type="number" placeholder={t(lang, "comv.other_charges", "Other Charges")} value={leg.otherCharges} onChange={(e) => updateLeg(idx, { otherCharges: e.target.value })} className={inputClass} />
                     <input type="text" placeholder={t(lang, "comv.customs_receipt_ref", "Receipt / Reference")} value={leg.customsReceiptRef} onChange={(e) => updateLeg(idx, { customsReceiptRef: e.target.value })} className={inputClass} />
                     <input type="date" value={leg.customsClearanceDate} onChange={(e) => updateLeg(idx, { customsClearanceDate: e.target.value })} className={inputClass} />
                   </div>
@@ -2793,14 +3105,37 @@ function Step3RouteVesselCustoms({
                 ) : null}
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <div>
                   <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_departure", "Planned Departure")}</label>
                   <input type="date" value={leg.plannedDeparture} onChange={(e) => updateLeg(idx, { plannedDeparture: e.target.value })} className={inputClass} />
                 </div>
                 <div>
+                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.actual_departure", "Actual Departure")}</label>
+                  <input type="date" value={leg.actualDeparture} onChange={(e) => updateLeg(idx, { actualDeparture: e.target.value })} className={inputClass} />
+                </div>
+                <div>
                   <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_arrival", "Planned Arrival")}</label>
                   <input type="date" value={leg.plannedArrival} onChange={(e) => updateLeg(idx, { plannedArrival: e.target.value })} className={inputClass} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.actual_arrival", "Actual Arrival")}</label>
+                  <input type="date" value={leg.actualArrival} onChange={(e) => updateLeg(idx, { actualArrival: e.target.value })} className={inputClass} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 rounded-lg border border-emerald-100 bg-emerald-50/40 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/10">
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.estimated_expense", "Estimated Expense")}</label>
+                  <input type="number" value={leg.estimatedExpenseAmount} onChange={(e) => updateLeg(idx, { estimatedExpenseAmount: e.target.value })} className={inputClass} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.actual_expense", "Actual Expense")}</label>
+                  <input type="number" value={leg.actualExpenseAmount} onChange={(e) => updateLeg(idx, { actualExpenseAmount: e.target.value })} className={inputClass} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.expense_currency", "Currency")}</label>
+                  <input type="text" value={leg.expenseCurrency} onChange={(e) => updateLeg(idx, { expenseCurrency: e.target.value })} className={inputClass} />
                 </div>
               </div>
 

@@ -84,7 +84,20 @@ export type ClearingCustomerOrderInput = {
   goodsEmptyWeight?: number | null;
   goodsNetWeight?: number | null;
   legs?: OrderLegInput[];
+  loadingAllocations?: LoadingAllocationInput[];
 };
+
+export type LoadingAllocationInput = {
+  id?: string | null;
+  rowSerial?: number | null;
+  warehouseId?: string | null;
+  sourceLocationText?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
+  remarks?: string | null;
+};
+
+export type ClearingCustomerOrderLoadingAllocationRow = Record<string, any> & { id: string; order_id: string };
 
 export type OrderLegInput = {
   id?: string | null;
@@ -131,6 +144,16 @@ export type OrderLegInput = {
   status?: string | null;
   handoverId?: string | null;
   remarks?: string | null;
+  responsibleUserId?: string | null;
+  billOfEntryNo?: string | null;
+  pgmNumber?: string | null;
+  declarationReference?: string | null;
+  taxAmount?: number | null;
+  otherCharges?: number | null;
+  customsStatus?: "not_applicable" | "pending" | "submitted" | "cleared" | "held" | "rejected" | null;
+  estimatedExpenseAmount?: number | null;
+  actualExpenseAmount?: number | null;
+  expenseCurrency?: string | null;
 };
 
 export type ClearingCustomerOrderLegRow = Record<string, any> & { id: string; order_id: string };
@@ -194,10 +217,12 @@ const LEG_TRANSPORT_MODES = new Set(["by_sea", "by_road", "by_air", "by_rail"]);
 const LEG_TRUCK_REG_TYPES = new Set(["registered", "temporary"]);
 const LEG_CLEARANCE_TYPES = new Set(["import", "export", "transit"]);
 const LEG_DUTY_TREATMENTS = new Set(["duty_payable", "no_duty_exempt", "transit_bonded", "pending"]);
+const LEG_CUSTOMS_STATUSES = new Set(["not_applicable", "pending", "submitted", "cleared", "held", "rejected"]);
 
 function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[] {
   return (legs ?? [])
     .map((leg, index) => ({
+      id: trimOrNull(leg.id),
       legNo: leg.legNo && leg.legNo > 0 ? leg.legNo : index + 1,
       fromCountryId: trimOrNull(leg.fromCountryId),
       fromCountryName: trimOrNull(leg.fromCountryName),
@@ -240,9 +265,33 @@ function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[
       actualArrival: leg.actualArrival || null,
       status: trimOrNull(leg.status) ?? "pending",
       handoverId: trimOrNull(leg.handoverId),
-      remarks: trimOrNull(leg.remarks)
+      remarks: trimOrNull(leg.remarks),
+      responsibleUserId: trimOrNull(leg.responsibleUserId),
+      billOfEntryNo: trimOrNull(leg.billOfEntryNo),
+      pgmNumber: trimOrNull(leg.pgmNumber),
+      declarationReference: trimOrNull(leg.declarationReference),
+      taxAmount: typeof leg.taxAmount === "number" ? leg.taxAmount : null,
+      otherCharges: typeof leg.otherCharges === "number" ? leg.otherCharges : null,
+      customsStatus: LEG_CUSTOMS_STATUSES.has(String(leg.customsStatus)) ? (leg.customsStatus as OrderLegInput["customsStatus"]) : "not_applicable",
+      estimatedExpenseAmount: typeof leg.estimatedExpenseAmount === "number" ? leg.estimatedExpenseAmount : null,
+      actualExpenseAmount: typeof leg.actualExpenseAmount === "number" ? leg.actualExpenseAmount : null,
+      expenseCurrency: trimOrNull(leg.expenseCurrency)
     }))
     .filter((leg) => leg.fromCountryId || leg.toCountryId || leg.fromLocationText || leg.toLocationText || leg.transportMode);
+}
+
+function normalizeLoadingAllocations(rows: LoadingAllocationInput[] | undefined | null): LoadingAllocationInput[] {
+  return (rows ?? [])
+    .map((row, index) => ({
+      id: trimOrNull(row.id),
+      rowSerial: row.rowSerial && row.rowSerial > 0 ? row.rowSerial : index + 1,
+      warehouseId: trimOrNull(row.warehouseId),
+      sourceLocationText: trimOrNull(row.sourceLocationText),
+      quantity: typeof row.quantity === "number" ? row.quantity : 0,
+      unit: trimOrNull(row.unit),
+      remarks: trimOrNull(row.remarks)
+    }))
+    .filter((row) => row.warehouseId || row.sourceLocationText || row.quantity > 0);
 }
 
 async function withOrderDb<T>(fn: (sql: any) => Promise<T>): Promise<T> {
@@ -257,7 +306,8 @@ async function syncOrderTranslations(
   order: Record<string, any>,
   links: ClearingCustomerOrderPartyRow[],
   legs: ClearingCustomerOrderLegRow[],
-  originalLanguage: SupportedLanguage
+  originalLanguage: SupportedLanguage,
+  allocations: ClearingCustomerOrderLoadingAllocationRow[] = []
 ) {
   await syncRecordTranslations({
     table: "clearing_customer_orders",
@@ -278,6 +328,14 @@ async function syncOrderTranslations(
       table: "clearing_customer_order_legs",
       recordId: leg.id,
       record: leg,
+      originalLanguage
+    });
+  }
+  for (const alloc of allocations) {
+    await syncRecordTranslations({
+      table: "clearing_customer_order_loading_allocations",
+      recordId: alloc.id,
+      record: alloc,
       originalLanguage
     });
   }
@@ -336,19 +394,22 @@ export async function listCustomerOrders(status?: string | null, scope?: Custome
     `;
 
     const orderIds = (orders ?? []).map((row: any) => row.id).filter(Boolean);
-    const [links, legs] = orderIds.length
+    const [links, legs, allocations] = orderIds.length
       ? await Promise.all([
           sql`select * from public.clearing_customer_order_parties where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by created_at asc`,
-          sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by leg_no asc`
+          sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by leg_no asc`,
+          sql`select * from public.clearing_customer_order_loading_allocations where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by row_serial asc`
         ])
-      : [[], []];
+      : [[], [], []];
 
     const linksByOrder = groupByOrder(links as ClearingCustomerOrderPartyRow[]);
     const legsByOrder = groupByOrder(legs as ClearingCustomerOrderLegRow[]);
+    const allocationsByOrder = groupByOrder(allocations as ClearingCustomerOrderLoadingAllocationRow[]);
     return (orders ?? []).map((row: any) => ({
       ...row,
       party_links: linksByOrder.get(row.id) ?? [],
-      legs: legsByOrder.get(row.id) ?? []
+      legs: legsByOrder.get(row.id) ?? [],
+      loading_allocations: allocationsByOrder.get(row.id) ?? []
     })) as ClearingCustomerOrderRow[];
   });
 }
@@ -362,14 +423,16 @@ export async function getCustomerOrderById(id: string) {
       limit 1
     `;
     if (!order) return null;
-    const [links, legs] = await Promise.all([
+    const [links, legs, allocations] = await Promise.all([
       sql`select * from public.clearing_customer_order_parties where deleted_at is null and order_id = ${id}::uuid order by created_at asc`,
-      sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ${id}::uuid order by leg_no asc`
+      sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ${id}::uuid order by leg_no asc`,
+      sql`select * from public.clearing_customer_order_loading_allocations where deleted_at is null and order_id = ${id}::uuid order by row_serial asc`
     ]);
     return {
       ...(order as Record<string, any>),
       party_links: links as ClearingCustomerOrderPartyRow[],
-      legs: legs as ClearingCustomerOrderLegRow[]
+      legs: legs as ClearingCustomerOrderLegRow[],
+      loading_allocations: allocations as ClearingCustomerOrderLoadingAllocationRow[]
     } as ClearingCustomerOrderRow;
   });
 }
@@ -674,68 +737,109 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
 
       let legRows: ClearingCustomerOrderLegRow[] = [];
       if (hasLegsPayload) {
-        const normalizedLegs = normalizeLegs(input.legs).map((leg) => ({
-          order_id: orderRow.id,
-          leg_no: leg.legNo,
-          from_country_id: leg.fromCountryId,
-          from_country_name: leg.fromCountryName,
-          to_country_id: leg.toCountryId,
-          to_country_name: leg.toCountryName,
-          from_location_text: leg.fromLocationText,
-          to_location_text: leg.toLocationText,
-          transport_mode: leg.transportMode,
-          responsible_country_branch_id: leg.responsibleCountryBranchId,
-          responsible_city_branch_id: leg.responsibleCityBranchId,
-          responsible_clearing_agent_id: leg.responsibleClearingAgentId,
-          truck_id: leg.truckRegistrationType === "registered" ? leg.truckId : null,
-          truck_registration_type: leg.truckRegistrationType,
-          truck_number: leg.truckNumber,
-          truck_driver_name: leg.truckDriverName,
-          truck_driver_mobile: leg.truckDriverMobile,
-          shipping_line_id: leg.shippingLineId,
-          vessel_name: leg.vesselName,
-          voyage_number: leg.voyageNumber,
-          container_number: leg.containerNumber,
-          seal_number: leg.sealNumber,
-          bl_number: leg.blNumber,
-          port_of_loading: leg.portOfLoading,
-          port_of_discharge: leg.portOfDischarge,
-          etd: leg.etd,
-          eta: leg.eta,
-          customs_country_id: leg.customsCountryId,
-          customs_point_text: leg.customsPointText,
-          customs_clearing_agent_id: leg.customsClearingAgentId,
-          clearance_type: leg.clearanceType,
-          duty_treatment: leg.dutyTreatment,
-          duty_amount: leg.dutyAmount,
-          duty_currency: leg.dutyCurrency,
-          duty_payer: leg.dutyPayer,
-          customs_receipt_ref: leg.customsReceiptRef,
-          customs_clearance_date: leg.customsClearanceDate,
-          planned_departure: leg.plannedDeparture,
-          actual_departure: leg.actualDeparture,
-          planned_arrival: leg.plannedArrival,
-          actual_arrival: leg.actualArrival,
-          status: leg.status,
-          handover_id: leg.handoverId,
-          remarks: leg.remarks,
-          created_at: now,
-          updated_at: now
-        }));
+        const normalizedLegs = normalizeLegs(input.legs);
 
-        if (orderId) {
+        // Upsert BY ID rather than delete-all-then-reinsert: a leg's id must stay
+        // stable across saves, because DocumentAttachmentIcon (generic documents
+        // system), a leg's current_task_id (user_tasks handoff), and external FKs
+        // (clearing_payment_bills.leg_id, shipping_bl_records.leg_id, etc.) all
+        // reference a specific leg by id. Deleting and reinserting on every save
+        // silently orphaned every one of those the moment the order was resaved.
+        const existingIds: string[] = orderId
+          ? (await tx`select id from public.clearing_customer_order_legs where order_id = ${orderId}::uuid and deleted_at is null`).map((r: any) => r.id)
+          : [];
+        const keptIds = new Set<string>();
+
+        for (const leg of normalizedLegs) {
+          const legPayload = {
+            order_id: orderRow.id,
+            leg_no: leg.legNo,
+            from_country_id: leg.fromCountryId,
+            from_country_name: leg.fromCountryName,
+            to_country_id: leg.toCountryId,
+            to_country_name: leg.toCountryName,
+            from_location_text: leg.fromLocationText,
+            to_location_text: leg.toLocationText,
+            transport_mode: leg.transportMode,
+            responsible_country_branch_id: leg.responsibleCountryBranchId,
+            responsible_city_branch_id: leg.responsibleCityBranchId,
+            responsible_clearing_agent_id: leg.responsibleClearingAgentId,
+            responsible_user_id: leg.responsibleUserId,
+            truck_id: leg.truckRegistrationType === "registered" ? leg.truckId : null,
+            truck_registration_type: leg.truckRegistrationType,
+            truck_number: leg.truckNumber,
+            truck_driver_name: leg.truckDriverName,
+            truck_driver_mobile: leg.truckDriverMobile,
+            shipping_line_id: leg.shippingLineId,
+            vessel_name: leg.vesselName,
+            voyage_number: leg.voyageNumber,
+            container_number: leg.containerNumber,
+            seal_number: leg.sealNumber,
+            bl_number: leg.blNumber,
+            port_of_loading: leg.portOfLoading,
+            port_of_discharge: leg.portOfDischarge,
+            etd: leg.etd,
+            eta: leg.eta,
+            customs_country_id: leg.customsCountryId,
+            customs_point_text: leg.customsPointText,
+            customs_clearing_agent_id: leg.customsClearingAgentId,
+            clearance_type: leg.clearanceType,
+            duty_treatment: leg.dutyTreatment,
+            duty_amount: leg.dutyAmount,
+            duty_currency: leg.dutyCurrency,
+            duty_payer: leg.dutyPayer,
+            customs_receipt_ref: leg.customsReceiptRef,
+            customs_clearance_date: leg.customsClearanceDate,
+            bill_of_entry_no: leg.billOfEntryNo,
+            pgm_number: leg.pgmNumber,
+            declaration_reference: leg.declarationReference,
+            tax_amount: leg.taxAmount,
+            other_charges: leg.otherCharges,
+            customs_status: leg.customsStatus ?? "not_applicable",
+            estimated_expense_amount: leg.estimatedExpenseAmount,
+            actual_expense_amount: leg.actualExpenseAmount,
+            expense_currency: leg.expenseCurrency,
+            planned_departure: leg.plannedDeparture,
+            actual_departure: leg.actualDeparture,
+            planned_arrival: leg.plannedArrival,
+            actual_arrival: leg.actualArrival,
+            status: leg.status,
+            handover_id: leg.handoverId,
+            remarks: leg.remarks,
+            updated_at: now
+          };
+
+          if (leg.id && existingIds.includes(leg.id)) {
+            keptIds.add(leg.id);
+            const [updatedLeg] = await tx`
+              update public.clearing_customer_order_legs
+              set ${tx(legPayload as any)}
+              where id = ${leg.id}::uuid
+              returning *
+            `;
+            if (updatedLeg) legRows.push(updatedLeg as ClearingCustomerOrderLegRow);
+          } else {
+            const [insertedLeg] = await tx`
+              insert into public.clearing_customer_order_legs ${tx({ ...legPayload, created_at: now })}
+              returning *
+            `;
+            if (insertedLeg) {
+              legRows.push(insertedLeg as ClearingCustomerOrderLegRow);
+              keptIds.add(insertedLeg.id);
+            }
+          }
+        }
+
+        // Soft-delete legs the user removed from the order (present before, absent now).
+        const removedIds = existingIds.filter((id) => !keptIds.has(id));
+        if (removedIds.length) {
           await tx`
-            delete from public.clearing_customer_order_legs
-            where order_id = ${orderId}::uuid
+            update public.clearing_customer_order_legs
+            set deleted_at = ${now}, updated_at = ${now}
+            where id = ANY(${removedIds}::uuid[])
           `;
         }
-
-        if (normalizedLegs.length) {
-          legRows = await tx`
-            insert into public.clearing_customer_order_legs ${tx(normalizedLegs)}
-            returning *
-          `;
-        }
+        legRows.sort((a: any, b: any) => (a.leg_no ?? 0) - (b.leg_no ?? 0));
       } else {
         legRows = await tx`
           select *
@@ -745,11 +849,70 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         `;
       }
 
-      return { order: orderRow, partyLinks: partyRows as ClearingCustomerOrderPartyRow[], legs: legRows };
+      let allocationRows: ClearingCustomerOrderLoadingAllocationRow[] = [];
+      const hasAllocationsPayload = input.loadingAllocations !== undefined;
+      if (hasAllocationsPayload) {
+        const normalizedAllocations = normalizeLoadingAllocations(input.loadingAllocations);
+        const existingAllocationIds: string[] = orderId
+          ? (await tx`select id from public.clearing_customer_order_loading_allocations where order_id = ${orderId}::uuid and deleted_at is null`).map((r: any) => r.id)
+          : [];
+        const keptAllocationIds = new Set<string>();
+
+        for (const alloc of normalizedAllocations) {
+          const allocPayload = {
+            order_id: orderRow.id,
+            row_serial: alloc.rowSerial,
+            warehouse_id: alloc.warehouseId,
+            source_location_text: alloc.sourceLocationText,
+            quantity: alloc.quantity,
+            unit: alloc.unit,
+            remarks: alloc.remarks,
+            updated_at: now
+          };
+          if (alloc.id && existingAllocationIds.includes(alloc.id)) {
+            keptAllocationIds.add(alloc.id);
+            const [updatedAlloc] = await tx`
+              update public.clearing_customer_order_loading_allocations
+              set ${tx(allocPayload as any)}
+              where id = ${alloc.id}::uuid
+              returning *
+            `;
+            if (updatedAlloc) allocationRows.push(updatedAlloc as ClearingCustomerOrderLoadingAllocationRow);
+          } else {
+            const [insertedAlloc] = await tx`
+              insert into public.clearing_customer_order_loading_allocations ${tx({ ...allocPayload, created_by: trimOrNull(input.createdBy), created_at: now })}
+              returning *
+            `;
+            if (insertedAlloc) {
+              allocationRows.push(insertedAlloc as ClearingCustomerOrderLoadingAllocationRow);
+              keptAllocationIds.add(insertedAlloc.id);
+            }
+          }
+        }
+
+        const removedAllocationIds = existingAllocationIds.filter((id) => !keptAllocationIds.has(id));
+        if (removedAllocationIds.length) {
+          await tx`
+            update public.clearing_customer_order_loading_allocations
+            set deleted_at = ${now}, updated_at = ${now}
+            where id = ANY(${removedAllocationIds}::uuid[])
+          `;
+        }
+        allocationRows.sort((a: any, b: any) => (a.row_serial ?? 0) - (b.row_serial ?? 0));
+      } else {
+        allocationRows = await tx`
+          select *
+          from public.clearing_customer_order_loading_allocations
+          where deleted_at is null and order_id = ${orderRow.id}::uuid
+          order by row_serial asc
+        `;
+      }
+
+      return { order: orderRow, partyLinks: partyRows as ClearingCustomerOrderPartyRow[], legs: legRows, loadingAllocations: allocationRows };
     });
   }).then(async (result) => {
     try {
-      await syncOrderTranslations(result.order, result.partyLinks, result.legs, input.originalLanguage ?? "en");
+      await syncOrderTranslations(result.order, result.partyLinks, result.legs, input.originalLanguage ?? "en", result.loadingAllocations);
     } catch (error) {
       console.warn("Customer-order translation sync failed after save; preserving saved shipping order.", error);
     }

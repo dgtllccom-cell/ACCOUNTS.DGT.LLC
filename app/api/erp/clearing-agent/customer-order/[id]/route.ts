@@ -97,6 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       status: body.status ?? "pending",
       partyLinks: body.party_links ?? body.partyLinks ?? undefined,
       legs: body.legs ?? undefined,
+      loadingAllocations: body.loading_allocations ?? body.loadingAllocations ?? undefined,
       originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
       // Scope columns are never re-writable via PATCH by a non-super-admin — a
       // scoped user editing their own order keeps its existing scope untouched;
@@ -132,7 +133,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       goodsNetWeight: body.goods_net_weight ?? body.goodsNetWeight ?? null
     });
 
-    return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs });
+    return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

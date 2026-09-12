@@ -7745,6 +7745,39 @@ export type UiKey =
   | "ait.error_enter_text"
   | "ait.approval_title"
   | "ait.approval_desc"
+  | "comv.progress_label"
+  | "comv.handoff_title"
+  | "comv.handoff_description"
+  | "comv.handoff_assigned"
+  | "comv.handoff_failed"
+  | "comv.handoff_user"
+  | "comv.select_handoff_user"
+  | "comv.handoff"
+  | "comv.task_linked"
+  | "comv.assigned_ok"
+  | "comv.assign_failed"
+  | "comv.stage_handoff"
+  | "comv.currently_with"
+  | "comv.task_open"
+  | "comv.select_next_user"
+  | "comv.assign_send"
+  | "comv.responsible_country_branch"
+  | "comv.responsible_city_branch"
+  | "comv.responsible_user"
+  | "comv.save_to_assign"
+  | "comv.cross_border_truck_warning"
+  | "comv.customs_status"
+  | "comv.customs_documents"
+  | "comv.bill_of_entry_no"
+  | "comv.pgm_number"
+  | "comv.declaration_reference"
+  | "comv.tax_amount"
+  | "comv.other_charges"
+  | "comv.actual_departure"
+  | "comv.actual_arrival"
+  | "comv.estimated_expense"
+  | "comv.actual_expense"
+  | "comv.expense_currency"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -25759,6 +25792,39 @@ const en: Dict = {
   "shl.create_account": "New Account Setup",
   "shl.register_new": "Register Shipping Line",
   "shl.search_lines": "Search shipping line by name, code, contact...",
+  "comv.progress_label": "Order completion progress",
+  "comv.handoff_title": "Shipping leg handoff",
+  "comv.handoff_description": "Review and progress the assigned shipping route leg.",
+  "comv.handoff_assigned": "Assigned",
+  "comv.handoff_failed": "Assignment failed",
+  "comv.handoff_user": "Handoff to user",
+  "comv.select_handoff_user": "Select responsible user",
+  "comv.handoff": "Handoff",
+  "comv.task_linked": "Task linked to this leg",
+  "comv.assigned_ok": "Assigned. The next user now sees this leg in their tasks.",
+  "comv.assign_failed": "Could not assign this leg.",
+  "comv.stage_handoff": "Stage Handoff",
+  "comv.currently_with": "Currently with:",
+  "comv.task_open": "task open",
+  "comv.select_next_user": "Send to next user…",
+  "comv.assign_send": "Assign",
+  "comv.responsible_country_branch": "Responsible Branch",
+  "comv.responsible_city_branch": "Responsible City Branch",
+  "comv.responsible_user": "Responsible User",
+  "comv.save_to_assign": "Save the order once to enable stage handoff/assignment for this leg.",
+  "comv.cross_border_truck_warning": "This leg crosses a country border — use a registered truck from the Truck Master, not a temporary one-time entry.",
+  "comv.customs_status": "Customs Status",
+  "comv.customs_documents": "Customs Documents",
+  "comv.bill_of_entry_no": "Bill of Entry No.",
+  "comv.pgm_number": "PGM Number",
+  "comv.declaration_reference": "Declaration / Reference No.",
+  "comv.tax_amount": "Tax Amount",
+  "comv.other_charges": "Other Charges",
+  "comv.actual_departure": "Actual Departure",
+  "comv.actual_arrival": "Actual Arrival",
+  "comv.estimated_expense": "Estimated Expense",
+  "comv.actual_expense": "Actual Expense",
+  "comv.expense_currency": "Expense Currency"
 };
 
 const ur: Dict = {
@@ -43747,6 +43813,39 @@ const ur: Dict = {
   "hr.pp_directory_scope": "ڈائریکٹری کا دائرہ",
   "hr.pp_all_records": "تمام افراد اور ملازمین",
   "hr.pp_local_country": "صرف موجودہ ملک",
+  "comv.progress_label": "آرڈر مکمل کرنے کی پیش رفت",
+  "comv.handoff_title": "شپنگ مرحلہ تفویض",
+  "comv.handoff_description": "تفویض کردہ شپنگ روٹ مرحلے کا جائزہ لیں اور آگے بڑھائیں۔",
+  "comv.handoff_assigned": "تفویض شدہ",
+  "comv.handoff_failed": "تفویض ناکام ہو گئی",
+  "comv.handoff_user": "صارف کو تفویض کریں",
+  "comv.select_handoff_user": "ذمہ دار صارف منتخب کریں",
+  "comv.handoff": "تفویض",
+  "comv.task_linked": "اس مرحلے سے منسلک ٹاسک",
+  "comv.assigned_ok": "تفویض ہو گیا۔ اگلا صارف اب اسے اپنے ٹاسکس میں دیکھے گا۔",
+  "comv.assign_failed": "اس مرحلے کو تفویض نہیں کیا جا سکا۔",
+  "comv.stage_handoff": "مرحلے کی تفویض",
+  "comv.currently_with": "فی الوقت بمطابق:",
+  "comv.task_open": "ٹاسک زیر التواء",
+  "comv.select_next_user": "اگلے صارف کو بھیجیں…",
+  "comv.assign_send": "تفویض کریں",
+  "comv.responsible_country_branch": "ذمہ دار ملک شاخ",
+  "comv.responsible_city_branch": "ذمہ دار شہری شاخ",
+  "comv.responsible_user": "ذمہ دار صارف",
+  "comv.save_to_assign": "اس مرحلے کی تفویض فعال کرنے کے لیے پہلے آرڈر محفوظ کریں۔",
+  "comv.cross_border_truck_warning": "یہ مرحلہ ملکی سرحد پار کرتا ہے — ٹرک ماسٹر سے رجسٹرڈ ٹرک استعمال کریں، عارضی اندراج نہیں۔",
+  "comv.customs_status": "کسٹمز کی حیثیت",
+  "comv.customs_documents": "کسٹمز دستاویزات",
+  "comv.bill_of_entry_no": "بل آف انٹری نمبر",
+  "comv.pgm_number": "پی جی ایم نمبر",
+  "comv.declaration_reference": "ڈیکلریشن / حوالہ نمبر",
+  "comv.tax_amount": "ٹیکس رقم",
+  "comv.other_charges": "دیگر اخراجات",
+  "comv.actual_departure": "اصل روانگی",
+  "comv.actual_arrival": "اصل آمد",
+  "comv.estimated_expense": "تخمینی اخراجات",
+  "comv.actual_expense": "اصل اخراجات",
+  "comv.expense_currency": "اخراجات کی کرنسی"
 };
 
 const ar: Dict = {
@@ -61737,6 +61836,39 @@ const ar: Dict = {
   "hr.pp_directory_scope": "نطاق الدليل",
   "hr.pp_all_records": "جميع الأشخاص والموظفين",
   "hr.pp_local_country": "الدولة الحالية فقط",
+  "comv.progress_label": "تقدم إنجاز الطلب",
+  "comv.handoff_title": "تسليم مرحلة الشحن",
+  "comv.handoff_description": "مراجعة مرحلة مسار الشحن المخصصة ومتابعتها.",
+  "comv.handoff_assigned": "تم التعيين",
+  "comv.handoff_failed": "فشل التعيين",
+  "comv.handoff_user": "تسليم إلى المستخدم",
+  "comv.select_handoff_user": "حدد المستخدم المسؤول",
+  "comv.handoff": "تسليم",
+  "comv.task_linked": "المهمة المرتبطة بهذه المرحلة",
+  "comv.assigned_ok": "تم التعيين. يرى المستخدم التالي هذه المرحلة في مهامه.",
+  "comv.assign_failed": "تعذر تعيين هذه المرحلة.",
+  "comv.stage_handoff": "تسليم المرحلة",
+  "comv.currently_with": "حالياً مع:",
+  "comv.task_open": "مهمة مفتوحة",
+  "comv.select_next_user": "إرسال إلى المستخدم التالي…",
+  "comv.assign_send": "تعيين",
+  "comv.responsible_country_branch": "فرع الدولة المسؤول",
+  "comv.responsible_city_branch": "فرع المدينة المسؤول",
+  "comv.responsible_user": "المستخدم المسؤول",
+  "comv.save_to_assign": "احفظ الطلب أولاً لتمكين تسليم/تعيين هذه المرحلة.",
+  "comv.cross_border_truck_warning": "هذه المرحلة تعبر حدود دولة — استخدم شاحنة مسجلة من سجل الشاحنات وليس إدخالاً مؤقتاً.",
+  "comv.customs_status": "حالة الجمارك",
+  "comv.customs_documents": "وثائق الجمارك",
+  "comv.bill_of_entry_no": "رقم بيان الدخول",
+  "comv.pgm_number": "رقم PGM",
+  "comv.declaration_reference": "رقم البيان / المرجع",
+  "comv.tax_amount": "مبلغ الضريبة",
+  "comv.other_charges": "رسوم أخرى",
+  "comv.actual_departure": "المغادرة الفعلية",
+  "comv.actual_arrival": "الوصول الفعلي",
+  "comv.estimated_expense": "المصروف المقدر",
+  "comv.actual_expense": "المصروف الفعلي",
+  "comv.expense_currency": "عملة المصروف"
 };
 
 const fa: Dict = {
@@ -79726,6 +79858,39 @@ const fa: Dict = {
   "hr.pp_directory_scope": "دامنه فهرست",
   "hr.pp_all_records": "همه اشخاص و کارکنان",
   "hr.pp_local_country": "فقط کشور فعلی",
+  "comv.progress_label": "پیشرفت تکمیل سفارش",
+  "comv.handoff_title": "واگذاری مرحله حمل و نقل",
+  "comv.handoff_description": "بررسی و پیشبرد مرحله مسیر حمل و نقل تعیین شده.",
+  "comv.handoff_assigned": "واگذار شد",
+  "comv.handoff_failed": "واگذاری ناموفق بود",
+  "comv.handoff_user": "واگذاری به کاربر",
+  "comv.select_handoff_user": "کاربر مسئول را انتخاب کنید",
+  "comv.handoff": "واگذاری",
+  "comv.task_linked": "وظیفه مرتبط با این مرحله",
+  "comv.assigned_ok": "واگذار شد. کاربر بعدی اکنون این مرحله را در وظایف خود می‌بیند.",
+  "comv.assign_failed": "امکان واگذاری این مرحله وجود نداشت.",
+  "comv.stage_handoff": "واگذاری مرحله",
+  "comv.currently_with": "در حال حاضر نزد:",
+  "comv.task_open": "وظیفه باز",
+  "comv.select_next_user": "ارسال به کاربر بعدی…",
+  "comv.assign_send": "واگذاری",
+  "comv.responsible_country_branch": "شعبه کشور مسئول",
+  "comv.responsible_city_branch": "شعبه شهری مسئول",
+  "comv.responsible_user": "کاربر مسئول",
+  "comv.save_to_assign": "برای فعال‌سازی واگذاری مرحله، ابتدا سفارش را ذخیره کنید.",
+  "comv.cross_border_truck_warning": "این مرحله از مرز کشور عبور می‌کند — از کامیون ثبت شده در مستر کامیون استفاده کنید، نه ثبت موقت.",
+  "comv.customs_status": "وضعیت گمرک",
+  "comv.customs_documents": "اسناد گمرکی",
+  "comv.bill_of_entry_no": "شماره برگ ترخیص",
+  "comv.pgm_number": "شماره PGM",
+  "comv.declaration_reference": "شماره اظهارنامه / مرجع",
+  "comv.tax_amount": "مبلغ مالیات",
+  "comv.other_charges": "سایر هزینه‌ها",
+  "comv.actual_departure": "حرکت واقعی",
+  "comv.actual_arrival": "رسیدن واقعی",
+  "comv.estimated_expense": "هزینه تخمینی",
+  "comv.actual_expense": "هزینه واقعی",
+  "comv.expense_currency": "ارز هزینه"
 };
 
 const ps: Dict = {
@@ -97721,6 +97886,39 @@ const ps: Dict = {
   "hr.pp_directory_scope": "د لارښود ساحه",
   "hr.pp_all_records": "ټول اشخاص او کارکوونکي",
   "hr.pp_local_country": "یوازې اوسنی هیواد",
+  "comv.progress_label": "د فرمایش بشپړولو پرمختګ",
+  "comv.handoff_title": "د بار وړلو مرحلې سپارل",
+  "comv.handoff_description": "د ټاکل شوې بار وړلو لارې مرحله وڅارئ او پرمخ یې بوځئ.",
+  "comv.handoff_assigned": "وسپارل شو",
+  "comv.handoff_failed": "سپارل ناکام شول",
+  "comv.handoff_user": "کارونکي ته سپارل",
+  "comv.select_handoff_user": "مسؤل کاروونکی وټاکئ",
+  "comv.handoff": "سپارل",
+  "comv.task_linked": "دې مرحلې پورې تړلې دنده",
+  "comv.assigned_ok": "وسپارل شو. راتلونکی کاروونکی اوس دا مرحله په خپلو دندو کې ګوري.",
+  "comv.assign_failed": "دا مرحله نشي سپارل کیدی.",
+  "comv.stage_handoff": "د مرحلې سپارل",
+  "comv.currently_with": "اوس مهال سره:",
+  "comv.task_open": "خلاصه دنده",
+  "comv.select_next_user": "راتلونکي کارونکي ته واستوئ…",
+  "comv.assign_send": "وسپارئ",
+  "comv.responsible_country_branch": "مسؤله هیواد څانګه",
+  "comv.responsible_city_branch": "مسؤله ښاري څانګه",
+  "comv.responsible_user": "مسؤل کاروونکی",
+  "comv.save_to_assign": "د دې مرحلې د سپارلو فعالولو لپاره لومړی فرمایش خوندي کړئ.",
+  "comv.cross_border_truck_warning": "دا مرحله د هیواد له پولې تیریږي — د ټرک ماسټر څخه ثبت شوی لارۍ وکاروئ، نه لنډمهاله ثبت.",
+  "comv.customs_status": "د ګمرک حالت",
+  "comv.customs_documents": "ګمرکي اسناد",
+  "comv.bill_of_entry_no": "د بیل اف انټري شمېره",
+  "comv.pgm_number": "د PGM شمېره",
+  "comv.declaration_reference": "د اظهار نامې / حوالې شمېره",
+  "comv.tax_amount": "د مالیې اندازه",
+  "comv.other_charges": "نور لګښتونه",
+  "comv.actual_departure": "اصلي حرکت",
+  "comv.actual_arrival": "اصلي رسیدل",
+  "comv.estimated_expense": "اټکل شوي لګښتونه",
+  "comv.actual_expense": "اصلي لګښتونه",
+  "comv.expense_currency": "د لګښت اسعار"
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

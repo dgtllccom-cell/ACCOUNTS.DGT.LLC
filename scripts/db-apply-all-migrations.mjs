@@ -107,7 +107,9 @@ const migrations = [
   { name: "20261027_goods_reorder_barcode", path: "supabase/migrations/20261027_goods_reorder_barcode.sql" },
   { name: "20261028_consignment_register", path: "supabase/migrations/20261028_consignment_register.sql" },
   { name: "20261029_country_tax_settings", path: "supabase/migrations/20261029_country_tax_settings.sql" },
-  { name: "20261102_shipping_line_and_linked_countries", path: "supabase/migrations/20261102_shipping_line_and_linked_countries.sql" }
+  { name: "20261102_shipping_line_and_linked_countries", path: "supabase/migrations/20261102_shipping_line_and_linked_countries.sql" },
+  { name: "20260912_shipping_order_multi_leg_organization", path: "supabase/migrations/20260912_shipping_order_multi_leg_organization.sql" },
+  { name: "20260912_shipping_leg_cross_border_truck_rule", path: "supabase/migrations/20260912_shipping_leg_cross_border_truck_rule.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

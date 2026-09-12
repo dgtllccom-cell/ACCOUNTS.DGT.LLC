@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
       orderNo: body.order_no ?? body.orderNo ?? null,
       partyLinks: body.party_links ?? body.partyLinks ?? undefined,
       legs: body.legs ?? undefined,
+      loadingAllocations: body.loading_allocations ?? body.loadingAllocations ?? undefined,
       originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
       countryId: isSuperAdmin ? (body.country_id ?? body.countryId ?? null) : sessionCountryId,
       countryBranchId: isSuperAdmin ? (body.country_branch_id ?? body.countryBranchId ?? null) : sessionCountryBranchId,
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest) {
       goodsNetWeight: body.goods_net_weight ?? body.goodsNetWeight ?? null
     });
 
-    return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs });
+    return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
