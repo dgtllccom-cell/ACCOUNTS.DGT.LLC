@@ -63,37 +63,37 @@ const ACCESS_PROFILES: Record<
     eyebrow: "Country Workspace",
     title: "Country Admin Access",
     subtitle: "Scoped access for country-level operations, master data, and business oversight.",
-    note: "Format: {countryCode}.{countryName}@dgt.llc (e.g. pk.pakistan@dgt.llc, ae.uae@dgt.llc).",
+    note: "Format: {countryName}.admin@dgt.llc (e.g. pakistan.admin@dgt.llc, uae.admin@dgt.llc).",
     scopeLabel: "Country-level access",
-    formatPlaceholder: "pk.pakistan@dgt.llc, ae.uae@dgt.llc, af.afghanistan@dgt.llc",
-    quickExamples: ["pk.pakistan@dgt.llc", "ae.uae@dgt.llc", "af.afghanistan@dgt.llc", "in.india@dgt.llc", "cn.china@dgt.llc"]
+    formatPlaceholder: "pakistan.admin@dgt.llc, uae.admin@dgt.llc",
+    quickExamples: ["pakistan.admin@dgt.llc", "uae.admin@dgt.llc"]
   },
   city: {
     eyebrow: "City Branch Workspace",
     title: "City Branch Access",
     subtitle: "Operational entry for city-specific teams with branch-aware ERP workflows.",
-    note: "Format: {cityName}.branch.b@dgt.llc (e.g. chaman.branch.b@dgt.llc, dubai.branch.b@dgt.llc).",
+    note: "Format: {cityName}.branch@dgt.llc (e.g. chaman.branch@dgt.llc, quetta.branch@dgt.llc, dubai.branch@dgt.llc).",
     scopeLabel: "City branch access",
-    formatPlaceholder: "chaman.branch.b@dgt.llc, dubai.branch.b@dgt.llc",
-    quickExamples: ["chaman.branch.b@dgt.llc", "dubai.branch.b@dgt.llc", "quetta.branch.b@dgt.llc", "kabul.branch.b@dgt.llc"]
+    formatPlaceholder: "chaman.branch@dgt.llc, quetta.branch@dgt.llc, dubai.branch@dgt.llc",
+    quickExamples: ["chaman.branch@dgt.llc", "quetta.branch@dgt.llc", "dubai.branch@dgt.llc"]
   },
   branch: {
     eyebrow: "Branch Operations",
     title: "Branch User Access",
     subtitle: "Focused access for branch users handling local transactions, reports, and approvals.",
-    note: "Format: {cityName}.branch.b@dgt.llc",
+    note: "Format: {cityName}.branch@dgt.llc or simple name (e.g. chaman)",
     scopeLabel: "Branch-level access",
-    formatPlaceholder: "chaman.branch.b@dgt.llc, dubai.branch.b@dgt.llc",
-    quickExamples: ["chaman.branch.b@dgt.llc", "dubai.branch.b@dgt.llc", "quetta.branch.b@dgt.llc"]
+    formatPlaceholder: "chaman.branch@dgt.llc, quetta.branch@dgt.llc, dubai.branch@dgt.llc",
+    quickExamples: ["chaman.branch@dgt.llc", "quetta.branch@dgt.llc", "dubai.branch@dgt.llc"]
   },
   agent: {
     eyebrow: "Shipping & Clearing",
     title: "Clearing Agent Access",
     subtitle: "Workflow access for shipping line and clearing operations with linked order visibility.",
-    note: "Format: {countryCode}.clearingagent@dgt.llc or {cityName}.clearingagent.c@dgt.llc",
+    note: "Format: shipping@dgt.llc or {cityName}.shipping.agent@dgt.llc",
     scopeLabel: "Agent workflow access",
-    formatPlaceholder: "pk.clearingagent@dgt.llc, chaman.clearingagent.c@dgt.llc",
-    quickExamples: ["pk.clearingagent@dgt.llc", "ae.clearingagent@dgt.llc", "chaman.clearingagent.c@dgt.llc", "dubai.clearingagent.c@dgt.llc"]
+    formatPlaceholder: "shipping@dgt.llc, quetta.shipping.agent@dgt.llc",
+    quickExamples: ["shipping@dgt.llc", "quetta.shipping.agent@dgt.llc", "pakistan.shipping.admin@dgt.llc"]
   },
 };
 
@@ -264,27 +264,21 @@ export function LoginForm({
 
   // Smart Username Generator based on selected country & city
   function generateSuggestedUsername() {
-    const cCode = selectedCountry === "Pakistan" ? "PK" :
-                  selectedCountry === "Afghanistan" ? "AF" :
-                  selectedCountry === "United Arab Emirates" ? "AE" :
-                  selectedCountry === "India" ? "IN" :
-                  selectedCountry === "China" ? "CN" : "";
-    
     if (activeTab === "country" && selectedCountry) {
-      if (selectedCountry === "United Arab Emirates") return "UAE@DGT.DALNC";
-      return `${selectedCountry.toUpperCase()}@DGT.LLC`;
+      if (selectedCountry === "United Arab Emirates") return "uae.admin@dgt.llc";
+      return `${selectedCountry.toLowerCase().replace(/\s+/g, "")}.admin@dgt.llc`;
     }
-    if (activeTab === "city" && cCode && selectedCity) {
-      const cityCode = selectedCity.toUpperCase().replace(/\s+/g, "");
-      if (cCode === "AF" && cityCode === "KABUL") return "AF/KABUL@DGT.DALNC";
-      return `${cCode}/${cityCode}@DGT.LLC`;
+    if ((activeTab === "city" || activeTab === "branch") && selectedCity) {
+      return `${selectedCity.toLowerCase().replace(/\s+/g, "")}.branch@dgt.llc`;
     }
-    if (activeTab === "agent" && cCode) {
+    if (activeTab === "agent") {
       if (selectedCity) {
-        const shortCity = selectedCity.substring(0, 3).toUpperCase();
-        return `${cCode}/${shortCity}/CLEARINGAGENT@DGT.DALNC`;
+        return `${selectedCity.toLowerCase().replace(/\s+/g, "")}.shipping.agent@dgt.llc`;
       }
-      return `${cCode}/CLEARINGAGENT@DGT.LLC`;
+      if (selectedCountry) {
+        return `${selectedCountry.toLowerCase().replace(/\s+/g, "")}.shipping.admin@dgt.llc`;
+      }
+      return "shipping@dgt.llc";
     }
     return "";
   }
