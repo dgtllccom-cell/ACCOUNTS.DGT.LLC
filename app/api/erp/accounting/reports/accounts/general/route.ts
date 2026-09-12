@@ -360,8 +360,83 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       limit ${limit}
     `;
 
-    const accountIds = (rows as Array<any>).map((r) => r.id);
-    const ledgerIds = (rows as Array<any>).map((r) => r.ledger_id).filter(Boolean);
+    // Query standalone country ledgers from public.ledgers if any exist (e.g. CT-INTER-* or *-CORP-GEN-*)
+    const standaloneCountryLedgers = await sql`
+      select
+        l.id,
+        'country' as scope,
+        l.country_id,
+        null::uuid as country_branch_id,
+        null::uuid as city_branch_id,
+        null::uuid as parent_id,
+        null::uuid as customer_id,
+        null::uuid as company_id,
+        null::uuid as bank_id,
+        l.code,
+        l.code as account_number,
+        ('CUST-' || l.code) as customer_number,
+        0 as account_serial_number,
+        '-' as country_serial_number,
+        '-' as branch_serial_number,
+        l.code as manual_reference_number,
+        l.created_at as creation_date,
+        null as branch_code,
+        0 as branch_account_sequence,
+        l.name,
+        'asset' as kind,
+        l.currency,
+        0 as opening_balance,
+        0 as current_balance,
+        case when l.is_active then 'active' else 'inactive' end as status,
+        true as is_control_account,
+        '[]'::jsonb as contacts,
+        l.created_at,
+        l.updated_at,
+        c.name as country_name,
+        c.iso2 as country_code,
+        null as country_branch_name,
+        null as country_branch_code,
+        null as city_name,
+        null as city_code,
+        l.id as ledger_id,
+        l.code as ledger_code,
+        l.name as ledger_name,
+        l.currency as ledger_currency,
+        l.is_active as ledger_is_active,
+        null as company_name,
+        null as company_legal_name,
+        null as company_owner_name,
+        null as customer_name,
+        null as bank_name,
+        null as bank_branch_name,
+        null as bank_account_number,
+        null as bank_phone,
+        null as bank_email
+      from public.ledgers l
+      left join public.countries c on c.id = l.country_id
+      where l.deleted_at is null
+        and l.is_active = true
+        and (
+          l.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
+          or l.name ilike '%Inter-Country%'
+          or l.name ilike '%Central Clearing%'
+          or l.name ilike '%Main Country Clearing%'
+        )
+      order by l.created_at asc
+      limit 20
+    `;
+
+    const existingCodes = new Set((rows as Array<any>).map((r) => r.code));
+    const mergedRows = [...(rows as Array<any>)];
+    for (const sled of standaloneCountryLedgers as Array<any>) {
+      if (!existingCodes.has(sled.code)) {
+        mergedRows.push(sled);
+        existingCodes.add(sled.code);
+      }
+    }
+
+    const accountIds = mergedRows.map((r) => r.id);
+    const ledgerIds = mergedRows.map((r) => r.ledger_id).filter(Boolean);
 
     // NOTE: the local-pg pooler connection (max:1) does not pipeline — run sequentially,
     // never Promise.all. Ledger movements come from `ledger_posting_lines` (there is no
@@ -434,7 +509,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       }
     }
 
-    const filtered = (rows as Array<any>).map((account) => {
+    const filtered = (mergedRows as Array<any>).map((account) => {
       const contactsList = Array.isArray(account.contacts) ? account.contacts : [];
       const companyName = account.company_legal_name || account.company_name || "-";
       const branchType = scopeLabel(account.scope);
@@ -713,29 +788,75 @@ export async function GET(request: NextRequest) {
     if (accountRes.error) throw new Error(accountRes.error.message);
 
     let accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
-    if (effectiveQuery.cityBranchId || effectiveQuery.countryBranchId || (effectiveQuery.countryId && !session.isSuperAdmin)) {
-      try {
-        const { data: coreCountryData } = await supabase
-          .from("enterprise_accounts")
-          .select(
-            "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
-          )
-          .is("deleted_at", null)
-          .or("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE,CHN-CORP-GEN-001),name.ilike.%Inter-Country%,name.ilike.%Central Clearing%,name.ilike.%Main Country Clearing%")
-          .limit(20);
+    try {
+      const { data: coreCountryData } = await supabase
+        .from("enterprise_accounts")
+        .select(
+          "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
+        )
+        .is("deleted_at", null)
+        .or("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE,CHN-CORP-GEN-001),name.ilike.%Inter-Country%,name.ilike.%Central Clearing%,name.ilike.%Main Country Clearing%")
+        .limit(20);
 
-        if (coreCountryData && coreCountryData.length > 0) {
-          const existingIds = new Set(accountRows.map((r) => r.id));
-          for (const coreAcc of coreCountryData as EnterpriseAccountRow[]) {
-            if (!existingIds.has(coreAcc.id)) {
-              accountRows.push(coreAcc);
-              existingIds.add(coreAcc.id);
-            }
+      const existingCodes = new Set(accountRows.map((r) => r.code));
+      if (coreCountryData && coreCountryData.length > 0) {
+        for (const coreAcc of coreCountryData as EnterpriseAccountRow[]) {
+          if (!existingCodes.has(coreAcc.code)) {
+            accountRows.push(coreAcc);
+            existingCodes.add(coreAcc.code);
           }
         }
-      } catch (err) {
-        console.warn("Failed to load core country accounts alongside branch accounts:", err);
       }
+
+      // Also load standalone country ledgers from public.ledgers (e.g. CT-INTER-* in production DB)
+      const { data: standaloneLedgers } = await supabase
+        .from("ledgers")
+        .select("id, enterprise_account_id, code, name, currency, country_id, is_active, created_at, updated_at")
+        .is("deleted_at", null)
+        .or("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE,CHN-CORP-GEN-001),name.ilike.%Inter-Country%,name.ilike.%Central Clearing%,name.ilike.%Main Country Clearing%")
+        .limit(20);
+
+      if (standaloneLedgers && standaloneLedgers.length > 0) {
+        for (const sled of standaloneLedgers) {
+          if (!existingCodes.has(sled.code)) {
+            const syntheticAcc: EnterpriseAccountRow = {
+              id: sled.id,
+              scope: "country",
+              country_id: sled.country_id ?? null,
+              country_branch_id: null,
+              city_branch_id: null,
+              parent_id: null,
+              customer_id: null,
+              company_id: null,
+              bank_id: null,
+              code: sled.code,
+              account_number: sled.code,
+              customer_number: `CUST-${sled.code}`,
+              account_serial_number: 0,
+              country_serial_number: "-",
+              branch_serial_number: "-",
+              manual_reference_number: sled.code,
+              creation_date: sled.created_at,
+              branch_code: null,
+              branch_account_sequence: 0,
+              name: sled.name,
+              kind: "asset",
+              currency: sled.currency || "USD",
+              opening_balance: 0,
+              current_balance: 0,
+              status: sled.is_active ? "active" : "archived",
+              is_control_account: true,
+              contacts: [],
+              created_at: sled.created_at,
+              updated_at: sled.updated_at,
+            };
+            accountRows.push(syntheticAcc);
+            existingCodes.add(sled.code);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load core country accounts alongside branch accounts:", err);
     }
     const accountIds = accountRows.map((row) => row.id);
 
@@ -760,21 +881,21 @@ export async function GET(request: NextRequest) {
         .from("ledgers")
         .select("id, enterprise_account_id, parent_ledger_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active, created_at, updated_at")
         .is("deleted_at", null)
-        .in("enterprise_account_id", chunk);
+        .or(`enterprise_account_id.in.(${chunk.join(",")}),id.in.(${chunk.join(",")})`);
     });
 
     const postingRes = await fetchInChunks(accountIds, 150, async (chunk) => {
       return supabase
         .from("ledger_posting_lines")
         .select("enterprise_account_id, ledger_id, batch_id, debit, credit, currency, usd_rate, usd_amount, created_at")
-        .in("enterprise_account_id", chunk);
+        .or(`enterprise_account_id.in.(${chunk.join(",")}),ledger_id.in.(${chunk.join(",")})`);
     });
 
     const roznamchaLineRes = await fetchInChunks(accountIds, 150, async (chunk) => {
       return supabase
         .from("roznamcha_lines")
         .select("enterprise_account_id, ledger_id, roznamcha_entry_id, debit, credit, currency, usd_rate, usd_amount")
-        .in("enterprise_account_id", chunk);
+        .or(`enterprise_account_id.in.(${chunk.join(",")}),ledger_id.in.(${chunk.join(",")})`);
     });
 
     const auditRes = await fetchInChunks(accountIds, 150, async (chunk) => {
@@ -859,25 +980,32 @@ export async function GET(request: NextRequest) {
     const countryLookup = new Map(countries.map((row) => [row.id, row] as const));
     const countryBranchLookup = new Map(countryBranches.map((row) => [row.id, row] as const));
     const cityBranchLookup = new Map(cityBranches.map((row) => [row.id, row] as const));
-    const ledgerLookup = new Map(ledgers.map((row) => [row.enterprise_account_id ?? row.id, row] as const));
+    const ledgerLookup = new Map<string, LedgerRow>();
+    for (const row of ledgers) {
+      if (row.enterprise_account_id) ledgerLookup.set(row.enterprise_account_id, row);
+      if (row.id) ledgerLookup.set(row.id, row);
+      if (row.code) ledgerLookup.set(row.code, row);
+    }
     const customerLookup = new Map(customers.map((row) => [row.id, row.customer_name] as const));
     const companiesLookup = new Map(((companiesListRes.data ?? []) as any[]).map((row) => [row.id, row]));
     const banksLookup = new Map(((banksListRes.data ?? []) as any[]).map((row) => [row.id, row]));
 
     const postingByAccount = new Map<string, PostingLineRow[]>();
     for (const line of postingLines) {
-      if (!line.enterprise_account_id) continue;
-      const list = postingByAccount.get(line.enterprise_account_id) ?? [];
+      const key = line.enterprise_account_id || line.ledger_id;
+      if (!key) continue;
+      const list = postingByAccount.get(key) ?? [];
       list.push(line);
-      postingByAccount.set(line.enterprise_account_id, list);
+      postingByAccount.set(key, list);
     }
 
     const rozByAccount = new Map<string, RoznamchaLineRow[]>();
     for (const line of rozLines) {
-      if (!line.enterprise_account_id) continue;
-      const list = rozByAccount.get(line.enterprise_account_id) ?? [];
+      const key = line.enterprise_account_id || line.ledger_id;
+      if (!key) continue;
+      const list = rozByAccount.get(key) ?? [];
       list.push(line);
-      rozByAccount.set(line.enterprise_account_id, list);
+      rozByAccount.set(key, list);
     }
 
     const batchLookup = new Map(postingBatches.map((row) => [row.id, row] as const));
@@ -892,9 +1020,15 @@ export async function GET(request: NextRequest) {
     }
 
     const rows = accountRows.map((account) => {
-      const linkedLedger = ledgerLookup.get(account.id) ?? null;
-      const postingMovements = postingByAccount.get(account.id) ?? [];
-      const rozMovements = rozByAccount.get(account.id) ?? [];
+      const linkedLedger = ledgerLookup.get(account.id) ?? (account.code ? ledgerLookup.get(account.code) : null) ?? null;
+      const postingMovements = [
+        ...(postingByAccount.get(account.id) ?? []),
+        ...(linkedLedger?.id && linkedLedger.id !== account.id ? postingByAccount.get(linkedLedger.id) ?? [] : [])
+      ];
+      const rozMovements = [
+        ...(rozByAccount.get(account.id) ?? []),
+        ...(linkedLedger?.id && linkedLedger.id !== account.id ? rozByAccount.get(linkedLedger.id) ?? [] : [])
+      ];
       const allMovements = [
         ...postingMovements.map((line) => ({
           source: "ledger" as const,
@@ -1174,7 +1308,7 @@ export async function GET(request: NextRequest) {
     const summary = {
       totalAccounts: filtered.length,
       activeAccounts: filtered.filter((row) => row.status === "active").length,
-      countryAccounts: filtered.filter((row) => row.branchType === "Country").length,
+      countryAccounts: filtered.filter((row) => row.branchType === "Country" || row.isCountryAccount).length,
       branchAccounts: filtered.filter((row) => row.branchType === "Main Branch" || row.branchType === "City Branch").length,
       adminAccounts: filtered.filter((row) => row.branchType === "Super Admin").length,
       totalLedgers: filtered.reduce((sum, row) => sum + row.linkedLedgerCount, 0),
