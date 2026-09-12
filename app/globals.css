@@ -262,6 +262,52 @@ body {
   border: 1px solid hsl(var(--border) / 0.5);
 }
 
+/* Shared ERP visual language. These opt-in primitives let legacy screens
+   adopt the same hierarchy without changing their business logic. */
+.erp-surface {
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 1rem;
+  background: hsl(var(--card) / 0.96);
+  box-shadow: 0 8px 24px -18px hsl(var(--foreground) / 0.28);
+}
+
+.erp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 0.875rem;
+  background: hsl(var(--card) / 0.9);
+  padding: 0.75rem;
+  box-shadow: 0 6px 18px -16px hsl(var(--foreground) / 0.3);
+}
+
+.erp-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.7);
+  padding-bottom: 0.625rem;
+}
+
+.erp-section-heading h2,
+.erp-section-heading h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.erp-table-head {
+  background: hsl(var(--muted) / 0.65);
+  color: hsl(var(--muted-foreground));
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* Custom modern scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
