@@ -131,7 +131,7 @@ for (const server of SERVERS) {
     const out = execSync(`ssh -o StrictHostKeyChecking=no ${server} "bash -s"`, {
       input: remoteScript,
       encoding: 'utf8',
-      timeout: 600000
+      timeout: 1500000
     });
     console.log(out);
     console.log(`✅ Successfully deployed PRODUCTION to ${server}`);
