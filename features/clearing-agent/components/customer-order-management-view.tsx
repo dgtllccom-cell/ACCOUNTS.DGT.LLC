@@ -1385,32 +1385,32 @@ export function CustomerOrderManagementView() {
   return (
     <div className="w-full space-y-4 pb-12" dir={isRtl ? "rtl" : "ltr"}>
       {/* Workspace header: entry and live report share one visual system. */}
-      <div className="relative isolate overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 p-4 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none sm:p-5">
-        <div className="pointer-events-none absolute -end-20 -top-24 -z-10 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-28 start-1/3 -z-10 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-blue-400/30 bg-blue-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-200">
-                {tt("header_entry", "Customer Order Entry")}
-              </span>
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
-                {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
-              </span>
-              <span className="rounded-full border border-sky-400/30 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-200">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/25">
+              <Route className="h-5 w-5" />
+            </span>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white sm:text-[22px]">{tt("title", "Customer Order")}</h1>
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
+                </span>
+              </div>
+              <p className="max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
+                {t(lang, "comv.intro_subtitle", "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later.")}
+              </p>
+              <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">
                 {tt("header_next", "Next")}: {currentStep < 4 ? stepsList[currentStep]?.title : t(lang, "comv.confirm_booking", "Confirm Booking")}
               </span>
             </div>
-            <h1 className="text-xl font-black tracking-tight text-white sm:text-2xl">{tt("title", "Customer Order")}</h1>
-            <p className="max-w-4xl text-xs leading-5 text-slate-300">
-              {t(lang, "comv.intro_subtitle", "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later.")}
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <button
               type="button"
               onClick={fetchInitialData}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-bold text-slate-100 transition hover:bg-white/20"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               {refreshLabel}
@@ -1418,7 +1418,7 @@ export function CustomerOrderManagementView() {
             <button
               type="button"
               onClick={resetForm}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500 px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-400"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 transition hover:bg-blue-700"
             >
               <Plus className="h-3.5 w-3.5" />
               {tt("new", "New Order")}
@@ -1450,44 +1450,42 @@ export function CustomerOrderManagementView() {
               ) : null}
             </div>
 
-            <div className="flex items-center gap-1.5 px-1" aria-label={t(lang, "comv.progress_label", "Order completion progress")}>
-              {stepsList.map((st) => (
-                <div key={st.num} className={`h-1.5 flex-1 rounded-full transition-colors ${currentStep >= st.num ? "bg-blue-600 dark:bg-blue-500" : "bg-slate-100 dark:bg-slate-800"}`} />
-              ))}
-            </div>
-
-            <div className="grid grid-cols-4 gap-1.5">
-              {stepsList.map((st) => {
+            {/* Connected stepper: numbered circles joined by a fill-as-you-go line. */}
+            <div className="flex items-center px-0.5" aria-label={t(lang, "comv.progress_label", "Order completion progress")}>
+              {stepsList.map((st, idx) => {
                 const isActive = currentStep === st.num;
                 const isPast = currentStep > st.num;
                 return (
-                  <button
-                    key={st.num}
-                    type="button"
-                    onClick={() => setCurrentStep(st.num as any)}
-                    className={`flex min-h-[56px] flex-col items-start rounded-xl border p-2 text-left transition-all ${
-                      isActive
-                        ? "border-blue-600 bg-blue-50/80 text-blue-800 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-200 shadow-xs"
-                        : isPast
-                        ? "border-emerald-200 bg-emerald-50/60 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-                        : "border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/40"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1 w-full">
+                  <div key={st.num} className={`flex items-center ${idx < stepsList.length - 1 ? "flex-1" : ""}`}>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(st.num as any)}
+                      title={st.title}
+                      className="group flex shrink-0 flex-col items-center gap-1"
+                    >
                       <span
-                        className={`h-4 w-4 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                        className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black shrink-0 ring-4 transition-colors ${
                           isActive
-                            ? "bg-blue-600 text-white"
+                            ? "bg-blue-600 text-white ring-blue-100 dark:ring-blue-950/60"
                             : isPast
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                            ? "bg-emerald-600 text-white ring-emerald-50 dark:ring-emerald-950/40"
+                            : "bg-slate-100 text-slate-500 ring-transparent dark:bg-slate-800 dark:text-slate-400"
                         }`}
                       >
                         {isPast ? "✓" : st.num}
                       </span>
-                      <span className="text-[10px] font-bold truncate">{st.title}</span>
-                    </div>
-                  </button>
+                      <span
+                        className={`hidden text-[9.5px] font-bold truncate sm:block ${
+                          isActive ? "text-blue-700 dark:text-blue-300" : isPast ? "text-emerald-700 dark:text-emerald-400" : "text-slate-400"
+                        }`}
+                      >
+                        {st.title}
+                      </span>
+                    </button>
+                    {idx < stepsList.length - 1 ? (
+                      <div className={`mx-1.5 h-0.5 flex-1 rounded-full transition-colors ${currentStep > st.num ? "bg-emerald-500" : "bg-slate-100 dark:bg-slate-800"}`} />
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
@@ -1648,49 +1646,58 @@ export function CustomerOrderManagementView() {
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{tt("live", "Live")}</span>
             </div>
-            {formData.legs.length > 0 || formData.customer_name ? (
-              <div className="rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white p-3.5 space-y-2.5 dark:border-indigo-900/60 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
-                      {t(lang, "comv.live_tracker_title", "This Order — Live")}
-                    </p>
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                      {formData.order_no || t(lang, "comv.live_tracker_unsaved", "Unsaved draft")} · {formData.customer_name || "-"}
-                    </h3>
-                  </div>
-                  {(() => {
-                    const currentLeg = formData.legs.find((l) => l.status !== "completed") ?? formData.legs[formData.legs.length - 1];
-                    if (!currentLeg) return null;
-                    return (
+            {formData.legs.length > 0 || formData.customer_name ? (() => {
+              const currentLeg = formData.legs.find((l) => l.status !== "completed") ?? formData.legs[formData.legs.length - 1];
+              const responsibleName = currentLeg
+                ? (currentLeg.responsibleUserId && assignableUsers.find((u) => u.id === currentLeg.responsibleUserId)?.name) ||
+                  (currentLeg.responsibleClearingAgentId && clearingAgents.find((a) => a.id === currentLeg.responsibleClearingAgentId)?.name) ||
+                  "-"
+                : "-";
+              const truckOrVessel = currentLeg
+                ? currentLeg.transportMode === "by_road"
+                  ? currentLeg.truckNumber || (currentLeg.truckRegistrationType ? `(${currentLeg.truckRegistrationType})` : "-")
+                  : currentLeg.transportMode === "by_sea"
+                    ? currentLeg.vesselName || "-"
+                    : "-"
+                : "-";
+              const selectedCustomerInfo = customers.find((c) => c.id === formData.customer_id);
+              const estimatedTotal = formData.legs.reduce((sum, l) => sum + (Number(l.estimatedExpenseAmount) || 0), 0);
+              const actualTotal = formData.legs.reduce((sum, l) => sum + (Number(l.actualExpenseAmount) || 0), 0);
+              const expenseCurrency = formData.legs.find((l) => l.expenseCurrency)?.expenseCurrency || "";
+              const readinessItems = [
+                { done: Boolean(formData.customer_name), label: t(lang, "comv.readiness_customer_selected", "Customer Selected") },
+                { done: Boolean(formData.goods_name), label: t(lang, "comv.readiness_goods_added", "Goods Details Added") },
+                { done: formData.legs.length > 0, label: t(lang, "comv.readiness_route_added", "Route Legs Added") },
+                { done: formData.legs.some((l) => l.truckNumber || l.vesselName), label: t(lang, "comv.readiness_transport_assigned", "Truck / Vessel Assigned") },
+                { done: formData.legs.some((l) => l.clearanceType), label: t(lang, "comv.readiness_customs_set", "Customs Info Set") }
+              ];
+              const cell = (label: string, value: string) => (
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+                  <p className="truncate text-[12px] font-black text-slate-800 dark:text-slate-100">{value || "-"}</p>
+                </div>
+              );
+              return (
+                <div className="rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white p-3.5 space-y-3 dark:border-indigo-900/60 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
+                        {t(lang, "comv.live_tracker_title", "This Order — Live")}
+                      </p>
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                        {formData.order_no || t(lang, "comv.live_tracker_unsaved", "Unsaved draft")} · {formData.customer_name || "-"}
+                      </h3>
+                    </div>
+                    {currentLeg ? (
                       <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-black text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
                         {t(lang, ("comv.legstatus_" + currentLeg.status) as never, currentLeg.status.replace(/_/g, " "))}
                       </span>
-                    );
-                  })()}
-                </div>
-                {(() => {
-                  const currentLeg = formData.legs.find((l) => l.status !== "completed") ?? formData.legs[formData.legs.length - 1];
-                  if (!currentLeg) {
-                    return <p className="text-[11px] text-slate-500">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>;
-                  }
-                  const responsibleName =
-                    (currentLeg.responsibleUserId && assignableUsers.find((u) => u.id === currentLeg.responsibleUserId)?.name) ||
-                    (currentLeg.responsibleClearingAgentId && clearingAgents.find((a) => a.id === currentLeg.responsibleClearingAgentId)?.name) ||
-                    "-";
-                  const truckOrVessel =
-                    currentLeg.transportMode === "by_road"
-                      ? currentLeg.truckNumber || (currentLeg.truckRegistrationType ? `(${currentLeg.truckRegistrationType})` : "-")
-                      : currentLeg.transportMode === "by_sea"
-                        ? currentLeg.vesselName || "-"
-                        : "-";
-                  const cell = (label: string, value: string) => (
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-                      <p className="truncate text-[12px] font-black text-slate-800 dark:text-slate-100">{value || "-"}</p>
-                    </div>
-                  );
-                  return (
+                    ) : null}
+                  </div>
+
+                  {!currentLeg ? (
+                    <p className="text-[11px] text-slate-500">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>
+                  ) : (
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                       {cell(t(lang, "comv.live_current_location", "Current Location"), `${currentLeg.fromCountryName || "?"} — ${currentLeg.fromLocationText || "?"}`)}
                       {cell(t(lang, "comv.live_next_destination", "Next Destination"), `${currentLeg.toCountryName || "?"} — ${currentLeg.toLocationText || "?"}`)}
@@ -1709,17 +1716,126 @@ export function CustomerOrderManagementView() {
                       {cell(t(lang, "comv.live_goods", "Goods"), `${formData.goods_name || "-"} ${formData.goods_quantity ? `(${formData.goods_quantity} ${formData.goods_unit})` : ""}`)}
                       {cell(t(lang, "comv.live_remarks", "Remarks"), currentLeg.remarks || "-")}
                     </div>
-                  );
-                })()}
-              </div>
-            ) : null}
+                  )}
+
+                  {/* Shipment Progress timeline + Customer / Vehicle / Readiness snapshot cards */}
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900 lg:col-span-3">
+                      <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        <Repeat2 className="h-3.5 w-3.5 text-indigo-500" />
+                        {t(lang, "comv.shipment_progress", "Shipment Progress")}
+                      </p>
+                      <ol className="space-y-0">
+                        {LEG_STATUS_SEQUENCE.map((stage, idx) => {
+                          const currentIdx = currentLeg ? LEG_STATUS_SEQUENCE.indexOf(currentLeg.status as any) : -1;
+                          const isDone = currentLeg ? idx < currentIdx || currentLeg.status === "completed" : false;
+                          const isCurrent = currentLeg ? idx === currentIdx && currentLeg.status !== "completed" : false;
+                          return (
+                            <li key={stage} className="flex items-start gap-2.5">
+                              <div className="flex flex-col items-center">
+                                <span
+                                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[8px] font-black ${
+                                    isDone
+                                      ? "bg-emerald-500 text-white"
+                                      : isCurrent
+                                        ? "bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-950/60"
+                                        : "bg-slate-200 dark:bg-slate-700"
+                                  }`}
+                                >
+                                  {isDone ? "✓" : ""}
+                                </span>
+                                {idx < LEG_STATUS_SEQUENCE.length - 1 ? (
+                                  <span className={`h-4 w-0.5 ${isDone ? "bg-emerald-400" : "bg-slate-150 dark:bg-slate-800"}`} />
+                                ) : null}
+                              </div>
+                              <div className="pb-2.5">
+                                <p className={`text-[11px] font-bold ${isCurrent ? "text-blue-700 dark:text-blue-300" : isDone ? "text-slate-700 dark:text-slate-300" : "text-slate-400"}`}>
+                                  {t(lang, ("comv.legstatus_" + stage) as never, stage.replace(/_/g, " "))}
+                                </p>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+
+                    <div className="space-y-3 lg:col-span-2">
+                      {selectedCustomerInfo ? (
+                        <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+                          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                            <Users className="h-3.5 w-3.5 text-blue-500" />
+                            {t(lang, "comv.customer_snapshot", "Customer")}
+                          </p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white">{selectedCustomerInfo.customer_name}</p>
+                          <p className="text-[10.5px] text-slate-500">{selectedCustomerInfo.person_code || "-"}</p>
+                          <div className="mt-1.5 space-y-0.5 text-[10.5px] text-slate-600 dark:text-slate-400">
+                            {selectedCustomerInfo.mobile ? <p>{t(lang, "acct.phone", "Phone")}: {selectedCustomerInfo.mobile}</p> : null}
+                            {selectedCustomerInfo.email ? <p className="truncate">{t(lang, "branch.row_email", "Email")}: {selectedCustomerInfo.email}</p> : null}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {currentLeg && (currentLeg.truckNumber || currentLeg.vesselName) ? (
+                        <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+                          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                            <Truck className="h-3.5 w-3.5 text-amber-500" />
+                            {t(lang, "comv.vehicle_container", "Vehicle / Container")}
+                          </p>
+                          <div className="space-y-0.5 text-[10.5px] text-slate-600 dark:text-slate-400">
+                            {currentLeg.truckNumber ? <p><span className="text-slate-400">{t(lang, "com.truck_number", "Truck Number")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.truckNumber}</span></p> : null}
+                            {currentLeg.truckDriverName ? <p><span className="text-slate-400">{t(lang, "plr.driver_name", "Driver Name")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.truckDriverName}</span></p> : null}
+                            {currentLeg.truckDriverMobile ? <p><span className="text-slate-400">{t(lang, "com.truck_driver_mobile", "Driver Mobile")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.truckDriverMobile}</span></p> : null}
+                            {currentLeg.vesselName ? <p><span className="text-slate-400">{t(lang, "comv.vessel_name", "Vessel Name")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.vesselName}</span></p> : null}
+                            {currentLeg.containerNumber ? <p><span className="text-slate-400">{t(lang, "comv.container_number", "Container No.")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.containerNumber}</span></p> : null}
+                            {currentLeg.sealNumber ? <p><span className="text-slate-400">{t(lang, "comv.seal_number", "Seal No.")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.sealNumber}</span></p> : null}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {estimatedTotal > 0 || actualTotal > 0 ? (
+                        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+                          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                            {t(lang, "comv.estimated_costs", "Estimated Costs (Ref.)")}
+                          </p>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500">{t(lang, "comv.estimate", "Estimated")}</span>
+                            <span className="font-black text-slate-800 dark:text-slate-100">{estimatedTotal.toLocaleString()} {expenseCurrency}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500">{t(lang, "comv.actual", "Actual")}</span>
+                            <span className="font-black text-emerald-700 dark:text-emerald-400">{actualTotal.toLocaleString()} {expenseCurrency}</span>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+                        <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          {t(lang, "comv.order_readiness", "Order Readiness")}
+                        </p>
+                        <ul className="space-y-1">
+                          {readinessItems.map((item) => (
+                            <li key={item.label} className="flex items-center gap-1.5 text-[10.5px]">
+                              <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[7px] font-black ${item.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-400 dark:bg-slate-700"}`}>
+                                {item.done ? "✓" : ""}
+                              </span>
+                              <span className={item.done ? "text-slate-700 dark:text-slate-300" : "text-slate-400"}>{item.label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : null}
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {/* 1. Order Summary */}
-              <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-3 dark:border-blue-900/50 dark:from-blue-950/40 dark:to-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{tt("kpi_order_summary", "Order Summary")}</span>
+              <div className="rounded-xl border border-blue-100 bg-white p-3 dark:border-blue-900/50 dark:bg-slate-900 flex flex-col justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"><FileText className="h-3.5 w-3.5" /></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_order_summary", "Order Summary")}</span>
                 </div>
                 <div className="mt-1 text-lg font-black text-slate-900 dark:text-white">{orderCounts.total}</div>
                 <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
@@ -1730,10 +1846,10 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 2. Movements */}
-              <div className="rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-3 dark:border-purple-900/50 dark:from-purple-950/40 dark:to-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <Route className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                  <span>{tt("kpi_movements", "Movements")}</span>
+              <div className="rounded-xl border border-purple-100 bg-white p-3 dark:border-purple-900/50 dark:bg-slate-900 flex flex-col justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400"><Route className="h-3.5 w-3.5" /></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_movements", "Movements")}</span>
                 </div>
                 <div className="mt-1 text-lg font-black text-purple-600 dark:text-purple-400">{orderCounts.total}</div>
                 <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
@@ -1744,10 +1860,10 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 3. Locations & Ports */}
-              <div className="rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-3 dark:border-sky-900/50 dark:from-sky-950/40 dark:to-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <Anchor className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{tt("kpi_locations", "Locations & Ports")}</span>
+              <div className="rounded-xl border border-sky-100 bg-white p-3 dark:border-sky-900/50 dark:bg-slate-900 flex flex-col justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400"><Anchor className="h-3.5 w-3.5" /></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_locations", "Locations & Ports")}</span>
                 </div>
                 <div className="mt-1 text-lg font-black text-slate-900 dark:text-white">{countries.length} <span className="text-[10px] font-normal text-slate-500">Countries</span></div>
                 <div className="mt-1 text-[9px] font-bold text-slate-500">
@@ -1756,10 +1872,10 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 4. This Month */}
-              <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-3 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <Boxes className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>{tt("kpi_this_month", "This Month")}</span>
+              <div className="rounded-xl border border-emerald-100 bg-white p-3 dark:border-emerald-900/50 dark:bg-slate-900 flex flex-col justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><Boxes className="h-3.5 w-3.5" /></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_this_month", "This Month")}</span>
                 </div>
                 <div className="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400">{orders.length}</div>
                 <div className="mt-1 text-[9px] font-bold text-slate-500">
@@ -1768,10 +1884,10 @@ export function CustomerOrderManagementView() {
               </div>
 
               {/* 5. Quick Info */}
-              <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 dark:border-slate-800 dark:from-slate-800/70 dark:to-slate-900 flex flex-col justify-between col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <BadgeInfo className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
-                  <span>{tt("kpi_quick_info", "Quick Info")}</span>
+              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between col-span-2 sm:col-span-1">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"><BadgeInfo className="h-3.5 w-3.5" /></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_quick_info", "Quick Info")}</span>
                 </div>
                 <div className="mt-1 text-[11px] font-black text-slate-800 dark:text-slate-200 truncate">DGT LLC</div>
                 <div className="mt-0.5 text-[9px] font-medium text-slate-500">
@@ -2030,10 +2146,64 @@ function canSeeSerial(tier: "super" | "country" | "branch", ctx: BranchUserConte
   return false;
 }
 
+// Mirrors the DB CHECK constraint on clearing_customer_order_legs.status — the
+// canonical order a leg progresses through, used to render the Shipment Progress
+// timeline on the Live Order Report.
+const LEG_STATUS_SEQUENCE = [
+  "pending", "pickup_assigned", "loaded", "in_transit", "arrived",
+  "customs_pending", "cleared", "handed_over", "completed"
+] as const;
+
 const selectClass =
   "w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans";
 const inputClass = selectClass;
 const labelClass = "mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300";
+
+// Shared numbered/icon section heading used across all 4 wizard steps — a single
+// visual language for "which part of the form am I in", matching the reference
+// ERP screens' numbered-card sections (Customer Info / Shipping Details / etc.).
+function SectionHeading({
+  num,
+  icon: Icon,
+  title,
+  subtitle
+}: {
+  num: number;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 pb-1">
+      <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-[11px] font-black text-white shadow-sm shadow-blue-600/30">
+        {num}
+      </span>
+      <span className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 sm:inline-flex">
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+      <div className="min-w-0">
+        <h3 className="text-[13px] font-black leading-tight text-slate-900 dark:text-white">{title}</h3>
+        {subtitle ? <p className="text-[10.5px] font-medium leading-tight text-slate-400">{subtitle}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+// Consistent card wrapper for a field group within a step — replaces the ad-hoc
+// bordered <div>s that were previously repeated with slightly different classes.
+function FieldCard({ children, tone = "slate" }: { children: React.ReactNode; tone?: "slate" | "white" }) {
+  return (
+    <div
+      className={`rounded-xl border p-3 space-y-2.5 ${
+        tone === "white"
+          ? "border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900"
+          : "border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-800/40"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
 
 function Step1BookingCustomer({
   lang,
@@ -2085,10 +2255,7 @@ function Step1BookingCustomer({
 
   return (
     <div className="space-y-3.5 animate-in fade-in duration-150">
-      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-        <Boxes className="h-4 w-4" />
-        <span>1. {t(lang, "comv.step1_title", "Booking & Customer")}</span>
-      </div>
+      <SectionHeading num={1} icon={Boxes} title={t(lang, "comv.step1_title", "Booking & Customer")} />
 
       {/* Serial bar — role-gated visibility (spec point 2); Global Bill/Shipping No. always shown */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
@@ -2397,10 +2564,7 @@ function Step2PickupGoodsTruck({
 
   return (
     <div className="space-y-3.5 animate-in fade-in duration-150">
-      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-        <Warehouse className="h-4 w-4" />
-        <span>2. {t(lang, "comv.step2_title", "Pickup, Goods & Truck")}</span>
-      </div>
+      <SectionHeading num={2} icon={Warehouse} title={t(lang, "comv.step2_title", "Pickup, Goods & Truck")} />
 
       {/* Pickup Source — spec point 5: Customer Warehouse must never create internal stock */}
       <div>
@@ -2893,10 +3057,7 @@ function Step3RouteVesselCustoms({
 
   return (
     <div className="space-y-3.5 animate-in fade-in duration-150">
-      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-        <Route className="h-4 w-4" />
-        <span>3. {t(lang, "comv.step3_title", "Route, Vessel & Customs")}</span>
-      </div>
+      <SectionHeading num={3} icon={Route} title={t(lang, "comv.step3_title", "Route, Vessel & Customs")} />
 
       <PartyRolePanel
         roleKey="importer"
@@ -3360,10 +3521,7 @@ function Step4ReviewConfirm({
 
   return (
     <div className="space-y-3.5 animate-in fade-in duration-150">
-      <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-        <CheckCircle2 className="h-4 w-4" />
-        <span>4. {t(lang, "comv.step4_title", "Review & Confirm")}</span>
-      </div>
+      <SectionHeading num={4} icon={CheckCircle2} title={t(lang, "comv.step4_title", "Review & Confirm")} />
 
       <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_references", "References")}</div>
