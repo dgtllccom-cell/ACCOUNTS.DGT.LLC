@@ -31,6 +31,7 @@ import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
+import { BranchFinalReview } from "./branch-final-review";
 
 type CountryBranchRow = {
   id: string;
@@ -1450,6 +1451,58 @@ function CityBranchSetupContent() {
     setPhoneNumberId("");
     setWabaId("");
     setAccessToken("");
+  }
+
+  if (activeStep === 9) {
+    return (
+      <div className="space-y-6">
+        <BranchFinalReview
+          branchLevel="city"
+          branchLevelTitle="City Branch"
+          branchName={branchName.trim() || effectiveBranchName}
+          branchCode={branchCode}
+          branchType="City Branch"
+          category="Own Operation"
+          country={previewCountry}
+          stateProvince={locationMeta.state?.name || ""}
+          city={locationMeta.city?.name || ""}
+          fullAddress={fullAddress}
+          companyName={company?.name || ""}
+          businessDomain="Trading & Distribution"
+          shippingDomain="Import & Export"
+          currency={currency}
+          mainBranchName={previewMainBranch || "Head Office (DXB-001)"}
+          isSaving={saving}
+          onBack={() => setActiveStep(8)}
+          onGoToStep={(step) => {
+            if (step === 1) setActiveStep(1);
+            else if (step === 2) setActiveStep(4);
+            else if (step === 3) setActiveStep(2);
+            else if (step === 4) setActiveStep(5);
+            else if (step === 5) setActiveStep(8);
+            else if (step === 6) setActiveStep(6);
+            else setActiveStep(9);
+          }}
+          onEditSection={(sec) => {
+            if (sec === "branch_info") setActiveStep(1);
+            else if (sec === "location") setActiveStep(2);
+            else if (sec === "company") setActiveStep(4);
+            else if (sec === "documents") setActiveStep(6);
+            else if (sec === "roles") setActiveStep(8);
+          }}
+          onApproveAndActivate={async () => {
+            const fakeEvent = { preventDefault: () => {} } as FormEvent<HTMLFormElement>;
+            await onSubmit(fakeEvent);
+          }}
+          onSendBackForEdit={() => setActiveStep(1)}
+          onRequestChanges={(note) => {
+            alert(`Change request sent for City Branch:\n${note || "Please review and revise requested branch details."}`);
+          }}
+          onViewSummary={viewReport}
+          onPrint={printReport}
+        />
+      </div>
+    );
   }
 
   return (

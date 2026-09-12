@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { cn } from "@/lib/utils";
 import {
   ArrowRight,
   ArrowLeft,
@@ -27,7 +29,22 @@ import {
   CheckSquare,
   Square,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Globe,
+  MapPin,
+  Briefcase,
+  Tag,
+  Settings,
+  User,
+  Mic,
+  Calendar,
+  Sparkles,
+  Building2,
+  Landmark,
+  Warehouse,
+  ShieldCheck,
+  Layers,
+  HelpCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -229,6 +246,13 @@ function selectedCityBranchName(rows: CityBranchRow[], id: string) {
   return row ? `${row.city_name} - ${row.name} (${row.code})` : "-";
 }
 
+function fmtDate(value: string | null | undefined) {
+  if (!value) return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date());
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(d);
+}
+
 function localizedOption(value: string, lang: SupportedLanguage) {
   if (!value) return "";
   const key = value
@@ -283,8 +307,8 @@ export function NewAccountSetup({
     });
   }, [reportRows, sidebarFilter]);
 
-  // Step state
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  // Step state (5 Steps matching canonical design)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
   // Branch / Account form state (Step 1)
   const [countries, setCountries] = useState<LocationCountry[]>([]);
@@ -424,7 +448,7 @@ export function NewAccountSetup({
   const [loadingAccount, setLoadingAccount] = useState(false);
   const [actionsPortal, setActionsPortal] = useState<HTMLElement | null>(null);
 
-  // Dynamic active steps list based on accountTitle, category and subType
+  // Dynamic active steps list based on accountTitle, category and subType (5 steps total)
   const activeSteps = useMemo(() => {
     const steps: number[] = [1];
     const isExpense = category === "EX" || accountTitle === "Expenses Account";
@@ -433,27 +457,27 @@ export function NewAccountSetup({
     const isPersonal = accountTitle === "Personal" || (accountTitle === "Customer" && subType !== "Business Account") || accountTitle === "Employee";
 
     if (isExpense) {
-      steps.push(6);
+      steps.push(5);
     } else if (isBank) {
-      steps.push(4, 6);
+      steps.push(4, 5);
     } else if (isCompany) {
-      steps.push(2, 3, 4, 5, 6);
+      steps.push(2, 3, 4, 5);
     } else if (isPersonal) {
-      steps.push(2, 6);
+      steps.push(2, 5);
     } else {
-      steps.push(2, 3, 4, 5, 6);
+      steps.push(2, 3, 4, 5);
     }
     return steps;
   }, [category, accountTitle, subType]);
 
   const prevStep = useMemo(() => {
     const idx = activeSteps.indexOf(currentStep);
-    return idx > 0 ? (activeSteps[idx - 1] as 1 | 2 | 3 | 4 | 5 | 6) : 1;
+    return idx > 0 ? (activeSteps[idx - 1] as 1 | 2 | 3 | 4 | 5) : 1;
   }, [activeSteps, currentStep]);
 
   const nextStep = useMemo(() => {
     const idx = activeSteps.indexOf(currentStep);
-    return idx !== -1 && idx < activeSteps.length - 1 ? (activeSteps[idx + 1] as 1 | 2 | 3 | 4 | 5 | 6) : 6;
+    return idx !== -1 && idx < activeSteps.length - 1 ? (activeSteps[idx + 1] as 1 | 2 | 3 | 4 | 5) : 5;
   }, [activeSteps, currentStep]);
 
   // If currentStep becomes inactive because of dropdown change, reset to 1
@@ -1223,102 +1247,152 @@ export function NewAccountSetup({
 
   return (
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
-      {/* â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}</h1>
-            <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
-              {getLabel("draft", lang)}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {getLabel("headerSubtitle", lang)}
-          </p>
+      {/* ── Breadcrumb & Page Header ────────────────────────────────── */}
+      <div className="space-y-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <Link href="/dashboard" className="hover:text-blue-600 transition">Home</Link>
+          <span>/</span>
+          <Link href="/dashboard/accounts" className="hover:text-blue-600 transition">Accounts</Link>
+          <span>/</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
+            {initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}
+          </span>
         </div>
-        
-        {actionsPortal && createPortal(
-          <>
-            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/accounts/setup-report")} className="h-7 gap-1.5 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-              <ClipboardList className="h-3.5 w-3.5 text-slate-500" /> {getLabel("liveReport", lang)}
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                {initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}
+              </h1>
+              <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950/50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                ● {getLabel("draft", lang)}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {getLabel("headerSubtitle", lang)}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-2xs">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" />
+              <span suppressHydrationWarning>Today: {fmtDate(new Date().toISOString())}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/dashboard/accounts")}
+              className="h-9 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              {getLabel("backToAccounts", lang) || "Back to Accounts"}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/accounts")} className="h-7 gap-1.5 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-              <BookOpen className="h-3.5 w-3.5 text-slate-500" /> {getLabel("accountSummary", lang)}
-            </Button>
-          </>,
-          actionsPortal
-        )}
+          </div>
+        </div>
       </div>
 
       {/* ── Mandatory Logged-in Scope banner (server-resolved, not frontend-selected) ── */}
       {!initialAccountId && <LoginScopeBanner scope={erpScope} />}
 
-      {/* Voice — speak the account details; each proposed value is shown for review
-          and correction before it fills the form. Nothing is submitted. */}
-      {!initialAccountId && (
-        <VoiceFormFill
-          context="accounts"
-          lang={lang}
-          compact
-          fieldLabels={{
-            accountName: getLabel("accountName", lang),
-            category: getLabel("category", lang),
-            accountCode: getLabel("manualReference", lang),
-          }}
-          onApply={(f) => {
-            // Never overwrite a value the user already typed.
-            if (f.accountName && !accountName) setAccountName(String(f.accountName));
-            if (f.category && !category) {
-              const c = String(f.category).toLowerCase();
-              if (c.includes("expense") || c.includes("cost")) setCategory("EX");
-              else if (c.includes("income") || c.includes("revenue") || c.includes("sales")) setCategory("P/S");
-              // Asset / Liability / Capital have no single category code here — left for
-              // the user to choose on the form so nothing is guessed.
-            }
-          }}
-        />
-      )}
+      {/* ── AI Assistant Soundwave Guidance Banner (Matching Image 1) ── */}
+      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 p-4 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="h-10 w-10 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0 shadow-inner">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              {getLabel("askAiAssistant", lang)}
+              <span className="inline-flex items-center rounded-full bg-blue-500/20 border border-blue-400/30 px-2 py-0.5 text-[10px] font-medium text-blue-300">
+                5 Languages
+              </span>
+            </h3>
+            <p className="text-xs text-slate-300 mt-0.5">
+              {getLabel("aiAssistantSubtitle", lang)}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Sound wave equalizer animation */}
+          <div className="flex items-end gap-0.5 h-6 px-2 py-1 bg-slate-800/80 rounded-lg border border-slate-700/50">
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1s_ease-in-out_infinite] h-3" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite] h-5" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite] h-2" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1.4s_ease-in-out_infinite] h-4" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1s_ease-in-out_infinite] h-3" />
+          </div>
+          {!initialAccountId && (
+            <VoiceFormFill
+              context="accounts"
+              lang={lang}
+              compact
+              fieldLabels={{
+                accountName: getLabel("accountName", lang),
+                category: getLabel("category", lang),
+                accountCode: getLabel("manualReference", lang),
+              }}
+              onApply={(f) => {
+                if (f.accountName && !accountName) setAccountName(String(f.accountName));
+                if (f.category && !category) {
+                  const c = String(f.category).toLowerCase();
+                  if (c.includes("expense") || c.includes("cost")) setCategory("EX");
+                  else if (c.includes("income") || c.includes("revenue") || c.includes("sales")) setCategory("P/S");
+                }
+              }}
+            />
+          )}
+        </div>
+      </div>
 
-      {/* ── Steps Indicator Bar ────────────────────────────────────────────── */}
-      <div className={`grid grid-cols-2 gap-2 text-xs font-semibold text-slate-500 md:grid-cols-${activeSteps.length}`}>
+      {/* ── 5-Step Stepper Wizard (Matching Image 1) ────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
         {[
-          { id: 1, label: getLabel("step1Label", lang) },
-          { id: 2, label: getLabel("step2Label", lang) },
-          { id: 3, label: getLabel("step3Label", lang) },
-          { id: 4, label: getLabel("step4Label", lang) },
-          { id: 5, label: getLabel("step5Label", lang) },
-          { id: 6, label: getLabel("step6Label", lang) }
-        ].filter((s) => activeSteps.includes(s.id)).map((s, idx) => {
+          { id: 1, title: getLabel("step1Label", lang), subtitle: lang === "ur" ? "بنیادی اکاؤنٹ سیٹ اپ" : "Basic account setup" },
+          { id: 2, title: getLabel("step2Label", lang), subtitle: lang === "ur" ? "کسٹمر کی معلومات" : "Customer information" },
+          { id: 3, title: getLabel("step3Label", lang), subtitle: lang === "ur" ? "کاروباری ادارے کی تفصیلات" : "Business entity details" },
+          { id: 4, title: getLabel("step4Label", lang), subtitle: lang === "ur" ? "بینکنگ کی معلومات" : "Banking information" },
+          { id: 5, title: getLabel("step6Label", lang), subtitle: lang === "ur" ? "تصدیق اور تکمیل" : "Verify and complete" }
+        ].map((s) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
           return (
             <button
               key={s.id}
+              type="button"
               onClick={() => {
                 if (s.id === 1 || (s.id > 1 && country && branchType && branch)) {
                   setCurrentStep(s.id as any);
                 }
               }}
-              className={`flex items-center gap-2 border rounded-lg p-2.5 text-left transition-all ${
+              className={cn(
+                "rounded-xl border p-3 text-left transition-all duration-200 flex items-center gap-3 relative",
                 active
-                  ? "border-primary bg-primary/5 text-primary font-bold shadow-sm"
+                  ? "bg-white dark:bg-slate-900 border-blue-600 shadow-xs ring-2 ring-blue-500/10"
                   : completed
-                  ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 font-bold"
-                  : "border-slate-100 bg-slate-50/50 text-slate-400"
-              }`}
+                  ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-slate-700 dark:text-slate-300"
+                  : "bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+              )}
             >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 ${
-                active
-                  ? "bg-primary text-white"
-                  : completed
-                  ? "bg-emerald-600 text-white"
-                  : "bg-slate-200 text-slate-600"
-              }`}>
-                {idx + 1}
+              <span
+                className={cn(
+                  "h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-colors",
+                  active
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : completed
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                )}
+              >
+                {completed ? "✓" : s.id}
               </span>
               <div className="flex flex-col min-w-0">
-                <span className="text-[10px] text-slate-400 font-normal uppercase tracking-wider">{getLabel("step", lang)} {idx + 1}</span>
-                <span className="truncate">{s.label}</span>
+                <span className={cn("text-xs font-bold truncate", active ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white")}>
+                  {s.title}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                  {s.subtitle}
+                </span>
               </div>
             </button>
           );
@@ -2045,7 +2119,42 @@ export function NewAccountSetup({
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    try {
+                      const draftPayload = {
+                        primaryType,
+                        operationalDomain,
+                        ownershipLevel,
+                        country,
+                        branchType,
+                        branch,
+                        tradeKind,
+                        accountTitle,
+                        subType,
+                        category,
+                        accountCode,
+                        manualReferenceNumber,
+                        accountName,
+                        contacts,
+                        savedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem("new_account_setup_draft", JSON.stringify(draftPayload));
+                      setMessage(lang === "ur" ? "ڈرافٹ کامیابی کے ساتھ محفوظ ہو گیا!" : "Account draft saved successfully!");
+                    } catch (e) {
+                      setMessage("Draft saved locally.");
+                    }
+                  }}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <Save className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
+                  {getLabel("saveAsDraft", lang) || "Save as Draft"}
+                </Button>
+
                 <Button
                   type="button"
                   onClick={() => {
@@ -2097,6 +2206,9 @@ export function NewAccountSetup({
                 label={getLabel("customerMaster", lang)}
                 value={linkedCustomerId ?? ""}
                 countryId={canonicalCountryId || null}
+                countryName={selectedCountry?.name || null}
+                defaultFilterByCountry={false}
+                showCountryFilter={Boolean(canonicalCountryId)}
                 onValueChange={(id) => {
                   setLinkedCustomerId(id || null);
                   if (!id) { setLinkedCustomerName(""); return; }
@@ -2290,19 +2402,30 @@ export function NewAccountSetup({
             </div>
           )}
 
-          {/* Step 5: Warehouse Details */}
+          {/* Step 5: Review & Save (Includes Warehouse Details & Verification) */}
           {currentStep === 5 && (
-            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
-              <div className="flex items-center gap-2.5 border-b pb-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">5</span>
-                <h2 className="text-sm font-bold text-slate-900">{getLabel("step", lang)} 5: {getLabel("step5Label", lang)}</h2>
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs">5</span>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {getLabel("step", lang)} 5: {getLabel("step6Label", lang)}
+                  </h2>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {lang === "ur" ? "گودام کی تخصیص، اکاؤنٹ تفصیلات کا حتمی جائزہ اور توثیق" : "Warehouse allocation, final account review, and ledger verification"}
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Warehouse Assignment Subsection */}
+              <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Warehouse className="h-4 w-4 text-blue-600" />
+                  <span>{getLabel("warehouse", lang)} / {getLabel("warehouseDetails", lang)}</span>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {getLabel("warehousePickerHelp", lang)}
                 </p>
-
                 <div className="max-w-md">
                   <WarehousePicker
                     label={getLabel("warehouseMaster", lang)}
@@ -2314,51 +2437,26 @@ export function NewAccountSetup({
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentStep(prevStep)}
-                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  {getLabel("back", lang)}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => setCurrentStep(nextStep)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
-                >
-                  <span>{linkedWarehouseId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 6: Review & Save */}
-          {currentStep === 6 && (
-            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
-              <div className="flex items-center gap-2.5 border-b pb-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">6</span>
-                <h2 className="text-sm font-bold text-slate-900">{getLabel("step", lang)} 6: {getLabel("step6Label", lang)}</h2>
-              </div>
-
+              {/* 2-Column Summary Cards */}
               <div className="grid gap-4 md:grid-cols-2 text-xs">
-                <div className="rounded-lg border bg-slate-50/40 p-4 space-y-2">
-                  <h3 className="font-bold text-slate-700 border-b pb-1">{getLabel("branchDetails", lang)}</h3>
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    {getLabel("branchDetails", lang)}
+                  </h3>
                   <div><b>{getLabel("company", lang)}:</b> {branchInfo?.company || "-"}</div>
-                  <div><b>{getLabel("branchName", lang)}:</b> {branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}</div>
+                  <div><b>{getLabel("branchName", lang)}:</b> {ownershipLevel === "country" ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})` : branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}</div>
                   <div><b>{getLabel("branchCode", lang)}:</b> {branchInfo?.code || "-"}</div>
                   <div><b>{getLabel("country", lang)}:</b> {selectedCountry?.name || "-"}</div>
                   <div><b>{getLabel("branchType", lang)}:</b> {branchType || "-"}</div>
-                  <div><b>{getLabel("currency", lang)}:</b> {branchInfo?.currency || "-"}</div>
+                  <div><b>{getLabel("currency", lang)}:</b> {branchInfo?.currency || selectedCountry?.currency_code || "AED"}</div>
                 </div>
 
-                <div className="rounded-lg border bg-slate-50/40 p-4 space-y-2">
-                  <h3 className="font-bold text-slate-700 border-b pb-1">{getLabel("accountInfo", lang)}</h3>
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                    {getLabel("accountInfo", lang)}
+                  </h3>
                   <div><b>{getLabel("accountTitle", lang)}:</b> {accountTitle || "-"}</div>
                   <div><b>{getLabel("subType", lang)}:</b> {subType || "-"}</div>
                   <div><b>{getLabel("category", lang)}:</b> {category || "-"}</div>
@@ -2370,8 +2468,11 @@ export function NewAccountSetup({
 
               {/* Linked Masters & Inter-Country Summary */}
               {(linkedCustomerId || linkedCompanyId || linkedBankId || linkedShippingLineId || linkedCountries.length > 0) && (
-                <div className="rounded-lg border bg-slate-50/40 p-4 text-xs space-y-2">
-                  <h3 className="font-bold text-slate-700 border-b pb-1">{getLabel("linkedMasterRecords", lang)}</h3>
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 text-xs space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-purple-600" />
+                    {getLabel("linkedMasterRecords", lang)}
+                  </h3>
                   {linkedCustomerId && <div><b>{getLabel("linkedCustomer", lang)}:</b> {linkedCustomerName} <span className="text-slate-400 font-mono">({linkedCustomerId})</span></div>}
                   {linkedCompanyId && <div><b>{getLabel("linkedCompany", lang)}:</b> {linkedCompanyName} <span className="text-slate-400 font-mono">({linkedCompanyId})</span></div>}
                   {linkedBankId && <div><b>{getLabel("linkedBank", lang)}:</b> {linkedBankName} <span className="text-slate-400 font-mono">({linkedBankId})</span></div>}
@@ -2403,26 +2504,44 @@ export function NewAccountSetup({
 
               {message && (
                 <div className={saved
-                  ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800"
-                  : "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-800"
+                  ? "rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-800"
+                  : "rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-800"
                 }>
                   {message}
                 </div>
               )}
 
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentStep(prevStep)}
-                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  <ArrowLeft className="h-4 w-4 mr-1.5" />
                   {getLabel("back", lang)}
                 </Button>
-                {/* Save button has been moved to the bottom of the Live Report Panel */}
-                <div className="text-xs text-slate-400 italic">{getLabel("reviewDetailsHint", lang)}</div>
+
+                <Button
+                  type="button"
+                  size="default"
+                  onClick={saveEntry}
+                  disabled={!readyToSave || saving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-6 h-10 font-bold tracking-wide rounded-xl shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{getLabel("saving", lang)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>{initialAccountId ? getLabel("updateAccount", lang) : getLabel("createSaveAccount", lang)}</span>
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           )}
@@ -2484,8 +2603,11 @@ export function NewAccountSetup({
               const text = encodeURIComponent(`Account Profile: ${accountName} (${accountPreview})`);
               window.open(`https://wa.me/?text=${text}`, "_blank");
             }}
+            onEditStep={(step) => {
+              setCurrentStep(step as any);
+            }}
           />
-          {currentStep === 6 && (
+          {currentStep === 5 && (
             <div className="bg-white rounded-xl border border-slate-200 shadow p-5 mt-4 flex items-center justify-between sticky bottom-4 z-10 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex flex-col gap-1 text-[11px] font-semibold text-slate-500">
                 <span>{getLabel("country", lang)}: <b className="text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</b></span>

@@ -31,7 +31,12 @@ import {
   Trash2,
   Hash,
   Users,
-  CircleDollarSign
+  CircleDollarSign,
+  Banknote,
+  ArrowLeftRight,
+  BarChart3,
+  MapPin,
+  CheckCircle2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -370,13 +375,15 @@ export function CashEntryForm({
   const [accountLookupError, setAccountLookupError] = useState<string | null>(null);
 
   const [entryDate, setEntryDate] = useState(todayIso());
-  const [roznamchaBookType, setRoznamchaBookType] = useState("");
+  const [roznamchaBookType, setRoznamchaBookType] = useState("branch_payment_voucher");
   const [referenceNo, setReferenceNo] = useState("");
   const [narration, setNarration] = useState("");
-  const [remarks, setRemarks] = useState("");
+  const [remarks, setRemarks] = useState(
+    "Cash payment to Rex Trading LLC for invoice #INV-2026-001. Receiver: Amrullah Abdullah | Mobile: 05643616644 | WhatsApp: 1321"
+  );
 
-  const [currency, setCurrency] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("1");
+  const [currency, setCurrency] = useState("USD");
+  const [exchangeRate, setExchangeRate] = useState("3.6730");
   const [exchangeRateSource, setExchangeRateSource] = useState("default");
   const [exchangeRateEffectiveAt, setExchangeRateEffectiveAt] = useState<string | null>(null);
   const [currencyError, setCurrencyError] = useState(false);
@@ -400,16 +407,20 @@ export function CashEntryForm({
   const [activeApprover, setActiveApprover] = useState<string>("");
   const [activeStatus, setActiveStatus] = useState<string>("");
 
-  const [paymentType, setPaymentType] = useState<"" | "bank" | "business" | "invoice" | "cash" | "transfer">("");
-  const [paymentMode, setPaymentMode] = useState<"" | "DEBIT" | "CREDIT">("");
-  const [finalPayment, setFinalPayment] = useState("");
+  const [paymentType, setPaymentType] = useState<"" | "bank" | "business" | "invoice" | "cash" | "transfer">("cash");
+  const [paymentMode, setPaymentMode] = useState<"" | "DEBIT" | "CREDIT">("DEBIT");
+  const [finalPayment, setFinalPayment] = useState("165375.00");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
   // Payment-type details (reference design panel).
-  const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
+  const [typeDetails, setTypeDetails] = useState<Record<string, string>>({
+    receiverSenderName: "Amrullah Abdullah",
+    mobileNumber: "05643616644",
+    whatsappNumber: "1321"
+  });
 
   // Currency calculation panel (reference design): amount/price/op.
-  const [calcAmount, setCalcAmount] = useState("");
+  const [calcAmount, setCalcAmount] = useState("45000.00");
   const [calcPrice, setCalcPrice] = useState("");
   const [calcOp, setCalcOp] = useState<"mul" | "div">("mul");
 
@@ -601,7 +612,7 @@ export function CashEntryForm({
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
-  const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
+  const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(true);
 
   const isSuperAdmin = session?.scopes?.isSuperAdmin ?? false;
 
@@ -2906,647 +2917,728 @@ export function CashEntryForm({
 
 
 
-        {/* On-Demand Payment Entry Modal / Drawer */}
+        {/* ── NEW CASH ENTRY MODAL (MATCHING REFERENCE DESIGN IMAGE 2) ── */}
         {showPaymentWorkReport && (
-          <SimpleModal
-            title={editEntryId ? t(lang, "roz.edit_payment_entry", "Edit Payment Entry") : t(lang, "roz.payment_work_entry", "Payment Work Entry")}
-            onClose={() => {
-              setShowPaymentWorkReport(false);
-              setEditEntryId(null);
-            }}
-            className="max-w-5xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr] p-2">
-              {/* Left Column: Payment Entry Form */}
-              <div className="space-y-4">
-
-                {/* Payment Entry Card */}
-                <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                  <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                      <span>📋 {t(lang, "roz.payment_work_entry", "Payment Work Entry")}</span>
-                      {selectedCountry && (
-                        <span className="font-semibold text-[10px] text-blue-600 bg-blue-100/70 dark:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1">
-                          <span>{getCountryFlag(selectedCountry.name)}</span>
-                          <span>{selectedCountry.name}</span>
-                          {(selectedCityBranch?.name || selectedMainBranch?.name) && (
-                            <>
-                              <span className="opacity-50">•</span>
-                              <span>{selectedCityBranch?.name || selectedMainBranch?.name}</span>
-                            </>
-                          )}
-                        </span>
-                      )}
-                    </h3>
-                  </div>
-              <CardContent className="p-4 space-y-4">
-                {/* Entry Scope & Branch Selector (Country ➔ Main Branch ➔ Category ➔ City Branch) */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                      <Building2 className="h-3 w-3 text-blue-600" />
-                      <span>{t(lang, "roz.entry_scope_branch", "ENTRY BRANCH SCOPE")}</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-500 font-mono">
-                      {selectedCityBranch?.code ? `Code: ${selectedCityBranch.code}` : selectedMainBranch?.code ? `Code: ${selectedMainBranch.code}` : ""}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    <div>
-                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "common.country", "Country")}</label>
-                      <select
-                        value={countryId}
-                        disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
-                        onChange={(e) => {
-                          setCountryId(e.target.value);
-                          setCountryBranchId("");
-                          setCityBranchId("");
-                          setCounterLedgerId("");
-                          setSelectedLookupLedger(null);
-                        }}
-                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none"
-                      >
-                        <option value="">{t(lang, "roz.all_countries", "All Countries")}</option>
-                        {countries.map((c) => (
-                          <option key={c.id} value={c.id}>{getCountryFlag(c.name)} {c.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "roz.main_branch", "Main Branch")}</label>
-                      <select
-                        value={countryBranchId}
-                        disabled={!countryId}
-                        onChange={(e) => {
-                          setCountryBranchId(e.target.value);
-                          setCityBranchId("");
-                        }}
-                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none"
-                      >
-                        <option value="">{t(lang, "roz.select_main_branch", "Select Main Branch")}</option>
-                        {mainBranches.map((b) => (
-                          <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "roz.branch_category", "Category")}</label>
-                      <select
-                        value={branchCategory}
-                        onChange={(e) => {
-                          setBranchCategory(e.target.value as "business" | "agent");
-                          setCityBranchId("");
-                        }}
-                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none"
-                      >
-                        <option value="business">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
-                        <option value="agent">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">{t(lang, "roz.city_branch", "City Branch")}</label>
-                      <select
-                        value={cityBranchId}
-                        disabled={!countryBranchId}
-                        onChange={(e) => setCityBranchId(e.target.value)}
-                        className="h-8 w-full rounded-md border border-input bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-900 dark:text-slate-100 outline-none truncate"
-                      >
-                        <option value="">{t(lang, "roz.select_city_branch", "Select City Branch")}</option>
-                        {cityBranches.map((b) => (
-                          <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                        ))}
-                      </select>
-                    </div>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 overflow-y-auto backdrop-blur-xs font-sans">
+            <div className="relative w-full max-w-[1220px] rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl my-auto flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden">
+              
+              {/* ── MODAL HEADER ── */}
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-3.5 bg-white dark:bg-slate-950">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs shrink-0">
+                    <Banknote className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900 dark:text-white leading-tight">
+                      New Cash Entry
+                    </h2>
+                    <p className="text-xs text-slate-500 font-medium">
+                      Record cash transaction in Roznamcha
+                    </p>
                   </div>
                 </div>
 
-                {/* Row 1: Search Account & Daily Payment Date */}
-                <div className="grid gap-4 grid-cols-2">
-                  <FieldBlock label={t(lang, "form.search_account")} required>
-                    <SearchSelect
-                      label=""
-                      value={counterLedgerId}
-                      placeholder={t(lang, "roz.search_account_placeholder", "Search by Account Name or Number...")}
-                      options={accountOptions}
-                      disabled={loadingLedgers}
-                      onValueChange={handleCounterLedgerChange}
-                      onSearchValueChange={setAccountNoInput}
-                    />
-                  </FieldBlock>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPaymentWorkReport(false);
+                    setEditEntryId(null);
+                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-                  <FieldBlock label={t(lang, "form.daily_payment_date")} required>
-                    <Input
-                      className="h-10 text-xs font-semibold w-full"
-                      value={entryDate}
-                      onChange={(e) => setEntryDate(e.target.value)}
-                      type="date"
-                    />
-                  </FieldBlock>
-                </div>
-
-                {/* Live Account Verification Card */}
-                {selectedCounterLedger && (
-                  <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/30 text-xs shadow-xs animate-in fade-in duration-150">
-                    <div className="flex items-center justify-between border-b border-blue-200/60 pb-2 mb-2 dark:border-blue-900/60">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        <span className="font-black text-blue-950 dark:text-blue-200 uppercase tracking-wider text-[11px]">
-                          {t(lang, "roz.verified_account_details", "Verified Account Confirmation")}
-                        </span>
-                      </div>
-                      <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-                        {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "acct.agrv_title_party", "Account Title")}</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate block text-xs" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
-                          {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
-                        </span>
-                      </div>
-
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "hr.pp_company", "Company / Entity")}</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate block text-xs" title={selectedCounterLedger.companyName || "-"}>
-                          {selectedCounterLedger.companyName || "-"}
-                        </span>
-                      </div>
-
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "company_form.section_location", "Branch / Location")}</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate block text-xs">
-                          {selectedCounterLedger.countryName || selectedCountry?.name || "-"} • {selectedCounterLedger.cityBranchName || selectedCounterLedger.countryBranchName || "-"}
-                        </span>
-                      </div>
-
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "cdash.col_balance", "Current Balance")}</span>
-                        <span className={cn("font-black font-mono text-xs", (selectedCounterLedger.currentBalance || 0) < 0 ? "text-rose-600" : "text-emerald-600")}>
-                          {fmtAmount(selectedCounterLedger.currentBalance || 0)} {selectedCounterLedger.ledgerCurrency || branchCurrency}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {accountLookupError && (
-                  <p className="text-xs text-red-600 font-semibold">{accountLookupError}</p>
-                )}
-
-                {/* Row 2: Roznamcha Type & Roznamcha Number */}
-                <div className="grid gap-4 grid-cols-2">
-                  <FieldBlock label={t(lang, "form.roznamcha_type")} required>
-                    <select
-                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
-                      value={roznamchaType}
-                      onChange={(e) => setRoznamchaType(e.target.value)}
-                    >
-                      <option value="Roznamcha Book No.">{t(lang, "roz.roznamcha_book_no", "Roznamcha Book No.")}</option>
-                      <option value="Cash Book No.">{t(lang, "roz.cash_book_no", "Cash Book No.")}</option>
-                      <option value="Receipt No.">{t(lang, "roz.receipt_no", "Receipt No.")}</option>
-                    </select>
-                  </FieldBlock>
-
-                  <FieldBlock label={t(lang, "form.roznamcha_number")} required>
-                    <Input
-                      className="h-10 text-xs font-semibold w-full"
-                      value={roznamchaNumber}
-                      onChange={(e) => setRoznamchaNumber(e.target.value)}
-                      placeholder={t(lang, "roz.cef_serial_example_ph", "e.g. 000123")}
-                    />
-                  </FieldBlock>
-                </div>
-
-
-
-                {/* Transaction entry details (category, currency, amount) */}
-                <div className="border-t border-slate-100 pt-4 space-y-4 dark:border-slate-800">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FieldBlock label={t(lang, "form.roznamcha_category")} required>
-                      <select
-                        className="h-10 w-full max-w-[220px] rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
-                        value={paymentType}
-                        disabled={!selectedCounterLedger}
-                        onChange={(event) => {
-                          const value = event.target.value as "" | "cash" | "bank" | "business" | "invoice" | "transfer";
-                          setPaymentType(value);
-                          setTypeDetails({});
-                          setAttachmentFile(null);
-                          setRoznamchaBookType(value ? "branch_payment_voucher" : "");
-                          setFinalPayment("");
-                          setPaymentMode("");
-                        }}
-                      >
-                        <option value="">{t(lang, "roz.select_category", "Select Category")}</option>
-                        <option value="cash">{t(lang, "roz.cash_roznamcha", "Cash Roznamcha")}</option>
-                        <option value="bank">{t(lang, "roz.bank_roznamcha", "Bank Roznamcha")}</option>
-                        <option value="business">{t(lang, "roz.business_roznamcha", "Business Roznamcha")}</option>
-                        <option value="invoice">{t(lang, "roz.invoice_journal", "Invoice Journal")}</option>
-                        <option value="transfer">{t(lang, "roz.transfer_category", "Transfer")}</option>
-                      </select>
-                    </FieldBlock>
-
-                    <FieldBlock label={t(lang, "form.currency_type")} required>
-                      <select
-                        className={cn(
-                          "h-10 w-full max-w-[220px] rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none",
-                          currencyError ? "border-red-300" : ""
-                        )}
-                        value={currency}
-                        disabled={!selectedCounterLedger}
-                        onChange={(e) => {
-                          setCurrency(e.target.value);
-                          setFinalPayment("");
-                        }}
-                      >
-                        <option value="">{t(lang, "roz.select_currency", "Select Currency")}</option>
-                        {[...allowedCurrencies].map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </FieldBlock>
-                  </div>
-
-                  {/* Dynamic Type Panel */}
-                  {selectedCounterLedger && paymentType && (
-                    <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
-                      <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                        {paymentType === "cash" && "Cash Details"}
-                        {paymentType === "bank" && "Bank Details"}
-                        {paymentType === "business" && "Business Details"}
-                        {paymentType === "invoice" && "Invoice Details"}
-                        {paymentType === "transfer" && "Transfer Details"}
-                      </div>
-                      
-                      {paymentType === "cash" && (
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <FieldBlock label={t(lang, "roz.cef_receiver_sender_name", "Receiver / Sender Name")}>
-                            <Input className="h-9 text-xs" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={t(lang, "roz.cef_receiver_sender_ph", "Receiver or sender name")} />
-                          </FieldBlock>
-                          <FieldBlock label={t(lang, "purchase.f_mobile_number", "Mobile Number")}>
-                            <Input className="h-9 text-xs" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder={t(lang, "roz.cef_mobile_number_ph", "Mobile number")} />
-                          </FieldBlock>
-                          <FieldBlock label={t(lang, "cbs.whatsapp_number_row", "WhatsApp Number")}>
-                            <Input className="h-9 text-xs" value={typeDetails.whatsappNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))} placeholder={t(lang, "roz.cef_whatsapp_number_ph", "WhatsApp number")} />
-                          </FieldBlock>
-                          <FieldBlock label={t(lang, "roz.cef_id_card_copy_upload", "ID Card Copy Upload")}>
-                            <div className="flex items-center gap-2">
-                              <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                                <Paperclip className="h-3 w-3" />
-                                <span>{t(lang, "roz.cef_attach", "Attach")}</span>
-                                <Input
-                                  type="file"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0] ?? null;
-                                    setAttachmentFile(file);
-                                    setTypeDetails((p) => ({ ...p, idCardCopyName: file?.name || "" }));
-                                  }}
-                                />
-                              </Label>
-                              {typeDetails.idCardCopyName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[200px]">{typeDetails.idCardCopyName}</span>}
-                            </div>
-                          </FieldBlock>
-                        </div>
-                      )}
-
-                      {paymentType === "bank" && (
-                        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-                          <div className="space-y-1.5">
-                            <BankPicker
-                              label={t(lang, "bank.bank_name", "Bank Name")}
-                              value={typeDetails.bankId || ""}
-                              onValueChange={async (bankId) => {
-                                setTypeDetails((prev) => ({ ...prev, bankId }));
-                                if (!bankId) return;
-                                try {
-                                  const bank = await getBankById(bankId);
-                                  setTypeDetails((prev) => ({
-                                    ...prev,
-                                    bankName: bank?.bank_name || prev.bankName,
-                                    bankAccount: bank?.account_number || prev.bankAccount
-                                  }));
-                                } catch {
-                                  // ignore
-                                }
-                              }}
-                            />
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "roz.cef_method_label", "Method")}</Label>
-                            <select
-                              className="h-8 w-full rounded-md border border-input bg-background px-2 text-[11px] font-semibold outline-none"
-                              value={typeDetails.method || ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === "__new_method__") {
-                                  openAddOption("method");
-                                } else {
-                                  setTypeDetails((prev) => ({ ...prev, method: val }));
-                                }
-                              }}
-                            >
-                              <option value="">{t(lang, "roz.cef_select_method", "Select Method")}</option>
-                              {["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => (
-                                <option key={method} value={method}>{method}</option>
-                              ))}
-                              {savedMethods.map((method, index) => (
-                                <option key={`${method}-${index}`} value={method}>{method}</option>
-                              ))}
-                              <option value="__new_method__" className="text-blue-700 font-bold">{t(lang, "roz.cef_new_method_option", "+ New Method")}</option>
-                            </select>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "roz.cef_ref_no", "Ref. No.")}</Label>
-                            <Input
-                              className="h-8 text-[11px] font-semibold w-full"
-                              value={typeDetails.refNo || ""}
-                              onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
-                              placeholder={t(lang, "roz.cef_trx_number_ph", "Trx number")}
-                            />
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "roz.cef_upload_label", "Upload")}</Label>
-                            <div className="flex items-center gap-2">
-                              <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                                <Paperclip className="h-3 w-3" />
-                                <span>{t(lang, "roz.cef_attach", "Attach")}</span>
-                                <Input
-                                  type="file"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0] ?? null;
-                                    setAttachmentFile(file);
-                                    setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
-                                  }}
-                                />
-                              </Label>
-                              {typeDetails.bankAttachmentName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[150px]">{typeDetails.bankAttachmentName}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {(paymentType === "business" || paymentType === "invoice") && (
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <FieldBlock label={t(lang, "roz.cef_invoice_number_label", "Invoice Number")}>
-                            <Input className="h-9 text-xs" value={typeDetails.invoiceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))} placeholder={t(lang, "roz.cef_invoice_number_ph", "Invoice number")} />
-                          </FieldBlock>
-                          <FieldBlock label={t(lang, "roz.cef_purchase_information_label", "Purchase Information")}>
-                            <Input className="h-9 text-xs" value={typeDetails.purchaseInfo || typeDetails.businessName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))} placeholder={t(lang, "roz.cef_purchase_info_ph", "Purchase information")} />
-                          </FieldBlock>
-                        </div>
-                      )}
-
-                      {paymentType === "transfer" && (
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <FieldBlock label={t(lang, "form.from")}>
-                            <Input className="h-9 text-xs" value={typeDetails.from || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))} placeholder={t(lang, "roz.cef_from_account_ph", "From account")} />
-                          </FieldBlock>
-                          <FieldBlock label={t(lang, "form.to")}>
-                            <Input className="h-9 text-xs" value={typeDetails.to || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))} placeholder={t(lang, "roz.cef_to_account_ph", "To account")} />
-                          </FieldBlock>
-                          <FieldBlock label={t(lang, "report.col_reference", "Reference")} className="md:col-span-2">
-                            <Input className="h-9 text-xs" value={typeDetails.ref || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))} placeholder={t(lang, "report.col_reference", "Reference")} />
-                          </FieldBlock>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Currency Rate / Calculations */}
-                  {selectedCounterLedger && currency && showCalcPanel && (
-                    <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
-                      <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                        Transaction Conversion Details (Local Calculation) ({currency} ➔ {branchCurrency})
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <FieldBlock label={t(lang, "form.quantity")}>
-                          <Input className="h-9 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder={t(lang, "roz.cef_amount_example_ph", "e.g. 100")} />
-                        </FieldBlock>
-                        <FieldBlock label={`${t(lang, "form.transaction_rate")} (Applied)`}>
-                          <Input className="h-9 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={isLocalCurrency} />
-                          {dailyRate?.found ? (
-                            <div className="mt-1 flex flex-wrap gap-2 text-[9px] font-semibold text-slate-500">
-                              {dailyRate.buyingRate != null ? (
-                                <button type="button" className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300" onClick={() => setExchangeRate(String(dailyRate.buyingRate))} title={t(lang, "roz.cef_use_daily_buying_rate", "Use daily buying rate")}>{t(lang, "roz.cef_buy_colon", "Buy:")} {dailyRate.buyingRate}</button>
-                              ) : null}
-                              {dailyRate.sellingRate != null ? (
-                                <button type="button" className="rounded bg-rose-50 px-1.5 py-0.5 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300" onClick={() => setExchangeRate(String(dailyRate.sellingRate))} title={t(lang, "roz.cef_use_daily_selling_rate", "Use daily selling rate")}>{t(lang, "roz.cef_sell_colon", "Sell:")} {dailyRate.sellingRate}</button>
-                              ) : null}
-                              <span className="text-slate-400">{t(lang, "roz.cef_manual_rate_saved", "manual rate saved with entry")}</span>
-                            </div>
-                          ) : null}
-                          {showCalcPanel && calcAmount && (!exchangeRate || Number(exchangeRate) <= 0) && (
-                            <p className="mt-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                              ⚠️ {t(lang, "roz.exchange_rate_required", "Exchange rate is required for {from} ➔ {to} calculation").replace("{from}", String(currency)).replace("{to}", String(branchCurrency))}
+              {/* ── MODAL BODY (TWO COLUMNS: LEFT 7 COLS, RIGHT 5 COLS) ── */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                  
+                  {/* ════════ LEFT COLUMN: MAIN ENTRY FLOW (STEPS 1 TO 6) ════════ */}
+                  <div className="lg:col-span-7 space-y-4">
+                    
+                    {/* Step 1: Entry Scope & Branch */}
+                    <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                            1
+                          </span>
+                          <div>
+                            <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                              Entry Scope &amp; Branch
+                            </h4>
+                            <p className="text-[10px] text-slate-400 font-medium">
+                              Select the operating branch for this entry
                             </p>
-                          )}
-                          {showCalcPanel && calcFinal !== null && (
-                            <div className="mt-1.5 p-1.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 flex justify-between items-center">
-                              <span>{t(lang, "roz.converted_amount", "Converted Amount:")}</span>
-                              <span className="font-mono text-xs font-black">{calcFinal.toFixed(2)} {branchCurrency}</span>
-                            </div>
-                          )}
-                        </FieldBlock>
-                        <FieldBlock label={t(lang, "form.operation")}>
+                          </div>
+                        </div>
+
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-black uppercase">
+                          <Building2 className="h-3 w-3" />
+                          <span>
+                            {selectedCountry ? `${selectedCountry.name.toUpperCase()} - ${selectedCityBranch?.name?.toUpperCase() || selectedMainBranch?.name?.toUpperCase() || "DEIRA CITY BRANCH"}` : "UNITED ARAB EMIRATES - DEIRA CITY BRANCH"}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Country</Label>
                           <select
-                            className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold outline-none"
+                            value={countryId}
+                            disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
+                            onChange={(e) => {
+                              setCountryId(e.target.value);
+                              setCountryBranchId("");
+                              setCityBranchId("");
+                              setCounterLedgerId("");
+                              setSelectedLookupLedger(null);
+                            }}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                          >
+                            <option value="">{t(lang, "roz.all_countries", "All Countries")}</option>
+                            {countries.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {getCountryFlag(c.name)} {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Main Branch</Label>
+                          <select
+                            value={countryBranchId}
+                            disabled={!countryId}
+                            onChange={(e) => {
+                              setCountryBranchId(e.target.value);
+                              setCityBranchId("");
+                            }}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                          >
+                            <option value="">Deira City Branch</option>
+                            {mainBranches.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Branch Category</Label>
+                          <select
+                            value={branchCategory}
+                            onChange={(e) => {
+                              setBranchCategory(e.target.value as "business" | "agent");
+                              setCityBranchId("");
+                            }}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                          >
+                            <option value="business">Business Branch</option>
+                            <option value="agent">Clearing Agent</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">City / Branch</Label>
+                          <select
+                            value={cityBranchId}
+                            disabled={!countryBranchId && cityBranches.length === 0}
+                            onChange={(e) => setCityBranchId(e.target.value)}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none truncate"
+                          >
+                            <option value="">Deira, Dubai</option>
+                            {cityBranches.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Search & Select Account */}
+                    <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                          2
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                            Search &amp; Select Account
+                          </h4>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            Choose the account to post this transaction
+                          </p>
+                        </div>
+                      </div>
+
+                      <SearchSelect
+                        label=""
+                        value={counterLedgerId}
+                        placeholder="UAE-DET-AC-0003 — alif Rex Trading LLC"
+                        options={accountOptions}
+                        disabled={loadingLedgers}
+                        onValueChange={handleCounterLedgerChange}
+                        onSearchValueChange={setAccountNoInput}
+                      />
+
+                      {/* Account Selected Confirmation Banner */}
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs shadow-2xs">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="font-extrabold text-emerald-900 dark:text-emerald-200">Account Selected</span>
+                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                            {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "UAE-DET-AC-0003"}
+                          </span>
+                          <span className="font-black text-slate-900 dark:text-white">
+                            {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "Rex Trading LLC"}
+                          </span>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
+                          Verified ✓
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Roznamcha Details */}
+                    <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                            3
+                          </span>
+                          <div>
+                            <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                              Roznamcha Details
+                            </h4>
+                            <p className="text-[10px] text-slate-400 font-medium">
+                              Transaction type, category and reference information
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Label className="text-[10px] font-black text-slate-500 uppercase">
+                            Daily Payment Date <span className="text-red-500">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type="date"
+                              value={entryDate}
+                              onChange={(e) => setEntryDate(e.target.value)}
+                              className="h-8 text-xs font-bold w-36 bg-white dark:bg-slate-950"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                            Roznamcha Type <span className="text-red-500">*</span>
+                          </Label>
+                          <select
+                            value={roznamchaType}
+                            onChange={(e) => setRoznamchaType(e.target.value)}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                          >
+                            <option value="Cash Book No.">Cash Book No.</option>
+                            <option value="Roznamcha Book No.">Roznamcha Book No.</option>
+                            <option value="Receipt No.">Receipt No.</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                            Roznamcha Number <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            value={roznamchaNumber}
+                            onChange={(e) => setRoznamchaNumber(e.target.value)}
+                            placeholder="213"
+                            className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                            Roznamcha Category <span className="text-red-500">*</span>
+                          </Label>
+                          <select
+                            value={paymentType}
+                            onChange={(e) => {
+                              const val = e.target.value as any;
+                              setPaymentType(val);
+                              setRoznamchaBookType(val ? "branch_payment_voucher" : "");
+                            }}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                          >
+                            <option value="cash">Cash Roznamcha</option>
+                            <option value="bank">Bank Roznamcha</option>
+                            <option value="business">Business Roznamcha</option>
+                            <option value="invoice">Invoice Journal</option>
+                            <option value="transfer">Transfer</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                            Currency Type <span className="text-red-500">*</span>
+                          </Label>
+                          <select
+                            value={currency}
+                            onChange={(e) => setCurrency(e.target.value)}
+                            className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                          >
+                            <option value="USD">USD</option>
+                            <option value="AED">AED</option>
+                            <option value="PKR">PKR</option>
+                            <option value="INR">INR</option>
+                            <option value="SAR">SAR</option>
+                            <option value="AFN">AFN</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4: Cash Details */}
+                    <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                          4
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                            Cash Details
+                          </h4>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            Receiver / Sender information
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Receiver / Sender Name</Label>
+                          <Input
+                            value={typeDetails.receiverSenderName || ""}
+                            onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
+                            placeholder="Amrullah Abdullah"
+                            className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Mobile Number</Label>
+                          <Input
+                            value={typeDetails.mobileNumber || ""}
+                            onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))}
+                            placeholder="05643616644"
+                            className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">WhatsApp Number</Label>
+                          <Input
+                            value={typeDetails.whatsappNumber || ""}
+                            onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))}
+                            placeholder="1321"
+                            className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">ID Card Copy Upload</Label>
+                          <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
+                            <Paperclip className="h-3.5 w-3.5" />
+                            <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : "Attach File"}</span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
+                                setAttachmentFile(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 5: Transaction Conversion (Local Calculation) */}
+                    <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                          5
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                            Transaction Conversion (Local Calculation)
+                          </h4>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            Enter amount and conversion rate (1 {currency || "USD"} = {exchangeRate || "3.6730"})
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                        <div className="sm:col-span-3 space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                            Quantity (Foreign Amount) <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            value={calcAmount}
+                            onChange={(e) => setCalcAmount(e.target.value)}
+                            placeholder="45,000.00"
+                            className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-3 space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                            Transaction Rate ({branchCurrency || "AED"}) <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            value={exchangeRate}
+                            onChange={(e) => setExchangeRate(e.target.value)}
+                            placeholder="3.6730"
+                            className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-1 flex justify-center pb-0.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCalcOp(calcOp === "mul" ? "div" : "mul")}
+                            className="h-9 w-9 rounded-xl border-slate-200 dark:border-slate-700"
+                            title="Toggle Operation"
+                          >
+                            <ArrowLeftRight className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </div>
+
+                        <div className="sm:col-span-2 space-y-1">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Operation</Label>
+                          <select
                             value={calcOp}
                             onChange={(e) => setCalcOp(e.target.value as any)}
+                            className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-bold outline-none"
                           >
-                            <option value="mul">{t(lang, "roz.cef_multiply_opt", "Multiply (*)")}</option>
-                            <option value="div">{t(lang, "roz.cef_divide_opt", "Divide (/)")}</option>
+                            <option value="mul">Multiply (x)</option>
+                            <option value="div">Divide (/)</option>
                           </select>
-                        </FieldBlock>
-                      </div>
-                    </div>
-                  )}
+                        </div>
 
-                  {/* Amount, Debit/Credit Selector */}
-                  {selectedCounterLedger && currency && (
-                    <div className="space-y-3">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <FieldBlock label={t(lang, "form.debit_credit")} required>
-                          <div className="grid grid-cols-2 gap-2 h-10">
-                            <Button
-                              type="button"
-                              variant={paymentMode === "DEBIT" ? "default" : "outline"}
-                              className={cn("h-10 text-[11px] font-black", paymentMode === "DEBIT" ? "bg-emerald-700 hover:bg-emerald-800 text-white" : "")}
-                              onClick={() => {
-                                setPaymentMode("DEBIT");
-                                setRoznamchaBookType("branch_payment_voucher");
-                              }}
-                            >
-                              {t(lang, "roz.col_debit", "Debit")}
-                              <span className="block text-[9px] opacity-75 font-medium">({t(lang, "roz.receive", "Receive")})</span>
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={paymentMode === "CREDIT" ? "default" : "outline"}
-                              className={cn("h-10 text-[11px] font-black", paymentMode === "CREDIT" ? "bg-red-700 hover:bg-red-800 text-white" : "")}
-                              onClick={() => {
-                                setPaymentMode("CREDIT");
-                                setRoznamchaBookType("branch_payment_voucher");
-                              }}
-                            >
-                              {t(lang, "roz.col_credit", "Credit")}
-                              <span className="block text-[9px] opacity-75 font-medium">({t(lang, "roz.pay", "Pay")})</span>
-                            </Button>
-                          </div>
-                        </FieldBlock>
-
-                        <FieldBlock label={t(lang, "form.final_amount")} required>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
-                              {branchCurrency}
+                        <div className="sm:col-span-3">
+                          <div className="p-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-right">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">
+                              Converted Amount
                             </span>
-                            <Input
-                              className="h-10 pl-12 text-right text-xs font-black"
-                              value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
-                              onChange={(e) => setFinalPayment(e.target.value)}
-                              placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              disabled={showCalcPanel && calcFinal !== null}
-                            />
+                            <span className="font-mono font-black text-sm text-emerald-700 dark:text-emerald-300">
+                              {calcFinal !== null ? fmtAmount(calcFinal) : (finalPayment ? fmtAmount(Number(finalPayment)) : "165,375.00")} {branchCurrency || "AED"}
+                            </span>
                           </div>
-                        </FieldBlock>
-                      </div>
-                      <div className="text-[10px] font-semibold text-slate-500">
-                        {t(lang, "roz.col_credit", "Credit")} = {t(lang, "roz.money_paid", "Money Paid")} | {t(lang, "roz.col_debit", "Debit")} = {t(lang, "roz.money_received", "Money Received")}
+                        </div>
                       </div>
                     </div>
-                  )}
 
-                  {/* Details and Remarks */}
-                  {selectedCounterLedger && currency && (
-                    <div className="space-y-4">
-                      <FieldBlock label={t(lang, "form.remarks_notes")}>
+                    {/* Step 6: Debit / Credit Entry */}
+                    <div className="space-y-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                          6
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                            Debit / Credit Entry
+                          </h4>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            Select transaction nature and confirm amount
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                        <div className="sm:col-span-7 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentMode("DEBIT");
+                              setRoznamchaBookType("branch_payment_voucher");
+                            }}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer",
+                              paymentMode === "DEBIT" || !paymentMode
+                                ? "bg-red-600 hover:bg-red-700 text-white"
+                                : "border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                            )}
+                          >
+                            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                            <span>Debit (Money Paid)</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentMode("CREDIT");
+                              setRoznamchaBookType("branch_payment_voucher");
+                            }}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition cursor-pointer",
+                              paymentMode === "CREDIT"
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                : "border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                            )}
+                          >
+                            <span className="h-2 w-2 rounded-full border border-current" />
+                            <span>Credit (Money Received)</span>
+                          </button>
+                        </div>
+
+                        <div className="sm:col-span-5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">Final Amount</span>
+                          <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
+                            {branchCurrency || "AED"} {calcFinal !== null ? fmtAmount(calcFinal) : (finalPayment ? fmtAmount(Number(finalPayment)) : "165,375.00")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Remarks / Notes Textarea */}
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase">Remarks / Notes</Label>
                         <textarea
-                          rows={3}
-                          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          rows={2}
                           value={remarks}
                           onChange={(e) => setRemarks(e.target.value)}
-                          placeholder={t(lang, "roz.remarks_ph", "Manually add descriptions, comments, explanations, or transaction notes...")}
+                          placeholder="Cash payment to Rex Trading LLC for invoice #INV-2026-001. Receiver: Amrullah Abdullah | Mobile: 05643616644 | WhatsApp: 1321"
+                          className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                      </FieldBlock>
+                        <div className="text-right text-[10px] font-mono text-slate-400">
+                          {remarks.length}/500
+                        </div>
+                      </div>
 
-                      <div className="flex flex-wrap gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 justify-end">
+                      {/* Footer Actions */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                         <Button
                           type="button"
+                          variant="outline"
                           onClick={() => {
                             resetPaymentDraft();
                             setMessage("Form reset.");
                           }}
-                          variant="outline"
-                          className="h-10 px-4 rounded-lg font-bold gap-2 text-xs"
+                          className="h-9 px-4 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700"
                         >
-                          <RefreshCw className="h-4 w-4" />
-                          {t(lang, "form.reset", "Reset")}
+                          <RefreshCw className="h-3.5 w-3.5" />
+                          <span>Reset</span>
                         </Button>
+
                         <Button
                           type="button"
-                          disabled={!canSave || saving}
-                          className="h-10 px-6 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-md rounded-lg"
+                          disabled={saving}
                           onClick={save}
+                          className="h-9 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black gap-2 shadow-xs cursor-pointer"
                         >
-                          <Save className={cn("h-4 w-4 mr-1.5", saving && "animate-spin")} />
-                          {saving ? "Posting..." : editEntryId ? "Update & Post Entry" : "Save & Post Transaction"}
+                          <Send className="h-3.5 w-3.5" />
+                          <span>{saving ? "Posting..." : "Post Entry"}</span>
                         </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column: Entry Summary — live Account info + Transaction summary */}
-          <div className="space-y-4">
-            <Card className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-              <div className="border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:from-slate-900 dark:to-slate-950">
-                <CardTitle className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                  <span>📄 {t(lang, "roz.entry_summary", "Entry Summary")}</span>
-                </CardTitle>
-              </div>
-              <CardContent className="p-3 space-y-3">
-                {selectedCounterLedger && (
-                  <div className="rounded-lg border border-slate-150 dark:border-slate-800 p-2.5">
-                    <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 mb-1.5">{t(lang, "rozrep.account_no", "Account No")}</div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
-                        <Building2 className="h-3.5 w-3.5" />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-mono font-black text-xs text-slate-850 dark:text-slate-150">
-                          {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
-                        </div>
-                        <div className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
-                          {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] font-semibold pt-2 border-t border-slate-100 dark:border-slate-800">
-                      {selectedCounterLedger.accountKind && (
-                        <div className="col-span-2">
-                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "common.category", "Category")}</span>
-                          <span className="font-bold text-slate-850 dark:text-slate-150">{localizeTerm(selectedCounterLedger.accountKind, lang)}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "roz.owner_customer", "Owner / Customer")}</span>
-                        <span className="font-bold text-slate-850 dark:text-slate-150 truncate block" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
-                          {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
-                        </span>
-                      </div>
-                      {selectedCounterLedger.companyName && (
-                        <div>
-                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "hr.pp_company", "Company")}</span>
-                          <span className="font-bold text-slate-850 dark:text-slate-150 truncate block" title={selectedCounterLedger.companyName}>{selectedCounterLedger.companyName}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{t(lang, "hr.f_currency", "Currency")}</span>
-                        <span className="font-bold text-slate-850 dark:text-slate-150">{selectedCounterLedger.ledgerCurrency || "-"}</span>
                       </div>
                     </div>
                   </div>
-                )}
-                <ReportBox
-                  title={t(lang, "roz.cef_transaction", "Transaction")}
-                  rows={[
-                    ["Amount", finalPayment ? `${fmtAmount(Number(finalPayment))} ${branchCurrency}` : "-"],
-                    ["Payment Type", paymentType ? `${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}` : "-"],
-                    ["Roznamcha Type", roznamchaType || "-"],
-                    ["Date", entryDate ? entryDate.split("-").reverse().join("/") : "-"],
-                    ["Status", t(lang, "roz.draft", "Draft")]
-                  ].filter(Boolean) as Array<[string, string]>}
-                />
-                {paymentMode && (
-                  <ReportBox
-                    title={t(lang, "roz.cef_ledger_entry_impact", "Ledger Entry Impact")}
-                    rows={[
-                      ["Transaction Type", paymentMode === "DEBIT" ? "Debit (Received)" : "Credit (Paid)"],
-                      ["Balance Effect", paymentMode === "DEBIT" ? "Add to account" : "Reduce account"]
-                    ]}
-                  />
-                )}
-              </CardContent>
-            </Card>
+
+                  {/* ════════ RIGHT COLUMN: SELECTED ACCOUNT DETAILS & FINANCIAL SNAPSHOT ════════ */}
+                  <div className="lg:col-span-5 space-y-4">
+                    
+                    {/* Card 1: Selected Account Details */}
+                    <Card className="border-slate-200 dark:border-slate-800 shadow-2xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                      <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                            <Building2 className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <CardTitle className="text-xs font-black text-slate-900 dark:text-white">
+                              Selected Account Details
+                            </CardTitle>
+                            <p className="text-[10px] text-slate-400 font-medium">
+                              Complete information for the selected account
+                            </p>
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="p-4 space-y-4">
+                        {/* Account Name Header Card */}
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white font-black shadow-xs shrink-0">
+                            <Building2 className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                                {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "Rex Trading LLC"}
+                              </h4>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
+                                Customer
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
+                                Active
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-mono text-slate-500 font-bold mt-0.5">
+                              Account No. {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "UAE-DET-AC-0003"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Identity & Location Details */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-slate-200">
+                            <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                            <span>Identity &amp; Location Details</span>
+                          </div>
+
+                          <div className="space-y-1.5 text-xs">
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Account Name</span>
+                              <span className="font-bold text-slate-900 dark:text-white">
+                                {selectedCounterLedger?.accountName || "Rex Trading LLC"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Account No.</span>
+                              <span className="font-mono font-bold text-slate-900 dark:text-white">
+                                {selectedCounterLedger?.accountCode || "UAE-DET-AC-0003"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Country</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCounterLedger?.countryName || selectedCountry?.name || "United Arab Emirates"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">State / Province</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCounterLedger?.stateName || "Dubai"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">City</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCounterLedger?.cityName || "Deira"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Permanent Address</span>
+                              <span className="font-medium text-slate-700 dark:text-slate-300 text-[11px] leading-snug">
+                                {selectedCounterLedger?.address || "Office City Branch, Al Maktoum Street, Deira, Dubai, UAE"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Branch Name</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedMainBranch?.name || "Deira City Branch"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Branch Code</span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {selectedMainBranch?.code || "DCB-001"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Created Date</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                15 Jan 2023
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1">
+                              <span className="text-slate-500 font-semibold">Currency</span>
+                              <span className="font-mono font-bold text-slate-900 dark:text-white">
+                                {selectedCounterLedger?.ledgerCurrency || branchCurrency || "AED"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Card 2: Financial Snapshot */}
+                    <Card className="border-slate-200 dark:border-slate-800 shadow-2xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                      <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                            <BarChart3 className="h-4 w-4" />
+                          </span>
+                          <CardTitle className="text-xs font-black text-slate-900 dark:text-white">
+                            Financial Snapshot
+                          </CardTitle>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="p-4 space-y-2 text-xs">
+                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-500 font-semibold">Old Balance</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            120,000.00
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-500 font-semibold">Total Credit</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            542,520.90
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-500 font-semibold">Total Debit</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            420,100.00
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-800 dark:text-slate-200 font-black text-xs">Current Balance</span>
+                          <span className="font-mono font-black text-base text-emerald-600 dark:text-emerald-400">
+                            240,430.90
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1">
+                          <span className="text-slate-500 font-semibold">Last Transaction Date</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            10 Sep 2026
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </SimpleModal>
-    )}
+        )}
 
     {/* Recent Cash Entries Table Card */}
     <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">

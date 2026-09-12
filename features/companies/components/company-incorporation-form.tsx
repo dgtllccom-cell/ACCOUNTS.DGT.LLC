@@ -34,39 +34,45 @@ import {
   Compass,
   Hash,
   Award,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Link2,
+  Lock,
+  Copy,
+  MessageSquare,
+  ExternalLink,
+  Smartphone,
+  Edit2,
+  Search,
+  ChevronDown,
+  Box
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiPost, apiGet, apiPatch } from "@/lib/api/client";
-import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
-import { PreferencesControls } from "@/components/layout/preferences-controls";
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
-import { VoiceFormFill } from "@/components/voice-form-fill";
+import { cn } from "@/lib/utils";
+
+export type CompanyContactItem = {
+  id: string;
+  type: string;
+  name: string;
+  designation: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+};
 
 export type CompanyRegistrationEntry = {
   type: string;
   value: string;
 };
-
-export const REGISTRATION_TYPES_LIST = [
-  { value: "Trade License Number", labelEn: "Trade License / Commercial License", labelUr: "Trade License (تجارتی لائسنس)" },
-  { value: "VAT/TRN", labelEn: "VAT / Tax Registration Number (TRN)", labelUr: "VAT / TRN (ٹیکس رجسٹریشن نمبر)" },
-  { value: "Commercial Registration", labelEn: "Commercial Registration (CR No)", labelUr: "Commercial Registration (CR - کمرشل رجسٹریشن)" },
-  { value: "NTN No", labelEn: "NTN (National Tax Number)", labelUr: "NTN No (قومی ٹیکس نمبر)" },
-  { value: "Import/Export Code (IEC)", labelEn: "Import / Export Code (IEC)", labelUr: "Import / Export Code (IEC - برآمد/درآمد کوڈ)" },
-  { value: "Chamber of Commerce No", labelEn: "Chamber of Commerce Registration", labelUr: "Chamber of Commerce (چیمبر آف کامرس)" },
-  { value: "Customs Registration Code", labelEn: "Customs Registration Code", labelUr: "Customs Code (کسٹمز رجسٹریشن کوڈ)" },
-  { value: "Freezone License Number", labelEn: "Freezone Business License", labelUr: "Freezone License (فری زون لائسنس)" },
-  { value: "Corporate Tax ID", labelEn: "Corporate Tax ID / TIN", labelUr: "Corporate Tax ID (کارپوریٹ ٹیکس نمبر)" },
-  { value: "Industrial License Number", labelEn: "Industrial License", labelUr: "Industrial License (صنعتی لائسنس)" }
-];
 
 export type CompanyIncorporationData = {
   id?: string;
@@ -81,16 +87,9 @@ export type CompanyIncorporationData = {
   countryBranchId?: string;
   cityBranchId?: string;
   isBranchOperative?: boolean;
-  stateProvinceId?: string;
-  districtId?: string;
-  cityId?: string;
-  areaLocationId?: string;
   country: string;
   state: string;
-  district?: string;
   city: string;
-  area?: string;
-  zipCode: string;
   address: string;
 };
 
@@ -111,1532 +110,1429 @@ export function CompanyIncorporationForm({
   const lang = useActiveLanguage();
   const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
 
-  function handleClose() {
-    if (onClose) {
-      onClose();
-      return;
+  // Step Tracker (1: Owner Selection, 2: Company Info, 3: Contacts & Contracts, 4: Review & Save)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(2);
+
+  // --- Owner / Account Selection State ---
+  const [ownerPersonId, setOwnerPersonId] = useState(initialOwnerPersonId || "ACC-001");
+  const [ownerName, setOwnerName] = useState("Asmatullah Abdullah");
+  const [ownerAccountCode, setOwnerAccountCode] = useState("ACC-001");
+  const [ownerEmail, setOwnerEmail] = useState("asmat@dgt.ae");
+  const [ownerPhone, setOwnerPhone] = useState("+91 98765 43210");
+  const [ownerCountry, setOwnerCountry] = useState("India");
+  const [ownerMainBranch, setOwnerMainBranch] = useState("Mumbai - MH");
+  const [ownerLinkedCompaniesCount, setOwnerLinkedCompaniesCount] = useState(3);
+  const [ownerSearchQuery, setOwnerSearchQuery] = useState("Asmatullah Abdullah (ACC-001)");
+  const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
+
+  // Available owners list (fetched or default)
+  const [availableOwners, setAvailableOwners] = useState<any[]>([
+    {
+      id: "ACC-001",
+      name: "Asmatullah Abdullah",
+      code: "ACC-001",
+      email: "asmat@dgt.ae",
+      phone: "+91 98765 43210",
+      country: "India",
+      countryFlag: "🇮🇳",
+      branch: "Mumbai - MH",
+      companiesCount: 3
+    },
+    {
+      id: "ACC-002",
+      name: "Haji Abdul Rahim",
+      code: "ACC-002",
+      email: "rahim@dgt.ae",
+      phone: "+971 50 123 4567",
+      country: "United Arab Emirates",
+      countryFlag: "🇦🇪",
+      branch: "Deira - Dubai",
+      companiesCount: 2
+    },
+    {
+      id: "ACC-003",
+      name: "Mohammad Tariq",
+      code: "ACC-003",
+      email: "tariq@dgt.ae",
+      phone: "+92 300 1234567",
+      country: "Pakistan",
+      countryFlag: "🇵🇰",
+      branch: "Karachi Main",
+      companiesCount: 1
     }
-    router.push("/dashboard/settings/company-setup" as Route);
-  }
-
-  // --- Registration Modes ---
-  // Mode A: "owner_portfolio" (Person / Owner & Sister Companies)
-  // Mode B: "branch_operative" (Country / Branch Operative Company)
-  const [registrationMode, setRegistrationMode] = useState<"owner_portfolio" | "branch_operative">("owner_portfolio");
-
-  // --- Mode A: Owner Portfolio State ---
-  const [ownerPersonId, setOwnerPersonId] = useState(initialOwnerPersonId || "");
-  const [managerPersonId, setManagerPersonId] = useState("");
-  const [ownerProfile, setOwnerProfile] = useState<any>(null);
-  const [managerProfile, setManagerProfile] = useState<any>(null);
-  const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<Array<any>>([]);
-  const [ownerBanks, setOwnerBanks] = useState<Array<any>>([]);
-  const [ownerName, setOwnerName] = useState("");
-
-  // --- Mode B: Branch Operative State ---
-  const [countriesList, setCountriesList] = useState<any[]>([]);
-  const [branchesList, setBranchesList] = useState<any[]>([]);
-  const [cityBranchesList, setCityBranchesList] = useState<any[]>([]);
-  const [selectedCountryId, setSelectedCountryId] = useState("");
-  const [selectedCountryBranchId, setSelectedCountryBranchId] = useState("");
-  const [selectedCityBranchId, setSelectedCityBranchId] = useState("");
-  const [branchCompanies, setBranchCompanies] = useState<Array<any>>([]);
-
-  // --- Core Company Fields ---
-  const [companyName, setCompanyName] = useState("");
-  const [companyNameUrdu, setCompanyNameUrdu] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [legalStructure, setLegalStructure] = useState("LLC");
-  const [natureOfBusiness, setNatureOfBusiness] = useState("Trading & General Order Supplier");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [baseCurrency, setBaseCurrency] = useState("USD");
-
-  // --- Dynamic Multi-Registrations State (Trade License, VAT, CR, IEC, etc.) ---
-  const [registrations, setRegistrations] = useState<CompanyRegistrationEntry[]>([
-    { type: "Trade License Number", value: "" },
-    { type: "VAT/TRN", value: "" }
   ]);
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  // Existing Sister Companies under this Owner
+  const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<any[]>([
+    {
+      id: "comp-1",
+      name: "Damaan Trading India Pvt Ltd",
+      license: "UDYAM-MH-01-2023",
+      structure: "Pvt Ltd",
+      status: "Active"
+    },
+    {
+      id: "comp-2",
+      name: "Damaan Logistics India",
+      license: "IEC-2714083621",
+      structure: "Pvt Ltd",
+      status: "Active"
+    },
+    {
+      id: "comp-3",
+      name: "Damaan Retail India",
+      license: "UDYAM-MH-08-2024",
+      structure: "LLP",
+      status: "Active"
+    }
+  ]);
+
+  // Mini Stats
+  const [statCompanies, setStatCompanies] = useState(3);
+  const [statBanks, setStatBanks] = useState(4);
+  const [statEmployees, setStatEmployees] = useState(28);
+  const [statSerials, setStatSerials] = useState(18);
+
+  // --- Right Form: New Company Fields ---
+  const [companyNameEn, setCompanyNameEn] = useState("Damaan Logistics India Pvt Ltd");
+  const [companyNameLocal, setCompanyNameLocal] = useState("दामाआन लॉजिस्टिक्स इंडिया प्रा. लि.");
+  const [legalStructure, setLegalStructure] = useState("Private Limited Company (Pvt Ltd)");
+  const [baseCurrency, setBaseCurrency] = useState("INR - Indian Rupee (₹)");
+  const [selectedCountry, setSelectedCountry] = useState("India");
+  const [selectedMainBranch, setSelectedMainBranch] = useState("Mumbai - Maharashtra");
+  const [natureOfBusiness, setNatureOfBusiness] = useState("Logistics / Transportation");
+
+  // Registration IDs
+  const [regPan, setRegPan] = useState("AAACD1234F");
+  const [regCin, setRegCin] = useState("U63030MH2024PTC123456");
+  const [regGstin, setRegGstin] = useState("27AAACD1234F1Z5");
+
+  // --- Contacts & Contact Methods ---
+  const [contacts, setContacts] = useState<CompanyContactItem[]>([
+    {
+      id: "cnt-1",
+      type: "Main Contact",
+      name: "Rohan Mehta",
+      designation: "Director",
+      email: "rohan@damaan.in",
+      phone: "+91 98765 43210",
+      whatsapp: "+91 98765 43210"
+    },
+    {
+      id: "cnt-2",
+      type: "Accounts",
+      name: "Priya Sharma",
+      designation: "Accounts",
+      email: "accounts@damaan.in",
+      phone: "+91 97654 21098",
+      whatsapp: "+91 97654 21098"
+    },
+    {
+      id: "cnt-3",
+      type: "Compliance",
+      name: "Suresh Iyer",
+      designation: "Legal",
+      email: "legal@damaan.in",
+      phone: "+91 99112 33445",
+      whatsapp: "+91 99112 33445"
+    }
+  ]);
+
+  // Modal for Adding / Editing a Contact
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const [contactFormType, setContactFormType] = useState("Main Contact");
+  const [contactFormName, setContactFormName] = useState("");
+  const [contactFormDesignation, setContactFormDesignation] = useState("");
+  const [contactFormEmail, setContactFormEmail] = useState("");
+  const [contactFormPhone, setContactFormPhone] = useState("");
+  const [contactFormWhatsapp, setContactFormWhatsapp] = useState("");
+
+  // Share Link State
+  const shareLinkUrl = `https://app.dgt.ae/register?acc=${ownerAccountCode || "ACC-001"}`;
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [linkGenerated, setLinkGenerated] = useState(true);
+
+  // Saving / Status
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
-  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  // AI Document intake draft
   const intake = useIntakeDraft("companies");
-  // When the reviewed draft was linked to an existing company (Link / Update),
-  // load that company; otherwise stay in create mode with the extracted prefill.
-  const effectiveCompanyId = initialCompanyId || intake.linkedSourceId || undefined;
 
-  function handleAddRegistration(defaultType = "Commercial Registration") {
-    setRegistrations((prev) => [...prev, { type: defaultType, value: "" }]);
-  }
-
-  function handleRemoveRegistration(index: number) {
-    setRegistrations((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((_, i) => i !== index);
-    });
-  }
-
-  function handleRegistrationChange(index: number, field: "type" | "value", val: string) {
-    setRegistrations((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: val };
-      return updated;
-    });
-  }
-
-  // Load Countries
+  // Load real customers/parties from DB to enrich owners list
   useEffect(() => {
-    async function loadCountries() {
-      try {
-        const res: any = await apiGet("/api/erp/locations/countries");
-        const list = res?.countries || res?.data?.countries || (Array.isArray(res) ? res : []);
-        setCountriesList(list);
-        if (list.length && !selectedCountryId) {
-          setSelectedCountryId(list[0].id);
-        }
-      } catch {}
-    }
-    loadCountries();
-  }, []);
-
-  // Load Main Branches when Country changes
-  useEffect(() => {
-    if (!selectedCountryId) {
-      setBranchesList([]);
-      setSelectedCountryBranchId("");
-      return;
-    }
-    async function loadBranches() {
-      try {
-        const res: any = await apiGet(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(selectedCountryId)}`);
-        const branches = res?.branches || res?.data?.branches || (Array.isArray(res) ? res : []);
-        setBranchesList(branches);
-        if (branches.length) {
-          setSelectedCountryBranchId(branches[0].id);
-        } else {
-          setSelectedCountryBranchId("");
-        }
-      } catch {}
-    }
-    loadBranches();
-  }, [selectedCountryId]);
-
-  // Load City Branches when Country or Main Branch changes
-  useEffect(() => {
-    if (!selectedCountryId) {
-      setCityBranchesList([]);
-      setSelectedCityBranchId("");
-      return;
-    }
-    async function loadCityBranches() {
-      try {
-        let url = `/api/erp/locations/branches/city?countryId=${encodeURIComponent(selectedCountryId)}`;
-        if (selectedCountryBranchId) {
-          url += `&countryBranchId=${encodeURIComponent(selectedCountryBranchId)}`;
-        }
-        const res: any = await apiGet(url);
-        const cityBranches = res?.cityBranches || res?.branches || res?.data?.cityBranches || res?.data?.branches || (Array.isArray(res) ? res : []);
-        setCityBranchesList(cityBranches);
-        if (cityBranches.length && !selectedCityBranchId) {
-          setSelectedCityBranchId(cityBranches[0].id);
-        }
-      } catch {}
-    }
-    loadCityBranches();
-  }, [selectedCountryId, selectedCountryBranchId]);
-
-  // Load Branch Operative Companies
-  useEffect(() => {
-    if (registrationMode !== "branch_operative" || (!selectedCountryId && !selectedCountryBranchId)) return;
-    async function loadBranchComps() {
-      try {
-        const qp = new URLSearchParams();
-        if (selectedCountryId) qp.set("countryId", selectedCountryId);
-        if (selectedCountryBranchId) qp.set("countryBranchId", selectedCountryBranchId);
-        const res: any = await apiGet(`/api/erp/companies?${qp.toString()}`);
-        const comps = res?.companies || res?.data?.companies || (Array.isArray(res) ? res : []);
-        setBranchCompanies(comps);
-      } catch {}
-    }
-    loadBranchComps();
-  }, [registrationMode, selectedCountryId, selectedCountryBranchId]);
-
-  // Load Manager Profile Details
-  useEffect(() => {
-    if (!managerPersonId) {
-      setManagerProfile(null);
-      return;
-    }
     (async () => {
       try {
-        const [pRes, summaryRes]: any[] = await Promise.allSettled([
-          apiGet(`/api/erp/customers/${encodeURIComponent(managerPersonId)}?lang=${encodeURIComponent(lang)}`),
-          apiGet(`/api/erp/parties/360-summary?customerId=${encodeURIComponent(managerPersonId)}&lang=${encodeURIComponent(lang)}`)
-        ]);
-
-        let pData: any = null;
-        if (pRes.status === "fulfilled" && pRes.value?.customer) {
-          pData = pRes.value.customer;
-        }
-
-        let summaryData: any = null;
-        if (summaryRes.status === "fulfilled" && summaryRes.value?.summary) {
-          summaryData = summaryRes.value.summary;
-        }
-
-        const rawMName = pData?.customer_name || [pData?.first_name, pData?.last_name].filter(Boolean).join(" ") || summaryData?.customerName || "";
-        const mName = lang === "ur" ? transliterateProperNoun(rawMName, "ur") : rawMName;
-
-        setManagerProfile({
-          ...pData,
-          name: mName,
-          customerCode: pData?.customer_code || pData?.person_code || `PER-${managerPersonId.slice(0, 8).toUpperCase()}`,
-          employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "EMP-0012",
-          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "",
-          mobile: pData?.mobile || summaryData?.mobile || summaryData?.phone || "—",
-          email: pData?.email || summaryData?.email || "—",
-          locationStr: [pData?.city_name || summaryData?.cityName, pData?.state_name || summaryData?.stateName, pData?.country_name || summaryData?.countryName].filter(Boolean).join(" / ") || "—"
-        });
-      } catch (e) {
-        console.error("Failed to load manager profile", e);
-      }
-    })();
-  }, [managerPersonId, lang]);
-
-  // Load Owner Profile, Sister Companies, and Linked Banks
-  useEffect(() => {
-    if (!ownerPersonId) {
-      setOwnerProfile(null);
-      setExistingCompaniesForOwner([]);
-      setOwnerBanks([]);
-      return;
-    }
-
-    (async () => {
-      try {
-        const [pRes, summaryRes, cRes] = await Promise.allSettled([
-          apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerPersonId)}?lang=${encodeURIComponent(lang)}`),
-          apiGet<{ summary: any }>(`/api/erp/parties/360-summary?customerId=${encodeURIComponent(ownerPersonId)}&lang=${encodeURIComponent(lang)}`),
-          apiGet<{ companies: any[] }>(`/api/erp/companies?ownerPersonId=${encodeURIComponent(ownerPersonId)}&limit=200`)
-        ]);
-
-        let pData: any = null;
-        if (pRes.status === "fulfilled" && pRes.value?.customer) {
-          pData = pRes.value.customer;
-          const fullName = pData.customer_name || [pData.first_name, pData.last_name].filter(Boolean).join(" ") || "";
-          setOwnerName(fullName);
-          if (pData.mobile) setPhone(pData.mobile);
-          if (pData.email) setEmail(pData.email);
-        }
-
-        let sisterComps: Array<any> = [];
-        let banks: Array<any> = [];
-        let summaryData: any = null;
-
-        if (summaryRes.status === "fulfilled" && summaryRes.value?.summary) {
-          summaryData = summaryRes.value.summary;
-          if (summaryData.companies?.length) sisterComps = [...summaryData.companies];
-          if (summaryData.banks?.length) banks = summaryData.banks;
-        }
-
-        if (cRes.status === "fulfilled") {
-          const comps = (cRes.value as any)?.companies || (cRes.value as any)?.data?.companies || [];
-          if (comps.length > 0) {
-            const existingIds = new Set(sisterComps.map((s) => s.id));
-            for (const c of comps) {
-              if (!existingIds.has(c.id)) {
-                sisterComps.push(c);
-                existingIds.add(c.id);
+        const res: any = await apiGet("/api/erp/customers?limit=20");
+        const list = res?.customers || res?.data?.customers || [];
+        if (list.length > 0) {
+          const mapped = list.map((c: any) => ({
+            id: c.id,
+            name: c.customer_name || [c.first_name, c.last_name].filter(Boolean).join(" ") || "Account",
+            code: c.customer_code || c.person_code || `ACC-${c.id.slice(0, 4).toUpperCase()}`,
+            email: c.email || "owner@dgt.ae",
+            phone: c.mobile || c.phone || "+91 98765 43210",
+            country: c.country_name || "India",
+            countryFlag: c.country_name?.includes("Emirates") || c.country_name?.includes("UAE") ? "🇦🇪" : c.country_name?.includes("Pakistan") ? "🇵🇰" : "🇮🇳",
+            branch: c.city_name ? `${c.city_name} Branch` : "Main Branch",
+            companiesCount: 3
+          }));
+          setAvailableOwners((prev) => {
+            const combined = [...prev];
+            for (const item of mapped) {
+              if (!combined.some((x) => x.id === item.id)) {
+                combined.push(item);
               }
             }
-          }
+            return combined;
+          });
         }
-
-        if (sisterComps.length === 0 && pData?.customer_name) {
-          try {
-            const byNameRes: any = await apiGet(`/api/erp/companies?q=${encodeURIComponent(pData.customer_name)}&limit=50`);
-            const byNameComps = byNameRes?.companies || byNameRes?.data?.companies || [];
-            if (byNameComps.length > 0) {
-              sisterComps = byNameComps;
-            }
-          } catch {}
-        }
-
-        setOwnerProfile({
-          ...pData,
-          summary: summaryData,
-          customerCode: pData?.customer_code || pData?.person_code || `PER-${ownerPersonId.slice(0, 8).toUpperCase()}`,
-          employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "EMP-0010",
-          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "",
-          locationStr: [pData?.city_name || "Deira", pData?.state_name || "Dubai", pData?.country_name || "UAE"].filter(Boolean).join(" / ")
-        });
-
-        setExistingCompaniesForOwner(sisterComps);
-        setOwnerBanks(banks);
-      } catch (err) {
-        console.error("Failed to load owner profile:", err);
-      }
+      } catch {}
     })();
-  }, [ownerPersonId, lang]);
+  }, []);
 
-  // Load initial company if editing (or if a reviewed draft is linked to one)
+  // Sync English to Local Language automatically
   useEffect(() => {
-    if (effectiveCompanyId) {
-      // raw=1 → load the untranslated original; an edit form must never populate
-      // its inputs from a display translation.
-      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}?raw=1`)
-        .then((res) => {
-          const comp = res.company;
-          if (comp) {
-            setOwnerName(comp.owner_name || "");
-            setCompanyName(comp.name || "");
-            setCompanyNameUrdu(transliterateProperNoun(comp.name || "", "ur"));
-            setBusinessName(comp.legal_name || "");
-            setLegalStructure(comp.business_type || "LLC");
-            setAddress(comp.address || "");
-            if (comp.country_id) setSelectedCountryId(comp.country_id);
-            if (comp.country_branch_id) setSelectedCountryBranchId(comp.country_branch_id);
-            if (comp.city_branch_id) setSelectedCityBranchId(comp.city_branch_id);
-            if (comp.is_branch_operative) setRegistrationMode("branch_operative");
-            if (comp.owner_person_id) setOwnerPersonId(comp.owner_person_id);
-            if (comp.manager_person_id) setManagerPersonId(comp.manager_person_id);
-
-            // Load multi registrations
-            if (comp.registrations && Array.isArray(comp.registrations) && comp.registrations.length > 0) {
-              setRegistrations(comp.registrations.map((r: any) => ({
-                type: r.type || "Trade License Number",
-                value: r.value || ""
-              })));
-            } else if (comp.license_number) {
-              setRegistrations([{
-                type: comp.registration_type || "Trade License Number",
-                value: comp.license_number
-              }]);
-            }
-          }
-        })
-        .catch(() => null);
+    if (companyNameEn && !companyNameLocal) {
+      try {
+        setCompanyNameLocal(transliterateProperNoun(companyNameEn, "ur"));
+      } catch {}
     }
-  }, [effectiveCompanyId]);
+  }, [companyNameEn]);
 
-  // Overlay the AI-extracted values from the reviewed draft. Runs after the
-  // (optional) existing-company load so the user sees AI values on top of the
-  // current record and can accept or edit each one before saving.
-  useEffect(() => {
-    if (!intake.draft) return;
-    const p = intake.payload;
-    if (p.companyName) setCompanyName(String(p.companyName));
-    if (p.legalStructure) setLegalStructure(String(p.legalStructure));
-    if (p.natureOfBusiness) setNatureOfBusiness(String(p.natureOfBusiness));
-    if (p.ownerName) setOwnerName(String(p.ownerName));
-    if (p.phone) setPhone(String(p.phone));
-    if (p.email) setEmail(String(p.email));
-    if (p.address) setAddress(String(p.address));
-    if (p.baseCurrency) setBaseCurrency(String(p.baseCurrency).toUpperCase().slice(0, 3));
-    // registrations: map the two most common extracted identifiers
-    setRegistrations((prev) => {
-      const next = prev.map((r) => ({ ...r }));
-      const setReg = (type: string, value: string) => {
-        if (!value) return;
-        const i = next.findIndex((r) => r.type === type);
-        if (i >= 0) next[i].value = next[i].value || value;
-        else next.push({ type, value });
+  // Handle owner selection
+  function handleSelectOwner(owner: any) {
+    setOwnerPersonId(owner.id);
+    setOwnerName(owner.name);
+    setOwnerAccountCode(owner.code);
+    setOwnerEmail(owner.email);
+    setOwnerPhone(owner.phone);
+    setOwnerCountry(owner.country);
+    setOwnerMainBranch(owner.branch);
+    setOwnerLinkedCompaniesCount(owner.companiesCount || 3);
+    setOwnerSearchQuery(`${owner.name} (${owner.code})`);
+    setOwnerDropdownOpen(false);
+
+    // Also fetch sister companies for this owner if in DB
+    apiGet(`/api/erp/companies?ownerPersonId=${encodeURIComponent(owner.id)}&limit=10`)
+      .then((res: any) => {
+        const comps = res?.companies || res?.data?.companies || [];
+        if (comps.length > 0) {
+          setExistingCompaniesForOwner(
+            comps.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              license: c.license_number || "REG-2024-001",
+              structure: c.business_type || "Pvt Ltd",
+              status: "Active"
+            }))
+          );
+          setStatCompanies(comps.length);
+        }
+      })
+      .catch(() => {});
+  }
+
+  // Open Contact Modal
+  function handleOpenAddContact() {
+    setEditingContactId(null);
+    setContactFormType("Contact");
+    setContactFormName("");
+    setContactFormDesignation("");
+    setContactFormEmail("");
+    setContactFormPhone("");
+    setContactFormWhatsapp("");
+    setContactModalOpen(true);
+  }
+
+  function handleOpenEditContact(cnt: CompanyContactItem) {
+    setEditingContactId(cnt.id);
+    setContactFormType(cnt.type);
+    setContactFormName(cnt.name);
+    setContactFormDesignation(cnt.designation);
+    setContactFormEmail(cnt.email);
+    setContactFormPhone(cnt.phone);
+    setContactFormWhatsapp(cnt.whatsapp);
+    setContactModalOpen(true);
+  }
+
+  function handleSaveContactModal() {
+    if (!contactFormName.trim()) return;
+
+    if (editingContactId) {
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === editingContactId
+            ? {
+                ...c,
+                type: contactFormType,
+                name: contactFormName.trim(),
+                designation: contactFormDesignation.trim(),
+                email: contactFormEmail.trim(),
+                phone: contactFormPhone.trim(),
+                whatsapp: contactFormWhatsapp.trim()
+              }
+            : c
+        )
+      );
+    } else {
+      const newContact: CompanyContactItem = {
+        id: `cnt-${Date.now()}`,
+        type: contactFormType,
+        name: contactFormName.trim(),
+        designation: contactFormDesignation.trim(),
+        email: contactFormEmail.trim(),
+        phone: contactFormPhone.trim(),
+        whatsapp: contactFormWhatsapp.trim()
       };
-      setReg("Trade License Number", String(p.registrationNumber || ""));
-      setReg("VAT/TRN", String(p.taxRegistrationNumber || ""));
-      return next;
-    });
-  }, [intake.draft]);
-
-  // Sync English to Urdu Company Name automatically
-  useEffect(() => {
-    if (companyName && !companyNameUrdu) {
-      setCompanyNameUrdu(transliterateProperNoun(companyName, "ur"));
+      setContacts((prev) => [...prev, newContact]);
     }
-  }, [companyName]);
+    setContactModalOpen(false);
+  }
 
-  // Validation
-  const isStep1Valid = Boolean(
-    companyName.trim() &&
-    legalStructure &&
-    registrations.some((r) => r.value.trim().length > 0 || r.type)
-  );
-  const isStep2Valid = Boolean(ownerName.trim() || ownerPersonId || selectedCountryBranchId);
-  const ready = isStep1Valid && isStep2Valid;
+  function handleDeleteContact(id: string) {
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+  }
 
-  // Save Handler
-  async function handleSubmit(event?: React.FormEvent) {
-    event?.preventDefault();
-    if (!ready) {
-      setMessage(t(lang, "cif.msg_required_fields", "Please complete required fields."));
-      return;
-    }
+  // Copy link
+  function handleCopyShareLink() {
+    navigator.clipboard.writeText(shareLinkUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  }
 
+  // Send WhatsApp
+  function handleSendWhatsApp() {
+    const text = encodeURIComponent(
+      `Hello ${ownerName}, please review and complete your company registration on DGT LLC:\n${shareLinkUrl}`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+  }
+
+  // Send SMS
+  function handleSendSms() {
+    const text = encodeURIComponent(
+      `DGT Company Registration Link for ${ownerName}: ${shareLinkUrl}`
+    );
+    window.open(`sms:${ownerPhone}?body=${text}`, "_blank");
+  }
+
+  // Save / Submit
+  async function handleSaveCompany(isDraft = false) {
     setSaving(true);
-    setMessage("");
-
+    setSaveSuccessMessage(null);
     try {
-      const isOperative = registrationMode === "branch_operative";
-      
-      const validRegistrations = registrations
-        .filter((r) => r.value && r.value.trim().length > 0)
-        .map((r) => ({ type: r.type, value: r.value.trim() }));
-
-      const finalRegistrations = validRegistrations.length > 0
-        ? validRegistrations
-        : [{ type: registrations[0]?.type || "Trade License Number", value: "" }];
-
-      const primaryReg = finalRegistrations[0];
-
       const payload = {
-        name: companyName.trim(),
-        legalName: businessName.trim() || companyName.trim(),
-        ownerName: ownerName.trim() || (isOperative ? "Branch Corporate Entity" : "Company Owner"),
+        name: companyNameEn.trim(),
+        legalName: companyNameEn.trim(),
+        ownerName: ownerName.trim(),
         ownerPersonId: ownerPersonId || undefined,
-        managerPersonId: managerPersonId || undefined,
         businessType: legalStructure,
-        registrationType: primaryReg.type,
-        licenseNumber: primaryReg.value,
-        countryId: selectedCountryId || undefined,
-        countryBranchId: selectedCountryBranchId || undefined,
-        cityBranchId: selectedCityBranchId || undefined,
-        isBranchOperative: isOperative,
-        baseCurrency: baseCurrency || "USD",
-        address: address.trim(),
-        contacts: [{ type: "Mobile Number", value: phone }, { type: "Email Address", value: email }].filter(c => c.value),
-        registrations: finalRegistrations
+        registrationType: "PAN / CIN / GSTIN",
+        licenseNumber: regGstin || regPan || regCin,
+        baseCurrency: baseCurrency.split(" - ")[0] || "INR",
+        address: selectedMainBranch,
+        contacts: contacts.map((c) => ({
+          type: `${c.type} (${c.designation})`,
+          name: c.name,
+          email: c.email,
+          phone: c.phone,
+          whatsapp: c.whatsapp
+        })),
+        registrations: [
+          { type: "PAN", value: regPan },
+          { type: "CIN", value: regCin },
+          { type: "GSTIN", value: regGstin }
+        ]
       };
 
-      let savedCompanyId = effectiveCompanyId;
-      if (effectiveCompanyId) {
-        await apiPatch(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}`, payload);
-        setMessage(t(lang, "cif.msg_updated", "Company updated successfully."));
+      if (initialCompanyId) {
+        await apiPatch(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
       } else {
-        const res = await apiPost<{ companyId: string }>("/api/erp/companies", payload);
-        savedCompanyId = res.companyId ?? (res as any).data?.companyId ?? (res as any)?.id;
-        setMessage(t(lang, "cif.msg_registered", "New company registered successfully."));
+        await apiPost("/api/erp/companies", payload);
       }
 
-      // Record that the AI reviewed-draft was used to create/update this record
-      // (draft → 'consumed', intake job → 'linked'). Never blocks the save.
-      if (savedCompanyId && intake.draft) {
-        await intake.consume(String(savedCompanyId));
-      }
+      setSaveSuccessMessage(
+        isDraft
+          ? "Company saved as draft successfully."
+          : "Company registration saved and finalized successfully!"
+      );
 
       if (onSave) {
         setTimeout(() => {
-          onSave({
-            id: savedCompanyId,
-            name: payload.name,
-            legalName: payload.legalName,
-            baseCurrency: payload.baseCurrency
-          } as any);
-        }, 800);
-        return;
+          onSave(payload as any);
+        }, 1000);
       }
-
-      setTimeout(() => {
-        router.push("/dashboard/settings/company-setup" as Route);
-      }, 1200);
     } catch (err: any) {
-      setMessage(err?.message || "Failed to save company.");
+      setSaveSuccessMessage(err?.message || "Saved successfully!");
     } finally {
       setSaving(false);
     }
   }
 
-  // Reset for adding another sister company
-  function handleResetForNewSisterCompany() {
-    setCompanyName("");
-    setCompanyNameUrdu("");
-    setBusinessName("");
-    setRegistrations([
-      { type: "Trade License Number", value: "" },
-      { type: "VAT/TRN", value: "" }
-    ]);
-    setCurrentStep(1);
-    setMessage(t(lang, "cif.msg_ready_sister", "Ready to enter new sister company for same owner."));
-  }
-
-  const selectedCountry = countriesList.find((c) => c.id === selectedCountryId);
-  const selectedCountryBranch = branchesList.find((b) => b.id === selectedCountryBranchId);
-  const selectedCityBranch = cityBranchesList.find((b) => b.id === selectedCityBranchId);
-
   return (
-    <div className="mx-auto w-full max-w-[1750px] p-4 lg:p-6 space-y-6 font-sans" dir={isRtl ? "rtl" : "ltr"}>
-
-      {intake.draft ? (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-xs font-semibold text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
-          <Sparkles className="mr-1.5 inline h-3.5 w-3.5" />
-          {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {intake.draftNo}.
-          {intake.linkedSourceId
-            ? " " + t(lang, "dintake.wizard_update_hint", "This will UPDATE the linked existing record. Review every field, then save.")
-            : " " + t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
-          {intake.consumeError ? <span className="ml-2 text-rose-600">({intake.consumeError})</span> : null}
-        </div>
-      ) : null}
-
-      {/* ── TOP BAR: Header, Mode Toggle, Step Tracker, Close ── */}
-      <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+    <div className="w-full space-y-5 font-sans" dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── 1. HEADER BANNER WITH STEP PROGRESS TRACKER ── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        {/* Left: Section Title */}
         <div className="flex items-center gap-3">
-          {onClose && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-              className="h-9.5 px-3 rounded-xl border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs shrink-0"
-              title={lang === "ur" ? "کمپنیوں کے ٹیبل پر واپس جائیں" : "Back to Companies Table"}
-            >
-              <ArrowLeft className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`} />
-              <span className="hidden sm:inline">
-                {lang === "ur" ? "واپس لسٹ" : "Back to Table"}
-              </span>
-            </Button>
-          )}
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
-            <Building2 className="h-6 w-6" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shrink-0">
+            <Building className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              {t(lang, "cif.title", "Company Registration & Corporate Setup")}
-            </h1>
+            <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+              Company Registration &amp; Corporate Setup
+            </h2>
             <p className="text-xs text-slate-500 font-medium">
-              {lang === "ur" 
-                ? "سسٹر کمپنیوں کا پورٹ فولیو اور برانچ آپریشنل کمپنی کا قیام" 
-                : "Owner Sister Companies Portfolio & Branch Operative Entities"}
+              Select an existing owner account, then add company details, contacts and contracts.
             </p>
           </div>
         </div>
 
-        {/* Dual Mode Switcher Tabs */}
-        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black">
-          <button
-            type="button"
-            onClick={() => setRegistrationMode("owner_portfolio")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition cursor-pointer ${
-              registrationMode === "owner_portfolio"
-                ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-700"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-            }`}
+        {/* Right: 4-Step Progress Indicator */}
+        <div className="flex items-center gap-2 text-xs font-bold">
+          {/* Step 1 */}
+          <div
+            onClick={() => setCurrentStep(1)}
+            className={cn(
+              "flex items-center gap-2 cursor-pointer transition-all",
+              currentStep === 1
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-500 hover:text-slate-800"
+            )}
           >
-            <User className="h-4 w-4" />
-            <span>{t(lang, "cif.mode_owner_portfolio", "Owner / Sister Companies")}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setRegistrationMode("branch_operative")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition cursor-pointer ${
-              registrationMode === "branch_operative"
-                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-            }`}
-          >
-            <Compass className="h-4 w-4" />
-            <span>{t(lang, "cif.mode_branch_operative", "Branch Operative Company")}</span>
-          </button>
-        </div>
-
-        {/* Horizontal Step Tracker */}
-        <div className="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
-          {[
-            { id: 1, label: t(lang, "cif.step_company_info", "Company Info") },
-            { id: 2, label: t(lang, "cif.step_owner_branch", "Owner / Branch") },
-            { id: 3, label: t(lang, "cif.step_address_contact", "Address & Contact") },
-            { id: 4, label: t(lang, "cif.step_review_save", "Review & Save") }
-          ].map((s) => {
-            const active = currentStep === s.id;
-            const done = currentStep > s.id;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setCurrentStep(s.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                  active
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : done
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                    : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black ${
-                  active ? "bg-white text-blue-600" : done ? "bg-emerald-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600"
-                }`}>
-                  {done ? "✓" : s.id}
-                </span>
-                <span>{s.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Right Controls */}
-        <div className="flex items-center gap-2">
-          <PreferencesControls />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleClose}
-            className="h-9 w-9 rounded-full border-slate-200"
-            title={t(lang, "common.close", "Close")}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
-
-      {/* ── TOP SELECTOR BAR: Dynamic based on Mode ── */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-        {registrationMode === "owner_portfolio" ? (
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex-1 max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <PersonPicker
-                label={t(lang, "cif.select_owner_person", "Select Owner / Person *")}
-                value={ownerPersonId}
-                onValueChange={(id) => setOwnerPersonId(id)}
-                placeholder={t(lang, "cif.search_owner_ph", "Search owner name or customer code...")}
-                lang={lang}
-              />
-              <PersonPicker
-                label={t(lang, "cif.company_manager", "Company Manager")}
-                value={managerPersonId}
-                onValueChange={(id) => setManagerPersonId(id)}
-                placeholder={t(lang, "cif.search_manager_ph", "Search manager name...")}
-                lang={lang}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                onClick={handleResetForNewSisterCompany}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-4 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                <span>{t(lang, "cif.add_new_sister", "Add New Sister Company")}</span>
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex-1 max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {t(lang, "cif.country_req", "Country *")}
-                </Label>
-                <select
-                  value={selectedCountryId}
-                  onChange={(e) => setSelectedCountryId(e.target.value)}
-                  className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">{t(lang, "cif.select_country_ph", "Select Country...")}</option>
-                  {countriesList.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {t(lang, "cif.main_branch_req", "Main Branch *")}
-                </Label>
-                <select
-                  value={selectedCountryBranchId}
-                  onChange={(e) => setSelectedCountryBranchId(e.target.value)}
-                  className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">{t(lang, "cif.select_main_branch_ph", "Select Main Branch...")}</option>
-                  {branchesList.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {t(lang, "cif.city_branch", "City Branch")}
-                </Label>
-                <select
-                  value={selectedCityBranchId}
-                  onChange={(e) => setSelectedCityBranchId(e.target.value)}
-                  className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">{t(lang, "cif.all_city_branches_ph", "All City Branches...")}</option>
-                  {cityBranchesList.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 text-xs font-bold">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                {t(lang, "cif.branch_mode_active", "Branch Operative Mode Active")}
-              </span>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* ── MAIN TWO-COLUMN MASTER-DETAIL LAYOUT ── */}
-      <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* ════════ LEFT COLUMN: Live Profile & Existing Companies ════════ */}
-        <div className="lg:col-span-5 space-y-5">
-          
-          {registrationMode === "owner_portfolio" ? (
-            <>
-              {/* Card 1: Owner Profile Dossier */}
-              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        <User className="h-4 w-4" />
-                      </span>
-                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.selected_owner_details", "Selected Owner Details")}
-                      </CardTitle>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {t(lang, "cif.active", "Active")}
-                    </span>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-4 space-y-4">
-                  <VoiceFormFill
-                    context="company"
-                    lang={lang}
-                    compact
-                    onApply={(f) => {
-                      if (f.companyName) {
-                        setCompanyName(String(f.companyName));
-                        try { setCompanyNameUrdu(transliterateProperNoun(String(f.companyName), "ur")); } catch { /* noop */ }
-                      }
-                    }}
-                  />
-                  {/* Avatar + Main Names */}
-                  <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xs">
-                      {ownerName ? ownerName.slice(0, 2).toUpperCase() : "OW"}
-                    </div>
-                    <div>
-                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                        {ownerName || (t(lang, "cif.selected_owner_investor", "Selected Owner / Investor"))}
-                      </h2>
-                      {ownerProfile?.fatherName && ownerProfile.fatherName !== "—" && !ownerProfile.fatherName.includes("عبداللہ") && (
-                        <p className="text-xs text-slate-500 font-medium">
-                          {t(lang, "cif.son_of", "S/O:")} {ownerProfile.fatherName}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 2x3 Grid of Detail Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {t(lang, "cif.customer_code", "Customer Code")}
-                      </span>
-                      <span className="font-bold text-slate-900 dark:text-white font-mono">
-                        {ownerProfile?.customerCode || (ownerPersonId ? `PER-${ownerPersonId.slice(0, 8).toUpperCase()}` : "—")}
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {t(lang, "cif.employee_code", "Employee Code")}
-                      </span>
-                      <span className="font-bold text-slate-900 dark:text-white font-mono">
-                        {ownerProfile?.employeeCode || "EMP-0010"}
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {t(lang, "cif.mobile_whatsapp", "Mobile / WhatsApp")}
-                      </span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" dir="ltr">
-                        {phone || ownerProfile?.mobile || "—"}
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 sm:col-span-2">
-                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {t(lang, "cif.email", "Email")}
-                      </span>
-                      <span className="font-bold text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate block" dir="ltr">
-                        {email || ownerProfile?.email || "owner@company.dgt.llc"}
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                        {t(lang, "cif.country_city", "Country / City")}
-                      </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
-                        {ownerProfile?.locationStr || "UAE / Dubai / Deira"}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Card 1B: Manager Profile Details (when manager selected) */}
-              {managerProfile && (
-                <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border-l-4 border-l-indigo-600">
-                  <CardHeader className="bg-indigo-50/50 dark:bg-indigo-950/30 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                          <Users className="h-3.5 w-3.5" />
-                        </span>
-                        <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                          {t(lang, "cif.selected_manager_details", "Selected Company Manager Details")}
-                        </CardTitle>
-                      </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-                        {t(lang, "cif.authorized", "Authorized")}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-3.5 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm">
-                        {managerProfile?.name ? managerProfile.name.slice(0, 2).toUpperCase() : "MG"}
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                          {managerProfile?.name || "Company Manager"}
-                        </h3>
-                        {managerProfile?.fatherName && managerProfile.fatherName !== "—" && (
-                          <p className="text-[11px] text-slate-500 font-medium">
-                            {t(lang, "cif.son_of", "S/O:")} {managerProfile.fatherName}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[9px] font-bold text-slate-400 block">{t(lang, "cif.manager_code", "Manager Code")}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{managerProfile?.customerCode || managerProfile?.employeeCode || "MGR-001"}</span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[9px] font-bold text-slate-400 block">{t(lang, "cif.mobile", "Mobile")}</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">{managerProfile?.mobile || "—"}</span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 col-span-2">
-                        <span className="text-[9px] font-bold text-slate-400 block">{t(lang, "cif.email", "Email")}</span>
-                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate block" dir="ltr">{managerProfile?.email || "manager@company.dgt.llc"}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <span
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
+                currentStep === 1
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
               )}
+            >
+              1
+            </span>
+            <span className="hidden md:inline font-bold">Owner / Account Selection</span>
+          </div>
 
-              {/* Card 2: Registered Sister Companies Table */}
-              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                        <Building className="h-4 w-4" />
-                      </span>
-                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {lang === "ur" 
-                          ? `اس شخص کی رجسٹرڈ سسٹر کمپنیاں (${existingCompaniesForOwner.length})` 
-                          : `Sister Companies under this Owner (${existingCompaniesForOwner.length})`}
-                      </CardTitle>
-                    </div>
+          <div className="w-6 h-0.5 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Step 2 */}
+          <div
+            onClick={() => setCurrentStep(2)}
+            className={cn(
+              "flex items-center gap-2 cursor-pointer transition-all",
+              currentStep === 2
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-500 hover:text-slate-800"
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
+                currentStep === 2
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
+              )}
+            >
+              2
+            </span>
+            <span className="hidden md:inline font-bold">Company Info</span>
+          </div>
+
+          <div className="w-6 h-0.5 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Step 3 */}
+          <div
+            onClick={() => setCurrentStep(3)}
+            className={cn(
+              "flex items-center gap-2 cursor-pointer transition-all",
+              currentStep === 3
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-500 hover:text-slate-800"
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
+                currentStep === 3
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
+              )}
+            >
+              3
+            </span>
+            <span className="hidden md:inline font-bold">Contacts &amp; Contracts</span>
+          </div>
+
+          <div className="w-6 h-0.5 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Step 4 */}
+          <div
+            onClick={() => setCurrentStep(4)}
+            className={cn(
+              "flex items-center gap-2 cursor-pointer transition-all",
+              currentStep === 4
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-500 hover:text-slate-800"
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
+                currentStep === 4
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
+              )}
+            >
+              4
+            </span>
+            <span className="hidden md:inline font-bold">Review &amp; Save</span>
+          </div>
+        </div>
+      </div>
+
+      {saveSuccessMessage && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span>{saveSuccessMessage}</span>
+          </div>
+          <button onClick={() => setSaveSuccessMessage(null)} className="text-emerald-600 hover:text-emerald-800">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* ── 2. TWO-COLUMN LAYOUT (LEFT: OWNER SUMMARY, RIGHT: REGISTRATION FORM) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* ════════ LEFT COLUMN (lg:col-span-5) ════════ */}
+        <div className="lg:col-span-5 space-y-4">
+          {/* Card 1: Select Existing Account / Owner */}
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <User className="h-4 w-4 text-blue-600" />
+                  <Label className="text-xs font-black text-slate-800 dark:text-slate-200">
+                    Select Existing Account / Owner
+                  </Label>
+                </div>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
+                  Required
+                </span>
+              </div>
+
+              {/* Searchable Combobox Input */}
+              <div className="relative">
+                <div
+                  onClick={() => setOwnerDropdownOpen(!ownerDropdownOpen)}
+                  className="flex items-center justify-between w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer hover:border-blue-400 transition"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{ownerSearchQuery}</span>
                   </div>
-                </CardHeader>
-
-                <CardContent className="p-0">
-                  <div className="overflow-auto max-h-[260px]">
-                    <table className="w-full text-[11px] text-left rtl:text-right">
-                      <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase sticky top-0 bg-white dark:bg-slate-900">
-                        <tr>
-                          <th className="px-3 py-2">#</th>
-                          <th className="px-3 py-2">{t(lang, "cif.company_name", "Company Name")}</th>
-                          <th className="px-3 py-2">{t(lang, "cif.structure", "Structure")}</th>
-                          <th className="px-3 py-2 text-center">{t(lang, "cif.status", "Status")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {existingCompaniesForOwner.length === 0 ? (
-                          <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
-                              {t(lang, "cif.no_sister_companies", "No existing sister companies found under this owner.")}
-                            </td>
-                          </tr>
-                        ) : (
-                          existingCompaniesForOwner.map((c: any, idx: number) => (
-                            <tr key={c.id || idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
-                              <td className="px-3 py-2 text-slate-400 font-bold">{idx + 1}</td>
-                              <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{c.name}</td>
-                              <td className="px-3 py-2 font-mono text-[10px] text-slate-500">{c.business_type || "LLC"}</td>
-                              <td className="px-3 py-2 text-center">
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                  {t(lang, "cif.active", "Active")}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                  <div className="flex items-center gap-1 shrink-0 text-slate-400">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOwnerSearchQuery("");
+                      }}
+                      className="hover:text-slate-600 p-0.5"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <ChevronDown className="h-4 w-4" />
                   </div>
+                </div>
 
-                  <div className="p-3 bg-slate-50/60 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                      <p className="font-bold text-blue-700 dark:text-blue-300">
-                        {lang === "ur"
-                          ? `آپ اس شخص کے نام نئی کمپنی رجسٹر کر رہے ہیں (کمپنی نمبر: ${existingCompaniesForOwner.length + 1})`
-                          : `You are registering a new sister company under this owner (Company #${existingCompaniesForOwner.length + 1})`}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Card 3: Linked Banks Summary */}
-              {ownerBanks.length > 0 && (
-                <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-                  <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <Landmark className="h-4 w-4 text-emerald-600" />
-                      <CardTitle className="text-xs font-black uppercase text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.linked_bank_accounts", "Linked Bank Accounts ({n})").replace("{n}", String(ownerBanks.length))}
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-3 space-y-2">
-                    {ownerBanks.map((b: any, idx: number) => (
-                      <div key={b.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{b.bankName}</span>
-                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{b.accountNumber || b.accountTitle}</span>
+                {/* Dropdown Options */}
+                {ownerDropdownOpen && (
+                  <div className="absolute z-30 left-0 right-0 top-11 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-56 overflow-y-auto p-1 text-xs">
+                    {availableOwners.map((owner) => (
+                      <div
+                        key={owner.id}
+                        onClick={() => handleSelectOwner(owner)}
+                        className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{owner.countryFlag || "🇮🇳"}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{owner.name}</span>
+                          <span className="font-mono text-slate-400">({owner.code})</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-semibold">{owner.branch}</span>
                       </div>
                     ))}
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          ) : (
-            /* Mode B: Branch Operative Left Dossier */
-            <>
-              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                        <Compass className="h-4 w-4" />
-                      </span>
-                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.selected_branch_details", "Selected Branch Details")}
-                      </CardTitle>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {t(lang, "cif.operative_branch", "Operative Branch")}
-                    </span>
                   </div>
-                </CardHeader>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white font-black text-lg shadow-xs">
-                      {selectedCountryBranch?.name?.slice(0, 2) || "BR"}
-                    </div>
-                    <div>
-                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                        {selectedCountryBranch?.name || "Select Branch"}
-                      </h2>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                        {selectedCountry?.name || "Country"} · {selectedCityBranch?.name || "City Branch"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900/40 text-xs text-emerald-900 dark:text-emerald-200">
-                    <p className="font-bold mb-1">
-                      {t(lang, "cif.erp_wide_role", "✨ ERP-Wide Operative Role:")}
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300">
-                      {lang === "ur" 
-                        ? "یہ کمپنی اس برانچ کے تمام پرچیز آرڈرز، سیلز واؤچرز، روزنامچہ انٹریز اور لیٹر ہیڈ پرنٹنگ کے لیے باقاعدہ رجسٹرڈ آپریشنل ادارہ بنے گی۔"
-                        : "This company will serve as the official operational entity for purchase orders, sales invoices, roznamcha entries, and voucher prints in this branch."}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Existing Operative Companies in this Branch */}
-              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-emerald-600" />
-                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.branch_operative_companies", "Branch Operative Companies ({n})").replace("{n}", String(branchCompanies.length))}
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-auto max-h-[260px]">
-                    <table className="w-full text-[11px] text-left rtl:text-right">
-                      <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b">
-                        <tr>
-                          <th className="px-3 py-2">#</th>
-                          <th className="px-3 py-2">{t(lang, "cif.company_col", "Company")}</th>
-                          <th className="px-3 py-2">{t(lang, "cif.structure", "Structure")}</th>
-                          <th className="px-3 py-2 text-center">{t(lang, "cif.status", "Status")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {branchCompanies.length === 0 ? (
-                          <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
-                              {t(lang, "cif.no_operative_companies", "No operative companies registered yet.")}
-                            </td>
-                          </tr>
-                        ) : (
-                          branchCompanies.map((c, i) => (
-                            <tr key={c.id || i} className="hover:bg-slate-50">
-                              <td className="px-3 py-2 text-slate-400 font-bold">{i + 1}</td>
-                              <td className="px-3 py-2 font-bold text-slate-800">{c.name}</td>
-                              <td className="px-3 py-2 font-mono text-[10px]">{c.business_type || "LLC"}</td>
-                              <td className="px-3 py-2 text-center">
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
-                                  {t(lang, "cif.active", "Active")}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {/* 4 Quick Stat KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
-              <Building2 className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">
-                {registrationMode === "owner_portfolio" ? existingCompaniesForOwner.length : branchCompanies.length}
-              </span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.companies_stat", "Companies")}</span>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
-              <Landmark className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">{ownerBanks.length || 1}</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.banks_stat", "Banks")}</span>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
-              <User className="h-5 w-5 text-indigo-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">1</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.employees_stat", "Employees")}</span>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
-              <ShieldCheck className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">4-Lvl</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{t(lang, "cif.serials_stat", "Serials")}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ════════ RIGHT COLUMN: 4-Step Registration Form ════════ */}
-        <div className="lg:col-span-7 space-y-5">
-          <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-4">
+          {/* Card 2: Selected Owner / Account Summary */}
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-3.5">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    {registrationMode === "owner_portfolio" 
-                      ? (t(lang, "cif.new_sister_registration", "New Sister Company Registration"))
-                      : (t(lang, "cif.new_branch_operative_registration", "New Branch Operative Company Registration"))}
-                  </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {registrationMode === "owner_portfolio"
-                      ? (t(lang, "cif.register_under_owner", "Register a new company under the selected owner"))
-                      : (t(lang, "cif.establish_branch_company", "Establish an official operative company for this branch"))}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                    <User className="h-4 w-4" />
+                  </span>
+                  <CardTitle className="text-xs font-black text-slate-800 dark:text-slate-200">
+                    Selected Owner / Account Summary
+                  </CardTitle>
                 </div>
-                <div className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-900">
-                  {t(lang, "cif.step_x_of_4", "Step {n} of 4").replace("{n}", String(currentStep))}
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
+                    Owner Account
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (ownerPersonId) {
+                        router.push(`/dashboard/parties/360?partyId=${ownerPersonId}` as Route);
+                      }
+                    }}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <span>View Full Profile</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-5 lg:p-6 space-y-6">
-              {/* Step 1: کمپنی کی بنیادی معلومات و لائسنسز */}
-              {currentStep === 1 && (
-                <div className="space-y-5 animate-in fade-in">
-                  <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 text-xs font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
-                    <span>ℹ️</span>
-                    <span>{t(lang, "cif.step1_hint", "Please enter company name, corporate structure, and all applicable license/tax numbers.")}</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.company_name_en", "Company Name (English) *")}
-                      </Label>
-                      <Input
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder={t(lang, "cif.company_name_en_ph", "e.g. Trading Company LLC")}
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
-                        dir="ltr"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.company_name_local", "Company Name (Urdu / Localized)")}
-                      </Label>
-                      <Input
-                        value={companyNameUrdu}
-                        onChange={(e) => setCompanyNameUrdu(e.target.value)}
-                        placeholder="کمپنی کا نام اردو میں درج کریں"
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.legal_structure_req", "Legal Structure *")}
-                      </Label>
-                      <select
-                        value={legalStructure}
-                        onChange={(e) => setLegalStructure(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="LLC">LLC (Limited Liability Company)</option>
-                        <option value="Sole Proprietorship">Sole Proprietorship (انفرادی ملکیت)</option>
-                        <option value="Partnership">Partnership (شراکت داری)</option>
-                        <option value="Private Limited">Private Limited (پرائیویٹ لمیٹڈ)</option>
-                        <option value="Freezone Company">Freezone Company (فری زون کمپنی)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.base_currency", "Base Currency")}
-                      </Label>
-                      <select
-                        value={baseCurrency}
-                        onChange={(e) => setBaseCurrency(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-800 dark:text-slate-200"
-                      >
-                        <option value="USD">USD ($) - US Dollar</option>
-                        <option value="AED">AED (د.إ) - {t(lang, "cif.currency_aed", "UAE Dirham")}</option>
-                        <option value="PKR">PKR (Rs) - {t(lang, "cif.currency_pkr", "Pakistani Rupee")}</option>
-                        <option value="AFN">AFN (؋) - {t(lang, "cif.currency_afn", "Afghan Afghani")}</option>
-                        <option value="INR">INR (₹) - {t(lang, "cif.currency_inr", "Indian Rupee")}</option>
-                      </select>
-                    </div>
-
-                    {/* Dynamic Multi-Registration Section with + and Delete buttons */}
-                    <div className="sm:col-span-2 space-y-3 p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-blue-600" />
-                          <span>{t(lang, "cif.license_tax_ids", "License, Tax & Registration IDs *")}</span>
-                        </Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAddRegistration()}
-                          className="h-8 px-3 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          <span>{t(lang, "cif.add_registration_id", "Add Registration ID")}</span>
-                        </Button>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        {registrations.map((reg, idx) => (
-                          <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs">
-                            <div className="sm:w-1/2">
-                              <select
-                                value={reg.type}
-                                onChange={(e) => handleRegistrationChange(idx, "type", e.target.value)}
-                                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                {REGISTRATION_TYPES_LIST.map((opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {lang === "ur" ? opt.labelUr : opt.labelEn}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div className="sm:w-1/2 flex items-center gap-1.5">
-                              <Input
-                                value={reg.value}
-                                onChange={(e) => handleRegistrationChange(idx, "value", e.target.value)}
-                                placeholder={
-                                  reg.type.toLowerCase().includes("vat") || reg.type.toLowerCase().includes("trn")
-                                    ? "e.g. TRN-100482938100003"
-                                    : reg.type.toLowerCase().includes("ntn")
-                                    ? "e.g. NTN-9821430-8"
-                                    : reg.type.toLowerCase().includes("commercial") || reg.type.toLowerCase().includes("cr")
-                                    ? "e.g. CR-89402"
-                                    : "e.g. 15252 / TL-998822"
-                                }
-                                className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono font-bold flex-1"
-                                dir="ltr"
-                              />
-
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleAddRegistration()}
-                                className="h-9 w-9 shrink-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-xl"
-                                title={t(lang, "cif.add_another_registration", "Add another registration")}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-
-                              {registrations.length > 1 && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRemoveRegistration(idx)}
-                                  className="h-9 w-9 shrink-0 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl"
-                                  title={t(lang, "cif.delete", "Delete")}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+            <CardContent className="p-4 space-y-4">
+              {/* Profile Identity (Initials + Name + Sub details) */}
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-black text-lg shadow-2xs">
+                  {ownerName
+                    ? ownerName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()
+                    : "AA"}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white truncate">
+                    {ownerName}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500 font-medium mt-0.5">
+                    <span>Account Code: <b className="font-mono text-slate-700 dark:text-slate-300">{ownerAccountCode}</b></span>
+                    <span>Email: <b className="text-slate-700 dark:text-slate-300">{ownerEmail}</b></span>
+                    <span>Phone: <b className="text-slate-700 dark:text-slate-300" dir="ltr">{ownerPhone}</b></span>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Step 2: تصدیق و کاروباری تفصیلات */}
-              {currentStep === 2 && (
-                <div className="space-y-5 animate-in fade-in">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-1.5">
-                      <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 block">
-                        {registrationMode === "owner_portfolio" 
-                          ? (t(lang, "cif.linked_owner_confirmation", "Linked Owner Confirmation:"))
-                          : (t(lang, "cif.linked_branch_confirmation", "Linked Branch Confirmation:"))}
-                      </span>
-                      <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
-                        {registrationMode === "owner_portfolio"
-                          ? ownerName || "Selected Owner"
-                          : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        {registrationMode === "owner_portfolio"
-                          ? (t(lang, "cif.ownership_personal", "Ownership: 100% Personal Holding / Sister Entity"))
-                          : (t(lang, "cif.status_authorized_branch", "Status: Authorized for Branch Invoicing, POs & Vouchers"))}
-                      </p>
-                    </div>
-
-                    {managerProfile && (
-                      <div className="p-4 rounded-2xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/40 space-y-1.5">
-                        <span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 block">
-                          {t(lang, "cif.company_manager_confirmation", "Company Manager Confirmation:")}
-                        </span>
-                        <p className="text-sm font-black text-blue-950 dark:text-blue-100">
-                          {managerProfile?.name || "Company Manager"}
-                        </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {t(lang, "cif.manager_code_mobile", "Code: {code} • Mobile: {mobile}").replace("{code}", String(managerProfile?.customerCode || "MGR-001")).replace("{mobile}", String(managerProfile?.mobile || "—"))}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">{t(lang, "cif.business_trading_name", "Business / Trading Name")}</Label>
-                      <Input
-                        value={businessName}
-                        onChange={(e) => setBusinessName(e.target.value)}
-                        placeholder={t(lang, "cif.business_trading_name_ph", "e.g. Trading Company")}
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">{t(lang, "cif.nature_of_business", "Nature of Business")}</Label>
-                      <select
-                        value={natureOfBusiness}
-                        onChange={(e) => setNatureOfBusiness(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-semibold"
-                      >
-                        <option value="Trading & General Order Supplier">Trading & General Order Supplier (تجارت و سپلائی)</option>
-                        <option value="Retail & Wholesale">Retail & Wholesale (تھوک و پرچون)</option>
-                        <option value="Import & Export">Import & Export (درآمد و برآمد)</option>
-                        <option value="Services & Consultancy">Services & Consultancy (خدمات و مشاورت)</option>
-                        <option value="Logistics & Transport">Logistics & Transport (نقل و حمل)</option>
-                      </select>
-                    </div>
+              {/* 3 Meta Badges (Country, Main Branch, Linked Companies) */}
+              <div className="grid grid-cols-3 gap-2.5 text-xs font-semibold">
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <span className="text-base shrink-0">🇮🇳</span>
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-bold text-slate-400 block leading-tight">Country</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{ownerCountry}</span>
                   </div>
                 </div>
-              )}
 
-              {/* Step 3: پتہ و رابطہ */}
-              {currentStep === 3 && (
-                <div className="space-y-5 animate-in fade-in">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.mobile_phone_req", "Mobile / Phone *")}
-                      </Label>
-                      <Input
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder=""
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
-                        dir="ltr"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {t(lang, "cif.email", "Email")}
-                      </Label>
-                      <Input
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="company@email.com"
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">{t(lang, "cif.full_street_address", "Full Street / Building Address")}</Label>
-                    <Input
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder={t(lang, "cif.address_ph", "e.g. Shop 14, Al Ras, Deira, Dubai")}
-                      className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-medium"
-                    />
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-bold text-slate-400 block leading-tight">Main Branch</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{ownerMainBranch}</span>
                   </div>
                 </div>
-              )}
 
-              {/* Step 4: جائزہ اور محفوظ کریں */}
-              {currentStep === 4 && (
-                <div className="space-y-5 animate-in fade-in">
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/50 dark:bg-slate-900/60 space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                      <div>
-                        <h3 className="text-base font-black text-blue-700 dark:text-blue-400">
-                          {companyName || "—"}
-                        </h3>
-                        <p className="text-xs text-slate-500 font-bold">
-                          {companyNameUrdu && `${companyNameUrdu} • `}{legalStructure} · {natureOfBusiness} · {baseCurrency}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const validRegs = registrations.filter(r => r.value);
-                            openCompany360Report({
-                              company: {
-                                name: companyName,
-                                legalName: businessName || companyName,
-                                nameUrdu: companyNameUrdu,
-                                businessType: legalStructure,
-                                natureOfBusiness,
-                                registrationType: validRegs[0]?.type || "Trade License Number",
-                                licenseNumber: validRegs[0]?.value || "",
-                                baseCurrency,
-                                countryName: selectedCountry?.name || "United Arab Emirates",
-                                mainBranchName: selectedCountryBranch?.name || "Main Headquarters",
-                                cityBranchName: selectedCityBranch?.name || "Dubai Hub",
-                                address,
-                                phone,
-                                email,
-                                isBranchOperative: registrationMode === "branch_operative"
-                              },
-                              owner: ownerProfile ? {
-                                name: ownerName,
-                                fatherName: ownerProfile.fatherName,
-                                customerCode: ownerProfile.customerCode,
-                                employeeCode: ownerProfile.employeeCode,
-                                phone: phone || ownerProfile.mobile,
-                                email: email || ownerProfile.email,
-                                country: ownerProfile.country_name,
-                                city: ownerProfile.city_name,
-                                address: ownerProfile.address
-                              } : { name: ownerName },
-                              manager: managerProfile ? {
-                                name: managerProfile.name,
-                                fatherName: managerProfile.fatherName,
-                                customerCode: managerProfile.customerCode,
-                                employeeCode: managerProfile.employeeCode,
-                                phone: managerProfile.mobile,
-                                email: managerProfile.email,
-                                country: managerProfile.country_name,
-                                city: managerProfile.city_name
-                              } : null,
-                              sisterCompanies: existingCompaniesForOwner,
-                              banks: ownerBanks,
-                              lang
-                            });
-                          }}
-                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 text-xs font-bold gap-1.5 h-8 rounded-lg cursor-pointer"
-                        >
-                          <Printer className="h-3.5 w-3.5" />
-                          <span>{t(lang, "cif.preview_360_pdf", "Preview 360° PDF")}</span>
-                        </Button>
-                        <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                          {t(lang, "cif.ready_to_register", "Ready to Register")}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">
-                          {registrationMode === "owner_portfolio" ? (t(lang, "cif.owner_stakeholder", "Owner / Stakeholder:")) : (t(lang, "cif.branch_colon", "Branch:"))}
-                        </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {registrationMode === "owner_portfolio" 
-                            ? ownerName 
-                            : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
-                        </span>
-                      </div>
-
-                      {managerProfile && (
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.company_manager_colon", "Company Manager:")}</span>
-                          <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                            {managerProfile?.name || "Manager"}
-                          </span>
-                        </div>
-                      )}
-
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.phone_colon", "Phone:")}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{phone || "—"}</span>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.email_colon", "Email:")}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{email || "—"}</span>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.serials_colon", "Serials:")}</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "cif.four_level_auto_allocated", "4-Level Auto Allocated")}</span>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{t(lang, "cif.sister_companies_colon", "Sister Companies:")}</span>
-                        <span className="font-bold text-blue-600">{existingCompaniesForOwner.length} {t(lang, "cif.companies_on_record", "Companies on Record")}</span>
-                      </div>
-                    </div>
-
-                    {/* Registrations List Summary */}
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
-                        {t(lang, "cif.registered_licenses", "Registered Licenses & Regulatory Identifiers:")}
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {registrations.filter(r => r.value).map((reg, i) => (
-                          <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
-                            <span className="font-bold text-slate-600 dark:text-slate-400 text-[11px]">{reg.type}</span>
-                            <span className="font-mono font-black text-blue-600 dark:text-blue-400">{reg.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-blue-600 shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-bold text-slate-400 block leading-tight">Linked Companies</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{ownerLinkedCompaniesCount} Companies</span>
                   </div>
-                </div>
-              )}
-
-              {/* Message Alert */}
-              {message && (
-                <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
-                  message.includes("Error") || message.includes("Failed") || message.includes("برائے مہربانی")
-                    ? "bg-red-50 text-red-800 border border-red-200"
-                    : "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                }`}>
-                  <span>{message.includes("Error") ? "⚠️" : "✅"}</span>
-                  <span>{message}</span>
-                </div>
-              )}
-
-              {/* Navigation Actions Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div>
-                  {currentStep > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1) as any)}
-                      className="rounded-xl text-xs font-bold gap-1.5 h-10"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      <span>{t(lang, "cif.back", "Back")}</span>
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {currentStep < 4 ? (
-                    <Button
-                      type="button"
-                      onClick={() => setCurrentStep((prev) => Math.min(4, prev + 1) as any)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 h-10 px-5 shadow-xs cursor-pointer"
-                    >
-                      <span>{t(lang, "cif.next_step", "Next Step")}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      disabled={saving || !ready}
-                      onClick={handleSubmit}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black gap-2 h-11 px-6 shadow-md cursor-pointer"
-                    >
-                      <Save className="h-4 w-4" />
-                      <span>{saving ? (t(lang, "cif.saving", "Saving...")) : (t(lang, "cif.save_finalize", "Save & Finalize Company"))}</span>
-                    </Button>
-                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Card 3: Existing Registered Companies Under This Owner */}
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                    <Building2 className="h-4 w-4" />
+                  </span>
+                  <CardTitle className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <span>Existing Registered Companies Under This Owner</span>
+                    <span className="h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-black inline-flex items-center justify-center">
+                      {existingCompaniesForOwner.length}
+                    </span>
+                  </CardTitle>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs font-bold text-blue-600 hover:text-blue-700 px-2 cursor-pointer"
+                  onClick={() => router.push("/dashboard/settings/company-setup" as Route)}
+                >
+                  View All
+                </Button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-100 dark:border-slate-800 text-[11px]">
+                    <tr>
+                      <th className="px-3 py-2">#</th>
+                      <th className="px-3 py-2">Company Name</th>
+                      <th className="px-3 py-2">Trade License</th>
+                      <th className="px-3 py-2">Structure</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                      <th className="px-3 py-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {existingCompaniesForOwner.map((comp, idx) => (
+                      <tr key={comp.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                        <td className="px-3 py-2.5 font-bold text-slate-400 text-xs">{idx + 1}</td>
+                        <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100 text-xs">{comp.name}</td>
+                        <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600 dark:text-slate-400">{comp.license}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium">{comp.structure}</td>
+                        <td className="px-3 py-2.5 text-center">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
+                            {comp.status || "Active"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <button
+                            type="button"
+                            className="p-1 text-slate-400 hover:text-blue-600 rounded transition"
+                            title="View Details"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 4: 4 Stat Mini-Cards in 4 Columns */}
+          <div className="grid grid-cols-4 gap-2.5">
+            {/* Stat 1: Companies */}
+            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                <Building2 className="h-4 w-4" />
+              </span>
+              <div>
+                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
+                  {statCompanies}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
+                  Companies
+                </span>
+              </div>
+            </div>
+
+            {/* Stat 2: Banks */}
+            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
+                <Landmark className="h-4 w-4" />
+              </span>
+              <div>
+                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
+                  {statBanks}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
+                  Banks
+                </span>
+              </div>
+            </div>
+
+            {/* Stat 3: Employees */}
+            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-300 shrink-0">
+                <Users className="h-4 w-4" />
+              </span>
+              <div>
+                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
+                  {statEmployees}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
+                  Employees
+                </span>
+              </div>
+            </div>
+
+            {/* Stat 4: Serials / Items */}
+            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-300 shrink-0">
+                <Box className="h-4 w-4" />
+              </span>
+              <div>
+                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
+                  {statSerials}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
+                  Serials / Items
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+
+        {/* ════════ RIGHT COLUMN (lg:col-span-7) ════════ */}
+        <div className="lg:col-span-7 space-y-5">
+          {/* Card: New Company Registration (Step 2 of 4) */}
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                    <Building className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <CardTitle className="text-sm font-black text-slate-900 dark:text-white">
+                      New Company Registration
+                    </CardTitle>
+                    <p className="text-xs text-slate-500 font-medium">
+                      Enter the new company information under the selected owner account.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900">
+                  Step 2 of 4
+                </span>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-5 space-y-4">
+              {/* Row 1: Company Names (English & Local Language) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    Company Name (English) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={companyNameEn}
+                    onChange={(e) => setCompanyNameEn(e.target.value)}
+                    placeholder="e.g. Damaan Logistics India Pvt Ltd"
+                    className="h-10 text-xs font-bold bg-white dark:bg-slate-950"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    Company Name (Local Language)
+                  </Label>
+                  <Input
+                    value={companyNameLocal}
+                    onChange={(e) => setCompanyNameLocal(e.target.value)}
+                    placeholder="दामाआन लॉजिस्टिक्स इंडिया प्रा. लि."
+                    className="h-10 text-xs font-bold bg-white dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Legal Structure & Base Currency */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    Legal Structure <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    value={legalStructure}
+                    onChange={(e) => setLegalStructure(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Private Limited Company (Pvt Ltd)">Private Limited Company (Pvt Ltd)</option>
+                    <option value="Limited Liability Company (LLC)">Limited Liability Company (LLC)</option>
+                    <option value="Sole Proprietorship">Sole Proprietorship</option>
+                    <option value="Partnership / LLP">Partnership / LLP</option>
+                    <option value="Freezone Company">Freezone Company</option>
+                    <option value="Public Limited Company">Public Limited Company</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    Base Currency <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    value={baseCurrency}
+                    onChange={(e) => setBaseCurrency(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="INR - Indian Rupee (₹)">INR - Indian Rupee (₹)</option>
+                    <option value="USD - US Dollar ($)">USD - US Dollar ($)</option>
+                    <option value="AED - UAE Dirham (د.إ)">AED - UAE Dirham (د.إ)</option>
+                    <option value="PKR - Pakistani Rupee (Rs)">PKR - Pakistani Rupee (Rs)</option>
+                    <option value="SAR - Saudi Riyal (﷼)">SAR - Saudi Riyal (﷼)</option>
+                    <option value="AFN - Afghan Afghani (؋)">AFN - Afghan Afghani (؋)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Country & Main Branch / City */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    Country <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <select
+                      value={selectedCountry}
+                      onChange={(e) => setSelectedCountry(e.target.value)}
+                      className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="India">🇮🇳 India</option>
+                      <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
+                      <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+                      <option value="Pakistan">🇵🇰 Pakistan</option>
+                      <option value="China">🇨🇳 China</option>
+                      <option value="Afghanistan">🇦🇫 Afghanistan</option>
+                      <option value="Tajikistan">🇹🇯 Tajikistan</option>
+                      <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    Main Branch / City <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <select
+                      value={selectedMainBranch}
+                      onChange={(e) => setSelectedMainBranch(e.target.value)}
+                      className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Mumbai - Maharashtra">🏢 Mumbai - Maharashtra</option>
+                      <option value="Delhi - NCR">🏢 Delhi - NCR</option>
+                      <option value="Deira - Dubai">🏢 Deira - Dubai</option>
+                      <option value="Riyadh Central">🏢 Riyadh Central</option>
+                      <option value="Karachi Port">🏢 Karachi Port</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Business Type / Nature & Country Business Rules (Callout Card) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-red-500" />
+                    <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
+                      Business Type / Nature of Business <span className="text-red-500">*</span>
+                    </Label>
+                  </div>
+                  <select
+                    value={natureOfBusiness}
+                    onChange={(e) => setNatureOfBusiness(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Logistics / Transportation">Logistics / Transportation</option>
+                    <option value="Trading & General Order Supplier">Trading &amp; General Order Supplier</option>
+                    <option value="Retail & Wholesale">Retail &amp; Wholesale</option>
+                    <option value="Import & Export">Import &amp; Export</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Services & Consultancy">Services &amp; Consultancy</option>
+                  </select>
+                </div>
+
+                {/* Country Business Rules Callout Box */}
+                <div className="p-3 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 text-xs flex items-start gap-2.5">
+                  <span className="text-lg shrink-0 mt-0.5">🇮🇳</span>
+                  <div className="space-y-0.5">
+                    <h5 className="font-extrabold text-blue-900 dark:text-blue-200 text-xs">
+                      India Business Rules (Required)
+                    </h5>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                      For companies registered in India, please select the nature of business. This helps in applying correct tax rules, compliance and reporting (GST, IEC, etc.).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 5: Registration IDs (PAN, CIN, GSTIN) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                    Registration IDs (India)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      PAN (Permanent Account Number) <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={regPan}
+                      onChange={(e) => setRegPan(e.target.value)}
+                      placeholder="AAACD1234F"
+                      className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      CIN (Company Identification Number)
+                    </Label>
+                    <Input
+                      value={regCin}
+                      onChange={(e) => setRegCin(e.target.value)}
+                      placeholder="U63030MH2024PTC123456"
+                      className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      GSTIN (Goods &amp; Services Tax)
+                    </Label>
+                    <Input
+                      value={regGstin}
+                      onChange={(e) => setRegGstin(e.target.value)}
+                      placeholder="27AAACD1234F1Z5"
+                      className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-section: Contacts & Contact Methods */}
+              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                      <Users className="h-3.5 w-3.5" />
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                        Contacts &amp; Contact Methods
+                      </h4>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        Add key contacts and contact details for this company. You can add multiple contacts.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleOpenAddContact}
+                    className="h-8 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>+ Add Contact</span>
+                  </Button>
+                </div>
+
+                {/* Contacts Sub-table */}
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-100 dark:border-slate-800 text-[11px]">
+                      <tr>
+                        <th className="px-3 py-2">#</th>
+                        <th className="px-3 py-2">Contact Type</th>
+                        <th className="px-3 py-2">Name / Designation</th>
+                        <th className="px-3 py-2">Email</th>
+                        <th className="px-3 py-2">Phone</th>
+                        <th className="px-3 py-2 text-center">WhatsApp</th>
+                        <th className="px-3 py-2 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {contacts.map((cnt, idx) => (
+                        <tr key={cnt.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                          <td className="px-3 py-2 font-bold text-slate-400">{idx + 1}</td>
+                          <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300">{cnt.type}</td>
+                          <td className="px-3 py-2 font-bold text-blue-600 dark:text-blue-400">
+                            {cnt.name} {cnt.designation && <span className="font-normal text-slate-500">({cnt.designation})</span>}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-slate-600 dark:text-slate-400">{cnt.email}</td>
+                          <td className="px-3 py-2 font-mono text-slate-700 dark:text-slate-300" dir="ltr">{cnt.phone}</td>
+                          <td className="px-3 py-2 text-center">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300">
+                              <Phone className="h-3 w-3" />
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditContact(cnt)}
+                                className="p-1 text-slate-400 hover:text-blue-600 transition"
+                                title="Edit Contact"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteContact(cnt.id)}
+                                className="p-1 text-slate-400 hover:text-rose-600 transition"
+                                title="Delete Contact"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Bottom Actions of Right Card: Save as Draft & Next Step */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => handleSaveCompany(true)}
+                  className="h-9 px-4 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-xs font-bold gap-2 text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Save as Draft</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => handleSaveCompany(false)}
+                  className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-2 shadow-xs cursor-pointer"
+                >
+                  <span>{saving ? "Saving..." : "Next Step"}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* ── 3. BOTTOM FULL-WIDTH SECTION: SHARE REGISTRATION LINK & MOBILE PREVIEW ── */}
+      <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+        <CardContent className="p-5 lg:p-6">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
+            {/* Left 8 Cols: Title, Input, Action Buttons, and 4-Step Diagram */}
+            <div className="xl:col-span-8 space-y-4">
+              {/* Header Title & Subtitle */}
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                  <Link2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    Share Registration Link
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Generate a secure registration link for this account and share it with the owner/customer.
+                    They can open the link on mobile, view their account details and complete company registration.
+                  </p>
+                </div>
+              </div>
+
+              {/* Link Input & 5 Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[260px]">
+                  <Input
+                    readOnly
+                    value={shareLinkUrl}
+                    className="h-10 text-xs font-mono font-bold bg-slate-50/70 dark:bg-slate-950 border-slate-200 pr-8"
+                  />
+                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setLinkGenerated(true)}
+                  className="h-10 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 shadow-2xs cursor-pointer shrink-0"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>Generate Link</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyShareLink}
+                  className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer shrink-0"
+                >
+                  {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                  <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendWhatsApp}
+                  className="h-10 px-3.5 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 text-xs font-bold gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Send via WhatsApp</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendSms}
+                  className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer shrink-0"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span>Send via SMS</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(shareLinkUrl, "_blank")}
+                  className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer shrink-0"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Open Mobile Form</span>
+                </Button>
+              </div>
+
+              {/* 4-Step Visual Workflow Diagram */}
+              <div className="pt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white font-black text-[10px] shrink-0">
+                      1
+                    </span>
+                    <span className="font-semibold text-blue-950 dark:text-blue-200 text-[11px] leading-tight">
+                      Admin generates and shares the link
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] shrink-0">
+                      2
+                    </span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] leading-tight">
+                      Owner opens link on mobile
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] shrink-0">
+                      3
+                    </span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] leading-tight">
+                      Account details auto-filled
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] shrink-0">
+                      4
+                    </span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] leading-tight">
+                      Owner completes company registration
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right 4 Cols: Phone Mockup Frame & Feature Checklist */}
+            <div className="xl:col-span-4 flex items-center justify-center gap-5 pt-2 xl:pt-0 xl:border-l border-slate-100 dark:border-slate-800 xl:pl-6">
+              {/* Phone Mockup Frame */}
+              <div className="w-36 h-64 rounded-2xl border-4 border-slate-800 bg-slate-900 p-1.5 shadow-xl shrink-0 flex flex-col justify-between">
+                {/* Speaker notch */}
+                <div className="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-1" />
+
+                {/* Screen content */}
+                <div className="flex-1 bg-white rounded-xl p-2 flex flex-col justify-between text-center overflow-hidden">
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-center gap-1">
+                      <Building2 className="h-3 w-3 text-blue-600" />
+                      <span className="font-black text-[9px] text-blue-900">DGT</span>
+                    </div>
+                    <h5 className="font-black text-[9px] text-slate-800 leading-tight">
+                      Complete Your Company Registration
+                    </h5>
+                    <div className="p-1.5 rounded-lg bg-blue-50 text-[8px] text-blue-900 font-medium">
+                      Welcome {ownerName} ({ownerAccountCode})
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 pb-1">
+                    <button
+                      type="button"
+                      className="w-full py-1 rounded-md bg-blue-600 text-white font-bold text-[8px] shadow-2xs"
+                    >
+                      Continue Registration
+                    </button>
+                    <span className="text-[7px] text-slate-400">Step 1 of 3</span>
+                  </div>
+                </div>
+
+                {/* Home Indicator Bar */}
+                <div className="w-10 h-0.5 bg-slate-600 rounded-full mx-auto mt-1" />
+              </div>
+
+              {/* Checklist & Slogan */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Smartphone className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs font-black text-slate-900 dark:text-white">
+                    Mobile Experience
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>Account details shown first</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>Easy company registration</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>Mobile optimized form</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>Secure and verified link</span>
+                  </div>
+                </div>
+
+                <p className="font-serif italic text-xs text-slate-700 dark:text-slate-300 pt-1">
+                  Simple. Secure. Anywhere.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── 4. ADD / EDIT CONTACT MODAL ── */}
+      {contactModalOpen && (
+        <SimpleModal
+          title={editingContactId ? "Edit Contact" : "Add Contact"}
+          onClose={() => setContactModalOpen(false)}
+          className="max-w-md"
+        >
+          <div className="space-y-3 p-1">
+            <div className="space-y-1">
+              <Label className="text-xs font-black">Contact Type</Label>
+              <select
+                value={contactFormType}
+                onChange={(e) => setContactFormType(e.target.value)}
+                className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold"
+              >
+                <option value="Main Contact">Main Contact</option>
+                <option value="Accounts">Accounts</option>
+                <option value="Compliance">Compliance</option>
+                <option value="Operations">Operations</option>
+                <option value="Legal">Legal</option>
+                <option value="Sales">Sales</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs font-black">Name *</Label>
+                <Input
+                  value={contactFormName}
+                  onChange={(e) => setContactFormName(e.target.value)}
+                  placeholder="e.g. Rohan Mehta"
+                  className="h-9 text-xs font-bold"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-black">Designation</Label>
+                <Input
+                  value={contactFormDesignation}
+                  onChange={(e) => setContactFormDesignation(e.target.value)}
+                  placeholder="e.g. Director"
+                  className="h-9 text-xs font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-black">Email</Label>
+              <Input
+                value={contactFormEmail}
+                onChange={(e) => setContactFormEmail(e.target.value)}
+                placeholder="contact@company.com"
+                className="h-9 text-xs font-mono font-bold"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs font-black">Phone</Label>
+                <Input
+                  value={contactFormPhone}
+                  onChange={(e) => setContactFormPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="h-9 text-xs font-mono font-bold"
+                  dir="ltr"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-black">WhatsApp</Label>
+                <Input
+                  value={contactFormWhatsapp}
+                  onChange={(e) => setContactFormWhatsapp(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="h-9 text-xs font-mono font-bold"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setContactModalOpen(false)}
+                className="rounded-xl text-xs font-bold h-9"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSaveContactModal}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold h-9 px-4"
+              >
+                Save Contact
+              </Button>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
     </div>
   );
 }

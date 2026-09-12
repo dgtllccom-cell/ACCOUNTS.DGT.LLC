@@ -1,30 +1,19 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useMemo } from "react";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import {
-  Info,
-  UserRound,
+  FileText,
+  User,
   Building2,
   Landmark,
-  Warehouse,
-  ShieldAlert,
-  Printer,
-  FileText,
-  FileSpreadsheet,
-  Mail,
-  MessageCircle,
-  ArrowLeft,
+  Package,
+  Clock,
   CheckCircle2,
-  Globe,
-  Sparkles
+  FolderPlus
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
-import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t as centralT } from "@/lib/i18n/ui";
+import { getLabel } from "./translations";
 
 export type AccountLiveReportProps = {
   // Wizard States
@@ -54,6 +43,15 @@ export type AccountLiveReportProps = {
   selectedBranchName?: string;
   selectedBranchCode?: string;
 
+  // Step navigation callbacks
+  onEditStep?: (step: number) => void;
+
+  // Audit Info
+  auditCreatedBy?: string;
+  auditCreatedOn?: string;
+  auditLastModifiedBy?: string;
+  auditLastModifiedOn?: string;
+
   // Actions
   onBack?: () => void;
   onPrint?: () => void;
@@ -71,374 +69,404 @@ export function AccountLiveReportPanel({
   category,
   manualReferenceNumber,
   currency,
-  status = "Active",
-  lang: langProp = "en",
+  status = "In Progress",
+  lang = "en",
   contacts,
   customerDetail,
   companyDetail,
   bankDetail,
   warehouseDetail,
-  shippingLineDetail,
-  linkedCountries,
-  countriesList,
   selectedCountryName,
-  selectedCountryCode,
   selectedBranchName,
-  selectedBranchCode,
-  onBack,
-  onPrint,
-  onPdf,
-  onExcel,
-  onEmail,
-  onWhatsApp
+  onEditStep,
+  auditCreatedBy = "Super Admin",
+  auditCreatedOn,
+  auditLastModifiedBy,
+  auditLastModifiedOn
 }: AccountLiveReportProps) {
-  
+  const trName = (val: string | null | undefined) => (val ? transliterateProperNoun(val, lang) : "-");
+  const trTerm = (val: string | null | undefined) => (val ? localizeTerm(val, lang) : "-");
+
   const now = useMemo(() => new Date(), []);
-  const stampDate = useMemo(() => now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }), [now]);
-  const stampTime = useMemo(() => now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }), [now]);
+  const defaultCreatedOn = useMemo(
+    () =>
+      now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+      ", " +
+      now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }),
+    [now]
+  );
 
-  const formattedDateTime = `${stampDate} ${stampTime}`;
+  const displayCreatedOn = auditCreatedOn || defaultCreatedOn;
 
-  // Central i18n dictionary is the single source of truth. Reconcile the reactive
-  // active language with any server-threaded `lang` prop (see CLAUDE.md).
-  const activeLang = useActiveLanguage();
-  const lang: SupportedLanguage = activeLang !== "en" ? activeLang : langProp;
-  const t = (key: string, fallback: string) =>
-    centralT(lang, `alr.${key.replace(/([A-Z])/g, "_$1").toLowerCase()}`, fallback);
+  // Contact resolution
+  const primaryPhone =
+    contacts?.find((c) => c.type?.toLowerCase().includes("mobile") || c.type?.toLowerCase().includes("phone"))?.value ||
+    customerDetail?.mobile ||
+    customerDetail?.phone ||
+    companyDetail?.phone ||
+    "-";
 
-  const trName = (val: string | null | undefined) => {
-    if (!val || val === "-") return "-";
-    return lang === "ur" ? transliterateProperNoun(val, "ur") : val;
-  };
-
-  const trTerm = (val: string | null | undefined) => {
-    if (!val || val === "-") return "-";
-    return localizeTerm(val, lang);
-  };
-
-
-  function compactCode(id: string, prefix: string) {
-    if (!id) return "-";
-    const clean = id.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-    return `${prefix}-${clean.slice(0, 4)}`;
-  }
-
-  // Extract contacts from Step 1 or master records
-  const stepContacts = Array.isArray(contacts) ? contacts.filter(c => c && c.value && c.value.trim() !== "") : [];
-  const primaryStepMobile = stepContacts.find(c => c.type.toLowerCase().includes("mobile") || c.type === "Mobile")?.value || stepContacts[0]?.value || "";
-  const primaryStepEmail = stepContacts.find(c => c.type.toLowerCase().includes("email"))?.value || "";
-  const formattedStepContacts = stepContacts.map(c => `${c.type}: ${c.value}`).join(" | ") || "";
-
-  // 2. Customer Information fields
-  const custObj = customerDetail?.customer ?? customerDetail;
-  const custContactsList = Array.isArray(customerDetail?.contacts) ? customerDetail.contacts : [];
-  const custPhone = custObj?.mobile || custObj?.phone || custObj?.whatsapp || custContactsList.find((c: any) => c.contact_value)?.contact_value || (accountTitle === "Customer" && primaryStepMobile ? primaryStepMobile : "-");
-  const custEmail = custObj?.email || custContactsList.find((c: any) => c.contact_type?.toLowerCase().includes("email"))?.contact_value || (accountTitle === "Customer" && primaryStepEmail ? primaryStepEmail : "-");
-  const custAddress = custObj?.address || (accountTitle === "Customer" ? [selectedBranchName, selectedCountryName].filter(Boolean).join(", ") || "-" : "-");
-
-  const customerFields = (custObj || accountTitle === "Customer") ? [
-    { label: t("customerName", "Customer Name"), value: trName(custObj?.customer_name || custObj?.name || (accountTitle === "Customer" ? accountName : "-")) },
-    { label: t("customerCode", "Customer Code"), value: custObj?.customer_code || (custObj?.id ? compactCode(custObj.id, "CUST") : (accountTitle === "Customer" ? accountCode || "CUST-AUTO" : "-")) },
-    { label: t("customerType", "Customer Type"), value: trTerm(custObj?.customer_type || subType || "Business Account") },
-    { label: "NTN / CNIC", value: custObj?.ntn_cnic || custObj?.ntn || (accountTitle === "Customer" ? manualReferenceNumber || "-" : "-") },
-    { label: t("phone", "Phone"), value: custPhone },
-    { label: t("email", "Email"), value: custEmail },
-    { label: t("address", "Address"), value: custAddress },
-    { label: t("createdAt", "Created At"), value: custObj?.created_at ? new Date(custObj.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + " " + new Date(custObj.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }) : formattedDateTime },
-    { label: t("lastUpdated", "Last Updated"), value: custObj?.updated_at ? new Date(custObj.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + " " + new Date(custObj.updated_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }) : formattedDateTime }
-  ] : [
-    { label: t("customerName", "Customer Name"), value: "-" },
-    { label: t("customerCode", "Customer Code"), value: "-" },
-    { label: t("customerType", "Customer Type"), value: "-" },
-    { label: "NTN / CNIC", value: "-" },
-    { label: t("phone", "Phone"), value: "-" },
-    { label: t("email", "Email"), value: "-" },
-    { label: t("address", "Address"), value: "-" },
-    { label: t("createdAt", "Created At"), value: "-" },
-    { label: t("lastUpdated", "Last Updated"), value: "-" }
-  ];
-
-  // 3. Company Details fields (supporting multi-registrations)
-  const compPhone = companyDetail?.phone || companyDetail?.contacts?.find((c: any) => c.type?.toLowerCase().includes("phone") || c.type?.toLowerCase().includes("mobile") || c.type?.toLowerCase().includes("number"))?.value || (accountTitle === "Company" && primaryStepMobile ? primaryStepMobile : "-");
-  const compEmail = companyDetail?.email || companyDetail?.contacts?.find((c: any) => c.type?.toLowerCase().includes("email"))?.value || (accountTitle === "Company" && primaryStepEmail ? primaryStepEmail : "-");
-  const compAddress = companyDetail?.address || (accountTitle === "Company" ? [selectedBranchName, selectedCountryName].filter(Boolean).join(", ") || "-" : "-");
-
-  const companyRegsFormatted = Array.isArray(companyDetail?.registrations) && companyDetail.registrations.length > 0
-    ? companyDetail.registrations.map((r: any) => `${r.type}: ${r.value}`).join(" | ")
-    : companyDetail?.registration_no || companyDetail?.licenseNumber || (accountTitle === "Company" ? manualReferenceNumber || "-" : "-");
-
-  const companyFields = (companyDetail || accountTitle === "Company") ? [
-    { label: t("companyName", "Company Name"), value: trName(companyDetail?.companyName || companyDetail?.name || companyDetail?.legal_name || (accountTitle === "Company" ? accountName : "-")) },
-    { label: t("companyCode", "Company Code"), value: companyDetail?.code || (companyDetail?.id ? compactCode(companyDetail.id, "DBG") : (accountTitle === "Company" ? accountCode || "COMP-AUTO" : "-")) },
-    { label: t("registrationNo", "Registration No."), value: companyRegsFormatted },
-    { label: t("taxVatTrn", "Tax / VAT TRN"), value: companyDetail?.ntn || companyDetail?.registrations?.find((r: any) => r.type?.toLowerCase().includes("vat") || r.type?.toLowerCase().includes("trn") || r.type?.toLowerCase().includes("tax"))?.value || "-" },
-    { label: t("phone", "Phone"), value: compPhone },
-    { label: t("email", "Email"), value: compEmail },
-    { label: t("address", "Address"), value: compAddress },
-    { label: t("createdAt", "Created At"), value: companyDetail?.created_at ? new Date(companyDetail.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + " " + new Date(companyDetail.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }) : formattedDateTime },
-    { label: t("lastUpdated", "Last Updated"), value: companyDetail?.updated_at ? new Date(companyDetail.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + " " + new Date(companyDetail.updated_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }) : formattedDateTime }
-  ] : [
-    { label: t("companyName", "Company Name"), value: "-" },
-    { label: t("companyCode", "Company Code"), value: "-" },
-    { label: t("registrationNo", "Registration No."), value: "-" },
-    { label: t("taxVatTrn", "Tax / VAT TRN"), value: "-" },
-    { label: t("phone", "Phone"), value: "-" },
-    { label: t("email", "Email"), value: "-" },
-    { label: t("address", "Address"), value: "-" },
-    { label: t("createdAt", "Created At"), value: "-" },
-    { label: t("lastUpdated", "Last Updated"), value: "-" }
-  ];
-
-  // 4. Bank Details fields
-  const bankFields = (bankDetail || accountTitle === "Bank") ? [
-    { label: t("bankName", "Bank Name"), value: trName(bankDetail?.bank_name || bankDetail?.bankName || bankDetail?.name || (accountTitle === "Bank" ? accountName : "-")) },
-    { label: t("accountTitle", "Account Title"), value: trName(bankDetail?.account_title || accountName || "-") },
-    { label: t("accountNumber", "Account Number"), value: bankDetail?.account_number || (accountTitle === "Bank" ? manualReferenceNumber || "-" : "-") },
-    { label: "IBAN", value: bankDetail?.iban_number || "-" },
-    { label: t("bankBranch", "Bank Branch"), value: bankDetail?.branch_name || (accountTitle === "Bank" ? selectedBranchName || "-" : "-") },
-    { label: t("swiftCode", "Swift Code"), value: bankDetail?.swift_bic || "-" },
-    { label: t("createdAt", "Created At"), value: bankDetail?.created_at ? new Date(bankDetail.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : formattedDateTime },
-    { label: t("lastUpdated", "Last Updated"), value: bankDetail?.updated_at ? new Date(bankDetail.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : formattedDateTime }
-  ] : [
-    { label: t("bankName", "Bank Name"), value: "-" },
-    { label: t("accountTitle", "Account Title"), value: "-" },
-    { label: t("accountNumber", "Account Number"), value: "-" },
-    { label: "IBAN", value: "-" },
-    { label: t("bankBranch", "Bank Branch"), value: "-" },
-    { label: t("swiftCode", "Swift Code"), value: "-" },
-    { label: t("createdAt", "Created At"), value: "-" },
-    { label: t("lastUpdated", "Last Updated"), value: "-" }
-  ];
-
-  // 5. Warehouse Details fields
-  const formatWhContact = (val: any) => {
-    if (!val) return "-";
-    if (typeof val === "string") {
-      const trimmed = val.trim();
-      if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.map((c: any) => c.value || c.phone || "").filter(Boolean).join(", ") || "-";
-          }
-          if (typeof parsed === "object" && parsed !== null) {
-            return parsed.value || parsed.phone || parsed.contact_number || "-";
-          }
-        } catch (e) {}
-      }
-    }
-    return String(val);
-  };
-  const whPhone = formatWhContact(warehouseDetail?.contact_number || warehouseDetail?.phone);
-  const whAddress = warehouseDetail?.full_address || warehouseDetail?.address || warehouseDetail?.location || "-";
-  const warehouseFields = warehouseDetail ? [
-    { label: t("warehouseName", "Warehouse Name"), value: warehouseDetail.warehouse_name || warehouseDetail.name || "-" },
-    { label: t("warehouseCode", "Warehouse Code"), value: warehouseDetail.id ? compactCode(warehouseDetail.id, "WH") : "-" },
-    { label: t("location", "Location"), value: whAddress },
-    { label: t("phone", "Phone"), value: whPhone },
-    { label: t("address", "Address"), value: whAddress },
-    { label: t("createdAt", "Created At"), value: warehouseDetail.created_at ? new Date(warehouseDetail.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : formattedDateTime },
-    { label: t("lastUpdated", "Last Updated"), value: warehouseDetail.updated_at ? new Date(warehouseDetail.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : formattedDateTime }
-  ] : [
-    { label: t("warehouseName", "Warehouse Name"), value: "-" },
-    { label: t("warehouseCode", "Warehouse Code"), value: "-" },
-    { label: t("location", "Location"), value: "-" },
-    { label: t("phone", "Phone"), value: "-" },
-    { label: t("address", "Address"), value: "-" },
-    { label: t("createdAt", "Created At"), value: "-" },
-    { label: t("lastUpdated", "Last Updated"), value: "-" }
-  ];
-
-  // 6. Audit Information fields
-  const auditFields = [
-    { label: t("createdBy", "Created By"), value: "Super Admin" },
-    { label: t("createdAt", "Created At"), value: formattedDateTime },
-    { label: t("updatedBy", "Updated By"), value: "Super Admin" },
-    { label: t("updatedAt", "Updated At"), value: formattedDateTime },
-    { label: t("ipAddress", "IP Address"), value: "192.168.1.100" },
-    { label: t("browserPlatform", "Browser / Platform"), value: "Chrome / Windows" }
-  ];
-
-  const linkedCountryNames = useMemo(() => {
-    if (!linkedCountries || linkedCountries.length === 0 || !countriesList) return [];
-    return linkedCountries
-      .map((id) => countriesList.find((c) => c.id === id)?.name || id)
-      .filter(Boolean);
-  }, [linkedCountries, countriesList]);
-
-  // 1. Account Information fields
-  const accountFields = [
-    { label: t("accountName", "Account Name"), value: trName(accountName || "-") },
-    { label: t("accountCode", "Account Code"), value: accountCode || "-" },
-    { label: t("accountTitle", "Account Title"), value: trTerm(accountTitle || "-") },
-    { label: t("subType", "Sub Type"), value: trTerm(subType || "-") },
-    { label: t("category", "Category"), value: trTerm(category || "-") },
-    { label: t("currency", "Currency"), value: currency || "-" },
-    { label: t("manualRef", "Manual Ref"), value: manualReferenceNumber || "-" },
-    { label: t("mobileNumber", "Mobile Number"), value: primaryStepMobile || custPhone || compPhone || "-" },
-    { label: t("contactsList", "Contacts"), value: formattedStepContacts || "-" },
-    { label: t("country", "Country"), value: trTerm(selectedCountryName || "-") },
-    { label: t("branch", "Branch"), value: trName(selectedBranchName || "-") },
-    ...(linkedCountryNames.length > 0 ? [{
-      label: centralT(lang, "acct.linked_countries", "Inter-Country Linkage (لین دین)"),
-      value: `${linkedCountryNames.join(", ")} (${linkedCountryNames.length})`
-    }] : []),
-    ...(shippingLineDetail ? [{
-      label: centralT(lang, "acct.shipping_carrier", "Shipping Line Carrier"),
-      value: `${shippingLineDetail.name} ${shippingLineDetail.shipping_line_code ? `(${shippingLineDetail.shipping_line_code})` : ""}`
-    }] : [])
-  ];
-
-  const isExpense = category === "EX";
-  const isBank = accountTitle === "Bank";
-  const isCompany = accountTitle === "Company" || (accountTitle === "Customer" && subType === "Business Account");
-  const isPersonal = accountTitle === "Personal" || (accountTitle === "Customer" && subType !== "Business Account") || accountTitle === "Employee";
-
-  const allowedSectionIds = [1, 6];
-  if (isExpense) {
-    // Only Account Info and Audit
-  } else if (isBank) {
-    allowedSectionIds.push(4);
-  } else if (isCompany) {
-    allowedSectionIds.push(2, 3, 4, 5);
-  } else if (isPersonal) {
-    allowedSectionIds.push(2);
-  } else {
-    allowedSectionIds.push(2, 3, 4, 5);
-  }
-
-  const sections = [
-    { id: 1, title: t("accountInformation", "ACCOUNT INFORMATION"), icon: FileText, fields: accountFields },
-    { id: 2, title: t("customerInformation", "CUSTOMER INFORMATION"), icon: UserRound, fields: customerFields },
-    { id: 3, title: t("companyDetails", "COMPANY DETAILS"), icon: Building2, fields: companyFields },
-    { id: 4, title: t("bankDetails", "BANK DETAILS"), icon: Landmark, fields: bankFields },
-    { id: 5, title: t("warehouseDetails", "WAREHOUSE DETAILS"), icon: Warehouse, fields: warehouseFields },
-    { id: 6, title: t("auditInformation", "AUDIT INFORMATION"), icon: ShieldAlert, fields: auditFields }
-  ].filter(s => allowedSectionIds.includes(s.id));
+  const primaryEmail =
+    contacts?.find((c) => c.type?.toLowerCase().includes("email"))?.value ||
+    customerDetail?.email ||
+    companyDetail?.email ||
+    "-";
 
   return (
-    <Card className="border-slate-200 dark:border-slate-800 shadow-lg bg-white dark:bg-slate-900 overflow-hidden w-full rounded-2xl">
-      {/* ── Preview Header ── */}
-      <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-6 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-xl lg:text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-              {accountName || "New Account Setup"}
-            </h1>
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-bold mt-1">
-              {accountTitle || t("accountTitle", "Account Title")} • {trTerm(subType || "General")}
+    <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-2xs">
+            <FolderPlus className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              {getLabel("liveSummaryTitle", lang)}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {getLabel("liveSummarySubtitle", lang)}
             </p>
           </div>
-          
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-xl lg:ml-8 text-left">
-            <div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("accountCodeAuto", "Account Code (Auto)")}</div>
-              <div className="text-xs font-black mt-1 text-slate-800 dark:text-slate-200 font-mono">{accountCode || "AUTO"}</div>
-            </div>
-            <div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("accountGroup", "Account Group")}</div>
-              <div className="text-xs font-bold mt-1 text-slate-800 dark:text-slate-200">{trTerm(category || "Assets / Debtors")}</div>
-            </div>
-            <div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("currency", "Currency")}</div>
-              <div className="text-xs font-black mt-1 text-emerald-600 dark:text-emerald-400">{currency || "AED"}</div>
-            </div>
-            <div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t("date", "Date")}</div>
-              <div className="text-xs font-bold mt-1 text-slate-700 dark:text-slate-300">{stampDate}</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950 px-3 py-1 text-xs font-black text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
-              {status === "Active" ? t("active", "Active") : status === "In Progress" ? t("inProgress", "In Progress") : status || t("active", "Active")}
-            </span>
-          </div>
         </div>
 
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          {getLabel("inProgress", lang)}
+        </span>
       </div>
 
-      {/* ── Detail Cards Grid ── */}
-      <CardContent className="p-6 bg-slate-50/40 dark:bg-slate-950/40 space-y-6">
-        {/* Row 1: ACCOUNT, CUSTOMER Details (2 columns) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {sections.filter(s => s.id >= 1 && s.id <= 2).map((sect) => {
-            const Icon = sect.icon;
-            return (
-              <div key={sect.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-wider uppercase">{sect.id}. {sect.title}</h3>
-                </div>
+      {/* ── 6 Cards Structured Grid ── */}
+      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Card 1: Account Information */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <User className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {getLabel("step1Label", lang)}
+              </h3>
+            </div>
+            {onEditStep && (
+              <button
+                type="button"
+                onClick={() => onEditStep(1)}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+              >
+                {getLabel("edit", lang)}
+              </button>
+            )}
+          </div>
 
-                <div className="p-4 flex-1 space-y-2.5">
-                  {sect.fields.map((f, i) => (
-                    <div key={i} className="grid grid-cols-[140px_1fr] gap-3 text-xs border-b border-slate-100 dark:border-slate-800/60 pb-2 last:border-0 last:pb-0">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{f.label}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                        {f.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountCode", lang)}</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">{accountCode || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountName", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{trName(accountName) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountType", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(accountTitle) || "Customer"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("subType", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(subType) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("category", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(category) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("country", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(selectedCountryName) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("branch", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{trName(selectedBranchName) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("referenceNo", lang)}</span>
+              <span className="font-mono text-slate-700 dark:text-slate-300">{manualReferenceNumber || "-"}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Row 2: COMPANY, BANK, WAREHOUSE Details (3 columns) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {sections.filter(s => s.id >= 3 && s.id <= 5).map((sect) => {
-            const Icon = sect.icon;
-            return (
-              <div key={sect.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-wider uppercase">{sect.id}. {sect.title}</h3>
-                </div>
+        {/* Card 2: Customer Information */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <User className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {getLabel("customerInformation", lang)}
+              </h3>
+            </div>
+            {onEditStep && (
+              <button
+                type="button"
+                onClick={() => onEditStep(2)}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+              >
+                {getLabel("edit", lang)}
+              </button>
+            )}
+          </div>
 
-                <div className="p-4 flex-1 space-y-2.5">
-                  {sect.fields.map((f, i) => (
-                    <div key={i} className="grid grid-cols-[120px_1fr] gap-3 text-xs border-b border-slate-100 dark:border-slate-800/60 pb-2 last:border-0 last:pb-0">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{f.label}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                        {f.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("customerName", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{trName(customerDetail?.customer_name) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("customerType", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(customerDetail?.gender || subType) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("industry", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(customerDetail?.industry) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("contactPerson", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{trName(customerDetail?.contact_person) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("phone", lang)}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200">{primaryPhone || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("email", lang)}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{primaryEmail || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("address", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{customerDetail?.address || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("taxNumber", lang)}</span>
+              <span className="font-mono text-slate-700 dark:text-slate-300">{customerDetail?.tax_number || "-"}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Row 3: AUDIT Information */}
-        <div className="grid grid-cols-1 gap-5">
-          {sections.filter(s => s.id === 6).map((sect) => {
-            const Icon = sect.icon;
-            return (
-              <div key={sect.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-wider uppercase">{sect.id}. {sect.title}</h3>
-                </div>
+        {/* Card 3: Company Details */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <Building2 className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {getLabel("step3Label", lang)}
+              </h3>
+            </div>
+            {onEditStep && (
+              <button
+                type="button"
+                onClick={() => onEditStep(3)}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+              >
+                {getLabel("edit", lang)}
+              </button>
+            )}
+          </div>
 
-                <div className="p-4 flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2.5">
-                  {sect.fields.map((f, i) => (
-                    <div key={i} className="grid grid-cols-[140px_1fr] gap-3 text-xs border-b border-slate-100 dark:border-slate-800/60 pb-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{f.label}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                        {f.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("companyName", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
+                {trName(companyDetail?.companyName || companyDetail?.name || companyDetail?.legal_name) || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("registrationNo", lang)}</span>
+              <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
+                {companyDetail?.registration_no || companyDetail?.registration_number || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("businessType", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">
+                {trTerm(companyDetail?.company_type) || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("industry", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">
+                {trTerm(companyDetail?.industry) || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("registeredAddress", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
+                {companyDetail?.address || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("branch", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
+                {trName(companyDetail?.city_name || selectedBranchName) || "-"}
+              </span>
+            </div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Card 4: Bank Details */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Landmark className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {getLabel("step4Label", lang)}
+              </h3>
+            </div>
+            {onEditStep && (
+              <button
+                type="button"
+                onClick={() => onEditStep(4)}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+              >
+                {getLabel("edit", lang)}
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("bankName", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
+                {trName(bankDetail?.bank_name || bankDetail?.bankName || bankDetail?.name) || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountTitle", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
+                {trName(bankDetail?.account_title || accountName) || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountNumber", lang)}</span>
+              <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
+                {bankDetail?.account_number || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("iban", lang)}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
+                {bankDetail?.iban_number || bankDetail?.iban || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("bankBranch", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
+                {trName(bankDetail?.branch_name || selectedBranchName) || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("swiftCode", lang)}</span>
+              <span className="font-mono text-slate-700 dark:text-slate-300">
+                {bankDetail?.swift_bic || bankDetail?.swift_code || "-"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Warehouse Details */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Package className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {getLabel("warehouseDetails", lang)}
+              </h3>
+            </div>
+            {onEditStep && (
+              <button
+                type="button"
+                onClick={() => onEditStep(5)}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+              >
+                {getLabel("edit", lang)}
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("warehouse", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
+                {warehouseDetail?.warehouse_name || warehouseDetail?.name || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("location", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
+                {warehouseDetail?.city_name || warehouseDetail?.location || warehouseDetail?.full_address || "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("defaultStock", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">
+                {warehouseDetail?.is_default ? "Yes" : "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("remarks", lang)}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300 max-w-[150px] truncate">
+                {warehouseDetail?.description || "-"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 6: Audit Information */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Clock className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {getLabel("auditInformation", lang)}
+              </h3>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("createdBy", lang)}</span>
+              <span className="font-medium text-slate-900 dark:text-white">{auditCreatedBy}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("createdOn", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{displayCreatedOn}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("lastModifiedBy", lang)}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{auditLastModifiedBy || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("lastModifiedOn", lang)}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{auditLastModifiedOn || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] pt-1">
+              <span className="text-slate-500 dark:text-slate-400">{getLabel("status", lang)}</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
+                {getLabel("inProgress", lang)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

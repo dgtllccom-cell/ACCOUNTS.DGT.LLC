@@ -33,6 +33,9 @@ export type CustomerRow = {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  employee_code?: string | null;
+  employee_designation?: string | null;
+  employee_department?: string | null;
 };
 
 export type CustomerContactRow = {
@@ -72,7 +75,7 @@ export class CustomersRepository {
   // already used by companies-repository.ts) when available, falling back to the Supabase
   // client otherwise. See banks-repository.ts for the same pattern.
   async search(input: { query?: string | null; countryId?: string | null; limit?: number }) {
-    const limit = Math.min(Math.max(input.limit ?? 50, 1), 100);
+    const limit = Math.min(Math.max(input.limit ?? 50, 1), 500);
     const q = cleanQuery(input.query ?? "");
     const like = q ? `%${q}%` : null;
 
@@ -94,17 +97,28 @@ export class CustomersRepository {
           cnt.name as country_name,
           sp.name as state_province_name,
           di.name as district_name,
-          ct.name as city_name
+          ct.name as city_name,
+          emp.employee_code,
+          emp.designation as employee_designation,
+          emp.department as employee_department
         FROM public.customers c
         LEFT JOIN public.countries cnt ON c.country_id = cnt.id
         LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
         LEFT JOIN public.districts di ON c.district_id = di.id
         LEFT JOIN public.cities ct ON c.city_id = ct.id
+        LEFT JOIN LATERAL (
+          SELECT e.employee_code, e.designation, e.department
+          FROM public.employees e
+          WHERE e.person_master_id = c.id
+          ORDER BY e.created_at DESC
+          LIMIT 1
+        ) emp ON true
         WHERE c.deleted_at IS NULL
           AND (${input.countryId ? sql`c.country_id = ${input.countryId}::uuid` : sql`true`})
           AND (${
             like
               ? sql`(c.customer_name ILIKE ${like} OR c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.father_name ILIKE ${like} OR c.person_code ILIKE ${like} OR c.company_name ILIKE ${like} OR c.contact_person ILIKE ${like} OR c.email ILIKE ${like} OR c.mobile ILIKE ${like} OR c.whatsapp ILIKE ${like} OR c.address ILIKE ${like} OR c.notes ILIKE ${like}
+                  OR emp.employee_code ILIKE ${like} OR emp.designation ILIKE ${like} OR emp.department ILIKE ${like}
                   OR EXISTS (SELECT 1 FROM public.customer_registrations cr WHERE cr.customer_id = c.id AND cr.deleted_at IS NULL AND cr.registration_value ILIKE ${like}) ${
                   translatedMatchIds.length > 0 ? sql`OR c.id = ANY(${translatedMatchIds}::uuid[])` : sql``
                 })`

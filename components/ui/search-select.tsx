@@ -238,7 +238,7 @@ export function SearchSelect({
               }}
               className="bg-slate-50 dark:bg-slate-900"
             />
-            <CommandList className="bg-white dark:bg-slate-950 opacity-100 max-h-[300px] overflow-y-auto">
+            <CommandList className="bg-white dark:bg-slate-950 opacity-100 max-h-[380px] overflow-y-auto">
               <CommandEmpty>
                 <div className="py-3 px-3 text-center space-y-2">
                   <div className="text-xs text-muted-foreground">{resolvedEmptyLabel}</div>

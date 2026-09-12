@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { PersonDuplicateWarningModal, type PersonDuplicateCandidate } from "@/components/erp/person-duplicate-warning-modal";
@@ -28,6 +29,9 @@ type PersonRow = {
   address: string | null;
   country_name?: string | null;
   city_name?: string | null;
+  employee_code?: string | null;
+  employee_designation?: string | null;
+  employee_department?: string | null;
 };
 
 /** Prefer the localized customer_name if present; fall back to first + last name. */
@@ -46,31 +50,45 @@ function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
   const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? transliterateProperNoun(fatherRaw, lang as SupportedLanguage) : null;
   const companyRaw = row.company_name && row.company_name !== rawName ? row.company_name : null;
   const company = companyRaw ? localizeTerm(companyRaw, lang as SupportedLanguage) : null;
+  const empDesig = row.employee_designation ? localizeTerm(row.employee_designation, lang as SupportedLanguage) : null;
+  const empDept = row.employee_department ? localizeTerm(row.employee_department, lang as SupportedLanguage) : null;
+  const displayCode = row.employee_code || row.person_code || undefined;
+
+  const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "الوالد:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "S/O:";
+
+  let secondaryParts: string[] = [];
+  if (father) secondaryParts.push(`${fatherPrefix} ${father}`);
+  if (empDesig) {
+    secondaryParts.push(empDept ? `${empDesig} (${empDept})` : empDesig);
+  } else if (company) {
+    secondaryParts.push(company);
+  }
+
+  const secondaryText = secondaryParts.length > 0 ? secondaryParts.join(" · ") : undefined;
 
   // Format clean name display with proper localization
   let extraBits: string[] = [];
-  if (row.person_code) extraBits.push(row.person_code);
-  if (father) {
-    const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "ابن:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "s/o:";
-    extraBits.push(`${fatherPrefix} ${father}`);
-  } else if (company) {
-    extraBits.push(company);
-  }
+  if (displayCode) extraBits.push(displayCode);
+  if (father) extraBits.push(`${fatherPrefix} ${father}`);
+  if (empDesig) extraBits.push(empDesig);
+  else if (company) extraBits.push(company);
 
   const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
     name, rawName, row.customer_name, row.first_name, row.last_name, row.person_code,
+    row.employee_code, row.employee_designation, row.employee_department,
     father, fatherRaw, company, companyRaw, row.mobile, row.whatsapp, row.email,
-    row.country_name, row.city_name
+    row.country_name, row.city_name,
+    row.employee_code ? "Employee Staff Worker" : "Person Customer"
   ].filter(Boolean).join(" ");
-  const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "الوالد:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "S/O:";
+
   return {
     value: row.id,
     label,
     keywords,
     primaryText: name,
-    secondaryText: father ? `${fatherPrefix} ${father}` : company || undefined,
-    code: row.person_code || undefined,
+    secondaryText,
+    code: displayCode,
     branch: row.city_name || undefined,
     country: row.country_name || undefined
   };
@@ -81,6 +99,9 @@ export function PersonPicker({
   value,
   onValueChange,
   countryId,
+  countryName,
+  defaultFilterByCountry = false,
+  showCountryFilter = true,
   disabled,
   placeholder,
   lang: langProp
@@ -89,12 +110,16 @@ export function PersonPicker({
   value: string;
   onValueChange: (personId: string) => void;
   countryId?: string | null;
+  countryName?: string | null;
+  defaultFilterByCountry?: boolean;
+  showCountryFilter?: boolean;
   disabled?: boolean;
   placeholder?: string;
   lang?: SupportedLanguage;
 }) {
   const activeLang = useActiveLanguage();
   const lang = (langProp && langProp !== "en") ? langProp : activeLang;
+  const [filterByCountry, setFilterByCountry] = useState(defaultFilterByCountry);
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
@@ -104,11 +129,12 @@ export function PersonPicker({
   const [pendingCreateName, setPendingCreateName] = useState<string | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function loadList() {
+  async function loadList(scopedCountryId?: string | null) {
     setLoading(true);
     try {
       const qp = new URLSearchParams();
-      if (countryId) qp.set("countryId", countryId);
+      const targetCountryId = scopedCountryId !== undefined ? scopedCountryId : (filterByCountry ? countryId : null);
+      if (targetCountryId) qp.set("countryId", targetCountryId);
       qp.set("limit", "500");
       // Resolve customer_name/company_name into the active language server-side
       qp.set("lang", lang);
@@ -130,7 +156,8 @@ export function PersonPicker({
         qp.set("q", q.trim());
         qp.set("limit", "50");
         qp.set("lang", lang);
-        if (countryId) qp.set("countryId", countryId);
+        const targetCountryId = filterByCountry ? countryId : null;
+        if (targetCountryId) qp.set("countryId", targetCountryId);
         const res = await apiGet<{ customers: PersonRow[] }>(`/api/erp/customers?${qp.toString()}`);
         const found = res.customers ?? [];
         if (found.length > 0) {
@@ -229,7 +256,7 @@ export function PersonPicker({
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, lang]);
+  }, [countryId, filterByCountry, lang]);
 
   useEffect(() => {
     if (!value) return;
@@ -305,6 +332,39 @@ export function PersonPicker({
 
   return (
     <>
+      {countryId && showCountryFilter && (
+        <div className="flex items-center justify-between gap-2 pb-1 text-xs">
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            {t(lang, "hr.pp_directory_scope", "Directory Scope")}:
+          </span>
+          <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-50 dark:bg-slate-900">
+            <button
+              type="button"
+              onClick={() => setFilterByCountry(false)}
+              className={cn(
+                "px-2.5 py-0.5 rounded-md text-[10.5px] font-bold transition",
+                !filterByCountry
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              )}
+            >
+              {t(lang, "hr.pp_all_records", "All Persons & Employees")} {!filterByCountry && people.length > 0 ? `(${people.length})` : ""}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterByCountry(true)}
+              className={cn(
+                "px-2.5 py-0.5 rounded-md text-[10.5px] font-bold transition",
+                filterByCountry
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              )}
+            >
+              {countryName || t(lang, "hr.pp_local_country", "Current Country Only")} {filterByCountry && people.length > 0 ? `(${people.length})` : ""}
+            </button>
+          </div>
+        </div>
+      )}
       <SearchSelect
         label={label}
         value={value}

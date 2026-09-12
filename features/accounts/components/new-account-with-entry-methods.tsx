@@ -25,15 +25,17 @@ import { ArrowLeft, LayoutList, Plus, FileText } from "lucide-react";
 export function NewAccountWithEntryMethods({
   lang: initialLang,
   initialAccountId,
+  initialMode,
 }: {
   lang: SupportedLanguage;
   initialAccountId?: string;
+  initialMode?: "table" | "form" | "bulk";
 }) {
   const activeLang = (useActiveLanguage() || initialLang) as SupportedLanguage;
   const s = useErpScreen("acctimp", activeLang);
 
   const [view, setView] = useState<"table" | "form" | "bulk" | "bulk_done">(
-    initialAccountId ? "form" : "table"
+    initialMode || (initialAccountId ? "form" : "table")
   );
   const [currentAccountId, setCurrentAccountId] = useState<string | undefined>(initialAccountId);
   const [createdCount, setCreatedCount] = useState(0);
@@ -246,7 +248,7 @@ export function NewAccountWithEntryMethods({
             domain="business"
             lang={activeLang}
             title="New Account Setup"
-            skipGate={!!currentAccountId}
+            skipGate={!!currentAccountId || initialMode === "form"}
             onScanClick={() => setView("bulk")}
           >
             <NewAccountSetup

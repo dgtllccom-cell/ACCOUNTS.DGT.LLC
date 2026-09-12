@@ -7,9 +7,10 @@ export const metadata = { title: "New Account Entry" };
 export default async function NewAccountPage({
   searchParams
 }: {
-  searchParams?: Promise<{ accountId?: string }>;
+  searchParams?: Promise<{ accountId?: string; mode?: string; new?: string }>;
 }) {
   const lang = await getRequestLanguage();
   const params = searchParams ? await searchParams : undefined;
-  return <NewAccountWithEntryMethods lang={lang} initialAccountId={params?.accountId} />;
+  const initialMode = (params?.mode === "form" || params?.new === "1" || !!params?.accountId) ? "form" : undefined;
+  return <NewAccountWithEntryMethods lang={lang} initialAccountId={params?.accountId} initialMode={initialMode} />;
 }

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const result = await customersService.search({
       query,
       countryId,
-      limit: limit ? Number(limit) : 20
+      limit: limit ? Number(limit) : 100
     });
 
 

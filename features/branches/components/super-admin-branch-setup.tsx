@@ -34,6 +34,7 @@ import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { BranchFinalReview } from "./branch-final-review";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -310,6 +311,7 @@ function SuperAdminBranchSetupContent() {
   const [modal, setModal] = useState<null | "contactType" | "report">(null);
   const [newType, setNewType] = useState("");
   const [message, setMessage] = useState("");
+  const [isReviewMode, setIsReviewMode] = useState(false);
 
   const countryName = locationMeta.country?.name ?? "";
   const stateName = locationMeta.state?.name ?? "";
@@ -933,6 +935,43 @@ function SuperAdminBranchSetupContent() {
     }
   }, [editId, savedBranchRows, editingBranchId]);
 
+  if (isReviewMode) {
+    return (
+      <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+        <BranchFinalReview
+          branchLevel="administrative"
+          branchLevelTitle="Administrative Branch"
+          branchName={companyDetails?.name ? `${companyDetails.name} Super Admin Branch` : "Super Admin Branch"}
+          branchCode={branchCode || "SUPER-HQ-001"}
+          branchType="Administrative / Operational Branch"
+          category="Headquarters"
+          country={countryName || "United Arab Emirates"}
+          stateProvince={stateName || "Dubai"}
+          city={cityName || "Dubai"}
+          fullAddress={address || "Office City Branch, Al Maktoum Street, Deira, Dubai, UAE"}
+          companyName={companyDetails?.name || "Damaan Global Trading LLC"}
+          businessDomain="Global Trading & Distribution"
+          shippingDomain="International Logistics"
+          currency={currency || "USD"}
+          mainBranchName="Head Office (DXB-001)"
+          onBack={() => setIsReviewMode(false)}
+          onGoToStep={() => setIsReviewMode(false)}
+          onEditSection={() => setIsReviewMode(false)}
+          onApproveAndActivate={async () => {
+            await saveBranch();
+            setIsReviewMode(false);
+          }}
+          onSendBackForEdit={() => setIsReviewMode(false)}
+          onRequestChanges={(note) => {
+            alert(`Change request sent for Administrative Branch:\n${note || "Please review and revise requested branch details."}`);
+          }}
+          onViewSummary={viewReport}
+          onPrint={printReport}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -943,10 +982,20 @@ function SuperAdminBranchSetupContent() {
             {tt("sab.desc", "Create the root (Head Office) branch. Country Main Branch and City Branch records will be created under this hierarchy.")}
           </p>
         </div>
-        <span className={pillClassName()}>
-          <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
-          <b>{tt("sab.status_lbl", "Status")}:</b> <span>{readyToSave ? tt("sab.status_ready", "Ready") : tt("sab.status_draft", "Draft")}</span>
-        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsReviewMode(true)}
+            className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs cursor-pointer"
+          >
+            Final Review & Approval →
+          </Button>
+          <span className={pillClassName()}>
+            <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
+            <b>{tt("sab.status_lbl", "Status")}:</b> <span>{readyToSave ? tt("sab.status_ready", "Ready") : tt("sab.status_draft", "Draft")}</span>
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
