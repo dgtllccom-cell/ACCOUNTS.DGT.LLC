@@ -283,27 +283,17 @@ function buildBranchOption(row: AccountGeneralReportRow) {
   };
 }
 
+const ALLOWED_COUNTRY_CODES_FRONTEND = new Set([
+  "PAK-CORP-GEN-001", "CT-INTER-PK",
+  "UAE-CORP-GEN-001", "CT-INTER-AE",
+  "AFG-CORP-GEN-001", "CT-INTER-AF",
+  "IND-CORP-GEN-001", "0005-IND-HUB", "CT-INTER-IN"
+]);
+
 function isCountryAccountRow(row: AccountGeneralReportRow): boolean {
   if (row.isCountryAccount) return true;
-  if (row.branchType === "Country") return true;
   const code = (row.rawAccountCode || row.accountCode || "").toUpperCase();
-  if (/^(PAK|UAE|AFG|IND|CHN)-CORP-GEN/i.test(code) || /^CT-INTER-/i.test(code) || code === "0005-IND-HUB") return true;
-  const name = (row.accountName || "").toLowerCase();
-  if (
-    name.includes("inter-country") ||
-    name.includes("central clearing") ||
-    name.includes("main country clearing") ||
-    name.includes("clearing general account") ||
-    name.includes("clearing ledger")
-  ) return true;
-  const lName = (row.ledgerName || "").toLowerCase();
-  if (
-    lName.includes("inter-country") ||
-    lName.includes("central clearing") ||
-    lName.includes("clearing account") ||
-    lName.includes("clearing ledger")
-  ) return true;
-  return false;
+  return ALLOWED_COUNTRY_CODES_FRONTEND.has(code);
 }
 
 function safeRowText(row: AccountGeneralReportRow) {

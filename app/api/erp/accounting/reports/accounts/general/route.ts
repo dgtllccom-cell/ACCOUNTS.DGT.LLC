@@ -48,6 +48,13 @@ const querySchema = z.object({
   language: supportedLanguageSchema.default("en")
 });
 
+export const ALLOWED_COUNTRY_ACCOUNT_CODES = [
+  "PAK-CORP-GEN-001", "CT-INTER-PK",
+  "UAE-CORP-GEN-001", "CT-INTER-AE",
+  "AFG-CORP-GEN-001", "CT-INTER-AF",
+  "IND-CORP-GEN-001", "0005-IND-HUB", "CT-INTER-IN"
+];
+
 type EnterpriseAccountRow = {
   id: string;
   scope: "super_admin" | "country" | "main_branch" | "city_branch";
@@ -347,10 +354,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
             ${cityBranchWhere}
           )
           or (
-            ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
-            or ea.name ilike '%Inter-Country%'
-            or ea.name ilike '%Central Clearing%'
-            or ea.name ilike '%Main Country Clearing%'
+            ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
           )
         )
         ${statusWhere}
@@ -416,12 +420,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       left join public.countries c on c.id = l.country_id
       where l.deleted_at is null
         and l.is_active = true
-        and (
-          l.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
-          or l.name ilike '%Inter-Country%'
-          or l.name ilike '%Central Clearing%'
-          or l.name ilike '%Main Country Clearing%'
-        )
+        and l.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
       order by l.created_at asc
       limit 20
     `;
@@ -539,11 +538,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       const calcCredit = movements.reduce((s, m) => s + m.credit, 0);
       const openBal = toNumber(account.opening_balance);
       const currBal = calcDebit > 0 || calcCredit > 0 ? openBal + calcDebit - calcCredit : toNumber(account.current_balance);
-      const isCountryAccount =
-        account.scope === "country" ||
-        /^(PAK|UAE|AFG|IND|CHN)-CORP-GEN|^(CT-INTER-)/i.test(account.code ?? "") ||
-        /inter-country|central clearing|main country clearing/i.test(account.name ?? "") ||
-        /inter-country|central clearing/i.test(account.ledger_name ?? "");
+      const isCountryAccount = ALLOWED_COUNTRY_ACCOUNT_CODES.includes((account.code ?? "").toUpperCase());
 
       return {
         accountId: account.id,
@@ -795,7 +790,7 @@ export async function GET(request: NextRequest) {
           "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
         )
         .is("deleted_at", null)
-        .or("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE,CHN-CORP-GEN-001),name.ilike.%Inter-Country%,name.ilike.%Central Clearing%,name.ilike.%Main Country Clearing%")
+        .in("code", ALLOWED_COUNTRY_ACCOUNT_CODES)
         .limit(20);
 
       const existingCodes = new Set(accountRows.map((r) => r.code));
@@ -813,7 +808,7 @@ export async function GET(request: NextRequest) {
         .from("ledgers")
         .select("id, enterprise_account_id, code, name, currency, country_id, is_active, created_at, updated_at")
         .is("deleted_at", null)
-        .or("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE,CHN-CORP-GEN-001),name.ilike.%Inter-Country%,name.ilike.%Central Clearing%,name.ilike.%Main Country Clearing%")
+        .in("code", ALLOWED_COUNTRY_ACCOUNT_CODES)
         .limit(20);
 
       if (standaloneLedgers && standaloneLedgers.length > 0) {
@@ -1179,8 +1174,8 @@ export async function GET(request: NextRequest) {
         cityCode: cityBranch?.code ?? "-",
         currency: account.currency,
         accountCategory: titleCase(account.kind),
-        subType: (account.scope === "country" || /^(PAK|UAE|AFG|IND|CHN)-CORP-GEN|^(CT-INTER-)/i.test(account.code ?? "") || /inter-country|central clearing|main country clearing/i.test(account.name ?? "") || /inter-country|central clearing/i.test(linkedLedger?.name ?? "")) ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Normal Account",
-        isCountryAccount: account.scope === "country" || /^(PAK|UAE|AFG|IND|CHN)-CORP-GEN|^(CT-INTER-)/i.test(account.code ?? "") || /inter-country|central clearing|main country clearing/i.test(account.name ?? "") || /inter-country|central clearing/i.test(linkedLedger?.name ?? ""),
+        subType: ALLOWED_COUNTRY_ACCOUNT_CODES.includes((account.code ?? "").toUpperCase()) ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Normal Account",
+        isCountryAccount: ALLOWED_COUNTRY_ACCOUNT_CODES.includes((account.code ?? "").toUpperCase()),
         status: account.status,
         createdAt: account.creation_date || account.created_at,
         openingBalance: toNumber(account.opening_balance),
@@ -1308,7 +1303,7 @@ export async function GET(request: NextRequest) {
     const summary = {
       totalAccounts: filtered.length,
       activeAccounts: filtered.filter((row) => row.status === "active").length,
-      countryAccounts: filtered.filter((row) => row.branchType === "Country" || row.isCountryAccount).length,
+      countryAccounts: filtered.filter((row) => row.isCountryAccount).length,
       branchAccounts: filtered.filter((row) => row.branchType === "Main Branch" || row.branchType === "City Branch").length,
       adminAccounts: filtered.filter((row) => row.branchType === "Super Admin").length,
       totalLedgers: filtered.reduce((sum, row) => sum + row.linkedLedgerCount, 0),

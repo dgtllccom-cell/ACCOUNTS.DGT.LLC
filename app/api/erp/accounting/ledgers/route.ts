@@ -48,10 +48,7 @@ export async function GET(request: NextRequest) {
                 and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
               )
               or (
-                code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
-                or name ilike '%Inter-Country%'
-                or name ilike '%Central Clearing%'
-                or name ilike '%Main Country Clearing%'
+                code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
               )
             )
           order by code asc
@@ -71,9 +68,7 @@ export async function GET(request: NextRequest) {
               and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
             )
             or (
-              code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
-              or name ilike '%Inter-Country%'
-              or name ilike '%Central Clearing%'
+              code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
             )
           )
         order by code asc
@@ -106,9 +101,6 @@ export async function GET(request: NextRequest) {
           conditions.push(`country_id.in.(${session.countryIds.join(",")})`);
         }
         conditions.push("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE)");
-        conditions.push("name.ilike.%Inter-Country%");
-        conditions.push("name.ilike.%Central Clearing%");
-
         query = query.or(conditions.join(","));
       }
 
