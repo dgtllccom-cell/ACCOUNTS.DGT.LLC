@@ -580,6 +580,7 @@ function PartyRolePanel({
 
 export function CustomerOrderManagementView() {
   const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const userContext = useBranchUserContext();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [orders, setOrders] = useState<ClearingCustomerOrderRow[]>([]);
@@ -1382,7 +1383,7 @@ export function CustomerOrderManagementView() {
   ];
 
   return (
-    <div className="w-full space-y-4 pb-12">
+    <div className="w-full space-y-4 pb-12" dir={isRtl ? "rtl" : "ltr"}>
       {/* Workspace header: entry and live report share one visual system. */}
       <div className="relative isolate overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 p-4 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none sm:p-5">
         <div className="pointer-events-none absolute -end-20 -top-24 -z-10 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
@@ -1433,9 +1434,9 @@ export function CustomerOrderManagementView() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
         {/* Left Form: Compact 4-Step Wizard */}
-        <div className="space-y-4 self-start rounded-2xl border border-slate-200/90 border-t-4 border-t-blue-600 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:border-t-blue-500 dark:bg-slate-900 dark:shadow-none xl:col-span-5 xl:sticky xl:top-4">
+        <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 self-start rounded-2xl border border-slate-200/90 border-t-4 border-t-blue-600 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:border-t-blue-500 dark:bg-slate-900 dark:shadow-none xl:col-span-5 xl:sticky xl:top-4">
           {/* Stepper Navigation Bar */}
           <div className="space-y-3 border-b border-slate-100 pb-3 dark:border-slate-800">
             <div className="flex items-center justify-between">
@@ -1634,7 +1635,7 @@ export function CustomerOrderManagementView() {
         </div>
 
         {/* Right Side Register & Live Report (Prominent, High Visibility) */}
-        <div className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 xl:self-start h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
+        <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 xl:self-start h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
           {/* Top KPI Cards */}
           <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
@@ -1647,6 +1648,72 @@ export function CustomerOrderManagementView() {
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{tt("live", "Live")}</span>
             </div>
+            {formData.legs.length > 0 || formData.customer_name ? (
+              <div className="rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white p-3.5 space-y-2.5 dark:border-indigo-900/60 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
+                      {t(lang, "comv.live_tracker_title", "This Order — Live")}
+                    </p>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                      {formData.order_no || t(lang, "comv.live_tracker_unsaved", "Unsaved draft")} · {formData.customer_name || "-"}
+                    </h3>
+                  </div>
+                  {(() => {
+                    const currentLeg = formData.legs.find((l) => l.status !== "completed") ?? formData.legs[formData.legs.length - 1];
+                    if (!currentLeg) return null;
+                    return (
+                      <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-black text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
+                        {t(lang, ("comv.legstatus_" + currentLeg.status) as never, currentLeg.status.replace(/_/g, " "))}
+                      </span>
+                    );
+                  })()}
+                </div>
+                {(() => {
+                  const currentLeg = formData.legs.find((l) => l.status !== "completed") ?? formData.legs[formData.legs.length - 1];
+                  if (!currentLeg) {
+                    return <p className="text-[11px] text-slate-500">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>;
+                  }
+                  const responsibleName =
+                    (currentLeg.responsibleUserId && assignableUsers.find((u) => u.id === currentLeg.responsibleUserId)?.name) ||
+                    (currentLeg.responsibleClearingAgentId && clearingAgents.find((a) => a.id === currentLeg.responsibleClearingAgentId)?.name) ||
+                    "-";
+                  const truckOrVessel =
+                    currentLeg.transportMode === "by_road"
+                      ? currentLeg.truckNumber || (currentLeg.truckRegistrationType ? `(${currentLeg.truckRegistrationType})` : "-")
+                      : currentLeg.transportMode === "by_sea"
+                        ? currentLeg.vesselName || "-"
+                        : "-";
+                  const cell = (label: string, value: string) => (
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+                      <p className="truncate text-[12px] font-black text-slate-800 dark:text-slate-100">{value || "-"}</p>
+                    </div>
+                  );
+                  return (
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                      {cell(t(lang, "comv.live_current_location", "Current Location"), `${currentLeg.fromCountryName || "?"} — ${currentLeg.fromLocationText || "?"}`)}
+                      {cell(t(lang, "comv.live_next_destination", "Next Destination"), `${currentLeg.toCountryName || "?"} — ${currentLeg.toLocationText || "?"}`)}
+                      {cell(t(lang, "comv.live_responsible", "Responsible"), responsibleName)}
+                      {cell(t(lang, "comv.live_truck_vessel", "Truck / Vessel"), truckOrVessel)}
+                      {cell(
+                        t(lang, "comv.live_customs", "Customs"),
+                        currentLeg.clearanceType
+                          ? `${tt(("mv_" + currentLeg.clearanceType) as any, currentLeg.clearanceType)} · ${t(lang, ("comv.customsstatus_" + (currentLeg.customsStatus || "not_applicable")) as never, currentLeg.customsStatus || "not_applicable")}`
+                          : t(lang, "comv.customsstatus_not_applicable", "not applicable")
+                      )}
+                      {cell(
+                        t(lang, "comv.live_duty", "Duty / No Duty"),
+                        currentLeg.dutyTreatment ? t(lang, ("comv.duty_" + currentLeg.dutyTreatment.replace("duty_", "")) as never, currentLeg.dutyTreatment) : "-"
+                      )}
+                      {cell(t(lang, "comv.live_goods", "Goods"), `${formData.goods_name || "-"} ${formData.goods_quantity ? `(${formData.goods_quantity} ${formData.goods_unit})` : ""}`)}
+                      {cell(t(lang, "comv.live_remarks", "Remarks"), currentLeg.remarks || "-")}
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : null}
+
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {/* 1. Order Summary */}
               <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-3 dark:border-blue-900/50 dark:from-blue-950/40 dark:to-slate-900 flex flex-col justify-between">
@@ -2409,6 +2476,98 @@ function Step2PickupGoodsTruck({
             className={`mt-2 ${inputClass}`}
           />
         )}
+      </div>
+
+      {/* Multi-warehouse loading allocations — ONE order + ONE goods item may still be
+          picked up from several warehouses/locations (e.g. Almond 10,000kg split across
+          3 warehouses). The order's own goods_quantity below stays the single total;
+          this is only the breakdown of where that total is sourced from. */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <Warehouse className="h-4 w-4 text-emerald-600" />
+            {t(lang, "comv.loading_allocations_title", "Multi-Warehouse Loading (optional)")}
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setFormData((current) => ({
+                ...current,
+                loadingAllocations: [...current.loadingAllocations, emptyLoadingAllocation(current.loadingAllocations.length + 1)]
+              }))
+            }
+            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          >
+            <Plus className="inline h-3 w-3 mr-0.5" />
+            {t(lang, "comv.add_allocation", "Add Warehouse")}
+          </button>
+        </div>
+        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+          {t(lang, "comv.loading_allocations_hint", "Leave empty if this order's goods are picked up from a single source above. Add rows only when the same goods item is split across more than one warehouse.")}
+        </p>
+        {formData.loadingAllocations.map((alloc, aIdx) => (
+          <div key={aIdx} className="grid grid-cols-1 gap-2 rounded-lg border border-slate-100 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-[2fr_1fr_1fr_auto]">
+            <WarehousePicker
+              label={t(lang, "comv.allocation_warehouse", "Warehouse")}
+              value={alloc.warehouseId}
+              onSelectRecord={(record) =>
+                setFormData((current) => ({
+                  ...current,
+                  loadingAllocations: current.loadingAllocations.map((a, i) =>
+                    i === aIdx ? { ...a, warehouseId: record?.id || "", warehouseName: record?.warehouse_name || "" } : a
+                  )
+                }))
+              }
+            />
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.allocation_quantity", "Quantity")}</label>
+              <input
+                type="number"
+                value={alloc.quantity}
+                onChange={(e) =>
+                  setFormData((current) => ({
+                    ...current,
+                    loadingAllocations: current.loadingAllocations.map((a, i) => (i === aIdx ? { ...a, quantity: e.target.value } : a))
+                  }))
+                }
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.allocation_unit", "Unit")}</label>
+              <input
+                type="text"
+                value={alloc.unit}
+                onChange={(e) =>
+                  setFormData((current) => ({
+                    ...current,
+                    loadingAllocations: current.loadingAllocations.map((a, i) => (i === aIdx ? { ...a, unit: e.target.value } : a))
+                  }))
+                }
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((current) => ({
+                  ...current,
+                  loadingAllocations: current.loadingAllocations.filter((_, i) => i !== aIdx)
+                }))
+              }
+              className="self-end rounded-lg p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+        {formData.loadingAllocations.length > 0 ? (
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+            {t(lang, "comv.allocation_total", "Allocated total:")}{" "}
+            {formData.loadingAllocations.reduce((sum, a) => sum + (Number(a.quantity) || 0), 0)}
+            {formData.goods_quantity ? ` / ${formData.goods_quantity}` : ""} {formData.goods_unit}
+          </p>
+        ) : null}
       </div>
 
       {/* Goods Master Selection Card */}

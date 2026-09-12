@@ -1976,6 +1976,14 @@ export type UiKey =
   | "comv.legstatus_completed"
   | "comv.handover_reference"
   | "comv.handover_reference_ph"
+  | "comv.loading_allocations_title" | "comv.add_allocation" | "comv.loading_allocations_hint"
+  | "comv.allocation_warehouse" | "comv.allocation_quantity" | "comv.allocation_unit" | "comv.allocation_total"
+  | "com.err_cross_border_truck"
+  | "comv.live_tracker_title" | "comv.live_tracker_unsaved" | "comv.live_current_location"
+  | "comv.live_next_destination" | "comv.live_responsible" | "comv.live_truck_vessel"
+  | "comv.live_customs" | "comv.live_duty" | "comv.live_goods" | "comv.live_remarks"
+  | "comv.customsstatus_not_applicable" | "comv.customsstatus_pending" | "comv.customsstatus_submitted"
+  | "comv.customsstatus_cleared" | "comv.customsstatus_held" | "comv.customsstatus_rejected"
   | "comv.review_references"
   | "comv.review_booking"
   | "comv.review_pickup_goods_truck"
@@ -21635,6 +21643,30 @@ const en: Dict = {
   "comv.legstatus_completed": "Completed",
   "comv.handover_reference": "Handover Reference",
   "comv.handover_reference_ph": "Link to an existing handover record (optional)",
+  "comv.loading_allocations_title": "Multi-Warehouse Loading (optional)",
+  "comv.add_allocation": "Add Warehouse",
+  "comv.loading_allocations_hint": "Leave empty if this order's goods are picked up from a single source above. Add rows only when the same goods item is split across more than one warehouse.",
+  "comv.allocation_warehouse": "Warehouse",
+  "comv.allocation_quantity": "Quantity",
+  "comv.allocation_unit": "Unit",
+  "comv.allocation_total": "Allocated total:",
+  "com.err_cross_border_truck": "This leg crosses a country border and must use a registered truck from the Truck Master, not a temporary one-time truck.",
+  "comv.live_tracker_title": "This Order — Live",
+  "comv.live_tracker_unsaved": "Unsaved draft",
+  "comv.live_current_location": "Current Location",
+  "comv.live_next_destination": "Next Destination",
+  "comv.live_responsible": "Responsible",
+  "comv.live_truck_vessel": "Truck / Vessel",
+  "comv.live_customs": "Customs",
+  "comv.live_duty": "Duty / No Duty",
+  "comv.live_goods": "Goods",
+  "comv.live_remarks": "Remarks",
+  "comv.customsstatus_not_applicable": "Not Applicable",
+  "comv.customsstatus_pending": "Pending",
+  "comv.customsstatus_submitted": "Submitted",
+  "comv.customsstatus_cleared": "Cleared",
+  "comv.customsstatus_held": "Held",
+  "comv.customsstatus_rejected": "Rejected",
   "comv.review_references": "References",
   "comv.review_booking": "Booking & Customer",
   "comv.review_pickup_goods_truck": "Pickup, Goods & Truck",
@@ -25880,6 +25912,30 @@ const ur: Dict = {
   "comv.supporting_reference": "معاون حوالہ / دستاویز",
   "comv.legstatus_customs_pending": "کسٹمز زیر التوا",
   "comv.handover_reference_ph": "موجودہ ہینڈ اوور ریکارڈ سے لنک کریں (اختیاری)",
+  "comv.loading_allocations_title": "ملٹی ویئر ہاؤس لوڈنگ (اختیاری)",
+  "comv.add_allocation": "گودام شامل کریں",
+  "comv.loading_allocations_hint": "اگر اس آرڈر کا سامان اوپر دیے گئے ایک ہی ذریعے سے اٹھایا جا رہا ہے تو خالی چھوڑ دیں۔ صرف اس وقت قطاریں شامل کریں جب ایک ہی سامان ایک سے زیادہ گوداموں میں تقسیم ہو۔",
+  "comv.allocation_warehouse": "گودام",
+  "comv.allocation_quantity": "مقدار",
+  "comv.allocation_unit": "یونٹ",
+  "comv.allocation_total": "مختص شدہ کل:",
+  "com.err_cross_border_truck": "یہ لیگ ملکی سرحد عبور کرتا ہے اور اسے ٹرک ماسٹر سے ایک رجسٹرڈ ٹرک استعمال کرنا ضروری ہے، عارضی ایک بار والا ٹرک نہیں۔",
+  "comv.live_tracker_title": "یہ آرڈر — لائیو",
+  "comv.live_tracker_unsaved": "غیر محفوظ شدہ ڈرافٹ",
+  "comv.live_current_location": "موجودہ مقام",
+  "comv.live_next_destination": "اگلی منزل",
+  "comv.live_responsible": "ذمہ دار",
+  "comv.live_truck_vessel": "ٹرک / بحری جہاز",
+  "comv.live_customs": "کسٹمز",
+  "comv.live_duty": "ڈیوٹی / بلا ڈیوٹی",
+  "comv.live_goods": "سامان",
+  "comv.live_remarks": "تبصرے",
+  "comv.customsstatus_not_applicable": "لاگو نہیں",
+  "comv.customsstatus_pending": "زیر التواء",
+  "comv.customsstatus_submitted": "جمع کرایا گیا",
+  "comv.customsstatus_cleared": "کلیئر",
+  "comv.customsstatus_held": "روکا گیا",
+  "comv.customsstatus_rejected": "مسترد",
   "comv.review_booking": "بکنگ اور کسٹمر",
   "comv.review_pickup_goods_truck": "پک اپ، سامان اور ٹرک",
   "gm.goods": "سامان",
@@ -61868,7 +61924,25 @@ const ar: Dict = {
   "comv.actual_arrival": "الوصول الفعلي",
   "comv.estimated_expense": "المصروف المقدر",
   "comv.actual_expense": "المصروف الفعلي",
-  "comv.expense_currency": "عملة المصروف"
+  "comv.expense_currency": "عملة المصروف",
+  "comv.loading_allocations_title": "التحميل من مستودعات متعددة (اختياري)",
+  "comv.add_allocation": "إضافة مستودع",
+  "comv.loading_allocations_hint": "اتركه فارغًا إذا كانت بضائع هذا الطلب تُستلم من مصدر واحد أعلاه. أضف صفوفًا فقط عند تقسيم نفس الصنف بين أكثر من مستودع.",
+  "comv.allocation_warehouse": "المستودع",
+  "comv.allocation_quantity": "الكمية",
+  "comv.allocation_unit": "الوحدة",
+  "comv.allocation_total": "الإجمالي المخصص:",
+  "com.err_cross_border_truck": "يعبر هذا الجزء حدود دولة ويجب أن يستخدم شاحنة مسجّلة من سجل الشاحنات، وليس شاحنة مؤقتة لمرة واحدة.",
+  "comv.live_tracker_title": "هذا الطلب — مباشر",
+  "comv.live_tracker_unsaved": "مسودة غير محفوظة",
+  "comv.live_current_location": "الموقع الحالي",
+  "comv.live_next_destination": "الوجهة التالية",
+  "comv.live_responsible": "المسؤول",
+  "comv.live_truck_vessel": "الشاحنة / السفينة",
+  "comv.live_customs": "الجمارك",
+  "comv.live_duty": "رسوم / بدون رسوم",
+  "comv.live_goods": "البضائع",
+  "comv.live_remarks": "ملاحظات"
 };
 
 const fa: Dict = {
@@ -79890,7 +79964,25 @@ const fa: Dict = {
   "comv.actual_arrival": "رسیدن واقعی",
   "comv.estimated_expense": "هزینه تخمینی",
   "comv.actual_expense": "هزینه واقعی",
-  "comv.expense_currency": "ارز هزینه"
+  "comv.expense_currency": "ارز هزینه",
+  "comv.loading_allocations_title": "بارگیری چند انباره (اختیاری)",
+  "comv.add_allocation": "افزودن انبار",
+  "comv.loading_allocations_hint": "اگر کالای این سفارش از یک منبع واحد بالا برداشت می‌شود، خالی بگذارید. فقط زمانی ردیف اضافه کنید که یک قلم کالا بین بیش از یک انبار تقسیم شده باشد.",
+  "comv.allocation_warehouse": "انبار",
+  "comv.allocation_quantity": "مقدار",
+  "comv.allocation_unit": "واحد",
+  "comv.allocation_total": "مجموع تخصیص‌یافته:",
+  "com.err_cross_border_truck": "این مرحله از مرز یک کشور عبور می‌کند و باید از یک کامیون ثبت‌شده در سیستم کامیون‌ها استفاده شود، نه یک کامیون موقت یک‌باره.",
+  "comv.live_tracker_title": "این سفارش — زنده",
+  "comv.live_tracker_unsaved": "پیش‌نویس ذخیره‌نشده",
+  "comv.live_current_location": "موقعیت فعلی",
+  "comv.live_next_destination": "مقصد بعدی",
+  "comv.live_responsible": "مسئول",
+  "comv.live_truck_vessel": "کامیون / کشتی",
+  "comv.live_customs": "گمرک",
+  "comv.live_duty": "عوارض / بدون عوارض",
+  "comv.live_goods": "کالا",
+  "comv.live_remarks": "ملاحظات"
 };
 
 const ps: Dict = {
@@ -97918,7 +98010,25 @@ const ps: Dict = {
   "comv.actual_arrival": "اصلي رسیدل",
   "comv.estimated_expense": "اټکل شوي لګښتونه",
   "comv.actual_expense": "اصلي لګښتونه",
-  "comv.expense_currency": "د لګښت اسعار"
+  "comv.expense_currency": "د لګښت اسعار",
+  "comv.loading_allocations_title": "د څو ګدامونو بار (اختیاري)",
+  "comv.add_allocation": "ګدام اضافه کړئ",
+  "comv.loading_allocations_hint": "که د دې امر توکي پورته یو ځای څخه اخیستل کیږي، خالي پریږدئ. یوازې هغه وخت قطارونه اضافه کړئ کله چې ورته توکي په یو څخه ډیرو ګدامونو کې وویشل شي.",
+  "comv.allocation_warehouse": "ګدام",
+  "comv.allocation_quantity": "مقدار",
+  "comv.allocation_unit": "واحد",
+  "comv.allocation_total": "تخصیص شوی ټول:",
+  "com.err_cross_border_truck": "دا مرحله د یوه هیواد پوله تیروي او باید د ټرک ماسټر څخه ثبت شوی ټرک وکاروي، نه یو لنډمهاله یو ځلي ټرک.",
+  "comv.live_tracker_title": "دا امر — ژوندی",
+  "comv.live_tracker_unsaved": "ناخوندي شوی مسوده",
+  "comv.live_current_location": "اوسنی ځای",
+  "comv.live_next_destination": "راتلونکی موخه",
+  "comv.live_responsible": "مسؤل",
+  "comv.live_truck_vessel": "ټرک / بېړۍ",
+  "comv.live_customs": "ګمرک",
+  "comv.live_duty": "محصول / پرته له محصول",
+  "comv.live_goods": "توکي",
+  "comv.live_remarks": "یادښتونه"
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

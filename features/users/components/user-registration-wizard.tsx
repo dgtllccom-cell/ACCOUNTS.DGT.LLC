@@ -137,18 +137,20 @@ const userWizardFallback: Record<string, string> = {
   address: "Permanent Residential Address",
   verifiedCompliant: "Verified & Compliant",
   pendingVerification: "Pending Document Verification",
-  optionalHint: "(Auto-filled from Employee Master)",
+  optionalHint: "(Auto-filled from Master Record)",
   addNewEmployee: "Add New Employee",
   newEmployeeModalTitle: "New Employee Registration",
-  employeeSearchPlaceholder: "Search employee by code, name, designation...",
-  noEmployeesFound: "No matching employees found.",
-  genderFilterLabel: "Gender / Staff Filter",
-  genderAll: "All Staff",
+  employeeSearchPlaceholder: "Search by code, customer name, employee, designation...",
+  noEmployeesFound: "No matching profiles found.",
+  genderFilterLabel: "Filter Profiles",
+  genderAll: "All Profiles",
+  customersOnly: "Customer Management",
+  employeesOnly: "Employees",
   genderMale: "Male",
   genderFemale: "Female",
   firstNameLabel: "First Name *",
   lastNameLabel: "Surname / Last Name *",
-  selectedEmployeeBanner: "Selected Employee Master Profile",
+  selectedEmployeeBanner: "Selected Master Profile",
   changeSelection: "Change / Clear",
   viewMasterRecord: "View Full Master Record"
 };
@@ -190,12 +192,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [savedUserData, setSavedUserData] = useState<UserProfileData | null>(null);
 
-  // HR Employees list for Step 1 dropdown
+  // HR Employees & Customer Management profiles for Step 1 dropdown
   const [hrEmployees, setHrEmployees] = useState<any[]>([]);
+  const [customersList, setCustomersList] = useState<any[]>([]);
   const [hrEmployeesLoading, setHrEmployeesLoading] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [employeeCode, setEmployeeCode] = useState<string>("");
-  const [genderFilter, setGenderFilter] = useState<"all" | "male" | "female">("all");
+  const [genderFilter, setGenderFilter] = useState<"all" | "customers" | "employees" | "male" | "female">("all");
 
   // Complete Detailed Employee Master Profile State
   const [employeeProfile, setEmployeeProfile] = useState<{
@@ -350,16 +353,22 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }));
   };
 
-  async function fetchHrEmployees(): Promise<any[]> {
+  async function fetchMasterProfiles(): Promise<any[]> {
     setHrEmployeesLoading(true);
     try {
-      const res = await fetch(`/api/erp/hr-payroll/employees?lang=${activeLang}`).then((r) => r.json());
-      if (res && res.employees && Array.isArray(res.employees)) {
-        setHrEmployees(res.employees);
-        return res.employees;
+      const [empRes, custRes] = await Promise.all([
+        fetch(`/api/erp/hr-payroll/employees?lang=${activeLang}`).then((r) => r.json()).catch(() => ({ employees: [] })),
+        fetch(`/api/erp/customers?limit=1000&lang=${activeLang}`).then((r) => r.json()).catch(() => ({ customers: [] }))
+      ]);
+      if (empRes && empRes.employees && Array.isArray(empRes.employees)) {
+        setHrEmployees(empRes.employees);
       }
+      if (custRes && custRes.customers && Array.isArray(custRes.customers)) {
+        setCustomersList(custRes.customers);
+      }
+      return empRes?.employees || [];
     } catch (err) {
-      console.error("Failed to load HR employees list", err);
+      console.error("Failed to load master profiles list", err);
     } finally {
       setHrEmployeesLoading(false);
     }
@@ -367,17 +376,85 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   useEffect(() => {
-    fetchHrEmployees();
+    fetchMasterProfiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
-  // When Employee is selected or language changes, populate rich profile across steps
+  // When Employee or Customer is selected or language changes, populate rich profile across steps
   useEffect(() => {
     if (!selectedEmployeeId) {
       setEmployeeCode("");
       setEmployeeProfile({});
       return;
     }
+
+    if (selectedEmployeeId.startsWith("cust_")) {
+      const custId = selectedEmployeeId.replace(/^cust_/, "");
+      const cust = customersList.find((c) => c.id === custId);
+      if (cust) {
+        const custName = cust.customer_name || cust.contact_person || cust.company_name || "";
+        const nameParts = custName.trim().split(" ");
+        const firstNameVal = cust.first_name || nameParts[0] || "";
+        const lastNameVal = cust.last_name || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : "");
+        const middleNameVal = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+        const code = cust.person_code || cust.employee_code || `CUST-${String(custId).slice(-4)}`;
+
+        setFirstName(firstNameVal);
+        setLastName(lastNameVal);
+        setFullName(custName);
+        setEmployeeCode(code);
+        if (!loginUsername) {
+          setLoginUsername(custName.toLowerCase().replace(/[^a-z0-9]/g, "."));
+        }
+        if (cust.mobile) setContactPhone(cust.mobile);
+
+        const cleanCode = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (cust.email && !cust.email.includes("@dgt.local")) {
+          setPersonalEmail(cust.email);
+        } else {
+          setPersonalEmail(`${cleanCode}@dgt.llc`);
+        }
+
+        const desig = cust.employee_designation || cust.gender || "Customer / Contact";
+        const dept = cust.employee_department || "Customer Management";
+        setDesignation(desig);
+        setDepartment(dept);
+        if (cust.country_id) setCountryId(cust.country_id);
+
+        if (cust.national_id_or_passport || cust.tax_id) {
+          setCnicPassportNo(cust.national_id_or_passport || cust.tax_id || "");
+        }
+        if (cust.address) {
+          setResidentialAddress(cust.address);
+        }
+
+        setEmployeeProfile({
+          personMasterId: cust.id,
+          firstName: firstNameVal,
+          middleName: middleNameVal,
+          lastName: lastNameVal,
+          fullName: custName,
+          employeeCode: code,
+          designation: desig,
+          department: dept,
+          employmentType: "Customer / Representative",
+          jobStatus: "Active",
+          workingShift: "General Day Shift",
+          dutyStartTime: "09:00 AM",
+          dutyEndTime: "06:00 PM",
+          salaryCurrency: "USD",
+          phone: cust.mobile,
+          whatsapp: cust.whatsapp || cust.mobile,
+          email: cust.email,
+          address: cust.address,
+          countryName: cust.country_name,
+          cityName: cust.city_name,
+          photoUrl: cust.photo_url
+        });
+      }
+      return;
+    }
+
     const emp = hrEmployees.find((e) => e.id === selectedEmployeeId);
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
@@ -455,7 +532,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         photoUrl: emp.photo_url || emp.person?.photo_url
       });
     }
-  }, [selectedEmployeeId, hrEmployees, activeLang]);
+  }, [selectedEmployeeId, hrEmployees, customersList, activeLang]);
 
   async function fetchSpecificUser(id: string) {
     try {
@@ -624,56 +701,116 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     [activeLang]
   );
 
-  const filteredHrEmployees = useMemo(() => {
-    if (genderFilter === "all") return hrEmployees;
-    return hrEmployees.filter((e) => {
-      const g = (e.gender || e.person?.gender || "").toLowerCase();
-      if (genderFilter === "male") return g.startsWith("m") || g === "male" || g === "مرد" || !g;
-      if (genderFilter === "female") return g.startsWith("f") || g === "female" || g === "خاتون" || g === "زن";
-      return true;
-    });
-  }, [hrEmployees, genderFilter]);
+  // Combine Employees + Customers into unified profiles list
+  const combinedProfiles = useMemo(() => {
+    const list: Array<{
+      id: string;
+      value: string;
+      type: "employee" | "customer";
+      name: string;
+      code: string;
+      designation?: string;
+      department?: string;
+      gender?: string;
+      branch?: string;
+      country?: string;
+      first_name?: string;
+      last_name?: string;
+    }> = [];
 
-  // Deduplicate employees by person_master_id / person id so that each individual appears only ONCE
-  const uniqueHrEmployees = useMemo(() => {
-    const seen = new Set<string>();
-    const out: any[] = [];
-    for (const e of filteredHrEmployees) {
+    const seenPersonIds = new Set<string>();
+
+    // 1. Add HR employees first
+    for (const e of hrEmployees) {
       const personKey = e.person_master_id || e.person?.id || (e.name || e.full_name || e.person?.customer_name || "").toLowerCase().trim();
-      if (!personKey || seen.has(personKey)) continue;
-      seen.add(personKey);
-      out.push(e);
+      if (personKey) seenPersonIds.add(personKey);
+      const empName = e.person?.customer_name || e.name || e.full_name || "Employee";
+      const empCode = e.employee_code || e.code || "EMP";
+      const branchName = e.city_branch?.name || e.country_branch?.name || undefined;
+      const pNames = empName.trim().split(" ");
+      list.push({
+        id: e.id,
+        value: e.id,
+        type: "employee",
+        name: empName,
+        code: empCode,
+        designation: e.designation || undefined,
+        department: e.department || undefined,
+        gender: e.gender || e.person?.gender || undefined,
+        branch: branchName,
+        country: e.country?.name || undefined,
+        first_name: e.first_name || e.person?.first_name || pNames[0] || "",
+        last_name: e.last_name || e.person?.last_name || (pNames.length > 1 ? pNames.slice(1).join(" ") : "")
+      });
     }
-    return out;
-  }, [filteredHrEmployees]);
+
+    // 2. Add all Customer Management customers/contacts
+    for (const c of customersList) {
+      if (seenPersonIds.has(c.id)) continue; // already represented as employee
+      const custName = c.customer_name || c.contact_person || c.company_name || "Customer";
+      const custCode = c.person_code || c.code || "CUST";
+      const pNames = custName.trim().split(" ");
+      list.push({
+        id: `cust_${c.id}`,
+        value: `cust_${c.id}`,
+        type: "customer",
+        name: custName,
+        code: custCode,
+        designation: c.employee_designation || c.gender || "Customer / Contact",
+        department: c.employee_department || "Customer Management",
+        gender: c.gender || undefined,
+        branch: c.city_name || undefined,
+        country: c.country_name || undefined,
+        first_name: c.first_name || pNames[0] || "",
+        last_name: c.last_name || (pNames.length > 1 ? pNames.slice(1).join(" ") : "")
+      });
+    }
+
+    return list;
+  }, [hrEmployees, customersList]);
+
+  const filteredProfiles = useMemo(() => {
+    if (genderFilter === "all") return combinedProfiles;
+    if (genderFilter === "customers") return combinedProfiles.filter((p) => p.type === "customer");
+    if (genderFilter === "employees") return combinedProfiles.filter((p) => p.type === "employee");
+    if (genderFilter === "male") {
+      return combinedProfiles.filter((p) => {
+        const g = (p.gender || "").toLowerCase();
+        return g.startsWith("m") || g === "male" || g === "مرد" || !g;
+      });
+    }
+    if (genderFilter === "female") {
+      return combinedProfiles.filter((p) => {
+        const g = (p.gender || "").toLowerCase();
+        return g.startsWith("f") || g === "female" || g === "خاتون" || g === "زن";
+      });
+    }
+    return combinedProfiles;
+  }, [combinedProfiles, genderFilter]);
 
   const employeeOptions = useMemo(
     () =>
-      uniqueHrEmployees.map((e) => {
-        const empName = e.person?.customer_name || e.name || e.full_name || "Employee";
-        const empCode = e.employee_code || e.code || "EMP";
-        const desig = e.designation ? ` • ${e.designation}` : "";
-        const isFemale = (e.gender || e.person?.gender || "").toLowerCase().startsWith("f");
-        const genderBadge = isFemale ? " [Female]" : " [Male]";
+      filteredProfiles.map((p) => {
+        const desig = p.designation ? ` • ${p.designation}` : "";
+        const isCustomer = p.type === "customer";
+        const isFemale = (p.gender || "").toLowerCase().startsWith("f");
+        const typeBadge = isCustomer ? " [Customer]" : isFemale ? " [Female]" : " [Employee]";
 
-        const pNames = empName.trim().split(" ");
-        const fName = e.first_name || e.person?.first_name || pNames[0] || "";
-        const lName = e.last_name || e.person?.last_name || (pNames.length > 1 ? pNames.slice(1).join(" ") : "");
+        const fName = p.first_name || "";
+        const lName = p.last_name || "";
 
-        // Clean label: Gender Badge, Name, Code, and Designation. Branch clutter removed as requested.
-        const branchName = e.city_branch?.name || e.country_branch?.name || undefined;
         return {
-          value: e.id,
-          label: `${fName} ${lName ? lName + " " : ""}(${empCode}${desig})${genderBadge}`,
-          keywords: `${empName} ${fName} ${lName} ${empCode} ${e.designation ?? ""} ${e.gender ?? ""} ${branchName ?? ""}`,
-          primaryText: `${fName} ${lName}`.trim() || empName,
-          secondaryText: e.designation || undefined,
-          code: empCode,
-          branch: branchName,
-          country: e.country?.name || undefined
+          value: p.value,
+          label: `${fName} ${lName ? lName + " " : ""}(${p.code}${desig})${typeBadge}`,
+          keywords: `${p.name} ${fName} ${lName} ${p.code} ${p.designation ?? ""} ${p.department ?? ""} ${p.gender ?? ""} ${p.branch ?? ""} ${isCustomer ? "customer management" : "employee staff"}`,
+          primaryText: `${fName} ${lName}`.trim() || p.name,
+          secondaryText: `${p.designation || (isCustomer ? "Customer Management" : "Employee")}${p.branch ? " • " + p.branch : ""}`,
+          code: p.code,
+          branch: p.branch,
+          country: p.country
         };
       }),
-    [uniqueHrEmployees]
+    [filteredProfiles]
   );
 
   const selectedCountry = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
@@ -832,8 +969,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         idExpiryDate,
         kycStatus,
         residentialAddress: residentialAddress.trim(),
-        employeeId: selectedEmployeeId || null,
-        personMasterId: employeeProfile.personMasterId || null,
+        employeeId: (selectedEmployeeId && !selectedEmployeeId.startsWith("cust_")) ? selectedEmployeeId : null,
+        personMasterId: employeeProfile.personMasterId || (selectedEmployeeId?.startsWith("cust_") ? selectedEmployeeId.replace(/^cust_/, "") : null),
         firstName: employeeProfile.firstName || firstName || (fullName.trim().split(" ")[0] || null),
         middleName: employeeProfile.middleName || null,
         lastName: employeeProfile.lastName || lastName || (fullName.trim().split(" ").slice(1).join(" ") || null),
@@ -1297,22 +1434,30 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => setViewEmployeeId(selectedEmployeeId)}
+                    onClick={() => {
+                      if (selectedEmployeeId.startsWith("cust_")) {
+                        window.open(`/dashboard/customers?id=${selectedEmployeeId.replace(/^cust_/, "")}`, "_blank");
+                      } else {
+                        setViewEmployeeId(selectedEmployeeId);
+                      }
+                    }}
                     className="flex-1 h-8 text-[11px] font-bold text-blue-700 border-blue-200 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-900"
                   >
                     <Eye className="h-3.5 w-3.5 mr-1" />
-                    <span>{centralT(activeLang, "urw2.view_employee" as never, "View Employee Record")}</span>
+                    <span>{selectedEmployeeId.startsWith("cust_") ? "View Customer Record" : centralT(activeLang, "urw2.view_employee" as never, "View Employee Record")}</span>
                   </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditEmployeeId(selectedEmployeeId)}
-                    className="flex-1 h-8 text-[11px] font-bold text-amber-700 border-amber-200 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-900"
-                  >
-                    <Pencil className="h-3.5 w-3.5 mr-1" />
-                    <span>{centralT(activeLang, "urw2.edit_employee" as never, "Edit Employee Record")}</span>
-                  </Button>
+                  {!selectedEmployeeId.startsWith("cust_") && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditEmployeeId(selectedEmployeeId)}
+                      className="flex-1 h-8 text-[11px] font-bold text-amber-700 border-amber-200 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-900"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      <span>{centralT(activeLang, "urw2.edit_employee" as never, "Edit Employee Record")}</span>
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"
@@ -1460,7 +1605,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         <span>{tr("selectEmployee")}</span>
                       </div>
-                      <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-0.5 gap-1 shadow-2xs">
+                      <div className="inline-flex flex-wrap rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-0.5 gap-1 shadow-2xs">
                         <button
                           type="button"
                           onClick={() => setGenderFilter("all")}
@@ -1471,7 +1616,31 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           }`}
                         >
                           <Users className="h-3 w-3" />
-                          <span>{tr("genderAll")}</span>
+                          <span>{tr("genderAll")} ({combinedProfiles.length})</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGenderFilter("customers")}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 ${
+                            genderFilter === "customers"
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "text-slate-600 dark:text-slate-400 hover:text-blue-600"
+                          }`}
+                        >
+                          <Users className="h-3 w-3 text-blue-500" />
+                          <span>{tr("customersOnly")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGenderFilter("employees")}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 ${
+                            genderFilter === "employees"
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "text-slate-600 dark:text-slate-400 hover:text-emerald-600"
+                          }`}
+                        >
+                          <Briefcase className="h-3 w-3 text-emerald-500" />
+                          <span>{tr("employeesOnly")}</span>
                         </button>
                         <button
                           type="button"
@@ -1510,8 +1679,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       disabled={hrEmployeesLoading}
                       richList
                       onValueChange={setSelectedEmployeeId}
-                      onViewOption={(empId) => setViewEmployeeId(empId)}
-                      onEditOption={(empId) => setEditEmployeeId(empId)}
+                      onViewOption={(profId) => {
+                        if (profId.startsWith("cust_")) {
+                          window.open(`/dashboard/customers?id=${profId.replace(/^cust_/, "")}`, "_blank");
+                        } else {
+                          setViewEmployeeId(profId);
+                        }
+                      }}
+                      onEditOption={(profId) => {
+                        if (!profId.startsWith("cust_")) {
+                          setEditEmployeeId(profId);
+                        }
+                      }}
                       createLabel={centralT(activeLang, "urw2.add_new_employee" as never, "+ Add New Employee")}
                       createButtonPlacement="both"
                       onCreateNew={async () => setShowEmployeeModal(true)}

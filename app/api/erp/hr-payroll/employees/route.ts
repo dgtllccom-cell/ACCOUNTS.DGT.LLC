@@ -21,6 +21,30 @@ function isSchemaCacheError(errMsg: string) {
   );
 }
 
+async function getNextEmployeeCode(sql: any): Promise<string> {
+  const [res] = await sql`
+    SELECT COALESCE(
+      MAX(
+        CASE 
+          WHEN employee_code ~ '^EMP-[0-9]+$' 
+          THEN SUBSTRING(employee_code FROM 5)::int 
+          ELSE 0 
+        END
+      ), 0
+    ) as max_num
+    FROM public.employees
+  `;
+  let nextNum = Math.max(1, Number(res?.max_num || 0) + 1);
+  while (true) {
+    const candidate = `EMP-${String(nextNum).padStart(4, "0")}`;
+    const [exists] = await sql`SELECT 1 FROM public.employees WHERE employee_code = ${candidate} LIMIT 1`;
+    if (!exists) {
+      return candidate;
+    }
+    nextNum++;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     await requireErpSession();
@@ -42,8 +66,7 @@ export async function GET(request: NextRequest) {
         `;
         if (unlinked && unlinked.length > 0) {
           for (const u of unlinked) {
-            const countRes = await sql`SELECT count(*)::int as c FROM public.employees`;
-            const code = `EMP-${String((countRes[0]?.c || 0) + 1).padStart(4, "0")}`;
+            const code = await getNextEmployeeCode(sql);
             const desig = u.gender === 'Country Owner' ? 'Country Director / Managing Partner'
               : u.gender === 'Branch Owner' ? 'Branch Owner / Manager'
               : u.gender === 'Company Owner' ? 'Company Owner / Partner'
@@ -259,9 +282,7 @@ export async function POST(request: NextRequest) {
 
     const newEmployeeId = await withLocalPg(async (sql) => {
       // Generate employee code
-      const countRes = await sql`SELECT count(*)::int as c FROM public.employees`;
-      const empCount = (countRes[0]?.c || 0) + 1;
-      const generatedCode = `EMP-${String(empCount).padStart(4, "0")}`;
+      const generatedCode = await getNextEmployeeCode(sql);
 
       // Allocate form serials
       let superAdminSerial = null;

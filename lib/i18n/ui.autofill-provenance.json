@@ -2462,5 +2462,133 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-11T09:15:46.077Z"
+  },
+  {
+    "key": "comv.allocation_warehouse",
+    "lang": "ur",
+    "value": "گودام",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_warehouse",
+    "lang": "ar",
+    "value": "المستودع",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_warehouse",
+    "lang": "fa",
+    "value": "انبار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_warehouse",
+    "lang": "ps",
+    "value": "ګدام",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_quantity",
+    "lang": "ur",
+    "value": "مقدار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_quantity",
+    "lang": "ar",
+    "value": "الكمية",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_quantity",
+    "lang": "fa",
+    "value": "مقدار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_quantity",
+    "lang": "ps",
+    "value": "مقدار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_unit",
+    "lang": "ur",
+    "value": "یونٹ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_unit",
+    "lang": "ar",
+    "value": "الوحدة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_unit",
+    "lang": "fa",
+    "value": "واحد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_unit",
+    "lang": "ps",
+    "value": "واحد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_total",
+    "lang": "ur",
+    "value": "اللوکاتید توتال:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_total",
+    "lang": "ar",
+    "value": "اللومنتید توتال:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_total",
+    "lang": "fa",
+    "value": "اللوازتید توتال:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "comv.allocation_total",
+    "lang": "ps",
+    "value": "اللودتید توتال:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-12T12:25:05.228Z"
   }
 ]
