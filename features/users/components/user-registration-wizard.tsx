@@ -465,6 +465,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setEditUserId(data.userId);
         setFullName(data.fullName || "");
         setUserCode(data.userCode || makeAutoUserCode());
+        const resolvedUsername = data.username || data.userCode || (data.email ? data.email.split("@")[0] : "") || "";
+        setLoginUsername(resolvedUsername);
+        if (data.firstName) setFirstName(data.firstName);
+        if (data.lastName) setLastName(data.lastName);
         setRole(data.role || "staff_user");
         if (data.operationalDomain === "shipping") setOperationalDomain("shipping");
         if (data.clearingAgentId) setClearingAgentId(data.clearingAgentId);
@@ -481,6 +485,31 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         if (data.kycStatus) setKycStatus(data.kycStatus);
         if (data.residentialAddress) setResidentialAddress(data.residentialAddress);
         if (data.employeeId) setSelectedEmployeeId(data.employeeId);
+
+        // Synthesize employeeProfile from user record so left card immediately displays user details
+        const empCode = data.userCode || "USR";
+        setEmployeeProfile({
+          personMasterId: data.personMasterId || null,
+          firstName: data.firstName || data.fullName?.split(" ")[0] || "",
+          middleName: data.middleName || "",
+          lastName: data.lastName || data.fullName?.split(" ").slice(1).join(" ") || "",
+          fullName: data.fullName || "",
+          employeeCode: empCode,
+          designation: data.designation || "Staff",
+          department: data.department || "General Office",
+          employmentType: "Full-Time",
+          jobStatus: data.isActive ? "Active" : "Inactive",
+          workingShift: "General Day Shift",
+          dutyStartTime: "09:00 AM",
+          dutyEndTime: "06:00 PM",
+          joiningDate: data.createdAt ? String(data.createdAt).slice(0, 10) : undefined,
+          salaryCurrency: "USD",
+          phone: data.phone,
+          whatsapp: data.phone,
+          email: data.email,
+          address: data.residentialAddress,
+          photoUrl: data.photoUrl
+        });
 
         if (data.countryBranchId && !data.cityBranchId) {
           setBranchType("main");
@@ -805,9 +834,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         residentialAddress: residentialAddress.trim(),
         employeeId: selectedEmployeeId || null,
         personMasterId: employeeProfile.personMasterId || null,
-        firstName: employeeProfile.firstName || null,
+        firstName: employeeProfile.firstName || firstName || (fullName.trim().split(" ")[0] || null),
         middleName: employeeProfile.middleName || null,
-        lastName: employeeProfile.lastName || null,
+        lastName: employeeProfile.lastName || lastName || (fullName.trim().split(" ").slice(1).join(" ") || null),
         photoUrl: employeeProfile.photoUrl || null,
         permissions: effectivePermissions
       };
@@ -1489,6 +1518,65 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     />
                   </div>
 
+                  {/* Editable Full Name & Personal Information (Direct & Override) */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <User className="h-4 w-4 text-emerald-600" />
+                      <span>{editUserId ? "Edit User Profile & Identity Information" : "User Profile & Identity Details"}</span>
+                    </Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-600 dark:text-slate-400">Full Name *</Label>
+                        <Input
+                          value={fullName}
+                          onChange={(e) => {
+                            setFullName(e.target.value);
+                            setEmployeeProfile((p) => ({ ...p, fullName: e.target.value }));
+                          }}
+                          placeholder="e.g. Muhammad Ali"
+                          className="h-9 text-xs font-bold"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-600 dark:text-slate-400">Designation</Label>
+                        <Input
+                          value={designation}
+                          onChange={(e) => {
+                            setDesignation(e.target.value);
+                            setEmployeeProfile((p) => ({ ...p, designation: e.target.value }));
+                          }}
+                          placeholder="e.g. Manager / Accountant"
+                          className="h-9 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-600 dark:text-slate-400">Contact Phone / Mobile</Label>
+                        <Input
+                          value={contactPhone}
+                          onChange={(e) => {
+                            setContactPhone(e.target.value);
+                            setEmployeeProfile((p) => ({ ...p, phone: e.target.value }));
+                          }}
+                          placeholder="+971 50 ... / +92 300 ..."
+                          className="h-9 text-xs font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-600 dark:text-slate-400">Department</Label>
+                        <Input
+                          value={department}
+                          onChange={(e) => {
+                            setDepartment(e.target.value);
+                            setEmployeeProfile((p) => ({ ...p, department: e.target.value }));
+                          }}
+                          placeholder="e.g. Finance & Accounts"
+                          className="h-9 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* MANDATORY Operational Domain */}
                   <div className="space-y-2 rounded-xl border border-teal-200 bg-teal-50/60 p-3.5 dark:border-teal-900 dark:bg-teal-950/20">
                     <Label className="text-xs font-black uppercase tracking-wide text-teal-800 dark:text-teal-300">
@@ -1833,13 +1921,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {/* Password & Confirm Password */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Account Password *")}</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{editUserId ? th("New Password (Optional)") : th("Account Password *")}</Label>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder={centralT(activeLang, "edm.pw_hint" as never, "At least 8 characters")}
+                          placeholder={editUserId ? th("Leave blank to keep unchanged") : centralT(activeLang, "edm.pw_hint" as never, "At least 8 characters")}
                           className="h-9 text-xs pr-8 font-mono"
                         />
                         <button
@@ -1854,7 +1942,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Confirm Password *")}</Label>
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{editUserId ? th("Confirm New Password") : th("Confirm Password *")}</Label>
                         {password && confirmPassword && (
                           <span className={`text-[10px] font-bold ${password === confirmPassword ? "text-emerald-600" : "text-rose-600"}`}>
                             {password === confirmPassword ? "✓ Match" : "✗ Mismatch"}

@@ -407,7 +407,7 @@ export function PurchaseOrderWizard({ session }) {
     setIsMounted(true);
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("create") === "true" || params.get("id") || params.get("purchaseOrderId")) {
+      if (params.get("create") === "true" || params.get("id") || params.get("purchaseOrderId") || params.get("purchaseId") || params.get("orderId")) {
         setIsFormOpen(true);
       }
     }
@@ -1403,12 +1403,12 @@ export function PurchaseOrderWizard({ session }) {
     }
   };
 
-  // Load existing purchase order if purchaseOrderNo or id is in URL query parameters
+  // Load existing purchase order if purchaseOrderNo, id, purchaseId, or orderId is in URL query parameters
   useEffect(() => {
     // activeSession is defined at the component level now
     if (!activeSession) return;
     const poNo = searchParams.get("purchaseOrderNo");
-    const orderId = searchParams.get("id") || searchParams.get("purchaseOrderId");
+    const orderId = searchParams.get("id") || searchParams.get("purchaseOrderId") || searchParams.get("purchaseId") || searchParams.get("orderId");
     if (!poNo && !orderId) return;
 
     handleSearchBookingOrder(orderId || poNo);
@@ -1416,6 +1416,8 @@ export function PurchaseOrderWizard({ session }) {
     searchParams.get("purchaseOrderNo"),
     searchParams.get("id"),
     searchParams.get("purchaseOrderId"),
+    searchParams.get("purchaseId"),
+    searchParams.get("orderId"),
     !!activeSession,
     lang
   ]);

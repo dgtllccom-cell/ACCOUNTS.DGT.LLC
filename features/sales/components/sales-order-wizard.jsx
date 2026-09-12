@@ -1309,7 +1309,7 @@ export function SalesOrderWizard({ session }) {
   useEffect(() => {
     if (!activeSession) return;
     const soNo = searchParams.get("salesOrderNo");
-    const orderId = searchParams.get("id") || searchParams.get("salesOrderId") || intake.linkedSourceId || undefined;
+    const orderId = searchParams.get("id") || searchParams.get("salesOrderId") || searchParams.get("salesId") || searchParams.get("orderId") || intake.linkedSourceId || undefined;
     if (!soNo && !orderId) return;
     setIsFormOpen(true);
 
@@ -1402,6 +1402,8 @@ export function SalesOrderWizard({ session }) {
     searchParams.get("salesOrderNo"),
     searchParams.get("id"),
     searchParams.get("salesOrderId"),
+    searchParams.get("salesId"),
+    searchParams.get("orderId"),
     intake.linkedSourceId,
     !!activeSession
   ]);

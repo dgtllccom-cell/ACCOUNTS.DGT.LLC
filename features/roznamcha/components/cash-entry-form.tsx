@@ -38,7 +38,7 @@ import {
   MapPin,
   CheckCircle2
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1470,8 +1470,12 @@ export function CashEntryForm({
 
   const canEditOrDelete = useMemo(() => {
     if (!session) return false;
-    if (session.scopes?.isSuperAdmin) return true;
-    const allowedRoles = ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "branch_admin", "admin"];
+    if (session.scopes?.isSuperAdmin || (session as any).isSuperAdmin) return true;
+    const perms = (session as any).permissions || [];
+    if (perms.includes("*:*") || perms.includes("roznamcha:*") || perms.includes("roznamcha:update") || perms.includes("roznamcha:delete")) {
+      return true;
+    }
+    const allowedRoles = ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "branch_admin", "admin", "accountant"];
     return session.roles?.some((role) => allowedRoles.includes(role)) ?? false;
   }, [session]);
 
@@ -1844,21 +1848,23 @@ export function CashEntryForm({
   };
 
   const handleEditEntry = (row: any) => {
-    setEditEntryId(row.id);
+    const h = row.header || row;
+    const lines = row.roznamcha_lines || row.lines || [];
+    setEditEntryId(h.id || row.id);
     setShowPaymentWorkReport(true);
     suppressScopeResetRef.current = true;
-    if (row.country_id) setCountryId(row.country_id);
-    if (row.country_branch_id) setCountryBranchId(row.country_branch_id);
-    if (row.city_branch_id) setCityBranchId(row.city_branch_id);
+    if (h.country_id) setCountryId(h.country_id);
+    if (h.country_branch_id) setCountryBranchId(h.country_branch_id);
+    if (h.city_branch_id) setCityBranchId(h.city_branch_id);
     
-    setEntryDate(row.entry_date);
-    setReferenceNo(row.reference_no || "");
+    setEntryDate(h.entry_date);
+    setReferenceNo(h.reference_no || "");
     
-    const narration = row.narration || "";
+    const narration = h.narration || "";
     setRemarks(parseNarrationRemarks(narration));
     
-    const firstLine = row.roznamcha_lines?.[0];
-    const secondLine = row.roznamcha_lines?.[1];
+    const firstLine = lines[0];
+    const secondLine = lines[1];
     
     if (firstLine) {
       setCounterLedgerId(firstLine.ledger_id);
@@ -1909,16 +1915,16 @@ export function CashEntryForm({
     }
     
     setSavedSerials({
-      superAdmin: row.super_admin_serial_number,
-      country: row.country_transaction_serial_number,
-      branch: row.branch_transaction_serial_number
+      superAdmin: h.super_admin_serial_number || row.super_admin_serial_number,
+      country: h.country_transaction_serial_number || row.country_transaction_serial_number,
+      branch: h.branch_transaction_serial_number || row.branch_transaction_serial_number
     });
 
-    setActiveCreator(row.profiles?.full_name || "System User");
-    setActiveApprover(row.approver_profile?.full_name || (row.status === "approved" ? "Approved" : "Pending"));
-    setActiveStatus(row.status || "posted");
+    setActiveCreator(h.profiles?.full_name || row.profiles?.full_name || "System User");
+    setActiveApprover(h.approver_profile?.full_name || row.approver_profile?.full_name || (h.status === "approved" ? "Approved" : "Pending"));
+    setActiveStatus(h.status || row.status || "posted");
     
-    setMessage(`Editing entry serials: ${[row.super_admin_serial_number, row.country_transaction_serial_number, row.branch_transaction_serial_number].filter(Boolean).join(" / ")}`);
+    setMessage(`Editing entry serials: ${[h.super_admin_serial_number || row.super_admin_serial_number, h.country_transaction_serial_number || row.country_transaction_serial_number, h.branch_transaction_serial_number || row.branch_transaction_serial_number].filter(Boolean).join(" / ")}`);
     
     const formElement = document.querySelector("h3")?.closest(".Card") || document.querySelector(".Payment-Work-Entry-card");
     formElement?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1935,6 +1941,25 @@ export function CashEntryForm({
       console.error(err);
     }
   };
+
+  const searchParams = useSearchParams();
+  const urlEntryId = searchParams.get("entryId") || searchParams.get("id");
+
+  useEffect(() => {
+    if (!urlEntryId) return;
+    let alive = true;
+    apiGet<any>(`/api/erp/roznamcha/${encodeURIComponent(urlEntryId)}`)
+      .then((res) => {
+        if (!alive) return;
+        if (res?.found && res?.header) {
+          handleEditEntry(res);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to auto-load roznamcha entry for edit:", err);
+      });
+    return () => { alive = false; };
+  }, [urlEntryId]);
 
   const handleDeleteEntry = async (entryId: string) => {
     if (!entryId || !canEditOrDelete) return;

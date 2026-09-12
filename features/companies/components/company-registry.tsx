@@ -1213,6 +1213,21 @@ export function CompanyRegistry({
                           </button>
                           <button
                             type="button"
+                            onClick={() => {
+                              const compId = c.companies[0]?.id || c.id;
+                              if (onEditCompany && compId) {
+                                onEditCompany(compId);
+                              } else {
+                                router.push(`/dashboard/settings/company-setup?companyId=${compId}` as Route);
+                              }
+                            }}
+                            className="h-8 w-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 inline-flex items-center justify-center cursor-pointer transition border border-slate-200/60 shadow-2xs"
+                            title="Edit Company / Group"
+                          >
+                            <PencilLine className="h-4 w-4 text-slate-600" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setOpenActionMenuId(openActionMenuId === c.id ? null : c.id)}
                             className="h-8 w-8 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer shadow-2xs"
                             title="Actions Menu"

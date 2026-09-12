@@ -49,6 +49,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { cn } from "@/lib/utils";
+import { ModulePermissionModal } from "@/components/permissions/module-permission-modal";
 
 interface UserDirectoryItem {
   userId: string;
@@ -1111,6 +1112,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
   const [printModalUser, setPrintModalUser] = useState<UserDirectoryItem | null>(null);
   const [showBatchPrint, setShowBatchPrint] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserDirectoryItem | null>(null);
+  const [showModulePermModal, setShowModulePermModal] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState<"permissions" | "profile" | "handover">("permissions");
   const [userPermissions, setUserPermissions] = useState<Record<string, { allowed: boolean; read: boolean; write: boolean; delete: boolean }>>({});
   const [savingPerms, setSavingPerms] = useState(false);
@@ -1330,15 +1332,81 @@ export default function SuperAdminAllUsersDirectoryPage() {
     setUserPermissions(next);
   };
 
+  const FORM_TO_RESOURCE_MAP: Record<string, string> = {
+    "dash-main": "dashboard",
+    "dash-super": "dashboard",
+    "dash-country": "dashboard",
+    "dash-city": "dashboard",
+    "dash-logistics": "dashboard",
+    "form-user-reg": "users",
+    "form-user-dir": "users",
+    "form-branch-super": "country_branches",
+    "form-branch-country": "country_branches",
+    "form-branch-city": "city_branches",
+    "form-accounts": "accounts",
+    "form-customers": "customers",
+    "form-goods": "products",
+    "form-cash-entry": "roznamcha",
+    "form-expenses": "expenses",
+    "form-exchange": "exchange_rates",
+    "form-banks": "banks",
+    "form-roznamcha-all": "roznamcha",
+    "form-ledger": "ledgers",
+    "form-po-wizard": "purchases",
+    "form-po-confirm": "purchases",
+    "form-po-adv": "transactions",
+    "form-po-rem": "transactions",
+    "form-po-local": "purchases",
+    "form-transit-entry": "shipping_records",
+    "form-customs-gd": "clearing_agents",
+    "form-transit-loading": "shipping_records",
+    "form-truck-reg": "shipping_records",
+    "form-clearing-bill": "clearing_agents",
+    "form-whatsapp": "communication",
+    "form-email": "communication",
+    "form-sms": "communication",
+    "form-company-settings": "companies",
+    "form-location-settings": "locations",
+    "form-ports-settings": "ports",
+  };
+
   const handleSaveUserPermissions = async () => {
     if (!selectedUser) return;
     setSavingPerms(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
-      showToast(th("Permissions successfully updated and synchronized across nodes!"));
+      const permsSet = new Set<string>();
+      if (selectedUser.role.toLowerCase().includes("super_admin")) {
+        permsSet.add("*:*");
+      }
+      Object.entries(userPermissions).forEach(([formId, flags]) => {
+        if (!flags.allowed) return;
+        const res = FORM_TO_RESOURCE_MAP[formId] || formId.replace(/^form-/, "");
+        if (flags.read) permsSet.add(`${res}:read`);
+        if (flags.write) {
+          permsSet.add(`${res}:create`);
+          permsSet.add(`${res}:update`);
+        }
+        if (flags.delete) permsSet.add(`${res}:delete`);
+      });
+
+      const response = await fetch("/api/erp/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: selectedUser.userId,
+          permissions: Array.from(permsSet)
+        })
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error?.message || json?.error || "Failed to update permissions");
+      }
+
+      showToast(th("Permissions successfully updated and saved to database!"));
       setSelectedUser(null);
-    } catch {
-      showToast(th("Failed to save permissions."));
+      await fetchUsers();
+    } catch (err: any) {
+      showToast(th(`Failed to save permissions: ${err?.message || "Unknown error"}`));
     } finally {
       setSavingPerms(false);
     }
@@ -1550,6 +1618,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
             >
               <Download className="h-3.5 w-3.5 text-slate-500" />
               <span>{th("Export CSV")}</span>
+            </Button>
+
+            {/* Module Edit & Delete Access Button */}
+            <Button
+              onClick={() => setShowModulePermModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>{th("Module Edit & Delete Access")}</span>
             </Button>
 
             {/* New User Form Button */}
@@ -2697,6 +2774,16 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
           </div>
         </div>
+      )}
+
+      {showModulePermModal && (
+        <ModulePermissionModal
+          onClose={() => setShowModulePermModal(false)}
+          onSaved={() => {
+            setShowModulePermModal(false);
+            fetchUsers();
+          }}
+        />
       )}
 
     </div>

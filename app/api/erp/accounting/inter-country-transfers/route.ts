@@ -7,6 +7,7 @@ import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 import {
   createInterCountryTransfer,
   listInterCountryTransfers,
+  listAllCountryMainAccounts,
 } from "@/lib/services/inter-country-transfer-service";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +18,16 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
 
+    // Support fetching the authoritative 4 Country Accounts
+    if (searchParams.get("action") === "country-accounts" || searchParams.get("accounts") === "true") {
+      const countryAccounts = await listAllCountryMainAccounts();
+      return apiOk({ countryAccounts });
+    }
+
     const countryId = searchParams.get("countryId") || (!session.isSuperAdmin ? session.countryIds?.[0] : null);
     const status = searchParams.get("status");
     const direction = searchParams.get("direction") as "sent" | "received" | null;
+    const tab = searchParams.get("tab") as "incoming" | "sent" | "pending" | "accepted" | "rejected" | "all" | null;
     const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!, 10) : 50;
     const offset = searchParams.get("offset") ? parseInt(searchParams.get("offset")!, 10) : 0;
 
@@ -27,6 +35,7 @@ export async function GET(request: NextRequest) {
       countryId,
       status,
       direction,
+      tab,
       limit,
       offset,
     });
@@ -54,8 +63,8 @@ export async function POST(request: NextRequest) {
     const session = await requireErpSession();
     const body = await request.json();
 
-    if (!body.sourceCountryId || !body.destCountryId || !body.amount || !body.originalCurrency || !body.finalCurrency) {
-      throw new Error("Missing required transfer parameters (sourceCountryId, destCountryId, amount, currencies)");
+    if (!body.sourceCountryId || !body.destCountryId || !body.amount || !body.originalCurrency) {
+      throw new Error("Missing required transfer parameters (sourceCountryId, destCountryId, amount, originalCurrency)");
     }
 
     if (body.sourceCountryId === body.destCountryId) {
@@ -72,14 +81,22 @@ export async function POST(request: NextRequest) {
       destCountryId: body.destCountryId,
       destCountryBranchId: body.destCountryBranchId,
       destCityBranchId: body.destCityBranchId,
-      destBankCashLedgerId: body.destBankCashLedgerId,
-      destPartyLedgerId: body.destPartyLedgerId,
       amount: Number(body.amount),
       originalCurrency: body.originalCurrency,
       exchangeRate: Number(body.exchangeRate || 1),
-      finalCurrency: body.finalCurrency,
-      finalAmount: Number(body.finalAmount || body.amount),
+      finalCurrency: body.finalCurrency || body.originalCurrency,
+      finalAmount: Number(body.finalAmount || (Number(body.amount) * Number(body.exchangeRate || 1))),
       direction: body.direction === "credit" ? "credit" : "debit",
+      // Reference & Claim Details
+      billNumber: body.billNumber || body.bill_number,
+      containerNumber: body.containerNumber || body.container_number,
+      orderReference: body.orderReference || body.order_reference,
+      blNumber: body.blNumber || body.bl_number,
+      jobNumber: body.jobNumber || body.job_number,
+      customerPartyName: body.customerPartyName || body.customer_party_name,
+      referenceDate: body.referenceDate || body.reference_date,
+      claimCategory: body.claimCategory || body.claim_category || "general_business",
+      claimDescription: body.claimDescription || body.claim_description,
       narration: body.narration,
       remarks: body.remarks,
       idempotencyKey: body.idempotencyKey,

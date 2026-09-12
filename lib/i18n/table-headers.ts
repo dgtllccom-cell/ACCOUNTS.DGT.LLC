@@ -40,6 +40,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   // ── Main-menu cleanup 2026-09-09 — new/changed labels ──
   "CLEARING ORDER TRUCKS": { ur: "کلیئرنگ آرڈر ٹرک", ar: "شاحنات أمر التخليص", fa: "کامیون‌های سفارش ترخیص", ps: "د کلیرنس امر لارۍ" },
   "SHIPPING HANDOVERS": { ur: "شپنگ حوالگی", ar: "تسليمات الشحن", fa: "تحویل‌های حمل", ps: "د لېږد سپارنې" },
+  "NEW CUSTOMER ORDER": { ur: "نیا کسٹمر آرڈر", ar: "طلب عميل جديد", fa: "سفارش جدید مشتری", ps: "د پیرودونکي نوی امر" },
   "DAILY SETTLEMENT": { ur: "روزانہ تصفیہ", ar: "التسوية اليومية", fa: "تسویه روزانه", ps: "ورځنۍ تصفیه" },
   "PAYMENT SETTLEMENT": { ur: "ادائیگی تصفیہ", ar: "تسوية المدفوعات", fa: "تسویه پرداخت", ps: "د تادیې تصفیه" },
   "EMPLOYEES DIRECTORY & REGISTRATION": { ur: "ملازمین ڈائریکٹری و رجسٹریشن", ar: "دليل الموظفين والتسجيل", fa: "فهرست و ثبت‌نام کارکنان", ps: "د کارکوونکو لارښود او ثبت" },

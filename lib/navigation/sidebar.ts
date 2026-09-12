@@ -234,6 +234,35 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "entry-edit-delete-control",
+    labelKey: "nav.entry_edit_delete_control" as any,
+    iconKey: "settings",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "entry-edit-invoice",
+        labelKey: "nav.business_edit_invoice" as any,
+        iconKey: "file-text",
+        href: "/dashboard/business-edit-invoice" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "entry-edit-history",
+        labelKey: "nav.edit_history" as any,
+        iconKey: "clock",
+        href: "/dashboard/super-admin/edit-history" as Route,
+        roles: ["super_admin"]
+      },
+      {
+        key: "entry-delete-records",
+        labelKey: "nav.deleted_records" as any,
+        iconKey: "scale",
+        href: "/dashboard/super-admin/deleted-records" as Route,
+        roles: ["super_admin", "country_admin"]
+      }
+    ]
+  },
+  {
     key: "ledgers",
     labelKey: "nav.ledgers",
     iconKey: "book-open",

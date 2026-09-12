@@ -11,9 +11,17 @@ import { t } from "@/lib/i18n/ui";
  * wizard is rendered unchanged for Manual Entry; a chosen draft is stashed in
  * sessionStorage (`di_draft_prefill`) for the wizard to read.
  */
-export function NewPurchaseBookingEntry({ session, lang }: { session: any; lang?: string }) {
+export function NewPurchaseBookingEntry({
+  session,
+  lang,
+  skipGate = false
+}: {
+  session: any;
+  lang?: string;
+  skipGate?: boolean;
+}) {
   return (
-    <EntryMethodSelector targetModule="purchase_orders" domain="business" lang={lang}>
+    <EntryMethodSelector targetModule="purchase_orders" domain="business" lang={lang} skipGate={skipGate}>
       <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">{t(lang, "npbe.loading_form", "Loading Purchase Booking Order Form…")}</div>}>
         <PurchaseOrderWizard session={session} />
       </Suspense>

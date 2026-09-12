@@ -100,14 +100,16 @@ export async function PATCH(
     const action = body.action as "accept" | "reject" | "edit_ledger";
 
     if (action === "accept") {
-      if (!body.debitLedgerId || !body.creditLedgerId) {
-        throw new Error("Debit and Credit Ledger IDs are required for acceptance");
+      const selectedLocalLedgerId = body.selectedLocalLedgerId || body.debitLedgerId;
+      if (!selectedLocalLedgerId) {
+        throw new Error("Selected local account/ledger ID is required for claim acceptance");
       }
       const result = await acceptInterCountryTransfer({
         session,
         transferId: id,
-        debitLedgerId: body.debitLedgerId,
-        creditLedgerId: body.creditLedgerId,
+        selectedLocalLedgerId,
+        debitLedgerId: selectedLocalLedgerId,
+        creditLedgerId: body.creditLedgerId || null,
         note: body.note,
       });
       return apiOk(result);

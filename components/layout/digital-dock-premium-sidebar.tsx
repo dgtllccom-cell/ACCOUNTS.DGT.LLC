@@ -49,6 +49,7 @@ import {
   MessageSquare,
   Mic,
   Package,
+  Pencil,
   PhoneCall,
   Receipt,
   RefreshCw,
@@ -160,6 +161,31 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
+    key: "entry-edit-delete-control",
+    label: "Entry Edit & Delete Control",
+    icon: Sliders,
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "sub-entry-edit",
+        label: "Entry Edit System",
+        icon: Pencil,
+        children: [
+          { label: "Business Edit Invoice", href: "/dashboard/business-edit-invoice", icon: FileText },
+          { label: "Edit & Version History", href: "/dashboard/super-admin/edit-history", icon: History, roles: ["super_admin"] },
+        ],
+      },
+      {
+        key: "sub-entry-delete",
+        label: "Entry Delete / Delete Management",
+        icon: Trash2,
+        children: [
+          { label: "Deleted Records & Trash Audit", href: "/dashboard/super-admin/deleted-records", icon: Trash2, roles: ["super_admin", "country_admin"] },
+        ],
+      },
+    ],
+  },
+  {
     key: "ledgers",
     label: "Ledgers",
     icon: BookOpen,
@@ -264,7 +290,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: Globe,
         children: [
           { label: "Country-to-Country Transfer", href: "/dashboard/purchase/country-transfer", icon: Globe },
-          { label: "Inter-Country Transfers", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
+          { label: "Inter-Country Transfers & Claims", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
           { label: "Country Purchase Reports", href: "/dashboard/purchase/country-purchase-reports", icon: FileBarChart },
         ],
       },
@@ -306,8 +332,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "Shipping & Clearing",
     icon: Ship,
     children: [
+      { label: "New Customer Order", href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
+      { label: "Inter-Country Shipping Claims", href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
       { label: "Clearing Order Trucks", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
       { label: "Shipping Handovers", href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
@@ -348,6 +376,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Layers,
     children: [
       { label: "Settlement & Reconciliation Engine", href: "/dashboard/settlement", icon: Layers },
+      { label: "Inter-Country Claims & Settlements", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
       { label: "Daily Settlement", href: "/dashboard/settlement/daily", icon: CalendarCheck },
       { label: "Payment Settlement", href: "/dashboard/settlement/payment", icon: Receipt },
     ],
