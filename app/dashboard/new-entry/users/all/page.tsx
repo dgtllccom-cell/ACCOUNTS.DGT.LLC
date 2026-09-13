@@ -84,21 +84,26 @@ interface UserDirectoryItem {
 
 // Complete list of system forms for granular permission granting & inspection
 const ALL_SYSTEM_FORMS = [
+  // 1. Dashboards
   { id: "dash-main", name: "Dashboard Overview", category: "Dashboards", route: "/dashboard" },
+  { id: "dash-smart-ops", name: "Smart Operations Center", category: "Dashboards", route: "/dashboard/smart-operations" },
   { id: "dash-super", name: "Super Admin Dashboard", category: "Dashboards", route: "/dashboard/super-admin" },
   { id: "dash-country", name: "Country Admin Dashboard", category: "Dashboards", route: "/dashboard/country" },
   { id: "dash-city", name: "City Branch Dashboard", category: "Dashboards", route: "/dashboard/city" },
   { id: "dash-logistics", name: "Logistics Dashboard", category: "Dashboards", route: "/dashboard/logistics" },
   
+  // 2. New Entry
   { id: "form-user-reg", name: "User Registration Form", category: "New Entry", route: "/dashboard/new-entry/users/registration" },
   { id: "form-user-dir", name: "All Users Directory", category: "New Entry", route: "/dashboard/new-entry/users/all" },
   { id: "form-branch-super", name: "Super Admin Branch Registry", category: "New Entry", route: "/dashboard/new-entry/branches/super-admin" },
   { id: "form-branch-country", name: "Country Branch Setup", category: "New Entry", route: "/dashboard/new-entry/branch-entry/country-branch" },
   { id: "form-branch-city", name: "City Branch Setup", category: "New Entry", route: "/dashboard/new-entry/branch-entry/city-branch" },
   { id: "form-accounts", name: "Chart of Accounts Master", category: "New Entry", route: "/dashboard/accounts/setup" },
+  { id: "form-ledger-new", name: "New Ledger Account Setup", category: "New Entry", route: "/dashboard/ledger/new" },
   { id: "form-customers", name: "Customer Profile Setup", category: "New Entry", route: "/dashboard/settings/customers/setup" },
   { id: "form-goods", name: "Goods Master Data", category: "New Entry", route: "/dashboard/new-entry/goods-master" },
   
+  // 3. Accounting & Roznamcha
   { id: "form-cash-entry", name: "Credit & Debit Cash Entry (Roznamcha)", category: "Accounting & Roznamcha", route: "/dashboard/roznamcha/cash-entry" },
   { id: "form-expenses", name: "Expenses Bill Entry", category: "Accounting & Roznamcha", route: "/dashboard/roznamcha/expenses-bill" },
   { id: "form-exchange", name: "Money Changer (Currency Dealing)", category: "Accounting & Roznamcha", route: "/dashboard/roznamcha/money-exchange" },
@@ -106,25 +111,43 @@ const ALL_SYSTEM_FORMS = [
   { id: "form-roznamcha-all", name: "Roznamcha All Ledger Report", category: "Accounting & Roznamcha", route: "/dashboard/roznamcha/all" },
   { id: "form-ledger", name: "Ledger Statement General Report", category: "Accounting & Roznamcha", route: "/dashboard/ledger/general-report" },
   
+  // 4. Trade & Purchase
   { id: "form-po-wizard", name: "Purchase Booking Order Wizard", category: "Trade & Purchase", route: "/dashboard/purchase/new-purchase-booking-order" },
   { id: "form-po-confirm", name: "Purchase Booking Confirmation", category: "Trade & Purchase", route: "/dashboard/purchase/purchase-confirm" },
   { id: "form-po-adv", name: "PO Advance Payment Entry", category: "Trade & Purchase", route: "/dashboard/journal/purchase-order-payment/advance" },
   { id: "form-po-rem", name: "PO Remaining Payment Entry", category: "Trade & Purchase", route: "/dashboard/journal/purchase-order-payment/remaining" },
   { id: "form-po-local", name: "Local Purchase Orders", category: "Trade & Purchase", route: "/dashboard/purchase/local-purchases" },
+  { id: "form-local-goods", name: "Local Goods Received Note", category: "Trade & Purchase", route: "/dashboard/purchase/local-goods-received" },
+  { id: "form-consignment", name: "Consignment Management", category: "Trade & Purchase", route: "/dashboard/consignment" },
+  { id: "form-inventory", name: "Inventory & Stock Levels", category: "Trade & Purchase", route: "/dashboard/inventory" },
+
+  // 5. Sales & Distribution
+  { id: "form-sales-new", name: "Sales Booking Order Entry", category: "Sales & Distribution", route: "/dashboard/sales/new-sales-booking-order" },
+  { id: "form-sales-confirm", name: "Sales Booking Confirmation", category: "Sales & Distribution", route: "/dashboard/sales/sales-confirm" },
+  { id: "form-sales-local", name: "Local Sales Orders", category: "Sales & Distribution", route: "/dashboard/sales/local-sales" },
+  { id: "form-sales-order", name: "Sales Order Management", category: "Sales & Distribution", route: "/dashboard/sales/sales-order" },
   
+  // 6. Shipping & Clearing
   { id: "form-transit-entry", name: "Transit Entry & Public Report", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/transit-entry" },
   { id: "form-customs-gd", name: "Customs Declaration (GD Entry)", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/agent-custom-entry" },
   { id: "form-transit-loading", name: "Transit Truck Loading", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/transit-loading" },
   { id: "form-truck-reg", name: "Truck Registration Form", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/truck-registration" },
   { id: "form-clearing-bill", name: "Clearing Agent Service Bill", category: "Shipping & Clearing", route: "/dashboard/clearing-agent/bill-entry" },
+  { id: "form-shipping-line", name: "Ocean & Border Shipping Line", category: "Shipping & Clearing", route: "/dashboard/shipping-line" },
+  { id: "form-bl-entry", name: "Bill of Lading (B/L Entry)", category: "Shipping & Clearing", route: "/dashboard/shipping-line/bl-entry" },
   
-  { id: "form-whatsapp", name: "WhatsApp Multi-Branch Team Inbox", category: "Communication", route: "/dashboard/messages/whatsapp" },
-  { id: "form-email", name: "Enterprise Email Center", category: "Communication", route: "/dashboard/communication-center" },
-  { id: "form-sms", name: "SMS Dispatch & Notifications", category: "Communication", route: "/dashboard/return-sms-reply" },
+  // 7. Communication & AI
+  { id: "form-whatsapp", name: "WhatsApp Multi-Branch Team Inbox", category: "Communication & AI", route: "/dashboard/messages/whatsapp" },
+  { id: "form-email", name: "Enterprise Email Center", category: "Communication & AI", route: "/dashboard/communication-center" },
+  { id: "form-sms", name: "SMS Dispatch & Notifications", category: "Communication & AI", route: "/dashboard/return-sms-reply" },
+  { id: "form-ai-voice", name: "AI Voice & Text Entry", category: "Communication & AI", route: "/dashboard/ai-entry/voice-text" },
   
+  // 8. Administration & Settings
   { id: "form-company-settings", name: "Company Master Profile", category: "Administration", route: "/dashboard/settings/company-setup" },
   { id: "form-location-settings", name: "Location Hierarchy Setup", category: "Administration", route: "/dashboard/settings/locations" },
-  { id: "form-ports-settings", name: "Ports & Border Crossing Customs", category: "Administration", route: "/dashboard/settings/tax" }
+  { id: "form-ports-settings", name: "Ports & Border Crossing Customs", category: "Administration", route: "/dashboard/settings/tax" },
+  { id: "form-tax-uae", name: "UAE Tax & E-Invoicing", category: "Administration", route: "/dashboard/tax-einvoicing/uae/dashboard" },
+  { id: "form-audit", name: "Audit & Security Monitoring", category: "Administration", route: "/dashboard/audit-monitoring" }
 ];
 
 // Fallback seed directory precisely matching the 28 users reference specification & database records
@@ -1118,6 +1141,8 @@ export default function SuperAdminAllUsersDirectoryPage() {
   const [activeModalTab, setActiveModalTab] = useState<"permissions" | "profile" | "handover">("permissions");
   const [userPermissions, setUserPermissions] = useState<Record<string, { allowed: boolean; read: boolean; write: boolean; delete: boolean }>>({});
   const [savingPerms, setSavingPerms] = useState(false);
+  const [rulesSearchQuery, setRulesSearchQuery] = useState("");
+  const [rulesCategoryFilter, setRulesCategoryFilter] = useState("All");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Change Password Modal State
@@ -1279,23 +1304,50 @@ export default function SuperAdminAllUsersDirectoryPage() {
     return { total, active, admins, staff, inactive, branches, countries };
   }, [filteredUsers]);
 
-  // Permissions Inspector Modal
+  // User Rules & Form Allocation Modal Handlers
   const openUserInspector = (user: UserDirectoryItem) => {
     setSelectedUser(user);
     setActiveModalTab("permissions");
+    setRulesSearchQuery("");
+    setRulesCategoryFilter("All");
 
     const held = new Set((user.permissions ?? []).map((p) => p.toLowerCase()));
-    const hasWildcard = held.has("*:*") || held.has("*") || user.role.includes("super_admin");
-    const isAdm = user.role.includes("admin");
+    const hasWildcard = held.has("*:*") || held.has("*") || user.role.toLowerCase().includes("super_admin");
+    const hasAnyRoute = Array.from(held).some((p) => p.startsWith("route:"));
 
     const initialPerms: Record<string, { allowed: boolean; read: boolean; write: boolean; delete: boolean }> = {};
     ALL_SYSTEM_FORMS.forEach((f) => {
-      const allowed = hasWildcard || isAdm || f.category === "Dashboards";
+      const res = (FORM_TO_RESOURCE_MAP[f.id] || f.id.replace(/^form-/, "")).toLowerCase();
+      let isAllowed = false;
+      let canRead = false;
+      let canWrite = false;
+      let canDelete = false;
+
+      if (hasWildcard) {
+        isAllowed = true;
+        canRead = true;
+        canWrite = true;
+        canDelete = true;
+      } else if (hasAnyRoute) {
+        // Explicit saved rules in DB
+        isAllowed = held.has(`route:${f.route.toLowerCase()}`);
+        canRead = isAllowed && (held.has(`${res}:read`) || held.has(`${res}:*`) || held.size > 0);
+        canWrite = isAllowed && (held.has(`${res}:create`) || held.has(`${res}:update`) || held.has(`${res}:write`) || held.has(`${res}:*`));
+        canDelete = isAllowed && (held.has(`${res}:delete`) || held.has(`${res}:*`));
+      } else {
+        // Fallback default if unconfigured
+        const isAdm = user.role.toLowerCase().includes("admin");
+        isAllowed = isAdm || f.category === "Dashboards";
+        canRead = isAllowed;
+        canWrite = isAllowed && isAdm;
+        canDelete = isAllowed && user.role.toLowerCase().includes("super_admin");
+      }
+
       initialPerms[f.id] = {
-        allowed,
-        read: allowed,
-        write: allowed && (hasWildcard || isAdm),
-        delete: allowed && (hasWildcard || user.role.includes("super_admin")),
+        allowed: isAllowed,
+        read: canRead,
+        write: canWrite,
+        delete: canDelete,
       };
     });
     setUserPermissions(initialPerms);
@@ -1346,8 +1398,21 @@ export default function SuperAdminAllUsersDirectoryPage() {
     setUserPermissions(next);
   };
 
+  const handleViewOnlyAll = () => {
+    setUserPermissions((prev) => {
+      const next: Record<string, { allowed: boolean; read: boolean; write: boolean; delete: boolean }> = {};
+      ALL_SYSTEM_FORMS.forEach((f) => {
+        const curr = prev[f.id];
+        const isAllowed = curr ? curr.allowed : true;
+        next[f.id] = { allowed: isAllowed, read: isAllowed, write: false, delete: false };
+      });
+      return next;
+    });
+  };
+
   const FORM_TO_RESOURCE_MAP: Record<string, string> = {
     "dash-main": "dashboard",
+    "dash-smart-ops": "dashboard",
     "dash-super": "dashboard",
     "dash-country": "dashboard",
     "dash-city": "dashboard",
@@ -1358,6 +1423,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
     "form-branch-country": "country_branches",
     "form-branch-city": "city_branches",
     "form-accounts": "accounts",
+    "form-ledger-new": "ledgers",
     "form-customers": "customers",
     "form-goods": "products",
     "form-cash-entry": "roznamcha",
@@ -1371,17 +1437,29 @@ export default function SuperAdminAllUsersDirectoryPage() {
     "form-po-adv": "transactions",
     "form-po-rem": "transactions",
     "form-po-local": "purchases",
+    "form-local-goods": "purchases",
+    "form-consignment": "purchases",
+    "form-inventory": "products",
+    "form-sales-new": "sales",
+    "form-sales-confirm": "sales",
+    "form-sales-local": "sales",
+    "form-sales-order": "sales",
     "form-transit-entry": "shipping_records",
     "form-customs-gd": "clearing_agents",
     "form-transit-loading": "shipping_records",
     "form-truck-reg": "shipping_records",
     "form-clearing-bill": "clearing_agents",
+    "form-shipping-line": "shipping_records",
+    "form-bl-entry": "shipping_records",
     "form-whatsapp": "communication",
     "form-email": "communication",
     "form-sms": "communication",
+    "form-ai-voice": "communication",
     "form-company-settings": "companies",
     "form-location-settings": "locations",
     "form-ports-settings": "ports",
+    "form-tax-uae": "tax",
+    "form-audit": "audit_logs"
   };
 
   const handleSaveUserPermissions = async () => {
@@ -1392,9 +1470,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
       if (selectedUser.role.toLowerCase().includes("super_admin")) {
         permsSet.add("*:*");
       }
-      Object.entries(userPermissions).forEach(([formId, flags]) => {
-        if (!flags.allowed) return;
-        const res = FORM_TO_RESOURCE_MAP[formId] || formId.replace(/^form-/, "");
+      ALL_SYSTEM_FORMS.forEach((form) => {
+        const flags = userPermissions[form.id];
+        if (!flags || !flags.allowed) return;
+
+        // 1. Critical for Navigation Sidebar: store route token so sidebar displays this form
+        permsSet.add(`route:${form.route}`);
+
+        // 2. Resource action tokens for API authorization
+        const res = FORM_TO_RESOURCE_MAP[form.id] || form.id.replace(/^form-/, "");
         if (flags.read) permsSet.add(`${res}:read`);
         if (flags.write) {
           permsSet.add(`${res}:create`);
@@ -1403,12 +1487,16 @@ export default function SuperAdminAllUsersDirectoryPage() {
         if (flags.delete) permsSet.add(`${res}:delete`);
       });
 
+      const updatedPermissions = Array.from(permsSet);
+
       const response = await fetch("/api/erp/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: selectedUser.userId,
-          permissions: Array.from(permsSet)
+          userCode: selectedUser.userCode,
+          email: selectedUser.email,
+          permissions: updatedPermissions
         })
       });
       const json = await response.json();
@@ -1416,11 +1504,20 @@ export default function SuperAdminAllUsersDirectoryPage() {
         throw new Error(json?.error?.message || json?.error || "Failed to update permissions");
       }
 
-      showToast(th("Permissions successfully updated and saved to database!"));
+      // Optimistically update local users state
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.userId === selectedUser.userId || u.userCode.toLowerCase() === selectedUser.userCode.toLowerCase()
+            ? { ...u, permissions: updatedPermissions, permissionsCount: updatedPermissions.length }
+            : u
+        )
+      );
+
+      showToast(th("Rules & form allocations saved! User navigation menu updated."));
       setSelectedUser(null);
       await fetchUsers();
     } catch (err: any) {
-      showToast(th(`Failed to save permissions: ${err?.message || "Unknown error"}`));
+      showToast(th(`Failed to save rules: ${err?.message || "Unknown error"}`));
     } finally {
       setSavingPerms(false);
     }
@@ -2141,15 +2238,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       {/* 13. Actions */}
                       <td className="py-3.5 px-3 text-center print:hidden">
                         <div className="flex items-center justify-center gap-1.5">
-                          {/* Inspect button */}
+                          {/* Rules button */}
                           <Button
                             size="sm"
                             onClick={() => openUserInspector(u)}
-                            className="h-7 px-2 text-[11px] font-bold bg-[#4338ca] hover:bg-[#3730a3] text-white rounded-md shadow-xs cursor-pointer flex items-center gap-1"
-                            title={th("Inspect Permissions")}
+                            className="h-7 px-2.5 text-[11px] font-bold bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-md shadow-xs cursor-pointer flex items-center gap-1.5 transition-all hover:scale-[1.02]"
+                            title={th("User Rules & Form Allocation")}
                           >
-                            <Eye className="w-3 h-3" />
-                            <span>{th("Inspect")}</span>
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>{th("Rules")}</span>
                           </Button>
 
                           {/* A4 Slip button */}
@@ -2190,22 +2287,22 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             </button>
 
                             {activeMenuRowId === u.userId && (
-                              <div className="absolute right-0 mt-1 w-48 rounded-xl border border-border bg-popover text-popover-foreground shadow-xl z-50 p-1 text-xs text-left animate-in fade-in zoom-in-95">
-                                <button
-                                  type="button"
-                                  onClick={() => { handleOpenPasswordModal(u); setActiveMenuRowId(null); }}
-                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2 font-medium text-indigo-600 dark:text-indigo-400"
-                                >
-                                  <KeyRound className="w-3.5 h-3.5" />
-                                  <span>{th("Change Password")}</span>
-                                </button>
+                              <div className="absolute right-0 mt-1 w-52 rounded-xl border border-border bg-popover text-popover-foreground shadow-xl z-50 p-1 text-xs text-left animate-in fade-in zoom-in-95">
                                 <button
                                   type="button"
                                   onClick={() => { openUserInspector(u); setActiveMenuRowId(null); }}
-                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2"
+                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2 font-bold text-indigo-600 dark:text-indigo-400"
                                 >
-                                  <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
-                                  <span>{th("Permissions Matrix")}</span>
+                                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                                  <span>{th("Rules & Form Allocation")}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { handleOpenPasswordModal(u); setActiveMenuRowId(null); }}
+                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5 text-slate-500" />
+                                  <span>{th("Change Password")}</span>
                                 </button>
                                 <button
                                   type="button"

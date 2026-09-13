@@ -463,7 +463,8 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const body = z.object({
-      userId: uuidSchema,
+      userId: z.string().trim(),
+      userCode: z.string().trim().optional(),
       isActive: z.boolean().optional(),
       password: z.string().min(8).max(128).optional(),
       fullName: z.string().trim().min(2).max(200).optional(),
@@ -512,18 +513,32 @@ export async function PATCH(request: NextRequest) {
 
     const admin = createSupabaseAdminClient() as any;
 
+    // Resolve target userId if non-UUID reference ID was provided
+    let targetUserId = body.userId;
+    if (!isUuid(targetUserId)) {
+      const codeOrEmail = body.userCode || body.email || targetUserId;
+      const { data: matchedProfile } = await admin
+        .from("profiles")
+        .select("id")
+        .or(`user_code.ilike.${codeOrEmail},email.ilike.${codeOrEmail}`)
+        .maybeSingle();
+
+      if (matchedProfile?.id) targetUserId = matchedProfile.id;
+    }
+    body.userId = targetUserId;
+
     // Fetch the target user's current assignment to check their current country scope
     let { data: targetAssignment } = await admin
       .from("user_role_assignments")
       .select("country_id, role, country_branch_id, city_branch_id, mobile_profile")
-      .eq("user_id", body.userId)
+      .eq("user_id", targetUserId)
       .is("deleted_at", null)
       .maybeSingle();
     if (!targetAssignment) {
       ({ data: targetAssignment } = await admin
         .from("user_role_assignments")
         .select("country_id, role, country_branch_id, city_branch_id")
-        .eq("user_id", body.userId)
+        .eq("user_id", targetUserId)
         .is("deleted_at", null)
         .maybeSingle());
     }
