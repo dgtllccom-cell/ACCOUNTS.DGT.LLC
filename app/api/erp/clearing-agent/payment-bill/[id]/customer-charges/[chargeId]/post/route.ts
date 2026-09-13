@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -23,6 +23,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "clearing_bill_customer_charges", action: "post" });
+    if (!sessionInDomain(session, "shipping")) {
+      return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });
+    }
     const { id, chargeId } = await params;
 
     const bill = await withLocalPg((sql) => sql`

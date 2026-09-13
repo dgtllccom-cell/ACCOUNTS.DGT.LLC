@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   getCustomerOrderById,
   listCustomerOrders,
@@ -75,6 +76,11 @@ export async function POST(req: NextRequest) {
     const sessionCountryBranchId = (session.countryBranchIds ?? [])[0] ?? null;
     const sessionCityBranchId = (session.cityBranchIds ?? [])[0] ?? null;
     const sessionClearingAgentId = (session.clearingAgentIds ?? [])[0] ?? null;
+    // The client rarely sends an explicit original_language — fall back to the
+    // active UI language (sent as x-erp-lang on every request) rather than a
+    // hardcoded "en", so a form filled out in Arabic/Urdu/Farsi/Pashto records
+    // its true source language instead of silently mislabeling it as English.
+    const requestLanguage = await getRequestLanguage(body.original_language ?? body.originalLanguage ?? null);
 
     const result = await saveCustomerOrder({
       customerId: body.customer_id ?? body.customerId ?? null,
@@ -114,7 +120,7 @@ export async function POST(req: NextRequest) {
       partyLinks: body.party_links ?? body.partyLinks ?? undefined,
       legs: body.legs ?? undefined,
       loadingAllocations: body.loading_allocations ?? body.loadingAllocations ?? undefined,
-      originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
+      originalLanguage: requestLanguage,
       countryId: isSuperAdmin ? (body.country_id ?? body.countryId ?? null) : sessionCountryId,
       countryBranchId: isSuperAdmin ? (body.country_branch_id ?? body.countryBranchId ?? null) : sessionCountryBranchId,
       cityBranchId: isSuperAdmin ? (body.city_branch_id ?? body.cityBranchId ?? null) : sessionCityBranchId,

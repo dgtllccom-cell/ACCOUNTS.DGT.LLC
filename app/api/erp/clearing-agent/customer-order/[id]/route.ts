@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   deleteCustomerOrder,
   getCustomerOrderById,
@@ -60,6 +61,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: false, error: "Not authorized to edit this order" }, { status: 403 });
     }
     const body = await req.json();
+    const requestLanguage = await getRequestLanguage(body.original_language ?? body.originalLanguage ?? null);
     const result = await saveCustomerOrder({
       id,
       customerId: body.customer_id ?? body.customerId ?? null,
@@ -98,7 +100,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       partyLinks: body.party_links ?? body.partyLinks ?? undefined,
       legs: body.legs ?? undefined,
       loadingAllocations: body.loading_allocations ?? body.loadingAllocations ?? undefined,
-      originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
+      originalLanguage: requestLanguage,
       // Scope columns are never re-writable via PATCH by a non-super-admin — a
       // scoped user editing their own order keeps its existing scope untouched;
       // only super admin can re-tag an order to a different country/branch/agent.

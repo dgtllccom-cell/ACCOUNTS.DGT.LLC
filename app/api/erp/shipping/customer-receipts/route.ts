@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { createReceipt } from "@/lib/services/customer-receipt-service";
 
 /**
@@ -15,6 +16,9 @@ export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "customer_receipts", action: "read" });
+    if (!sessionInDomain(session, "shipping")) {
+      return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });
+    }
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get("customerId");
 
@@ -42,6 +46,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "customer_receipts", action: "create" });
+    if (!sessionInDomain(session, "shipping")) {
+      return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });
+    }
     const body = await req.json();
 
     if (!body.customerId) return NextResponse.json({ success: false, error: "customerId is required" }, { status: 400 });
@@ -77,7 +84,8 @@ export async function POST(req: NextRequest) {
       allocationType: body.allocationType ?? "unallocated",
       allocations: body.allocations,
       remarks: body.remarks ?? null,
-      createdBy: session.userId
+      createdBy: session.userId,
+      originalLanguage: await getRequestLanguage(body.original_language ?? body.originalLanguage ?? null)
     });
 
     return NextResponse.json({ success: true, data: receipt });

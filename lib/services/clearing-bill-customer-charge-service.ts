@@ -1,5 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export interface ClearingBillCustomerChargeInput {
   billId: string;
@@ -10,6 +12,7 @@ export interface ClearingBillCustomerChargeInput {
   amount: number;
   remarks?: string | null;
   createdBy?: string | null;
+  originalLanguage?: SupportedLanguage;
 }
 
 export async function listChargesForBill(billId: string) {
@@ -23,7 +26,7 @@ export async function listChargesForBill(billId: string) {
 }
 
 export async function createBillCustomerCharge(input: ClearingBillCustomerChargeInput) {
-  return withLocalPg(async (sql) => {
+  const charge = await withLocalPg(async (sql) => {
     const rows = await sql`
       INSERT INTO public.clearing_bill_customer_charges
         (bill_id, order_id, customer_id, charge_type, currency_code, amount, remarks, created_by)
@@ -35,6 +38,21 @@ export async function createBillCustomerCharge(input: ClearingBillCustomerCharge
     `;
     return rows[0];
   });
+
+  if (charge) {
+    try {
+      await syncRecordTranslations({
+        table: "clearing_bill_customer_charges",
+        recordId: charge.id,
+        record: charge,
+        originalLanguage: input.originalLanguage ?? "en"
+      });
+    } catch (error) {
+      console.warn("Bill customer-charge translation sync failed after save; preserving saved charge.", error);
+    }
+  }
+
+  return charge;
 }
 
 /**

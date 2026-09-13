@@ -1,6 +1,8 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import { ensureCustomerShippingLedger, ensureUnallocatedSuspenseLedger } from "@/lib/services/clearing-bill-customer-charge-service";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export interface CustomerReceiptAllocationInput {
   domain: "business" | "shipping" | "unallocated";
@@ -26,6 +28,7 @@ export interface CreateCustomerReceiptInput {
   allocations: CustomerReceiptAllocationInput[];
   remarks?: string | null;
   createdBy?: string | null;
+  originalLanguage?: SupportedLanguage;
 }
 
 function assertAllocationsBalance(input: CreateCustomerReceiptInput) {
@@ -44,7 +47,7 @@ function assertAllocationsBalance(input: CreateCustomerReceiptInput) {
 
 export async function createReceipt(input: CreateCustomerReceiptInput) {
   assertAllocationsBalance(input);
-  return withLocalPg(async (sql) => {
+  const receipt = await withLocalPg(async (sql) => {
     await sql`BEGIN`;
     try {
       const receiptRows = await sql`
@@ -77,6 +80,21 @@ export async function createReceipt(input: CreateCustomerReceiptInput) {
       throw e;
     }
   });
+
+  if (receipt) {
+    try {
+      await syncRecordTranslations({
+        table: "customer_receipts",
+        recordId: receipt.id,
+        record: receipt,
+        originalLanguage: input.originalLanguage ?? "en"
+      });
+    } catch (error) {
+      console.warn("Customer-receipt translation sync failed after save; preserving saved receipt.", error);
+    }
+  }
+
+  return receipt;
 }
 
 /**

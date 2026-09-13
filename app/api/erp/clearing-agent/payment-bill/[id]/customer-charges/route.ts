@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { listChargesForBill, createBillCustomerCharge } from "@/lib/services/clearing-bill-customer-charge-service";
 
 /**
@@ -14,6 +15,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "clearing_bill_customer_charges", action: "read" });
+    if (!sessionInDomain(session, "shipping")) {
+      return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });
+    }
     const { id } = await params;
 
     const bill = await withLocalPg((sql) => sql`
@@ -36,6 +40,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "clearing_bill_customer_charges", action: "create" });
+    if (!sessionInDomain(session, "shipping")) {
+      return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });
+    }
     const { id } = await params;
     const body = await req.json();
 
@@ -62,7 +69,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       currencyCode: body.currencyCode ?? "USD",
       amount: Number(body.amount),
       remarks: body.remarks ?? null,
-      createdBy: session.userId
+      createdBy: session.userId,
+      originalLanguage: await getRequestLanguage(body.original_language ?? body.originalLanguage ?? null)
     });
 
     return NextResponse.json({ success: true, data: charge });
