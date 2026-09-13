@@ -48,6 +48,30 @@ function hasRealServiceRoleKey() {
   return Boolean(secretKey && !/^sb_(publishable|anon)_/i.test(secretKey) && secretKey !== getSupabasePublicKey());
 }
 
+/**
+ * Account masters are shared, but activation is an approval-controlled
+ * operation.  Super Admins and users explicitly granted the approval action
+ * may create an active account; every other entry user creates a pending
+ * request.  The check is deliberately permission based so new countries and
+ * roles inherit the same rule without hard-coded geography.
+ */
+function requiresAccountApproval(session: Awaited<ReturnType<typeof requireErpSession>>) {
+  if (session.isSuperAdmin) return false;
+  const permissions = new Set(session.permissions ?? []);
+  return !(
+    permissions.has("approvals:approve") ||
+    permissions.has("approvals:*") ||
+    permissions.has("accounts:approve") ||
+    permissions.has("accounts:*") ||
+    permissions.has("*:*")
+  );
+}
+
+function accountApprovalRequestNo(accountCode: string) {
+  const safeCode = accountCode.replace(/[^A-Z0-9_-]/gi, "").slice(0, 48) || "ACCOUNT";
+  return `APR-ACCOUNT-${safeCode}-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+}
+
 async function buildAccountListViaLocalPg(
   session: Awaited<ReturnType<typeof requireErpSession>>,
   scope: ReturnType<typeof getScopeFromSearchParams>,
@@ -453,6 +477,12 @@ export async function POST(request: NextRequest) {
       throw new ApiClientError("A valid logged-in user ID is required to create an account. Account creation requires a valid user reference.");
     }
 
+    const approvalRequired = requiresAccountApproval(session);
+    // Never allow an entry user to smuggle `status: active` through the API.
+    // Their request is persisted as pending until an authorised approver
+    // accepts it.
+    const accountStatus = approvalRequired ? "pending_approval" : body.status || "active";
+
     const localPgResult = await withLocalPg(async (sql) => {
       return await sql.begin(async (tx) => {
         await tx`
@@ -471,15 +501,9 @@ export async function POST(request: NextRequest) {
           for update;
         `;
         if ((profileRows?.length ?? 0) === 0) {
-          await tx`
-            insert into profiles (id, full_name, user_code)
-            values (
-              ${actorId}::uuid,
-              ${session.fullName || session.email || "Bootstrapped User"},
-              ${"BOOTSTRAP-" + actorId.slice(0, 4).toUpperCase()}
-            )
-            on conflict (id) do nothing;
-          `;
+          throw new ApiClientError(
+            "The authenticated user has no profile record. Ask an administrator to provision the user before creating an account."
+          );
         }
 
         const requestedCode = body.code.trim().toUpperCase();
@@ -683,7 +707,7 @@ export async function POST(request: NextRequest) {
             currency: (body.currency || "USD").toUpperCase(),
             opening_balance: body.openingBalance ?? 0,
             current_balance: body.openingBalance ?? 0,
-            status: body.status || "active",
+            status: accountStatus,
             is_control_account: Boolean(body.isControlAccount),
             contacts: body.contacts ?? null,
             created_by: validActorId
@@ -730,7 +754,9 @@ export async function POST(request: NextRequest) {
             debit_total: 0,
             credit_total: 0,
             normal_balance: creditNormal ? "credit" : "debit",
-            is_active: true,
+            // Keep the ledger unavailable while the account is pending
+            // approval. Posting is additionally guarded at the database.
+            is_active: !approvalRequired,
             created_by: validActorId
           })}
           returning id;
@@ -739,6 +765,53 @@ export async function POST(request: NextRequest) {
         const ledgerId = (ledgerRows[0] as any)?.id as string;
         if (!ledgerId) {
           throw new Error("Ledger creation did not return a record ID.");
+        }
+
+        let approvalRequestId: string | null = null;
+        if (approvalRequired) {
+          const requestRows = await tx`
+            insert into approval_requests (
+              request_no, action, status, target_table, target_id,
+              country_id, country_branch_id, city_branch_id, requested_by,
+              reason, after_data
+            ) values (
+              ${accountApprovalRequestNo(issuedCode)}, 'create', 'pending',
+              'enterprise_accounts', ${accountId}::uuid,
+              ${validCountryId}::uuid, ${validCountryBranchId}::uuid, ${validCityBranchId}::uuid, ${validActorId}::uuid,
+              ${"New account requires Operations Admin approval before activation."},
+              ${JSON.stringify({
+                accountId,
+                accountCode: issuedCode,
+                name: body.name,
+                kind: body.kind,
+                currency: body.currency,
+                customerId: validCustomerId,
+                companyId: validCompanyId,
+                bankId: validBankId,
+                shippingLineId: validShippingLineId,
+                scope: body.scope,
+                operationalDomain: body.operationalDomain,
+                countryId: validCountryId,
+                countryBranchId: validCountryBranchId,
+                cityBranchId: validCityBranchId,
+                ledgerId
+              })}::jsonb
+            )
+            returning id;
+          `;
+          approvalRequestId = (requestRows[0] as any)?.id ?? null;
+          if (!approvalRequestId) throw new Error("Account approval request could not be created.");
+
+          await tx`
+            insert into approval_status_history (approval_request_id, from_status, to_status, actor_id, note)
+            values (${approvalRequestId}::uuid, null, 'pending', ${validActorId}::uuid,
+              ${"Account created and queued for approval."})
+          `;
+          await tx`
+            update enterprise_accounts
+            set approval_request_id = ${approvalRequestId}::uuid
+            where id = ${accountId}::uuid;
+          `;
         }
 
         await tx`
@@ -759,6 +832,7 @@ export async function POST(request: NextRequest) {
               branchCode,
               branchAccountSequence: branchSequence,
               linkedLedgerId: ledgerId,
+              approvalRequestId,
               sessionUser: {
                 id: session.userId || null,
                 email: session.email || null,
@@ -779,7 +853,9 @@ export async function POST(request: NextRequest) {
           branchSerialNumber,
           manualReferenceNumber,
           branchCode,
-          branchAccountSequence: branchSequence
+          branchAccountSequence: branchSequence,
+          approvalRequestId,
+          status: accountStatus
         };
       });
     });
@@ -825,20 +901,9 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (profileError || !userProfile) {
-      // Auto-create a default profile row for this actorId using the admin client
-      const admin = createSupabaseAdminClient() as any;
-      const { error: insertError } = await admin
-        .from("profiles")
-        .insert({
-          id: actorId,
-          full_name: session.fullName || session.email || "Bootstrapped User",
-          user_code: "BOOTSTRAP-" + actorId.slice(0, 4).toUpperCase()
-        });
-      if (insertError) {
-        throw new ApiClientError(
-          `The user ID does not exist in the referenced users table and could not be auto-created: ${insertError.message}. Account creation requires a valid user reference.`
-        );
-      }
+      throw new ApiClientError(
+        `The authenticated user has no profile record${profileError ? `: ${profileError.message}` : ""}. Ask an administrator to provision the user before creating an account.`
+      );
     }
 
     const manualReferenceNumber = body.manualReferenceNumber?.trim() || null;
@@ -874,7 +939,7 @@ export async function POST(request: NextRequest) {
         currency: body.currency.toUpperCase(),
         opening_balance: body.openingBalance,
         current_balance: body.openingBalance,
-        status: body.status || "active",
+        status: accountStatus,
         is_control_account: body.isControlAccount,
         contacts: body.contacts,
         created_by: actorId
@@ -923,7 +988,7 @@ export async function POST(request: NextRequest) {
         debit_total: 0,
         credit_total: 0,
         normal_balance: creditNormal ? "credit" : "debit",
-        is_active: true,
+        is_active: !approvalRequired,
         created_by: actorId
       })
       .select("id")
@@ -934,6 +999,65 @@ export async function POST(request: NextRequest) {
     }
 
     const ledgerId = (createdLedger as { id: string }).id;
+
+    let approvalRequestId: string | null = null;
+    if (approvalRequired) {
+      // Prefer the service-role writer when configured (server-side only),
+      // otherwise the authenticated RLS policy permits a user to submit a
+      // request for their own record.
+      const approvalWriter = (hasRealServiceRoleKey() ? createSupabaseAdminClient() : supabase) as any;
+      const requestResult = await approvalWriter
+        .from("approval_requests")
+        .insert({
+          request_no: accountApprovalRequestNo(issuedCode),
+          action: "create",
+          status: "pending",
+          target_table: "enterprise_accounts",
+          target_id: accountId,
+          country_id: body.countryId ?? null,
+          country_branch_id: body.countryBranchId ?? null,
+          city_branch_id: body.cityBranchId ?? null,
+          requested_by: actorId,
+          reason: "New account requires Operations Admin approval before activation.",
+          after_data: {
+            accountId,
+            accountCode: issuedCode,
+            name: body.name,
+            kind: body.kind,
+            currency: body.currency,
+            customerId: body.customerId ?? null,
+            companyId: body.companyId ?? null,
+            bankId: body.bankId ?? null,
+            shippingLineId: body.shippingLineId ?? null,
+            scope: body.scope,
+            operationalDomain: body.operationalDomain,
+            countryId: body.countryId ?? null,
+            countryBranchId: body.countryBranchId ?? null,
+            cityBranchId: body.cityBranchId ?? null,
+            ledgerId
+          }
+        })
+        .select("id")
+        .single();
+      if (requestResult.error) throw new Error(requestResult.error.message);
+      approvalRequestId = (requestResult.data as { id: string } | null)?.id ?? null;
+      if (!approvalRequestId) throw new Error("Account approval request could not be created.");
+
+      const historyResult = await approvalWriter.from("approval_status_history").insert({
+        approval_request_id: approvalRequestId,
+        from_status: null,
+        to_status: "pending",
+        actor_id: actorId,
+        note: "Account created and queued for approval."
+      });
+      if (historyResult.error) throw new Error(historyResult.error.message);
+
+      const linkResult = await approvalWriter
+        .from("enterprise_accounts")
+        .update({ approval_request_id: approvalRequestId })
+        .eq("id", accountId);
+      if (linkResult.error) throw new Error(linkResult.error.message);
+    }
 
     await supabase.from("enterprise_account_history").insert({
       enterprise_account_id: accountId,
@@ -952,6 +1076,7 @@ export async function POST(request: NextRequest) {
         branchCode: identity.branchCode,
         branchAccountSequence: identity.branchAccountSequence,
         linkedLedgerId: ledgerId,
+        approvalRequestId,
         sessionUser: {
           id: session.userId,
           email: session.email,
@@ -995,7 +1120,9 @@ export async function POST(request: NextRequest) {
       branchSerialNumber: identity.branchSerialNumber,
       manualReferenceNumber,
       branchCode: identity.branchCode,
-      branchAccountSequence: identity.branchAccountSequence
+      branchAccountSequence: identity.branchAccountSequence,
+      approvalRequestId,
+      status: accountStatus
     });
   } catch (error) {
     return handleApiError(error);

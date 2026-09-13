@@ -20,7 +20,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const STAGED = process.argv.includes("--staged");
 const ROOT = process.cwd();
@@ -66,12 +66,44 @@ const rules = [
 
 function listFiles() {
   // Only version-controlled files matter — a gitignored scratch file is not "committed".
-  const cmd = STAGED
-    ? "git diff --cached --name-only --diff-filter=ACMR"
-    : "git ls-files";
-  const out = execSync(cmd, { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
-  return out
-    .split("\n")
+  // Use execFileSync rather than execSync so Windows does not route the command
+  // through cmd.exe.  The latter can fail with spawnSync ... EPERM in managed
+  // workspaces even though Git itself is available and the same build succeeds
+  // on Linux.
+  const args = STAGED
+    ? ["diff", "--cached", "--name-only", "--diff-filter=ACMR"]
+    : ["ls-files"];
+  let names;
+  try {
+    const out = execFileSync("git", args, { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
+    names = out.split("\n");
+  } catch (error) {
+    // Some managed Windows workspaces deny child-process creation altogether
+    // (`spawnSync git EPERM`).  Fall back to a conservative source-tree walk;
+    // scanning untracked files is stricter than scanning only Git files and
+    // still guarantees that a credential cannot slip into a build.
+    if (STAGED) console.warn("repo-safety-guard: Git file listing unavailable; scanning the full source tree.");
+    // Mirror the repository's ignored/generated trees.  They contain local
+    // backups, browser probes and Capacitor bundles that are intentionally not
+    // versioned and may include test fixtures or third-party placeholder text.
+    const ignored = new Set([
+      ".git", ".next", ".turbo", "node_modules", "dist", "build",
+      ".codex-backups", "backups", "exports", "scratch", "storage", "vendor",
+      "uat-samples", "local-output", "android", "ios"
+    ]);
+    const walk = (dir) => {
+      const result = [];
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory() && ignored.has(entry.name)) continue;
+        const absolute = path.join(dir, entry.name);
+        if (entry.isDirectory()) result.push(...walk(absolute));
+        else result.push(path.relative(ROOT, absolute).split(path.sep).join("/"));
+      }
+      return result;
+    };
+    names = walk(ROOT);
+  }
+  return names
     .map((s) => s.trim())
     .filter((s) => s && /\.(mjs|cjs|js|ts|tsx|sh|json|env|md|html)$/.test(s) && !s.startsWith("supabase/migrations/"));
 }

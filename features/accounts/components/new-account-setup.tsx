@@ -176,6 +176,8 @@ type AccountCreateResponse = {
   manualReferenceNumber?: string | null;
   branchCode: string;
   branchAccountSequence: number;
+  approvalRequestId?: string | null;
+  status?: "active" | "archived" | "pending_approval" | string;
 };
 
 const subTypes: Record<AccountTitle, string[]> = {
@@ -1168,7 +1170,6 @@ export function NewAccountSetup({
           kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
           currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
           openingBalance: 0,
-          status: "active",
           isControlAccount: accountTitle === "Bank",
           category,
           categoryId: selectedCategoryId || null,
@@ -1203,7 +1204,11 @@ export function NewAccountSetup({
             localStorage.setItem(`account_warehouse_${response.accountNumber}`, whData);
           } catch (e) {}
         }
-        setMessage(`${getLabel("savedAccountPrefix", lang)} ${response.accountNumber}`);
+        setMessage(
+          response.status === "pending_approval"
+            ? `${getLabel("savedAccountPrefix", lang)} ${response.accountNumber} — ${t(lang, "comv.approval_pending", "Pending Approval")}`
+            : `${getLabel("savedAccountPrefix", lang)} ${response.accountNumber}`
+        );
         void fetchReport();
         setTimeout(() => {
           router.push(`/dashboard/accounts?accountId=${response.accountId}&created=1`);
@@ -2715,8 +2720,6 @@ export function NewAccountSetup({
     </div>
   );
 }
-
-
 
 
 

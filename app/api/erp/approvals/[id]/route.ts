@@ -21,6 +21,57 @@ type ApprovalRow = {
   requested_by?: string;
 };
 
+/** Apply the account-master side effects after the generic approval record is
+ * decided.  Account creation is intentionally not considered active until an
+ * authorised reviewer approves the request; this keeps the shared customer
+ * master reusable while preventing premature ledger posting. */
+async function applyEnterpriseAccountDecision(
+  supabase: any,
+  current: ApprovalRow,
+  nextStatus: "approved" | "rejected" | "cancelled",
+  actorId: string
+) {
+  const accountResult = await supabase
+    .from("enterprise_accounts")
+    .select("id, status, approval_request_id")
+    .eq("id", current.target_id)
+    .maybeSingle();
+  if (accountResult.error) throw new Error(accountResult.error.message);
+  if (!accountResult.data) throw new Error("The account approval target no longer exists.");
+
+  const approved = nextStatus === "approved";
+  const accountPatch = approved
+    ? { status: "active", approved_by: actorId }
+    : { status: "archived", approved_by: null };
+  const accountUpdate = await supabase
+    .from("enterprise_accounts")
+    .update(accountPatch)
+    .eq("id", current.target_id)
+    .eq("approval_request_id", current.id);
+  if (accountUpdate.error) throw new Error(accountUpdate.error.message);
+
+  // A pending account may have a placeholder ledger for audit purposes, but
+  // it cannot be posted until both the account and ledger are active.
+  const ledgerUpdate = await supabase
+    .from("ledgers")
+    .update({ is_active: approved })
+    .eq("enterprise_account_id", current.target_id);
+  if (ledgerUpdate.error) throw new Error(ledgerUpdate.error.message);
+
+  const history = await supabase.from("enterprise_account_history").insert({
+    enterprise_account_id: current.target_id,
+    event_type: approved ? "approved" : "approval_rejected",
+    created_by: actorId,
+    details: {
+      approvalRequestId: current.id,
+      approvalStatus: nextStatus,
+      decidedBy: actorId,
+      decidedAt: new Date().toISOString()
+    }
+  });
+  if (history.error) throw new Error(history.error.message);
+}
+
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
@@ -84,6 +135,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       note: body.note
     });
 
+    if (current.target_table === "enterprise_accounts") {
+      await applyEnterpriseAccountDecision(supabase, current, nextStatus, session.userId);
+    }
+
     if (nextStatus === "approved" && current.target_table === "daily_usd_rates") {
       const payload = current.after_data as any;
       if (payload) {
@@ -146,7 +201,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       });
     }
 
-    if (nextStatus === "rejected" || nextStatus === "cancelled") {
+    if (
+      nextStatus === "rejected" ||
+      nextStatus === "cancelled" ||
+      current.target_table === "enterprise_accounts"
+    ) {
       await service.unlockRecord(session, {
         recordTable: current.target_table,
         recordId: current.target_id

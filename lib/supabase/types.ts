@@ -15798,7 +15798,7 @@ export type Database = {
     }
     Enums: {
       account_kind: "asset" | "liability" | "equity" | "income" | "expense"
-      account_status: "active" | "archived"
+      account_status: "active" | "archived" | "pending_approval"
       app_role:
         | "super_admin"
         | "country_admin"
@@ -15812,6 +15812,7 @@ export type Database = {
         | "auditor_viewer"
         | "country_user"
       approval_action_type:
+        | "create"
         | "edit"
         | "delete"
         | "update"
@@ -16024,7 +16025,7 @@ export const Constants = {
   public: {
     Enums: {
       account_kind: ["asset", "liability", "equity", "income", "expense"],
-      account_status: ["active", "archived"],
+      account_status: ["active", "archived", "pending_approval"],
       app_role: [
         "super_admin",
         "country_admin",
@@ -16039,6 +16040,7 @@ export const Constants = {
         "country_user",
       ],
       approval_action_type: [
+        "create",
         "edit",
         "delete",
         "update",

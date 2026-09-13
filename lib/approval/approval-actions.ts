@@ -1,4 +1,6 @@
-export const approvalActions = ["edit", "delete", "update", "reverse", "lock", "unlock"] as const;
+// `create` is used by the shared account-master workflow.  Entry users may
+// submit an account request, but only an approver can activate its ledger.
+export const approvalActions = ["create", "edit", "delete", "update", "reverse", "lock", "unlock"] as const;
 
 export const approvalStatuses = ["draft", "pending", "approved", "rejected", "applied", "cancelled"] as const;
 

@@ -516,13 +516,54 @@ export async function PATCH(request: NextRequest) {
     // Resolve target userId if non-UUID reference ID was provided
     let targetUserId = body.userId;
     if (!isUuid(targetUserId)) {
-      const code = (body.userCode || targetUserId).trim();
-      const { data: matchedProfile } = await admin
-        .from("profiles")
-        .select("id")
-        .ilike("user_code", code)
-        .maybeSingle();
-      if (matchedProfile?.id) targetUserId = matchedProfile.id;
+      const code = (body.userCode || "").trim();
+      const emailPrefix = (body.email || "").split("@")[0].trim();
+      const searchTerms = [code, emailPrefix, body.fullName].filter(Boolean);
+      
+      let matchedProfile: any = null;
+      for (const term of searchTerms) {
+        // Try exact user_code match
+        const { data: m1 } = await admin
+          .from("profiles")
+          .select("id")
+          .ilike("user_code", term)
+          .maybeSingle();
+        if (m1?.id) { matchedProfile = m1; break; }
+
+        // Try prefix match e.g. QUETTA.BRANCH or PAKISTAN.ADMIN
+        const { data: m2 } = await admin
+          .from("profiles")
+          .select("id")
+          .ilike("user_code", `${term}.%`)
+          .maybeSingle();
+        if (m2?.id) { matchedProfile = m2; break; }
+
+        // Try full_name contains
+        const { data: m3 } = await admin
+          .from("profiles")
+          .select("id")
+          .ilike("full_name", `%${term}%`)
+          .maybeSingle();
+        if (m3?.id) { matchedProfile = m3; break; }
+      }
+
+      if (matchedProfile?.id) {
+        targetUserId = matchedProfile.id;
+      } else {
+        // Auto-provision profile with a valid UUID so FK constraints succeed
+        const newId = crypto.randomUUID();
+        const newCode = (code || emailPrefix || "USER").toUpperCase();
+        const { error: insErr } = await admin.from("profiles").insert({
+          id: newId,
+          user_code: newCode,
+          full_name: body.fullName || newCode,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        if (!insErr) {
+          targetUserId = newId;
+        }
+      }
     }
     body.userId = targetUserId;
 
