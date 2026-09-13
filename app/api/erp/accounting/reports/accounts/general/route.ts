@@ -48,7 +48,7 @@ const querySchema = z.object({
   language: supportedLanguageSchema.default("en")
 });
 
-export const ALLOWED_COUNTRY_ACCOUNT_CODES = [
+const ALLOWED_COUNTRY_ACCOUNT_CODES = [
   "PAK-CORP-GEN-001", "CT-INTER-PK",
   "UAE-CORP-GEN-001", "CT-INTER-AE",
   "AFG-CORP-GEN-001", "CT-INTER-AF",
