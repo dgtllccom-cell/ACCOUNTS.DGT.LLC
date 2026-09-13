@@ -575,7 +575,7 @@ export interface DigitalDockPremiumSidebarProps {
   permissions?: string[] | null;
 }
 
-const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
+export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard": ["dashboard:read", "route:/dashboard"],
   "/dashboard/smart-operations": ["dashboard:read", "route:/dashboard/smart-operations"],
   "/dashboard/super-admin": ["dashboard:read", "route:/dashboard/super-admin"],

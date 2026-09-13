@@ -1,6 +1,10 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "rules.access_restricted_title"
+  | "rules.access_restricted_desc"
+  | "rules.return_to_dashboard"
+
   | "roz.serial_numbers_exchange"
   | "roz.selected_account"
   | "roz.account_name"
@@ -7807,6 +7811,10 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "rules.access_restricted_title": "Form Access Restricted",
+  "rules.access_restricted_desc": "This form has not been allotted to your account by the administrator. Only allotted modules are accessible.",
+  "rules.return_to_dashboard": "Return to Dashboard",
+
   "roz.serial_numbers_exchange": "Serial Numbers & Exchange Rate",
   "roz.selected_account": "Selected Account",
   "roz.account_name": "Account Name",
@@ -25926,6 +25934,10 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "rules.access_restricted_title": "فارم کی رسائی محدود ہے",
+  "rules.access_restricted_desc": "یہ فارم منتظم کی طرف سے آپ کے اکاؤنٹ کے لیے تفویض نہیں کیا گیا ہے۔ صرف تفویض کردہ فارمز ہی کھولے جا سکتے ہیں۔",
+  "rules.return_to_dashboard": "ڈیش بورڈ پر واپس جائیں",
+
   "comv.save_draft": "ڈرافٹ محفوظ کریں",
   "comv.step1_name": "بکنگ اور کسٹمر",
   "comv.step1_desc": "کسٹمر، نقل و حرکت، موڈ اور روٹ",
@@ -44020,6 +44032,10 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "rules.access_restricted_title": "الوصول إلى النموذج مقيد",
+  "rules.access_restricted_desc": "لم يتم تخصيص هذا النموذج لحسابك من قبل المشرف. يمكنك فقط الوصول إلى الوحدات المخصصة لك.",
+  "rules.return_to_dashboard": "العودة إلى لوحة التحكم",
+
   "comv.save_draft": "حفظ المسودة",
   "comv.step1_name": "الحجز والعميل",
   "comv.step1_desc": "العميل والحركة والوضع والمسار",
@@ -62116,6 +62132,10 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "rules.access_restricted_title": "دسترسی به فرم محدود شده است",
+  "rules.access_restricted_desc": "این فرم توسط مدیر به حساب شما اختصاص داده نشده است. فقط ماژول‌های اختصاص‌یافته قابل دسترسی هستند.",
+  "rules.return_to_dashboard": "بازگشت به داشبورد",
+
   "comv.save_draft": "ذخیره پیش‌نویس",
   "comv.step1_name": "رزرو و مشتری",
   "comv.step1_desc": "مشتری، نوع جابجایی، حالت و مسیر",
@@ -80211,6 +80231,10 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "rules.access_restricted_title": "د فورم لاسرسی محدود دی",
+  "rules.access_restricted_desc": "دا فورم د مدیر لخوا ستاسو حساب ته نه دی ځانګړی شوی. یوازې ځانګړي شوي ماډلونه د لاسرسي وړ دي.",
+  "rules.return_to_dashboard": "ډشبورډ ته بېرته ستنېدل",
+
   "comv.save_draft": "مسوده خوندي کړئ",
   "comv.step1_name": "بکنګ او پیرودونکی",
   "comv.step1_desc": "پیرودونکی، حرکت، طریقه او لاره",

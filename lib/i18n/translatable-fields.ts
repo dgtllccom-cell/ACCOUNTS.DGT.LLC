@@ -447,7 +447,21 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "truck_driver_name", mode: "transliterate" },
     { field: "vessel_name", mode: "transliterate" },
     { field: "remarks", mode: "translate" },
+    { field: "bill_of_entry_no", mode: "transliterate" },
+    { field: "declaration_reference", mode: "transliterate" },
+    { field: "pgm_number", mode: "transliterate" },
   ],
+  clearing_customer_order_loading_allocations: [
+    { field: "source_location_text", mode: "transliterate" },
+    { field: "remarks", mode: "translate" },
+  ],
+  // Shipping billing/receipts plan (Phase 1.8) registered these two in the DB
+  // translation_field_registry but this TS registry — the one the real
+  // translateMasterRecord() engine actually reads — was never updated to match,
+  // so every remarks entry silently stayed English-tagged regardless of the
+  // language it was typed in.
+  clearing_bill_customer_charges: [{ field: "remarks", mode: "translate" }],
+  customer_receipts: [{ field: "remarks", mode: "translate" }],
 
   // ── Added 2026-09-13: 109-route localization backlog batch ──
   ai_call_number_map: [
