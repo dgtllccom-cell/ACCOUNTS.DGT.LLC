@@ -2693,7 +2693,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             modalDisplayedForms.map((form) => {
                               const p = userPermissions[form.id] || { allowed: false, read: false, write: false, delete: false };
                               return (
-                                <tr>
+                                <tr
                                   key={form.id}
                                   className={cn(
                                     "hover:bg-muted/30 transition-colors",
