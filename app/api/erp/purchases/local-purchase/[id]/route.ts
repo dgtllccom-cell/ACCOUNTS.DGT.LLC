@@ -21,7 +21,7 @@ const localPurchaseUpdateSchema = z.object({
   countryBranchId: z.string().uuid().optional(),
   cityBranchId: z.string().uuid().nullable().optional(),
   goodsId: z.string().uuid().nullable().optional(),
-  purchaseAccountNo: z.string().nullable().optional(),
+  purchaseAccountNo: z.string().trim().min(1, "A debit purchase ledger is required."),
   salesAccountNo: z.string().nullable().optional(),
   brokerAccountNo: z.string().nullable().optional(),
   brand: z.string().nullable().optional(),
@@ -62,7 +62,10 @@ const localPurchaseUpdateSchema = z.object({
   taxPercentage: z.coerce.number().default(0),
   taxAmount: z.coerce.number().default(0),
   finalCost: z.coerce.number().min(0),
-});
+}).refine(
+  (value) => Boolean(value.salesAccountNo?.trim() || value.brokerAccountNo?.trim()),
+  { path: ["salesAccountNo"], message: "A credit sales/payable ledger is required." },
+);
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {

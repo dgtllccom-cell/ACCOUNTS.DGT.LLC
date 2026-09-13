@@ -5,6 +5,8 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 /**
  * Truck Registration master (Settings -> Truck Management).
@@ -56,7 +58,8 @@ export async function GET(req: Request) {
                driver.customer_name as driver_display_name,
                transporter.customer_name as transporter_display_name,
                company.name as company_display_name,
-               coalesce(cb.name, crb.name) as branch_display_name
+               coalesce(cb.name, crb.name) as branch_display_name,
+               country.name as country_display_name
         from public.trucks t
         left join public.customers owner on owner.id = t.owner_person_id
         left join public.customers driver on driver.id = t.driver_person_id
@@ -64,6 +67,7 @@ export async function GET(req: Request) {
         left join public.companies company on company.id = t.transport_company_id
         left join public.city_branches cb on cb.id = t.city_branch_id
         left join public.country_branches crb on crb.id = t.country_branch_id
+        left join public.countries country on country.id = t.country_id
         where t.deleted_at is null
           and (${selectable ? sql`t.status = 'active'` : status ? sql`t.status = ${status}` : sql`true`})
           and (${searchLike ? sql`(t.truck_number ilike ${searchLike} or t.registration_number ilike ${searchLike} or t.owner_name ilike ${searchLike} or t.driver_name ilike ${searchLike} or t.transport_company ilike ${searchLike})` : sql`true`})
@@ -72,7 +76,23 @@ export async function GET(req: Request) {
       `;
     });
 
-    return NextResponse.json({ trucks: rows || [] });
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    let localizedRows: any[] = rows ?? [];
+    try {
+      localizedRows = await localizeJoinedNames<any>(localizedRows, lang, [
+        { idField: "owner_person_id", nameField: "owner_display_name", table: "customers", field: "customer_name" },
+        { idField: "driver_person_id", nameField: "driver_display_name", table: "customers", field: "customer_name" },
+        { idField: "transporter_person_id", nameField: "transporter_display_name", table: "customers", field: "customer_name" },
+        { idField: "transport_company_id", nameField: "company_display_name", table: "companies", field: "name" },
+        { idField: "city_branch_id", nameField: "branch_display_name", table: "city_branches", field: "name" },
+        { idField: "country_branch_id", nameField: "branch_display_name", table: "country_branches", field: "name" },
+        { idField: "country_id", nameField: "country_display_name", table: "countries", field: "name" }
+      ]);
+    } catch {
+      // keep original names on failure
+    }
+
+    return NextResponse.json({ trucks: localizedRows });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });

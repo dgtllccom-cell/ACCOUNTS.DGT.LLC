@@ -358,15 +358,15 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                   filteredPurchases.map(row => {
                     const totalCost = Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0);
                     const curr = row.localCurrency || row.local_currency || "PKR";
-                    const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || `LP-2026-${row.id?.slice(0, 4) || "1001"}`;
+                    const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "—";
 
                     return (
                       <tr key={row.id} className="hover:bg-amber-50/20 dark:hover:bg-amber-950/10 transition-colors">
                         <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
                         <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
                         <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
-                        <td className="p-2 font-mono text-[9px] font-bold text-blue-600 border-r border-slate-150 dark:border-slate-800">{row.purchaseAccountNo || row.purchase_account_no || "PK-CHM-AC-0001"}</td>
-                        <td className="p-2 font-mono text-[9px] font-bold text-purple-600 border-r border-slate-150 dark:border-slate-800">{row.salesAccountNo || row.sales_account_no || "PK-CHM-AC-0002"}</td>
+                        <td className="p-2 font-mono text-[9px] font-bold text-blue-600 border-r border-slate-150 dark:border-slate-800">{row.purchaseAccountNo || row.purchase_account_no || "—"}</td>
+                        <td className="p-2 font-mono text-[9px] font-bold text-purple-600 border-r border-slate-150 dark:border-slate-800">{row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}</td>
                         <td className="p-2 font-bold text-slate-900 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
                         <td className="p-2 text-slate-500 border-r border-slate-150 dark:border-slate-800">{row.brand || "-"}</td>
                         <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{Number(row.quantityKgs || row.quantity_kgs || 0).toLocaleString()} {row.quantityName || row.quantity_name}</td>

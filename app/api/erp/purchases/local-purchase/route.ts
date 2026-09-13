@@ -29,8 +29,8 @@ const localPurchaseCreateSchema = z.object({
   countryBranchId: z.string().uuid(),
   cityBranchId: z.string().uuid().nullable().optional(),
   goodsId: z.string().uuid().nullable().optional(),
-  purchaseAccountNo: z.string().nullable().optional(),
-  salesAccountNo: z.string().nullable().optional(),
+  purchaseAccountNo: z.string().trim().min(1, "A debit purchase ledger is required."),
+  salesAccountNo: z.string().trim().nullable().optional(),
   brokerAccountNo: z.string().nullable().optional(),
   brand: z.string().nullable().optional(),
   size: z.string().nullable().optional(),
@@ -70,7 +70,10 @@ const localPurchaseCreateSchema = z.object({
   taxPercentage: z.coerce.number().default(0),
   taxAmount: z.coerce.number().default(0),
   finalCost: z.coerce.number().min(0),
-});
+}).refine(
+  (value) => Boolean(value.salesAccountNo?.trim() || value.brokerAccountNo?.trim()),
+  { path: ["salesAccountNo"], message: "A credit sales/payable ledger is required." },
+);
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,10 +123,20 @@ export async function GET(request: NextRequest) {
 
     const recordsViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select *
-        from local_purchases
-        where deleted_at is null
-        order by created_at desc;
+        select lp.*,
+               c.name as country_name,
+               cb.name as branch_name,
+               cb.code as branch_code,
+               city.name as city_branch_name,
+               city.code as city_branch_code,
+               co.name as company_name
+        from local_purchases lp
+        left join countries c on c.id = lp.country_id
+        left join country_branches cb on cb.id = lp.country_branch_id
+        left join city_branches city on city.id = lp.city_branch_id
+        left join companies co on co.id = lp.company_id
+        where lp.deleted_at is null
+        order by lp.created_at desc;
       `;
       return rows
         .filter(matchesScope)

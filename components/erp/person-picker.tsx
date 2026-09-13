@@ -104,7 +104,8 @@ export function PersonPicker({
   showCountryFilter = true,
   disabled,
   placeholder,
-  lang: langProp
+  lang: langProp,
+  createLabel: createLabelProp
 }: {
   label: string;
   value: string;
@@ -116,6 +117,10 @@ export function PersonPicker({
   disabled?: boolean;
   placeholder?: string;
   lang?: SupportedLanguage;
+  /** Overrides the generic "+ Add New Person Master" button/label with a context-specific
+   *  one (e.g. "+ New Driver", "+ New Truck Owner") while reusing the exact same embedded
+   *  Customer/Person Management create flow. */
+  createLabel?: string;
 }) {
   const activeLang = useActiveLanguage();
   const lang = (langProp && langProp !== "en") ? langProp : activeLang;
@@ -385,7 +390,7 @@ export function PersonPicker({
         }}
         onEditOption={(personId) => setEditPersonId(personId)}
         onPrintOption={handlePrintPerson}
-        createLabel={t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
+        createLabel={createLabelProp ?? t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
         createButtonPlacement="both"
         onCreateWithSearch={handleQuickCreatePerson}
         onCreateNew={async () => {

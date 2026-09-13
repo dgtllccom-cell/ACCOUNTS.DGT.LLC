@@ -132,10 +132,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   // Page 1 (Items 1 to 10) - Strictly matching the executive reference screenshot:
   {
     userId: "ref-usr-1",
-    userCode: "dubai.admin",
+    userCode: "dubai",
     fullName: "Ismat Ullah (عصمت اللہ)",
     subtitle: "Dubai City Administration",
-    email: "dubai.admin@dgt.llc",
+    email: "dubai@dgt.llc",
     countryId: "c-are",
     countryName: "United Arab Emirates",
     countryCode: "UAE",
@@ -148,7 +148,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IU",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "Admin@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-20T10:00:00Z",
@@ -156,10 +156,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-2",
-    userCode: "chaman.admin",
+    userCode: "chaman",
     fullName: "Izzat Ullah Khan (عزت اللہ خان)",
     subtitle: "Chaman City Office",
-    email: "chaman.admin@dgt.llc",
+    email: "chaman@dgt.llc",
     countryId: "c-pak",
     countryName: "Pakistan",
     countryCode: "Pakistan",
@@ -172,7 +172,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IK",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "Chaman@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-21T10:00:00Z",
@@ -180,10 +180,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-3",
-    userCode: "quetta.admin",
+    userCode: "quetta",
     fullName: "Ahmad Shah Durrani (احمد شاہ)",
     subtitle: "Quetta City Office",
-    email: "quetta.admin@dgt.llc",
+    email: "quetta@dgt.llc",
     countryId: "c-pak",
     countryName: "Pakistan",
     countryCode: "Pakistan",
@@ -196,7 +196,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "AD",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "Quetta@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-21T11:00:00Z",
@@ -204,10 +204,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-4",
-    userCode: "usa.country",
+    userCode: "usa",
     fullName: "John S. Khan (جان سمتھ خان)",
     subtitle: "USA Country Operations",
-    email: "usa.admin@dgt.llc",
+    email: "usa@dgt.llc",
     countryId: "c-usa",
     countryName: "United States",
     countryCode: "USA",
@@ -220,7 +220,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "JK",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordKey: "Usa@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -228,10 +228,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-5",
-    userCode: "pakistan.admin",
+    userCode: "pakistan",
     fullName: "Rashid Mehmood (راشد محمود)",
     subtitle: "Pakistan Country Operations",
-    email: "pakistan.admin@dgt.llc",
+    email: "pakistan@dgt.llc",
     countryId: "c-pak",
     countryName: "Pakistan",
     countryCode: "Pakistan",
@@ -244,7 +244,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "RM",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "Pak@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -268,7 +268,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "MA",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "Asad@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -292,7 +292,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: false,
     avatarInitials: "MR",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordKey: "MrSports@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -303,7 +303,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "superadmin",
     fullName: "Izzatullah Admin (عزت اللہ ایڈمن)",
     subtitle: "System Administrator",
-    email: "admin@damaan.com",
+    email: "superadmin@dgt.llc",
     countryId: null,
     countryName: "Global",
     countryCode: "Global",
@@ -316,7 +316,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IA",
     avatarColor: "bg-[#e0f2fe] text-[#0369a1]",
-    passwordKey: "Admin@Damaan2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-14T10:00:00Z",
@@ -324,10 +324,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-9",
-    userCode: "ship.user",
+    userCode: "shipping",
     fullName: "Sohail Ahmad (سہیل احمد)",
     subtitle: "Shipping Line Operations",
-    email: "ship.user@dgt.llc",
+    email: "shipping@dgt.llc",
     countryId: "c-are",
     countryName: "United Arab Emirates",
     countryCode: "UAE",
@@ -340,7 +340,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "SA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "Ship@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Shipping Portal",
     createdAt: "2025-04-16T10:00:00Z",
@@ -348,7 +348,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-10",
-    userCode: "transport.user",
+    userCode: "transport",
     fullName: "Tariq Jameel (طارق جمیل)",
     subtitle: "Transport Operations",
     email: "transport@dgt.llc",
@@ -364,7 +364,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "TJ",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
-    passwordKey: "Transport@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login",
     loginPortalLabel: "Staff Portal",
     createdAt: "2025-04-17T10:00:00Z",
@@ -373,10 +373,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   // Items 11 to 28 (Pages 2 & 3 - Database Mapped):
   {
     userId: "ref-usr-11",
-    userCode: "bombay.admin",
+    userCode: "bombay",
     fullName: "Bilal Bashir (بلال بشیر)",
     subtitle: "Bombay City Office",
-    email: "bombay.admin@dgt.llc",
+    email: "bombay@dgt.llc",
     countryId: "c-ind",
     countryName: "India",
     countryCode: "India",
@@ -389,7 +389,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "BB",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordKey: "Bombay@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-22T10:00:00Z",
@@ -397,10 +397,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-12",
-    userCode: "kandahar.admin",
+    userCode: "kandahar",
     fullName: "Khalid Balkhi (خالد بلخی)",
     subtitle: "Kandahar City Office",
-    email: "kandahar.admin@dgt.llc",
+    email: "kandahar@dgt.llc",
     countryId: "c-afg",
     countryName: "Afghanistan",
     countryCode: "Afghanistan",
@@ -413,7 +413,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "KB",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "Kandahar@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-22T11:00:00Z",
@@ -437,7 +437,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "BC",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "Agent@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T10:00:00Z",
@@ -461,7 +461,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "ZI",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "Agent@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T11:00:00Z",
@@ -485,7 +485,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "DS",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "Agent@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T12:00:00Z",
@@ -509,7 +509,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "KS",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "Agent@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T13:00:00Z",
@@ -533,7 +533,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "TM",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
-    passwordKey: "Cashier@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login",
     loginPortalLabel: "Cashier Portal",
     createdAt: "2025-04-24T10:00:00Z",
@@ -557,7 +557,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "NA",
     avatarColor: "bg-[#f1f5f9] text-[#475569]",
-    passwordKey: "Staff@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login",
     loginPortalLabel: "Staff Portal",
     createdAt: "2025-04-24T11:00:00Z",
@@ -568,7 +568,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "audit.admin",
     fullName: "Farooq Khattak (فاروق خٹک)",
     subtitle: "Internal Audit Division",
-    email: "audit.admin@dgt.llc",
+    email: "audit@dgt.llc",
     countryId: null,
     countryName: "Global",
     countryCode: "Global",
@@ -581,7 +581,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "FK",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "Audit@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -605,7 +605,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "AM",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordKey: "Super@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -616,7 +616,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "afg.country",
     fullName: "Arif Alvi (عارف علوی)",
     subtitle: "Afghanistan Operations",
-    email: "afg.admin@dgt.llc",
+    email: "afg@dgt.llc",
     countryId: "c-afg",
     countryName: "Afghanistan",
     countryCode: "Afghanistan",
@@ -629,7 +629,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "AA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "Afg@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -640,7 +640,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "ind.country",
     fullName: "Sunil Sharma (سنیل شرما)",
     subtitle: "India Operations",
-    email: "ind.admin@dgt.llc",
+    email: "ind@dgt.llc",
     countryId: "c-ind",
     countryName: "India",
     countryCode: "India",
@@ -653,7 +653,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "SS",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordKey: "Ind@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -664,7 +664,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "saudi.admin",
     fullName: "Saud Abdullah (سعود عبداللہ)",
     subtitle: "Saudi Arabia Operations",
-    email: "saudi.admin@dgt.llc",
+    email: "saudi@dgt.llc",
     countryId: "c-sau",
     countryName: "Saudi Arabia",
     countryCode: "SA",
@@ -677,7 +677,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "SA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "Saudi@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T10:00:00Z",
@@ -688,7 +688,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "uzb.admin",
     fullName: "Usman Tashkendi (عثمان تاشقندی)",
     subtitle: "Uzbekistan Operations",
-    email: "uzb.admin@dgt.llc",
+    email: "uzb@dgt.llc",
     countryId: "c-uzb",
     countryName: "Uzbekistan",
     countryCode: "UZ",
@@ -701,7 +701,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "UT",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "Uzb@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T11:00:00Z",
@@ -712,7 +712,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "tjk.admin",
     fullName: "Timur Dushanbe (تیمور دوشنبے)",
     subtitle: "Tajikistan Operations",
-    email: "tjk.admin@dgt.llc",
+    email: "tjk@dgt.llc",
     countryId: "c-tjk",
     countryName: "Tajikistan",
     countryCode: "TJ",
@@ -725,7 +725,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "TD",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "Tjk@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T12:00:00Z",
@@ -736,7 +736,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "iran.admin",
     fullName: "Ismail Tehrani (اسماعیل تہرانی)",
     subtitle: "Iran Operations",
-    email: "iran.admin@dgt.llc",
+    email: "iran@dgt.llc",
     countryId: "c-irn",
     countryName: "Iran",
     countryCode: "IR",
@@ -749,7 +749,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IT",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordKey: "Iran@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T13:00:00Z",
@@ -760,7 +760,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     userCode: "bandar.port",
     fullName: "Bahram Abbasi (بہرام عباسی)",
     subtitle: "Port & Customs Operations",
-    email: "bandar.port@dgt.llc",
+    email: "bandar@dgt.llc",
     countryId: "c-irn",
     countryName: "Iran",
     countryCode: "IR",
@@ -773,7 +773,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "BA",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "Port@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Shipping Portal",
     createdAt: "2025-04-20T10:00:00Z",
@@ -781,10 +781,10 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
   },
   {
     userId: "ref-usr-28",
-    userCode: "jeddah.admin",
+    userCode: "jeddah",
     fullName: "Ilyas Jameeli (الیاس جمیلی)",
     subtitle: "Wholesale Market Operations",
-    email: "jeddah.admin@dgt.llc",
+    email: "jeddah@dgt.llc",
     countryId: "c-sau",
     countryName: "Saudi Arabia",
     countryCode: "SA",
@@ -797,7 +797,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IJ",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "Jeddah@Dgt2026!",
+    passwordKey: "chaman@9090",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-20T11:00:00Z",
@@ -1118,6 +1118,13 @@ export default function SuperAdminAllUsersDirectoryPage() {
   const [savingPerms, setSavingPerms] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Change Password Modal State
+  const [passwordModalUser, setPasswordModalUser] = useState<UserDirectoryItem | null>(null);
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [showModalPassword, setShowModalPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   // Dynamic context
   const currentTime = "24 Apr 2025, 14:32";
   const [sess, setSess] = useState<any>(null);
@@ -1183,6 +1190,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             return {
               ...ref,
               userId: dbMatch.userId || dbMatch.id || ref.userId,
+              passwordKey: dbMatch.raw_password || dbMatch.passwordKey || ref.passwordKey,
               permissions: permsArr,
               permissionsCount: permsArr.length || ref.permissionsCount,
               phone: dbMatch.phone || ref.phone,
@@ -1409,6 +1417,59 @@ export default function SuperAdminAllUsersDirectoryPage() {
       showToast(th(`Failed to save permissions: ${err?.message || "Unknown error"}`));
     } finally {
       setSavingPerms(false);
+    }
+  };
+
+  // Change Password Handlers
+  const handleOpenPasswordModal = (user: UserDirectoryItem) => {
+    setPasswordModalUser(user);
+    setNewPasswordInput(user.passwordKey || "chaman@9090");
+    setShowModalPassword(false);
+    setPasswordError(null);
+  };
+
+  const handleSavePassword = async () => {
+    if (!passwordModalUser) return;
+    const trimmed = newPasswordInput.trim();
+    if (!trimmed) {
+      setPasswordError(th("Password cannot be empty"));
+      return;
+    }
+    setSavingPassword(true);
+    setPasswordError(null);
+    try {
+      const res = await fetch("/api/erp/users/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: passwordModalUser.userId,
+          userCode: passwordModalUser.userCode,
+          email: passwordModalUser.email,
+          newPassword: trimmed
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to update password");
+      }
+
+      // Update local state for all user lists
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.userId === passwordModalUser.userId || u.userCode.toLowerCase() === passwordModalUser.userCode.toLowerCase()
+            ? { ...u, passwordKey: trimmed }
+            : u
+        )
+      );
+      if (selectedUser && (selectedUser.userId === passwordModalUser.userId || selectedUser.userCode.toLowerCase() === passwordModalUser.userCode.toLowerCase())) {
+        setSelectedUser((prev) => (prev ? { ...prev, passwordKey: trimmed } : null));
+      }
+      showToast(`${th("Password updated successfully for")} ${passwordModalUser.fullName} (${trimmed})`);
+      setPasswordModalUser(null);
+    } catch (err: any) {
+      setPasswordError(err?.message || "Failed to update password");
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -2019,7 +2080,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         </div>
                       </td>
 
-                      {/* 10. Password with eye toggle & copy */}
+                      {/* 10. Password with eye toggle, copy & change modal */}
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-1.5 font-mono text-xs text-slate-800 dark:text-slate-200">
                           <span className={cn("font-medium select-none", !isPwdVisible && "tracking-widest")}>
@@ -2040,6 +2101,14 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
                           >
                             {copiedKey === `pwd-${u.userId}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPasswordModal(u)}
+                            title={th("Change Password")}
+                            className="p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/50 text-indigo-600 hover:text-indigo-700 cursor-pointer shrink-0 transition-colors"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -2115,7 +2184,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             </button>
 
                             {activeMenuRowId === u.userId && (
-                              <div className="absolute right-0 mt-1 w-44 rounded-xl border border-border bg-popover text-popover-foreground shadow-xl z-50 p-1 text-xs text-left animate-in fade-in zoom-in-95">
+                              <div className="absolute right-0 mt-1 w-48 rounded-xl border border-border bg-popover text-popover-foreground shadow-xl z-50 p-1 text-xs text-left animate-in fade-in zoom-in-95">
+                                <button
+                                  type="button"
+                                  onClick={() => { handleOpenPasswordModal(u); setActiveMenuRowId(null); }}
+                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2 font-medium text-indigo-600 dark:text-indigo-400"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5" />
+                                  <span>{th("Change Password")}</span>
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => { openUserInspector(u); setActiveMenuRowId(null); }}
@@ -2472,9 +2549,21 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         </div>
                         <div className="flex justify-between pb-1 border-b border-border items-center">
                           <span className="text-muted-foreground">{th("Access Password")}:</span>
-                          <span className="font-mono font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-                            {selectedUser.passwordKey || "••••••••"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
+                              {selectedUser.passwordKey || "••••••••"}
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleOpenPasswordModal(selectedUser)}
+                              className="h-6 px-2 text-[10px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1"
+                            >
+                              <KeyRound className="w-3 h-3" />
+                              <span>{th("Change")}</span>
+                            </Button>
+                          </div>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">{th("Direct Login URL")}:</span>
@@ -2784,6 +2873,154 @@ export default function SuperAdminAllUsersDirectoryPage() {
             fetchUsers();
           }}
         />
+      )}
+
+      {/* ─── Change Password Modal ─── */}
+      {passwordModalUser && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200"
+          onClick={() => {
+            if (!savingPassword) setPasswordModalUser(null);
+          }}
+        >
+          <div 
+            className="bg-card border border-border rounded-3xl shadow-2xl max-w-md w-full overflow-hidden text-foreground animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black flex items-center gap-2">
+                    <span>{th("Change Password")}</span>
+                  </h2>
+                  <p className="text-xs text-indigo-200 mt-0.5">
+                    {passwordModalUser.fullName} ({passwordModalUser.userCode})
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={savingPassword}
+                onClick={() => setPasswordModalUser(null)}
+                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 text-xs">
+              {/* User Summary Card */}
+              <div className="bg-muted/40 rounded-2xl p-3.5 border border-border space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground font-medium">{th("User Code")}:</span>
+                  <span className="font-mono font-bold text-foreground bg-background px-2 py-0.5 rounded border border-border">
+                    {passwordModalUser.userCode}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground font-medium">{th("Login Email")}:</span>
+                  <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[200px]">
+                    {passwordModalUser.email}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground font-medium">{th("Role & Branch")}:</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {passwordModalUser.roleLabel} • {passwordModalUser.branchName}
+                  </span>
+                </div>
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground">
+                    {th("New Access Password")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setNewPasswordInput("chaman@9090")}
+                    className="text-[10.5px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline cursor-pointer"
+                  >
+                    {th("Use Standard (chaman@9090)")}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showModalPassword ? "text" : "password"}
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !savingPassword) {
+                        e.preventDefault();
+                        void handleSavePassword();
+                      }
+                    }}
+                    placeholder="Enter new password (e.g. chaman@9090)"
+                    disabled={savingPassword}
+                    className="w-full h-10 px-3 pr-10 text-xs font-mono font-bold rounded-xl border border-input bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowModalPassword(!showModalPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    {showModalPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {th("This password will be immediately updated in both the ERP credentials vault and the authentication login system.")}
+                </p>
+              </div>
+
+              {/* Error Box */}
+              {passwordError && (
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-300 text-[11px] flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-muted/30 px-6 py-4 border-t border-border flex items-center justify-end gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={savingPassword}
+                onClick={() => setPasswordModalUser(null)}
+                className="h-9 px-4 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                {th("Cancel")}
+              </Button>
+              <Button
+                type="button"
+                disabled={savingPassword || !newPasswordInput.trim()}
+                onClick={() => void handleSavePassword()}
+                className="h-9 px-4 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {savingPassword ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>{th("Saving...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{th("Save Password")}</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>

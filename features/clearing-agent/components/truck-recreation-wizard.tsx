@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Truck as TruckIcon,
   User,
@@ -12,11 +12,15 @@ import {
   Loader2,
   Search,
   Eye,
-  Pencil,
-  Trash2,
   ListChecks,
   ArrowLeft,
   FileText,
+  Users,
+  Globe,
+  Columns as ColumnsIcon,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
@@ -27,22 +31,27 @@ import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { ReportActions } from "@/components/ui/report-actions";
+import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 
 /**
- * Registered Truck (Shipping & Clearing). Table: trucks.
+ * Clearing Truck Registration (Shipping & Clearing). Table: trucks.
  *
- * Table-first workflow: the Registered Trucks list is the landing view. "New Chat
- * Registration" opens a compact entry form (left) next to a large live report
- * preview (right) that mirrors every field as it's typed — no data is duplicated,
- * the same POST/PATCH /api/erp/master-data/trucks contract as before is used, and
- * saving returns to the (now updated) list view.
+ * Table-first workflow: the Registered Trucks list — with a live Branch & User /
+ * Truck / Registration / Countries summary above it — is the landing view. "New
+ * Clearing Truck Registration" opens a compact entry form (left) next to a large
+ * live report preview (right) that mirrors every field as it's typed. Saving
+ * returns to the (now updated) list view. Same POST/PATCH/DELETE contract as
+ * before against /api/erp/master-data/trucks — no new module, route, table or
+ * duplicate Truck Registration system.
  *
- * Owner, Transporter and Driver all resolve through the same Customer/Person master
- * (PersonPicker); Registered Company resolves through the Company master
- * (CompanyPicker). Each keeps one stable id — the display name is fetched live from
- * the master record, so it already follows the viewer's active language via the
- * ERP's one central translation architecture, with no duplicate name columns per
- * language.
+ * Owner, Transporter and Driver all resolve through the same Customer/Person
+ * master (PersonPicker) — search/select an existing person, or "+ New Owner /
+ * Transporter / Driver" opens the SAME embedded Customer/Person Management form
+ * (no separate Driver master), saves, and auto-selects the newly created person.
+ * Registered Company resolves through the Company master (CompanyPicker). Each
+ * keeps one stable id — the display name is fetched live from the master record
+ * (already localized server-side), so it follows the viewer's active language
+ * via the ERP's one central translation architecture.
  */
 
 type CustomerDetails = {
@@ -96,6 +105,7 @@ type TruckRow = {
   status: string;
   created_at: string;
   branch_display_name: string | null;
+  country_display_name: string | null;
   super_admin_serial: string | null;
   country_serial: string | null;
   branch_serial: string | null;
@@ -122,7 +132,19 @@ const EMPTY_FORM = {
 
 type ViewMode = "list" | "form";
 
-export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: SupportedLanguage }) {
+const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
+
+type OptionalColumnKey = "truckName" | "model" | "company" | "transporter" | "mobile" | "branch";
+
+export function TruckRecreationWizard({
+  lang: initialLang = "en",
+  userName = null,
+  isSuperAdmin = false,
+}: {
+  lang?: SupportedLanguage;
+  userName?: string | null;
+  isSuperAdmin?: boolean;
+}) {
   const globalLang = useActiveLanguage();
   const activeLang = (globalLang || initialLang) as SupportedLanguage;
   const dir = getLanguageDirection(activeLang);
@@ -147,10 +169,34 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const columnsRef = useRef<HTMLDivElement>(null);
+  const [visibleCols, setVisibleCols] = useState<Record<OptionalColumnKey, boolean>>({
+    truckName: true,
+    model: true,
+    company: true,
+    transporter: true,
+    mobile: true,
+    branch: false,
+  });
+
+  const [nowStr] = useState(() => new Date().toLocaleString());
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) setColumnsOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
   async function loadList() {
     setLoadingList(true);
     try {
-      const res = await fetch("/api/erp/master-data/trucks");
+      const res = await fetch(`/api/erp/master-data/trucks?lang=${encodeURIComponent(activeLang)}`);
       const json = await res.json();
       setRows(json.trucks || []);
     } catch {
@@ -162,7 +208,12 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
   useEffect(() => {
     loadList();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLang]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter, pageSize]);
 
   useEffect(() => {
     if (!form.ownerId) {
@@ -308,11 +359,11 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
     }
   }
 
-  function handleView(row: TruckRow) {
+  function handleView(row: TruckRow, options?: { autoPrint?: boolean }) {
     openMasterProfileReportWindow({
       lang: activeLang,
-      title: tt("trk.registered_truck_title", "Registered Truck"),
-      subtitle: tt("trk.module_subtitle", "Shipping & Clearing Management"),
+      title: tt("trk.registered_truck_title", "Clearing Truck Registration"),
+      subtitle: tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting."),
       name: row.truck_number,
       status: row.status,
       meta: [
@@ -367,7 +418,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
       ],
       reportIdPrefix: "TRUCK",
       reportIdValue: row.entry_serial || row.truck_number,
-      autoPrint: false,
+      autoPrint: options?.autoPrint ?? false,
     });
   }
 
@@ -440,6 +491,36 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
     });
   }, [rows, query, statusFilter]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const clampedPage = Math.min(page, totalPages);
+  const pageStart = (clampedPage - 1) * pageSize;
+  const paginatedRows = filteredRows.slice(pageStart, pageStart + pageSize);
+
+  // ── KPI / summary computations — real, live, derived from the same fetched rows ──
+  const totalTrucks = rows.length;
+  const activeTrucksCount = rows.filter((r) => r.status === "active").length;
+  const registeredOwnersCount = new Set(rows.map((r) => r.owner_person_id).filter(Boolean)).size;
+  const assignedDriversCount = new Set(rows.map((r) => r.driver_person_id).filter(Boolean)).size;
+  const pendingCount = rows.filter((r) => r.status === "suspended").length;
+  const inactiveCount = rows.filter((r) => r.status === "inactive" || r.status === "expired").length;
+
+  const countryBreakdown = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows) {
+      const name = r.country_display_name;
+      if (!name) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  }, [rows]);
+
+  const distinctCountries = useMemo(() => new Set(rows.map((r) => r.country_display_name).filter(Boolean)), [rows]);
+  const distinctBranches = useMemo(() => new Set(rows.map((r) => r.branch_display_name).filter(Boolean)), [rows]);
+  const scopeCountryLabel =
+    distinctCountries.size === 0 ? "—" : distinctCountries.size === 1 ? [...distinctCountries][0]! : tt("common.all_countries", "All Countries");
+  const scopeBranchLabel =
+    distinctBranches.size === 0 ? "—" : distinctBranches.size === 1 ? [...distinctBranches][0]! : tt("trk.col_branch", "Branch");
+
   const statusLabel = (status: string) =>
     status === "active"
       ? tt("common.active", "Active")
@@ -483,6 +564,42 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
     </div>
   );
 
+  const KpiCard = ({
+    title,
+    icon: Icon,
+    items,
+  }: {
+    title: string;
+    icon: any;
+    items: Array<{ label: string; value: string | number }>;
+  }) => (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-3 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
+        <Icon className="h-4 w-4" /> {title}
+      </div>
+      <dl className="space-y-2">
+        {items.map((it) => (
+          <div key={it.label} className="flex items-center justify-between gap-2">
+            <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{it.label}</dt>
+            <dd className="text-sm font-black text-slate-900 dark:text-white">{it.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+
+  const breadcrumb = (
+    <nav className="flex flex-wrap items-center gap-1.5 px-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+      <a href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400">
+        {tt("nav.dashboard", "Dashboard")}
+      </a>
+      <span className="text-slate-300 dark:text-slate-700">›</span>
+      <span>{tt("nav.shipping_clearing", "Shipping & Clearing")}</span>
+      <span className="text-slate-300 dark:text-slate-700">›</span>
+      <span className="font-black text-slate-700 dark:text-slate-200">{tt("trk.registered_truck_title", "Clearing Truck Registration")}</span>
+    </nav>
+  );
+
   const listHeader = (
     <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
@@ -491,9 +608,11 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
         </div>
         <div className="min-w-0">
           <h1 className="truncate text-xl font-black tracking-tight text-slate-900 dark:text-white">
-            {tt("trk.registered_truck_title", "Registered Truck")}
+            {tt("trk.registered_truck_title", "Clearing Truck Registration")}
           </h1>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{tt("trk.module_subtitle", "Shipping & Clearing Management")}</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting.")}
+          </p>
         </div>
       </div>
       <button
@@ -501,7 +620,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
         onClick={openNewRegistration}
         className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
       >
-        <Plus className="h-4 w-4" /> {tt("trk.new_chat_registration", "New Chat Registration")}
+        <Plus className="h-4 w-4" /> {tt("trk.new_chat_registration", "New Clearing Truck Registration")}
       </button>
     </div>
   );
@@ -514,9 +633,11 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
         </div>
         <div className="min-w-0">
           <h1 className="truncate text-xl font-black tracking-tight text-slate-900 dark:text-white">
-            {editingId ? tt("trk.form_title_edit", "Edit Truck Registration") : tt("trk.new_truck_registration", "New Truck Registration")}
+            {editingId ? tt("trk.form_title_edit", "Edit Clearing Truck Registration") : tt("trk.new_truck_registration", "New Clearing Truck Registration")}
           </h1>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{tt("trk.module_subtitle", "Shipping & Clearing Management")}</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting.")}
+          </p>
         </div>
       </div>
       <button
@@ -541,12 +662,147 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
     </div>
   );
 
+  const kpiCards = (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiCard
+        title={tt("trk.section_branch_user", "1. Branch & User Details")}
+        icon={Users}
+        items={[
+          { label: tt("common.country", "Country"), value: scopeCountryLabel },
+          { label: tt("common.branch_name", "Branch Name"), value: scopeBranchLabel },
+          { label: tt("common.user_name", "User Name"), value: userName || "—" },
+          { label: tt("common.date_time", "Date & Time"), value: nowStr },
+        ]}
+      />
+      <KpiCard
+        title={tt("trk.section_truck_summary", "2. Truck Summary")}
+        icon={TruckIcon}
+        items={[
+          { label: tt("trk.kpi_total_trucks", "Total Trucks"), value: totalTrucks },
+          { label: tt("trk.kpi_active_trucks", "Active Trucks"), value: activeTrucksCount },
+          { label: tt("trk.kpi_registered_owners", "Registered Owners"), value: registeredOwnersCount },
+          { label: tt("trk.kpi_assigned_drivers", "Assigned Drivers"), value: assignedDriversCount },
+        ]}
+      />
+      <KpiCard
+        title={tt("trk.section_registration_summary", "3. Registration Summary")}
+        icon={ClipboardList}
+        items={[
+          { label: tt("common.total_records", "Total Records"), value: totalTrucks },
+          { label: tt("common.active", "Active"), value: activeTrucksCount },
+          { label: tt("common.pending", "Pending"), value: pendingCount },
+          { label: tt("common.inactive", "Inactive"), value: inactiveCount },
+        ]}
+      />
+      <KpiCard
+        title={tt("trk.section_countries_report", "4. All Countries Report")}
+        icon={Globe}
+        items={
+          countryBreakdown.length
+            ? countryBreakdown.map((c) => ({ label: c.name, value: `${c.count} ${tt("trk.trucks_count_suffix", "trucks")}` }))
+            : [{ label: tt("common.all_countries", "All Countries"), value: 0 }]
+        }
+      />
+    </div>
+  );
+
+  const OPTIONAL_COLUMN_DEFS: Array<{ key: OptionalColumnKey; label: string }> = [
+    { key: "truckName", label: tt("trk.col_truck_name", "Truck Name") },
+    { key: "model", label: tt("trk.col_model", "Model") },
+    { key: "company", label: tt("trk.col_company", "Company") },
+    { key: "transporter", label: tt("trk.col_transporter", "Transporter") },
+    { key: "mobile", label: tt("common.mobile", "Mobile") },
+    { key: "branch", label: tt("trk.col_branch", "Branch") },
+  ];
+
+  const columnsToggle = (
+    <div className="relative" ref={columnsRef}>
+      <button
+        type="button"
+        onClick={() => setColumnsOpen((v) => !v)}
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+      >
+        <ColumnsIcon className="h-3.5 w-3.5" /> {tt("common.columns", "Columns")}
+      </button>
+      {columnsOpen && (
+        <div className="absolute end-0 z-20 mt-1.5 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          {OPTIONAL_COLUMN_DEFS.map((col) => (
+            <label
+              key={col.key}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <input
+                type="checkbox"
+                checked={visibleCols[col.key]}
+                onChange={(e) => setVisibleCols((prev) => ({ ...prev, [col.key]: e.target.checked }))}
+                className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              {col.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const paginationBar = (
+    <div className="flex flex-col gap-2 border-t border-slate-100 px-1 pt-3 text-xs font-semibold text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        {filteredRows.length === 0
+          ? tt("trk.no_trucks_found", "No registered trucks found.")
+          : tt("trk.showing_records", "Showing {from} to {to} of {total} records")
+              .replace("{from}", String(pageStart + 1))
+              .replace("{to}", String(Math.min(pageStart + pageSize, filteredRows.length)))
+              .replace("{total}", String(filteredRows.length))}
+      </div>
+      <div className="flex items-center gap-3">
+        <select
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          className="h-7 rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-bold outline-none dark:border-slate-700 dark:bg-slate-950"
+        >
+          {PAGE_SIZE_OPTIONS.map((n) => (
+            <option key={n} value={n}>
+              {n} {tt("trk.per_page_suffix", "/ page")}
+            </option>
+          ))}
+        </select>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={clampedPage <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+          </button>
+          <span className="min-w-[2.5rem] text-center font-black text-slate-700 dark:text-slate-200">
+            {clampedPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={clampedPage >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950"
+          >
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const trucksTable = (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-slate-100">
-          <ListChecks className="h-4 w-4 text-blue-600" /> {tt("trk.list_title", "Registered Trucks List")}
-        </h2>
+        <div>
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-slate-100">
+            <ListChecks className="h-4 w-4 text-blue-600" /> {tt("trk.list_title", "Registered Trucks")}
+          </h2>
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            {tt("trk.list_subtitle", "All registered trucks and master records")}
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
@@ -566,8 +822,9 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
             <option value="active">{tt("common.active", "Active")}</option>
             <option value="inactive">{tt("common.inactive", "Inactive")}</option>
           </select>
+          {columnsToggle}
           <ReportActions
-            title={tt("trk.list_title", "Registered Trucks List")}
+            title={tt("trk.list_title", "Registered Trucks")}
             lang={activeLang}
             rows={filteredRows.map((r) => ({
               owner: r.owner_display_name || "-",
@@ -577,6 +834,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               company: r.company_display_name || "-",
               transporter: r.transporter_display_name || "-",
               driver: r.driver_display_name || "-",
+              mobile: r.driver_mobile || "-",
               status: r.status,
               reg_date: (r.created_at || "").slice(0, 10),
               branch: r.branch_display_name || "-",
@@ -590,6 +848,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               { key: "company", label: tt("trk.col_company", "Company") },
               { key: "transporter", label: tt("trk.col_transporter", "Transporter") },
               { key: "driver", label: tt("trk.col_driver", "Driver") },
+              { key: "mobile", label: tt("common.mobile", "Mobile") },
               { key: "status", label: tt("common.status", "Status") },
               { key: "reg_date", label: tt("trk.col_reg_date", "Reg. Date") },
               { key: "branch", label: tt("trk.col_branch", "Branch") },
@@ -604,16 +863,16 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
           <thead className="border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <tr>
               <th className="px-2 py-2 text-start">#</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_owner", "Owner Name")}</th>
               <th className="px-2 py-2 text-start">{tt("trk.col_truck_no", "Truck No.")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_truck_name", "Truck Name")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_model", "Model")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_company", "Company")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_transporter", "Transporter")}</th>
+              <th className="px-2 py-2 text-start">{tt("trk.col_owner", "Owner Name")}</th>
+              {visibleCols.truckName && <th className="px-2 py-2 text-start">{tt("trk.col_truck_name", "Truck Name")}</th>}
+              {visibleCols.model && <th className="px-2 py-2 text-start">{tt("trk.col_model", "Model")}</th>}
+              {visibleCols.company && <th className="px-2 py-2 text-start">{tt("trk.col_company", "Company")}</th>}
+              {visibleCols.transporter && <th className="px-2 py-2 text-start">{tt("trk.col_transporter", "Transporter")}</th>}
               <th className="px-2 py-2 text-start">{tt("trk.col_driver", "Driver")}</th>
+              {visibleCols.mobile && <th className="px-2 py-2 text-start">{tt("common.mobile", "Mobile")}</th>}
+              {visibleCols.branch && <th className="px-2 py-2 text-start">{tt("trk.col_branch", "Branch")}</th>}
               <th className="px-2 py-2 text-start">{tt("common.status", "Status")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_reg_date", "Reg. Date")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_branch", "Branch")}</th>
               <th className="px-2 py-2 text-end">{tt("common.actions", "Actions")}</th>
             </tr>
           </thead>
@@ -624,41 +883,42 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </td>
               </tr>
-            ) : filteredRows.length === 0 ? (
+            ) : paginatedRows.length === 0 ? (
               <tr>
                 <td colSpan={12} className="px-4 py-8 text-center text-slate-400">
                   {tt("trk.no_trucks_found", "No registered trucks found.")}
                 </td>
               </tr>
             ) : (
-              filteredRows.map((r, idx) => (
+              paginatedRows.map((r, idx) => (
                 <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                  <td className="px-2 py-2 font-semibold text-slate-500">{idx + 1}</td>
-                  <td className="px-2 py-2 font-bold text-slate-800 dark:text-slate-100">{r.owner_display_name || "-"}</td>
+                  <td className="px-2 py-2 font-semibold text-slate-500">{pageStart + idx + 1}</td>
                   <td className="px-2 py-2 font-mono font-bold">{r.truck_number}</td>
-                  <td className="px-2 py-2">{r.truck_name || "-"}</td>
-                  <td className="px-2 py-2">{r.model || "-"}</td>
-                  <td className="px-2 py-2">{r.company_display_name || "-"}</td>
-                  <td className="px-2 py-2">{r.transporter_display_name || "-"}</td>
+                  <td className="px-2 py-2 font-bold text-slate-800 dark:text-slate-100">{r.owner_display_name || "-"}</td>
+                  {visibleCols.truckName && <td className="px-2 py-2">{r.truck_name || "-"}</td>}
+                  {visibleCols.model && <td className="px-2 py-2">{r.model || "-"}</td>}
+                  {visibleCols.company && <td className="px-2 py-2">{r.company_display_name || "-"}</td>}
+                  {visibleCols.transporter && <td className="px-2 py-2">{r.transporter_display_name || "-"}</td>}
                   <td className="px-2 py-2">{r.driver_display_name || "-"}</td>
+                  {visibleCols.mobile && (
+                    <td className="px-2 py-2 font-mono" dir="ltr">
+                      {r.driver_mobile || "-"}
+                    </td>
+                  )}
+                  {visibleCols.branch && <td className="px-2 py-2">{r.branch_display_name || "-"}</td>}
                   <td className="px-2 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadgeClasses(r.status)}`}>
                       {statusLabel(r.status)}
                     </span>
                   </td>
-                  <td className="px-2 py-2">{(r.created_at || "").slice(0, 10)}</td>
-                  <td className="px-2 py-2">{r.branch_display_name || "-"}</td>
                   <td className="px-2 py-2">
-                    <div className="flex items-center justify-end gap-1">
-                      <button type="button" onClick={() => handleView(r)} title={tt("common.view", "View")} className="rounded-lg p-1.5 text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40">
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
-                      <button type="button" onClick={() => startEdit(r)} title={tt("common.edit", "Edit")} className="rounded-lg p-1.5 text-slate-500 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/40">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button type="button" onClick={() => handleDelete(r.id)} title={tt("common.delete", "Delete")} className="rounded-lg p-1.5 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                    <div className="flex justify-end">
+                      <UnifiedActionMenu
+                        onView={() => handleView(r)}
+                        onEdit={() => startEdit(r)}
+                        onPrint={() => handleView(r, { autoPrint: true })}
+                        onDelete={() => handleDelete(r.id)}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -667,15 +927,19 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
           </tbody>
         </table>
       </div>
+
+      {paginationBar}
     </div>
   );
 
   return (
-    <div dir={dir} className="space-y-6">
+    <div dir={dir} className="space-y-4">
       {view === "list" ? (
         <>
           {listHeader}
+          {breadcrumb}
           {messageBanner}
+          {kpiCards}
           {trucksTable}
         </>
       ) : (
@@ -698,6 +962,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id }))}
                     placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
                     lang={activeLang}
+                    createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
                   />
                   {form.ownerId && (
                     <button
@@ -791,6 +1056,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     onValueChange={(id) => setForm((p) => ({ ...p, transporterId: id }))}
                     placeholder={tt("trk.search_transporter_ph", "Search transporter...")}
                     lang={activeLang}
+                    createLabel={tt("trk.new_transporter", "+ New Transporter")}
                   />
                   {form.transporterId && (
                     <button
@@ -804,7 +1070,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 </div>
               </section>
 
-              {/* 5. Driver */}
+              {/* 5. Driver — reuses the Customer/Person Management master */}
               <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
                   <UserCheck className="h-3.5 w-3.5" /> {tt("trk.section_driver", "5. Driver Information")}
@@ -818,6 +1084,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                         onValueChange={(id) => setForm((p) => ({ ...p, driverId: id }))}
                         placeholder={tt("trk.search_driver_ph", "Search driver...")}
                         lang={activeLang}
+                        createLabel={tt("trk.new_driver", "+ New Driver")}
                       />
                     </div>
                     {form.driverId && (

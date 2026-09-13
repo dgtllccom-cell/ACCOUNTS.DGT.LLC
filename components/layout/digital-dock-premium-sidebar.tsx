@@ -337,7 +337,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
       { label: "Inter-Country Shipping Claims", href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
-      { label: "Clearing Order Trucks", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
+      { label: "Clearing Truck Registration", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
       { label: "Shipping Handovers", href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
       { label: "Logistics Tracking Dashboard", href: "/dashboard/logistics", icon: BarChart3 },
     ],

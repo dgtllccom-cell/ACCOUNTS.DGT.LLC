@@ -39,6 +39,7 @@ type ProfileRow = {
   id: string;
   full_name: string | null;
   user_code: string | null;
+  raw_password?: string | null;
   preferred_language_code: string | null;
   created_at: string;
   updated_at: string;
@@ -180,7 +181,7 @@ export async function GET(request: NextRequest) {
       withTimeout<ProfileRow>(
         admin
         .from("profiles")
-        .select("id, full_name, user_code, preferred_language_code, created_at, updated_at, deleted_at")
+        .select("id, full_name, user_code, raw_password, preferred_language_code, created_at, updated_at, deleted_at")
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
           .limit(query.limit),
@@ -461,6 +462,8 @@ export async function GET(request: NextRequest) {
         lastActivity: lastActivityDate,
         lastActivityAction: lastActivity?.action ?? null,
         lastLogin: lastLoginDate,
+        passwordKey: profile.raw_password ?? null,
+        raw_password: profile.raw_password ?? null,
         activityCounts,
       };
     });

@@ -38,7 +38,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "CONSIGNMENT REGISTER": { ur: "کنسائنمنٹ رجسٹر", ar: "سجل الشحنات", fa: "دفتر امانی", ps: "د امانت رجسټر" },
   "AI VOICE & DOCUMENT ENTRY": { ur: "AI وائس اور دستاویز انٹری", ar: "إدخال الصوت والمستندات بالذكاء الاصطناعي", fa: "ورود صوت و سند با هوش مصنوعی", ps: "د AI غږ او سند ننوت" },
   // ── Main-menu cleanup 2026-09-09 — new/changed labels ──
-  "CLEARING ORDER TRUCKS": { ur: "کلیئرنگ آرڈر ٹرک", ar: "شاحنات أمر التخليص", fa: "کامیون‌های سفارش ترخیص", ps: "د کلیرنس امر لارۍ" },
+  "CLEARING TRUCK REGISTRATION": { ur: "کلیئرنگ ٹرک رجسٹریشن", ar: "تسجيل شاحنة التخليص", fa: "ثبت کامیون ترخیص", ps: "د کلیرنس د لارۍ راجستر" },
   "SHIPPING HANDOVERS": { ur: "شپنگ حوالگی", ar: "تسليمات الشحن", fa: "تحویل‌های حمل", ps: "د لېږد سپارنې" },
   "NEW CUSTOMER ORDER": { ur: "نیا کسٹمر آرڈر", ar: "طلب عميل جديد", fa: "سفارش جدید مشتری", ps: "د پیرودونکي نوی امر" },
   "DAILY SETTLEMENT": { ur: "روزانہ تصفیہ", ar: "التسوية اليومية", fa: "تسویه روزانه", ps: "ورځنۍ تصفیه" },

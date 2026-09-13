@@ -476,10 +476,10 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                         const totalCost = Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0);
                         const curr = row.localCurrency || row.local_currency || cg.currency;
 
-                        const superSerial = row.superAdminSerialNo || row.super_admin_serial_no || row.global_serial_no || `GBL-${row.id?.slice(0, 4) || "001"}`;
-                        const countrySerial = row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || `CTY-${row.id?.slice(0, 4) || "001"}`;
-                        const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || `BR-${row.id?.slice(0, 4) || "001"}`;
-                        const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || `LP-2026-${row.id?.slice(0, 4) || "1001"}`;
+                        const superSerial = row.superAdminSerialNo || row.super_admin_serial_no || row.global_serial_no || "—";
+                        const countrySerial = row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || "—";
+                        const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || "—";
+                        const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "—";
 
                         return (
                           <tr key={row.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
@@ -504,16 +504,16 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                             <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
                             <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.countryName || row.country_name || "-"}</td>
                             <td className="p-2 font-mono text-[9px] font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
-                              {row.purchaseAccountNo || row.purchase_account_no || "PK-CHM-AC-0001"}
+                              {row.purchaseAccountNo || row.purchase_account_no || "—"}
                             </td>
                             <td className="p-2 font-mono text-[9px] font-bold text-purple-600 dark:text-purple-400 border-r border-slate-150 dark:border-slate-800">
-                              {row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "PK-CHM-AC-0002"}
+                              {row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}
                             </td>
                             <td className="p-2 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
                             <td className="p-2 text-slate-600 dark:text-slate-400 border-r border-slate-150 dark:border-slate-800">{row.brand || "-"}</td>
                             <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.originCountryName || row.origin_country_name || "Local"}</td>
                             <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{pkgCount.toLocaleString()}</td>
-                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.quantityName || row.quantity_name || "Bags"}</td>
+                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.quantityName || row.quantity_name || "—"}</td>
                             <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">{grossWt.toLocaleString()} kg</td>
                             <td className="p-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{netWt.toLocaleString()} kg</td>
                             <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">{rate > 0 ? `${rate.toFixed(2)} ${curr}` : "-"}</td>

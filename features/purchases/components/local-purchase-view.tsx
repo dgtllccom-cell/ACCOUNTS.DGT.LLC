@@ -243,6 +243,7 @@ export function LocalPurchaseView({
 }: LocalPurchaseViewProps) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const isGlobalUser = Boolean(session?.isSuperAdmin || session?.isSuperAdmin === true || session?.roles?.includes?.("super_admin"));
   const th = (x: string) => translateHeader(lang, x);
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
@@ -483,8 +484,12 @@ export function LocalPurchaseView({
   }, [countryBranches, selectedCountryId]);
 
   const activeBranch = useMemo(() => {
+    // Keep the global Super Admin registry truly unfiltered. Falling back to
+    // the first branch here made the summary cards display an arbitrary branch
+    // even though the table contained all authorized records.
+    if (isGlobalUser && !selectedCountryId && !selectedBranchId) return undefined;
     return countryBranches.find(b => b.id === selectedBranchId) || filteredCountryBranches[0] || countryBranches[0];
-  }, [countryBranches, filteredCountryBranches, selectedBranchId]);
+  }, [countryBranches, filteredCountryBranches, selectedBranchId, selectedCountryId, isGlobalUser]);
 
   const activeCityBranches = useMemo(() => {
     if (!selectedBranchId) return [];
@@ -505,6 +510,15 @@ export function LocalPurchaseView({
 
   // Default selection based on user scope
   useEffect(() => {
+    // Super Admins start on the unfiltered registry so global reports and KPI
+    // cards include every authorized country/branch. They can still choose a
+    // specific hierarchy node from the shared dropdown when needed.
+    if (isGlobalUser) {
+      setSelectedCountryId("");
+      setSelectedBranchId("");
+      setSelectedCityBranchId("");
+      return;
+    }
     if (countryBranches.length > 0) {
       const userBranch = session.countryBranchIds?.[0] || session.country_branch_ids?.[0];
       const match = countryBranches.find(b => b.id === userBranch) || countryBranches[0];
@@ -513,15 +527,20 @@ export function LocalPurchaseView({
         setSelectedBranchId(match.id);
       }
     }
-  }, [countryBranches, session]);
+  }, [countryBranches, session, isGlobalUser]);
 
   useEffect(() => {
+    if (isGlobalUser && !selectedCountryId && !selectedBranchId) return;
     if (filteredCountryBranches.length > 0 && !filteredCountryBranches.some(b => b.id === selectedBranchId)) {
       setSelectedBranchId(filteredCountryBranches[0].id);
     }
-  }, [filteredCountryBranches, selectedBranchId]);
+  }, [filteredCountryBranches, selectedBranchId, selectedCountryId, isGlobalUser]);
 
   useEffect(() => {
+    if (isGlobalUser && !selectedBranchId) {
+      setSelectedCityBranchId("");
+      return;
+    }
     if (activeCityBranches.length > 0) {
       const userCityBranch = session.cityBranchIds?.[0] || session.city_branch_ids?.[0];
       if (userCityBranch && activeCityBranches.some(c => c.id === userCityBranch)) {
@@ -532,7 +551,7 @@ export function LocalPurchaseView({
     } else {
       setSelectedCityBranchId("");
     }
-  }, [activeCityBranches, session]);
+  }, [activeCityBranches, session, selectedBranchId, isGlobalUser]);
 
   // Origin Country
   const selectedOriginCountryName = useMemo(() => {
@@ -612,11 +631,10 @@ export function LocalPurchaseView({
     return accountsList.find(acc => acc.code === brokerAccountNo);
   }, [accountsList, brokerAccountNo]);
 
-  const [serialNo, setSerialNo] = useState<string>("");
-
-  useEffect(() => {
-    setSerialNo(`LP-2026-${Math.floor(1000 + Math.random() * 9000)}`);
-  }, []);
+  // A bill serial is issued by the server when the draft is accepted. Never
+  // display a random client-side placeholder that could be mistaken for a
+  // persisted voucher number.
+  const [serialNo] = useState<string>("PENDING");
 
   // Load registry logs
   const loadHistory = async () => {
@@ -2935,7 +2953,7 @@ export function LocalPurchaseView({
                   title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
                   subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                   columns={[
-                    { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
+                      { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
                     { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
                     { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
                     { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
@@ -2946,15 +2964,15 @@ export function LocalPurchaseView({
                     { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
                   ]}
                   rows={filteredPurchases.map((p) => ({
-                    voucherNo: p.voucher_no || p.invoice_no || "-",
-                    date: p.purchase_date || p.created_at ? new Date(p.purchase_date || p.created_at).toLocaleDateString("en-GB") : "-",
-                    supplier: p.supplier_name || p.supplier_account_name || "-",
-                    goods: p.goods_name || "-",
-                    qty: `${Number(p.quantity || 0).toLocaleString()} ${p.quantity_unit || "Units"}`,
+                    voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                    date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
+                    supplier: p.supplier_name || "—",
+                    goods: p.goods_name || "—",
+                    qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
                     netWeight: `${Number(p.net_weight || 0).toLocaleString()} kg`,
-                    rate: `$${Number(p.rate || 0).toFixed(2)}`,
-                    finalAmount: Number(p.final_amount || p.total_amount || 0),
-                    status: (p.posting_status || p.status || "DRAFT").toUpperCase()
+                    rate: `${Number(p.purchase_rate || 0).toFixed(2)} ${p.purchase_currency || ""}`.trim(),
+                    finalAmount: Number(p.final_cost || p.purchase_cost || 0),
+                    status: (p.status || "DRAFT").toUpperCase()
                   }))}
                   variant="default"
                   className="bg-[#002B66] hover:bg-[#001D44] text-white font-bold h-7 text-xs gap-1 px-3"
@@ -2966,6 +2984,7 @@ export function LocalPurchaseView({
                 <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                   <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider">
                     <tr>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-center">#</Th>
                       <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_super_sn", "Super S/N")}</Th>
                       <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_cty_sn", "Cty S/N")}</Th>
                       <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_br_sn", "Br S/N")}</Th>
@@ -2993,21 +3012,21 @@ export function LocalPurchaseView({
                   <tbody className="divide-y divide-slate-100 text-[10px]">
                     {loadingHistory ? (
                       <tr>
-                        <td colSpan={22} className="p-8 text-center text-slate-400 font-mono">
+                      <td colSpan={23} className="p-8 text-center text-slate-400 font-mono">
                           <Loader2 className="h-5 w-5 animate-spin mx-auto text-blue-600 mb-2" />
                           {t(lang, "lp.loading_bills", "Loading bills...")}
                         </td>
                       </tr>
                     ) : filteredPurchases.length === 0 ? (
                       <tr>
-                        <td colSpan={22} className="px-5 py-12 text-center text-slate-400 font-sans">
+                        <td colSpan={23} className="px-5 py-12 text-center text-slate-400 font-sans">
                           <Package className="h-10 w-10 mx-auto text-slate-200 mb-3" />
                           <p className="font-bold text-slate-700">{t(lang, "lp.no_bills_found", "No bills found")}</p>
                           <p className="text-[10px] text-slate-400 mt-0.5">Click &quot;+ Create Local Purchase&quot; to create a new bill.</p>
                         </td>
                       </tr>
                     ) : (
-                      filteredPurchases.map((row) => {
+                      filteredPurchases.map((row, rowIndex) => {
                         const rowStatus = row.status || row.bill_status || "draft";
                         const postingState = deriveLocalPurchasePostingState(row);
                         const rowCurrency = row.local_currency || row.localCurrency || row.purchase_currency || row.purchaseCurrency || "PKR";
@@ -3018,12 +3037,12 @@ export function LocalPurchaseView({
                         const rowGrossWeight = Number(row.total_gross_weight || row.totalGrossWeight || 0);
                         const rowQty = Number(row.quantity_kgs || row.quantityKgs || 0);
                         const rowRate = Number(row.purchase_rate || row.purchaseRate || 0);
-                        const rowDivideKgs = row.divide_kgs || row.divideKgs || 50;
+                        const rowDivideKgs = row.divide_kgs || row.divideKgs || null;
 
-                        const superSerial = row.superAdminSerialNo || row.super_admin_serial_no || row.global_serial_no || `GBL-${row.id?.slice(0, 4) || "001"}`;
-                        const countrySerial = row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || `CTY-${row.id?.slice(0, 4) || "001"}`;
-                        const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || `BR-${row.id?.slice(0, 4) || "001"}`;
-                        const voucherCode = row.journal_serial_no || row.serial_no || row.serialNo || row.bill_no || row.billNo || `LP-2026-${row.id?.slice(0, 4) || "1001"}`;
+                        const superSerial = row.superAdminSerialNo || row.super_admin_serial_no || row.global_serial_no || "—";
+                        const countrySerial = row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || "—";
+                        const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || "—";
+                        const voucherCode = row.journal_serial_no || row.serial_no || row.serialNo || row.bill_no || row.billNo || "—";
 
                         const badge = postingState.visualStatus === "black"
                           ? { bg: "bg-black border-black", text: "text-white", label: "BLACK" }
@@ -3031,27 +3050,28 @@ export function LocalPurchaseView({
 
                         return (
                           <tr key={row.id} className="hover:bg-blue-50/30 transition-colors border-b border-slate-100">
+                            <td className="px-2 py-2 font-mono text-[9px] text-slate-500 font-bold text-center border-r border-slate-150">{rowIndex + 1}</td>
                             <td className="px-2 py-2 font-mono text-[9px] text-slate-500 font-bold text-center border-r border-slate-150">{superSerial}</td>
                             <td className="px-2 py-2 font-mono text-[9px] text-slate-500 text-center border-r border-slate-150">{countrySerial}</td>
                             <td className="px-2 py-2 font-mono text-[9px] text-slate-500 text-center border-r border-slate-150">{branchSerial}</td>
                             <td className="px-2 py-2 font-mono text-[9px] font-bold text-blue-600 border-r border-slate-150">{voucherCode}</td>
                             <td className="px-2 py-2 font-mono text-[9px] text-slate-500 border-r border-slate-150" suppressHydrationWarning>
-                              {new Date(row.created_at || row.createdAt || "").toLocaleDateString("en-GB")}
+                              {row.created_at || row.createdAt ? new Date(row.created_at || row.createdAt).toLocaleDateString("en-GB") : "—"}
                             </td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-blue-600 font-bold border-r border-slate-150">{row.purchase_account_no || row.purchaseAccountNo || "PK-CHM-AC-0001"}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-purple-600 font-bold border-r border-slate-150">{row.sales_account_no || row.salesAccountNo || row.broker_account_no || row.brokerAccountNo || "PK-CHM-AC-0002"}</td>
+                            <td className="px-2 py-2 font-mono text-[9px] text-blue-600 font-bold border-r border-slate-150">{row.purchase_account_no || row.purchaseAccountNo || "—"}</td>
+                            <td className="px-2 py-2 font-mono text-[9px] text-purple-600 font-bold border-r border-slate-150">{row.sales_account_no || row.salesAccountNo || row.broker_account_no || row.brokerAccountNo || "—"}</td>
                             <td className="px-2 py-2 font-semibold text-slate-700 border-r border-slate-150">{row.supplier_name || row.supplierName || "—"}</td>
-                            <td className="px-2 py-2 font-bold text-slate-900 border-r border-slate-150">{row.goods_name || row.goodsName || "-"}</td>
-                            <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.brand || "-"}</td>
-                            <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.size || "-"}</td>
+                            <td className="px-2 py-2 font-bold text-slate-900 border-r border-slate-150">{row.goods_name || row.goodsName || "—"}</td>
+                            <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.brand || "—"}</td>
+                            <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.size || "—"}</td>
                             <td className="px-2 py-2 text-right font-mono font-bold text-slate-800 border-r border-slate-150">{rowQty.toLocaleString()}</td>
-                            <td className="px-2 py-2 text-slate-600 border-r border-slate-150">{row.quantity_name || row.quantityName || "Bags"}</td>
+                            <td className="px-2 py-2 text-slate-600 border-r border-slate-150">{row.quantity_name || row.quantityName || "—"}</td>
                             <td className="px-2 py-2 text-right font-mono text-slate-600 border-r border-slate-150">{rowGrossWeight.toLocaleString()} kg</td>
                             <td className="px-2 py-2 text-right font-mono font-bold text-blue-600 border-r border-slate-150">{rowNetWeight.toLocaleString()} kg</td>
-                            <td className="px-2 py-2 text-center font-mono text-[9px] text-purple-700 font-bold border-r border-slate-150">{rowDivideKgs} KG</td>
-                            <td className="px-2 py-2 text-right font-mono text-slate-700 border-r border-slate-150">${rowRate}</td>
-                            <td className="px-2 py-2 text-right font-mono text-slate-800 border-r border-slate-150">${rowBaseCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="px-2 py-2 text-right font-mono text-red-500 border-r border-slate-150">${rowTaxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="px-2 py-2 text-center font-mono text-[9px] text-purple-700 font-bold border-r border-slate-150">{rowDivideKgs ? `${rowDivideKgs} KG` : "—"}</td>
+                            <td className="px-2 py-2 text-right font-mono text-slate-700 border-r border-slate-150">{rowRate ? `${rowRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${rowCurrency}` : "—"}</td>
+                            <td className="px-2 py-2 text-right font-mono text-slate-800 border-r border-slate-150">{rowBaseCost ? `${rowCurrency} ${rowBaseCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</td>
+                            <td className="px-2 py-2 text-right font-mono text-red-500 border-r border-slate-150">{rowTaxAmount ? `${rowCurrency} ${rowTaxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</td>
                             <td className="px-2 py-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150">
                               {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>

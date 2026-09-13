@@ -18,6 +18,7 @@ type ResolvedLedger = {
   code: string | null;
   name: string | null;
   account_id: string | null;
+  enterprise_account_id: string | null;
   country_id: string | null;
   country_branch_id: string | null;
   city_branch_id: string | null;
@@ -54,32 +55,32 @@ async function resolveLedger(tx: any, term: unknown): Promise<ResolvedLedger | n
 
   if (isUuid) {
     const byId = await tx`
-      select id, code, name, account_id, country_id, country_branch_id, city_branch_id
+      select id, code, name, account_id, enterprise_account_id, country_id, country_branch_id, city_branch_id
       from ledgers
       where id = ${clean}::uuid
         and deleted_at is null
       limit 1;
     `;
-    if (byId[0]) return byId[0];
+    if (byId[0]) return hydrateLedgerScope(tx, byId[0]);
 
     const byAccount = await tx`
-      select id, code, name, account_id, country_id, country_branch_id, city_branch_id
+      select id, code, name, account_id, enterprise_account_id, country_id, country_branch_id, city_branch_id
       from ledgers
       where account_id = ${clean}::uuid
         and deleted_at is null
       limit 1;
     `;
-    if (byAccount[0]) return byAccount[0];
+    if (byAccount[0]) return hydrateLedgerScope(tx, byAccount[0]);
   }
 
   const byCode = await tx`
-    select id, code, name, account_id, country_id, country_branch_id, city_branch_id
+    select id, code, name, account_id, enterprise_account_id, country_id, country_branch_id, city_branch_id
     from ledgers
     where code = ${clean}
       and deleted_at is null
     limit 1;
   `;
-  if (byCode[0]) return byCode[0];
+  if (byCode[0]) return hydrateLedgerScope(tx, byCode[0]);
 
   const accountByCode = await tx`
     select id from accounts
@@ -89,16 +90,75 @@ async function resolveLedger(tx: any, term: unknown): Promise<ResolvedLedger | n
   `;
   if (accountByCode[0]?.id) {
     const byLinkedAccount = await tx`
-      select id, code, name, account_id, country_id, country_branch_id, city_branch_id
+      select id, code, name, account_id, enterprise_account_id, country_id, country_branch_id, city_branch_id
       from ledgers
       where account_id = ${accountByCode[0].id}::uuid
         and deleted_at is null
       limit 1;
     `;
-    if (byLinkedAccount[0]) return byLinkedAccount[0];
+    if (byLinkedAccount[0]) return hydrateLedgerScope(tx, byLinkedAccount[0]);
+  }
+
+  // The current ERP account picker uses enterprise_accounts. Resolve that
+  // canonical account to its ledger when the legacy accounts table has no row.
+  const enterpriseByCode = await tx`
+    select id
+    from enterprise_accounts
+    where code = ${clean}
+      and deleted_at is null
+    limit 1;
+  `;
+  const enterpriseAccountId = enterpriseByCode[0]?.id;
+  if (enterpriseAccountId) {
+    const byEnterpriseAccount = await tx`
+      select id, code, name, account_id, enterprise_account_id, country_id, country_branch_id, city_branch_id
+      from ledgers
+      where enterprise_account_id = ${enterpriseAccountId}::uuid
+        and deleted_at is null
+      limit 1;
+    `;
+    if (byEnterpriseAccount[0]) return hydrateLedgerScope(tx, byEnterpriseAccount[0]);
   }
 
   return null;
+}
+
+/**
+ * Ledgers created by the modern account engine may store only a city-branch
+ * reference. Resolve the inherited country/branch here so posting cannot
+ * accidentally use a ledger from a different country when the account code is
+ * duplicated across scopes.
+ */
+async function hydrateLedgerScope(tx: any, ledger: ResolvedLedger): Promise<ResolvedLedger> {
+  const [scope] = await tx`
+    select
+      coalesce(l.country_id, city.country_id, branch.country_id) as effective_country_id,
+      coalesce(l.country_branch_id, city.country_branch_id) as effective_country_branch_id,
+      l.city_branch_id as effective_city_branch_id
+    from ledgers l
+    left join city_branches city on city.id = l.city_branch_id
+    left join country_branches branch on branch.id = l.country_branch_id
+    where l.id = ${ledger.id}::uuid
+    limit 1;
+  `;
+  return {
+    ...ledger,
+    country_id: ledger.country_id || scope?.effective_country_id || null,
+    country_branch_id: ledger.country_branch_id || scope?.effective_country_branch_id || null,
+    city_branch_id: ledger.city_branch_id || scope?.effective_city_branch_id || null,
+  };
+}
+
+function assertLedgerMatchesPurchase(ledger: ResolvedLedger, purchase: any) {
+  const mismatches = [
+    ["country", ledger.country_id, purchase.country_id],
+    ["country branch", ledger.country_branch_id, purchase.country_branch_id],
+    ["city branch", ledger.city_branch_id, purchase.city_branch_id],
+  ].filter(([, ledgerScope, purchaseScope]) => ledgerScope && ledgerScope !== purchaseScope);
+
+  if (mismatches.length > 0) {
+    throw new Error(`Selected ledger is outside the Local Purchase ${mismatches[0][0]} scope.`);
+  }
 }
 
 function assertBalancedLines(lines: Array<{ debit: number; credit: number }>, label: string, expectedAmount: number) {
@@ -185,8 +245,11 @@ export async function POST(request: NextRequest) {
         if (!purchaseLedger || !creditLedger) {
           throw new Error("The selected Purchase (DR) and Sales/Payable (CR) ledgers must both exist before transfer.");
         }
-        if (!purchaseLedger.account_id || !creditLedger.account_id) {
-          throw new Error("The selected Purchase (DR) and Sales/Payable (CR) ledgers must each have a linked account.");
+        assertLedgerMatchesPurchase(purchaseLedger, purchase);
+        assertLedgerMatchesPurchase(creditLedger, purchase);
+        if ((!purchaseLedger.account_id && !purchaseLedger.enterprise_account_id) ||
+            (!creditLedger.account_id && !creditLedger.enterprise_account_id)) {
+          throw new Error("The selected Purchase (DR) and Sales/Payable (CR) ledgers must each be linked to a canonical account.");
         }
         if (purchaseLedger.id === creditLedger.id) {
           throw new Error("Purchase (DR) and Sales/Payable (CR) must be different ledgers.");
@@ -210,7 +273,13 @@ export async function POST(request: NextRequest) {
         let journalEntryId = purchase.journal_entry_id ?? null;
         let journalEntryNo = journalSerialNo;
 
-        if (!journalEntryId) {
+        // Legacy journal_entries/journal_lines require rows in the deprecated
+        // accounts table. New ERP accounts are enterprise_accounts and are
+        // posted authoritatively through Roznamcha, which updates the linked
+        // ledger balances without creating a duplicate legacy journal.
+        const canPostLegacyJournal = Boolean(purchaseLedger.account_id && creditLedger.account_id);
+
+        if (!journalEntryId && canPostLegacyJournal) {
           const journalRows = await tx`
             insert into journal_entries (
               company_id,
@@ -289,7 +358,7 @@ export async function POST(request: NextRequest) {
           }
 
           await tx`select post_journal_entry(${journalEntryId}::uuid);`;
-        } else {
+        } else if (journalEntryId) {
           const journalRows = await tx`
             select id, entry_no, status, posted_at
             from journal_entries
@@ -314,6 +383,8 @@ export async function POST(request: NextRequest) {
             await tx`select post_journal_entry(${journalEntryId}::uuid);`;
           }
           journalEntryNo = journal.entry_no || journalEntryNo;
+        } else {
+          journalEntryNo = `JV-${journalSerialNo}`;
         }
 
         let roznamchaEntryId = purchase.roznamcha_entry_id ?? null;
@@ -325,6 +396,27 @@ export async function POST(request: NextRequest) {
           city_branch_transaction_serial?: string | null;
           entry_serial_number?: string | null;
         } = {};
+
+        if (!roznamchaEntryId) {
+          const existingRozRows = await tx`
+            select id, super_admin_serial_number, country_transaction_serial_number,
+                   branch_transaction_serial_number, main_branch_transaction_serial,
+                   city_branch_transaction_serial, entry_serial_number
+            from roznamcha_entries
+            where source_module = 'local_purchase'
+              and source_transaction_type = 'local_purchase_transfer'
+              and source_transaction_id = ${purchase.id}::uuid
+              and deleted_at is null
+              and status <> 'cancelled'
+            order by created_at desc
+            limit 1
+            for update;
+          `;
+          if (existingRozRows[0]?.id) {
+            roznamchaEntryId = existingRozRows[0].id;
+            roznamchaSerials = existingRozRows[0];
+          }
+        }
 
         if (!roznamchaEntryId) {
           const lines = [
@@ -359,7 +451,8 @@ export async function POST(request: NextRequest) {
               ${null},
               ${journalSerialNo},
               ${`Local Purchase: ${purchase.goods_name} - ${purchase.supplier_name || "Local Vendor"} | ${postingCurrency} ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} [${purchase.payment_mode || "Cash"}]`},
-              ${tx.json(lines)}
+              ${tx.json(lines)},
+              true
             ) as id;
           `;
           roznamchaEntryId = String(createdRoznamchaRows[0]?.id ?? "");
@@ -378,6 +471,19 @@ export async function POST(request: NextRequest) {
             roznamchaEntryId = fallback[0].id;
             roznamchaSerials = fallback[0];
           }
+
+          if (roznamchaEntryId && !roznamchaSerials.super_admin_serial_number) {
+            const serialRows = await tx`
+              select super_admin_serial_number, country_transaction_serial_number,
+                     branch_transaction_serial_number, main_branch_transaction_serial,
+                     city_branch_transaction_serial, entry_serial_number
+              from roznamcha_entries
+              where id = ${roznamchaEntryId}::uuid
+              limit 1;
+            `;
+            roznamchaSerials = serialRows[0] ?? {};
+          }
+
         } else {
           const rozRows = await tx`
             select id, status, posted_at, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number
@@ -404,9 +510,27 @@ export async function POST(request: NextRequest) {
           roznamchaSerials = roz;
         }
 
-        if (!journalEntryId || !roznamchaEntryId) {
-          throw new Error("Local Purchase posting did not produce both journal and Roznamcha links.");
+        if (!roznamchaEntryId) {
+          throw new Error("Local Purchase posting did not produce a Roznamcha/ledger entry.");
         }
+
+        // Keep source/financial traceability consistent for both newly created
+        // and idempotently reused Roznamcha rows. This is the single canonical
+        // posting consumed by the modern ledger/reporting engine.
+        await tx`
+          update roznamcha_entries
+          set journal_entry_id = ${journalEntryId ? journalEntryId : null}::uuid,
+              source_module = 'local_purchase',
+              source_transaction_type = 'local_purchase_transfer',
+              source_transaction_id = ${purchase.id}::uuid,
+              source_reference_no = ${journalSerialNo},
+              original_currency_code = ${postingCurrency},
+              currency_name = ${postingCurrency},
+              base_currency_amount = ${finalAmount * (Number(purchase.exchange_rate || 1) || 1)},
+              entry_category = 'business',
+              updated_at = now()
+          where id = ${roznamchaEntryId}::uuid;
+        `;
 
         const updatedRows = await tx`
           update local_purchases
