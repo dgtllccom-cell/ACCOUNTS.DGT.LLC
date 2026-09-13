@@ -442,10 +442,14 @@ function PurchaseTransferErpReportViewContent({
         </aside>
 
         {/* RIGHT A4 DOCUMENT PREVIEW PANE (8.5 COLS) */}
-        <main className="lg:col-span-8 flex justify-center">
-          
+        {/* overflow-x-auto + child mx-auto (not flex+justify-center, which clips the
+            start of overflowing content it also scrolls) so this 210mm sheet pans
+            instead of forcing the whole page to overflow horizontally on narrow
+            screens; print is unaffected (print:w-full already governs paper output). */}
+        <main className="lg:col-span-8 overflow-x-auto">
+
           {/* SAP / Oracle Grade Printable A4 Sheet Container */}
-          <div id="erp-transfer-report-sheet" className="w-[210mm] min-h-[297mm] bg-white border border-slate-300 shadow-2xl p-[7mm] text-[8px] text-slate-900 space-y-3 relative print:border-none print:shadow-none print:w-full print:p-0 font-sans">
+          <div id="erp-transfer-report-sheet" className="w-[210mm] min-h-[297mm] mx-auto bg-white border border-slate-300 shadow-2xl p-[7mm] text-[8px] text-slate-900 space-y-3 relative print:border-none print:shadow-none print:w-full print:p-0 font-sans">
 
             {/* Official Stamp Overlay */}
             {isPosted && (

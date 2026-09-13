@@ -640,6 +640,11 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 const sizeName = selectedRowForVoucher.size || "-";
                 if (isUAE) {
                   return (
+                    // Fixed A4-width (794px) preview by design — kept as-is for print fidelity
+                    // (Phase 13: don't reflow the official layout for phones). The overflow-x-auto
+                    // wrapper only lets a narrow screen pan across it; printDomFragmentViaModal
+                    // clones into its own print window, so print output is unaffected.
+                    <div className="overflow-x-auto print:overflow-visible">
                     <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
@@ -769,6 +774,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                         </div>
                       </div>
                     </div>
+                    </div>
                   );
                 }
 
@@ -809,7 +815,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border border-slate-200">
                         <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
                           <tr>

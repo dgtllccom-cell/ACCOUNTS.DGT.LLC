@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -61,6 +61,10 @@ export async function POST(request: NextRequest) {
     const session = await requireErpSession();
     const body = await request.json();
     const parsed = createCategorySchema.parse(body);
+
+    if (!sessionInDomain(session, parsed.operationalDomain)) {
+      throw new ApiClientError(`You do not have ${parsed.operationalDomain} domain access to create this category.`, { status: 403, code: "DOMAIN_FORBIDDEN" });
+    }
 
     const generatedCode =
       parsed.code?.trim().toUpperCase() ||

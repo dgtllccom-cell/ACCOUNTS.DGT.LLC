@@ -6447,8 +6447,12 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(false)} className="h-8 px-4 text-xs font-bold hover:bg-slate-100">{t(lang, "purchase.close_btn", "Close")}</Button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 bg-slate-100/50 flex justify-center custom-scrollbar">
-              <div id="wizard-a4-preview" className="w-[210mm] min-h-[297mm] bg-white shadow-xl border border-slate-200 p-8 transform scale-[0.9] origin-top print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
+            {/* flex+justify-center clips the start of overflowing content when it also
+                scrolls (a well-known flexbox centering bug) — margin-auto on the child
+                centers it when it fits and scrolls cleanly from the true left edge when
+                it doesn't, on any screen narrower than 210mm. */}
+            <div className="flex-1 overflow-auto p-8 bg-slate-100/50 custom-scrollbar">
+              <div id="wizard-a4-preview" className="w-[210mm] min-h-[297mm] mx-auto bg-white shadow-xl border border-slate-200 p-8 transform scale-[0.9] origin-top print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
 
                 {/* Header */}
                 <div className="text-center border-b-2 border-slate-800 pb-4 mb-6">

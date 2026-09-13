@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createCityBranchSchema } from "@/features/branch-management/validation";
-import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
+import { ErpAuthError, requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
 import { allPermissionGroupKeys, constrainChildPermissions } from "@/lib/permissions/catalog";
@@ -184,6 +184,9 @@ export async function POST(request: Request) {
     // Super Admin can create everywhere. Country/Main branch roles can create under their country scope.
     if (!session.isSuperAdmin && !session.countryIds.includes(parsed.data.countryId)) {
       return NextResponse.json({ error: formatError("Country scope is not allowed.", session.isSuperAdmin) }, { status: 403 });
+    }
+    if (!sessionInDomain(session, parsed.data.operationalDomain)) {
+      return NextResponse.json({ error: formatError(`You do not have ${parsed.data.operationalDomain} domain access to create this branch.`, session.isSuperAdmin) }, { status: 403 });
     }
 
     // Check main branch via Postgres or Supabase
@@ -442,6 +445,9 @@ export async function PUT(request: Request) {
 
     if (!session.isSuperAdmin && !session.countryIds.includes(parsed.data.countryId)) {
       return NextResponse.json({ error: formatError("Country scope is not allowed.", session.isSuperAdmin) }, { status: 403 });
+    }
+    if (!sessionInDomain(session, parsed.data.operationalDomain)) {
+      return NextResponse.json({ error: formatError(`You do not have ${parsed.data.operationalDomain} domain access to update this branch.`, session.isSuperAdmin) }, { status: 403 });
     }
 
     let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any } | null = null;
