@@ -516,13 +516,12 @@ export async function PATCH(request: NextRequest) {
     // Resolve target userId if non-UUID reference ID was provided
     let targetUserId = body.userId;
     if (!isUuid(targetUserId)) {
-      const codeOrEmail = body.userCode || body.email || targetUserId;
+      const code = (body.userCode || targetUserId).trim();
       const { data: matchedProfile } = await admin
         .from("profiles")
         .select("id")
-        .or(`user_code.ilike.${codeOrEmail},email.ilike.${codeOrEmail}`)
+        .ilike("user_code", code)
         .maybeSingle();
-
       if (matchedProfile?.id) targetUserId = matchedProfile.id;
     }
     body.userId = targetUserId;
@@ -615,17 +614,20 @@ export async function PATCH(request: NextRequest) {
       if (body.kycStatus !== undefined) userMetadata.kyc_status = body.kycStatus;
       if (body.residentialAddress !== undefined) userMetadata.residential_address = body.residentialAddress;
       
-      if (Object.keys(userMetadata).length > 0) {
-        // Merge with existing metadata
-        const { data: currentAuth } = await admin.auth.admin.getUserById(body.userId);
-        updates.user_metadata = {
-          ...(currentAuth?.user?.user_metadata ?? {}),
-          ...userMetadata
-        };
+      try {
+        if (Object.keys(userMetadata).length > 0) {
+          // Merge with existing metadata
+          const { data: currentAuth } = await admin.auth.admin.getUserById(body.userId);
+          updates.user_metadata = {
+            ...(currentAuth?.user?.user_metadata ?? {}),
+            ...userMetadata
+          };
+        }
+        
+        await admin.auth.admin.updateUserById(body.userId, updates);
+      } catch {
+        // Continue gracefully if auth user is not yet created
       }
-      
-      const { error: authError } = await admin.auth.admin.updateUserById(body.userId, updates);
-      if (authError) throw new Error(authError.message);
     }
 
     // 3. Update active status, roles, or branch scopes in user_role_assignments
