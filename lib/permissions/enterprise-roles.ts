@@ -71,6 +71,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   ],
   country_admin: [
     "companies:read",
+    "companies:create",
+    "companies:update",
     "business_groups:read",
     "country_company_profiles:read",
     "countries:read",
@@ -204,6 +206,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "city_branches:read",
     "users:read",
     "customers:read",
+    "companies:read",
+    "companies:create",
     "accounts:create",
     "accounts:read",
     "accounts:update",
@@ -234,6 +238,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   ],
   main_branch_admin: [
     "companies:read",
+    "companies:create",
+    "companies:update",
     "business_groups:read",
     "country_company_profiles:read",
     "countries:read",
@@ -326,6 +332,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   ],
   city_branch_admin: [
     "companies:read",
+    "companies:create",
+    "companies:update",
     "business_groups:read",
     "country_company_profiles:read",
     "city_branches:read",
@@ -412,6 +420,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   ],
   accountant: [
     "companies:read",
+    "companies:create",
+    "companies:update",
     "accounts:create",
     "accounts:read",
     "customers:create",

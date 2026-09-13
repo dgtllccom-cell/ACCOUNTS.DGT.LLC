@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { companyCreateSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -57,15 +59,44 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    let session = null;
-    try {
-      session = await requireErpSession();
-    } catch {
-      // allow fallback userId if unauthenticated demo
-    }
+    const session = await requireErpSession();
 
     const raw = await request.json();
     const body = companyCreateSchema.parse(raw);
+
+    authorizeApiScope(session, {
+      resource: "companies",
+      action: "create",
+      countryId: body.countryId ?? null,
+      countryBranchId: body.countryBranchId ?? null,
+      cityBranchId: body.cityBranchId ?? null
+    });
+
+    // Geography scope alone doesn't gate the Business/Shipping axis — resolve
+    // the target branch's own operational_domain (companies themselves carry
+    // no domain flag, but the branch they're filed under does) and reject a
+    // caller whose session isn't in that domain, mirroring the same check
+    // already added this session for accounts/account-categories/branches.
+    if (body.countryBranchId || body.cityBranchId) {
+      const targetDomain = await withLocalPg(async (sql) => {
+        if (body.cityBranchId) {
+          const rows = (await sql`select operational_domain from public.city_branches where id = ${body.cityBranchId}::uuid`) as unknown as any[];
+          if (rows[0]?.operational_domain) return rows[0].operational_domain as "business" | "shipping";
+        }
+        if (body.countryBranchId) {
+          const rows = (await sql`select operational_domain from public.country_branches where id = ${body.countryBranchId}::uuid`) as unknown as any[];
+          if (rows[0]?.operational_domain) return rows[0].operational_domain as "business" | "shipping";
+        }
+        return "business" as const;
+      });
+      const resolvedDomain = targetDomain ?? "business";
+      if (!sessionInDomain(session, resolvedDomain)) {
+        throw new ApiClientError(
+          `You do not have ${resolvedDomain} domain access to create a company under this branch.`,
+          { status: 403, code: "DOMAIN_FORBIDDEN" }
+        );
+      }
+    }
 
     const companyId = await companiesService.create(
       {
@@ -96,7 +127,7 @@ export async function POST(request: NextRequest) {
         registrations: body.registrations ?? [],
         ownerIds: body.ownerIds ?? []
       },
-      session?.userId ?? null
+      session.userId
     );
 
     try {
