@@ -4,6 +4,7 @@ import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { applySessionScopeDefaults, resolveCommunicationSender } from "@/lib/communication-center/communication-center-service";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { sendBranchEmail } from "@/lib/email/titan-smtp-service";
 
 const messageSchema = z.object({
   channel: z.enum(["email", "whatsapp", "internal", "notification"]).default("email"),
@@ -71,6 +72,37 @@ export async function POST(req: NextRequest) {
       cityBranchId: clean(body.cityBranchId)
     });
     const sender = await resolveCommunicationSender(admin, scope);
+    const composedBody = `${body.body.trim()}\n\n--\n${sender.signatureText}`.trim();
+
+    // Actually dispatch email through the same Titan SMTP path the Messages
+    // module already uses — this was previously insert-only ("logged", no
+    // real send). WhatsApp is left as "logged" for now: unlike email it has
+    // no default branch-level account to send from (the real Meta integration
+    // is scoped per-conversation via features/*/whatsapp, not per-branch), so
+    // wiring it here would require a product decision on which WhatsApp
+    // Business Account a bare phone-number message should go out from.
+    let deliveryStatus: string = body.folder === "draft" ? "draft" : "logged";
+    let providerMessageId: string | null = null;
+    let providerPayload: Record<string, unknown> = {};
+    let sentAt: string | null = null;
+    if (body.channel === "email" && body.folder === "sent" && sender.fromEmail) {
+      const result = await sendBranchEmail({
+        countryId: scope.countryId ?? "",
+        branchId: scope.cityBranchId ?? scope.countryBranchId ?? scope.countryId ?? "",
+        senderUserId: session.userId,
+        senderEmail: sender.fromEmail,
+        recipientEmail: body.to,
+        subject: body.subject ?? "ERP Communication",
+        bodyHtml: composedBody.replace(/\n/g, "<br>"),
+        bodyText: composedBody
+      });
+      deliveryStatus = result.success ? "sent" : "failed";
+      providerMessageId = result.messageId ?? null;
+      providerPayload = result.success ? {} : { error: result.error };
+      sentAt = result.success ? new Date().toISOString() : null;
+    } else if (body.folder === "sent") {
+      sentAt = new Date().toISOString();
+    }
 
     const { data, error } = await admin
       .from("communication_center_messages")
@@ -90,14 +122,16 @@ export async function POST(req: NextRequest) {
         recipient_cc: body.cc ?? "",
         recipient_bcc: body.bcc ?? "",
         subject: body.subject ?? (body.channel === "whatsapp" ? "WhatsApp Message" : "ERP Communication"),
-        body: `${body.body.trim()}\n\n--\n${sender.signatureText}`.trim(),
+        body: composedBody,
         attachments: body.attachments ?? [],
         linked_module: body.linkedModule ?? null,
         linked_document_no: body.linkedDocumentNo ?? null,
         linked_route: body.linkedRoute ?? null,
-        delivery_status: body.folder === "draft" ? "draft" : "logged",
+        delivery_status: deliveryStatus,
+        provider_message_id: providerMessageId,
+        provider_payload: providerPayload,
         sender_snapshot: sender,
-        sent_at: body.folder === "sent" ? new Date().toISOString() : null
+        sent_at: sentAt
       })
       .select("*")
       .single();
