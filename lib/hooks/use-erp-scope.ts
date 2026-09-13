@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 
 export type ErpScopeMode = "super_admin" | "country" | "main_branch" | "city_branch" | "unknown";
 
+export type OperationalDomain = "business" | "shipping" | "both";
+
 export type ErpScope = {
   loading: boolean;
   error: string | null;
@@ -20,6 +22,14 @@ export type ErpScope = {
   isSuperAdmin: boolean;
   /** super_admin → free choice; country → country locked; main_branch/city_branch → branch locked too */
   mode: ErpScopeMode;
+
+  // Business/Shipping axis, independent of geography. Empty until loaded.
+  // super_admin and a "both" assignment are both free to choose either domain.
+  operationalDomains: OperationalDomain[];
+  /** true when the user may only ever act in one domain (not super admin, not "both") */
+  domainLocked: boolean;
+  /** the single domain to pre-select/lock when domainLocked is true */
+  lockedDomain: "business" | "shipping" | null;
 
   // raw allowed sets (empty for super admin = "all")
   countryIds: string[];
@@ -45,6 +55,7 @@ export type ErpScope = {
 
 const EMPTY: ErpScope = {
   loading: true, error: null, isSuperAdmin: false, mode: "unknown",
+  operationalDomains: [], domainLocked: false, lockedDomain: null,
   countryIds: [], countryBranchIds: [], cityBranchIds: [],
   lockedCountryId: null, lockedCountryBranchId: null, lockedCityBranchId: null,
   countryName: null, countryBranchName: null, cityBranchName: null, branchDisplayName: null,
@@ -83,9 +94,18 @@ export function useErpScope(): ErpScope {
                 ? "country"
                 : "unknown";
 
+        const operationalDomains: OperationalDomain[] = Array.isArray(s.operationalDomains) && s.operationalDomains.length > 0
+          ? s.operationalDomains
+          : ["business"];
+        // Locked only when the user has exactly one domain and isn't a "both"/super-admin
+        // assignment — mirrors the existing single-option geography lock below.
+        const domainLocked = !isSuperAdmin && operationalDomains.length === 1 && operationalDomains[0] !== "both";
+        const lockedDomain = domainLocked ? (operationalDomains[0] as "business" | "shipping") : null;
+
         setScope({
           loading: false, error: null,
           isSuperAdmin, mode,
+          operationalDomains, domainLocked, lockedDomain,
           countryIds, countryBranchIds, cityBranchIds,
           // lock a level only when the user has EXACTLY ONE option there
           lockedCountryId: !isSuperAdmin && countryIds.length === 1 ? countryIds[0] : null,

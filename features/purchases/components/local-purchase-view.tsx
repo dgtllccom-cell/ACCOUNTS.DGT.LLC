@@ -3665,6 +3665,14 @@ export function LocalPurchaseView({
                 const sizeName = selectedRowForVoucher.size || selectedRowForVoucher.sizeName || selectedRowForVoucher.size_name || "-";
                 if (isUAE) {
                   return (
+                    // The A4-format invoice below is a fixed 794px (A4 @96dpi) layout by
+                    // design — Phase 13 forbids reflowing it for phones, since that would
+                    // no longer match the official printed document. On a narrow screen
+                    // this wrapper lets the user pan across it instead of the content
+                    // clipping or forcing the whole modal to scroll sideways; print output
+                    // is unaffected (printDomFragmentViaModal clones into its own print
+                    // document, and print:max-w-none below already governs paper output).
+                    <div className="overflow-x-auto print:overflow-visible">
                     <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
@@ -3796,6 +3804,7 @@ export function LocalPurchaseView({
                         </div>
                       </div>
                     </div>
+                    </div>
                   );
                 }
 
@@ -3831,7 +3840,7 @@ export function LocalPurchaseView({
                 </div>
               </div>
 
-              <div>
+              <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border border-slate-200">
                   <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
                     <tr>

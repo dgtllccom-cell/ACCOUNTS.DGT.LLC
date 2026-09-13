@@ -815,13 +815,18 @@ export function NewAccountSetup({
         setBranchType("Main");
         setBranch(erpScope.lockedCountryBranchId);
       }
+      // A single-domain (non-"both") assignment locks Business vs Shipping the
+      // same way a single-option country/branch already locks geography.
+      if (erpScope.domainLocked && erpScope.lockedDomain) {
+        setOperationalDomain(erpScope.lockedDomain);
+      }
     } else {
       if (initialCountryId) setCountry(initialCountryId);
       if (initialBranchType) setBranchType(initialBranchType);
       if (initialBranchId) setBranch(initialBranchId);
     }
     setScopePrefilled(true);
-  }, [initialAccountId, erpScope.loading, erpScope.isSuperAdmin, erpScope.mode, erpScope.lockedCountryId, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, scopePrefilled, initialCountryId, initialBranchType, initialBranchId]);
+  }, [initialAccountId, erpScope.loading, erpScope.isSuperAdmin, erpScope.mode, erpScope.lockedCountryId, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.domainLocked, erpScope.lockedDomain, scopePrefilled, initialCountryId, initialBranchType, initialBranchId]);
 
   // Resolve the operating company for the selected country from the branding
   // master (country_company_profiles) — never a hard-coded "Damaan …".
@@ -1451,6 +1456,7 @@ export function NewAccountSetup({
                   <select
                     id="operationalDomain"
                     value={primaryType === "others_country" ? "inter_country" : operationalDomain}
+                    disabled={erpScope.domainLocked}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (val === "inter_country") {
@@ -1469,8 +1475,11 @@ export function NewAccountSetup({
                   >
                     <option value="business">{getLabel("businessDomain", lang)}</option>
                     <option value="shipping">{getLabel("shippingDomain", lang)}</option>
-                    <option value="inter_country">{getLabel("interCountryDomain", lang)}</option>
+                    {!erpScope.domainLocked && <option value="inter_country">{getLabel("interCountryDomain", lang)}</option>}
                   </select>
+                  {erpScope.domainLocked && (
+                    <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedDomain", lang)}</p>
+                  )}
                 </div>
 
                 {/* 1C: Ownership Level (کھاتہ یا لیجر کی سطح) */}

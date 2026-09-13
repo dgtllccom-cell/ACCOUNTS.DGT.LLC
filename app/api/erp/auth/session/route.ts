@@ -56,6 +56,7 @@ export async function GET() {
         countryBranchIds: session.countryBranchIds,
         cityBranchIds: session.cityBranchIds,
         isSuperAdmin: session.isSuperAdmin,
+        operationalDomains: session.operationalDomains,
         summary: {
           level: reportScope.level,
           scopeLabel: reportScope.scopeLabel,

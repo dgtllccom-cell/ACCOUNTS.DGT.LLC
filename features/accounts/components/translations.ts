@@ -841,6 +841,13 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "بر اساس دامنه ورود شما تعیین شده — قابل تغییر نیست",
     ps: "ستاسو د ننوتلو ساحې لخوا ټاکل شوی — نشي بدلیدلی"
   },
+  scopeLockedDomain: {
+    en: "Set by your login scope — cannot be changed",
+    ur: "آپ کے لاگ اِن دائرہ کار سے مقرر — تبدیل نہیں ہو سکتا",
+    ar: "محدد بواسطة نطاق تسجيل دخولك — لا يمكن تغييره",
+    fa: "بر اساس دامنه ورود شما تعیین شده — قابل تغییر نیست",
+    ps: "ستاسو د ننوتلو ساحې لخوا ټاکل شوی — نشي بدلیدلی"
+  },
   missingFieldsPrefix: {
     en: "Please complete these required fields",
     ur: "براہ کرم یہ لازمی خانے مکمل کریں",

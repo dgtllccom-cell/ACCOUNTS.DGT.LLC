@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { ApiClientError, apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { enterpriseAccountCreateSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -451,6 +451,14 @@ export async function POST(request: NextRequest) {
       countryBranchId: body.countryBranchId,
       cityBranchId: body.cityBranchId
     });
+
+    // Geography scope alone doesn't gate the Business/Shipping axis — a
+    // caller could otherwise post operationalDomain:"shipping" straight past
+    // a UI that never shows them that option (UI hiding is not enforcement).
+    const requestedDomain = body.operationalDomain === "shipping" ? "shipping" : "business";
+    if (!sessionInDomain(session, requestedDomain)) {
+      throw new ApiClientError(`You do not have ${requestedDomain} domain access to create this account.`, { status: 403, code: "DOMAIN_FORBIDDEN" });
+    }
 
     const supabase = await createApiSupabaseClient();
     const issuedCode =

@@ -30,6 +30,16 @@ export function LoginScopeBanner({ scope, className }: { scope: ErpScope; classN
     if (parts.length === 0) parts.push(tt("scope.unassigned", "No scope assigned"));
   }
 
+  // Business/Shipping domain chip — only when the assignment fixes it to one
+  // domain; "both" and super admin already get the free selector elsewhere,
+  // so no chip is needed for them here.
+  const domainLabel = scope.domainLocked && scope.lockedDomain
+    ? scope.lockedDomain === "shipping"
+      ? tt("scope.domain_shipping", "Shipping")
+      : tt("scope.domain_business", "Business")
+    : null;
+  const domainIcon = scope.lockedDomain === "shipping" ? "🚢" : "🏢";
+
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
@@ -59,6 +69,12 @@ export function LoginScopeBanner({ scope, className }: { scope: ErpScope; classN
             <ChevronRight className={cn("h-3 w-3 text-blue-400", isRtl && "rotate-180")} />
             <b className="font-bold">{scope.role ? t(lang, `role.${scope.role}` as never, roleLabel(scope.role)) : roleLabel(scope.role)}</b>
           </span>
+          {domainLabel && (
+            <span className="flex items-center gap-1">
+              <ChevronRight className={cn("h-3 w-3 text-blue-400", isRtl && "rotate-180")} />
+              <b className="font-bold">{domainIcon} {domainLabel}</b>
+            </span>
+          )}
         </span>
       )}
     </div>
