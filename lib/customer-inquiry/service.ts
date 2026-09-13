@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ErpSession } from "@/lib/auth/session";
+import { sessionInDomain } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
@@ -182,6 +183,28 @@ export async function createInquiry(
     cityBranchId = cityBranchId ?? s.cityBranchId;
     if (s.level === "country" && countryId && s.countryIds.length && !s.countryIds.includes(countryId)) {
       throw new ApiClientError("Inquiry country is outside your scope.", { status: 403, code: "OUT_OF_SCOPE" });
+    }
+  }
+
+  // Geography scope alone doesn't gate the Business/Shipping axis — resolve the
+  // target branch's own operational_domain and reject a caller whose session
+  // isn't in that domain, mirroring the same check already added this session
+  // to account/account-category/branch creation (lib/auth/session.ts:sessionInDomain).
+  if (cityBranchId || countryBranchId) {
+    const targetDomain = await withLocalPg(async (sql) => {
+      if (cityBranchId) {
+        const rows = (await sql`select operational_domain from public.city_branches where id = ${cityBranchId}::uuid`) as unknown as any[];
+        if (rows[0]?.operational_domain) return rows[0].operational_domain as "business" | "shipping";
+      }
+      if (countryBranchId) {
+        const rows = (await sql`select operational_domain from public.country_branches where id = ${countryBranchId}::uuid`) as unknown as any[];
+        if (rows[0]?.operational_domain) return rows[0].operational_domain as "business" | "shipping";
+      }
+      return "business" as const;
+    });
+    const resolvedDomain = targetDomain ?? "business";
+    if (!sessionInDomain(session, resolvedDomain)) {
+      throw new ApiClientError(`You do not have ${resolvedDomain} domain access to create an inquiry for this branch.`, { status: 403, code: "DOMAIN_FORBIDDEN" });
     }
   }
 
