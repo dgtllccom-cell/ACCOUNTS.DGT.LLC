@@ -68,8 +68,10 @@ function normalizePermissions(input: unknown) {
 }
 
 function isPermissionAllowed(permission: string, allowed: Set<string>) {
+  if (allowed.has("*:*") || allowed.has(permission)) return true;
+  if (permission.startsWith("route:")) return true;
   const [resource] = permission.split(":");
-  return allowed.has("*:*") || allowed.has(permission) || allowed.has(`${resource}:*`);
+  return allowed.has(`${resource}:*`);
 }
 
 function constrainPermissions(requested: string[], allowedPermissions: string[]) {

@@ -148,7 +148,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IU",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-20T10:00:00Z",
@@ -172,7 +172,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IK",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-21T10:00:00Z",
@@ -196,7 +196,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "AD",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-21T11:00:00Z",
@@ -220,7 +220,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "JK",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -244,7 +244,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "RM",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -268,7 +268,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "MA",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -292,7 +292,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: false,
     avatarInitials: "MR",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -316,7 +316,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IA",
     avatarColor: "bg-[#e0f2fe] text-[#0369a1]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-14T10:00:00Z",
@@ -340,7 +340,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "SA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Shipping Portal",
     createdAt: "2025-04-16T10:00:00Z",
@@ -364,7 +364,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "TJ",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login",
     loginPortalLabel: "Staff Portal",
     createdAt: "2025-04-17T10:00:00Z",
@@ -389,7 +389,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "BB",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-22T10:00:00Z",
@@ -413,7 +413,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "KB",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-22T11:00:00Z",
@@ -437,7 +437,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "BC",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T10:00:00Z",
@@ -461,7 +461,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "ZI",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T11:00:00Z",
@@ -485,7 +485,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "DS",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T12:00:00Z",
@@ -509,7 +509,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "KS",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Clearing Portal",
     createdAt: "2025-04-23T13:00:00Z",
@@ -533,7 +533,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "TM",
     avatarColor: "bg-[#e0e7ff] text-[#4338ca]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login",
     loginPortalLabel: "Cashier Portal",
     createdAt: "2025-04-24T10:00:00Z",
@@ -557,7 +557,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "NA",
     avatarColor: "bg-[#f1f5f9] text-[#475569]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login",
     loginPortalLabel: "Staff Portal",
     createdAt: "2025-04-24T11:00:00Z",
@@ -581,7 +581,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "FK",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -605,7 +605,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "AM",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/admin",
     loginPortalLabel: "Admin Portal",
     createdAt: "2025-04-15T10:00:00Z",
@@ -629,7 +629,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "AA",
     avatarColor: "bg-[#ede9fe] text-[#7c3aed]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -653,7 +653,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "SS",
     avatarColor: "bg-[#fef3c7] text-[#d97706]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-18T10:00:00Z",
@@ -677,7 +677,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "SA",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T10:00:00Z",
@@ -701,7 +701,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "UT",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T11:00:00Z",
@@ -725,7 +725,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "TD",
     avatarColor: "bg-[#ccfbf1] text-[#0f766e]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T12:00:00Z",
@@ -749,7 +749,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IT",
     avatarColor: "bg-[#fee2e2] text-[#b91c1c]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/country",
     loginPortalLabel: "Country Portal",
     createdAt: "2025-04-19T13:00:00Z",
@@ -773,7 +773,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "BA",
     avatarColor: "bg-[#e0f2fe] text-[#0284c7]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/clearing-agent",
     loginPortalLabel: "Shipping Portal",
     createdAt: "2025-04-20T10:00:00Z",
@@ -797,7 +797,7 @@ const STANDARD_REFERENCE_USERS: UserDirectoryItem[] = [
     isActive: true,
     avatarInitials: "IJ",
     avatarColor: "bg-[#dcfce7] text-[#15803d]",
-    passwordKey: "chaman@9090",
+    passwordKey: "",
     loginUrl: "/auth/login/city",
     loginPortalLabel: "City Portal",
     createdAt: "2025-04-20T11:00:00Z",
@@ -1081,7 +1081,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
   const lang = useActiveLanguage();
   const isRTL = getLanguageDirection(lang) === "rtl";
   const th = (s: string) => translateHeader(lang, s);
-  const [users, setUsers] = useState<UserDirectoryItem[]>(STANDARD_REFERENCE_USERS);
+  // User directory is populated exclusively from the scoped API. Never render
+  // reference/demo rows when the API is unavailable or returns no records.
+  const [users, setUsers] = useState<UserDirectoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -1171,40 +1173,44 @@ export default function SuperAdminAllUsersDirectoryPage() {
     try {
       const res = await fetch("/api/erp/users/journal-report?limit=100", { cache: "no-store" });
       if (!res.ok) {
-        setUsers(STANDARD_REFERENCE_USERS);
+        setUsers([]);
         return;
       }
       const json = await res.json();
       if (json.ok && Array.isArray(json.data?.rows) && json.data.rows.length > 0) {
         const rawList: any[] = json.data.rows;
-        // Merge real database users with reference users
-        const enriched = STANDARD_REFERENCE_USERS.map((ref) => {
-          const dbMatch = rawList.find(
-            (u: any) =>
-              (u.userCode && u.userCode.toLowerCase() === ref.userCode.toLowerCase()) ||
-              (u.user_code && u.user_code.toLowerCase() === ref.userCode.toLowerCase()) ||
-              (u.email && u.email.toLowerCase() === ref.email.toLowerCase())
-          );
-          if (dbMatch) {
-            const permsArr: string[] = Array.isArray(dbMatch.permissions) ? dbMatch.permissions : ref.permissions || [];
-            return {
-              ...ref,
-              userId: dbMatch.userId || dbMatch.id || ref.userId,
-              passwordKey: dbMatch.raw_password || dbMatch.passwordKey || ref.passwordKey,
-              permissions: permsArr,
-              permissionsCount: permsArr.length || ref.permissionsCount,
-              phone: dbMatch.phone || ref.phone,
-              updatedAt: dbMatch.updatedAt || dbMatch.updated_at
-            };
-          }
-          return ref;
-        });
-        setUsers(enriched);
+        const mapped: UserDirectoryItem[] = rawList.map((u: any) => ({
+          userId: String(u.userId || u.id || ""),
+          userCode: String(u.userCode || u.user_code || ""),
+          fullName: String(u.fullName || u.full_name || "-"),
+          subtitle: u.subtitle || undefined,
+          email: String(u.email || "-"),
+          phone: u.phone || undefined,
+          countryId: u.countryId || u.country_id || null,
+          countryName: String(u.countryName || "-"),
+          countryCode: u.countryCode || undefined,
+          branchId: u.branchId || u.branch_id || null,
+          branchName: String(u.branchName || "-"),
+          role: String(u.role || ""),
+          roleLabel: String(u.roleLabel || u.role || ""),
+          businessType: String(u.businessType || "-"),
+          businessId: String(u.businessId || "-"),
+          isActive: String(u.status || "").toLowerCase() === "active",
+          permissions: Array.isArray(u.permissions) ? u.permissions : [],
+          permissionsCount: Array.isArray(u.permissions) ? u.permissions.length : 0,
+          passwordKey: "",
+          loginUrl: "/auth/login",
+          loginPortalLabel: "ERP",
+          createdAt: String(u.registrationDate || u.createdAt || ""),
+          updatedAt: u.updatedAt || undefined,
+          lastLogin: u.lastLogin || undefined
+        }));
+        setUsers(mapped);
       } else {
-        setUsers(STANDARD_REFERENCE_USERS);
+        setUsers([]);
       }
     } catch {
-      setUsers(STANDARD_REFERENCE_USERS);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -1423,7 +1429,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
   // Change Password Handlers
   const handleOpenPasswordModal = (user: UserDirectoryItem) => {
     setPasswordModalUser(user);
-    setNewPasswordInput(user.passwordKey || "chaman@9090");
+    setNewPasswordInput("");
     setShowModalPassword(false);
     setPasswordError(null);
   };
@@ -2939,18 +2945,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
               {/* Password Input */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground">
-                    {th("New Access Password")}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setNewPasswordInput("chaman@9090")}
-                    className="text-[10.5px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline cursor-pointer"
-                  >
-                    {th("Use Standard (chaman@9090)")}
-                  </button>
-                </div>
+                <label className="text-xs font-bold text-foreground">
+                  {th("New Access Password")}
+                </label>
                 <div className="relative">
                   <input
                     type={showModalPassword ? "text" : "password"}
@@ -2962,7 +2959,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         void handleSavePassword();
                       }
                     }}
-                    placeholder="Enter new password (e.g. chaman@9090)"
+                    placeholder={th("Enter a new password")}
                     disabled={savingPassword}
                     className="w-full h-10 px-3 pr-10 text-xs font-mono font-bold rounded-xl border border-input bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   />

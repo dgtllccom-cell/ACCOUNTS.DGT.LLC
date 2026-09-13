@@ -427,6 +427,7 @@ export function DashboardFrame({
         <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-r border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
           <DigitalDockPremiumSidebar
             roles={roles ?? null}
+            permissions={permissions ?? null}
             brandTitle={brandCompany || "Damaan Business Group"}
             onToggleCollapse={() => setSidebarCollapsed(true)}
           />
@@ -456,6 +457,7 @@ export function DashboardFrame({
             </button>
             <DigitalDockPremiumSidebar
               roles={roles ?? null}
+              permissions={permissions ?? null}
               brandTitle={brandCompany || "Damaan Business Group"}
               onNavigate={() => {
                 setDrawerOpen(false);
