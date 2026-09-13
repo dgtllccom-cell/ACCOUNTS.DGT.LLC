@@ -24,7 +24,7 @@ export default async function LoginPage({
 
   return (
     <LoginScopeProvider initialLang={lang}>
-      <AuthPortalShell lang={lang} rightPanel={<LoginShowcasePanel lang={lang} />}>
+      <AuthPortalShell layoutVariant="operations" lang={lang} rightPanel={<LoginShowcasePanel lang={lang} />}>
         <LoginErrorBoundary>
           {params.error && (
             <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">

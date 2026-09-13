@@ -8,18 +8,31 @@ export function AuthPortalShell({
   children,
   rightPanel,
   className,
+  layoutVariant = "default",
 }: {
   lang: SupportedLanguage;
   children: ReactNode;
   rightPanel: ReactNode;
   className?: string;
+  layoutVariant?: "default" | "operations";
 }) {
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isOperationsLayout = layoutVariant === "operations";
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50 ${className ?? ""}`.trim()}>
       <main className="flex min-h-screen flex-col justify-center">
-        <div className="grid min-h-screen w-full lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
-          <section className="relative flex min-h-screen flex-col justify-between border-slate-200/70 bg-white px-4 py-6 shadow-[0_0_0_1px_rgba(148,163,184,0.06)] sm:px-8 sm:py-10 lg:border-r lg:px-12 xl:px-16 dark:border-slate-900/70 dark:bg-slate-950 dark:shadow-none">
+        <div
+          className={`grid min-h-screen w-full ${
+            isOperationsLayout
+              ? "lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]"
+              : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]"
+          }`}
+        >
+          <section
+            className={`relative flex min-h-screen flex-col justify-between border-slate-200/70 bg-white px-4 py-6 shadow-[0_0_0_1px_rgba(148,163,184,0.06)] sm:px-8 sm:py-10 lg:px-12 xl:px-16 dark:border-slate-900/70 dark:bg-slate-950 dark:shadow-none ${
+              isOperationsLayout ? "lg:order-2 lg:border-l" : "lg:order-1 lg:border-r"
+            }`}
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3">
                 <img
@@ -70,8 +83,15 @@ export function AuthPortalShell({
           </section>
 
           <section
-            className="relative hidden overflow-hidden border-l border-white/10 lg:flex lg:flex-col justify-between"
-            style={{ background: "linear-gradient(160deg, #06122d 0%, #0a1f45 45%, #071828 100%)", color: "#ffffff" }}
+            className={`relative hidden overflow-hidden border-white/10 lg:flex lg:flex-col justify-between ${
+              isOperationsLayout ? "lg:order-1 lg:border-r" : "lg:order-2 lg:border-l"
+            }`}
+            style={{
+              background: isOperationsLayout
+                ? "linear-gradient(150deg, #10234d 0%, #183873 56%, #e85b3d 150%)"
+                : "linear-gradient(160deg, #06122d 0%, #0a1f45 45%, #071828 100%)",
+              color: "#ffffff",
+            }}
           >
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div

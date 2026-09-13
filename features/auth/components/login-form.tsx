@@ -6,8 +6,6 @@ import {
   ArrowRight,
   Building2,
   ChevronDown,
-  Eye,
-  EyeOff,
   Globe,
   LockKeyhole,
   Mail,
@@ -171,7 +169,6 @@ export function LoginForm({
   const scope = useLoginScope();
   const [activeTab, setActiveTab] = useState<LoginTab>(initialTab);
   const [selectedLang, setSelectedLang] = useState<string>(initialLang || "en");
-  const [showPassword, setShowPassword] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
@@ -574,24 +571,16 @@ export function LoginForm({
             <Input
               id="password"
               name="password"
-              type={showPassword ? "text" : "password"}
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setPwFocused(true)}
               onBlur={() => setPwFocused(false)}
-              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 pr-12 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
+              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
               placeholder="••••••••••••"
               autoComplete="current-password"
               required
             />
-            <button
-              type="button"
-              className="absolute right-3 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
           </div>
         </div>
 
