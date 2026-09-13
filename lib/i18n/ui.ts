@@ -6604,6 +6604,8 @@ export type UiKey =
   | "trk.col_branch" | "trk.search_trucks_ph" | "trk.no_trucks_found" | "trk.serial_global"
   | "trk.serial_country" | "trk.serial_branch" | "trk.serial_city" | "trk.duplicate_error"
   | "trk.required_fields_error" | "trk.updated_success_msg"
+  | "trk.new_chat_registration" | "trk.back_to_list" | "trk.live_report_title" | "trk.live_report_sub"
+  | "trk.form_title_edit"
   | "common.registration_date" | "common.save_and_new" | "common.list_view" | "common.phone"
   | "common.address" | "common.mobile" | "common.contact" | "common.home"
   | "common.serial_numbers" | "common.error"
@@ -14569,6 +14571,11 @@ const en: Dict = {
   "trk.duplicate_error": "A truck with this number is already registered.",
   "trk.required_fields_error": "Please fill all mandatory fields marked with *.",
   "trk.updated_success_msg": "Truck Record Successfully Updated!",
+  "trk.new_chat_registration": "New Chat Registration",
+  "trk.back_to_list": "Back to List",
+  "trk.live_report_title": "Live Truck Report",
+  "trk.live_report_sub": "Registration preview — updates as you type",
+  "trk.form_title_edit": "Edit Truck Registration",
   "sarh.title": "Super Admin Reports",
   "sarh.badge": "Reports & Analytics",
   "sarh.tagline": "Global visibility. Complete control.",
@@ -32727,6 +32734,11 @@ const ur: Dict = {
   "trk.duplicate_error": "اس نمبر کا ٹرک پہلے ہی رجسٹرڈ ہے۔",
   "trk.required_fields_error": "براہ کرم * سے نشان زد تمام لازمی خانے پُر کریں۔",
   "trk.updated_success_msg": "ٹرک ریکارڈ کامیابی سے اپ ڈیٹ ہو گیا!",
+  "trk.new_chat_registration": "نیا ٹرک اندراج",
+  "trk.back_to_list": "فہرست پر واپس جائیں",
+  "trk.live_report_title": "لائیو ٹرک رپورٹ",
+  "trk.live_report_sub": "اندراج کا پیش منظر — ٹائپ کرتے ہی اپ ڈیٹ ہوتا ہے",
+  "trk.form_title_edit": "ٹرک اندراج میں ترمیم کریں",
   "sarh.title": "سپر ایڈمن رپورٹس",
   "sarh.badge": "رپورٹس اور تجزیات",
   "sarh.tagline": "عالمی نظر۔ مکمل کنٹرول۔",
@@ -50762,6 +50774,11 @@ const ar: Dict = {
   "trk.duplicate_error": "توجد شاحنة مسجلة بهذا الرقم بالفعل.",
   "trk.required_fields_error": "يرجى تعبئة جميع الحقول الإلزامية المشار إليها بـ *.",
   "trk.updated_success_msg": "تم تحديث سجل الشاحنة بنجاح!",
+  "trk.new_chat_registration": "تسجيل شاحنة جديدة",
+  "trk.back_to_list": "العودة إلى القائمة",
+  "trk.live_report_title": "تقرير الشاحنة المباشر",
+  "trk.live_report_sub": "معاينة التسجيل — يتم التحديث أثناء الكتابة",
+  "trk.form_title_edit": "تعديل تسجيل الشاحنة",
   "sarh.title": "تقارير المدير العام",
   "sarh.badge": "التقارير والتحليلات",
   "sarh.tagline": "رؤية عالمية. تحكم كامل.",
@@ -68834,6 +68851,11 @@ const fa: Dict = {
   "trk.duplicate_error": "کامیونی با این شماره قبلاً ثبت شده است.",
   "trk.required_fields_error": "لطفاً همه فیلدهای اجباری علامت‌گذاری‌شده با * را تکمیل کنید.",
   "trk.updated_success_msg": "سابقه کامیون با موفقیت به‌روزرسانی شد!",
+  "trk.new_chat_registration": "ثبت کامیون جدید",
+  "trk.back_to_list": "بازگشت به فهرست",
+  "trk.live_report_title": "گزارش زنده کامیون",
+  "trk.live_report_sub": "پیش‌نمایش ثبت — همزمان با تایپ به‌روزرسانی می‌شود",
+  "trk.form_title_edit": "ویرایش ثبت کامیون",
   "sarh.title": "گزارش‌های مدیر ارشد",
   "sarh.badge": "گزارش‌ها و تحلیل‌ها",
   "sarh.tagline": "دید جهانی. کنترل کامل.",
@@ -86912,6 +86934,11 @@ const ps: Dict = {
   "trk.duplicate_error": "د دې شمېرې موټر دمخه ثبت شوی دی.",
   "trk.required_fields_error": "مهرباني وکړئ ټول د * سره نښه شوي لازمي ساحې ډک کړئ.",
   "trk.updated_success_msg": "د موټر ریکارډ په بریالیتوب سره تازه شو!",
+  "trk.new_chat_registration": "نوی موټر ثبتول",
+  "trk.back_to_list": "لیست ته بیرته",
+  "trk.live_report_title": "د موټر ژوندی راپور",
+  "trk.live_report_sub": "د ثبت مخکتنه — لیکلو سره سم تازه کیږي",
+  "trk.form_title_edit": "د موټر ثبت سمول",
   "sarh.title": "د سوپر ادمین راپورونه",
   "sarh.badge": "راپورونه او تحلیلونه",
   "sarh.tagline": "نړیوال لید. بشپړ کنټرول.",
