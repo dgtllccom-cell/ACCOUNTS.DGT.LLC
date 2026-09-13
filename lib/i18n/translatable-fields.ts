@@ -90,6 +90,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "first_name", mode: "transliterate" },
     { field: "last_name", mode: "transliterate" },
     { field: "father_name", mode: "transliterate" },
+    { field: "notes", mode: "translate" },
   ],
   account_categories: [
     { field: "description", mode: "translate" },
@@ -183,13 +184,20 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "branding_report_footer", mode: "translate" },
   ],
   clearing_agents: [
-    { field: "contact_person", mode: "transliterate" },{ field: "name", mode: "transliterate" }],
+    { field: "contact_person", mode: "transliterate" },{ field: "name", mode: "transliterate" },
+    { field: "notes", mode: "translate" },
+  ],
   clearing_agent_branches: [{ field: "name", mode: "transliterate" }],
   banks: [
     { field: "bank_name", mode: "transliterate" },
     { field: "branch_name", mode: "transliterate" },
     { field: "short_name", mode: "transliterate" },
     { field: "account_title", mode: "translate" },
+    { field: "remarks", mode: "translate" },
+  ],
+  bank_cheque_transactions: [
+    { field: "bank_name", mode: "transliterate" },
+    { field: "user_name", mode: "transliterate" },
   ],
   profiles: [{ field: "full_name", mode: "transliterate" }],
 
@@ -286,6 +294,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "shipping_line", mode: "transliterate" },
     { field: "transport_remarks", mode: "translate" },
     { field: "receiving_remarks", mode: "translate" },
+    { field: "remarks", mode: "translate" },
   ],
   purchase_order_items: [
     { field: "goods_name", mode: "translate" },
@@ -305,16 +314,19 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "supplier_name", mode: "transliterate" },
     { field: "importer_name", mode: "transliterate" },
     { field: "driver_name", mode: "transliterate" },
+    { field: "remarks", mode: "translate" },
   ],
   transit_truck_loadings: [
     { field: "goods_name", mode: "translate" },
     { field: "driver_name", mode: "transliterate" },
+    { field: "remarks", mode: "translate" },
   ],
   truck_loadings: [
     { field: "goods_name", mode: "translate" },
     { field: "driver_name", mode: "transliterate" },
     { field: "truck_name", mode: "transliterate" },
     { field: "truck_owner_name", mode: "transliterate" },
+    { field: "remarks", mode: "translate" },
   ],
   trucks: [
     { field: "owner_address", mode: "transliterate" },
@@ -327,6 +339,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "truck_name", mode: "transliterate" },
     { field: "driver_name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },
+    { field: "notes", mode: "translate" },
   ],
 
   // ── Money exchange / expenses (party/place → transliterate; titles → translate) ──
@@ -361,11 +374,15 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "segment_name", mode: "transliterate" },
     { field: "body", mode: "translate" },
   ],
-  communication_center_followups: [{ field: "title", mode: "translate" }],
+  communication_center_followups: [
+    { field: "title", mode: "translate" },
+    { field: "notes", mode: "translate" },
+  ],
   communication_center_leads: [
     { field: "lead_name", mode: "transliterate" },
     { field: "company_name", mode: "transliterate" },
     { field: "contact_person", mode: "transliterate" },
+    { field: "notes", mode: "translate" },
   ],
   communication_center_profiles: [
     { field: "office_name", mode: "transliterate" },
