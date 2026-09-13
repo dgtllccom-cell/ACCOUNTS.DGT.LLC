@@ -5,6 +5,8 @@ import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-mid
 import { requireErpSession } from "@/lib/auth/session";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -246,6 +248,53 @@ export async function GET(request: NextRequest) {
       const { data, error } = await query.order(sortBy, { ascending: sortDir === "asc" });
       if (error) throw new Error(error.message);
       rows = (data ?? []) as any[];
+    }
+
+    const lang = await getRequestLanguage(params.get("lang"));
+    try {
+      const flat = rows.map((r: any) => ({
+        country_id: r.country_id,
+        countryNameFlat: r.countries?.name,
+        country_branch_id: r.country_branch_id,
+        countryBranchNameFlat: r.country_branches?.name,
+        city_branch_id: r.city_branch_id,
+        cityBranchNameFlat: r.city_branches?.name,
+        created_by: r.created_by,
+        creatorNameFlat: r.profiles?.full_name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "country_branch_id", nameField: "countryBranchNameFlat", table: "country_branches", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" },
+        { idField: "created_by", nameField: "creatorNameFlat", table: "profiles", field: "full_name" }
+      ]);
+
+      const allLedgers = rows.flatMap((r: any) => (r.roznamcha_lines ?? []).map((l: any) => l.ledgers).filter((l: any) => l?.name));
+      let ledgerNameByRef: Map<any, string> | null = null;
+      if (allLedgers.length) {
+        // ledgers don't carry their own id in the nested select — match by (code,name) pair via a
+        // synthetic id-free lookup is unsafe, so localize using the ledger_id present on each line.
+        const ledgerFlat = rows.flatMap((r: any) => (r.roznamcha_lines ?? []).map((l: any) => ({ ledger_id: l.ledger_id, ledgerNameFlat: l.ledgers?.name })));
+        const localizedLedgerFlat = await localizeJoinedNames<any>(ledgerFlat, lang, [
+          { idField: "ledger_id", nameField: "ledgerNameFlat", table: "ledgers", field: "name" }
+        ]);
+        ledgerNameByRef = new Map(localizedLedgerFlat.map((l: any) => [l.ledger_id, l.ledgerNameFlat]));
+      }
+
+      rows = rows.map((r: any, i: number) => ({
+        ...r,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        country_branches: r.country_branches ? { ...r.country_branches, name: localizedFlat[i].countryBranchNameFlat } : r.country_branches,
+        city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches,
+        profiles: r.profiles ? { ...r.profiles, full_name: localizedFlat[i].creatorNameFlat } : r.profiles,
+        roznamcha_lines: (r.roznamcha_lines ?? []).map((l: any) => (
+          l.ledgers && ledgerNameByRef?.has(l.ledger_id)
+            ? { ...l, ledgers: { ...l.ledgers, name: ledgerNameByRef.get(l.ledger_id) } }
+            : l
+        ))
+      }));
+    } catch {
+      // keep original names on failure
     }
 
     // Line-level filters (ledger/currency/debit-credit) applied in-memory after the entry-level

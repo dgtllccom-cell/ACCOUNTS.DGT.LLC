@@ -8,6 +8,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   q: z.string().trim().max(200).optional(),
@@ -277,9 +279,10 @@ export async function GET(request: NextRequest) {
         : Promise.resolve({ data: [], error: null })
     ]);
 
-    const countries = (countriesRes.error ? [] : countriesRes.data ?? []) as Array<{ id: string; name: string; iso2: string | null }>;
-    const countryBranches = (countryBranchesRes.error ? [] : countryBranchesRes.data ?? []) as Array<{ id: string; name: string; code: string; country_id: string }>;
-    const cityBranches = (cityBranchesRes.error ? [] : cityBranchesRes.data ?? []) as Array<{
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let countries = (countriesRes.error ? [] : countriesRes.data ?? []) as Array<{ id: string; name: string; iso2: string | null }>;
+    let countryBranches = (countryBranchesRes.error ? [] : countryBranchesRes.data ?? []) as Array<{ id: string; name: string; code: string; country_id: string }>;
+    let cityBranches = (cityBranchesRes.error ? [] : cityBranchesRes.data ?? []) as Array<{
       id: string;
       name: string;
       code: string;
@@ -287,6 +290,15 @@ export async function GET(request: NextRequest) {
       country_id: string;
       country_branch_id: string;
     }>;
+    let profilesLocalized = profiles;
+    try {
+      countries = await localizeRecordFields<any>(countries, "countries", ["name"], lang);
+      countryBranches = await localizeRecordFields<any>(countryBranches, "country_branches", ["name"], lang);
+      cityBranches = await localizeRecordFields<any>(cityBranches, "city_branches", ["name", "city_name"], lang);
+      profilesLocalized = await localizeRecordFields<any>(profiles, "profiles", ["full_name"], lang);
+    } catch {
+      // keep original names on failure
+    }
     const clearingAgents = (clearingAgentsRes.error ? [] : clearingAgentsRes.data ?? []) as Array<{
       id: string;
       name: string;
@@ -318,7 +330,7 @@ export async function GET(request: NextRequest) {
       auditsByUser.set(row.actor_id, list);
     }
 
-    const rowData = profiles.map((profile) => {
+    const rowData = profilesLocalized.map((profile) => {
       const userAssignments = assignments.filter((row) => row.user_id === profile.id);
       const latestAssignment =
         [...userAssignments].sort((a, b) => b.created_at.localeCompare(a.created_at) || b.updated_at.localeCompare(a.updated_at)).find((row) => row.is_active) ??

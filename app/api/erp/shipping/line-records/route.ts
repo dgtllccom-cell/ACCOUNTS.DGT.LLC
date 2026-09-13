@@ -5,6 +5,8 @@ import { optionalUuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const shippingLineSchema = z.object({
   countryId: optionalUuidSchema,
@@ -72,7 +74,15 @@ export async function GET(request: NextRequest) {
       else if (!session.isSuperAdmin && session.cityBranchIds.length) query = query.in("city_branch_id", session.cityBranchIds);
     }
 
-    return apiOk({ shippingLineRecords: await requireSupabaseData(query) });
+    const lang = await getRequestLanguage(params.get("lang"));
+    let shippingLineRecords: any[] = (await requireSupabaseData(query)) ?? [];
+    try {
+      shippingLineRecords = await localizeRecordFields<any>(shippingLineRecords, "shipping_line_records", ["shipping_line_name", "vessel_name"], lang);
+    } catch {
+      // keep original names
+    }
+
+    return apiOk({ shippingLineRecords });
   } catch (error) {
     return handleApiError(error);
   }

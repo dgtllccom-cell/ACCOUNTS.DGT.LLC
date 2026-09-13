@@ -5,6 +5,8 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 /**
  * Bank accounts OWNED by a company (owner_company_id) — the beneficiary bank
@@ -12,10 +14,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
  *
  *   GET /api/erp/companies/[id]/bank-accounts
  */
-export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "companies", action: "read" });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const { id: rawId } = await context.params;
     const id = uuidSchema.parse(rawId);
@@ -23,7 +26,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     let rows: any[] = [];
     try {
       rows = (await withLocalPg(async (sql) => sql`
-        SELECT bank_name, branch_name, account_title, account_number, iban_number,
+        SELECT id, bank_name, branch_name, account_title, account_number, iban_number,
                swift_bic, currency, full_address
         FROM public.banks
         WHERE owner_company_id = ${id}::uuid AND (is_active IS NULL OR is_active = true)
@@ -33,10 +36,16 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
       const db = createSupabaseAdminClient() as any;
       const { data } = await db
         .from("banks")
-        .select("bank_name, branch_name, account_title, account_number, iban_number, swift_bic, currency, full_address")
+        .select("id, bank_name, branch_name, account_title, account_number, iban_number, swift_bic, currency, full_address")
         .eq("owner_company_id", id)
         .limit(25);
       rows = data || [];
+    }
+
+    try {
+      rows = await localizeRecordFields<any>(rows, "banks", ["bank_name"], lang);
+    } catch {
+      // keep original bank names
     }
 
     return apiOk({

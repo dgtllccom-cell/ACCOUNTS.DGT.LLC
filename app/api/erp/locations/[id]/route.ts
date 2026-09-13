@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export async function GET(
   request: NextRequest,
@@ -44,7 +46,33 @@ export async function GET(
       });
     }
 
-    return apiOk({ location: data });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedData: any = data;
+    try {
+      const flat = {
+        country_id: data.country_id, countryNameFlat: data.country?.name,
+        state_province_id: data.state_province_id, stateNameFlat: data.state?.name,
+        district_id: data.district_id, districtNameFlat: data.district?.name,
+        city_id: data.city_id, cityNameFlat: data.city?.name
+      };
+      const [localizedFlat] = await localizeJoinedNames<any>([flat], lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "state_province_id", nameField: "stateNameFlat", table: "states_provinces", field: "name" },
+        { idField: "district_id", nameField: "districtNameFlat", table: "districts", field: "name" },
+        { idField: "city_id", nameField: "cityNameFlat", table: "cities", field: "name" }
+      ]);
+      localizedData = {
+        ...data,
+        country: data.country ? { ...data.country, name: localizedFlat.countryNameFlat } : data.country,
+        state: data.state ? { ...data.state, name: localizedFlat.stateNameFlat } : data.state,
+        district: data.district ? { ...data.district, name: localizedFlat.districtNameFlat } : data.district,
+        city: data.city ? { ...data.city, name: localizedFlat.cityNameFlat } : data.city
+      };
+    } catch {
+      // keep original names on failure
+    }
+
+    return apiOk({ location: localizedData });
   } catch (error) {
     return handleApiError(error);
   }

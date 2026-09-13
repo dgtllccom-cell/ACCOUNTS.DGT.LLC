@@ -3,6 +3,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 /**
  * GET /api/erp/whatsapp/contacts?phone=+971...&countryId=...
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     // 2. Look up ERP customer by mobile/whatsapp
-    const { data: customers } = await (supabase as any)
+    const { data: customersRaw } = await (supabase as any)
       .from("customers")
       .select(`
         id, customer_name, company_name, mobile, whatsapp, email, address,
@@ -48,6 +50,22 @@ export async function GET(request: NextRequest) {
       .or(`mobile.ilike.%${digits},whatsapp.ilike.%${digits}`)
       .is("deleted_at", null)
       .limit(3);
+
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    let customers: any[] = customersRaw ?? [];
+    try {
+      customers = await localizeRecordFields<any>(customers, "customers", ["customer_name", "company_name"], lang);
+      const flat = customers.map((c: any) => ({ country_id: c.country_id, countryNameFlat: c.countries?.name }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" }
+      ]);
+      customers = customers.map((c: any, i: number) => ({
+        ...c,
+        countries: c.countries ? { ...c.countries, name: localizedFlat[i].countryNameFlat } : c.countries
+      }));
+    } catch {
+      // keep original names
+    }
 
     const erpCustomer = customers?.[0] ?? null;
 

@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -514,6 +516,17 @@ export async function GET(request: NextRequest) {
 
     if (!result) {
       return apiOk({ items: [], total: 0, page, pageSize, counts: { overdue: 0, dueToday: 0, dueTomorrow: 0, upcoming: 0, pending: 0 } });
+    }
+
+    const uiLang = await getRequestLanguage(lang);
+    try {
+      result.items = await localizeJoinedNames<any>(result.items, uiLang, [
+        { idField: "countryId", nameField: "countryName", table: "countries", field: "name" },
+        { idField: "countryBranchId", nameField: "branchName", table: "country_branches", field: "name" },
+        { idField: "cityBranchId", nameField: "branchName", table: "city_branches", field: "name" }
+      ]);
+    } catch {
+      // keep original names on failure
     }
 
     return apiOk(result);

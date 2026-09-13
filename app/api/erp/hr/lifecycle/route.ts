@@ -3,6 +3,8 @@ import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { guardHr } from "@/lib/services/hr-api";
 import { hrLifecycleService } from "@/lib/services/hr-lifecycle-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,11 +14,17 @@ export async function GET(request: NextRequest) {
     const { scope } = await guardHr("read");
     const sp = request.nextUrl.searchParams;
     const type = sp.get("type") ?? "position";
+    const lang = await getRequestLanguage(sp.get("lang"));
     if (type === "transfer") {
-      const rows = await hrLifecycleService.listTransfers(scope, {
+      let rows: any[] = await hrLifecycleService.listTransfers(scope, {
         status: sp.get("status") || undefined,
         transferType: sp.get("transferType") || undefined,
       });
+      try {
+        rows = await localizeRecordFields<any>(rows, "hr_employee_transfers", ["new_department", "prev_department"], lang);
+      } catch {
+        // keep original values
+      }
       return apiOk({ rows });
     }
     if (type === "separation") {
@@ -27,12 +35,17 @@ export async function GET(request: NextRequest) {
       });
       return apiOk({ rows });
     }
-    const rows = await hrLifecycleService.listPositionEvents(scope, {
+    let rows: any[] = await hrLifecycleService.listPositionEvents(scope, {
       status: sp.get("status") || undefined,
       eventType: sp.get("eventType") || undefined,
       fromDate: sp.get("fromDate") || undefined,
       toDate: sp.get("toDate") || undefined,
     });
+    try {
+      rows = await localizeRecordFields<any>(rows, "hr_employee_position_events", ["new_department", "new_designation", "prev_department", "prev_designation"], lang);
+    } catch {
+      // keep original values
+    }
     return apiOk({ rows });
   } catch (error) {
     return handleApiError(error);

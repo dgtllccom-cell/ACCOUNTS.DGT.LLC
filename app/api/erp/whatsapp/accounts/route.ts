@@ -6,6 +6,8 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 // This route uses cookies() via requireErpSession — must be dynamic
 export const dynamic = "force-dynamic";
@@ -72,7 +74,30 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
-    return apiOk(data ?? []);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedData: any[] = data ?? [];
+    try {
+      const flat = localizedData.map((r: any) => ({
+        country_id: r.country_id, countryNameFlat: r.countries?.name,
+        country_branch_id: r.country_branch_id, countryBranchNameFlat: r.country_branches?.name,
+        city_branch_id: r.city_branch_id, cityBranchNameFlat: r.city_branches?.name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "country_branch_id", nameField: "countryBranchNameFlat", table: "country_branches", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" }
+      ]);
+      localizedData = localizedData.map((r: any, i: number) => ({
+        ...r,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        country_branches: r.country_branches ? { ...r.country_branches, name: localizedFlat[i].countryBranchNameFlat } : r.country_branches,
+        city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches
+      }));
+    } catch {
+      // keep original names
+    }
+
+    return apiOk(localizedData);
   } catch (error) {
     return handleApiError(error);
   }

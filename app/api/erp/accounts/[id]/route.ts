@@ -4,11 +4,14 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "read" });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const db = createSupabaseAdminClient() as any;
     const { data: account, error } = await db
@@ -46,12 +49,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .eq("account_id", (await params).id)
     ]);
 
+    let localizedAccounts = [account];
+    let localizedCompanies = companies.data?.map((row: any) => row.companies) || [];
+    let localizedBanks = banks.data?.map((row: any) => row.banks) || [];
+    let localizedWarehouses = warehouses.data?.map((row: any) => row.warehouses) || [];
+    let localizedCustomers = customers.data?.map((row: any) => row.customers) || [];
+    try {
+      localizedAccounts = await localizeRecordFields<any>(localizedAccounts, "accounts", ["name"], lang);
+      localizedCompanies = await localizeRecordFields<any>(localizedCompanies, "companies", ["name"], lang);
+      localizedBanks = await localizeRecordFields<any>(localizedBanks, "banks", ["name"], lang);
+      localizedWarehouses = await localizeRecordFields<any>(localizedWarehouses, "warehouses", ["name"], lang);
+      localizedCustomers = await localizeRecordFields<any>(localizedCustomers, "customers", ["name"], lang);
+    } catch {
+      // fall back to the raw, unlocalized values already assigned above
+    }
+
     const enriched = {
-      ...account,
-      linked_companies: companies.data?.map((row: any) => row.companies) || [],
-      linked_banks: banks.data?.map((row: any) => row.banks) || [],
-      linked_warehouses: warehouses.data?.map((row: any) => row.warehouses) || [],
-      linked_customers: customers.data?.map((row: any) => row.customers) || []
+      ...localizedAccounts[0],
+      linked_companies: localizedCompanies,
+      linked_banks: localizedBanks,
+      linked_warehouses: localizedWarehouses,
+      linked_customers: localizedCustomers
     };
 
     return apiOk({ account: enriched });

@@ -6,6 +6,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateErp } from "@/lib/i18n/erp-translator";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import {
   AUTO_REPLY_TEMPLATES,
@@ -79,8 +81,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       countryId: request.nextUrl.searchParams.get("countryId"),
     });
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const admin = createSupabaseAdminClient();
-    const customer = await loadCustomer(admin, id);
+    let customer = await loadCustomer(admin, id);
+    try {
+      [customer] = await localizeRecordFields<any>([customer], "customers", ["customer_name", "company_name"], lang);
+    } catch {
+      // keep original customer name/company
+    }
 
     const { data: rows } = await (admin.from("communication_messages") as any)
       .select(

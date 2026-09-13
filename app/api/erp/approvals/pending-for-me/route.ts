@@ -2,6 +2,8 @@ import type { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { guardIntake } from "@/lib/services/document-intake-api";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,9 +16,10 @@ export const revalidate = 0;
  * enough job context (doc type, target module, field count, language) for the
  * approval queue to render without a second round-trip.
  */
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const { scope } = await guardIntake("read");
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const scopeOk = scope.countryIds
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (sql: any) => sql`(j.country_id IS NULL OR j.country_id = ANY(${scope.countryIds}))`
@@ -48,7 +51,15 @@ export async function GET(_request: NextRequest) {
       `,
     );
 
-    return apiOk({ rows: rows ?? [] });
+    let localizedRows: any[] = rows ?? [];
+    try {
+      localizedRows = await localizeJoinedNames(localizedRows, lang, [
+        { idField: "submitted_by", nameField: "submitted_by_name", table: "profiles", field: "full_name" }
+      ]);
+    } catch {
+      // keep original names
+    }
+    return apiOk({ rows: localizedRows });
   } catch (error) {
     return handleApiError(error);
   }

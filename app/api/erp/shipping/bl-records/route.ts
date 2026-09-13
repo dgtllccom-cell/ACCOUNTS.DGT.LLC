@@ -7,6 +7,8 @@ import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -281,8 +283,35 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedRecords: any[] = recordsResult.data ?? [];
+    try {
+      localizedRecords = await localizeRecordFields<any>(localizedRecords, "shipping_bl_records", ["shipping_line_name", "vessel_name"], lang);
+      const flat = localizedRecords.map((r: any) => ({
+        country_id: r.country_id, countryNameFlat: r.countries?.name,
+        country_branch_id: r.country_branch_id, countryBranchNameFlat: r.country_branches?.name,
+        city_branch_id: r.city_branch_id, cityBranchNameFlat: r.city_branches?.name,
+        ledger_id: r.ledger_id, ledgerNameFlat: r.ledgers?.name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "country_branch_id", nameField: "countryBranchNameFlat", table: "country_branches", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" },
+        { idField: "ledger_id", nameField: "ledgerNameFlat", table: "ledgers", field: "name" }
+      ]);
+      localizedRecords = localizedRecords.map((r: any, i: number) => ({
+        ...r,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        country_branches: r.country_branches ? { ...r.country_branches, name: localizedFlat[i].countryBranchNameFlat } : r.country_branches,
+        city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches,
+        ledgers: r.ledgers ? { ...r.ledgers, name: localizedFlat[i].ledgerNameFlat } : r.ledgers
+      }));
+    } catch {
+      // keep original names on failure
+    }
+
     return apiOk({
-      records: recordsResult.data ?? [],
+      records: localizedRecords,
       filters,
       session: {
         isSuperAdmin: session.isSuperAdmin,

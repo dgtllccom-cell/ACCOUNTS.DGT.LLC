@@ -4,6 +4,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const createParamSchema = z.object({
   goodsId: z.string().uuid().optional().nullable(),
@@ -74,8 +76,16 @@ export async function GET(request: NextRequest) {
       `;
     });
 
-    const parameters = rows ?? [];
-    
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    let parameters: any[] = rows ?? [];
+    try {
+      parameters = await localizeJoinedNames(parameters, lang, [
+        { idField: "goods_id", nameField: "goods_name", table: "goods", field: "goods_name" }
+      ]);
+    } catch {
+      // keep original goods names
+    }
+
     // Group parameters by type
     const brands = parameters.filter((p: any) => p.param_type === "brand" && p.is_active);
     const sizes = parameters.filter((p: any) => p.param_type === "size" && p.is_active);

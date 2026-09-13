@@ -418,8 +418,10 @@ export class SettlementService {
   }) {
     return withLocalPg(async (sql) => {
       return sql`
-        SELECT 
+        SELECT
           sl.id as link_id,
+          sl.cr_settlement_id,
+          sl.dr_settlement_id,
           sl.settlement_date,
           sl.linked_local_amount,
           sl.linked_usd_amount,
@@ -428,6 +430,7 @@ export class SettlementService {
           sl.fx_difference_local,
           sl.fx_difference_usd,
           sl.fx_direction,
+          cr.country_id,
           cr.source_module as cr_module,
           cr.source_reference_no as cr_ref,
           cr.party_name as cr_party,

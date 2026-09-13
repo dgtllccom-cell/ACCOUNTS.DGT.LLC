@@ -3,6 +3,8 @@ import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { guardHr } from "@/lib/services/hr-api";
 import { hrPayrollTaxService } from "@/lib/services/hr-payroll-tax-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -36,10 +38,18 @@ export async function GET(request: NextRequest) {
   try {
     const { scope } = await guardHr("read");
     const sp = request.nextUrl.searchParams;
-    const rows = await hrPayrollTaxService.list(scope, {
+    const lang = await getRequestLanguage(sp.get("lang"));
+    let rows: any[] = await hrPayrollTaxService.list(scope, {
       countryId: sp.get("countryId") || undefined,
       componentType: sp.get("componentType") || undefined,
     });
+    try {
+      rows = await localizeJoinedNames<any>(rows, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" }
+      ]);
+    } catch {
+      // keep original country names
+    }
     return apiOk({ rows });
   } catch (error) {
     return handleApiError(error);

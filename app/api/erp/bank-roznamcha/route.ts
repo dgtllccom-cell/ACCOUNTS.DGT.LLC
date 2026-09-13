@@ -5,6 +5,48 @@ import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-mid
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+
+// Localizes the { id, name } / { id, full_name } / { id, bank_name } sub-objects this
+// route embeds per row (company/country/country_branch/city_branch/profile/bank),
+// batched by join type across the returned page rather than per-row.
+async function localizeNestedJoins(rows: any[], lang: SupportedLanguage): Promise<any[]> {
+  if (!rows.length) return rows;
+  const joins: { key: string; table: string; field: string }[] = [
+    { key: "company", table: "companies", field: "name" },
+    { key: "country", table: "countries", field: "name" },
+    { key: "country_branch", table: "country_branches", field: "name" },
+    { key: "city_branch", table: "city_branches", field: "name" },
+    { key: "profile", table: "profiles", field: "full_name" },
+    { key: "bank", table: "banks", field: "bank_name" }
+  ];
+  const maps: Record<string, Map<string, any>> = {};
+  for (const j of joins) {
+    const distinct = new Map<string, any>();
+    for (const row of rows) {
+      const obj = row[j.key];
+      if (obj?.id && !distinct.has(obj.id)) distinct.set(obj.id, obj);
+    }
+    if (distinct.size === 0) continue;
+    try {
+      const localized = await localizeRecordFields<any>([...distinct.values()], j.table, [j.field], lang);
+      maps[j.key] = new Map(localized.map((r: any) => [r.id, r]));
+    } catch {
+      // leave this join type unlocalized on failure
+    }
+  }
+  return rows.map((row) => {
+    const next = { ...row };
+    for (const j of joins) {
+      const map = maps[j.key];
+      const obj = row[j.key];
+      if (map && obj?.id && map.has(obj.id)) next[j.key] = map.get(obj.id);
+    }
+    return next;
+  });
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,6 +56,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const scope = getScopeFromSearchParams(request);
     const params = request.nextUrl.searchParams;
+    const lang = await getRequestLanguage(params.get("lang"));
 
     authorizeApiScope(session, { resource: "roznamcha", action: "read", ...scope });
 
@@ -230,6 +273,8 @@ export async function GET(request: NextRequest) {
     if (!result) {
       throw new Error("Unable to connect to database");
     }
+
+    result.entries = await localizeNestedJoins(result.entries, lang);
 
     return apiOk(result);
   } catch (error) {

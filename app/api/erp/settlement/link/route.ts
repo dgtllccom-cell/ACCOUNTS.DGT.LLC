@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { settlementService } from "@/lib/services/settlement-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -16,7 +18,16 @@ export async function GET(request: NextRequest) {
       return apiOk([]);
     }
 
-    const links = await settlementService.getTransactionLinks(settlementId);
+    let links: any[] = await settlementService.getTransactionLinks(settlementId);
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    try {
+      links = await localizeJoinedNames<any>(links, lang, [
+        { idField: "cr_settlement_id", nameField: "cr_party", table: "settlement_transactions", field: "party_name" },
+        { idField: "dr_settlement_id", nameField: "dr_party", table: "settlement_transactions", field: "party_name" }
+      ]);
+    } catch {
+      // keep original names
+    }
     return apiOk(links);
   } catch (error) {
     return handleApiError(error);

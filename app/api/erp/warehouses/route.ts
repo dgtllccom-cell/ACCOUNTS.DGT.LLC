@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 type WarehouseRow = {
   id: string;
@@ -48,7 +50,7 @@ function mapWarehouse(row: WarehouseRow): LegacyWarehouseRecord {
   };
 }
 
-async function loadWarehouses(): Promise<LegacyWarehouseRecord[]> {
+async function loadWarehouses(lang: Awaited<ReturnType<typeof getRequestLanguage>>): Promise<LegacyWarehouseRecord[]> {
   const viaPg = await withLocalPg(async (sql) => {
     const rows = await sql<WarehouseRow[]>`
       SELECT
@@ -74,7 +76,16 @@ async function loadWarehouses(): Promise<LegacyWarehouseRecord[]> {
       WHERE w.deleted_at IS NULL
       ORDER BY w.created_at DESC
     `;
-    return rows.map(mapWarehouse);
+    let localizedRows: WarehouseRow[] = rows;
+    try {
+      localizedRows = await localizeRecordFields<any>(localizedRows, "warehouses", ["warehouse_name"], lang);
+      localizedRows = await localizeJoinedNames<any>(localizedRows, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries", field: "name" }
+      ]);
+    } catch {
+      // keep original names on failure
+    }
+    return localizedRows.map(mapWarehouse);
   });
   if (viaPg) return viaPg;
   return [];
@@ -89,7 +100,8 @@ export async function GET(request: NextRequest) {
     const limit = Number(request.nextUrl.searchParams.get("limit") || "500");
     const offset = Number(request.nextUrl.searchParams.get("offset") || "0");
 
-    const all = await loadWarehouses();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const all = await loadWarehouses(lang);
     const scoped = !session.isSuperAdmin
       ? all.filter((warehouse) => !warehouse.country_id || session.countryIds.includes(warehouse.country_id))
       : all;

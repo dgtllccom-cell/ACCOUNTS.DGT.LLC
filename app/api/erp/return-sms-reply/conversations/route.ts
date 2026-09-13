@@ -3,6 +3,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 // Uses cookies() via requireErpSession — must be dynamic
 export const dynamic = "force-dynamic";
@@ -61,7 +63,29 @@ export async function GET(request: NextRequest) {
       console.warn("[return-sms-reply/conversations] DB query notice:", error.message);
     }
 
-    const conversations = (convRows ?? []).map((c: any) => ({
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    let localizedConvRows: any[] = convRows ?? [];
+    try {
+      const flat = localizedConvRows.map((r: any) => ({
+        country_id: r.country_id,
+        countryNameFlat: r.countries?.name,
+        city_branch_id: r.city_branch_id,
+        cityBranchNameFlat: r.city_branches?.name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" }
+      ]);
+      localizedConvRows = localizedConvRows.map((r: any, i: number) => ({
+        ...r,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches
+      }));
+    } catch {
+      // keep original names
+    }
+
+    const conversations = localizedConvRows.map((c: any) => ({
       id: c.id,
       channel: c.channel,
       contactIdentifier: c.contact_identifier,

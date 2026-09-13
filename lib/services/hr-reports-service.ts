@@ -68,7 +68,7 @@ export class HrReportsService {
       if (f.countryId) where.push(sql`e.country_id = ${f.countryId}`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
       return sql`
-        SELECT e.employee_code, COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name,
+        SELECT e.id AS employee_id, e.employee_code, COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name,
                e.designation, e.department, co.name AS country, cib.name AS city_branch,
                e.joining_date, e.status, e.employment_type,
                e.basic_salary, public.hr_employee_currency(e.id) AS currency,

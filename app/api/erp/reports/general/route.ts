@@ -4,6 +4,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const reportQuerySchema = z.object({
   reportType: z.enum([
@@ -61,6 +63,7 @@ export async function GET(request: NextRequest) {
     parsed.countryId = effectiveCountryId ?? "all";
     parsed.branchId = effectiveBranchId ?? "all";
 
+    const lang = await getRequestLanguage(searchParams.get("lang"));
     const admin = createSupabaseAdminClient();
 
     // For roznamcha_lines-based report types (receipts/payments/expenses) the country/branch scope
@@ -279,7 +282,12 @@ export async function GET(request: NextRequest) {
             .select("id, name, legal_name, base_currency, is_active, created_at")
             .is("deleted_at", null);
           if (parsed.countryId && parsed.countryId !== "all") compQuery = compQuery.eq("country_id", parsed.countryId);
-          const { data: dbData } = await compQuery;
+          let { data: dbData } = await compQuery;
+          try {
+            dbData = await localizeRecordFields<any>(dbData ?? [], "companies", ["name", "legal_name"], lang);
+          } catch {
+            // keep original company names
+          }
 
           const mapped = (dbData ?? []).map((row: any) => ({
             id: row.id,
@@ -311,7 +319,21 @@ export async function GET(request: NextRequest) {
             .is("deleted_at", null)
             .order("rate_date", { ascending: false });
 
-          const mapped = (dbData ?? []).map((row: any) => ({
+          let localizedRates: any[] = dbData ?? [];
+          try {
+            const flat = localizedRates.map((r: any) => ({ country_id: r.country_id, countryNameFlat: r.countries?.name }));
+            const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+              { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" }
+            ]);
+            localizedRates = localizedRates.map((r: any, i: number) => ({
+              ...r,
+              countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries
+            }));
+          } catch {
+            // keep original country names
+          }
+
+          const mapped = localizedRates.map((row: any) => ({
             id: row.id,
             country: row.countries?.name || "Pakistan",
             date: row.rate_date,
@@ -348,8 +370,29 @@ export async function GET(request: NextRequest) {
           }
           const { data: dbData } = await btQuery;
 
+          let localizedBt: any[] = dbData ?? [];
+          try {
+            const flat = localizedBt.map((r: any) => ({
+              country_id: r.country_id,
+              countryNameFlat: r.countries?.name,
+              city_branch_id: r.city_branch_id,
+              cityBranchNameFlat: r.city_branches?.name
+            }));
+            const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+              { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+              { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" }
+            ]);
+            localizedBt = localizedBt.map((r: any, i: number) => ({
+              ...r,
+              countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+              city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches
+            }));
+          } catch {
+            // keep original names
+          }
+
           const branchGroups: Record<string, any> = {};
-          (dbData ?? []).forEach((row: any) => {
+          localizedBt.forEach((row: any) => {
             const branchName = row.city_branches?.name || row.countries?.name || "Global / Main";
             const branchCode = row.city_branches?.code || "GLB";
             if (!branchGroups[branchName]) {

@@ -6,6 +6,8 @@ import { appendCountryEmailSignature, resolveCountryEmailConfig } from "@/lib/em
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendEmailDirect } from "@/lib/email/smtp-client";
 import { decrypt } from "@/lib/crypto";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   channel: z.enum(["email", "whatsapp", "internal", "notifications"]).default("email")
@@ -400,6 +402,18 @@ export async function GET(request: NextRequest) {
     if (countriesRes.error) throw new Error(countriesRes.error.message);
     if (countryBranchesRes.error) throw new Error(countryBranchesRes.error.message);
     if (cityBranchesRes.error) throw new Error(cityBranchesRes.error.message);
+
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    try {
+      countriesRes.data = await localizeRecordFields<any>(countriesRes.data ?? [], "countries", ["name"], lang);
+    } catch {
+      // keep original country names
+    }
+    try {
+      cityBranchesRes.data = await localizeRecordFields<any>(cityBranchesRes.data ?? [], "city_branches", ["name", "city_name"], lang);
+    } catch {
+      // keep original city branch names
+    }
 
     const profile = profileRes.data as ProfileRow | null;
     const defaultCompanyId = profile?.default_company_id ?? null;

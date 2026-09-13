@@ -8,6 +8,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/config";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -332,8 +334,16 @@ export async function GET(request: NextRequest) {
       ...scope
     });
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+
     if (!hasRealServiceRoleKey()) {
-      return apiOk(await buildAccountListViaLocalPg(session, scope, limit));
+      const result = await buildAccountListViaLocalPg(session, scope, limit);
+      try {
+        result.accounts = await localizeRecordFields<any>(result.accounts, "enterprise_accounts", ["name"], lang);
+      } catch {
+        // keep original account names
+      }
+      return apiOk(result);
     }
 
     let supabase = await createApiSupabaseClient();
@@ -380,11 +390,24 @@ export async function GET(request: NextRequest) {
     }
 
     if ((!data || data.length === 0) && !hasRealServiceRoleKey()) {
-      return apiOk(await buildAccountListViaLocalPg(session, scope, limit));
+      const fallback = await buildAccountListViaLocalPg(session, scope, limit);
+      try {
+        fallback.accounts = await localizeRecordFields<any>(fallback.accounts, "enterprise_accounts", ["name"], lang);
+      } catch {
+        // keep original account names
+      }
+      return apiOk(fallback);
+    }
+
+    let localizedAccounts: any[] = data ?? [];
+    try {
+      localizedAccounts = await localizeRecordFields<any>(localizedAccounts, "enterprise_accounts", ["name"], lang);
+    } catch {
+      // keep original account names
     }
 
     return apiOk({
-      accounts: data ?? [],
+      accounts: localizedAccounts,
       limit
     });
   } catch (error) {

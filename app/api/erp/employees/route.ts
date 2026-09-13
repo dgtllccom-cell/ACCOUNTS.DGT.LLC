@@ -4,11 +4,14 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "employees", action: "read" });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const search = request.nextUrl.searchParams.get("search")?.trim().toLowerCase() || "";
     const category = request.nextUrl.searchParams.get("category");
@@ -57,7 +60,14 @@ export async function GET(request: NextRequest) {
       return true;
     });
 
-    const limited = scoped.slice(0, limit);
+    let limited: any[] = scoped.slice(0, limit);
+    try {
+      limited = await localizeJoinedNames(limited, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" }
+      ]);
+    } catch {
+      // keep original country names
+    }
     const active = scoped.filter((d: any) => d.is_active).length;
     return apiOk({
       employees: limited.map((emp: any) => ({

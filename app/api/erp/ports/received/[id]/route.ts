@@ -4,15 +4,25 @@ import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { portUpdateSchema } from "@/lib/api/erp-validation";
 import { receivedPortsService } from "@/lib/services/ports-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireErpSession();
     const { id } = await params;
-    const port = await receivedPortsService.getById(id);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let port: any = await receivedPortsService.getById(id);
+    if (port) {
+      try {
+        [port] = await localizeRecordFields<any>([port], "ports", ["port_name"], lang);
+      } catch {
+        // keep original port name
+      }
+    }
     return apiOk({ port });
   } catch (error) {
     return handleApiError(error);

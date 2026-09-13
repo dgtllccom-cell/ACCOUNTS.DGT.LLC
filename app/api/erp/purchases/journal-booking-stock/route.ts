@@ -5,6 +5,8 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   purchaseOrderNo: z.string().trim().max(140).optional(),
@@ -191,8 +193,38 @@ export async function GET(request: NextRequest) {
       return handleApiError(new Error(error.message));
     }
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedData: any[] = data ?? [];
+    try {
+      const flat = localizedData.map((r: any) => ({
+        country_id: r.country_id,
+        countryNameFlat: r.countries?.name,
+        country_branch_id: r.country_branch_id,
+        countryBranchNameFlat: r.country_branches?.name,
+        city_branch_id: r.city_branch_id,
+        cityBranchNameFlat: r.city_branches?.name,
+        cityBranchCityNameFlat: r.city_branches?.city_name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "country_branch_id", nameField: "countryBranchNameFlat", table: "country_branches", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchCityNameFlat", table: "city_branches", field: "city_name" }
+      ]);
+      localizedData = localizedData.map((r: any, i: number) => ({
+        ...r,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        country_branches: r.country_branches ? { ...r.country_branches, name: localizedFlat[i].countryBranchNameFlat } : r.country_branches,
+        city_branches: r.city_branches
+          ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat, city_name: localizedFlat[i].cityBranchCityNameFlat }
+          : r.city_branches
+      }));
+    } catch {
+      // keep original names on failure
+    }
+
     // Expand all orders into individual goods-line rows
-    let allRows: any[] = (data ?? []).flatMap(expandOrderToStockRows);
+    let allRows: any[] = localizedData.flatMap(expandOrderToStockRows);
 
     // Apply goods-level filters
     if (query.goodsName) {

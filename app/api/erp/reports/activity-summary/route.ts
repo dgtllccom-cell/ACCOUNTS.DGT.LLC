@@ -3,6 +3,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames, localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -45,6 +47,34 @@ export async function GET(request: NextRequest) {
 
     const { data: branches, error: brErr } = await branchQuery;
     if (brErr) throw brErr;
+
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    let localizedBranches: any[] = branches ?? [];
+    try {
+      const flat = localizedBranches.map((b: any) => ({
+        id: b.id,
+        nameFlat: b.name,
+        country_id: b.country_id,
+        countryNameFlat: b.countries?.name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" }
+      ]);
+      const branchNameLocalized = await localizeRecordFields<any>(
+        flat.map((f) => ({ id: f.id, name: f.nameFlat })),
+        "country_branches",
+        ["name"],
+        lang
+      );
+      const branchNameById = new Map(branchNameLocalized.map((r: any) => [r.id, r.name]));
+      localizedBranches = localizedBranches.map((b: any, i: number) => ({
+        ...b,
+        name: branchNameById.get(b.id) ?? b.name,
+        countries: b.countries ? { ...b.countries, name: localizedFlat[i].countryNameFlat } : b.countries
+      }));
+    } catch {
+      // keep original branch/country names on failure
+    }
 
     // Helper to conditionally apply scope to Supabase queries
     function applyScope(query: any, branchField = "country_branch_id") {
@@ -149,7 +179,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build per-branch stats
-    const branchStats = (branches ?? []).map((branch: any) => {
+    const branchStats = localizedBranches.map((branch: any) => {
       const bId = branch.id;
       const cId = branch.country_id;
 

@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { apiError, apiOk, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 type CountryRow = {
   id: string;
@@ -162,7 +164,7 @@ function normalizeDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-async function loadViaPg() {
+async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>) {
   return await withLocalPg(async (sql) => {
     const countryRowsRaw = await sql<CountryRow[]>`select id, name, iso2, iso3, currency_code, is_active from countries where deleted_at is null order by name asc`;
     const branchRowsRaw = await sql<CountryBranchRow[]>`select id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from country_branches where deleted_at is null order by name asc`;
@@ -174,14 +176,23 @@ async function loadViaPg() {
     const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
     const permissionRowsRaw = await sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`;
 
-    const countryRows = countryRowsRaw as CountryRow[];
-    const branchRows = branchRowsRaw as CountryBranchRow[];
-    const cityRows = cityRowsRaw as CityBranchRow[];
+    let countryRows = countryRowsRaw as CountryRow[];
+    let branchRows = branchRowsRaw as CountryBranchRow[];
+    let cityRows = cityRowsRaw as CityBranchRow[];
+    let profileRowsLocalized = profileRowsRaw as ProfileRow[];
+    try {
+      countryRows = await localizeRecordFields<any>(countryRows, "countries", ["name"], lang);
+      branchRows = await localizeRecordFields<any>(branchRows, "country_branches", ["name"], lang);
+      cityRows = await localizeRecordFields<any>(cityRows, "city_branches", ["name", "city_name"], lang);
+      profileRowsLocalized = await localizeRecordFields<any>(profileRowsLocalized, "profiles", ["full_name"], lang);
+    } catch {
+      // keep original names on failure
+    }
     const clearingAgents = clearingAgentRowsRaw as Array<{ id: string; name: string; code: string; head_office_country_id: string | null }>;
     const clearingBranches = clearingBranchRowsRaw as Array<{ id: string; name: string; code: string; clearing_agent_id: string; branch_level: string }>;
     const authUsers = authUserRowsRaw as Array<{ id: string; email: string }>;
     const assignmentRows = assignmentRowsRaw as AssignmentRow[];
-    const profileRows = profileRowsRaw as ProfileRow[];
+    const profileRows = profileRowsLocalized;
     const permissionRows = permissionRowsRaw as PermissionSetRow[];
 
     const countriesById = new Map(countryRows.map((row) => [row.id, row] as const));
@@ -380,14 +391,15 @@ async function loadViaPg() {
   });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     if (!session.isSuperAdmin) {
       return apiError("FORBIDDEN", "Super Admin access is required.", 403);
     }
 
-    const viaPg = await loadViaPg();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const viaPg = await loadViaPg(lang);
     if (viaPg) {
       return apiOk(viaPg);
     }

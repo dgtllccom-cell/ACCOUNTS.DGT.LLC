@@ -3,6 +3,8 @@ import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { guardHr } from "@/lib/services/hr-api";
 import { hrKycService } from "@/lib/services/hr-kyc-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,11 +23,33 @@ const docSchema = z.object({
   notes: z.string().trim().max(2000).nullish(),
 });
 
-export async function GET(_req: NextRequest, ctx: { params: Promise<{ employeeId: string }> }) {
+export async function GET(request: NextRequest, ctx: { params: Promise<{ employeeId: string }> }) {
   try {
     const { scope } = await guardHr("read");
     const { employeeId } = paramSchema.parse(await ctx.params);
-    const data = await hrKycService.employeeChecklist(employeeId, scope);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const data: any = await hrKycService.employeeChecklist(employeeId, scope);
+    try {
+      if (data.employee) {
+        [data.employee] = await localizeJoinedNames<any>([data.employee], lang, [
+          { idField: "country_id", nameField: "country_name", table: "countries" }
+        ]);
+      }
+      if (Array.isArray(data.items) && data.items.length) {
+        const synthetic = data.items
+          .filter((it: any) => it.requirement_id)
+          .map((it: any) => ({ id: it.requirement_id, label: it.label }));
+        if (synthetic.length) {
+          const localized = await localizeRecordFields<any>(synthetic, "hr_employee_kyc_requirements", ["label"], lang);
+          const byId = new Map(localized.map((l: any) => [l.id, l.label]));
+          data.items = data.items.map((it: any) =>
+            it.requirement_id && byId.has(it.requirement_id) ? { ...it, label: byId.get(it.requirement_id) } : it
+          );
+        }
+      }
+    } catch {
+      // keep original labels/names on failure
+    }
     return apiOk(data);
   } catch (error) {
     return handleApiError(error);

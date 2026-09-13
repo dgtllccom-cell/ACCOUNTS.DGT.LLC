@@ -5,6 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { getScopeFromSearchParams } from "@/lib/api/scope-middleware";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -148,7 +150,17 @@ export async function GET(request: NextRequest) {
 
       const all = rows as any[];
       const total = all.length;
-      const pageRows = all.slice((page - 1) * pageSize, page * pageSize);
+      const lang = await getRequestLanguage(p.get("lang"));
+      let pageRows: any[] = all.slice((page - 1) * pageSize, page * pageSize);
+      try {
+        pageRows = await localizeJoinedNames<any>(pageRows, lang, [
+          { idField: "country_id", nameField: "country_name", table: "countries" },
+          { idField: "country_branch_id", nameField: "country_branch_name", table: "country_branches", field: "name" },
+          { idField: "city_branch_id", nameField: "city_branch_name", table: "city_branches", field: "name" }
+        ]);
+      } catch {
+        // keep original names
+      }
 
       // ── aggregates for the four cards (from the FULL scoped set, not the page) ──
       const num = (v: unknown) => Number(v ?? 0) || 0;

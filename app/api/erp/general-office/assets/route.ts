@@ -4,6 +4,8 @@ import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { requireOfficeSession, officeScopeWhere } from "@/lib/api/office-hr";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,7 @@ export async function GET(request: NextRequest) {
     const session = await requireOfficeSession(false);
     const p = request.nextUrl.searchParams;
     const from = p.get("from"); const to = p.get("to");
+    const lang = await getRequestLanguage(p.get("lang"));
     const data = await withLocalPg(async (sql) => {
       const scope = officeScopeWhere(sql, session, "a");
       const rows = await sql`
@@ -44,7 +47,13 @@ export async function GET(request: NextRequest) {
         limit 500`;
       return rows;
     });
-    return apiOk({ assets: data ?? [] });
+    let assets: any[] = data ?? [];
+    try {
+      assets = await localizeRecordFields<any>(assets, "office_assets", ["asset_name"], lang);
+    } catch {
+      // keep original asset names
+    }
+    return apiOk({ assets });
   } catch (error) {
     return handleApiError(error);
   }

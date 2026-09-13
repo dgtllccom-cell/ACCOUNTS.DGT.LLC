@@ -6,6 +6,8 @@ import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { goodsService } from "@/lib/services/goods-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 /**
  * Goods Master Registry backend (/dashboard/settings/goods-master).
@@ -42,6 +44,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "goods", action: "read" });
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const status = (request.nextUrl.searchParams.get("status") || "").toLowerCase();
     const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") || 500) || 500, 1000);
 
@@ -90,10 +93,19 @@ export async function GET(request: NextRequest) {
       `;
     });
 
+    let nameById = new Map<string, string>();
+    try {
+      const synthetic = (rows ?? []).map((r: any) => ({ id: r.id, goods_name: r.name }));
+      const localizedNames = await localizeRecordFields<any>(synthetic, "goods", ["goods_name"], lang);
+      nameById = new Map(localizedNames.map((r: any) => [r.id, r.goods_name]));
+    } catch {
+      // keep original names (map stays empty, falls back to r.name below)
+    }
+
     const list = (rows ?? []).map((r: any) => ({
       id: r.id,
       chs_code: r.chs_code,
-      name: r.name,
+      name: nameById.get(r.id) ?? r.name,
       category: r.category ?? "",
       brand: r.brand ?? "",
       sizes: r.sizes ?? "",

@@ -3,6 +3,8 @@ import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,7 @@ export async function GET(request: NextRequest) {
     authorize(session, { resource: "reports", action: "read" });
     const scope = resolveReportScope(session);
     const sp = request.nextUrl.searchParams;
+    const lang = await getRequestLanguage(sp.get("lang"));
 
     const report = (sp.get("report") || "bill_wise_expense") as ReportKey;
     if (!REPORTS.includes(report)) {
@@ -70,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     const payload = await withLocalPg(async (sql) => {
       // ---- base: bills in scope + posted/draft expense rollups -----------------
-      const bills = await sql`
+      let bills: any[] = await sql`
         select
           be.id, be.source_module, be.source_id, be.source_table, be.bill_no, be.manual_bill_no,
           be.bill_date, be.transaction_date, be.country_id, be.city_branch_id, be.country_branch_id,
@@ -104,6 +107,13 @@ export async function GET(request: NextRequest) {
           ${statusF ? sql`and be.status = ${statusF}` : sql``}
         order by be.transaction_date desc nulls last, be.created_at desc
       `;
+
+      try {
+        bills = await localizeRecordFields<any>(bills, "bill_expenses", ["party_name"], lang);
+        bills = await localizeJoinedNames(bills, lang, [{ idField: "country_id", nameField: "country_name", table: "countries" }]);
+      } catch {
+        // keep original values on failure
+      }
 
       const billIds = bills.map((b: any) => b.id);
 

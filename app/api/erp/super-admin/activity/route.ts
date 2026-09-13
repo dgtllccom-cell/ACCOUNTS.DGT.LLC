@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession, ErpAuthError } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -157,8 +159,20 @@ export async function GET(request: NextRequest) {
 
     if (!result) return apiOk({ summary: null, entries: [], total: 0, page, pageSize, connected: false, filters: { countries: [], currencies: [] } });
 
+    const lang = await getRequestLanguage(p.get("lang"));
+    let localizedRows: any[] = result.rows as any[];
+    try {
+      localizedRows = await localizeJoinedNames<any>(localizedRows, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries", field: "name" },
+        { idField: "branch_id", nameField: "branch_name", table: "city_branches", field: "name" },
+        { idField: "branch_id", nameField: "branch_name", table: "country_branches", field: "name" }
+      ]);
+    } catch {
+      // keep original names
+    }
+
     const num = (n: any) => Number(n || 0);
-    const entries = (result.rows as any[]).map((r, i) => ({
+    const entries = localizedRows.map((r, i) => ({
       sr: offset + i + 1,
       recordId: r.record_id,
       sourceModule: r.source_module,

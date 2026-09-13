@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export async function GET(
   request: NextRequest,
@@ -13,7 +15,8 @@ export async function GET(
     authorizeApiScope(session, { resource: "inventory", action: "read" });
 
     const id = (await params).id;
-    const movement = await withLocalPg(async (sql) => {
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let movement = await withLocalPg(async (sql) => {
       const rows = await sql`
         SELECT 
           sm.*,
@@ -46,6 +49,16 @@ export async function GET(
         status: 403,
         headers: { "Content-Type": "application/json" }
       });
+    }
+
+    try {
+      [movement] = await localizeJoinedNames<any>([movement], lang, [
+        { idField: "goods_id", nameField: "goods_name", table: "goods" },
+        { idField: "warehouse_id", nameField: "warehouse_name", table: "warehouses" },
+        { idField: "country_id", nameField: "country_name", table: "countries", field: "name" }
+      ]);
+    } catch {
+      // keep original names
     }
 
     return apiOk({ movement });

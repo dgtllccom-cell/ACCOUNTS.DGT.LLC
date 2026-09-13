@@ -4,6 +4,8 @@ import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { applySessionScopeDefaults } from "@/lib/communication-center/communication-center-service";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const leadSchema = z.object({
   leadName: z.string().trim().min(1).max(200),
@@ -38,6 +40,7 @@ export async function GET(req: NextRequest) {
     const session = await requireErpSession();
     const admin = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
+    const lang = await getRequestLanguage(searchParams.get("lang"));
     const scope = applySessionScopeDefaults(session, {
       countryId: clean(searchParams.get("countryId")),
       countryBranchId: clean(searchParams.get("countryBranchId")),
@@ -54,7 +57,13 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    return apiOk({ leads: data ?? [], scope });
+    let localized: any[] = data ?? [];
+    try {
+      localized = await localizeRecordFields<any>(localized, "communication_center_leads", ["lead_name", "company_name", "contact_person"], lang);
+    } catch {
+      localized = data ?? [];
+    }
+    return apiOk({ leads: localized, scope });
   } catch (error) {
     return handleApiError(error);
   }

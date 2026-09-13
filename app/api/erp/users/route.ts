@@ -11,6 +11,8 @@ import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import { expandPermissionGroups } from "@/lib/permissions/catalog";
 import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -408,10 +410,19 @@ export async function GET(request: NextRequest) {
     const permissions = permissionsRes.data?.permissions ?? [];
     const authUser = authUserRes.data?.user;
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedFullName = profile.full_name;
+    try {
+      const [localizedProfile] = await localizeRecordFields<any>([{ id: userId, full_name: profile.full_name }], "profiles", ["full_name"], lang);
+      localizedFullName = localizedProfile.full_name;
+    } catch {
+      // keep original full name
+    }
+
     return apiOk({
       userId,
       userCode: profile.user_code,
-      fullName: profile.full_name,
+      fullName: localizedFullName,
       defaultCompanyId: profile.default_company_id ?? null,
       isActive: assignment?.is_active ?? false,
       role: assignment?.role ?? "city_branch_admin",

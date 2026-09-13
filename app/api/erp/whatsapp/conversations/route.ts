@@ -4,6 +4,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,8 +61,30 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) throw new Error(error.message);
 
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    let results: any[] = data ?? [];
+    try {
+      const flat = results.map((r: any) => ({
+        assigned_user_id: r.assigned_profiles?.id, assignedNameFlat: r.assigned_profiles?.full_name,
+        country_id: r.countries?.id, countryNameFlat: r.countries?.name,
+        city_branch_id: r.city_branches?.id, cityBranchNameFlat: r.city_branches?.name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "assigned_user_id", nameField: "assignedNameFlat", table: "profiles", field: "full_name" },
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" }
+      ]);
+      results = results.map((r: any, i: number) => ({
+        ...r,
+        assigned_profiles: r.assigned_profiles ? { ...r.assigned_profiles, full_name: localizedFlat[i].assignedNameFlat } : r.assigned_profiles,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches
+      }));
+    } catch {
+      // keep original names
+    }
+
     // Client-side search filter (contact name / phone)
-    let results = data ?? [];
     if (search) {
       const s = search.toLowerCase();
       results = results.filter((conv: any) => {

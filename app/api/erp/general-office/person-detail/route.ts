@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,6 +19,7 @@ export async function GET(request: NextRequest) {
     await requireErpSession();
     const id = request.nextUrl.searchParams.get("id")?.trim();
     if (!id || !/^[0-9a-fA-F-]{36}$/.test(id)) return apiOk({ found: false });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const data = await withLocalPg(async (sql) => {
       const [profile] = await sql`
@@ -47,7 +50,15 @@ export async function GET(request: NextRequest) {
     });
 
     if (!data) return apiOk({ found: false });
-    const { profile, roles, docs } = data as any;
+    let { profile, roles, docs } = data as any;
+
+    if (profile) {
+      try {
+        [profile] = await localizeRecordFields<any>([profile], "profiles", ["full_name"], lang);
+      } catch {
+        // keep original name
+      }
+    }
 
     return apiOk({
       found: true,

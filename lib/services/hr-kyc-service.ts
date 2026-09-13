@@ -90,7 +90,7 @@ export class HrKycService {
         LEFT JOIN public.countries co ON co.id = e.country_id
         WHERE e.id = ${employeeId}`)?.[0];
       const items = await sql`
-        SELECT r.code, r.label, r.is_mandatory, r.requires_expiry, r.requires_number, r.rank_order,
+        SELECT r.id AS requirement_id, r.code, r.label, r.is_mandatory, r.requires_expiry, r.requires_number, r.rank_order,
                d.id AS document_id, d.document_number, d.issuing_authority, d.issue_date, d.expiry_date,
                d.file_url, d.office_document_id, d.status, d.verified_by, d.verified_at, d.rejection_reason, d.notes
         FROM public.hr_employee_kyc_requirements r

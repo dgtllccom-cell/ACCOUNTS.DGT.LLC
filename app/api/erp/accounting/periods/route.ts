@@ -4,11 +4,14 @@ import { financialPeriodCreateSchema } from "@/lib/api/erp-validation";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const scope = getScopeFromSearchParams(request);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     authorizeApiScope(session, {
       resource: "financial_periods",
@@ -35,8 +38,14 @@ export async function GET(request: NextRequest) {
       throw new Error(error.message);
     }
 
+    let localized = data ?? [];
+    try {
+      localized = await localizeRecordFields<any>(localized, "financial_periods", ["period_name"], lang);
+    } catch {
+      localized = data ?? [];
+    }
     return apiOk({
-      periods: data ?? []
+      periods: localized
     });
   } catch (error) {
     return handleApiError(error);

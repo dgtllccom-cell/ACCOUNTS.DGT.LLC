@@ -5,6 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateLocalTranslations } from "@/lib/i18n/auto-translate-record";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const taxSchema = z.object({
   id: z.string().uuid().optional(),
@@ -56,7 +58,23 @@ export async function GET(request: NextRequest) {
       throw new Error(`Tax settings unavailable: ${error.message}`);
     }
 
-    let taxes = (taxRows ?? []).map((t: any) => ({
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedTaxRows: any[] = taxRows ?? [];
+    try {
+      localizedTaxRows = await localizeRecordFields<any>(localizedTaxRows, "country_tax_settings", ["tax_name"], lang);
+      const flat = localizedTaxRows.map((t: any) => ({ country_id: t.country_id, countryNameFlat: t.countries?.name }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" }
+      ]);
+      localizedTaxRows = localizedTaxRows.map((t: any, i: number) => ({
+        ...t,
+        countries: t.countries ? { ...t.countries, name: localizedFlat[i].countryNameFlat } : t.countries
+      }));
+    } catch {
+      // keep original names
+    }
+
+    let taxes = localizedTaxRows.map((t: any) => ({
       id: t.id,
       countryId: t.country_id,
       countryName: t.countries?.name || "Global",

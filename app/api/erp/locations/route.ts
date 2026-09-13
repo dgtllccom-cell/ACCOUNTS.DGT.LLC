@@ -4,6 +4,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   limit: z.coerce.number().default(100),
@@ -23,6 +25,7 @@ export async function GET(request: NextRequest) {
       resource: "locations",
       action: "read",
     });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const query = querySchema.parse({
       limit: request.nextUrl.searchParams.get("limit"),
@@ -95,8 +98,22 @@ export async function GET(request: NextRequest) {
     const active = data.filter((d: any) => d.is_active).length;
     const inactive = data.filter((d: any) => !d.is_active).length;
 
+    let localizedData: any[] = data;
+    try {
+      for (const key of ["district", "city"] as const) {
+        const nested = localizedData.map((r: any) => r[key]).filter((v: any) => v?.id);
+        if (!nested.length) continue;
+        const table = key === "district" ? "districts" : "cities";
+        const localizedNested = await localizeRecordFields<any>(nested, table, ["name"], lang);
+        const byId = new Map(localizedNested.map((n: any) => [n.id, n]));
+        localizedData = localizedData.map((r: any) => (r[key]?.id && byId.has(r[key].id) ? { ...r, [key]: byId.get(r[key].id) } : r));
+      }
+    } catch {
+      // keep original nested names on failure
+    }
+
     return apiOk({
-      locations: data,
+      locations: localizedData,
       summary: { total: count || 0, active, inactive },
     });
   } catch (error) {

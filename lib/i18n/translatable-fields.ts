@@ -81,6 +81,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "hr_department_name", mode: "translate" },
   ],
   customers: [
+    { field: "father_name", mode: "transliterate" },
+    { field: "first_name", mode: "transliterate" },
+    { field: "last_name", mode: "transliterate" },
     { field: "customer_name", mode: "transliterate" },
     { field: "company_name", mode: "transliterate" },
     { field: "contact_person", mode: "transliterate" },
@@ -89,6 +92,8 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "father_name", mode: "transliterate" },
   ],
   account_categories: [
+    { field: "description", mode: "translate" },
+    { field: "name", mode: "transliterate" },
     { field: "name", mode: "translate" },
     { field: "description", mode: "translate" },
   ],
@@ -102,6 +107,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   // ONE original row; these free-text fields get translated views via record_translations.
   // "View Original" bypasses localisation. Names transliterate, content translates.
   customer_inquiries: [
+    { field: "company_name", mode: "transliterate" },
+    { field: "contact_person", mode: "transliterate" },
+    { field: "customer_name", mode: "transliterate" },
     { field: "customer_name", mode: "transliterate" },
     { field: "company_name", mode: "transliterate" },
     { field: "contact_person", mode: "transliterate" },
@@ -114,22 +122,34 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   consignment: [
     { field: "party_name", mode: "transliterate" },
     { field: "title", mode: "translate" },
+    { field: "party_name", mode: "transliterate" },
+    { field: "title", mode: "translate" },
     { field: "notes", mode: "translate" },
   ],
   // ── HR masters (descriptive labels → translate) ──
-  hr_departments: [{ field: "name", mode: "translate" }],
-  hr_designations: [{ field: "title", mode: "translate" }],
-  hr_leave_types: [{ field: "name", mode: "translate" }],
-  hr_shifts: [{ field: "name", mode: "translate" }],
-  hr_holidays: [{ field: "name", mode: "translate" }],
+  hr_departments: [
+    { field: "description", mode: "translate" },
+    { field: "name", mode: "transliterate" },{ field: "name", mode: "translate" }],
+  hr_designations: [
+    { field: "description", mode: "translate" },
+    { field: "title", mode: "translate" },{ field: "title", mode: "translate" }],
+  hr_leave_types: [
+    { field: "name", mode: "transliterate" },{ field: "name", mode: "translate" }],
+  hr_shifts: [
+    { field: "name", mode: "transliterate" },{ field: "name", mode: "translate" }],
+  hr_holidays: [
+    { field: "name", mode: "transliterate" },{ field: "name", mode: "translate" }],
 
   // ── Temporary Purchase & Sales Bills Register (historical tracking only, NO accounting) ──
   temp_bill: [
+    { field: "goods_name", mode: "translate" },
+    { field: "party_name", mode: "transliterate" },
     { field: "party_name", mode: "transliterate" },
     { field: "goods_name", mode: "translate" },
     { field: "remarks", mode: "translate" },
   ],
   business_edit_invoices: [
+    { field: "party_name", mode: "transliterate" },
     { field: "party_name", mode: "transliterate" },
     { field: "destination", mode: "translate" },
     { field: "notes", mode: "translate" },
@@ -162,7 +182,8 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "branding_report_header", mode: "translate" },
     { field: "branding_report_footer", mode: "translate" },
   ],
-  clearing_agents: [{ field: "name", mode: "transliterate" }],
+  clearing_agents: [
+    { field: "contact_person", mode: "transliterate" },{ field: "name", mode: "transliterate" }],
   clearing_agent_branches: [{ field: "name", mode: "transliterate" }],
   banks: [
     { field: "bank_name", mode: "transliterate" },
@@ -240,7 +261,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   // ── Logistics / shipping (party & vessel names → transliterate; goods → translate) ──
   // Shipping-line MASTER (company name → transliterate). Distinct from the
   // *_records transaction tables below.
-  shipping_lines: [{ field: "name", mode: "transliterate" }],
+  shipping_lines: [
+    { field: "contact_person", mode: "transliterate" },
+    { field: "name", mode: "transliterate" },{ field: "name", mode: "transliterate" }],
   shipping_line_records: [
     { field: "shipping_line_name", mode: "transliterate" },
     { field: "vessel_name", mode: "transliterate" },
@@ -255,6 +278,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "description", mode: "translate" },
   ],
   purchase_loading_records: [
+    { field: "driver_name", mode: "transliterate" },
     { field: "carrier_name", mode: "transliterate" },
     // Country-to-Country Purchase — Transportation & Receiving.
     { field: "transport_company", mode: "transliterate" },
@@ -293,6 +317,14 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "truck_owner_name", mode: "transliterate" },
   ],
   trucks: [
+    { field: "owner_address", mode: "transliterate" },
+    { field: "owner_cnic_passport", mode: "transliterate" },
+    { field: "owner_name_ar", mode: "transliterate" },
+    { field: "owner_name_en", mode: "transliterate" },
+    { field: "owner_name_fa", mode: "transliterate" },
+    { field: "owner_name_ps", mode: "transliterate" },
+    { field: "owner_name_ur", mode: "transliterate" },
+    { field: "truck_name", mode: "transliterate" },
     { field: "driver_name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },
   ],
@@ -309,6 +341,11 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
 
   // ── Documents / communication (titles/bodies → translate; names → transliterate) ──
   office_documents: [
+    { field: "account_name", mode: "transliterate" },
+    { field: "company_name", mode: "transliterate" },
+    { field: "document_type", mode: "translate" },
+    { field: "person_account_name", mode: "transliterate" },
+    { field: "scanner_device_name", mode: "transliterate" },
     { field: "title", mode: "translate" },
     { field: "category", mode: "translate" },
     { field: "country_name", mode: "transliterate" },
@@ -410,6 +447,224 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "truck_driver_name", mode: "transliterate" },
     { field: "vessel_name", mode: "transliterate" },
     { field: "remarks", mode: "translate" },
+  ],
+
+  // ── Added 2026-09-13: 109-route localization backlog batch ──
+  ai_call_number_map: [
+    { field: "label", mode: "translate" },
+  ],
+  bill_expenses: [
+    { field: "party_name", mode: "transliterate" },
+  ],
+  business_edit_invoice_events: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  business_edit_invoice_lines: [
+    { field: "brand", mode: "translate" },
+    { field: "description", mode: "translate" },
+    { field: "goods_name", mode: "translate" },
+  ],
+  business_shipping_handovers: [
+    { field: "approved_by_name", mode: "transliterate" },
+  ],
+  clearing_agent_custom_entries: [
+    { field: "agent_name", mode: "transliterate" },
+    { field: "consignee_name", mode: "transliterate" },
+    { field: "consignor_name", mode: "transliterate" },
+    { field: "goods_description", mode: "translate" },
+  ],
+  clearing_payment_bills: [
+    { field: "agent_name", mode: "transliterate" },
+    { field: "port_name", mode: "transliterate" },
+  ],
+  consignment_container: [
+    { field: "vessel_name", mode: "transliterate" },
+  ],
+  consignment_container_good: [
+    { field: "goods_name", mode: "translate" },
+    { field: "unit_label", mode: "translate" },
+  ],
+  consignment_event: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  consignment_expense: [
+    { field: "description", mode: "translate" },
+  ],
+  consignment_sale: [
+    { field: "buyer_name", mode: "transliterate" },
+    { field: "goods_name", mode: "translate" },
+    { field: "unit_label", mode: "translate" },
+  ],
+  contract_register_audit: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  country_tax_settings: [
+    { field: "tax_name", mode: "transliterate" },
+  ],
+  crm_action_items: [
+    { field: "branch_name", mode: "transliterate" },
+    { field: "country_name", mode: "transliterate" },
+    { field: "party_name", mode: "transliterate" },
+    { field: "responsible_user_name", mode: "transliterate" },
+  ],
+  crm_followup_notes: [
+    { field: "user_name", mode: "transliterate" },
+  ],
+  customer_inquiry_attachments: [
+    { field: "name", mode: "transliterate" },
+  ],
+  customer_inquiry_events: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  daily_branch_summaries: [
+    { field: "branch_name", mode: "transliterate" },
+    { field: "country_name", mode: "transliterate" },
+  ],
+  daily_usd_rates: [
+    { field: "branch_name", mode: "transliterate" },
+    { field: "user_name", mode: "transliterate" },
+  ],
+  dgt_conversations: [
+    { field: "last_message_preview", mode: "translate" },
+    { field: "title", mode: "translate" },
+  ],
+  dgt_messages: [
+    { field: "body", mode: "translate" },
+  ],
+  document_intake_drafts: [
+    { field: "consumed_by_name", mode: "transliterate" },
+  ],
+  document_intake_events: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  document_intake_fields: [
+    { field: "validation_message", mode: "translate" },
+  ],
+  document_intake_jobs: [
+    { field: "uploaded_by_name", mode: "transliterate" },
+  ],
+  document_intake_line_items: [
+    { field: "brand", mode: "translate" },
+    { field: "description", mode: "translate" },
+  ],
+  document_intake_matches: [
+    { field: "label", mode: "translate" },
+  ],
+  document_type_registry: [
+    { field: "name", mode: "transliterate" },
+  ],
+  enterprise_audit_events: [
+    { field: "branch_name", mode: "transliterate" },
+    { field: "country_name", mode: "transliterate" },
+    { field: "party_name", mode: "transliterate" },
+    { field: "user_name", mode: "transliterate" },
+  ],
+  erp_documents: [
+    { field: "name", mode: "transliterate" },
+  ],
+  general_brand_print_settings: [
+    { field: "approved_by_label", mode: "translate" },
+    { field: "brand_name", mode: "translate" },
+    { field: "checked_by_label", mode: "translate" },
+    { field: "prepared_by_label", mode: "translate" },
+  ],
+  hr_checklist_templates: [
+    { field: "description", mode: "translate" },
+    { field: "task_name", mode: "transliterate" },
+  ],
+  hr_employee_checklist: [
+    { field: "task_name", mode: "transliterate" },
+  ],
+  hr_employee_kyc_documents: [
+    { field: "document_type", mode: "translate" },
+  ],
+  hr_employee_kyc_requirements: [
+    { field: "label", mode: "translate" },
+  ],
+  hr_employee_position_events: [
+    { field: "new_department", mode: "translate" },
+    { field: "new_designation", mode: "translate" },
+    { field: "prev_department", mode: "translate" },
+    { field: "prev_designation", mode: "translate" },
+  ],
+  hr_employee_transfers: [
+    { field: "new_department", mode: "translate" },
+    { field: "prev_department", mode: "translate" },
+  ],
+  hr_gratuity_policy: [
+    { field: "name", mode: "transliterate" },
+  ],
+  hr_payroll_run_events: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  hr_payroll_tax_config: [
+    { field: "name", mode: "transliterate" },
+  ],
+  inter_country_transfers: [
+    { field: "claim_description", mode: "translate" },
+    { field: "customer_party_name", mode: "transliterate" },
+  ],
+  office_assets: [
+    { field: "asset_name", mode: "transliterate" },
+  ],
+  sales_order_items: [
+    { field: "brand", mode: "translate" },
+    { field: "goods_name", mode: "translate" },
+    { field: "unit_name", mode: "translate" },
+  ],
+  settlement_transactions: [
+    { field: "party_name", mode: "transliterate" },
+  ],
+  shipping_agent_entries: [
+    { field: "agent_name", mode: "transliterate" },
+    { field: "city_name", mode: "transliterate" },
+    { field: "contact_person", mode: "transliterate" },
+    { field: "country_name", mode: "transliterate" },
+    { field: "shipping_line_name", mode: "transliterate" },
+  ],
+  super_admin_capital_accounts: [
+    { field: "description", mode: "translate" },
+  ],
+  transit_entries: [
+    { field: "branch_name", mode: "transliterate" },
+    { field: "country_name", mode: "transliterate" },
+    { field: "goods_name", mode: "translate" },
+    { field: "super_agent_name", mode: "transliterate" },
+  ],
+  uae_designated_zones: [
+    { field: "zone_name", mode: "transliterate" },
+  ],
+  uae_e_invoices: [
+    { field: "buyer_name", mode: "transliterate" },
+    { field: "document_type", mode: "translate" },
+  ],
+  uae_tax_audit_log: [
+    { field: "actor_name", mode: "transliterate" },
+  ],
+  uae_tax_entities: [
+    { field: "legal_name", mode: "transliterate" },
+    { field: "registered_name", mode: "transliterate" },
+  ],
+  uae_tax_lines: [
+    { field: "account_name", mode: "transliterate" },
+    { field: "description", mode: "translate" },
+    { field: "party_name", mode: "transliterate" },
+  ],
+  user_activity_events: [
+    { field: "module_name", mode: "transliterate" },
+    { field: "user_name", mode: "transliterate" },
+  ],
+  user_task_attachments: [
+    { field: "name", mode: "transliterate" },
+  ],
+  user_task_notifications: [
+    { field: "title", mode: "translate" },
+  ],
+  user_tasks: [
+    { field: "department", mode: "translate" },
+    { field: "description", mode: "translate" },
+    { field: "related_record_label", mode: "translate" },
+    { field: "title", mode: "translate" },
   ],
 };
 

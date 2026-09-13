@@ -5,6 +5,8 @@ import { guardHr, canRunPayroll } from "@/lib/services/hr-api";
 import { requireErpSession } from "@/lib/auth/session";
 import { hrPayrollService } from "@/lib/services/hr-payroll-service";
 import { hrPayrollPosting } from "@/lib/services/hr-payroll-posting";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,12 +20,24 @@ const bodySchema = z.object({
   reason: z.string().trim().max(2000).nullish(),
 });
 
-export async function GET(_r: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { scope } = await guardHr("read");
     const { id } = idSchema.parse(await ctx.params);
-    const data = await hrPayrollService.getRun(id, scope);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const data: any = await hrPayrollService.getRun(id, scope);
     if (!data) return apiError("NOT_FOUND", "Payroll run not found in your scope.", 404);
+    try {
+      if (data.run) {
+        [data.run] = await localizeJoinedNames<any>([data.run], lang, [
+          { idField: "country_id", nameField: "country_name", table: "countries" },
+          { idField: "country_branch_id", nameField: "country_branch_name", table: "country_branches", field: "name" },
+          { idField: "city_branch_id", nameField: "city_branch_name", table: "city_branches", field: "name" }
+        ]);
+      }
+    } catch {
+      // keep original names
+    }
     return apiOk(data);
   } catch (error) {
     return handleApiError(error);

@@ -3,6 +3,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,7 @@ export async function GET(request: NextRequest) {
 
     const scope = resolveReportScope(session);
     const sp = request.nextUrl.searchParams;
+    const lang = await getRequestLanguage(sp.get("lang"));
 
     const { effectiveCountryId, effectiveBranchId } = enforceScopeFilters(
       scope,
@@ -79,7 +82,17 @@ export async function GET(request: NextRequest) {
       `;
     });
 
-    const list = (rows ?? []).map((r: any) => ({
+    let localizedRows: any[] = rows ?? [];
+    try {
+      localizedRows = await localizeRecordFields<any>(localizedRows, "bill_expenses", ["party_name"], lang);
+      localizedRows = await localizeJoinedNames<any>(localizedRows, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" }
+      ]);
+    } catch {
+      // keep original names on failure
+    }
+
+    const list = localizedRows.map((r: any) => ({
       id: r.id,
       sourceModule: r.source_module,
       sourceId: r.source_id,

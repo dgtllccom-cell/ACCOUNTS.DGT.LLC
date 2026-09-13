@@ -4,6 +4,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   shipmentType: z.string().optional(),
@@ -142,8 +144,22 @@ export async function GET(request: NextRequest) {
       query = query.eq("created_by", parsed.salesmanId);
     }
 
-    const { data: dbData, error } = await query;
+    let { data: dbData, error } = await query;
     if (error) throw error;
+
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    try {
+      const branches = (dbData ?? []).map((r: any) => r.city_branches).filter((b: any) => b?.id);
+      if (branches.length) {
+        const localizedBranches = await localizeRecordFields<any>(branches, "city_branches", ["name"], lang);
+        const byId = new Map(localizedBranches.map((b: any) => [b.id, b.name]));
+        dbData = (dbData ?? []).map((r: any) => (r.city_branches?.id && byId.has(r.city_branches.id)
+          ? { ...r, city_branches: { ...r.city_branches, name: byId.get(r.city_branches.id) } }
+          : r)) as any;
+      }
+    } catch {
+      // keep original branch names
+    }
 
     interface GoodsEntry {
       goodsName?: string;
@@ -317,7 +333,7 @@ export async function GET(request: NextRequest) {
         };
       })
       .filter(r => {
-        const rawRow = dbData.find(d => d.id === r.id);
+        const rawRow = (dbData ?? []).find(d => d.id === r.id);
         if (!rawRow) return false;
         const isConfirmed = Number(rawRow.advance_paid || 0) > 0 ||
                             (rawRow.payment_status && rawRow.payment_status !== "pending" && rawRow.payment_status !== "draft") ||
@@ -372,7 +388,19 @@ export async function GET(request: NextRequest) {
         localQuery = localQuery.eq("created_by", parsed.salesmanId);
       }
 
-      const { data: localDbData, error: localErr } = await localQuery;
+      let { data: localDbData, error: localErr } = await localQuery;
+      try {
+        const branches = (localDbData ?? []).map((r: any) => r.city_branches).filter((b: any) => b?.id);
+        if (branches.length) {
+          const localizedBranches = await localizeRecordFields<any>(branches, "city_branches", ["name"], lang);
+          const byId = new Map(localizedBranches.map((b: any) => [b.id, b.name]));
+          localDbData = (localDbData ?? []).map((r: any) => (r.city_branches?.id && byId.has(r.city_branches.id)
+            ? { ...r, city_branches: { ...r.city_branches, name: byId.get(r.city_branches.id) } }
+            : r)) as any;
+        }
+      } catch {
+        // keep original branch names
+      }
       if (!localErr && localDbData) {
         localDbRecords = localDbData.map(row => {
           const partyName = row.supplier_name || "—";

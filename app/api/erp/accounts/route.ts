@@ -3,11 +3,14 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "read" });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const db = createSupabaseAdminClient() as any;
 
@@ -73,8 +76,14 @@ export async function GET(request: NextRequest) {
     }));
 
     const active = enrichedAccounts?.filter((a: any) => a.is_active).length || 0;
+    let localizedAccounts = enrichedAccounts || [];
+    try {
+      localizedAccounts = await localizeRecordFields<any>(localizedAccounts, "accounts", ["name"], lang);
+    } catch {
+      localizedAccounts = enrichedAccounts || [];
+    }
     return apiOk({
-      accounts: enrichedAccounts || [],
+      accounts: localizedAccounts,
       summary: {
         total: enrichedAccounts?.length || 0,
         active,

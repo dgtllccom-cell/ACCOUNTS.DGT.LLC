@@ -7,6 +7,8 @@ import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { businessShippingHandoverService, type HandoverScope } from "@/lib/services/business-shipping-handover-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 function scopeOf(session: any): HandoverScope {
   const global = session.isSuperAdmin || (session.roles ?? []).includes("super_admin_reports");
@@ -39,16 +41,27 @@ export async function GET(request: NextRequest) {
     const scope = scopeOf(session);
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || undefined;
+    const lang = await getRequestLanguage(searchParams.get("lang"));
     if (scope.isShippingScoped || searchParams.get("as") === "agent") {
       authorizeApiScope(session, { resource: "shipping_records", action: "read" });
-      const rows = await businessShippingHandoverService.listForAgent(scope, { status });
+      let rows: any[] = (await businessShippingHandoverService.listForAgent(scope, { status })) ?? [];
+      try {
+        rows = await localizeRecordFields<any>(rows, "business_shipping_handovers", ["approved_by_name"], lang);
+      } catch {
+        // keep original names
+      }
       return apiOk({ rows, view: "agent" });
     }
     authorizeApiScope(session, { resource: "purchases", action: "read" });
-    const rows = await businessShippingHandoverService.listForBusiness(scope, {
+    let rows: any[] = (await businessShippingHandoverService.listForBusiness(scope, {
       businessSourceId: searchParams.get("businessSourceId") || undefined,
       status,
-    });
+    })) ?? [];
+    try {
+      rows = await localizeRecordFields<any>(rows, "business_shipping_handovers", ["approved_by_name"], lang);
+    } catch {
+      // keep original names
+    }
     return apiOk({ rows, view: "business" });
   } catch (error) {
     return handleApiError(error);

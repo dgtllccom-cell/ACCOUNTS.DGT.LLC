@@ -4,6 +4,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   countryId: z.string().uuid().optional().or(z.literal("all")),
@@ -79,8 +81,29 @@ export async function GET(request: NextRequest) {
       query = query.eq("created_by", parsed.salesmanId);
     }
 
-    const { data: dbData, error } = await query;
+    let { data: dbData, error } = await query;
     if (error) throw error;
+
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    try {
+      const flat = (dbData ?? []).map((r: any) => ({
+        country_id: r.country_id,
+        countryNameFlat: (r.countries as any)?.name,
+        city_branch_id: r.city_branch_id,
+        cityBranchNameFlat: (r.city_branches as any)?.name
+      }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "country_id", nameField: "countryNameFlat", table: "countries", field: "name" },
+        { idField: "city_branch_id", nameField: "cityBranchNameFlat", table: "city_branches", field: "name" }
+      ]);
+      dbData = (dbData ?? []).map((r: any, i: number) => ({
+        ...r,
+        countries: r.countries ? { ...r.countries, name: localizedFlat[i].countryNameFlat } : r.countries,
+        city_branches: r.city_branches ? { ...r.city_branches, name: localizedFlat[i].cityBranchNameFlat } : r.city_branches
+      })) as any;
+    } catch {
+      // keep original names
+    }
 
     interface GoodsEntry {
       netWeight?: string | number;

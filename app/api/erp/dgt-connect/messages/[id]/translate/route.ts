@@ -3,18 +3,16 @@ import { apiOk, apiError } from "@/lib/api/response";
 import { requireDgtSession, dgtErrorResponse } from "@/lib/dgt-connect/route-helpers";
 import { getMessageTranslation } from "@/lib/dgt-connect/translate";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
-const LANGS = ["en", "ur", "ps", "fa", "ar"] as const;
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireDgtSession();
   if ("response" in auth) return auth.response;
   try {
     const { id } = await ctx.params;
-    const lang = (new URL(request.url).searchParams.get("lang") || auth.session.preferredLanguage || "en") as SupportedLanguage;
-    if (!LANGS.includes(lang as any)) return apiError("VALIDATION", "Unsupported language", 400);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || auth.session.preferredLanguage);
 
     // membership check — the caller must be a participant of the message's conversation
     const allowed = await withLocalPg(async (sql) => {

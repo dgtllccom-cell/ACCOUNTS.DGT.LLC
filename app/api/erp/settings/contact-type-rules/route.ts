@@ -5,6 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData } from "@/lib/api/supabase";
 import { uuidSchema } from "@/lib/api/erp-validation";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const ruleSchema = z.object({
   contactTypeKey: z.enum(["mobile", "phone", "whatsapp", "fax", "extension"]),
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createApiSupabaseClient();
 
-    const contactTypes = (await requireSupabaseData(
+    let contactTypes = (await requireSupabaseData(
       supabase
         .from("contact_types")
         .select("id, key, name, is_active, sort_order")
@@ -38,6 +40,13 @@ export async function GET(request: NextRequest) {
         .order("sort_order", { ascending: true })
         .limit(200)
     )) as any[];
+
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    try {
+      contactTypes = await localizeRecordFields<any>(contactTypes ?? [], "contact_types", ["name"], lang);
+    } catch {
+      // keep original contact type names
+    }
 
     let rules: any[] = [];
     let countryPhoneCode: string | null = null;

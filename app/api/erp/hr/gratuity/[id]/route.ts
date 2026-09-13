@@ -4,6 +4,8 @@ import { apiOk, apiError, handleApiError } from "@/lib/api/response";
 import { guardHr, canRunPayroll } from "@/lib/services/hr-api";
 import { requireErpSession } from "@/lib/auth/session";
 import { hrGratuityService } from "@/lib/services/hr-gratuity-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -16,12 +18,20 @@ const bodySchema = z.object({
   paymentDate: z.string().nullish(),
 });
 
-export async function GET(_r: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { scope } = await guardHr("read");
     const { id } = idSchema.parse(await ctx.params);
-    const row = await hrGratuityService.get(id, scope);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let row: any = await hrGratuityService.get(id, scope);
     if (!row) return apiError("NOT_FOUND", "Settlement not found in your scope.", 404);
+    try {
+      [row] = await localizeJoinedNames<any>([row], lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" }
+      ]);
+    } catch {
+      // keep original country name
+    }
     return apiOk({ settlement: row });
   } catch (error) {
     return handleApiError(error);

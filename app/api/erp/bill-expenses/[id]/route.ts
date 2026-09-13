@@ -3,6 +3,8 @@ import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     authorize(session, { resource: "reports", action: "read" });
     const { id } = await context.params;
     const scope = resolveReportScope(session);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const payload = await withLocalPg(async (sql) => {
       const [be] = await sql`
@@ -92,6 +95,35 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         sourceBill = cp ?? null;
       }
 
+      let localizedBe: any[] = [be];
+      try {
+        localizedBe = await localizeRecordFields<any>(localizedBe, "bill_expenses", ["party_name"], lang);
+        localizedBe = await localizeJoinedNames(localizedBe, lang, [
+          { idField: "country_id", nameField: "country_name", table: "countries" },
+          { idField: "country_branch_id", nameField: "country_branch_name", table: "country_branches" },
+          { idField: "city_branch_id", nameField: "city_branch_name", table: "city_branches" }
+        ]);
+      } catch {
+        localizedBe = [be];
+      }
+      const beLoc = localizedBe[0] ?? be;
+
+      if (sourceBill) {
+        try {
+          if (be.source_table === "local_purchases") {
+            [sourceBill] = await localizeRecordFields<any>([sourceBill], "local_purchases", ["supplier_name", "goods_name"], lang);
+          } else if (be.source_table === "sales_orders") {
+            [sourceBill] = await localizeRecordFields<any>([sourceBill], "sales_orders", ["customer_name"], lang);
+          } else if (be.source_table === "shipping_bl_records") {
+            [sourceBill] = await localizeRecordFields<any>([sourceBill], "shipping_bl_records", ["vessel_name", "shipping_line_name"], lang);
+          } else if (be.source_table === "clearing_payment_bills") {
+            [sourceBill] = await localizeRecordFields<any>([sourceBill], "clearing_payment_bills", ["agent_name", "port_name"], lang);
+          }
+        } catch {
+          // keep the original, unlocalized sourceBill on failure
+        }
+      }
+
       return {
         billExpense: {
           id: be.id,
@@ -103,14 +135,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           billDate: be.bill_date,
           transactionDate: be.transaction_date,
           countryId: be.country_id,
-          countryName: be.country_name,
+          countryName: beLoc.country_name,
           countryBranchId: be.country_branch_id,
-          countryBranchName: be.country_branch_name,
+          countryBranchName: beLoc.country_branch_name,
           cityBranchId: be.city_branch_id,
-          cityBranchName: be.city_branch_name || be.city_branch_alt_name,
-          branchLabel: be.city_branch_name || be.country_branch_name || be.country_name || "—",
+          cityBranchName: beLoc.city_branch_name || be.city_branch_alt_name,
+          branchLabel: beLoc.city_branch_name || beLoc.country_branch_name || beLoc.country_name || "—",
           partyAccountNo: be.party_account_no,
-          partyName: be.party_name,
+          partyName: beLoc.party_name,
           currency: be.currency,
           originalBillAmount: Number(be.original_bill_amount || 0),
           expenseTotal: Number(be.expense_total || 0),

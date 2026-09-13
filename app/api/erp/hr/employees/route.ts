@@ -2,6 +2,8 @@ import type { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { guardHr } from "@/lib/services/hr-api";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,7 +43,16 @@ export async function GET(request: NextRequest) {
         ORDER BY name ASC
         LIMIT 1000`;
     });
-    return apiOk({ rows: rows ?? [] });
+    const lang = await getRequestLanguage(sp.get("lang"));
+    let localizedRows: any[] = rows ?? [];
+    try {
+      localizedRows = await localizeJoinedNames(localizedRows, lang, [
+        { idField: "country_id", nameField: "country_name", table: "countries" }
+      ]);
+    } catch {
+      // keep original names
+    }
+    return apiOk({ rows: localizedRows });
   } catch (error) {
     return handleApiError(error);
   }

@@ -4,6 +4,8 @@ import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -69,8 +71,23 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     if (error) throw new Error(error.message);
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedMessages: any[] = messages ?? [];
+    try {
+      const flat = localizedMessages.map((m: any) => ({ sender_user_id: m.sender_profiles?.id, senderNameFlat: m.sender_profiles?.full_name }));
+      const localizedFlat = await localizeJoinedNames<any>(flat, lang, [
+        { idField: "sender_user_id", nameField: "senderNameFlat", table: "profiles", field: "full_name" }
+      ]);
+      localizedMessages = localizedMessages.map((m: any, i: number) => ({
+        ...m,
+        sender_profiles: m.sender_profiles ? { ...m.sender_profiles, full_name: localizedFlat[i].senderNameFlat } : m.sender_profiles
+      }));
+    } catch {
+      // keep original names
+    }
+
     return apiOk({
-      messages: messages ?? [],
+      messages: localizedMessages,
       pagination: { page, limit, total: count ?? 0, pages: Math.ceil((count ?? 0) / limit) }
     });
   } catch (error) {

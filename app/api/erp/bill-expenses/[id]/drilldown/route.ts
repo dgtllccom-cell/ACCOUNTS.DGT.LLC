@@ -3,6 +3,8 @@ import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     authorize(session, { resource: "reports", action: "read" });
     const { id } = await context.params;
     const scope = resolveReportScope(session);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const payload = await withLocalPg(async (sql) => {
       const [be] = await sql`
@@ -52,6 +55,16 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         limit 1
       `;
       if (!be) return { notFound: true } as const;
+
+      try {
+        const [localizedBe] = await localizeRecordFields<any>([be], "bill_expenses", ["party_name"], lang);
+        const [joinedBe] = await localizeJoinedNames<any>([localizedBe], lang, [
+          { idField: "country_id", nameField: "country_name", table: "countries" }
+        ]);
+        Object.assign(be, joinedBe);
+      } catch {
+        // keep original party/country names on failure
+      }
 
       if (scope.level === "country" && scope.countryId && be.country_id !== scope.countryId) {
         return { forbidden: true } as const;

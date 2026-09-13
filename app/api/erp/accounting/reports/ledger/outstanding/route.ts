@@ -4,6 +4,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 /**
  * Outstanding / Recovery ledger report.
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "reports", action: "read" });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const q = querySchema.parse({
       countryId: request.nextUrl.searchParams.get("countryId") ?? undefined,
@@ -80,6 +83,12 @@ export async function GET(request: NextRequest) {
 
     if (typeof q.overdueDays === "number") {
       rows = rows.filter((x: any) => (x.daysOutstanding ?? 0) >= q.overdueDays!);
+    }
+
+    try {
+      rows = await localizeRecordFields<any>(rows, "ledgers", ["name"], lang);
+    } catch {
+      // keep original names
     }
 
     const summary = {
