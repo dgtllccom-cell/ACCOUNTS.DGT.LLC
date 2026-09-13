@@ -101,21 +101,19 @@ export async function POST(request: NextRequest) {
   }
 
   const cleanPass = rawPassword.trim();
-  const MASTER_PASS = (process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || ["Chaman", "@", "9090"].join("")).trim();
-  const isMasterPassword =
-    cleanPass.toLowerCase() === "chaman@9090" ||
-    cleanPass === "Chaman@9090" ||
-    cleanPass === MASTER_PASS;
+  // Bootstrap authentication is an explicit, environment-provided DEV-only
+  // credential. Never accept a hard-coded/shared password or use it in a
+  // configured Supabase environment unless demo auth is explicitly enabled.
+  const isBootstrapPassword = BOOTSTRAP_ENABLED && cleanPass === BOOTSTRAP_PASSWORD;
+  const bootstrapAllowed = isBootstrapPassword && (isDemoAuthEnabled() || !isSupabaseConfigured());
 
   const isBootstrapSuperAdmin =
-    (BOOTSTRAP_ENABLED || isMasterPassword) &&
-    (isDemoAuthEnabled() || !isSupabaseConfigured() || isMasterPassword) &&
+    bootstrapAllowed &&
     (rawIdentifier.toLowerCase() === BOOTSTRAP_IDENTIFIER ||
      rawIdentifier.toLowerCase() === "superadmin" ||
      rawIdentifier.toUpperCase() === "SUPERADMIN" ||
      rawIdentifier.toLowerCase() === "superadmin@dgt.llc" ||
-     rawIdentifier.toLowerCase() === "asmatdgtllc@users.damaan.local") &&
-    (rawPassword === BOOTSTRAP_PASSWORD || isMasterPassword);
+     rawIdentifier.toLowerCase() === "asmatdgtllc@users.damaan.local");
 
   if (isBootstrapSuperAdmin) {
     await setTempSuperAdminSession({ remember: rememberMe });
@@ -130,7 +128,7 @@ export async function POST(request: NextRequest) {
      cleanLower === "shipping.line@dgt.llc" ||
      cleanLower === "shippingline" ||
      cleanLower === "shippingline@dgt.llc") &&
-    (isMasterPassword || (BOOTSTRAP_ENABLED && rawPassword === BOOTSTRAP_PASSWORD));
+    bootstrapAllowed;
 
   if (isShippingUser) {
     await setDirectUserSession({
@@ -244,39 +242,6 @@ export async function POST(request: NextRequest) {
   let userRoles: EnterpriseRole[] = [];
   let roleAssignments: any[] = [];
 
-  // 1B. Fallback city branch lookup if not yet found
-  if (!profileRecord) {
-    const cityKeywords: Record<string, { role: EnterpriseRole; code: string; name: string; id: string }> = {
-      chaman: { role: "city_branch_admin", code: "CHAMAN.BRANCH", name: "Chaman City Branch Admin", id: "e9f5a445-9780-4b83-b9ec-828d3d3d8f02" },
-      quetta: { role: "city_branch_admin", code: "QUETTA.BRANCH", name: "Quetta City Branch Admin", id: "ff270f91-3151-4dff-b0f1-515896ee26fd" },
-      dubai: { role: "city_branch_admin", code: "DUBAI.BRANCH", name: "Dubai City Branch Admin", id: "8f07f23e-fa25-4e37-bae5-40577f96e4c9" },
-      kandahar: { role: "city_branch_admin", code: "KANDAHAR.BRANCH", name: "Kandahar City Branch Admin", id: "c232a5fa-b2c4-4dfb-9c4e-30f769e63a34" },
-      bombay: { role: "city_branch_admin", code: "BOMBAY.BRANCH", name: "Bombay City Branch Admin", id: "ae58e5dc-a50f-4347-b885-13ddb4e6459d" },
-      jeddah: { role: "city_branch_admin", code: "JEDDAH.BRANCH", name: "Jeddah City Branch Admin", id: "00000000-0000-4000-8000-000000000010" },
-      karachi: { role: "city_branch_admin", code: "KARACHI.BRANCH", name: "Karachi Branch Admin", id: "00000000-0000-4000-8000-000000000011" },
-      kabul: { role: "city_branch_admin", code: "KABUL.BRANCH", name: "Kabul City Branch Admin", id: "de05214f-360d-47c4-8ed5-31339508ffa5" },
-      tehran: { role: "city_branch_admin", code: "TEHRAN.BRANCH", name: "Tehran City Branch Admin", id: "00000000-0000-4000-8000-000000000012" },
-      riyadh: { role: "city_branch_admin", code: "RIYADH.BRANCH", name: "Riyadh City Branch Admin", id: "00000000-0000-4000-8000-000000000013" },
-      pakistan: { role: "country_admin", code: "PAKISTAN.ADMIN", name: "Pakistan Country Admin", id: "409b050f-faf9-428f-9ec6-d9c8bc5a9dc2" },
-      usa: { role: "country_admin", code: "USA.ADMIN", name: "USA Country Admin", id: "00000000-0000-4000-8000-000000000014" },
-      uae: { role: "country_admin", code: "UAE.ADMIN", name: "UAE Country Admin", id: "c5bb3ddf-0781-41f7-b625-241a1c6babd0" },
-      shipping: { role: "agent_user", code: "SHIPPING", name: "Shipping Line Operator", id: "00000000-0000-4000-8000-000000000004" },
-      transport: { role: "staff_user", code: "TRANSPORT", name: "Transport Operator", id: "00000000-0000-4000-8000-000000000015" },
-    };
-
-    const matchedKey = Object.keys(cityKeywords).find((k) => cleanId.includes(k) || baseTerm.includes(k));
-    if (matchedKey && (isMasterPassword || cleanPass.toLowerCase() === "chaman@9090")) {
-      const info = cityKeywords[matchedKey];
-      profileRecord = {
-        id: info.id,
-        user_code: info.code,
-        full_name: info.name,
-        raw_password: "chaman@9090"
-      };
-      userRoles = [info.role];
-    }
-  }
-
   // 2. Fetch User Role Assignments if profile is found in DB
 
   if (profileRecord) {
@@ -339,15 +304,13 @@ export async function POST(request: NextRequest) {
   let authenticatedEmail: string | null = null;
 
   if (profileRecord) {
-    const hasRawPwMatch =
+    const hasRawPwMatch = legacyRawPwLoginEnabled() &&
       typeof profileRecord.raw_password === "string" &&
       profileRecord.raw_password.length > 0 &&
       (profileRecord.raw_password === rawPassword ||
-       profileRecord.raw_password.trim().toLowerCase() === cleanPass.toLowerCase() ||
-       isMasterPassword);
-    const hasBootstrapBypass =
-      (isDemoAuthEnabled() || isMasterPassword) && (rawPassword === BOOTSTRAP_PASSWORD || isMasterPassword);
-    if (hasRawPwMatch || hasBootstrapBypass || isMasterPassword) {
+       profileRecord.raw_password.trim().toLowerCase() === cleanPass.toLowerCase());
+    const hasBootstrapBypass = isBootstrapSuperAdmin;
+    if (hasRawPwMatch || hasBootstrapBypass) {
       isAuthenticated = true;
       authenticatedEmail = profileRecord.auth_email || (rawIdentifier.includes("@") ? rawIdentifier.toLowerCase() : `${cleanId}@dgt.llc`);
     }
@@ -361,7 +324,7 @@ export async function POST(request: NextRequest) {
           SELECT u.id, u.email
           FROM auth.users u
           WHERE (u.email ILIKE ${rawIdentifier} OR u.email ILIKE ${`${cleanId}@dgt.llc`} OR u.email ILIKE ${`${baseTerm}.branch@dgt.llc`} OR u.id = ${profileRecord?.id ?? null})
-            AND (u.encrypted_password = crypt(${rawPassword}, u.encrypted_password) OR ${isMasterPassword})
+            AND u.encrypted_password = crypt(${rawPassword}, u.encrypted_password)
           LIMIT 1;
         `;
         return rows[0] || null;
