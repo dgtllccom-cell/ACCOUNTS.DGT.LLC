@@ -2091,7 +2091,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   const isPwdVisible = Boolean(visiblePasswords[u.userId]);
 
                   return (
-                    <tr 
+              <tr
                       key={u.userId}
                       className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                     >
@@ -2407,363 +2407,560 @@ export default function SuperAdminAllUsersDirectoryPage() {
         </div>
       </div>
 
-      {/* ─── 6. INTERACTIVE PERMISSION MATRIX & DETAILS MODAL ─── */}
-      {selectedUser && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 print:hidden animate-in fade-in">
-          <div className="bg-card border border-border rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden text-foreground">
-            
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-lg">
-                  {selectedUser.fullName.substring(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base sm:text-lg font-black">{selectedUser.fullName}</h2>
-                    <span className="bg-indigo-500/30 text-indigo-200 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-400/30">
-                      {selectedUser.userCode}
-                    </span>
-                    <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-400/30 uppercase">
-                      {selectedUser.roleLabel}
-                    </span>
+      {/* ─── 6. USER RULES & FORM ALLOCATION MODAL (قواعد اور فارم تفویض) ─── */}
+      {selectedUser && (() => {
+        const allottedCount = Object.values(userPermissions).filter((p) => p.allowed).length;
+        const totalFormsCount = ALL_SYSTEM_FORMS.length;
+        const modalCategories = [
+          "All",
+          "Dashboards",
+          "New Entry",
+          "Accounting & Roznamcha",
+          "Trade & Purchase",
+          "Sales & Distribution",
+          "Shipping & Clearing",
+          "Communication & AI",
+          "Administration"
+        ];
+        const modalDisplayedForms = ALL_SYSTEM_FORMS.filter((form) => {
+          const matchesCategory = rulesCategoryFilter === "All" || form.category === rulesCategoryFilter;
+          const q = rulesSearchQuery.trim().toLowerCase();
+          const matchesQuery =
+            !q ||
+            form.name.toLowerCase().includes(q) ||
+            form.route.toLowerCase().includes(q) ||
+            form.category.toLowerCase().includes(q);
+          return matchesCategory && matchesQuery;
+        });
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 print:hidden animate-in fade-in">
+            <div className="bg-card border border-border rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden text-foreground">
+
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between border-b border-indigo-900/50">
+                <div className="flex items-center gap-3.5">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-950/50">
+                    <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <p className="text-xs text-indigo-200 mt-0.5">
-                    {selectedUser.email} • {selectedUser.branchName} ({selectedUser.countryName})
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-black tracking-tight">
+                        {th("User Rules & Form Allocation")}
+                      </h2>
+                      <span className="text-xs font-bold text-indigo-300">
+                        (قواعد اور فارم تفویض)
+                      </span>
+                    </div>
+                    <p className="text-xs text-indigo-200/80 mt-0.5">
+                      {th("Allocate forms, control menu appearance, and configure Read, Edit/Create, and Delete privileges.")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(null)}
+                  className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* ─── TOP SECTION: User Details & Live Allotment Card ("Upar user ka detail") ─── */}
+              <div className="bg-gradient-to-r from-slate-900/50 via-indigo-950/20 to-slate-900/50 p-4 border-b border-border">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-center">
+                  {/* User Profile Summary */}
+                  <div className="lg:col-span-8 flex items-start sm:items-center gap-3.5">
+                    <div className={cn(
+                      "h-12 w-12 rounded-2xl flex items-center justify-center font-black text-base shadow-md shrink-0",
+                      selectedUser.avatarColor || "bg-indigo-600 text-white"
+                    )}>
+                      {selectedUser.avatarInitials || selectedUser.fullName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-black text-foreground truncate">
+                          {selectedUser.fullName}
+                        </span>
+                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30">
+                          {selectedUser.userCode}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 uppercase">
+                          {selectedUser.roleLabel}
+                        </span>
+                        <span className={cn(
+                          "text-[9px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1",
+                          selectedUser.isActive ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
+                        )}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", selectedUser.isActive ? "bg-emerald-500" : "bg-rose-500")} />
+                          {selectedUser.isActive ? "Active Account" : "Inactive"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span className="font-mono">{selectedUser.email}</span>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <span>{selectedUser.branchName}</span>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Globe className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span>{selectedUser.countryName}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Live Allotment Indicator */}
+                  <div className="lg:col-span-4 bg-background/80 dark:bg-slate-900/80 border border-indigo-500/30 rounded-2xl p-3 flex items-center justify-between sm:justify-end gap-3 shadow-xs">
+                    <div className="text-left sm:text-right">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                        {th("Allotted in Menu")}
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-indigo-600 dark:text-indigo-400">
+                          {allottedCount}
+                        </span>
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          / {totalFormsCount} {th("Forms")}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedUser(null)}
-                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+              {/* Modal Navigation Tabs */}
+              <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-6 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab("permissions")}
+                  className={cn(
+                    "px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
+                    activeModalTab === "permissions"
+                      ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-background rounded-t-lg shadow-xs"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>{th("Rules & Form Allocation")} ({allottedCount} {th("Allotted")})</span>
+                </button>
 
-            {/* Modal Navigation Tabs */}
-            <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-6 pt-2">
-              <button
-                type="button"
-                onClick={() => setActiveModalTab("permissions")}
-                className={cn(
-                  "px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
-                  activeModalTab === "permissions"
-                    ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-background rounded-t-lg"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{th("Allowed Forms & Permission Matrix")} ({ALL_SYSTEM_FORMS.length} {th("Forms")})</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab("profile")}
+                  className={cn(
+                    "px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
+                    activeModalTab === "profile"
+                      ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-background rounded-t-lg shadow-xs"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  <span>{th("Branch & Identity Profile")}</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveModalTab("profile")}
-                className={cn(
-                  "px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
-                  activeModalTab === "profile"
-                    ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-background rounded-t-lg"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <UserCheck className="h-3.5 w-3.5" />
-                <span>{th("Branch, Identity & Security Vault")}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab("handover")}
+                  className={cn(
+                    "px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
+                    activeModalTab === "handover"
+                      ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-background rounded-t-lg shadow-xs"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>{th("A4 Official Slip")}</span>
+                </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveModalTab("handover")}
-                className={cn(
-                  "px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer",
-                  activeModalTab === "handover"
-                    ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-background rounded-t-lg"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Printer className="h-3.5 w-3.5" />
-                <span>{th("A4 Onboarding Slip")}</span>
-              </button>
-            </div>
+              {/* Modal Content Body */}
+              <div className="p-6 overflow-y-auto max-h-[58vh] space-y-4">
 
-            {/* Modal Content Body */}
-            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
-              
-              {/* TAB 1: PERMISSION MATRIX */}
-              {activeModalTab === "permissions" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/40 p-3.5 rounded-2xl border border-border">
-                    <div>
-                      <h3 className="text-xs font-black uppercase text-foreground flex items-center gap-2">
-                        <span>{th("Form Level Authorization & Permission Grants")}</span>
-                        <span className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded">
-                          {Object.values(userPermissions).filter((p) => p.allowed).length} / {ALL_SYSTEM_FORMS.length} {th("Allowed")}
-                        </span>
-                      </h3>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {th("Toggle access on/off for specific ERP forms, and adjust Read/Write/Delete privileges.")}
-                      </p>
+                {/* TAB 1: RULES & FORM ALLOCATION */}
+                {activeModalTab === "permissions" && (
+                  <div className="space-y-4">
+                    {/* Filter & Action Controls Bar */}
+                    <div className="bg-muted/40 p-3.5 rounded-2xl border border-border space-y-3">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        {/* Search Input */}
+                        <div className="relative flex-1 max-w-md">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="text"
+                            value={rulesSearchQuery}
+                            onChange={(e) => setRulesSearchQuery(e.target.value)}
+                            placeholder={th("Search ERP forms or routes...")}
+                            className="w-full h-8.5 pl-9 pr-3 text-xs rounded-xl border border-input bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          {rulesSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setRulesSearchQuery("")}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Presets Action Buttons */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleGrantAll}
+                            className="h-8 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl cursor-pointer flex items-center gap-1"
+                            title={th("Allot all forms with full access")}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{th("Allot All")}</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleViewOnlyAll}
+                            className="h-8 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-xl cursor-pointer flex items-center gap-1"
+                            title={th("Set all forms to View Only (No Edit or Delete)")}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>{th("View Only")}</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleRevokeAll}
+                            className="h-8 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl cursor-pointer flex items-center gap-1"
+                            title={th("Close all forms and remove from menu")}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>{th("Close All")}</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Category Pills Filter */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                        {modalCategories.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setRulesCategoryFilter(cat)}
+                            className={cn(
+                              "px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer",
+                              rulesCategoryFilter === cat
+                                ? "bg-indigo-600 text-white shadow-xs"
+                                : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted border border-border"
+                            )}
+                          >
+                            {cat === "All" ? th("All Categories") : th(cat)}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleGrantAll}
-                        className="h-8 text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl cursor-pointer"
-                      >
-                        {th("Grant All")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleRevokeAll}
-                        className="h-8 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl cursor-pointer"
-                      >
-                        {th("Restrict All")}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Permissions Table by Category */}
-                  <div className="overflow-hidden rounded-2xl border border-border">
-                    <table className="w-full text-xs text-left">
-                      <thead className="bg-muted/70 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
-                        <tr>
-                          <th className="px-4 py-2.5">{th("Form / Module")}</th>
-                          <th className="px-3 py-2.5">{th("Category")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("Access Status")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("Read")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("Write")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("Delete")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {ALL_SYSTEM_FORMS.map((form) => {
-                          const p = userPermissions[form.id] || { allowed: false, read: false, write: false, delete: false };
-                          return (
-                            <tr key={form.id} className={cn("hover:bg-muted/30 transition-colors", !p.allowed && "opacity-60 bg-muted/10")}>
-                              <td className="px-4 py-2.5 font-bold text-foreground">
-                                <div>{th(form.name)}</div>
-                                <div className="text-[10px] font-mono text-muted-foreground font-normal">{form.route}</div>
-                              </td>
-                              <td className="px-3 py-2.5">
-                                <span className="inline-block rounded px-2 py-0.5 text-[9px] font-extrabold bg-muted text-muted-foreground border border-border">
-                                  {th(form.category)}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() => toggleFormAccess(form.id)}
-                                  className={cn(
-                                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                                    p.allowed
-                                      ? "bg-emerald-600 text-white shadow-xs"
-                                      : "bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"
-                                  )}
-                                >
-                                  {p.allowed ? th("Allowed") : th("Restricted")}
-                                </button>
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={p.read}
-                                  disabled={!p.allowed}
-                                  onChange={() => togglePermFlag(form.id, "read")}
-                                  className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-30"
-                                />
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={p.write}
-                                  disabled={!p.allowed}
-                                  onChange={() => togglePermFlag(form.id, "write")}
-                                  className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-30"
-                                />
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={p.delete}
-                                  disabled={!p.allowed}
-                                  onChange={() => togglePermFlag(form.id, "delete")}
-                                  className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-30"
-                                />
+                    {/* Rules Table ("Neeche rules aayega") */}
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-muted/70 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
+                          <tr>
+                            <th className="px-4 py-3">{th("Form / Module & URL")}</th>
+                            <th className="px-3 py-3">{th("Category")}</th>
+                            <th className="px-3 py-3 text-center">{th("Form Allocation (Menu)")}</th>
+                            <th className="px-3 py-3 text-center">{th("Read")} (دیکھنا)</th>
+                            <th className="px-3 py-3 text-center">{th("Edit / Create")} (ترمیم)</th>
+                            <th className="px-3 py-3 text-center">{th("Delete")} (حذف)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {modalDisplayedForms.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-xs">
+                                {th("No matching forms found for the selected category or search filter.")}
                               </td>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+                          ) : (
+                            modalDisplayedForms.map((form) => {
+                              const p = userPermissions[form.id] || { allowed: false, read: false, write: false, delete: false };
+                              return (
+                                <tr>
+                                  key={form.id}
+                                  className={cn(
+                                    "hover:bg-muted/30 transition-colors",
+                                    !p.allowed && "opacity-50 bg-muted/10"
+                                  )}
+                                >
+                                  {/* Form name and route */}
+                                  <td className="px-4 py-2.5 font-bold text-foreground">
+                                    <div className="flex items-center gap-1.5">
+                                      <span>{th(form.name)}</span>
+                                    </div>
+                                    <div className="text-[10px] font-mono text-muted-foreground font-normal">
+                                      {form.route}
+                                    </div>
+                                  </td>
 
-              {/* TAB 2: PROFILE & CREDENTIALS */}
-              {activeModalTab === "profile" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
-                      <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <Users className="h-4 w-4" /> {th("Identity & Role Assignment")}
-                      </h4>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">{th("User Code")}:</span>
-                          <span className="font-mono font-bold text-foreground">{selectedUser.userCode}</span>
-                        </div>
-                        <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">{th("Full Name")}:</span>
-                          <span className="font-bold text-foreground">{selectedUser.fullName}</span>
-                        </div>
-                        <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">{th("Primary Role")}:</span>
-                          <span className="font-black text-indigo-600">{selectedUser.roleLabel}</span>
-                        </div>
-                        <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">{th("Assigned Country")}:</span>
-                          <span className="font-bold text-foreground">{selectedUser.countryName}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{th("Assigned Branch")}:</span>
-                          <span className="font-bold text-foreground">{selectedUser.branchName}</span>
-                        </div>
-                      </div>
+                                  {/* Category pill */}
+                                  <td className="px-3 py-2.5">
+                                    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-extrabold bg-muted text-muted-foreground border border-border">
+                                      {th(form.category)}
+                                    </span>
+                                  </td>
+
+                                  {/* Allocation Toggle Button */}
+                                  <td className="px-3 py-2.5 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleFormAccess(form.id)}
+                                      className={cn(
+                                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1",
+                                        p.allowed
+                                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                          : "bg-muted hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground"
+                                      )}
+                                      title={p.allowed ? th("Form is allotted to this user's menu") : th("Form is closed and hidden from menu")}
+                                    >
+                                      {p.allowed ? (
+                                        <>
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          <span>{th("Allotted")}</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <X className="w-3 h-3" />
+                                          <span>{th("Closed")}</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  </td>
+
+                                  {/* Read Permission Checkbox */}
+                                  <td className="px-3 py-2.5 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={p.read}
+                                      disabled={!p.allowed}
+                                      onChange={() => togglePermFlag(form.id, "read")}
+                                      className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-30"
+                                      title={th("Allow user to view and read records in this form")}
+                                    />
+                                  </td>
+
+                                  {/* Write / Edit Permission Checkbox */}
+                                  <td className="px-3 py-2.5 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={p.write}
+                                      disabled={!p.allowed}
+                                      onChange={() => togglePermFlag(form.id, "write")}
+                                      className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-30"
+                                      title={th("Allow user to create and edit records in this form")}
+                                    />
+                                  </td>
+
+                                  {/* Delete Permission Checkbox */}
+                                  <td className="px-3 py-2.5 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={p.delete}
+                                      disabled={!p.allowed}
+                                      onChange={() => togglePermFlag(form.id, "delete")}
+                                      className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-30"
+                                      title={th("Allow user to delete records in this form")}
+                                    />
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
                     </div>
+                  </div>
+                )}
 
-                    <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
-                      <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <KeyRound className="h-4 w-4" /> {th("Credentials & Access Vault")}
-                      </h4>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">{th("Vault Reference")}:</span>
-                          <span className="font-mono font-bold text-foreground">{selectedUser.passwordVaultRef}</span>
-                        </div>
-                        <div className="flex justify-between pb-1 border-b border-border">
-                          <span className="text-muted-foreground">{th("Login Email")}:</span>
-                          <span className="font-mono font-bold text-foreground">{selectedUser.email}</span>
-                        </div>
-                        <div className="flex justify-between pb-1 border-b border-border items-center">
-                          <span className="text-muted-foreground">{th("Access Password")}:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-                              {selectedUser.passwordKey || "••••••••"}
-                            </span>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenPasswordModal(selectedUser)}
-                              className="h-6 px-2 text-[10px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1"
-                            >
-                              <KeyRound className="w-3 h-3" />
-                              <span>{th("Change")}</span>
-                            </Button>
+                {/* TAB 2: PROFILE & CREDENTIALS */}
+                {activeModalTab === "profile" && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
+                        <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                          <Users className="h-4 w-4" /> {th("Identity & Role Assignment")}
+                        </h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between pb-1 border-b border-border">
+                            <span className="text-muted-foreground">{th("User Code")}:</span>
+                            <span className="font-mono font-bold text-foreground">{selectedUser.userCode}</span>
+                          </div>
+                          <div className="flex justify-between pb-1 border-b border-border">
+                            <span className="text-muted-foreground">{th("Full Name")}:</span>
+                            <span className="font-bold text-foreground">{selectedUser.fullName}</span>
+                          </div>
+                          <div className="flex justify-between pb-1 border-b border-border">
+                            <span className="text-muted-foreground">{th("Primary Role")}:</span>
+                            <span className="font-black text-indigo-600">{selectedUser.roleLabel}</span>
+                          </div>
+                          <div className="flex justify-between pb-1 border-b border-border">
+                            <span className="text-muted-foreground">{th("Assigned Country")}:</span>
+                            <span className="font-bold text-foreground">{selectedUser.countryName}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{th("Assigned Branch")}:</span>
+                            <span className="font-bold text-foreground">{selectedUser.branchName}</span>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">{th("Direct Login URL")}:</span>
-                          <span className="font-mono text-[10px] text-blue-600 truncate max-w-[180px]">{selectedUser.loginUrl}</span>
+                      </div>
+
+                      <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
+                        <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                          <KeyRound className="h-4 w-4" /> {th("Credentials & Access Vault")}
+                        </h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between pb-1 border-b border-border">
+                            <span className="text-muted-foreground">{th("Vault Reference")}:</span>
+                            <span className="font-mono font-bold text-foreground">{selectedUser.passwordVaultRef}</span>
+                          </div>
+                          <div className="flex justify-between pb-1 border-b border-border">
+                            <span className="text-muted-foreground">{th("Login Email")}:</span>
+                            <span className="font-mono font-bold text-foreground">{selectedUser.email}</span>
+                          </div>
+                          <div className="flex justify-between pb-1 border-b border-border items-center">
+                            <span className="text-muted-foreground">{th("Access Password")}:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
+                                {selectedUser.passwordKey || "••••••••"}
+                              </span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenPasswordModal(selectedUser)}
+                                className="h-6 px-2 text-[10px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1"
+                              >
+                                <KeyRound className="w-3 h-3" />
+                                <span>{th("Change")}</span>
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">{th("Direct Login URL")}:</span>
+                            <span className="font-mono text-[10px] text-blue-600 truncate max-w-[180px]">{selectedUser.loginUrl}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* TAB 3: A4 ONBOARDING SLIP */}
-              {activeModalTab === "handover" && (
-                <div className="space-y-4 flex flex-col items-center">
-                  <div className="bg-white text-slate-900 w-full max-w-xl p-6 rounded-2xl shadow-md border border-slate-200 font-sans space-y-4">
-                    <div className="flex items-center justify-between border-b pb-3">
-                      <div>
-                        <h4 className="text-sm font-black text-slate-900">{brandLine}</h4>
-                        <p className="text-[10px] font-bold text-indigo-700 uppercase">{th("OFFICIAL EMPLOYEE ACCESS SLIP")}</p>
+                {/* TAB 3: A4 ONBOARDING SLIP */}
+                {activeModalTab === "handover" && (
+                  <div className="space-y-4 flex flex-col items-center">
+                    <div className="bg-white text-slate-900 w-full max-w-xl p-6 rounded-2xl shadow-md border border-slate-200 font-sans space-y-4">
+                      <div className="flex items-center justify-between border-b pb-3">
+                        <div>
+                          <h4 className="text-sm font-black text-slate-900">{brandLine}</h4>
+                          <p className="text-[10px] font-bold text-indigo-700 uppercase">{th("OFFICIAL EMPLOYEE ACCESS SLIP")}</p>
+                        </div>
+                        <div className="text-right text-[9px] font-mono text-slate-500">
+                          Date: <span suppressHydrationWarning>{new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span>
+                        </div>
                       </div>
-                      <div className="text-right text-[9px] font-mono text-slate-500">
-                        Date: <span suppressHydrationWarning>{new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold block">{th("EMPLOYEE / OFFICER NAME")}</span>
+                          <span className="font-bold text-slate-900">{selectedUser.fullName}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold block">{th("USER CODE")}</span>
+                          <span className="font-mono font-bold text-slate-900">{selectedUser.userCode}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold block">{th("ROLE & JURISDICTION")}</span>
+                          <span className="font-bold text-indigo-700">{selectedUser.roleLabel}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-bold block">{th("BRANCH LOCATION")}</span>
+                          <span className="font-bold text-slate-900">{selectedUser.branchName}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-[10px] text-slate-500 font-bold block">{th("LOGIN USERNAME / EMAIL")}</span>
+                          <span className="font-mono font-bold text-slate-900 break-all bg-slate-50 p-1.5 rounded border border-slate-200 block">{selectedUser.email}</span>
+                        </div>
+                        <div className="col-span-2 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200">
+                          <span className="text-[10px] text-emerald-800 font-bold block">{th("INITIAL ACCESS PASSWORD")}</span>
+                          <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || th("Not set in vault")}</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-200 flex justify-between text-[9px] text-slate-500 font-medium">
+                        <span>{th("Authorized by")}: {sess?.user?.fullName || sess?.fullName || sess?.user?.email || "—"}</span>
+                        <span>{th("Generated")}: {currentTime || "—"}</span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">{th("EMPLOYEE / OFFICER NAME")}</span>
-                        <span className="font-bold text-slate-900">{selectedUser.fullName}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">{th("USER CODE")}</span>
-                        <span className="font-mono font-bold text-slate-900">{selectedUser.userCode}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">{th("ROLE & JURISDICTION")}</span>
-                        <span className="font-bold text-indigo-700">{selectedUser.roleLabel}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">{th("BRANCH LOCATION")}</span>
-                        <span className="font-bold text-slate-900">{selectedUser.branchName}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-[10px] text-slate-500 font-bold block">{th("LOGIN USERNAME / EMAIL")}</span>
-                        <span className="font-mono font-bold text-slate-900 break-all bg-slate-50 p-1.5 rounded border border-slate-200 block">{selectedUser.email}</span>
-                      </div>
-                      <div className="col-span-2 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200">
-                        <span className="text-[10px] text-emerald-800 font-bold block">{th("INITIAL ACCESS PASSWORD")}</span>
-                        <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || th("Not set in vault")}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-200 flex justify-between text-[9px] text-slate-500 font-medium">
-                      <span>{th("Authorized by")}: {sess?.user?.fullName || sess?.fullName || sess?.user?.email || "—"}</span>
-                      <span>{th("Generated")}: {currentTime || "—"}</span>
-                    </div>
+                    <Button
+                      onClick={() => { setPrintModalUser(selectedUser); }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl cursor-pointer shadow-xs"
+                    >
+                      <Printer className="h-3.5 w-3.5 mr-1.5" />
+                      {th("Open Official Print Preview")}
+                    </Button>
                   </div>
+                )}
 
+              </div>
+
+              {/* Modal Footer */}
+              <div className="border-t border-border bg-muted/20 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Shield className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span>
+                    {th("Allotted Forms")}: <strong className="text-foreground">{allottedCount}</strong> / {totalFormsCount} • {th("Unallotted forms are automatically hidden from this user's sidebar menu.")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
-                    onClick={() => { setPrintModalUser(selectedUser); }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl cursor-pointer shadow-xs"
+                    variant="outline"
+                    onClick={() => setSelectedUser(null)}
+                    className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                   >
-                    <Printer className="h-3.5 w-3.5 mr-1.5" />
-                    {th("Open Official Print Preview")}
+                    {th("Cancel")}
+                  </Button>
+                  <Button
+                    onClick={handleSaveUserPermissions}
+                    disabled={savingPerms}
+                    className="h-9 px-4 text-xs font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-60"
+                  >
+                    {savingPerms ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>{th("Saving Rules...")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>{th("Save Rules & Update Navigation Menu")}</span>
+                      </>
+                    )}
                   </Button>
                 </div>
-              )}
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="border-t border-border bg-muted/20 px-6 py-3.5 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {th("All changes to permissions are logged in the ERP security audit ledger.")}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedUser(null)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
-                >
-                  {th("Cancel")}
-                </Button>
-                <Button
-                  onClick={handleSaveUserPermissions}
-                  disabled={savingPerms}
-                  className="h-9 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-60"
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  <span>{savingPerms ? th("Saving") : th("Save Permission Grants")}</span>
-                </Button>
               </div>
-            </div>
 
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ─── 7. A4 PRINT MODAL PREVIEW (Batch or Single User) ─── */}
       {(showBatchPrint || printModalUser) && (
