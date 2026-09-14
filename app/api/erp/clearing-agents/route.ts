@@ -37,12 +37,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    let session = null;
-    try {
-      session = await requireErpSession();
-    } catch {
-      // allow fallback userId if unauthenticated demo
-    }
+    // Was fully anonymous ("allow fallback userId if unauthenticated demo") —
+    // no permission string exists yet for this resource to gate on safely
+    // without guessing which roles should be excluded, so the minimal,
+    // non-breaking fix is requiring a real session, matching every other
+    // creation endpoint in this codebase.
+    const session = await requireErpSession();
 
     const body = await request.json();
     if (!body?.name || !String(body.name).trim()) {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       clearingAgentId,
       { name: body.name },
       body.originalLanguage || "en",
-      session?.userId ?? null
+      session.userId
     );
 
     return apiCreated({ clearingAgentId });
