@@ -205,6 +205,23 @@ export function DailyExchangeRateManager() {
     return [...new Set(rates.map((rate) => rate.branch_name).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b));
   }, [rates]);
 
+  // Countries in this session's own scope that have NO active (non-superseded)
+  // rate dated today — these still need today's rate approved before any
+  // cross-currency posting against them is trustworthy.
+  const countriesPendingTodayRate = useMemo(() => {
+    const today = isoToday();
+    const scopedCountryIds = sessionInfo?.scopes?.isSuperAdmin
+      ? null
+      : sessionInfo?.scopes?.countryIds ?? null;
+    const scopedCountries = scopedCountryIds
+      ? countries.filter((c) => scopedCountryIds.includes(c.id))
+      : countries;
+    const haveTodayRate = new Set(
+      rates.filter((r) => r.rate_date === today && !r.superseded_at).map((r) => r.country_id)
+    );
+    return scopedCountries.filter((c) => !haveTodayRate.has(c.id));
+  }, [countries, rates, sessionInfo]);
+
   useEffect(() => {
     if (!selectedCountryId || !selectedCountry) return;
     const existingRate = rates.find(r => r.country_id === selectedCountryId);
@@ -402,6 +419,20 @@ export function DailyExchangeRateManager() {
           </Button>
         </div>,
         actionsSlot
+      )}
+
+      {/* Today's-rate pending alert — prominent red until every scoped country has
+          an approved rate dated today, then it disappears (no banner = up to date). */}
+      {!loading && countriesPendingTodayRate.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-red-400 bg-red-50 px-4 py-3 shadow-sm dark:border-red-800 dark:bg-red-950/40">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+          <span className="text-xs font-black uppercase tracking-wide text-red-700 dark:text-red-300">
+            {th("Today's Exchange Rate Pending")}
+          </span>
+          <span className="text-[11px] font-semibold text-red-600/90 dark:text-red-400/90">
+            {countriesPendingTodayRate.map((c) => c.name).join(", ")}
+          </span>
+        </div>
       )}
 
       {/* Main 2-Column Split Workspace (Left: 4 Cols Form | Right: 8 Cols Expanded Super Admin Table) */}

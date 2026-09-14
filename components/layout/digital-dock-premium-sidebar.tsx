@@ -188,16 +188,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    key: "ledgers",
-    label: "Ledgers",
-    icon: BookOpen,
-    children: [
-      { label: "Detailed Ledger Statement", href: "/dashboard/ledger/detailed", icon: FileText },
-      { label: "Ledger General Report", href: "/dashboard/ledger/general-report", icon: FileBarChart },
-      { label: "Outstanding Ledgers Report", href: "/dashboard/ledger/outstanding", icon: FileSpreadsheet },
-    ],
-  },
-  {
     key: "daily-payment",
     label: "Daily Payment Entry",
     icon: FileText,
@@ -227,6 +217,22 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       },
       { label: "Daily Operational Expenses", href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
       { label: "Office / Home Expenses Bill", href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    key: "daily-exchange-rate",
+    label: "Daily Exchange Rate",
+    icon: RefreshCw,
+    href: "/dashboard/reports/exchange-rate",
+  },
+  {
+    key: "ledgers",
+    label: "Ledgers",
+    icon: BookOpen,
+    children: [
+      { label: "Detailed Ledger Statement", href: "/dashboard/ledger/detailed", icon: FileText },
+      { label: "Ledger General Report", href: "/dashboard/ledger/general-report", icon: FileBarChart },
+      { label: "Outstanding Ledgers Report", href: "/dashboard/ledger/outstanding", icon: FileSpreadsheet },
     ],
   },
   {
@@ -355,7 +361,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Banks & Bank Accounts", href: "/dashboard/settings/bank", icon: Landmark },
       { label: "Bank Cheque Roznamcha", href: "/dashboard/roznamcha/reports/bank", icon: Receipt },
       { label: "Money Exchange (Currency Changer)", href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
-      { label: "Daily Exchange Rates (Intraday)", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
       { label: "Country Investments", href: "/dashboard/super-admin/investments", icon: TrendingUp },
     ],
   },

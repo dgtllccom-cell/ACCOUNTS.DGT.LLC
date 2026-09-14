@@ -2872,6 +2872,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "WAREHOUSE TRANSFER QUEUE": { ur: "گودام منتقلی قطار", ar: "قائمة نقل المستودع", fa: "صف انتقال انبار", ps: "د ګدام لېږد قطار" },
   "LOCAL PURCHASE LOADING QUEUE": { ur: "لوکل خریداری لوڈنگ قطار", ar: "قائمة تحميل الشراء المحلي", fa: "صف بارگیری خرید محلی", ps: "د سیمه‌ييز پیرودنې د بار کولو قطار" },
   "EXPORT HANDOVER QUEUE": { ur: "برآمدی حوالگی قطار", ar: "قائمة تسليم التصدير", fa: "صف تحویل صادرات", ps: "د صادراتو د سپارلو قطار" },
+  "TODAY'S EXCHANGE RATE PENDING": { ur: "آج کی شرح تبادلہ زیر التواء ہے", ar: "سعر الصرف لهذا اليوم قيد الانتظار", fa: "نرخ ارز امروز در انتظار تایید است", ps: "د نن ورځې د تبادلې نرخ پاتې دی" },
+  "DAILY EXCHANGE RATE": { ur: "روزانہ شرح تبادلہ", ar: "سعر الصرف اليومي", fa: "نرخ ارز روزانه", ps: "ورځنی د تبادلې نرخ" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
