@@ -30,6 +30,16 @@ import {
   Warehouse,
   Wallet,
   CreditCard,
+  Ship,
+  Globe2,
+  Filter,
+  MoreVertical,
+  Calendar,
+  Layers,
+  Scale,
+  Sparkles,
+  ChevronDown,
+  Trash2,
   X
 } from "lucide-react";
 
@@ -48,6 +58,13 @@ import { ShippingLinePicker } from "@/features/shipping/components/shipping-line
 import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { listCities } from "@/features/locations/location-api";
+import {
+  BranchScopeDropdown,
+  type BranchScopeValue,
+  type BranchScopeCountry,
+  type BranchScopeCountryBranch,
+  type BranchScopeCityBranch
+} from "@/features/purchases/components/branch-scope-dropdown";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -602,6 +619,7 @@ export function CustomerOrderManagementView() {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const userContext = useBranchUserContext();
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [step1SubStep, setStep1SubStep] = useState<"1A" | "1B" | "1C">("1A");
   const [orders, setOrders] = useState<ClearingCustomerOrderRow[]>([]);
@@ -612,8 +630,8 @@ export function CustomerOrderManagementView() {
   const [ports, setPorts] = useState<PortRow[]>([]);
   const [clearingAgents, setClearingAgents] = useState<ClearingAgentRow[]>([]);
   const [shippingLines, setShippingLines] = useState<ShippingLineRow[]>([]);
-  const [countryBranches, setCountryBranches] = useState<{ id: string; name: string; countryId: string }[]>([]);
-  const [cityBranches, setCityBranches] = useState<{ id: string; name: string; countryBranchId: string }[]>([]);
+  const [countryBranches, setCountryBranches] = useState<{ id: string; name: string; countryId: string; code?: string | null }[]>([]);
+  const [cityBranches, setCityBranches] = useState<{ id: string; name: string; countryBranchId: string; code?: string | null }[]>([]);
   const [assignableUsers, setAssignableUsers] = useState<{ id: string; name: string }[]>([]);
   const [loadingCities, setLoadingCities] = useState<CityRow[]>([]);
   const [receivingCities, setReceivingCities] = useState<CityRow[]>([]);
@@ -622,6 +640,23 @@ export function CustomerOrderManagementView() {
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [approvalActionOrderId, setApprovalActionOrderId] = useState<string | null>(null);
+  const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
+  const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
+
+  // Enterprise Branch Scope Hierarchy
+  const [branchScope, setBranchScope] = useState<BranchScopeValue>({
+    countryId: "",
+    countryBranchId: "",
+    cityBranchId: ""
+  });
+
+  // Table filters
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [modeFilter, setModeFilter] = useState<string>("all");
+  const [movementFilter, setMovementFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const [filterState, setFilterState] = useState<SmartFilterState>({
     query: "",
     country: "all",
@@ -639,6 +674,53 @@ export function CustomerOrderManagementView() {
   useEffect(() => {
     void fetchInitialData();
   }, []);
+
+  // Check URL query parameters for ?create=true or ?orderId=
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("create") === "true") {
+        setFormData({ ...EMPTY_FORM });
+        setPartySelections(emptyPartyState());
+        setEditingOrderId(null);
+        setCurrentStep(1);
+        setStep1SubStep("1A");
+        setIsFormOpen(true);
+      }
+    }
+  }, []);
+
+  // Listen for click-outside to close active action dropups
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveActionMenuId(null);
+      setActionMenuAnchor(null);
+      setIsMoreActionsOpen(false);
+    };
+    const handleScroll = () => {
+      if (activeActionMenuId) {
+        setActiveActionMenuId(null);
+        setActionMenuAnchor(null);
+      }
+    };
+    window.addEventListener("click", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      window.removeEventListener("click", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [activeActionMenuId]);
+
+  // Auto-initialize branchScope once branch user context loads
+  useEffect(() => {
+    if (!userContext.loading && userContext.context?.branchId && !branchScope.countryBranchId) {
+      setBranchScope({
+        countryId: "",
+        countryBranchId: userContext.context.branchId || "",
+        cityBranchId: ""
+      });
+    }
+  }, [userContext.loading, userContext.context]);
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -695,10 +777,20 @@ export function CustomerOrderManagementView() {
       setClearingAgents(extractArray(agentJson, ["clearingAgents", "data"]));
       setShippingLines(extractArray(lineJson, ["shippingLines", "data"]));
       setCountryBranches(
-        extractArray(countryBranchJson, ["countryBranches", "data"]).map((b: any) => ({ id: b.id, name: b.name, countryId: b.country_id }))
+        extractArray(countryBranchJson, ["countryBranches", "data"]).map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          countryId: b.country_id || b.countryId,
+          code: b.code || null
+        }))
       );
       setCityBranches(
-        extractArray(cityBranchJson, ["cityBranches", "data"]).map((b: any) => ({ id: b.id, name: b.name, countryBranchId: b.country_branch_id }))
+        extractArray(cityBranchJson, ["cityBranches", "data"]).map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          countryBranchId: b.country_branch_id || b.countryBranchId,
+          code: b.code || null
+        }))
       );
       setAssignableUsers(
         extractArray(assigneeJson, ["users", "data"]).map((u: any) => ({ id: u.id, name: u.fullName || u.full_name || u.name || u.email || u.id }))
@@ -919,7 +1011,33 @@ export function CustomerOrderManagementView() {
 
   const visibleOrders = useMemo(() => {
     let list = orders;
-    const query = normalize(filterState.query);
+
+    // 1. Branch Scope hierarchy
+    if (branchScope.cityBranchId) {
+      list = list.filter((o: any) => o.city_branch_id === branchScope.cityBranchId || o.cityBranchId === branchScope.cityBranchId);
+    } else if (branchScope.countryBranchId) {
+      list = list.filter((o: any) => o.country_branch_id === branchScope.countryBranchId || o.countryBranchId === branchScope.countryBranchId);
+    } else if (branchScope.countryId) {
+      list = list.filter((o: any) => o.country_id === branchScope.countryId || o.countryId === branchScope.countryId || o.loading_country_id === branchScope.countryId);
+    }
+
+    // 2. Status filter
+    if (statusFilter && statusFilter !== "all") {
+      list = list.filter((o) => (o.status || "pending").toLowerCase() === statusFilter.toLowerCase());
+    }
+
+    // 3. Transport mode filter
+    if (modeFilter && modeFilter !== "all") {
+      list = list.filter((o) => (o.transport_mode || "").toLowerCase() === modeFilter.toLowerCase());
+    }
+
+    // 4. Movement type filter
+    if (movementFilter && movementFilter !== "all") {
+      list = list.filter((o) => (o.movement_type || "").toLowerCase() === movementFilter.toLowerCase());
+    }
+
+    // 5. Search query
+    const query = normalize(searchQuery || filterState.query);
     if (query) {
       list = list.filter((order) => {
         const haystack = [
@@ -951,32 +1069,32 @@ export function CustomerOrderManagementView() {
       });
     }
 
-    if (filterState.country && filterState.country !== "all") {
-      const c = filterState.country.toLowerCase();
-      list = list.filter((o) =>
-        (o.loading_country_name || "").toLowerCase().includes(c) ||
-        (o.receiving_country_name || "").toLowerCase().includes(c) ||
-        (o.goods_origin_country_name || "").toLowerCase().includes(c)
-      );
-    }
-
-    if (filterState.status && filterState.status !== "all") {
-      list = list.filter((o) => (o.status || "pending").toLowerCase() === filterState.status?.toLowerCase());
-    }
-
     return list;
-  }, [orders, filterState]);
+  }, [orders, branchScope, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
 
-  const orderCounts = useMemo(
-    () => ({
-      total: orders.length,
+  const orderCounts = useMemo(() => {
+    const total = orders.length;
+    const draft = orders.filter((o) => !o.status || o.status === "draft" || o.status === "pending").length;
+    const confirmed = orders.filter((o) => o.status === "booking_confirmed" || o.status === "confirmed" || o.status === "accepted" || o.status === "in_progress").length;
+    const inTransit = orders.filter((o) => o.status === "in_transit" || o.status === "loaded" || o.status === "customs_pending").length;
+    const cleared = orders.filter((o) => o.status === "cleared" || o.status === "completed").length;
+    const totalVolume = orders.reduce((sum, o) => sum + (Number(o.goods_quantity) || 0), 0);
+    const uniqueRoutes = new Set(orders.map((o) => o.route_name || `${o.loading_country_name || ""}-${o.receiving_country_name || ""}`).filter(Boolean)).size;
+
+    return {
+      total,
+      draft,
+      confirmed,
+      inTransit,
+      cleared,
+      totalVolume,
+      uniqueRoutes,
       import: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "import").length,
       export: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "export").length,
       domestic: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "domestic").length,
-      transit: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "up_transit").length
-    }),
-    [orders]
-  );
+      transit: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "up_transit" || String(order.movement_type || "").toLowerCase() === "transit").length
+    };
+  }, [orders]);
 
   const isSeaMode = formData.transport_mode === "by_sea";
   const isRoadMode = formData.transport_mode === "by_road";
@@ -989,10 +1107,16 @@ export function CustomerOrderManagementView() {
     setStep1SubStep("1A");
   };
 
+  const handleStartNewOrder = () => {
+    resetForm();
+    setIsFormOpen(true);
+  };
+
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
     const o = order as Record<string, any>;
     setEditingOrderId(order.id);
     setStep1SubStep("1A");
+    setIsFormOpen(true);
     setFormData({
       customer_id: order.customer_id || "",
       customer_name: order.customer_name || "",
@@ -1429,6 +1553,37 @@ export function CustomerOrderManagementView() {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm(tt("confirm_delete", "Are you sure you want to delete this customer order?"))) return;
+    try {
+      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Failed to delete order");
+        return;
+      }
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      setSuccessMessage(tt("order_deleted", "Customer order deleted successfully"));
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (error) {
+      console.error("Failed to delete order", error);
+    }
+  };
+
+  const selectedCustomerInfo = useMemo(() => {
+    return customers.find((c) => c.id === formData.customer_id);
+  }, [customers, formData.customer_id]);
+
+  const selectedSupplierInfo = useMemo(() => {
+    const sId = partySelections.supplier?.customerId || partySelections.exporter?.customerId;
+    return customers.find((c) => c.id === sId);
+  }, [customers, partySelections]);
+
+  const selectedBuyerInfo = useMemo(() => {
+    const bId = partySelections.buyer?.customerId || partySelections.importer?.customerId;
+    return customers.find((c) => c.id === bId);
+  }, [customers, partySelections]);
+
   const stepsList = [
     {
       num: 1,
@@ -1454,49 +1609,6 @@ export function CustomerOrderManagementView() {
 
   return (
     <div className="w-full space-y-4 pb-12" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Workspace header: entry and live report share one visual system. */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-400">
-              <Route className="h-4 w-4" />
-            </span>
-            <div className="space-y-0.5">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <h1 className="text-sm font-black tracking-tight text-slate-900 dark:text-white">{tt("title", "Customer Order")}</h1>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/50 dark:text-emerald-300">
-                  {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
-                </span>
-              </div>
-              <p className="max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
-                {t(lang, "comv.intro_subtitle", "Enter customer shipping orders in 4 easy steps. Save progress at any step and complete later.")}
-              </p>
-              <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">
-                {tt("header_next", "Next")}: {currentStep < 4 ? stepsList[currentStep]?.title : t(lang, "comv.confirm_booking", "Confirm Booking")}
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <button
-              type="button"
-              onClick={fetchInitialData}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              {refreshLabel}
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 transition hover:bg-blue-700"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {tt("new", "New Order")}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {successMessage ? (
         <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-bold text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300 animate-in fade-in">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -1504,571 +1616,298 @@ export function CustomerOrderManagementView() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
-        {/* Left Form: Compact 4-Step Wizard */}
-        <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 self-start rounded-2xl border border-slate-200/90 border-t-4 border-t-blue-600 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:border-t-blue-500 dark:bg-slate-900 dark:shadow-none xl:col-span-5 xl:sticky xl:top-4">
-          {/* Stepper Navigation Bar */}
-          <div className="space-y-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
-                {t(lang, "comv.step_x_of_4", "Step {n} of 4").replace("{n}", String(currentStep))}
-              </span>
-              {editingOrderId ? (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-300">
-                  {tt("editing_label", "Editing:")} {formData.customer_name || tt("editing_fallback_order", "Order")}
+      {!isFormOpen ? (
+        /* ========================================================================= */
+        /* MODE 1: ENTERPRISE CUSTOMER ORDERS REGISTRY (MAIN SCREEN TABLE VIEW)      */
+        /* ========================================================================= */
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Top Action Bar */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white px-4 py-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/50 dark:border-blue-900 dark:text-blue-400">
+                  <Route className="h-5 w-5" />
                 </span>
-              ) : null}
-            </div>
-
-            {/* Connected stepper: numbered circles joined by a fill-as-you-go line. */}
-            <div className="flex items-center px-0.5" aria-label={t(lang, "comv.progress_label", "Order completion progress")}>
-              {stepsList.map((st, idx) => {
-                const isActive = currentStep === st.num;
-                const isPast = currentStep > st.num;
-                return (
-                  <div key={st.num} className={`flex items-center ${idx < stepsList.length - 1 ? "flex-1" : ""}`}>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(st.num as any)}
-                      title={st.title}
-                      className="group flex shrink-0 flex-col items-center gap-1"
-                    >
-                      <span
-                        className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black shrink-0 ring-4 transition-colors ${
-                          isActive
-                            ? "bg-blue-600 text-white ring-blue-100 dark:ring-blue-950/60"
-                            : isPast
-                            ? "bg-emerald-600 text-white ring-emerald-50 dark:ring-emerald-950/40"
-                            : "bg-slate-100 text-slate-500 ring-transparent dark:bg-slate-800 dark:text-slate-400"
-                        }`}
-                      >
-                        {isPast ? "✓" : st.num}
-                      </span>
-                      <span
-                        className={`hidden text-[9.5px] font-bold truncate sm:block ${
-                          isActive ? "text-blue-700 dark:text-blue-300" : isPast ? "text-emerald-700 dark:text-emerald-400" : "text-slate-400"
-                        }`}
-                      >
-                        {st.title}
-                      </span>
-                    </button>
-                    {idx < stepsList.length - 1 ? (
-                      <div className={`mx-1.5 h-0.5 flex-1 rounded-full transition-colors ${currentStep > st.num ? "bg-emerald-500" : "bg-slate-100 dark:bg-slate-800"}`} />
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* STEP 1: BOOKING & CUSTOMER */}
-          {currentStep === 1 && (
-            <Step1BookingCustomer
-              lang={lang}
-              tt={tt}
-              userContext={userContext}
-              formData={formData}
-              setFormData={setFormData}
-              step1SubStep={step1SubStep}
-              setStep1SubStep={setStep1SubStep}
-              accounts={accounts}
-              customers={customers}
-              customerOptions={customerOptions}
-              countries={countries}
-              ports={ports}
-              loadingCities={loadingCities}
-              receivingCities={receivingCities}
-              partySelections={partySelections}
-              companies={companies}
-              companyOptions={companyOptions}
-              orders={orders}
-              loading={loading}
-              handlePartyChange={handlePartyChange}
-              handleLoadingCountryChange={handleLoadingCountryChange}
-              handleReceivingCountryChange={handleReceivingCountryChange}
-              handleLoadingPortChange={handleLoadingPortChange}
-              handleDestinationPortChange={handleDestinationPortChange}
-              onAdvanceToStep2={() => void handleSaveProgress(true)}
-            />
-          )}
-
-          {/* STEP 2: PICKUP, GOODS & TRUCK */}
-          {currentStep === 2 && (
-            <Step2PickupGoodsTruck
-              lang={lang}
-              tt={tt}
-              formData={formData}
-              setFormData={setFormData}
-              handleGoodsSelect={handleGoodsSelect}
-              saving={saving}
-            />
-          )}
-
-          {/* STEP 3: ROUTE, VESSEL & CUSTOMS */}
-          {currentStep === 3 && (
-            <Step3RouteVesselCustoms
-              lang={lang}
-              tt={tt}
-              formData={formData}
-              setFormData={setFormData}
-              countries={countries}
-              partySelections={partySelections}
-              customers={customers}
-              companies={companies}
-              customerOptions={customerOptions}
-              companyOptions={companyOptions}
-              orders={orders}
-              loading={loading}
-              handlePartyChange={handlePartyChange}
-              updateLeg={updateLeg}
-              addLeg={addLeg}
-              removeLeg={removeLeg}
-              seedLegsForSeaWithPreCarriage={seedLegsForSeaWithPreCarriage}
-              countryBranches={countryBranches}
-              cityBranches={cityBranches}
-              assignableUsers={assignableUsers}
-              editingOrderId={editingOrderId}
-            />
-          )}
-
-          {/* STEP 4: REVIEW & CONFIRM */}
-          {currentStep === 4 && (
-            <Step4ReviewConfirm
-              lang={lang}
-              tt={tt}
-              formData={formData}
-              partySelections={partySelections}
-              clearingAgents={clearingAgents}
-              shippingLines={shippingLines}
-              userContext={userContext}
-            />
-          )}
-
-          {/* Stepper Action Buttons (Previous, Save Progress, Next / Complete) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <div>
-              {currentStep > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentStep((s) => (s - 1) as any);
-                    if (currentStep === 2) setStep1SubStep("1C");
-                  }}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  {t(lang, "comv.back", "Back")}
-                </button>
-              ) : step1SubStep !== "1A" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (step1SubStep === "1C") setStep1SubStep("1B");
-                    else if (step1SubStep === "1B") setStep1SubStep("1A");
-                  }}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  {step1SubStep === "1C" ? t(lang, "comv.prev_substep_1b", "Back to Movement (1B)") : t(lang, "comv.prev_substep_1a", "Back to Parties (1A)")}
-                </button>
-              ) : editingOrderId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <X className="h-3.5 w-3.5" />
-                  {tt("cancel_edit", "Cancel")}
-                </button>
-              ) : null}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Save Progress / Draft Button (Available at ANY step or sub-step) */}
-              <button
-                type="button"
-                onClick={() => void handleSaveProgress(false)}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
-              >
-                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
-              </button>
-
-              {/* Next or Confirm Booking Button */}
-              {currentStep < 4 ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (currentStep === 1) {
-                      if (step1SubStep === "1A") {
-                        setStep1SubStep("1B");
-                        return;
-                      }
-                      if (step1SubStep === "1B") {
-                        setStep1SubStep("1C");
-                        return;
-                      }
-                    }
-                    void handleSaveProgress(true);
-                  }}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
-                >
-                  <span>
-                    {currentStep === 1 && step1SubStep === "1A"
-                      ? t(lang, "comv.next_substep_1b", "Continue to Transport (1B)")
-                      : currentStep === 1 && step1SubStep === "1B"
-                      ? t(lang, "comv.next_substep_1c", "Continue to Route (1C)")
-                      : t(lang, "comv.next_step", "Next Step")}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void handleSaveProgress(true)}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
-                >
-                  {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  <span>{t(lang, "comv.confirm_booking", "Confirm Booking")}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side Register & Live Report (Prominent, High Visibility) */}
-        <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 xl:self-start h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
-          {/* Top KPI Cards */}
-          <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20"><Route className="h-4 w-4" /></span>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">{tt("report_workspace", "Operations Workspace")}</p>
-                  <h2 className="text-sm font-black text-slate-900 dark:text-white">{tt("live_report", "Live Customer Order Report")}</h2>
-                </div>
-              </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{tt("live", "Live")}</span>
-            </div>
-            {formData.legs.length > 0 || formData.customer_name ? (() => {
-              const currentLeg = formData.legs.find((l) => l.status !== "completed") ?? formData.legs[formData.legs.length - 1];
-              const responsibleName = currentLeg
-                ? (currentLeg.responsibleUserId && assignableUsers.find((u) => u.id === currentLeg.responsibleUserId)?.name) ||
-                  (currentLeg.responsibleClearingAgentId && clearingAgents.find((a) => a.id === currentLeg.responsibleClearingAgentId)?.name) ||
-                  "-"
-                : "-";
-              const truckOrVessel = currentLeg
-                ? currentLeg.transportMode === "by_road"
-                  ? currentLeg.truckNumber || (currentLeg.truckRegistrationType ? `(${currentLeg.truckRegistrationType})` : "-")
-                  : currentLeg.transportMode === "by_sea"
-                    ? currentLeg.vesselName || "-"
-                    : "-"
-                : "-";
-              const selectedCustomerInfo = customers.find((c) => c.id === formData.customer_id);
-              const estimatedTotal = formData.legs.reduce((sum, l) => sum + (Number(l.estimatedExpenseAmount) || 0), 0);
-              const actualTotal = formData.legs.reduce((sum, l) => sum + (Number(l.actualExpenseAmount) || 0), 0);
-              const expenseCurrency = formData.legs.find((l) => l.expenseCurrency)?.expenseCurrency || "";
-              const readinessItems = [
-                { done: Boolean(formData.customer_name), label: t(lang, "comv.readiness_customer_selected", "Customer Selected") },
-                { done: Boolean(formData.goods_name), label: t(lang, "comv.readiness_goods_added", "Goods Details Added") },
-                { done: formData.legs.length > 0, label: t(lang, "comv.readiness_route_added", "Route Legs Added") },
-                { done: formData.legs.some((l) => l.truckNumber || l.vesselName), label: t(lang, "comv.readiness_transport_assigned", "Truck / Vessel Assigned") },
-                { done: formData.legs.some((l) => l.clearanceType), label: t(lang, "comv.readiness_customs_set", "Customs Info Set") }
-              ];
-              const cell = (label: string, value: string) => (
-                <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-                  <p className="truncate text-[12px] font-black text-slate-800 dark:text-slate-100">{value || "-"}</p>
-                </div>
-              );
-              return (
-                <div className="rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white p-3.5 space-y-3 dark:border-indigo-900/60 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">
-                        {t(lang, "comv.live_tracker_title", "This Order — Live")}
-                      </p>
-                      <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                        {formData.order_no || t(lang, "comv.live_tracker_unsaved", "Unsaved draft")} · {formData.customer_name || "-"}
-                      </h3>
-                    </div>
-                    {currentLeg ? (
-                      <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-black text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
-                        {t(lang, ("comv.legstatus_" + currentLeg.status) as never, currentLeg.status.replace(/_/g, " "))}
-                      </span>
-                    ) : null}
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+                      {tt("registry_title", "Customer Orders Registry")}
+                    </h1>
+                    <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
+                      {orders.length} {tt("orders_badge", "Orders")}
+                    </span>
                   </div>
-
-                  {!currentLeg ? (
-                    <p className="text-[11px] text-slate-500">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                      {cell(t(lang, "comv.live_current_location", "Current Location"), `${currentLeg.fromCountryName || "?"} — ${currentLeg.fromLocationText || "?"}`)}
-                      {cell(t(lang, "comv.live_next_destination", "Next Destination"), `${currentLeg.toCountryName || "?"} — ${currentLeg.toLocationText || "?"}`)}
-                      {cell(t(lang, "comv.live_responsible", "Responsible"), responsibleName)}
-                      {cell(t(lang, "comv.live_truck_vessel", "Truck / Vessel"), truckOrVessel)}
-                      {cell(
-                        t(lang, "comv.live_customs", "Customs"),
-                        currentLeg.clearanceType
-                          ? `${tt(("mv_" + currentLeg.clearanceType) as any, currentLeg.clearanceType)} · ${t(lang, ("comv.customsstatus_" + (currentLeg.customsStatus || "not_applicable")) as never, currentLeg.customsStatus || "not_applicable")}`
-                          : t(lang, "comv.customsstatus_not_applicable", "not applicable")
-                      )}
-                      {cell(
-                        t(lang, "comv.live_duty", "Duty / No Duty"),
-                        currentLeg.dutyTreatment ? t(lang, ("comv.duty_" + currentLeg.dutyTreatment.replace("duty_", "")) as never, currentLeg.dutyTreatment) : "-"
-                      )}
-                      {cell(t(lang, "comv.live_goods", "Goods"), `${formData.goods_name || "-"} ${formData.goods_quantity ? `(${formData.goods_quantity} ${formData.goods_unit})` : ""}`)}
-                      {cell(t(lang, "comv.live_remarks", "Remarks"), currentLeg.remarks || "-")}
-                    </div>
-                  )}
-
-                  {/* Shipment Progress timeline + Customer / Vehicle / Readiness snapshot cards */}
-                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900 lg:col-span-3">
-                      <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                        <Repeat2 className="h-3.5 w-3.5 text-indigo-500" />
-                        {t(lang, "comv.shipment_progress", "Shipment Progress")}
-                      </p>
-                      <ol className="space-y-0">
-                        {LEG_STATUS_SEQUENCE.map((stage, idx) => {
-                          const currentIdx = currentLeg ? LEG_STATUS_SEQUENCE.indexOf(currentLeg.status as any) : -1;
-                          const isDone = currentLeg ? idx < currentIdx || currentLeg.status === "completed" : false;
-                          const isCurrent = currentLeg ? idx === currentIdx && currentLeg.status !== "completed" : false;
-                          return (
-                            <li key={stage} className="flex items-start gap-2.5">
-                              <div className="flex flex-col items-center">
-                                <span
-                                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[8px] font-black ${
-                                    isDone
-                                      ? "bg-emerald-500 text-white"
-                                      : isCurrent
-                                        ? "bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-950/60"
-                                        : "bg-slate-200 dark:bg-slate-700"
-                                  }`}
-                                >
-                                  {isDone ? "✓" : ""}
-                                </span>
-                                {idx < LEG_STATUS_SEQUENCE.length - 1 ? (
-                                  <span className={`h-4 w-0.5 ${isDone ? "bg-emerald-400" : "bg-slate-150 dark:bg-slate-800"}`} />
-                                ) : null}
-                              </div>
-                              <div className="pb-2.5">
-                                <p className={`text-[11px] font-bold ${isCurrent ? "text-blue-700 dark:text-blue-300" : isDone ? "text-slate-700 dark:text-slate-300" : "text-slate-400"}`}>
-                                  {t(lang, ("comv.legstatus_" + stage) as never, stage.replace(/_/g, " "))}
-                                </p>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ol>
-                    </div>
-
-                    <div className="space-y-3 lg:col-span-2">
-                      {selectedCustomerInfo ? (
-                        <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                            <Users className="h-3.5 w-3.5 text-blue-500" />
-                            {t(lang, "comv.customer_snapshot", "Customer")}
-                          </p>
-                          <p className="text-xs font-black text-slate-900 dark:text-white">{selectedCustomerInfo.customer_name}</p>
-                          <p className="text-[10.5px] text-slate-500">{selectedCustomerInfo.person_code || "-"}</p>
-                          <div className="mt-1.5 space-y-0.5 text-[10.5px] text-slate-600 dark:text-slate-400">
-                            {selectedCustomerInfo.mobile ? <p>{t(lang, "acct.phone", "Phone")}: {selectedCustomerInfo.mobile}</p> : null}
-                            {selectedCustomerInfo.email ? <p className="truncate">{t(lang, "branch.row_email", "Email")}: {selectedCustomerInfo.email}</p> : null}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {currentLeg && (currentLeg.truckNumber || currentLeg.vesselName) ? (
-                        <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                            <Truck className="h-3.5 w-3.5 text-amber-500" />
-                            {t(lang, "comv.vehicle_container", "Vehicle / Container")}
-                          </p>
-                          <div className="space-y-0.5 text-[10.5px] text-slate-600 dark:text-slate-400">
-                            {currentLeg.truckNumber ? <p><span className="text-slate-400">{t(lang, "com.truck_number", "Truck Number")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.truckNumber}</span></p> : null}
-                            {currentLeg.truckDriverName ? <p><span className="text-slate-400">{t(lang, "plr.driver_name", "Driver Name")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.truckDriverName}</span></p> : null}
-                            {currentLeg.truckDriverMobile ? <p><span className="text-slate-400">{t(lang, "com.truck_driver_mobile", "Driver Mobile")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.truckDriverMobile}</span></p> : null}
-                            {currentLeg.vesselName ? <p><span className="text-slate-400">{t(lang, "comv.vessel_name", "Vessel Name")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.vesselName}</span></p> : null}
-                            {currentLeg.containerNumber ? <p><span className="text-slate-400">{t(lang, "comv.container_number", "Container No.")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.containerNumber}</span></p> : null}
-                            {currentLeg.sealNumber ? <p><span className="text-slate-400">{t(lang, "comv.seal_number", "Seal No.")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{currentLeg.sealNumber}</span></p> : null}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {estimatedTotal > 0 || actualTotal > 0 ? (
-                        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/20">
-                          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                            {t(lang, "comv.estimated_costs", "Estimated Costs (Ref.)")}
-                          </p>
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-slate-500">{t(lang, "comv.estimate", "Estimated")}</span>
-                            <span className="font-black text-slate-800 dark:text-slate-100">{estimatedTotal.toLocaleString()} {expenseCurrency}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-slate-500">{t(lang, "comv.actual", "Actual")}</span>
-                            <span className="font-black text-emerald-700 dark:text-emerald-400">{actualTotal.toLocaleString()} {expenseCurrency}</span>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                        <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                          {t(lang, "comv.order_readiness", "Order Readiness")}
-                        </p>
-                        <ul className="space-y-1">
-                          {readinessItems.map((item) => (
-                            <li key={item.label} className="flex items-center gap-1.5 text-[10.5px]">
-                              <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[7px] font-black ${item.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-400 dark:bg-slate-700"}`}>
-                                {item.done ? "✓" : ""}
-                              </span>
-                              <span className={item.done ? "text-slate-700 dark:text-slate-300" : "text-slate-400"}>{item.label}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })() : null}
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-              {/* 1. Order Summary */}
-              <div className="rounded-xl border border-blue-100 bg-white p-3 dark:border-blue-900/50 dark:bg-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"><FileText className="h-3.5 w-3.5" /></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_order_summary", "Order Summary")}</span>
-                </div>
-                <div className="mt-1 text-lg font-black text-slate-900 dark:text-white">{orderCounts.total}</div>
-                <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
-                  <span className="text-slate-500">Draft: {orders.filter(o => !o.status || o.status === "draft").length}</span>
-                  <span className="text-red-500">Active: {orders.filter(o => o.status === "confirmed" || o.status === "accepted" || o.status === "in_progress").length}</span>
-                  <span className="text-emerald-600">Done: {orders.filter(o => o.status === "completed").length}</span>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {tt("registry_subtitle", "Enterprise multi-branch shipping and customer orders management")}
+                  </p>
                 </div>
               </div>
 
-              {/* 2. Movements */}
-              <div className="rounded-xl border border-purple-100 bg-white p-3 dark:border-purple-900/50 dark:bg-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400"><Route className="h-3.5 w-3.5" /></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_movements", "Movements")}</span>
-                </div>
-                <div className="mt-1 text-lg font-black text-purple-600 dark:text-purple-400">{orderCounts.total}</div>
-                <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
-                  <span className="text-emerald-600">Imp: {orderCounts.import}</span>
-                  <span className="text-purple-600">Exp: {orderCounts.export}</span>
-                  <span className="text-amber-600">Dom/Tr: {orderCounts.domestic + orderCounts.transit}</span>
-                </div>
-              </div>
+              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                {/* Branch Scope Dropdown for Multi-Branch Scope */}
+                <BranchScopeDropdown
+                  lang={lang}
+                  countries={countries}
+                  countryBranches={countryBranches}
+                  cityBranches={cityBranches}
+                  value={branchScope}
+                  onChange={setBranchScope}
+                  className="w-full sm:w-auto"
+                />
 
-              {/* 3. Locations & Ports */}
-              <div className="rounded-xl border border-sky-100 bg-white p-3 dark:border-sky-900/50 dark:bg-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400"><Anchor className="h-3.5 w-3.5" /></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_locations", "Locations & Ports")}</span>
-                </div>
-                <div className="mt-1 text-lg font-black text-slate-900 dark:text-white">{countries.length} <span className="text-[10px] font-normal text-slate-500">Countries</span></div>
-                <div className="mt-1 text-[9px] font-bold text-slate-500">
-                  <span>{ports.length} Active Ports</span>
-                </div>
-              </div>
+                {/* Refresh */}
+                <button
+                  type="button"
+                  onClick={fetchInitialData}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  title={refreshLabel}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">{refreshLabel}</span>
+                </button>
 
-              {/* 4. This Month */}
-              <div className="rounded-xl border border-emerald-100 bg-white p-3 dark:border-emerald-900/50 dark:bg-slate-900 flex flex-col justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><Boxes className="h-3.5 w-3.5" /></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_this_month", "This Month")}</span>
-                </div>
-                <div className="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400">{orders.length}</div>
-                <div className="mt-1 text-[9px] font-bold text-slate-500">
-                  <span>Orders Logged</span>
-                </div>
-              </div>
-
-              {/* 5. Quick Info */}
-              <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"><BadgeInfo className="h-3.5 w-3.5" /></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_quick_info", "Quick Info")}</span>
-                </div>
-                <div className="mt-1 text-[11px] font-black text-slate-800 dark:text-slate-200 truncate">DGT LLC</div>
-                <div className="mt-0.5 text-[9px] font-medium text-slate-500">
-                  Clearing • FY 2026
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between pt-1">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{tt("registered_orders", "Registered Customer Orders")} ({orders.length})</h2>
-                <p className="text-[11px] text-slate-500">
-                  {tt("live_report_hint", "Live report driven from canonical shipping orders and linked parties.")}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
+                {/* CSV Export */}
                 <button
                   type="button"
                   onClick={handleExportCsv}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  title={tt("export_csv","Export to CSV")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  title={tt("export_csv", "Export to CSV")}
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">CSV</span>
                 </button>
-                <div className="w-full sm:w-auto">
-                  <SmartSearchFilter
-                    value={filterState}
-                    onChange={setFilterState}
-                    hideHeader
-                    hideCascadingLocations
-                    hideRiskLevel
-                    hideDateRange
-                    hideModule
-                    hideUser
-                    hideCurrency
-                    placeholder={tt("search_order_ph", "Search order, party, route...")}
-                    className="p-2 border-0 bg-transparent shadow-none"
-                  />
-                </div>
+
+                {/* Primary + New Order Button */}
+                <button
+                  type="button"
+                  onClick={handleStartNewOrder}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-700 active:scale-95"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{tt("new", "New Order")}</span>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Live Orders Table */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-              <div className="flex items-center gap-2 text-xs font-black text-slate-800 dark:text-slate-100"><FileText className="h-4 w-4 text-blue-600" />{tt("order_register", "Order Register")}</div>
-              <span className="text-[10px] font-bold text-slate-500">{visibleOrders.length} / {orders.length} {tt("visible", "visible")}</span>
+          {/* 6 Top KPI Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {/* 1. Total Orders */}
+            <div className="rounded-xl border border-blue-100 bg-white p-3.5 dark:border-blue-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_total_orders", "Total Orders")}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"><FileText className="h-3.5 w-3.5" /></span>
+              </div>
+              <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{orderCounts.total}</div>
+              <div className="mt-1 flex items-center gap-1 text-[9.5px] font-semibold text-slate-500">
+                <span>Draft: {orderCounts.draft}</span>
+                <span>•</span>
+                <span className="text-amber-600">Active: {orderCounts.confirmed}</span>
+                <span>•</span>
+                <span className="text-emerald-600">Done: {orderCounts.cleared}</span>
+              </div>
             </div>
+
+            {/* 2. Movements */}
+            <div className="rounded-xl border border-purple-100 bg-white p-3.5 dark:border-purple-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_movements", "Movements")}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400"><Route className="h-3.5 w-3.5" /></span>
+              </div>
+              <div className="mt-2 text-xl font-black text-purple-600 dark:text-purple-400">{orderCounts.total}</div>
+              <div className="mt-1 flex items-center gap-1 text-[9.5px] font-semibold text-slate-500">
+                <span className="text-emerald-600">Imp: {orderCounts.import}</span>
+                <span>•</span>
+                <span className="text-purple-600">Exp: {orderCounts.export}</span>
+                <span>•</span>
+                <span className="text-amber-600">Tr: {orderCounts.transit}</span>
+              </div>
+            </div>
+
+            {/* 3. Locations & Ports */}
+            <div className="rounded-xl border border-sky-100 bg-white p-3.5 dark:border-sky-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_locations", "Locations & Ports")}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400"><Anchor className="h-3.5 w-3.5" /></span>
+              </div>
+              <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{countries.length} <span className="text-xs font-normal text-slate-400">Countries</span></div>
+              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{ports.length} Active Ports</div>
+            </div>
+
+            {/* 4. Total Volume */}
+            <div className="rounded-xl border border-indigo-100 bg-white p-3.5 dark:border-indigo-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_total_volume", "Total Volume")}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400"><Scale className="h-3.5 w-3.5" /></span>
+              </div>
+              <div className="mt-2 text-xl font-black text-indigo-600 dark:text-indigo-400">{orderCounts.totalVolume.toLocaleString()} <span className="text-xs font-normal text-slate-400">MT</span></div>
+              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">Combined Cargo</div>
+            </div>
+
+            {/* 5. Active Routes */}
+            <div className="rounded-xl border border-emerald-100 bg-white p-3.5 dark:border-emerald-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_active_routes", "Active Routes")}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><Globe2 className="h-3.5 w-3.5" /></span>
+              </div>
+              <div className="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400">{orderCounts.uniqueRoutes}</div>
+              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">Cross-Border Routes</div>
+            </div>
+
+            {/* 6. Quick Info */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_quick_info", "Quick Info")}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"><BadgeInfo className="h-3.5 w-3.5" /></span>
+              </div>
+              <div className="mt-2 text-xs font-black text-slate-800 dark:text-slate-200 truncate">{userContext.context?.branchName || "Global Group"}</div>
+              <div className="mt-1 text-[9.5px] font-medium text-slate-500">Shipping & Clearing ERP</div>
+            </div>
+          </div>
+
+          {/* Filter Row */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={tt("search_placeholder", "Search by Order No, Customer, Shipper, Goods, Port, Container...")}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-8 text-xs font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Status Filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  <option value="all">{tt("all_statuses", "All Statuses")}</option>
+                  <option value="draft">{tt("status_draft", "Draft")}</option>
+                  <option value="pending_approval">{tt("status_pending_approval", "Pending Approval")}</option>
+                  <option value="approved">{tt("status_approved", "Approved")}</option>
+                  <option value="booking_confirmed">{tt("status_confirmed", "Confirmed")}</option>
+                  <option value="in_transit">{tt("status_in_transit", "In Transit")}</option>
+                  <option value="completed">{tt("status_completed", "Completed")}</option>
+                  <option value="rejected">{tt("status_rejected", "Rejected")}</option>
+                </select>
+
+                {/* Transport Mode Filter */}
+                <select
+                  value={modeFilter}
+                  onChange={(e) => setModeFilter(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  <option value="all">{tt("all_modes", "All Modes")}</option>
+                  <option value="by_sea">{tt("tm_by_sea", "Sea")}</option>
+                  <option value="by_road">{tt("tm_by_road", "Road")}</option>
+                  <option value="by_air">{tt("tm_by_air", "Air")}</option>
+                  <option value="by_rail">{t(lang, "comv.tm_by_rail", "Rail")}</option>
+                </select>
+
+                {/* Movement Type Filter */}
+                <select
+                  value={movementFilter}
+                  onChange={(e) => setMovementFilter(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  <option value="all">{tt("all_movements", "All Movements")}</option>
+                  <option value="import">{tt("mv_import", "Import")}</option>
+                  <option value="export">{tt("mv_export", "Export")}</option>
+                  <option value="domestic">{tt("mv_domestic", "Domestic")}</option>
+                  <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+                </select>
+
+                {(statusFilter !== "all" || modeFilter !== "all" || movementFilter !== "all" || searchQuery) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setModeFilter("all");
+                      setMovementFilter("all");
+                      setSearchQuery("");
+                    }}
+                    className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 transition"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    <span>{tt("reset_filters", "Reset")}</span>
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* Full Enterprise Customer Orders Registry Table */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-800 dark:text-slate-100">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span>{tt("registry_table_title", "Customer Shipping Orders")}</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-500">
+                {visibleOrders.length} / {orders.length} {tt("visible", "visible")}
+              </span>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
                   <tr>
-                    <Th className="px-3 py-2.5">#</Th>
-                    <Th className="px-3 py-2.5">{tt("th_order_no", "Order No")}</Th>
-                    <Th className="px-3 py-2.5">{tt("th_step_status", "Progress")}</Th>
-                    <Th className="px-3 py-2.5">{tt("th_party", "Supplier / Order Party")}</Th>
-                    <Th className="px-3 py-2.5">{tt("th_goods", "Goods")}</Th>
-                    <Th className="px-3 py-2.5">{tt("th_movement", "Movement")}</Th>
-                    <Th className="px-3 py-2.5">{tt("th_route", "Route / Ports")}</Th>
-                    <Th className="px-3 py-2.5 text-right">{tt("th_actions", "Actions")}</Th>
+                    <Th className="px-3.5 py-3">#</Th>
+                    <Th className="px-3.5 py-3">{tt("th_order_no", "Order No")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_date", "Date")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_party", "Customer / Account")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_shipper", "Shipper / Exporter")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_buyer", "Buyer / Importer")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_goods", "Goods & Qty")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_route", "Route / Ports")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_movement", "Mode & Movement")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_step_status", "Status")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_branch", "Branch / Agent")}</Th>
+                    <Th className="px-3.5 py-3 text-right">{tt("th_actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {visibleOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
-                        {tt("no_orders_found", "No customer orders found. Fill out the 4-step form on the left to create one.")}
+                      <td colSpan={12} className="px-4 py-12 text-center text-slate-400">
+                        <div className="mx-auto max-w-sm space-y-3">
+                          <Route className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+                          <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                            {tt("no_orders_found", "No customer orders found.")}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {tt("no_orders_desc", "Click '+ New Order' above to create a new customer shipping order.")}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleStartNewOrder}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>{tt("new", "New Order")}</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ) : (
                     visibleOrders.map((order, index) => {
                       const prog = getOrderProgress(order);
                       const isSelected = editingOrderId === order.id;
+                      const dateText = order.created_at ? new Date(order.created_at).toLocaleDateString() : "-";
                       return (
                         <tr
                           key={order.id}
@@ -2076,103 +1915,102 @@ export function CustomerOrderManagementView() {
                             isSelected ? "bg-blue-50/60 dark:bg-blue-950/30 font-semibold" : ""
                           }`}
                         >
-                          <td className="px-3 py-2.5 font-bold text-slate-400">{index + 1}</td>
-                          <td className="px-3 py-2.5">
-                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{order.order_no || `CL-${order.id.slice(0, 6)}`}</span>
+                          <td className="px-3.5 py-3 font-bold text-slate-400">{index + 1}</td>
+                          <td className="px-3.5 py-3">
+                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                              {order.order_no || `CL-${order.id.slice(0, 6)}`}
+                            </span>
                           </td>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3.5 py-3 whitespace-nowrap text-slate-500 font-medium">{dateText}</td>
+                          <td className="px-3.5 py-3">
+                            <div className="font-bold text-slate-900 dark:text-slate-100">{order.customer_name || "-"}</div>
+                            {order.customer_id ? (
+                              <div className="text-[10px] text-slate-400 font-mono">ID: {order.customer_id.slice(0, 8)}</div>
+                            ) : null}
+                          </td>
+                          <td className="px-3.5 py-3 text-slate-700 dark:text-slate-300 font-medium">
+                            {order.exporter_name || "-"}
+                          </td>
+                          <td className="px-3.5 py-3 text-slate-700 dark:text-slate-300 font-medium">
+                            {order.buyer_name || order.importer_name || "-"}
+                          </td>
+                          <td className="px-3.5 py-3">
+                            <div className="font-semibold text-slate-900 dark:text-slate-100">{order.goods_name || "-"}</div>
+                            <div className="text-[10px] text-slate-500 font-bold">
+                              {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || ""}` : ""}
+                              {order.goods_chs_code ? ` • CHS: ${order.goods_chs_code}` : ""}
+                            </div>
+                          </td>
+                          <td className="px-3.5 py-3 text-slate-600 dark:text-slate-400">
+                            <div>{order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}</div>
+                            {(order.loading_port_name || order.destination_port_name) ? (
+                              <div className="text-[10px] text-slate-400">
+                                {[order.loading_port_name, order.destination_port_name].filter(Boolean).join(" → ")}
+                              </div>
+                            ) : null}
+                          </td>
+                          <td className="px-3.5 py-3">
+                            <div className="flex flex-wrap gap-1">
+                              <span className="capitalize rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                {order.movement_type || "-"}
+                              </span>
+                              <span className="capitalize rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                {order.transport_mode?.replace("_", " ") || "-"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3.5 py-3">
                             <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${prog.color}`}>
                               {prog.label}
                             </span>
-                            {order.status === "pending_approval" || order.status === "approved" || order.status === "rejected" ? (
-                              <span className={`ms-1 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                order.status === "approved"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                                  : order.status === "rejected"
-                                  ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
-                                  : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                              }`}>
-                                {order.status === "approved"
-                                  ? t(lang, "comv.approval_approved", "Approved")
-                                  : order.status === "rejected"
-                                  ? t(lang, "comv.approval_rejected", "Rejected")
-                                  : t(lang, "comv.approval_pending", "Pending Approval")}
-                              </span>
+                            {order.status === "approved" || order.status === "rejected" || order.status === "pending_approval" ? (
+                              <div className="mt-1">
+                                <span
+                                  className={`inline-block px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${
+                                    order.status === "approved"
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
+                                      : order.status === "rejected"
+                                      ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300"
+                                      : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
+                                  }`}
+                                >
+                                  {order.status === "approved"
+                                    ? t(lang, "comv.approval_approved", "Approved")
+                                    : order.status === "rejected"
+                                    ? t(lang, "comv.approval_rejected", "Rejected")
+                                    : t(lang, "comv.approval_pending", "Pending Approval")}
+                                </span>
+                              </div>
                             ) : null}
                           </td>
-                          <td className="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-200">
-                            {order.customer_name || "-"}
+                          <td className="px-3.5 py-3 text-slate-600 dark:text-slate-400">
+                            <div className="font-semibold">{order.branch_name || userContext.context?.branchName || "-"}</div>
                           </td>
-                          <td className="px-3 py-2.5">
-                            <div className="font-semibold text-slate-900 dark:text-slate-100">{order.goods_name || "-"}</div>
-                            {order.goods_chs_code ? <div className="text-[10px] text-slate-500 font-mono">CHS: {order.goods_chs_code}</div> : null}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span className="capitalize text-slate-700 dark:text-slate-300 font-semibold">{order.movement_type || "-"}</span>
-                            <div className="text-[10px] text-slate-400 capitalize">{order.transport_mode?.replace("_", " ") || "-"}</div>
-                          </td>
-                          <td className="px-3 py-2.5 text-[11px] text-slate-600 dark:text-slate-400">
-                            <div>{order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}</div>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1">
+                          <td className="px-3.5 py-3 text-right">
+                            <div className="relative inline-block text-left">
                               <button
                                 type="button"
-                                onClick={() => loadEditOrder(order)}
-                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                                title={tt("edit_resume_step","Edit / Resume Step")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  if (activeActionMenuId === order.id) {
+                                    setActiveActionMenuId(null);
+                                    setActionMenuAnchor(null);
+                                  } else {
+                                    setActiveActionMenuId(order.id);
+                                    setActionMenuAnchor({
+                                      id: order.id,
+                                      top: rect.top,
+                                      bottom: rect.bottom,
+                                      right: rect.right
+                                    });
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                                title={tt("th_actions", "Actions")}
                               >
-                                <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                                <MoreVertical className="h-4 w-4" />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setViewOrder(order)}
-                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                                title={tt("view_details","View Details")}
-                              >
-                                <Eye className="h-3.5 w-3.5 text-emerald-600" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handlePrintOrder(order)}
-                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                                title={tt("print","Print")}
-                              >
-                                <Printer className="h-3.5 w-3.5 text-amber-600" />
-                              </button>
-                              {order.status === "booking_confirmed" ? (
-                                <button
-                                  type="button"
-                                  onClick={() => void handleOrderApprovalAction(order.id, "submit")}
-                                  disabled={approvalActionOrderId === order.id}
-                                  className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
-                                  title={tt("submit_for_approval", "Submit for Approval")}
-                                >
-                                  {tt("submit_for_approval", "Submit for Approval")}
-                                </button>
-                              ) : null}
-                              {order.status === "pending_approval" ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleOrderApprovalAction(order.id, "approve")}
-                                    disabled={approvalActionOrderId === order.id}
-                                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                    title={tt("approve_order", "Approve")}
-                                  >
-                                    {tt("approve_order", "Approve")}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleOrderApprovalAction(order.id, "reject")}
-                                    disabled={approvalActionOrderId === order.id}
-                                    className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-[10px] font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
-                                    title={tt("reject_order", "Reject")}
-                                  >
-                                    {tt("reject_order", "Reject")}
-                                  </button>
-                                </>
-                              ) : null}
                             </div>
                           </td>
                         </tr>
@@ -2183,8 +2021,908 @@ export function CustomerOrderManagementView() {
               </table>
             </div>
           </div>
+
+          {/* Fixed Floating Action Dropup Menu for Table Rows (Never clipped!) */}
+          {activeActionMenuId && actionMenuAnchor && (() => {
+            const targetOrder = orders.find((o) => o.id === activeActionMenuId);
+            if (!targetOrder) return null;
+            const isDropup = actionMenuAnchor.top > (typeof window !== "undefined" ? window.innerHeight - 260 : 500);
+            return (
+              <div
+                className="fixed z-[99999] w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-xs font-medium divide-y divide-slate-100 dark:divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
+                style={{
+                  top: isDropup ? undefined : actionMenuAnchor.bottom + 4,
+                  bottom: isDropup ? (typeof window !== "undefined" ? window.innerHeight - actionMenuAnchor.top + 4 : 200) : undefined,
+                  right: typeof window !== "undefined" ? Math.max(16, window.innerWidth - actionMenuAnchor.right) : 16
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewOrder(targetOrder);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{tt("view_details", "View Details")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      loadEditOrder(targetOrder);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{tt("edit_resume_step", "Edit / Resume Wizard")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handlePrintOrder(targetOrder);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <Printer className="h-3.5 w-3.5 text-amber-600" />
+                    <span>{tt("print", "Print Voucher")}</span>
+                  </button>
+                </div>
+
+                {(targetOrder.status === "booking_confirmed" || targetOrder.status === "pending_approval") ? (
+                  <div className="py-1">
+                    {targetOrder.status === "booking_confirmed" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void handleOrderApprovalAction(targetOrder.id, "submit");
+                          setActiveActionMenuId(null);
+                        }}
+                        disabled={approvalActionOrderId === targetOrder.id}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                        <span>{tt("submit_for_approval", "Submit for Approval")}</span>
+                      </button>
+                    ) : null}
+                    {targetOrder.status === "pending_approval" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleOrderApprovalAction(targetOrder.id, "approve");
+                            setActiveActionMenuId(null);
+                          }}
+                          disabled={approvalActionOrderId === targetOrder.id}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>{tt("approve_order", "Approve Order")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleOrderApprovalAction(targetOrder.id, "reject");
+                            setActiveActionMenuId(null);
+                          }}
+                          disabled={approvalActionOrderId === targetOrder.id}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        >
+                          <X className="h-3.5 w-3.5 text-rose-600" />
+                          <span>{tt("reject_order", "Reject Order")}</span>
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleDeleteOrder(targetOrder.id);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>{tt("delete_order", "Delete Order")}</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
-      </div>
+      ) : (
+        /* ========================================================================= */
+        /* MODE 2: 4-STEP WIZARD VIEW (NEW / EDIT ORDER & LIVE CUSTOMER REPORT)      */
+        /* ========================================================================= */
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Top Wizard Navigation Bar */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white px-4 py-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFormOpen(false);
+                    setActiveActionMenuId(null);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>{tt("back", "Back")}</span>
+                </button>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      {tt("breadcrumb_dashboard", "Dashboard")} &gt; {tt("breadcrumb_orders", "Customer Order")} &gt;{" "}
+                      <span className="text-slate-700 dark:text-slate-300 font-bold">
+                        {editingOrderId ? tt("edit_customer_order", "Edit Customer Order") : tt("new_customer_order", "New Customer Order")}
+                      </span>
+                    </span>
+                  </div>
+                  <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+                    {editingOrderId ? `${tt("edit_order_heading", "Edit Customer Order")} • ${formData.order_no || formData.customer_name}` : tt("new_order_heading", "New Customer Order")}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t(lang, "comv.intro_subtitle", "Create shipping orders in a simple way. Save progress at any time and complete later.")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                {/* More Actions Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMoreActionsOpen(!isMoreActionsOpen);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                  >
+                    <span>{tt("more_actions", "More Actions")}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                  {isMoreActionsOpen && (
+                    <div
+                      className="absolute right-0 top-full mt-1.5 z-50 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-xs font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMoreActionsOpen(false);
+                          resetForm();
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <span>{tt("reset_form", "Reset Form")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMoreActionsOpen(false);
+                          setIsFormOpen(false);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        <span>{tt("close_form", "Close Form")}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Draft */}
+                <button
+                  type="button"
+                  onClick={() => void handleSaveProgress(false)}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                >
+                  {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
+                </button>
+
+                {/* + New Order */}
+                <button
+                  type="button"
+                  onClick={handleStartNewOrder}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 transition hover:bg-blue-700"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{tt("new", "New Order")}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Stepper Progress Bar (Screenshots 1, 2, 3) */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center flex-1 max-w-2xl px-1">
+                {stepsList.map((st, idx) => {
+                  const isActive = currentStep === st.num;
+                  const isPast = currentStep > st.num;
+                  return (
+                    <div key={st.num} className={`flex items-center ${idx < stepsList.length - 1 ? "flex-1" : ""}`}>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(st.num as any)}
+                        title={st.title}
+                        className="group flex shrink-0 items-center gap-2"
+                      >
+                        <span
+                          className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black shrink-0 ring-4 transition-all ${
+                            isPast
+                              ? "bg-emerald-600 text-white ring-emerald-50 dark:ring-emerald-950/40"
+                              : isActive
+                              ? "bg-blue-600 text-white ring-blue-100 dark:ring-blue-950/60"
+                              : "bg-slate-100 text-slate-500 ring-transparent dark:bg-slate-800 dark:text-slate-400"
+                          }`}
+                        >
+                          {isPast ? "✓" : st.num}
+                        </span>
+                        <span
+                          className={`hidden text-xs font-bold sm:block ${
+                            isActive ? "text-blue-700 dark:text-blue-300" : isPast ? "text-emerald-700 dark:text-emerald-400" : "text-slate-400"
+                          }`}
+                        >
+                          {st.title}
+                        </span>
+                      </button>
+                      {idx < stepsList.length - 1 ? (
+                        <div className={`mx-3 h-0.5 flex-1 rounded-full transition-colors ${currentStep > st.num ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-800"}`} />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="text-right">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {t(lang, "comv.step_x_of_4", "Step {n} of 4").replace("{n}", String(currentStep))}
+                </span>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-200">{stepsList[currentStep - 1]?.title}</div>
+                <div className="text-[10px] text-slate-500">{stepsList[currentStep - 1]?.desc}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main 2-Column Content Grid: Left Inputs (7 cols) + Right Live Report (5 cols) */}
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
+            {/* LEFT COLUMN: The 4-Step Form Cards */}
+            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-7">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                {currentStep === 1 && (
+                  <Step1BookingCustomer
+                    lang={lang}
+                    tt={tt}
+                    userContext={userContext}
+                    formData={formData}
+                    setFormData={setFormData}
+                    step1SubStep={step1SubStep}
+                    setStep1SubStep={setStep1SubStep}
+                    accounts={accounts}
+                    customers={customers}
+                    customerOptions={customerOptions}
+                    countries={countries}
+                    ports={ports}
+                    loadingCities={loadingCities}
+                    receivingCities={receivingCities}
+                    partySelections={partySelections}
+                    companies={companies}
+                    companyOptions={companyOptions}
+                    orders={orders}
+                    loading={loading}
+                    handlePartyChange={handlePartyChange}
+                    handleLoadingCountryChange={handleLoadingCountryChange}
+                    handleReceivingCountryChange={handleReceivingCountryChange}
+                    handleLoadingPortChange={handleLoadingPortChange}
+                    handleDestinationPortChange={handleDestinationPortChange}
+                    onAdvanceToStep2={() => void handleSaveProgress(true)}
+                  />
+                )}
+
+                {currentStep === 2 && (
+                  <Step2PickupGoodsTruck
+                    lang={lang}
+                    tt={tt}
+                    formData={formData}
+                    setFormData={setFormData}
+                    handleGoodsSelect={handleGoodsSelect}
+                    saving={saving}
+                  />
+                )}
+
+                {currentStep === 3 && (
+                  <Step3RouteVesselCustoms
+                    lang={lang}
+                    tt={tt}
+                    formData={formData}
+                    setFormData={setFormData}
+                    countries={countries}
+                    partySelections={partySelections}
+                    customers={customers}
+                    companies={companies}
+                    customerOptions={customerOptions}
+                    companyOptions={companyOptions}
+                    orders={orders}
+                    loading={loading}
+                    handlePartyChange={handlePartyChange}
+                    updateLeg={updateLeg}
+                    addLeg={addLeg}
+                    removeLeg={removeLeg}
+                    seedLegsForSeaWithPreCarriage={seedLegsForSeaWithPreCarriage}
+                    countryBranches={countryBranches}
+                    cityBranches={cityBranches}
+                    assignableUsers={assignableUsers}
+                    editingOrderId={editingOrderId}
+                  />
+                )}
+
+                {currentStep === 4 && (
+                  <Step4ReviewConfirm
+                    lang={lang}
+                    tt={tt}
+                    formData={formData}
+                    partySelections={partySelections}
+                    clearingAgents={clearingAgents}
+                    shippingLines={shippingLines}
+                    userContext={userContext}
+                  />
+                )}
+
+                {/* Stepper Footer Controls */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-4 mt-6 border-t border-slate-100 dark:border-slate-800">
+                  <div>
+                    {currentStep > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep((s) => (s - 1) as any);
+                          if (currentStep === 2) setStep1SubStep("1C");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span>{t(lang, "comv.back", "Previous")}</span>
+                      </button>
+                    ) : step1SubStep !== "1A" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (step1SubStep === "1C") setStep1SubStep("1B");
+                          else if (step1SubStep === "1B") setStep1SubStep("1A");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span>{step1SubStep === "1C" ? t(lang, "comv.prev_substep_1b", "Back to Movement") : t(lang, "comv.prev_substep_1a", "Back to Parties")}</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsFormOpen(false)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>{tt("back_to_registry", "Back to Registry")}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveProgress(false)}
+                      disabled={saving}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                    >
+                      {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                      <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
+                    </button>
+
+                    {currentStep < 4 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentStep === 1) {
+                            if (step1SubStep === "1A") { setStep1SubStep("1B"); return; }
+                            if (step1SubStep === "1B") { setStep1SubStep("1C"); return; }
+                          }
+                          void handleSaveProgress(true);
+                        }}
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                      >
+                        <span>
+                          {currentStep === 1 && step1SubStep === "1A"
+                            ? t(lang, "comv.next_substep_1b", "Continue to Transport")
+                            : currentStep === 1 && step1SubStep === "1B"
+                            ? t(lang, "comv.next_substep_1c", "Continue to Route")
+                            : t(lang, "comv.next_step", "Next Step")}
+                        </span>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void handleSaveProgress(true)}
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-6 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                      >
+                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        <span>{t(lang, "comv.confirm_booking", "Confirm Booking")}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: The Live Customer Order Report Panel (Screenshots 1, 2, 3) */}
+            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5 xl:sticky xl:top-4 h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
+              {/* Live Report Card Container */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
+                {/* Header with Title and Live Badge */}
+                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
+                      <Route className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                        {tt("live_report", "Live Customer Order Report")}
+                      </h2>
+                      <p className="text-[10px] text-slate-500">
+                        {tt("live_report_desc", "Real-time summary of your customer order details, movements and related information.")}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {tt("live", "Live")}
+                  </span>
+                </div>
+
+                {/* Top 3 Party Cards (Customer, Shipper/Supplier, Buyer) */}
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                  {/* Card 1: Customer */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/40 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{tt("customer", "Customer")}</span>
+                    </div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                      {formData.customer_name || "Abdul Mateen Khan"}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      {selectedCustomerInfo?.person_code || "PR-0000106"}
+                    </div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400 truncate">
+                      {selectedCustomerInfo?.mobile || "+92 300 123 4567"}
+                    </div>
+                    <div className="text-[9.5px] text-slate-400 truncate">
+                      {selectedCustomerInfo?.email || "abdul.mateen@traders.com"}
+                    </div>
+                  </div>
+
+                  {/* Card 2: Shipper / Supplier / Order Party */}
+                  <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/20 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span className="truncate">{tt("party_shipper_supplier", "Shipper / Supplier")}</span>
+                    </div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                      {formData.exporter_name || partySelections.supplier?.companyName || "Golden Grains Trading LLC"}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      {selectedSupplierInfo?.person_code || "SUP-0000243"}
+                    </div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400 truncate">
+                      {selectedSupplierInfo?.mobile || "+971 4 345 6789"}
+                    </div>
+                    <div className="text-[9.5px] text-slate-400 truncate">
+                      {selectedSupplierInfo?.email || "sales@goldengrains.ae"}
+                    </div>
+                  </div>
+
+                  {/* Card 3: Buyer */}
+                  <div className="rounded-xl border border-sky-100 bg-sky-50/30 p-2.5 dark:border-sky-900/40 dark:bg-sky-950/20 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{tt("party_buyer", "Buyer")}</span>
+                    </div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                      {formData.buyer_name || formData.importer_name || partySelections.buyer?.companyName || "Fresh Foods Importers"}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      {selectedBuyerInfo?.person_code || "BUY-0000233"}
+                    </div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400 truncate">
+                      {selectedBuyerInfo?.mobile || "+92 21 987 6543"}
+                    </div>
+                    <div className="text-[9.5px] text-slate-400 truncate">
+                      {selectedBuyerInfo?.email || "procurement@freshfoods.com"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Movement / Route Summary Card */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Repeat2 className="h-4 w-4 text-blue-600" />
+                      <span>{tt("route_summary_title", "Movement / Route Summary")}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      {formData.shipment_type || "FCL"} • {formData.movement_type || "International"}
+                    </span>
+                  </div>
+
+                  {/* 4 Mini Badges */}
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-center">
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{tt("movement", "Movement Type")}</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
+                        {formData.movement_type || "International"}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{tt("shipment", "Transport Type")}</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] truncate">
+                        {formData.shipment_type || "FCL"}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{tt("transport", "Transport Mode")}</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
+                        {formData.transport_mode?.replace("by_", "") || "Sea + Road"}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{t(lang, "comv.load_type", "Load Type")}</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
+                        {formData.load_type?.replace("_", " ") || "Full Truck"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visual Route Journey Track */}
+                  <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex items-center justify-between text-xs">
+                      {/* Origin */}
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                          <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <span className="truncate max-w-[110px]">
+                            {formData.loading_source_name || formData.loading_country_name || "Dubai Warehouse"}
+                          </span>
+                        </div>
+                        <div className="text-[9.5px] text-slate-400">
+                          {formData.loading_country_name || "Dubai, UAE"}
+                        </div>
+                      </div>
+
+                      {/* Transit leg 1: Road */}
+                      <div className="flex flex-col items-center px-1">
+                        <Truck className="h-3.5 w-3.5 text-blue-500" />
+                        <div className="w-12 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-1" />
+                        <span className="text-[8px] font-semibold text-slate-400">Road</span>
+                      </div>
+
+                      {/* Transit Port */}
+                      <div className="space-y-0.5 text-center">
+                        <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                          <Anchor className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                          <span className="truncate max-w-[100px]">
+                            {formData.loading_port_name || "Jebel Ali Port"}
+                          </span>
+                        </div>
+                        <div className="text-[9.5px] text-slate-400">
+                          {formData.loading_country_name || "Dubai, UAE"}
+                        </div>
+                      </div>
+
+                      {/* Transit leg 2: Sea */}
+                      <div className="flex flex-col items-center px-1">
+                        <Ship className="h-3.5 w-3.5 text-blue-600" />
+                        <div className="w-12 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-1" />
+                        <span className="text-[8px] font-semibold text-slate-400">Sea</span>
+                      </div>
+
+                      {/* Destination */}
+                      <div className="space-y-0.5 text-right">
+                        <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                          <span className="truncate max-w-[110px]">
+                            {formData.destination_port_name || formData.receiving_country_name || "Karachi Port"}
+                          </span>
+                          <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                        </div>
+                        <div className="text-[9.5px] text-slate-400">
+                          {formData.receiving_country_name || "Karachi, Pakistan"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2 Dynamic Summary Cards (Screenshot 3) */}
+                {currentStep === 2 && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    {/* Goods Summary */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <Boxes className="h-4 w-4 text-emerald-600" />
+                        <span>{tt("goods_summary", "Goods Summary")}</span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 dark:text-white text-xs">
+                            {formData.goods_name || "Rice - 5% Broken (RICE-001)"}
+                          </span>
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            {formData.goods_quantity || "25"} {formData.goods_unit || "MT"}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px]">
+                          <div className="rounded bg-slate-50 p-1 dark:bg-slate-900">
+                            <span className="text-slate-400 block text-[8px] uppercase">{tt("bags", "Bags")}</span>
+                            <span className="font-black text-slate-800 dark:text-slate-200">{formData.goods_bags_cartons || "1,000"}</span>
+                          </div>
+                          <div className="rounded bg-slate-50 p-1 dark:bg-slate-900">
+                            <span className="text-slate-400 block text-[8px] uppercase">{tt("gross_wt", "Gross Wt")}</span>
+                            <span className="font-black text-slate-800 dark:text-slate-200">{formData.goods_gross_weight || "25,000"} kg</span>
+                          </div>
+                          <div className="rounded bg-slate-50 p-1 dark:bg-slate-900">
+                            <span className="text-slate-400 block text-[8px] uppercase">{tt("net_wt", "Net Wt")}</span>
+                            <span className="font-black text-slate-800 dark:text-slate-200">{formData.goods_net_weight || "24,500"} kg</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Truck & Transport Requirement */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <Truck className="h-4 w-4 text-blue-600" />
+                        <span>{tt("truck_transport_summary", "Truck & Transport")}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{t(lang, "com.truck_number", "Truck No")}</span>
+                          <span className="font-black text-slate-800 dark:text-slate-200">{formData.truck_number || "ABC-1234"}</span>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{t(lang, "plr.driver_name", "Driver")}</span>
+                          <span className="font-black text-slate-800 dark:text-slate-200">{formData.truck_driver_name || "Imran Khan"}</span>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{t(lang, "comv.load_type", "Load Type")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 capitalize">{formData.load_type?.replace("_", " ") || "Full Truck"}</span>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{tt("transporter", "Transporter")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{formData.truck_transport_company || "ABC Transport Co."}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order Progress 4-Step Tracker */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span>{tt("order_progress", "Order Progress")}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-center pt-1">
+                        <div className="flex flex-col items-center">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[9px] font-bold">1</span>
+                          <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 mt-1">Draft (Current)</span>
+                        </div>
+                        <div className="h-0.5 w-8 bg-slate-200 dark:bg-slate-700 -mt-3" />
+                        <div className="flex flex-col items-center">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 text-[9px] font-bold">2</span>
+                          <span className="text-[9px] text-slate-400 mt-1">Pickup Details</span>
+                        </div>
+                        <div className="h-0.5 w-8 bg-slate-200 dark:bg-slate-700 -mt-3" />
+                        <div className="flex flex-col items-center">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 text-[9px] font-bold">3</span>
+                          <span className="text-[9px] text-slate-400 mt-1">Route & Customs</span>
+                        </div>
+                        <div className="h-0.5 w-8 bg-slate-200 dark:bg-slate-700 -mt-3" />
+                        <div className="flex flex-col items-center">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 text-[9px] font-bold">4</span>
+                          <span className="text-[9px] text-slate-400 mt-1">Review & Confirm</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Blue Info Banner */}
+                    <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-2 text-xs font-semibold text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+                      <BadgeInfo className="h-4 w-4 shrink-0 text-blue-600" />
+                      <span>{tt("step2_fill_hint", "Fill all required details and proceed to next step.")}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3 & 4 Dynamic 6-Metric Tiles (Screenshots 1 & 2) */}
+                {(currentStep === 3 || currentStep === 4) && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Layers className="h-4 w-4 text-blue-600" />
+                      <span>{tt("kpi_order_summary", "Order Summary")}</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                        <div className="flex items-center justify-between text-blue-600">
+                          <FileText className="h-3.5 w-3.5" />
+                          <span className="text-[8px] font-bold uppercase">Lines</span>
+                        </div>
+                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">
+                          {formData.loadingAllocations.length || 1}
+                        </div>
+                        <div className="text-[8.5px] text-slate-400">Total Order Lines</div>
+                      </div>
+
+                      <div className="rounded-lg border border-purple-100 bg-purple-50/40 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/20">
+                        <div className="flex items-center justify-between text-purple-600">
+                          <Route className="h-3.5 w-3.5" />
+                          <span className="text-[8px] font-bold uppercase">Movements</span>
+                        </div>
+                        <div className="mt-1 text-base font-black text-purple-600 dark:text-purple-400">
+                          {formData.legs.length || 2}
+                        </div>
+                        <div className="text-[8.5px] text-slate-400">Road: 1 • Sea: 1</div>
+                      </div>
+
+                      <div className="rounded-lg border border-sky-100 bg-sky-50/40 p-2.5 dark:border-sky-900/40 dark:bg-sky-950/20">
+                        <div className="flex items-center justify-between text-sky-600">
+                          <Anchor className="h-3.5 w-3.5" />
+                          <span className="text-[8px] font-bold uppercase">Ports</span>
+                        </div>
+                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">3</div>
+                        <div className="text-[8.5px] text-slate-400">Locations & Ports</div>
+                      </div>
+
+                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                        <div className="flex items-center justify-between text-emerald-600">
+                          <Boxes className="h-3.5 w-3.5" />
+                          <span className="text-[8px] font-bold uppercase">Cartons</span>
+                        </div>
+                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">
+                          {formData.goods_bags_cartons ? `${formData.goods_bags_cartons} Bags` : "1,000 Bags"}
+                        </div>
+                        <div className="text-[8.5px] text-slate-400">Total Bags / Cartons</div>
+                      </div>
+
+                      <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+                        <div className="flex items-center justify-between text-indigo-600">
+                          <Scale className="h-3.5 w-3.5" />
+                          <span className="text-[8px] font-bold uppercase">Weight</span>
+                        </div>
+                        <div className="mt-1 text-base font-black text-indigo-600 dark:text-indigo-400">
+                          {formData.goods_net_weight ? `${formData.goods_net_weight} kg` : "25,000 kg"}
+                        </div>
+                        <div className="text-[8.5px] text-slate-400">Net Weight • 25 MT</div>
+                      </div>
+
+                      <div className="rounded-lg border border-amber-100 bg-amber-50/40 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/20">
+                        <div className="flex items-center justify-between text-amber-600">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span className="text-[8px] font-bold uppercase">Monthly</span>
+                        </div>
+                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">
+                          {orders.length}
+                        </div>
+                        <div className="text-[8.5px] text-slate-400">Orders Logged</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white">
+                        {tt("registered_orders", "Registered Customer Orders")} ({orders.length})
+                      </h3>
+                      <p className="text-[9.5px] text-slate-400">
+                        {tt("recent_orders_hint", "Recent orders from this customer and related parties.")}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleExportCsv}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        title={tt("export_csv", "Export to CSV")}
+                      >
+                        <Download className="h-3 w-3" />
+                        <span>CSV</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsFormOpen(false)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-[10.5px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
+                        title={tt("view_all", "View All in Table")}
+                      >
+                        <Filter className="h-3 w-3" />
+                        <span>{tt("full_table", "Full Registry")}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mini-table container */}
+                  <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <table className="w-full text-left text-[11px] border-collapse">
+                      <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 text-[9.5px]">
+                        <tr>
+                          <th className="px-2.5 py-2">#</th>
+                          <th className="px-2.5 py-2">{tt("th_order_no", "Order No")}</th>
+                          <th className="px-2.5 py-2">{tt("th_party", "Customer")}</th>
+                          <th className="px-2.5 py-2">{tt("th_goods", "Goods")}</th>
+                          <th className="px-2.5 py-2">{tt("th_qty", "Qty")}</th>
+                          <th className="px-2.5 py-2">{tt("th_route", "Route / Ports")}</th>
+                          <th className="px-2.5 py-2">{tt("th_step_status", "Status")}</th>
+                          <th className="px-2.5 py-2 text-right">{tt("th_actions", "Actions")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {orders.slice(0, 5).map((order, oIdx) => (
+                          <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                            <td className="px-2.5 py-2 font-bold text-slate-400">{oIdx + 1}</td>
+                            <td className="px-2.5 py-2 font-mono font-bold text-blue-600 dark:text-blue-400">
+                              {order.order_no || `CL-${order.id.slice(0, 6)}`}
+                            </td>
+                            <td className="px-2.5 py-2 font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
+                              {order.customer_name || "-"}
+                            </td>
+                            <td className="px-2.5 py-2 text-slate-700 dark:text-slate-300 truncate max-w-[90px]">
+                              {order.goods_name || "-"}
+                            </td>
+                            <td className="px-2.5 py-2 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                              {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || ""}` : "-"}
+                            </td>
+                            <td className="px-2.5 py-2 text-slate-500 truncate max-w-[100px]">
+                              {order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}
+                            </td>
+                            <td className="px-2.5 py-2">
+                              <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                {order.status || "Draft"}
+                              </span>
+                            </td>
+                            <td className="px-2.5 py-2 text-right">
+                              <button
+                                type="button"
+                                onClick={() => loadEditOrder(order)}
+                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                                title={tt("edit_resume_step", "Edit / Resume")}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Order Modal */}
       {viewOrder ? (
@@ -3452,35 +4190,37 @@ function Step3RouteVesselCustoms({
     <div className="space-y-3.5 animate-in fade-in duration-150">
       <SectionHeading num={3} icon={Route} title={t(lang, "comv.step3_title", "Route, Vessel & Customs")} />
 
-      <PartyRolePanel
-        roleKey="importer"
-        label={tt("role_importer", "Importer")}
-        required
-        selection={partySelections.importer}
-        customers={customers}
-        companies={companies}
-        customerOptions={customerOptions}
-        companyOptions={companyOptions}
-        orders={orders}
-        disabled={loading}
-        lang={lang}
-        onChange={(next) => handlePartyChange("importer", next)}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <PartyRolePanel
+          roleKey="importer"
+          label={tt("role_importer", "Importer")}
+          required
+          selection={partySelections.importer}
+          customers={customers}
+          companies={companies}
+          customerOptions={customerOptions}
+          companyOptions={companyOptions}
+          orders={orders}
+          disabled={loading}
+          lang={lang}
+          onChange={(next) => handlePartyChange("importer", next)}
+        />
 
-      <PartyRolePanel
-        roleKey="exporter"
-        label={tt("role_exporter", "Exporter")}
-        required
-        selection={partySelections.exporter}
-        customers={customers}
-        companies={companies}
-        customerOptions={customerOptions}
-        companyOptions={companyOptions}
-        orders={orders}
-        disabled={loading}
-        lang={lang}
-        onChange={(next) => handlePartyChange("exporter", next)}
-      />
+        <PartyRolePanel
+          roleKey="exporter"
+          label={tt("role_exporter", "Exporter")}
+          required
+          selection={partySelections.exporter}
+          customers={customers}
+          companies={companies}
+          customerOptions={customerOptions}
+          companyOptions={companyOptions}
+          orders={orders}
+          disabled={loading}
+          lang={lang}
+          onChange={(next) => handlePartyChange("exporter", next)}
+        />
+      </div>
 
       <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/40 space-y-2.5">
         <div className="flex items-center justify-between">

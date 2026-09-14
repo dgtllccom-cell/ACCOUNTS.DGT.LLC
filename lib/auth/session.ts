@@ -136,17 +136,20 @@ function getAssignmentRoots(assignments: RoleAssignmentScope[]) {
   const cIds: string[] = [];
   const cbIds: string[] = [];
   const cityIds: string[] = [];
-  
+
+  // A city-branch assignment row commonly also carries its own parent
+  // country_branch_id/country_id (denormalized at assignment time) — collect
+  // ALL populated levels from each assignment rather than only the most
+  // specific one, so a city-branch-scoped user's session still knows its
+  // own parent chain. resolveHierarchyScopes() below additionally resolves
+  // upward via the branch tables for any assignment where the parent
+  // columns were left null, so both cases are covered.
   for (const a of assignments) {
-    if (a.cityBranchId) {
-      cityIds.push(a.cityBranchId);
-    } else if (a.countryBranchId) {
-      cbIds.push(a.countryBranchId);
-    } else if (a.countryId) {
-      cIds.push(a.countryId);
-    }
+    if (a.cityBranchId) cityIds.push(a.cityBranchId);
+    if (a.countryBranchId) cbIds.push(a.countryBranchId);
+    if (a.countryId) cIds.push(a.countryId);
   }
-  
+
   return {
     initialCountryIds: uniqueStrings(cIds),
     initialCountryBranchIds: uniqueStrings(cbIds),
@@ -198,6 +201,51 @@ async function resolveHierarchyScopes(
       cityRes?.forEach((r: any) => { if (r.id) finalCityBranchIds.add(r.id); });
     } catch (e) {
       console.error("Error resolving downward from country branch IDs:", e);
+    }
+  }
+
+  // 3. Resolve UPWARD from city-branch roots to their parent country branch
+  //    and country. Without this, a user scoped ONLY at the city-branch level
+  //    (e.g. a Business/Shipping admin or user assigned to one city branch,
+  //    with no separate country/country-branch assignment) never gets their
+  //    parent IDs into countryBranchIds/countryIds — so any query that reads
+  //    an account/ledger/master record shared at the country-branch or
+  //    country level (city_branch_id IS NULL, scoped one level up) matches
+  //    nothing for them, even though that record legitimately applies to
+  //    their branch. This was the root cause of Purchase/Sales accounts not
+  //    loading for a city-branch-scoped user (e.g. Al Ras / Dubai) despite
+  //    valid accounts existing at the country-branch level.
+  if (initialCityBranchIds.length > 0) {
+    try {
+      const { data: cityRows } = await supabase
+        .from("city_branches")
+        .select("id, country_branch_id, country_id")
+        .in("id", initialCityBranchIds)
+        .is("deleted_at", null);
+      cityRows?.forEach((r: any) => {
+        if (r.country_branch_id) finalCountryBranchIds.add(r.country_branch_id);
+        if (r.country_id) finalCountryIds.add(r.country_id);
+      });
+    } catch (e) {
+      console.error("Error resolving upward from city branch IDs:", e);
+    }
+  }
+
+  // 4. Resolve UPWARD from country-branch roots (including any just added in
+  //    step 3) to their parent country, for the same reason as step 3.
+  const countryBranchIdsForUpwardLookup = Array.from(finalCountryBranchIds);
+  if (countryBranchIdsForUpwardLookup.length > 0) {
+    try {
+      const { data: branchRows } = await supabase
+        .from("country_branches")
+        .select("id, country_id")
+        .in("id", countryBranchIdsForUpwardLookup)
+        .is("deleted_at", null);
+      branchRows?.forEach((r: any) => {
+        if (r.country_id) finalCountryIds.add(r.country_id);
+      });
+    } catch (e) {
+      console.error("Error resolving upward from country branch IDs:", e);
     }
   }
 
