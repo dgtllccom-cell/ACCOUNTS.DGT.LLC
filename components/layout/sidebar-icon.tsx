@@ -34,7 +34,9 @@ import {
   ShoppingBag,
   Users,
   Truck,
-  Video
+  Video,
+  Warehouse,
+  Flag
 } from "lucide-react";
 import type { SidebarIconKey } from "@/lib/navigation/sidebar";
 import { cn } from "@/lib/utils";
@@ -73,7 +75,9 @@ const iconMap: Partial<Record<SidebarIconKey, LucideIcon>> = {
   scale: Scale,
   send: Send,
   "shield-check": ShieldCheck,
-  "shopping-bag": ShoppingBag
+  "shopping-bag": ShoppingBag,
+  warehouse: Warehouse,
+  flag: Flag
 };
 
 export function SidebarIcon({ name, className }: { name?: SidebarIconKey; className?: string }) {

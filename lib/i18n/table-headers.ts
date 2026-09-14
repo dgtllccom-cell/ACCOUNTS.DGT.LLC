@@ -2869,6 +2869,9 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "SHIPPING": { ur: "شپنگ", ar: "الشحن", fa: "حمل و نقل", ps: "بار وړل" },
   "DOMAIN": { ur: "ڈومین", ar: "النطاق", fa: "حوزه", ps: "ډومین" },
   "ALL DOMAINS": { ur: "تمام ڈومینز", ar: "جميع النطاقات", fa: "همه حوزه‌ها", ps: "ټول ډومینونه" },
+  "WAREHOUSE TRANSFER QUEUE": { ur: "گودام منتقلی قطار", ar: "قائمة نقل المستودع", fa: "صف انتقال انبار", ps: "د ګدام لېږد قطار" },
+  "LOCAL PURCHASE LOADING QUEUE": { ur: "لوکل خریداری لوڈنگ قطار", ar: "قائمة تحميل الشراء المحلي", fa: "صف بارگیری خرید محلی", ps: "د سیمه‌ييز پیرودنې د بار کولو قطار" },
+  "EXPORT HANDOVER QUEUE": { ur: "برآمدی حوالگی قطار", ar: "قائمة تسليم التصدير", fa: "صف تحویل صادرات", ps: "د صادراتو د سپارلو قطار" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

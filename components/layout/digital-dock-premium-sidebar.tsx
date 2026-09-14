@@ -68,6 +68,8 @@ import {
   Truck,
   Users,
   Wallet,
+  Warehouse,
+  Flag,
   X,
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -254,6 +256,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: "Local Purchase Order", href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
           { label: "Local Goods Received", href: "/dashboard/purchase/local-goods-received", icon: Package },
           { label: "Local Purchase Payment / Transfer", href: "/dashboard/purchase/local-purchase-transfer-payment", icon: Receipt },
+          { label: "Warehouse Transfer Queue", href: "/dashboard/purchase/local-purchase-warehouse-transfer", icon: Warehouse },
+          { label: "Local Purchase Loading Queue", href: "/dashboard/purchase/local-purchase-loading", icon: Truck },
+          { label: "Export Handover Queue", href: "/dashboard/purchase/local-purchase-export", icon: Flag },
           { label: "Local Purchase Journal Report", href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
@@ -619,6 +624,9 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/purchase/local-purchase": ["purchases:read", "route:/dashboard/purchase/local-purchase"],
   "/dashboard/purchase/local-goods-received": ["purchases:read", "route:/dashboard/purchase/local-goods-received"],
   "/dashboard/purchase/local-purchase-transfer-payment": ["purchases:read", "route:/dashboard/purchase/local-purchase-transfer-payment"],
+  "/dashboard/purchase/local-purchase-warehouse-transfer": ["purchases:read", "route:/dashboard/purchase/local-purchase-warehouse-transfer"],
+  "/dashboard/purchase/local-purchase-loading": ["purchases:read", "route:/dashboard/purchase/local-purchase-loading"],
+  "/dashboard/purchase/local-purchase-export": ["purchases:read", "route:/dashboard/purchase/local-purchase-export"],
   "/dashboard/purchase/local-purchase-journal-report": ["purchases:read", "route:/dashboard/purchase/local-purchase-journal-report"],
   "/dashboard/consignment": ["purchases:read", "route:/dashboard/consignment"],
   "/dashboard/sales/new-sales-booking-order": ["sales:read", "route:/dashboard/sales/new-sales-booking-order"],

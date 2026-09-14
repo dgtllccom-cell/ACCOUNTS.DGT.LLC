@@ -44,6 +44,23 @@ const SHIPPING_MODES = [
   { value: "Custom", label: "Custom Mode" },
 ];
 
+// The "Shipment Type" selector (Loading by Truck / Warehouse Transfer / Export
+// Shipment) is the actual destination-routing choice the user makes at booking
+// time. It must persist as local_purchases.shipping_mode so that, once the
+// bill is posted, the destination-stage API/queues (destination-stage/route.ts)
+// know which operational queue to route it into. Previously shipmentType was
+// local UI state only and was never saved — this mapping keeps the two in sync.
+const SHIPMENT_TYPE_TO_SHIPPING_MODE: Record<string, string> = {
+  "Loading by Truck": "Loading",
+  "Warehouse Transfer": "Transfer Layout",
+  "Export Shipment": "Export",
+};
+const SHIPPING_MODE_TO_SHIPMENT_TYPE: Record<string, string> = {
+  "Loading": "Loading by Truck",
+  "Transfer Layout": "Warehouse Transfer",
+  "Export": "Export Shipment",
+};
+
 const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
 
 function isUaeCountryName(value?: string | null) {
@@ -1163,6 +1180,7 @@ export function LocalPurchaseView({
       setSupplierPersonId("");
       setPaymentMode("Cash");
       setShippingMode("Loading");
+      setShipmentType("Loading by Truck");
       setCustomShippingMode("");
       setOriginCountryId("");
       setCustomOriginCountryName("");
@@ -2005,7 +2023,11 @@ export function LocalPurchaseView({
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.shipment_type", "Shipment Type *")}</label>
                         <select
                           value={shipmentType}
-                          onChange={e => setShipmentType(e.target.value)}
+                          onChange={e => {
+                            const nextType = e.target.value;
+                            setShipmentType(nextType);
+                            setShippingMode(SHIPMENT_TYPE_TO_SHIPPING_MODE[nextType] || "Loading");
+                          }}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-blue-700"
                         >
                           <option value="Loading by Truck">{t(lang, "lp.shipment_loading", "Loading by Truck")}</option>
@@ -3370,6 +3392,7 @@ export function LocalPurchaseView({
                                           setLotNo(row.lot_no || row.lotNo || "");
                                           setPaymentMode(row.payment_mode || row.paymentMode || "Cash");
                                           setShippingMode(row.shipping_mode || row.shippingMode || "Loading");
+                                          setShipmentType(SHIPPING_MODE_TO_SHIPMENT_TYPE[row.shipping_mode || row.shippingMode || "Loading"] || "Loading by Truck");
                                           setOriginCountryId(row.origin_country_id || row.originCountryId || "");
                                           setAdvancePercentage(String(row.advance_percentage ?? row.advancePercentage ?? "20"));
                                           setWarehouseName(row.warehouse_name || row.warehouseName || "");

@@ -39,7 +39,9 @@ export type SidebarIconKey =
   | "file-spreadsheet"
   | "scale"
   | "phone"
-  | "credit-card";
+  | "credit-card"
+  | "warehouse"
+  | "flag";
 
 export type SidebarNode = {
   key: string;
@@ -712,6 +714,27 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.inter_country_transfer_payment",
         iconKey: "send",
         href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "local-purchase-warehouse-transfer",
+        labelKey: "nav.lp_warehouse_transfer_queue",
+        iconKey: "warehouse",
+        href: "/dashboard/purchase/local-purchase-warehouse-transfer" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "local-purchase-loading",
+        labelKey: "nav.lp_loading_queue",
+        iconKey: "truck",
+        href: "/dashboard/purchase/local-purchase-loading" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "local-purchase-export",
+        labelKey: "nav.lp_export_queue",
+        iconKey: "flag",
+        href: "/dashboard/purchase/local-purchase-export" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {

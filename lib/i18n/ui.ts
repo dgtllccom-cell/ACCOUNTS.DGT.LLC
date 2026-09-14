@@ -665,6 +665,9 @@ export type UiKey =
   | "nav.inter_country_trade"
   | "nav.inter_country_purchase_booking"
   | "nav.inter_country_transfer_payment"
+  | "nav.lp_warehouse_transfer_queue"
+  | "nav.lp_loading_queue"
+  | "nav.lp_export_queue"
   | "nav.inter_country_transfer_verification"
   | "nav.receiving_country_workflow"
   | "nav.new_purchase_booking"
@@ -4431,6 +4434,30 @@ export type UiKey =
   | "lp.roznamcha_pending"
   | "lp.ledger_posted"
   | "lp.ledger_pending"
+  | "lpdest.title_warehouse_transfer"
+  | "lpdest.title_loading"
+  | "lpdest.title_export"
+  | "lpdest.subtitle"
+  | "lpdest.search_placeholder"
+  | "lpdest.refresh"
+  | "lpdest.col_bill"
+  | "lpdest.col_supplier"
+  | "lpdest.col_details"
+  | "lpdest.col_amount"
+  | "lpdest.col_status"
+  | "lpdest.col_action"
+  | "lpdest.loading"
+  | "lpdest.empty"
+  | "lpdest.status_completed"
+  | "lpdest.status_pending"
+  | "lpdest.warehouse_label"
+  | "lpdest.truck_label"
+  | "lpdest.action_mark_warehouse"
+  | "lpdest.action_mark_loading"
+  | "lpdest.action_mark_export"
+  | "lpdest.confirm_warehouse"
+  | "lpdest.confirm_loading"
+  | "lpdest.confirm_export"
   | "branch.wizard_step1_title"
   | "branch.wizard_step1_desc"
   | "branch.wizard_step2_title"
@@ -12987,6 +13014,30 @@ const en: Dict = {
   "lp.roznamcha_pending": "Roznamcha: Pending",
   "lp.ledger_posted": "Ledger: Posted",
   "lp.ledger_pending": "Ledger: Pending",
+  "lpdest.title_warehouse_transfer": "Warehouse Transfer Queue",
+  "lpdest.title_loading": "Loading Queue",
+  "lpdest.title_export": "Export Handover Queue",
+  "lpdest.subtitle": "Posted Local Purchase bills routed to this destination",
+  "lpdest.search_placeholder": "Search goods, supplier, serial...",
+  "lpdest.refresh": "Refresh",
+  "lpdest.col_bill": "Bill / Goods",
+  "lpdest.col_supplier": "Supplier",
+  "lpdest.col_details": "Details",
+  "lpdest.col_amount": "Amount",
+  "lpdest.col_status": "Status",
+  "lpdest.col_action": "Action",
+  "lpdest.loading": "Loading...",
+  "lpdest.empty": "No bills currently in this queue.",
+  "lpdest.status_completed": "Completed",
+  "lpdest.status_pending": "Pending",
+  "lpdest.warehouse_label": "Warehouse:",
+  "lpdest.truck_label": "Truck:",
+  "lpdest.action_mark_warehouse": "Mark Transfer Completed",
+  "lpdest.action_mark_loading": "Mark Loaded",
+  "lpdest.action_mark_export": "Confirm Export Handover",
+  "lpdest.confirm_warehouse": "Confirm this bill's stock has been physically transferred to the warehouse?",
+  "lpdest.confirm_loading": "Confirm this bill has been loaded onto the truck?",
+  "lpdest.confirm_export": "Confirm this bill has been handed over to the Export/Shipping module?",
   // Tax System
   "nav.tax": "Tax Setup & Rates",
   "nav.tax_settings": "Country Tax Settings",
@@ -13060,6 +13111,9 @@ const en: Dict = {
   "nav.inter_country_trade": "Inter-Country Trade & Transfers",
   "nav.inter_country_purchase_booking": "Inter-Country Purchase Booking",
   "nav.inter_country_transfer_payment": "Inter-Country Transfer Payment",
+  "nav.lp_warehouse_transfer_queue": "Warehouse Transfer Queue",
+  "nav.lp_loading_queue": "Loading Queue",
+  "nav.lp_export_queue": "Export Handover Queue",
   "nav.inter_country_transfer_verification": "Inter-Country Transfer Verification",
   "nav.receiving_country_workflow": "Receiving Country Workflow (Goods Received)",
   "nav.purchase_entry": "Purchase Entry",
@@ -31159,6 +31213,30 @@ const ur: Dict = {
   "lp.roznamcha_pending": "روزنامچہ: زیر التواء",
   "lp.ledger_posted": "لیجر: پوسٹ شدہ",
   "lp.ledger_pending": "لیجر: زیر التواء",
+  "lpdest.title_warehouse_transfer": "گودام منتقلی قطار",
+  "lpdest.title_loading": "لوڈنگ قطار",
+  "lpdest.title_export": "برآمدی حوالگی قطار",
+  "lpdest.subtitle": "پوسٹ شدہ لوکل خریداری بل جو اس منزل کی طرف بھیجے گئے",
+  "lpdest.search_placeholder": "مال، سپلائر، سیریل تلاش کریں...",
+  "lpdest.refresh": "تازہ کریں",
+  "lpdest.col_bill": "بل / مال",
+  "lpdest.col_supplier": "سپلائر",
+  "lpdest.col_details": "تفصیلات",
+  "lpdest.col_amount": "رقم",
+  "lpdest.col_status": "حیثیت",
+  "lpdest.col_action": "عمل",
+  "lpdest.loading": "لوڈ ہو رہا ہے...",
+  "lpdest.empty": "اس قطار میں فی الحال کوئی بل موجود نہیں۔",
+  "lpdest.status_completed": "مکمل",
+  "lpdest.status_pending": "زیر التواء",
+  "lpdest.warehouse_label": "گودام:",
+  "lpdest.truck_label": "ٹرک:",
+  "lpdest.action_mark_warehouse": "منتقلی مکمل قرار دیں",
+  "lpdest.action_mark_loading": "لوڈ ہو گیا قرار دیں",
+  "lpdest.action_mark_export": "برآمدی حوالگی کی تصدیق کریں",
+  "lpdest.confirm_warehouse": "کیا آپ تصدیق کرتے ہیں کہ اس بل کا مال گودام میں منتقل ہو چکا ہے؟",
+  "lpdest.confirm_loading": "کیا آپ تصدیق کرتے ہیں کہ اس بل کا مال ٹرک پر لوڈ ہو چکا ہے؟",
+  "lpdest.confirm_export": "کیا آپ تصدیق کرتے ہیں کہ یہ بل برآمد/شپنگ ماڈیول کے حوالے کر دیا گیا ہے؟",
   // Tax System Urdu
   "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
   "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
@@ -32283,6 +32361,9 @@ const ur: Dict = {
   "nav.inter_country_trade": "بین الممالک تجارت اور ٹرانسفرز",
   "nav.inter_country_purchase_booking": "بین الممالک خریداری بکنگ",
   "nav.inter_country_transfer_payment": "بین الممالک ٹرانسفر ادائیگی",
+  "nav.lp_warehouse_transfer_queue": "گودام منتقلی قطار",
+  "nav.lp_loading_queue": "لوڈنگ قطار",
+  "nav.lp_export_queue": "برآمدی حوالگی قطار",
   "nav.inter_country_transfer_verification": "بین الممالک ٹرانسفر تصدیق",
   "nav.receiving_country_workflow": "وصول کنندہ ملک ورک فلو (اشیاء موصولہ)",
   "nav.new_purchase_booking": "نئی خریداری بکنگ",
@@ -49220,6 +49301,30 @@ const ar: Dict = {
   "lp.roznamcha_pending": "الروزنامجة: قيد الانتظار",
   "lp.ledger_posted": "دفتر الأستاذ: مرحل",
   "lp.ledger_pending": "دفتر الأستاذ: قيد الانتظار",
+  "lpdest.title_warehouse_transfer": "قائمة نقل المستودع",
+  "lpdest.title_loading": "قائمة التحميل",
+  "lpdest.title_export": "قائمة تسليم التصدير",
+  "lpdest.subtitle": "فواتير الشراء المحلي المرحّلة الموجهة إلى هذه الوجهة",
+  "lpdest.search_placeholder": "ابحث عن البضاعة أو المورد أو الرقم التسلسلي...",
+  "lpdest.refresh": "تحديث",
+  "lpdest.col_bill": "الفاتورة / البضاعة",
+  "lpdest.col_supplier": "المورد",
+  "lpdest.col_details": "التفاصيل",
+  "lpdest.col_amount": "المبلغ",
+  "lpdest.col_status": "الحالة",
+  "lpdest.col_action": "الإجراء",
+  "lpdest.loading": "جارٍ التحميل...",
+  "lpdest.empty": "لا توجد فواتير في هذه القائمة حاليًا.",
+  "lpdest.status_completed": "مكتمل",
+  "lpdest.status_pending": "قيد الانتظار",
+  "lpdest.warehouse_label": "المستودع:",
+  "lpdest.truck_label": "الشاحنة:",
+  "lpdest.action_mark_warehouse": "وضع علامة اكتمال النقل",
+  "lpdest.action_mark_loading": "وضع علامة تم التحميل",
+  "lpdest.action_mark_export": "تأكيد تسليم التصدير",
+  "lpdest.confirm_warehouse": "هل تؤكد أن بضاعة هذه الفاتورة قد نُقلت فعليًا إلى المستودع؟",
+  "lpdest.confirm_loading": "هل تؤكد أن هذه الفاتورة قد حُمّلت على الشاحنة؟",
+  "lpdest.confirm_export": "هل تؤكد تسليم هذه الفاتورة إلى وحدة التصدير/الشحن؟",
   // Tax System Arabic
   "nav.tax": "إعدادات الضرائب والنسب",
   "nav.tax_settings": "إعدادات ضرائب الدولة",
@@ -50372,6 +50477,9 @@ const ar: Dict = {
   "nav.inter_country_trade": "التجارة والتحويلات بين الدول",
   "nav.inter_country_purchase_booking": "حجز الشراء بين الدول",
   "nav.inter_country_transfer_payment": "دفعة التحويل بين الدول",
+  "nav.lp_warehouse_transfer_queue": "قائمة نقل المستودع",
+  "nav.lp_loading_queue": "قائمة التحميل",
+  "nav.lp_export_queue": "قائمة تسليم التصدير",
   "nav.inter_country_transfer_verification": "التحقق من التحويل بين الدول",
   "nav.receiving_country_workflow": "سير عمل الدولة المستلمة (استلام البضائع)",
   "nav.new_purchase_booking": "حجز شراء جديد",
@@ -67295,6 +67403,30 @@ const fa: Dict = {
   "lp.roznamcha_pending": "روزنامچه: در انتظار",
   "lp.ledger_posted": "دفتر کل: ثبت شده",
   "lp.ledger_pending": "دفتر کل: در انتظار",
+  "lpdest.title_warehouse_transfer": "صف انتقال انبار",
+  "lpdest.title_loading": "صف بارگیری",
+  "lpdest.title_export": "صف تحویل صادرات",
+  "lpdest.subtitle": "صورتحساب‌های خرید محلی ثبت‌شده که به این مقصد ارجاع شده‌اند",
+  "lpdest.search_placeholder": "جستجوی کالا، تأمین‌کننده، شماره سریال...",
+  "lpdest.refresh": "بازخوانی",
+  "lpdest.col_bill": "صورتحساب / کالا",
+  "lpdest.col_supplier": "تأمین‌کننده",
+  "lpdest.col_details": "جزئیات",
+  "lpdest.col_amount": "مبلغ",
+  "lpdest.col_status": "وضعیت",
+  "lpdest.col_action": "اقدام",
+  "lpdest.loading": "در حال بارگذاری...",
+  "lpdest.empty": "در حال حاضر هیچ صورتحسابی در این صف وجود ندارد.",
+  "lpdest.status_completed": "تکمیل شده",
+  "lpdest.status_pending": "در انتظار",
+  "lpdest.warehouse_label": "انبار:",
+  "lpdest.truck_label": "کامیون:",
+  "lpdest.action_mark_warehouse": "تکمیل انتقال ثبت شود",
+  "lpdest.action_mark_loading": "بارگیری شده ثبت شود",
+  "lpdest.action_mark_export": "تأیید تحویل صادرات",
+  "lpdest.confirm_warehouse": "آیا تأیید می‌کنید که کالای این صورتحساب عملاً به انبار منتقل شده است؟",
+  "lpdest.confirm_loading": "آیا تأیید می‌کنید که این صورتحساب روی کامیون بارگیری شده است؟",
+  "lpdest.confirm_export": "آیا تأیید می‌کنید که این صورتحساب به واحد صادرات/حمل‌ونقل تحویل داده شده است؟",
   "nav.account_setup_report": "گزارش تنظیم حساب",
   "nav.account_type": "نوع حساب",
   "nav.afghanistan": "افغانستان",
@@ -68499,6 +68631,9 @@ const fa: Dict = {
   "nav.inter_country_trade": "تجارت و انتقالات بین‌کشوری",
   "nav.inter_country_purchase_booking": "رزرو خرید بین‌کشوری",
   "nav.inter_country_transfer_payment": "پرداخت انتقال بین‌کشوری",
+  "nav.lp_warehouse_transfer_queue": "صف انتقال انبار",
+  "nav.lp_loading_queue": "صف بارگیری",
+  "nav.lp_export_queue": "صف تحویل صادرات",
   "nav.inter_country_transfer_verification": "تأیید انتقال بین‌کشوری",
   "nav.receiving_country_workflow": "گردش‌کار کشور دریافت‌کننده (کالای دریافت‌شده)",
   "nav.new_purchase_booking": "رزرو خرید جدید",
@@ -85401,6 +85536,30 @@ const ps: Dict = {
   "lp.roznamcha_pending": "روزنامچه: پاتې",
   "lp.ledger_posted": "لېجر: ثبت شوی",
   "lp.ledger_pending": "لېجر: پاتې",
+  "lpdest.title_warehouse_transfer": "د ګدام لېږد قطار",
+  "lpdest.title_loading": "د بار کولو قطار",
+  "lpdest.title_export": "د صادراتو د سپارلو قطار",
+  "lpdest.subtitle": "پوسټ شوي سیمه‌ييز پیرودنې بېلونه چې دې منزل ته لیږل شوي",
+  "lpdest.search_placeholder": "توکي، عرضه کوونکی، سریال ولټوئ...",
+  "lpdest.refresh": "تازه کول",
+  "lpdest.col_bill": "بېل / توکي",
+  "lpdest.col_supplier": "عرضه کوونکی",
+  "lpdest.col_details": "تفصیلات",
+  "lpdest.col_amount": "اندازه",
+  "lpdest.col_status": "حالت",
+  "lpdest.col_action": "کړنه",
+  "lpdest.loading": "لوډ کیږي...",
+  "lpdest.empty": "دا مهال په دې قطار کې هیڅ بېل نشته.",
+  "lpdest.status_completed": "بشپړ شوی",
+  "lpdest.status_pending": "پاتې",
+  "lpdest.warehouse_label": "ګدام:",
+  "lpdest.truck_label": "ټرک:",
+  "lpdest.action_mark_warehouse": "لېږد بشپړ شوی په نښه کړئ",
+  "lpdest.action_mark_loading": "بار شوی په نښه کړئ",
+  "lpdest.action_mark_export": "د صادراتو سپارنه تایید کړئ",
+  "lpdest.confirm_warehouse": "ایا تاسو تایید کوئ چې د دې بېل توکي په واقعیت کې ګدام ته لېږدول شوي؟",
+  "lpdest.confirm_loading": "ایا تاسو تایید کوئ چې دا بېل په ټرک باندې بار شوی؟",
+  "lpdest.confirm_export": "ایا تاسو تایید کوئ چې دا بېل د صادراتو/بار وړلو برخې ته سپارل شوی؟",
   "nav.account_setup_report": "د حساب تنظیم راپور",
   "nav.account_type": "د حساب ډول",
   "nav.afghanistan": "افغانستان",
@@ -86633,6 +86792,9 @@ const ps: Dict = {
   "nav.inter_country_trade": "د هېوادونو ترمنځ سوداګري او لیږدونه",
   "nav.inter_country_purchase_booking": "د هېوادونو ترمنځ د اخیستلو بکنګ",
   "nav.inter_country_transfer_payment": "د هېوادونو ترمنځ د لیږد تادیه",
+  "nav.lp_warehouse_transfer_queue": "د ګدام لېږد قطار",
+  "nav.lp_loading_queue": "د بار کولو قطار",
+  "nav.lp_export_queue": "د صادراتو د سپارلو قطار",
   "nav.inter_country_transfer_verification": "د هېوادونو ترمنځ د لیږد تایید",
   "nav.receiving_country_workflow": "د ترلاسه کوونکي هېواد کاري بهیر (ترلاسه شوي توکي)",
   "nav.new_purchase_booking": "نوی د اخیستلو بکنګ",
