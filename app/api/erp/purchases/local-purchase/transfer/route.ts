@@ -235,6 +235,13 @@ export async function POST(request: NextRequest) {
           cityBranchId: purchase.city_branch_id ?? null,
         });
 
+        // Defensive guard on top of the idempotency-lock + reuse-by-id logic below:
+        // a purchase already posted (status='posted' with a linked Roznamcha entry)
+        // must never be re-processed as if it were a fresh transfer.
+        if (purchase.status === "posted" && purchase.roznamcha_entry_id) {
+          throw new Error("This bill has already been transferred and posted to Roznamcha/GL. No further action is needed.");
+        }
+
         const finalAmount = money(purchase.final_cost);
         if (finalAmount <= 0) {
           throw new Error("Cannot post a local purchase with zero or negative amount.");

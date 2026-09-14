@@ -157,8 +157,15 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
       const payload = await res.json();
       if (payload.ok && payload.data?.purchases) {
         const raw = payload.data.purchases as LocalPurchaseRecord[];
-        // Filter in memory: keep only accepted status entries for transfer payments
-        const filtered = raw.filter(p => p.status === "accepted");
+        // Filter in memory: keep only accepted status entries for transfer payments.
+        // Credit bills have no immediate cash outflow to review here — they still post
+        // to Roznamcha/GL exactly the same way via "Transfer & Post" in the main
+        // registry, they just don't need to sit in this Payment queue.
+        const filtered = raw.filter(p => {
+          if (p.status !== "accepted") return false;
+          const mode = String(p.paymentMode || p.payment_mode || "").trim().toLowerCase().split("(")[0].trim();
+          return mode !== "credit";
+        });
         setPurchases(filtered);
       }
     } catch (err) {
