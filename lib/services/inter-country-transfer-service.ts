@@ -675,3 +675,449 @@ export async function listInterCountryTransfers(filters: {
     };
   })) || { transfers: [], total: 0, pendingIncomingCount: 0 };
 }
+
+// ============================================================================
+// MAIN TRANSFER & HANDOVER CENTER — generic, multi-type workflow on the SAME
+// inter_country_transfers table (see supabase/migrations/20261125_transfer_
+// handover_center.sql). The financial_claim functions above are untouched;
+// everything below is additive and defaults to the non-financial path.
+// ============================================================================
+
+export type TransferCenterType =
+  | "financial_claim"
+  | "shipping_handover"
+  | "purchase_booking"
+  | "truck_task"
+  | "goods_verification"
+  | "clearing_bill"
+  | "other";
+
+export type TransferCenterTab =
+  | "incoming"
+  | "sent"
+  | "pending"
+  | "returned"
+  | "accepted"
+  | "completed"
+  | "all";
+
+export type CreateHandoverInput = {
+  session: ErpSession;
+  transferType: Exclude<TransferCenterType, "financial_claim">;
+  sourceCountryId: string;
+  sourceCountryBranchId?: string | null;
+  sourceCityBranchId?: string | null;
+  destCountryId: string;
+  destCountryBranchId?: string | null;
+  destCityBranchId?: string | null;
+  sourceTable?: string | null;
+  sourceId?: string | null;
+  narration?: string | null;
+  remarks?: string | null;
+  billNumber?: string | null;
+  containerNumber?: string | null;
+  orderReference?: string | null;
+  blNumber?: string | null;
+  jobNumber?: string | null;
+  customerPartyName?: string | null;
+  referenceDate?: string | null;
+  claimDescription?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+function assertSessionCanReachScope(
+  session: ErpSession,
+  countryId: string,
+  countryBranchId?: string | null,
+  cityBranchId?: string | null
+) {
+  if (session.isSuperAdmin) return;
+  const inCountry = !countryId || (session.countryIds ?? []).includes(countryId);
+  const inCountryBranch = !countryBranchId || (session.countryBranchIds ?? []).includes(countryBranchId);
+  const inCityBranch = !cityBranchId || (session.cityBranchIds ?? []).includes(cityBranchId);
+  // A caller must own at least ONE of the levels they're claiming as "theirs" —
+  // scope inheritance (city -> country-branch -> country) is already baked
+  // into session.countryIds/countryBranchIds/cityBranchIds by resolveHierarchyScopes().
+  if (!(inCountry || inCountryBranch || inCityBranch)) {
+    throw new Error("You do not have access to the requested source or destination scope.");
+  }
+}
+
+// ─── CREATE A NON-FINANCIAL HANDOVER ──────────────────────────────────────────
+
+export async function createHandoverTransfer(
+  input: CreateHandoverInput
+): Promise<{ id: string; transferNo: string; globalReferenceId: string }> {
+  assertSessionCanReachScope(input.session, input.sourceCountryId, input.sourceCountryBranchId, input.sourceCityBranchId);
+
+  const transferNo = generateTransferNo();
+  const globalRefId = generateGlobalRefId();
+  const refDate = input.referenceDate || new Date().toISOString().slice(0, 10);
+
+  const row = await withLocalPg(async (sql) => {
+    const r = await sql`
+      insert into public.inter_country_transfers (
+        transfer_no, transfer_type, source_table, source_id,
+        source_country_id, source_country_branch_id, source_city_branch_id,
+        dest_country_id, dest_country_branch_id, dest_city_branch_id,
+        narration, remarks, status, global_reference_id,
+        sender_user_id, created_by,
+        bill_number, container_number, order_reference, bl_number, job_number,
+        customer_party_name, reference_date, claim_category, claim_description,
+        metadata
+      ) values (
+        ${transferNo}, ${input.transferType}, ${input.sourceTable ?? null}, ${input.sourceId ?? null},
+        ${input.sourceCountryId}, ${input.sourceCountryBranchId ?? null}, ${input.sourceCityBranchId ?? null},
+        ${input.destCountryId}, ${input.destCountryBranchId ?? null}, ${input.destCityBranchId ?? null},
+        ${input.narration ?? null}, ${input.remarks ?? null}, 'pending', ${globalRefId},
+        ${input.session.userId}, ${input.session.userId},
+        ${input.billNumber ?? null}, ${input.containerNumber ?? null}, ${input.orderReference ?? null},
+        ${input.blNumber ?? null}, ${input.jobNumber ?? null},
+        ${input.customerPartyName ?? null}, ${refDate}, ${input.transferType},
+        ${input.claimDescription ?? null},
+        ${JSON.stringify(input.metadata ?? {})}::jsonb
+      )
+      returning id, transfer_no`;
+    return r[0];
+  });
+
+  if (!row) throw new Error("Failed to create the handover record.");
+
+  await withLocalPg(async (sql) => {
+    await sql`
+      insert into public.erp_activity_events (actor_id, action, resource, record_table, record_id, country_id, metadata)
+      values (
+        ${input.session.userId}, 'create', ${input.transferType}, 'inter_country_transfers', ${row.id}::uuid,
+        ${input.sourceCountryId}::uuid,
+        ${JSON.stringify({ transferNo: row.transfer_no, transferType: input.transferType, destCountryId: input.destCountryId })}::jsonb
+      )`;
+  });
+
+  return { id: row.id as string, transferNo: row.transfer_no as string, globalReferenceId: globalRefId };
+}
+
+// ─── ACCEPT A NON-FINANCIAL HANDOVER (no Roznamcha posting) ───────────────────
+
+export async function acceptHandover(input: {
+  session: ErpSession;
+  transferId: string;
+  note?: string | null;
+}): Promise<{ status: "accepted"; transferNo: string }> {
+  const result = await withLocalPg(async (sql) => {
+    const r = await sql`
+      update public.inter_country_transfers
+        set status = 'accepted',
+            accepted_by = ${input.session.userId},
+            accepted_at = now(),
+            receiver_user_id = ${input.session.userId},
+            remarks = case when ${input.note ?? null}::text is not null
+                        then coalesce(remarks || E'\n', '') || ${input.note ?? null}
+                        else remarks end,
+            updated_at = now()
+      where id = ${input.transferId} and status = 'pending' and deleted_at is null
+        and transfer_type <> 'financial_claim'
+      returning transfer_no, source_country_id`;
+    return r[0] ?? null;
+  });
+
+  if (!result) {
+    throw new Error("Handover not found, not pending, or is a financial claim (use the ledger-accept flow for those).");
+  }
+
+  await withLocalPg(async (sql) => {
+    await sql`
+      insert into public.erp_activity_events (actor_id, action, resource, record_table, record_id, country_id, metadata)
+      values (
+        ${input.session.userId}, 'accept', 'transfer_handover', 'inter_country_transfers', ${input.transferId}::uuid,
+        ${result.source_country_id}::uuid,
+        ${JSON.stringify({ transferNo: result.transfer_no, note: input.note ?? null })}::jsonb
+      )`;
+  });
+
+  return { status: "accepted", transferNo: result.transfer_no as string };
+}
+
+// ─── MARK AN ACCEPTED HANDOVER COMPLETED ──────────────────────────────────────
+
+export async function completeHandover(input: {
+  session: ErpSession;
+  transferId: string;
+  note?: string | null;
+}): Promise<{ status: "completed"; transferNo: string }> {
+  const result = await withLocalPg(async (sql) => {
+    const r = await sql`
+      update public.inter_country_transfers
+        set status = 'completed',
+            completed_by = ${input.session.userId},
+            completed_at = now(),
+            remarks = case when ${input.note ?? null}::text is not null
+                        then coalesce(remarks || E'\n', '') || ${input.note ?? null}
+                        else remarks end,
+            updated_at = now()
+      where id = ${input.transferId} and status = 'accepted' and deleted_at is null
+      returning transfer_no, dest_country_id`;
+    return r[0] ?? null;
+  });
+
+  if (!result) {
+    throw new Error("Only an already-accepted transfer/handover can be marked completed.");
+  }
+
+  await withLocalPg(async (sql) => {
+    await sql`
+      insert into public.erp_activity_events (actor_id, action, resource, record_table, record_id, country_id, metadata)
+      values (
+        ${input.session.userId}, 'complete', 'transfer_handover', 'inter_country_transfers', ${input.transferId}::uuid,
+        ${result.dest_country_id}::uuid,
+        ${JSON.stringify({ transferNo: result.transfer_no })}::jsonb
+      )`;
+  });
+
+  return { status: "completed", transferNo: result.transfer_no as string };
+}
+
+// ─── RETURN FOR CORRECTION (distinct from reject — sender may resubmit) ──────
+
+export async function returnTransferForCorrection(input: {
+  session: ErpSession;
+  transferId: string;
+  reason: string;
+}): Promise<{ status: "returned"; transferNo: string }> {
+  if (!input.reason || input.reason.trim().length === 0) {
+    throw new Error("A reason is required when returning a transfer/handover for correction.");
+  }
+
+  const result = await withLocalPg(async (sql) => {
+    const r = await sql`
+      update public.inter_country_transfers
+        set status = 'returned',
+            return_reason = ${input.reason},
+            receiver_user_id = ${input.session.userId},
+            updated_at = now()
+      where id = ${input.transferId} and status = 'pending' and deleted_at is null
+      returning transfer_no, source_country_id`;
+    return r[0] ?? null;
+  });
+
+  if (!result) {
+    throw new Error("Transfer/handover not found or is no longer pending.");
+  }
+
+  await withLocalPg(async (sql) => {
+    await sql`
+      insert into public.erp_activity_events (actor_id, action, resource, record_table, record_id, country_id, metadata)
+      values (
+        ${input.session.userId}, 'return', 'transfer_handover', 'inter_country_transfers', ${input.transferId}::uuid,
+        ${result.source_country_id}::uuid,
+        ${JSON.stringify({ transferNo: result.transfer_no, reason: input.reason })}::jsonb
+      )`;
+  });
+
+  return { status: "returned", transferNo: result.transfer_no as string };
+}
+
+// ─── RESUBMIT A RETURNED TRANSFER/HANDOVER ────────────────────────────────────
+// Creates a NEW pending row carrying the same content (plus any corrected
+// fields), links it back to the original via resubmitted_from_id, and marks
+// the original 'resubmitted' (a distinct terminal state from 'returned' so
+// the inbox doesn't show the same item twice as actionable).
+
+export async function resubmitTransfer(input: {
+  session: ErpSession;
+  transferId: string;
+  narration?: string | null;
+  remarks?: string | null;
+}): Promise<{ id: string; transferNo: string }> {
+  const original = await withLocalPg(async (sql) => {
+    const r = await sql`
+      select * from public.inter_country_transfers
+      where id = ${input.transferId} and status = 'returned' and deleted_at is null
+      limit 1`;
+    return r[0] ?? null;
+  });
+
+  if (!original) {
+    throw new Error("Only a returned transfer/handover can be resubmitted.");
+  }
+  if ((original as any).transfer_type === "financial_claim") {
+    throw new Error("Resubmit a financial claim by creating a corrected claim — this path is for handovers.");
+  }
+
+  const transferNo = generateTransferNo();
+  const globalRefId = generateGlobalRefId();
+
+  const row = await withLocalPg(async (sql) => {
+    const r = await sql`
+      insert into public.inter_country_transfers (
+        transfer_no, transfer_type, source_table, source_id,
+        source_country_id, source_country_branch_id, source_city_branch_id,
+        dest_country_id, dest_country_branch_id, dest_city_branch_id,
+        narration, remarks, status, global_reference_id,
+        sender_user_id, created_by,
+        bill_number, container_number, order_reference, bl_number, job_number,
+        customer_party_name, reference_date, claim_category, claim_description,
+        metadata, resubmitted_from_id, resubmit_count
+      )
+      select
+        ${transferNo}, transfer_type, source_table, source_id,
+        source_country_id, source_country_branch_id, source_city_branch_id,
+        dest_country_id, dest_country_branch_id, dest_city_branch_id,
+        ${input.narration ?? null}::text, coalesce(${input.remarks ?? null}::text, remarks), 'pending', ${globalRefId},
+        ${input.session.userId}, ${input.session.userId},
+        bill_number, container_number, order_reference, bl_number, job_number,
+        customer_party_name, reference_date, claim_category, claim_description,
+        metadata, id, resubmit_count + 1
+      from public.inter_country_transfers
+      where id = ${input.transferId}
+      returning id, transfer_no`;
+    return r[0];
+  });
+
+  if (!row) throw new Error("Failed to resubmit the handover.");
+
+  await withLocalPg(async (sql) => {
+    await sql`
+      update public.inter_country_transfers
+        set status = 'resubmitted', updated_at = now()
+      where id = ${input.transferId}`;
+    await sql`
+      insert into public.erp_activity_events (actor_id, action, resource, record_table, record_id, country_id, metadata)
+      values (
+        ${input.session.userId}, 'resubmit', 'transfer_handover', 'inter_country_transfers', ${row.id}::uuid,
+        ${(original as any).source_country_id}::uuid,
+        ${JSON.stringify({ transferNo: row.transfer_no, resubmittedFromId: input.transferId })}::jsonb
+      )`;
+  });
+
+  return { id: row.id as string, transferNo: row.transfer_no as string };
+}
+
+// ─── UNIFIED LIST — any transfer_type, the 6-tab Gmail-style inbox ───────────
+// Scope uses the FULL resolved hierarchy (session.countryIds/countryBranchIds/
+// cityBranchIds — already inheritance-resolved by resolveHierarchyScopes()),
+// not just the first country id, so a city/country-branch-scoped user sees
+// their real inbox. listInterCountryTransfers() above is untouched and keeps
+// serving the existing financial-claims screen exactly as before.
+
+export async function listTransferCenterItems(filters: {
+  session: ErpSession;
+  transferType?: TransferCenterType | "all" | null;
+  tab: TransferCenterTab;
+  limit?: number;
+  offset?: number;
+}): Promise<{ transfers: any[]; total: number; counts: Record<TransferCenterTab, number> }> {
+  const { session } = filters;
+  const limit = filters.limit || 50;
+  const offset = filters.offset || 0;
+
+  return (await withLocalPg(async (sql) => {
+    const countryIds = session.countryIds ?? [];
+    const countryBranchIds = session.countryBranchIds ?? [];
+    const cityBranchIds = session.cityBranchIds ?? [];
+
+    const scopeClause = session.isSuperAdmin
+      ? sql`true`
+      : sql`(
+          t.source_country_id = any(${countryIds}::uuid[]) or t.dest_country_id = any(${countryIds}::uuid[])
+          or t.source_country_branch_id = any(${countryBranchIds}::uuid[]) or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
+          or t.source_city_branch_id = any(${cityBranchIds}::uuid[]) or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
+          or t.created_by = ${session.userId}::uuid
+        )`;
+
+    const destInScope = session.isSuperAdmin
+      ? sql`true`
+      : sql`(
+          t.dest_country_id = any(${countryIds}::uuid[])
+          or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
+          or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
+        )`;
+
+    const sourceInScope = session.isSuperAdmin
+      ? sql`true`
+      : sql`(
+          t.source_country_id = any(${countryIds}::uuid[])
+          or t.source_country_branch_id = any(${countryBranchIds}::uuid[])
+          or t.source_city_branch_id = any(${cityBranchIds}::uuid[])
+          or t.created_by = ${session.userId}::uuid
+        )`;
+
+    const typeClause =
+      filters.transferType && filters.transferType !== "all"
+        ? sql`and t.transfer_type = ${filters.transferType}`
+        : sql``;
+
+    function tabClause(tab: TransferCenterTab) {
+      switch (tab) {
+        case "incoming":
+          return sql`${scopeClause} and ${destInScope} and t.status = 'pending' ${typeClause}`;
+        case "sent":
+          return sql`${scopeClause} and ${sourceInScope} and t.status <> 'cancelled' ${typeClause}`;
+        case "pending":
+          return sql`${scopeClause} and t.status = 'pending' ${typeClause}`;
+        case "returned":
+          return sql`${scopeClause} and t.status = 'returned' ${typeClause}`;
+        case "accepted":
+          return sql`${scopeClause} and t.status = 'accepted' ${typeClause}`;
+        case "completed":
+          return sql`${scopeClause} and t.status = 'completed' ${typeClause}`;
+        case "all":
+        default:
+          return sql`${scopeClause} ${typeClause}`;
+      }
+    }
+
+    const whereCondition = sql`t.deleted_at is null and ${tabClause(filters.tab)}`;
+
+    const rows = await sql`
+      select
+        t.*,
+        sc.name as source_country_name,
+        dc.name as dest_country_name,
+        scb.name as source_branch_name,
+        dcb.name as dest_branch_name,
+        scib.name as source_city_branch_name,
+        dcib.name as dest_city_branch_name,
+        sp.full_name as sender_name,
+        rp.full_name as receiver_name,
+        ap.full_name as accepted_by_name,
+        rjp.full_name as rejected_by_name,
+        cp.full_name as completed_by_name
+      from public.inter_country_transfers t
+      left join public.countries sc on sc.id = t.source_country_id
+      left join public.countries dc on dc.id = t.dest_country_id
+      left join public.country_branches scb on scb.id = t.source_country_branch_id
+      left join public.country_branches dcb on dcb.id = t.dest_country_branch_id
+      left join public.city_branches scib on scib.id = t.source_city_branch_id
+      left join public.city_branches dcib on dcib.id = t.dest_city_branch_id
+      left join public.profiles sp on sp.id = t.sender_user_id
+      left join public.profiles rp on rp.id = t.receiver_user_id
+      left join public.profiles ap on ap.id = t.accepted_by
+      left join public.profiles rjp on rjp.id = t.rejected_by
+      left join public.profiles cp on cp.id = t.completed_by
+      where ${whereCondition}
+      order by t.created_at desc
+      limit ${limit} offset ${offset}
+    `;
+
+    const countRows = await sql`
+      select count(*)::int as total from public.inter_country_transfers t
+      where t.deleted_at is null and ${tabClause(filters.tab)}
+    `;
+
+    const tabs: TransferCenterTab[] = ["incoming", "sent", "pending", "returned", "accepted", "completed"];
+    const counts: Record<string, number> = {};
+    for (const tabName of tabs) {
+      const c = await sql`
+        select count(*)::int as n from public.inter_country_transfers t
+        where t.deleted_at is null and ${tabClause(tabName)}
+      `;
+      counts[tabName] = c[0]?.n || 0;
+    }
+
+    return {
+      transfers: rows || [],
+      total: countRows?.[0]?.total || 0,
+      counts: counts as Record<TransferCenterTab, number>,
+    };
+  })) || { transfers: [], total: 0, counts: { incoming: 0, sent: 0, pending: 0, returned: 0, accepted: 0, completed: 0, all: 0 } };
+}

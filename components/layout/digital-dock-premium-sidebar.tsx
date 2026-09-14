@@ -18,6 +18,7 @@ import {
   ArrowRightLeft,
   Banknote,
   BarChart3,
+  Inbox,
   BookOpen,
   BookOpenText,
   Boxes,
@@ -352,6 +353,12 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Shipping Handovers", href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
       { label: "Logistics Tracking Dashboard", href: "/dashboard/logistics", icon: BarChart3 },
     ],
+  },
+  {
+    key: "transfer-handover-center",
+    label: "Transfer & Handover Center",
+    icon: Inbox,
+    href: "/dashboard/transfer-center",
   },
   {
     key: "finance",

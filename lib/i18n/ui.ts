@@ -1,6 +1,63 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "tc.title"
+  | "tc.new_handover"
+  | "tc.tab_incoming"
+  | "tc.tab_sent"
+  | "tc.tab_pending"
+  | "tc.tab_returned"
+  | "tc.tab_accepted"
+  | "tc.tab_completed"
+  | "tc.filter_type"
+  | "tc.type_all"
+  | "tc.type_shipping_handover"
+  | "tc.type_purchase_booking"
+  | "tc.type_truck_task"
+  | "tc.type_goods_verification"
+  | "tc.type_clearing_bill"
+  | "tc.type_other"
+  | "tc.items"
+  | "tc.empty"
+  | "tc.select_item"
+  | "tc.source"
+  | "tc.destination"
+  | "tc.sender"
+  | "tc.receiver"
+  | "tc.bill_no"
+  | "tc.container_no"
+  | "tc.bl_no"
+  | "tc.job_no"
+  | "tc.order_ref"
+  | "tc.party"
+  | "tc.narration"
+  | "tc.remarks"
+  | "tc.return_reason"
+  | "tc.rejection_reason"
+  | "tc.resubmit_count"
+  | "tc.action_accept"
+  | "tc.action_return"
+  | "tc.action_reject"
+  | "tc.action_resubmit"
+  | "tc.action_complete"
+  | "tc.reason_ph"
+  | "tc.cancel"
+  | "tc.submit"
+  | "tc.source_country"
+  | "tc.source_branch"
+  | "tc.dest_country"
+  | "tc.dest_branch"
+  | "tc.select"
+  | "tc.narration_ph"
+  | "tc.create"
+  | "tc.err_required"
+  | "tc.status_pending"
+  | "tc.status_accepted"
+  | "tc.status_rejected"
+  | "tc.status_returned"
+  | "tc.status_cancelled"
+  | "tc.status_resubmitted"
+  | "tc.status_completed"
   | "comv.substep_1a_title"
   | "comv.substep_1a_desc"
   | "comv.substep_1b_title"
@@ -26035,7 +26092,64 @@ const en: Dict = {
   "comv.actual_arrival": "Actual Arrival",
   "comv.estimated_expense": "Estimated Expense",
   "comv.actual_expense": "Actual Expense",
-  "comv.expense_currency": "Expense Currency"
+  "comv.expense_currency": "Expense Currency",
+  "tc.title": "Transfer & Handover Center",
+  "tc.new_handover": "New Handover",
+  "tc.tab_incoming": "Incoming",
+  "tc.tab_sent": "Sent",
+  "tc.tab_pending": "Pending",
+  "tc.tab_returned": "Returned",
+  "tc.tab_accepted": "Accepted",
+  "tc.tab_completed": "Completed",
+  "tc.filter_type": "Type",
+  "tc.type_all": "All Types",
+  "tc.type_shipping_handover": "Shipping Handover",
+  "tc.type_purchase_booking": "Purchase Booking",
+  "tc.type_truck_task": "Truck Task",
+  "tc.type_goods_verification": "Goods Verification",
+  "tc.type_clearing_bill": "Clearing Bill",
+  "tc.type_other": "Other",
+  "tc.items": "items",
+  "tc.empty": "Nothing here.",
+  "tc.select_item": "Select an item to view its details.",
+  "tc.source": "Source",
+  "tc.destination": "Destination",
+  "tc.sender": "Sender",
+  "tc.receiver": "Receiver",
+  "tc.bill_no": "Bill",
+  "tc.container_no": "Container",
+  "tc.bl_no": "BL",
+  "tc.job_no": "Job",
+  "tc.order_ref": "Order",
+  "tc.party": "Party",
+  "tc.narration": "Narration",
+  "tc.remarks": "Remarks",
+  "tc.return_reason": "Returned for correction",
+  "tc.rejection_reason": "Rejected",
+  "tc.resubmit_count": "Resubmitted",
+  "tc.action_accept": "Accept",
+  "tc.action_return": "Return for Correction",
+  "tc.action_reject": "Reject",
+  "tc.action_resubmit": "Resubmit",
+  "tc.action_complete": "Mark Completed",
+  "tc.reason_ph": "Explain why...",
+  "tc.cancel": "Cancel",
+  "tc.submit": "Submit",
+  "tc.source_country": "Source Country",
+  "tc.source_branch": "Source Branch",
+  "tc.dest_country": "Destination Country",
+  "tc.dest_branch": "Destination Branch",
+  "tc.select": "Select...",
+  "tc.narration_ph": "What is being handed over...",
+  "tc.create": "Create",
+  "tc.err_required": "Source and destination country are required.",
+  "tc.status_pending": "Pending",
+  "tc.status_accepted": "Accepted",
+  "tc.status_rejected": "Rejected",
+  "tc.status_returned": "Returned",
+  "tc.status_cancelled": "Cancelled",
+  "tc.status_resubmitted": "Resubmitted",
+  "tc.status_completed": "Completed",
 };
 
 const ur: Dict = {
@@ -44188,7 +44302,64 @@ const ur: Dict = {
   "comv.actual_arrival": "اصل آمد",
   "comv.estimated_expense": "تخمینی اخراجات",
   "comv.actual_expense": "اصل اخراجات",
-  "comv.expense_currency": "اخراجات کی کرنسی"
+  "comv.expense_currency": "اخراجات کی کرنسی",
+  "tc.title": "ٹرانسفر و ہینڈ اوور سینٹر",
+  "tc.new_handover": "نیا ہینڈ اوور",
+  "tc.tab_incoming": "موصولہ",
+  "tc.tab_sent": "بھیجی گئی",
+  "tc.tab_pending": "زیر التوا",
+  "tc.tab_returned": "واپس شدہ",
+  "tc.tab_accepted": "منظور شدہ",
+  "tc.tab_completed": "مکمل",
+  "tc.filter_type": "قسم",
+  "tc.type_all": "تمام اقسام",
+  "tc.type_shipping_handover": "شپنگ ہینڈ اوور",
+  "tc.type_purchase_booking": "خریداری بکنگ",
+  "tc.type_truck_task": "ٹرک ٹاسک",
+  "tc.type_goods_verification": "سامان کی تصدیق",
+  "tc.type_clearing_bill": "کلیئرنگ بل",
+  "tc.type_other": "دیگر",
+  "tc.items": "اندراجات",
+  "tc.empty": "یہاں کچھ نہیں ہے۔",
+  "tc.select_item": "تفصیلات دیکھنے کے لیے کوئی آئٹم منتخب کریں۔",
+  "tc.source": "ماخذ",
+  "tc.destination": "منزل",
+  "tc.sender": "بھیجنے والا",
+  "tc.receiver": "وصول کنندہ",
+  "tc.bill_no": "بل",
+  "tc.container_no": "کنٹینر",
+  "tc.bl_no": "بی ایل",
+  "tc.job_no": "جاب",
+  "tc.order_ref": "آرڈر",
+  "tc.party": "فریق",
+  "tc.narration": "تفصیل",
+  "tc.remarks": "ریمارکس",
+  "tc.return_reason": "تصحیح کے لیے واپس",
+  "tc.rejection_reason": "مسترد",
+  "tc.resubmit_count": "دوبارہ جمع کرایا گیا",
+  "tc.action_accept": "منظور کریں",
+  "tc.action_return": "تصحیح کے لیے واپس کریں",
+  "tc.action_reject": "مسترد کریں",
+  "tc.action_resubmit": "دوبارہ جمع کریں",
+  "tc.action_complete": "مکمل نشان زد کریں",
+  "tc.reason_ph": "وجہ بیان کریں...",
+  "tc.cancel": "منسوخ کریں",
+  "tc.submit": "جمع کرائیں",
+  "tc.source_country": "ماخذ ملک",
+  "tc.source_branch": "ماخذ برانچ",
+  "tc.dest_country": "منزل ملک",
+  "tc.dest_branch": "منزل برانچ",
+  "tc.select": "منتخب کریں...",
+  "tc.narration_ph": "کیا منتقل کیا جا رہا ہے...",
+  "tc.create": "بنائیں",
+  "tc.err_required": "ماخذ اور منزل ملک درکار ہیں۔",
+  "tc.status_pending": "زیر التوا",
+  "tc.status_accepted": "منظور شدہ",
+  "tc.status_rejected": "مسترد",
+  "tc.status_returned": "واپس شدہ",
+  "tc.status_cancelled": "منسوخ",
+  "tc.status_resubmitted": "دوبارہ جمع شدہ",
+  "tc.status_completed": "مکمل",
 };
 
 const ar: Dict = {
@@ -62343,7 +62514,64 @@ const ar: Dict = {
   "com.csv_importer": "المستورد",
   "com.csv_exporter": "المصدّر",
   "com.csv_buyer": "المشتري",
-  "com.csv_created_date": "تاريخ الإنشاء"
+  "com.csv_created_date": "تاريخ الإنشاء",
+  "tc.title": "مركز النقل والتسليم",
+  "tc.new_handover": "تسليم جديد",
+  "tc.tab_incoming": "الوارد",
+  "tc.tab_sent": "المرسل",
+  "tc.tab_pending": "قيد الانتظار",
+  "tc.tab_returned": "معاد",
+  "tc.tab_accepted": "مقبول",
+  "tc.tab_completed": "مكتمل",
+  "tc.filter_type": "النوع",
+  "tc.type_all": "كل الأنواع",
+  "tc.type_shipping_handover": "تسليم الشحن",
+  "tc.type_purchase_booking": "حجز الشراء",
+  "tc.type_truck_task": "مهمة الشاحنة",
+  "tc.type_goods_verification": "التحقق من البضائع",
+  "tc.type_clearing_bill": "فاتورة التخليص",
+  "tc.type_other": "أخرى",
+  "tc.items": "عناصر",
+  "tc.empty": "لا يوجد شيء هنا.",
+  "tc.select_item": "حدد عنصرًا لعرض تفاصيله.",
+  "tc.source": "المصدر",
+  "tc.destination": "الوجهة",
+  "tc.sender": "المرسل",
+  "tc.receiver": "المستلم",
+  "tc.bill_no": "الفاتورة",
+  "tc.container_no": "الحاوية",
+  "tc.bl_no": "بوليصة الشحن",
+  "tc.job_no": "المهمة",
+  "tc.order_ref": "الطلب",
+  "tc.party": "الطرف",
+  "tc.narration": "البيان",
+  "tc.remarks": "ملاحظات",
+  "tc.return_reason": "أعيد للتصحيح",
+  "tc.rejection_reason": "مرفوض",
+  "tc.resubmit_count": "أعيد الإرسال",
+  "tc.action_accept": "قبول",
+  "tc.action_return": "إعادة للتصحيح",
+  "tc.action_reject": "رفض",
+  "tc.action_resubmit": "إعادة الإرسال",
+  "tc.action_complete": "وضع علامة مكتمل",
+  "tc.reason_ph": "اشرح السبب...",
+  "tc.cancel": "إلغاء",
+  "tc.submit": "إرسال",
+  "tc.source_country": "بلد المصدر",
+  "tc.source_branch": "فرع المصدر",
+  "tc.dest_country": "بلد الوجهة",
+  "tc.dest_branch": "فرع الوجهة",
+  "tc.select": "اختر...",
+  "tc.narration_ph": "ما الذي يتم تسليمه...",
+  "tc.create": "إنشاء",
+  "tc.err_required": "بلد المصدر والوجهة مطلوبان.",
+  "tc.status_pending": "قيد الانتظار",
+  "tc.status_accepted": "مقبول",
+  "tc.status_rejected": "مرفوض",
+  "tc.status_returned": "معاد",
+  "tc.status_cancelled": "ملغى",
+  "tc.status_resubmitted": "أُعيد إرساله",
+  "tc.status_completed": "مكتمل",
 };
 
 const fa: Dict = {
@@ -80497,7 +80725,64 @@ const fa: Dict = {
   "com.csv_importer": "واردکننده",
   "com.csv_exporter": "صادرکننده",
   "com.csv_buyer": "خریدار",
-  "com.csv_created_date": "تاریخ ایجاد"
+  "com.csv_created_date": "تاریخ ایجاد",
+  "tc.title": "مرکز انتقال و تحویل",
+  "tc.new_handover": "تحویل جدید",
+  "tc.tab_incoming": "دریافتی",
+  "tc.tab_sent": "ارسال‌شده",
+  "tc.tab_pending": "در انتظار",
+  "tc.tab_returned": "بازگشتی",
+  "tc.tab_accepted": "پذیرفته‌شده",
+  "tc.tab_completed": "تکمیل‌شده",
+  "tc.filter_type": "نوع",
+  "tc.type_all": "همه انواع",
+  "tc.type_shipping_handover": "تحویل حمل‌ونقل",
+  "tc.type_purchase_booking": "رزرو خرید",
+  "tc.type_truck_task": "وظیفه کامیون",
+  "tc.type_goods_verification": "تأیید کالا",
+  "tc.type_clearing_bill": "صورتحساب ترخیص",
+  "tc.type_other": "سایر",
+  "tc.items": "مورد",
+  "tc.empty": "چیزی اینجا نیست.",
+  "tc.select_item": "موردی را برای مشاهده جزئیات انتخاب کنید.",
+  "tc.source": "مبدأ",
+  "tc.destination": "مقصد",
+  "tc.sender": "فرستنده",
+  "tc.receiver": "گیرنده",
+  "tc.bill_no": "صورتحساب",
+  "tc.container_no": "کانتینر",
+  "tc.bl_no": "بارنامه",
+  "tc.job_no": "کار",
+  "tc.order_ref": "سفارش",
+  "tc.party": "طرف",
+  "tc.narration": "شرح",
+  "tc.remarks": "یادداشت‌ها",
+  "tc.return_reason": "بازگشت برای اصلاح",
+  "tc.rejection_reason": "رد شده",
+  "tc.resubmit_count": "دوباره ارسال شد",
+  "tc.action_accept": "پذیرفتن",
+  "tc.action_return": "بازگرداندن برای اصلاح",
+  "tc.action_reject": "رد کردن",
+  "tc.action_resubmit": "ارسال مجدد",
+  "tc.action_complete": "علامت‌گذاری به‌عنوان تکمیل‌شده",
+  "tc.reason_ph": "دلیل را توضیح دهید...",
+  "tc.cancel": "لغو",
+  "tc.submit": "ارسال",
+  "tc.source_country": "کشور مبدأ",
+  "tc.source_branch": "شعبه مبدأ",
+  "tc.dest_country": "کشور مقصد",
+  "tc.dest_branch": "شعبه مقصد",
+  "tc.select": "انتخاب کنید...",
+  "tc.narration_ph": "چه چیزی تحویل داده می‌شود...",
+  "tc.create": "ایجاد",
+  "tc.err_required": "کشور مبدأ و مقصد الزامی است.",
+  "tc.status_pending": "در انتظار",
+  "tc.status_accepted": "پذیرفته‌شده",
+  "tc.status_rejected": "رد شده",
+  "tc.status_returned": "بازگشتی",
+  "tc.status_cancelled": "لغوشده",
+  "tc.status_resubmitted": "دوباره ارسال شده",
+  "tc.status_completed": "تکمیل‌شده",
 };
 
 const ps: Dict = {
@@ -98657,7 +98942,64 @@ const ps: Dict = {
   "com.csv_importer": "واردوونکی",
   "com.csv_exporter": "صادروونکی",
   "com.csv_buyer": "پیرودونکی",
-  "com.csv_created_date": "د جوړولو نېټه"
+  "com.csv_created_date": "د جوړولو نېټه",
+  "tc.title": "د لېږد او سپارنې مرکز",
+  "tc.new_handover": "نوی سپارنه",
+  "tc.tab_incoming": "راتلونکي",
+  "tc.tab_sent": "لېږل شوي",
+  "tc.tab_pending": "په تمه",
+  "tc.tab_returned": "بېرته شوي",
+  "tc.tab_accepted": "منل شوي",
+  "tc.tab_completed": "بشپړ شوي",
+  "tc.filter_type": "ډول",
+  "tc.type_all": "ټول ډولونه",
+  "tc.type_shipping_handover": "د بحري لېږد سپارنه",
+  "tc.type_purchase_booking": "د پیرودنې بکنګ",
+  "tc.type_truck_task": "د لارۍ دنده",
+  "tc.type_goods_verification": "د توکو تایید",
+  "tc.type_clearing_bill": "د کلیرنس بېل",
+  "tc.type_other": "نور",
+  "tc.items": "توکي",
+  "tc.empty": "دلته هېڅ شی نشته.",
+  "tc.select_item": "د تفصیلاتو لپاره یو توکی وټاکئ.",
+  "tc.source": "سرچینه",
+  "tc.destination": "موخه",
+  "tc.sender": "لېږونکی",
+  "tc.receiver": "ترلاسه کوونکی",
+  "tc.bill_no": "بېل",
+  "tc.container_no": "ټانکر",
+  "tc.bl_no": "بي ال",
+  "tc.job_no": "دنده",
+  "tc.order_ref": "امر",
+  "tc.party": "لوری",
+  "tc.narration": "بیان",
+  "tc.remarks": "یادښتونه",
+  "tc.return_reason": "د سمون لپاره بېرته شوی",
+  "tc.rejection_reason": "رد شوی",
+  "tc.resubmit_count": "بیا سپارل شوی",
+  "tc.action_accept": "منل",
+  "tc.action_return": "د سمون لپاره بېرته کول",
+  "tc.action_reject": "رد کول",
+  "tc.action_resubmit": "بیا سپارل",
+  "tc.action_complete": "د بشپړ په توګه نښه کول",
+  "tc.reason_ph": "دلیل تشریح کړئ...",
+  "tc.cancel": "لغوه کول",
+  "tc.submit": "سپارل",
+  "tc.source_country": "د سرچینې هیواد",
+  "tc.source_branch": "د سرچینې څانګه",
+  "tc.dest_country": "د موخې هیواد",
+  "tc.dest_branch": "د موخې څانګه",
+  "tc.select": "وټاکئ...",
+  "tc.narration_ph": "څه سپارل کیږي...",
+  "tc.create": "جوړول",
+  "tc.err_required": "د سرچینې او موخې هیواد اړین دي.",
+  "tc.status_pending": "په تمه",
+  "tc.status_accepted": "منل شوی",
+  "tc.status_rejected": "رد شوی",
+  "tc.status_returned": "بېرته شوی",
+  "tc.status_cancelled": "لغوه شوی",
+  "tc.status_resubmitted": "بیا سپارل شوی",
+  "tc.status_completed": "بشپړ شوی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

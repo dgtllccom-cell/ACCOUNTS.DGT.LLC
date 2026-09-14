@@ -93,6 +93,9 @@ async function buildAccountListViaLocalPg(
         ea.country_id,
         ea.country_branch_id,
         ea.city_branch_id,
+        ea.company_id,
+        ea.customer_id,
+        ea.parent_id,
         ea.branch_code,
         ea.manual_reference_number,
         ea.account_number,
@@ -108,8 +111,15 @@ async function buildAccountListViaLocalPg(
               or ea.city_branch_id = any(${session.cityBranchIds ?? []}::uuid[])
             )
             ${scope.countryId ? sql`and (ea.country_id = ${scope.countryId}::uuid or ea.country_id is null)` : sql``}
-            ${scope.countryBranchId ? sql`and (ea.country_branch_id = ${scope.countryBranchId}::uuid or ea.country_branch_id is null)` : sql``}
-            ${scope.cityBranchId ? sql`and (ea.city_branch_id = ${scope.cityBranchId}::uuid or ea.city_branch_id is null)` : sql``}
+            ${
+              scope.cityBranchId && scope.countryBranchId
+                ? sql`and (ea.city_branch_id = ${scope.cityBranchId}::uuid or (ea.country_branch_id = ${scope.countryBranchId}::uuid and ea.city_branch_id is null))`
+                : scope.cityBranchId
+                ? sql`and (ea.city_branch_id = ${scope.cityBranchId}::uuid or ea.city_branch_id is null)`
+                : scope.countryBranchId
+                ? sql`and (ea.country_branch_id = ${scope.countryBranchId}::uuid or ea.country_branch_id is null)`
+                : sql``
+            }
           )
           or (
             ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE', 'CHN-CORP-GEN-001')
@@ -401,11 +411,12 @@ export async function GET(request: NextRequest) {
     if (scope.countryId) {
       query = query.or(`country_id.eq.${scope.countryId},country_id.is.null`);
     }
-    if (scope.countryBranchId) {
-      query = query.or(`country_branch_id.eq.${scope.countryBranchId},country_branch_id.is.null`);
-    }
-    if (scope.cityBranchId) {
+    if (scope.cityBranchId && scope.countryBranchId) {
+      query = query.or(`city_branch_id.eq.${scope.cityBranchId},and(country_branch_id.eq.${scope.countryBranchId},city_branch_id.is.null)`);
+    } else if (scope.cityBranchId) {
       query = query.or(`city_branch_id.eq.${scope.cityBranchId},city_branch_id.is.null`);
+    } else if (scope.countryBranchId) {
+      query = query.or(`country_branch_id.eq.${scope.countryBranchId},country_branch_id.is.null`);
     }
 
     const { data, error } = await query.limit(limit);
