@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { handleApiError } from "@/lib/api/response";
+import { ApiClientError, handleApiError } from "@/lib/api/response";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
         // a purchase already posted (status='posted' with a linked Roznamcha entry)
         // must never be re-processed as if it were a fresh transfer.
         if (purchase.status === "posted" && purchase.roznamcha_entry_id) {
-          throw new Error("This bill has already been transferred and posted to Roznamcha/GL. No further action is needed.");
+          throw new ApiClientError("This bill has already been transferred and posted to Roznamcha/GL. No further action is needed.", { status: 409, code: "ALREADY_POSTED" });
         }
 
         const finalAmount = money(purchase.final_cost);
