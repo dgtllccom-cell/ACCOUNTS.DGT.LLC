@@ -593,7 +593,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                 <GateBadge label={_("ble.gate_details", "Shipment Details Entered")} ok={shipmentDetailsReady} />
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
               {[
                 [1, _("ble.step1_label", "1) Parties")],
                 [2, _("ble.step2_label", "2) BL Entry")],

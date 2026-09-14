@@ -466,7 +466,7 @@ export function DashboardFrame({
     <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Persistent Sidebar (Collapsible via << Collapse Menu or Menu button) */}
       {!sidebarCollapsed && (
-        <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-r border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
+        <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-e border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
           <DigitalDockPremiumSidebar
             roles={roles ?? null}
             permissions={permissions ?? null}
@@ -488,11 +488,11 @@ export function DashboardFrame({
               setMobileOpen(false);
             }}
           />
-          <aside className="relative z-50 h-full w-[275px] max-w-[85vw] border-r border-border bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
+          <aside className="relative z-50 h-full w-[275px] max-w-[85vw] border-e border-border bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
             <button
               type="button"
               onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
-              className="absolute right-3 top-4 z-10 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"
+              className="absolute end-3 top-4 z-10 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"
               aria-label="Close navigation"
             >
               <X className="h-4 w-4" />
@@ -635,11 +635,11 @@ export function DashboardFrame({
                   className="relative p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+                  <span className="absolute top-1.5 end-1.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
                 </button>
 
                 {notificationsOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                  <div className="absolute top-full end-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                     <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
                       <span className="font-bold text-xs">{t(lang, "dashboard.system_notifications", "System Notifications")}</span>
                       <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{t(lang, "dashboard.live", "Live")}</span>
@@ -683,7 +683,7 @@ export function DashboardFrame({
                 </button>
 
               {profileMenuOpen && (
-                <div className="absolute top-full right-0 mt-2 w-72 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                <div className="absolute top-full end-0 mt-2 w-72 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                   <div className="p-4 border-b border-border bg-muted/30">
                     <p className="font-bold text-sm text-foreground">{userName || t(lang, "common.user", "User")}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{userEmail}</p>
@@ -850,7 +850,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ml-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800">
                     {t(lang, "dashboard.navigation", "Navigation")}
                   </span>
                 </CommandItem>
@@ -888,7 +888,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ml-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800">
                      {t(lang, "dashboard.module", "Module")}
                   </span>
                 </CommandItem>
@@ -914,7 +914,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ml-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
                      {t(lang, "dashboard.action", "Action")}
                   </span>
                 </CommandItem>
@@ -940,7 +940,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ml-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
+                  <span className="shrink-0 ms-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
                      {t(lang, "dashboard.settings", "Settings")}
                   </span>
                 </CommandItem>
@@ -968,7 +968,7 @@ export function DashboardFrame({
                       </p>
                     </div>
                   </div>
-                  <span className="shrink-0 ml-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800">
                     {item.entityType}
                   </span>
                 </CommandItem>

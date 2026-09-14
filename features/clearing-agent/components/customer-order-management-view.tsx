@@ -28,6 +28,8 @@ import {
   Truck,
   Users,
   Warehouse,
+  Wallet,
+  CreditCard,
   X
 } from "lucide-react";
 
@@ -149,6 +151,24 @@ function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): Rou
     estimatedExpenseAmount: "", actualExpenseAmount: "", expenseCurrency: "", currentTaskId: null
   };
 }
+
+type AccountRow = {
+  id: string;
+  code: string;
+  name: string;
+  kind?: string | null;
+  currency?: string | null;
+  status?: string | null;
+  current_balance?: string | number | null;
+  opening_balance?: string | number | null;
+  customer_id?: string | null;
+  company_id?: string | null;
+  country_id?: string | null;
+  country_branch_id?: string | null;
+  city_branch_id?: string | null;
+  account_number?: string | null;
+  manual_reference_number?: string | null;
+};
 
 type CustomerRow = {
   id: string;
@@ -583,8 +603,10 @@ export function CustomerOrderManagementView() {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const userContext = useBranchUserContext();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step1SubStep, setStep1SubStep] = useState<"1A" | "1B" | "1C">("1A");
   const [orders, setOrders] = useState<ClearingCustomerOrderRow[]>([]);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
+  const [accounts, setAccounts] = useState<AccountRow[]>([]);
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [ports, setPorts] = useState<PortRow[]>([]);
@@ -621,7 +643,7 @@ export function CustomerOrderManagementView() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes] = await Promise.all([
+      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes, accountRes] = await Promise.all([
         fetch("/api/erp/clearing-agent/customer-order"),
         fetch("/api/erp/customers?limit=250"),
         fetch("/api/erp/companies?limit=250"),
@@ -631,10 +653,11 @@ export function CustomerOrderManagementView() {
         fetch("/api/erp/shipping-lines?limit=200"),
         fetch("/api/branch-management/country-branches"),
         fetch("/api/branch-management/city-branches"),
-        fetch("/api/erp/user-tasks/assignees")
+        fetch("/api/erp/user-tasks/assignees"),
+        fetch("/api/erp/accounting/accounts?limit=1000").catch(() => null)
       ]);
 
-      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson] = await Promise.all([
+      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson, accountJson] = await Promise.all([
         orderRes.json(),
         customerRes.json(),
         companyRes.json(),
@@ -644,7 +667,8 @@ export function CustomerOrderManagementView() {
         lineRes.json(),
         countryBranchRes.json().catch(() => null),
         cityBranchRes.json().catch(() => null),
-        assigneeRes.json().catch(() => null)
+        assigneeRes.json().catch(() => null),
+        accountRes ? accountRes.json().catch(() => null) : null
       ]);
 
       const extractArray = (json: any, keys: string[]) => {
@@ -664,6 +688,7 @@ export function CustomerOrderManagementView() {
 
       setOrders(extractArray(orderJson, ["data", "orders", "entries"]));
       setCustomers(extractArray(customerJson, ["customers", "data"]));
+      setAccounts(extractArray(accountJson, ["accounts", "data"]));
       setCompanies(extractArray(companyJson, ["companies", "data"]));
       setCountries(extractArray(countryJson, ["countries", "data"]));
       setPorts(extractArray(portJson, ["ports", "data"]));
@@ -763,17 +788,60 @@ export function CustomerOrderManagementView() {
     }));
   };
 
-  const customerOptions = useMemo(
-    () =>
-      customers.map((row) => ({
+  const customerOptions = useMemo(() => {
+    const accountByCustomerId = new Map<string, AccountRow>();
+    for (const acc of accounts) {
+      if (acc.customer_id) accountByCustomerId.set(acc.customer_id, acc);
+    }
+
+    const items: SearchSelectOption[] = [];
+    const seenIds = new Set<string>();
+
+    for (const row of customers) {
+      seenIds.add(row.id);
+      const acc = accountByCustomerId.get(row.id);
+      const parts = [row.customer_name];
+      if (row.company_name) parts.push(`(${row.company_name})`);
+      if (acc?.code) parts.push(`• [${acc.code}]`);
+      else if (row.person_code) parts.push(`• [${row.person_code}]`);
+      if (acc?.current_balance != null && Number(acc.current_balance) !== 0) {
+        parts.push(`• Bal: ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+      }
+
+      items.push({
         value: row.id,
-        label: optionLabelFromCustomer(row),
-        keywords: [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email, row.address]
+        label: parts.join(" "),
+        keywords: [
+          row.customer_name,
+          row.company_name,
+          row.contact_person,
+          row.mobile,
+          row.whatsapp,
+          row.email,
+          row.address,
+          row.person_code,
+          acc?.code,
+          acc?.name,
+          acc?.currency
+        ]
           .filter(Boolean)
           .join(" ")
-      })),
-    [customers]
-  );
+      });
+    }
+
+    for (const acc of accounts) {
+      if (!acc.id || seenIds.has(acc.id) || (acc.customer_id && seenIds.has(acc.customer_id))) continue;
+      items.push({
+        value: acc.id,
+        label: `${acc.name} • [${acc.code}]${acc.current_balance != null ? ` • Bal: ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`,
+        keywords: [acc.name, acc.code, acc.currency, acc.account_number, acc.manual_reference_number]
+          .filter(Boolean)
+          .join(" ")
+      });
+    }
+
+    return items;
+  }, [customers, accounts]);
 
   const companyOptions = useMemo(
     () =>
@@ -918,11 +986,13 @@ export function CustomerOrderManagementView() {
     setPartySelections(emptyPartyState());
     setEditingOrderId(null);
     setCurrentStep(1);
+    setStep1SubStep("1A");
   };
 
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
     const o = order as Record<string, any>;
     setEditingOrderId(order.id);
+    setStep1SubStep("1A");
     setFormData({
       customer_id: order.customer_id || "",
       customer_name: order.customer_name || "",
@@ -1499,6 +1569,9 @@ export function CustomerOrderManagementView() {
               userContext={userContext}
               formData={formData}
               setFormData={setFormData}
+              step1SubStep={step1SubStep}
+              setStep1SubStep={setStep1SubStep}
+              accounts={accounts}
               customers={customers}
               customerOptions={customerOptions}
               countries={countries}
@@ -1515,6 +1588,7 @@ export function CustomerOrderManagementView() {
               handleReceivingCountryChange={handleReceivingCountryChange}
               handleLoadingPortChange={handleLoadingPortChange}
               handleDestinationPortChange={handleDestinationPortChange}
+              onAdvanceToStep2={() => void handleSaveProgress(true)}
             />
           )}
 
@@ -1576,11 +1650,26 @@ export function CustomerOrderManagementView() {
               {currentStep > 1 ? (
                 <button
                   type="button"
-                  onClick={() => setCurrentStep((s) => (s - 1) as any)}
+                  onClick={() => {
+                    setCurrentStep((s) => (s - 1) as any);
+                    if (currentStep === 2) setStep1SubStep("1C");
+                  }}
                   className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   {t(lang, "comv.back", "Back")}
+                </button>
+              ) : step1SubStep !== "1A" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (step1SubStep === "1C") setStep1SubStep("1B");
+                    else if (step1SubStep === "1B") setStep1SubStep("1A");
+                  }}
+                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  {step1SubStep === "1C" ? t(lang, "comv.prev_substep_1b", "Back to Movement (1B)") : t(lang, "comv.prev_substep_1a", "Back to Parties (1A)")}
                 </button>
               ) : editingOrderId ? (
                 <button
@@ -1595,7 +1684,7 @@ export function CustomerOrderManagementView() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Save Progress / Draft Button (Available at ANY step) */}
+              {/* Save Progress / Draft Button (Available at ANY step or sub-step) */}
               <button
                 type="button"
                 onClick={() => void handleSaveProgress(false)}
@@ -1610,11 +1699,29 @@ export function CustomerOrderManagementView() {
               {currentStep < 4 ? (
                 <button
                   type="button"
-                  onClick={() => void handleSaveProgress(true)}
+                  onClick={() => {
+                    if (currentStep === 1) {
+                      if (step1SubStep === "1A") {
+                        setStep1SubStep("1B");
+                        return;
+                      }
+                      if (step1SubStep === "1B") {
+                        setStep1SubStep("1C");
+                        return;
+                      }
+                    }
+                    void handleSaveProgress(true);
+                  }}
                   disabled={saving}
                   className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
                 >
-                  <span>{t(lang, "comv.next_step", "Next Step")}</span>
+                  <span>
+                    {currentStep === 1 && step1SubStep === "1A"
+                      ? t(lang, "comv.next_substep_1b", "Continue to Transport (1B)")
+                      : currentStep === 1 && step1SubStep === "1B"
+                      ? t(lang, "comv.next_substep_1c", "Continue to Route (1C)")
+                      : t(lang, "comv.next_step", "Next Step")}
+                  </span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               ) : (
@@ -2211,6 +2318,9 @@ function Step1BookingCustomer({
   userContext,
   formData,
   setFormData,
+  step1SubStep,
+  setStep1SubStep,
+  accounts,
   customers,
   customerOptions,
   countries,
@@ -2226,13 +2336,17 @@ function Step1BookingCustomer({
   handleLoadingCountryChange,
   handleReceivingCountryChange,
   handleLoadingPortChange,
-  handleDestinationPortChange
+  handleDestinationPortChange,
+  onAdvanceToStep2
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
   userContext: { context: BranchUserContext | null; loading: boolean; error: string | null };
   formData: FormDataState;
   setFormData: SetFormData;
+  step1SubStep: "1A" | "1B" | "1C";
+  setStep1SubStep: (sub: "1A" | "1B" | "1C") => void;
+  accounts: AccountRow[];
   customers: CustomerRow[];
   customerOptions: SearchSelectOption[];
   countries: CountryRow[];
@@ -2249,297 +2363,576 @@ function Step1BookingCustomer({
   handleReceivingCountryChange: (countryId: string) => void;
   handleLoadingPortChange: (portId: string) => void;
   handleDestinationPortChange: (portId: string) => void;
+  onAdvanceToStep2: () => void;
 }) {
   const ctx = userContext.context;
   const selectedCustomer = customers.find((c) => c.id === formData.customer_id);
+  const selectedAccount = accounts.find(
+    (a) =>
+      (formData.customer_id && a.customer_id === formData.customer_id) ||
+      a.id === formData.customer_id ||
+      (selectedCustomer && a.id === (selectedCustomer as any).account_id)
+  );
+
+  const selectedLoadingCountry = countries.find((c) => c.id === formData.loading_country_id);
+  const selectedReceivingCountry = countries.find((c) => c.id === formData.receiving_country_id);
+  const selectedLoadingCity = loadingCities.find((c) => c.id === formData.loading_city_id);
+  const selectedReceivingCity = receivingCities.find((c) => c.id === formData.receiving_city_id);
+  const selectedLoadingPort = ports.find((p) => p.id === formData.loading_port_id);
+  const selectedDestinationPort = ports.find((p) => p.id === formData.destination_port_id);
+
+  const isComplete1A = Boolean(formData.customer_id && formData.customer_name);
+  const isComplete1B = Boolean(formData.movement_type && formData.transport_mode);
+  const isComplete1C = Boolean(formData.loading_country_id && formData.receiving_country_id);
+
+  const handleCustomerSelection = (cid: string) => {
+    const cust = customers.find((c) => c.id === cid);
+    const acc = accounts.find((a) => a.id === cid || (cust && a.customer_id === cust.id));
+    const finalCustId = cust?.id || acc?.customer_id || cid;
+    const finalCustName = cust?.customer_name || acc?.name || "";
+    const finalCompName = cust?.company_name || "";
+    const finalAddr = cust?.address || "";
+
+    setFormData((prev) => ({
+      ...prev,
+      customer_id: finalCustId,
+      customer_name: finalCustName,
+      loading_country_id: prev.loading_country_id || cust?.country_id || acc?.country_id || ""
+    }));
+
+    handlePartyChange("supplier", {
+      ...partySelections.supplier,
+      customerId: finalCustId,
+      customerName: finalCustName,
+      companyName: partySelections.supplier.companyName || finalCompName,
+      addressText: partySelections.supplier.addressText || finalAddr,
+      addressSource: partySelections.supplier.addressSource || "ERP Account / Customer Master"
+    });
+  };
+
+  const copyCustomerToBuyer = () => {
+    if (!formData.customer_id) return;
+    handlePartyChange("buyer", {
+      ...partySelections.buyer,
+      customerId: formData.customer_id,
+      customerName: formData.customer_name,
+      companyName: partySelections.supplier.companyName || selectedCustomer?.company_name || "",
+      addressText: partySelections.supplier.addressText || selectedCustomer?.address || "",
+      addressSource: "Copied from Customer"
+    });
+  };
 
   return (
     <div className="space-y-3.5 animate-in fade-in duration-150">
-      <SectionHeading num={1} icon={Boxes} title={t(lang, "comv.step1_title", "Booking & Customer")} />
-
-      {/* Serial bar — role-gated visibility (spec point 2); Global Bill/Shipping No. always shown */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
-        {canSeeSerial("super", ctx) ? (
-          <div className="space-y-0.5">
-            <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_super_admin", "Super Admin")}</div>
-            <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.super_admin_serial || "—"}</div>
-          </div>
-        ) : null}
-        {canSeeSerial("country", ctx) ? (
-          <div className="space-y-0.5">
-            <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_country", "Country Serial")}</div>
-            <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.country_serial || "—"}</div>
-          </div>
-        ) : null}
-        {canSeeSerial("branch", ctx) ? (
-          <div className="space-y-0.5">
-            <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_branch", "Branch Serial")}</div>
-            <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.branch_serial || "—"}</div>
-          </div>
-        ) : null}
-        <div className="space-y-0.5">
-          <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_global_bill", "Global Bill / Shipping No.")}</div>
-          <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || t(lang, "comv.serial_auto", "Auto on Save")}</div>
-        </div>
-      </div>
-
-      {/* Customer / Ledger Account Search & Select */}
-      <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-blue-600" />
-            <span>{t(lang, "comv.customer_ledger_account_req", "Customer / Ledger Account *")}</span>
-          </label>
-          {formData.customer_name ? (
-            <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
-              ✓ {formData.customer_name}
-            </span>
-          ) : null}
-        </div>
-        <SearchSelect
-          label={t(lang, "comv.select_customer_account", "Select Customer Account")}
-          value={formData.customer_id}
-          options={customerOptions}
-          placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
-          onValueChange={(cid) => {
-            const cust = customers.find((c) => c.id === cid);
-            if (cust) {
-              setFormData((prev) => ({ ...prev, customer_id: cust.id, customer_name: cust.customer_name }));
-              handlePartyChange("supplier", {
-                ...partySelections.supplier,
-                customerId: cust.id,
-                customerName: cust.customer_name,
-                addressText: partySelections.supplier.addressText || cust.address || ""
-              });
-            }
-          }}
-          disabled={loading}
-          searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
-          emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
-        />
-
-        {/* Live account details side panel — spec point 3 */}
-        {selectedCustomer ? (
-          <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 text-[11px] dark:border-slate-800 dark:bg-slate-800/50">
-            <div>
-              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_name", "Account Name:")}</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.customer_name}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_number", "Account No.:")}</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.person_code || "-"}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_company", "Company:")}</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.company_name || "-"}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_country", "Country:")}</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.country_name || "-"}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 font-semibold">{t(lang, "comv.acc_branch", "Branch / City:")}</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCustomer.city_name || "-"}</span>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      <PartyRolePanel
-        roleKey="supplier"
-        label={tt("role_supplier", "Supplier / Order Party")}
-        required
-        selection={partySelections.supplier}
-        customers={customers}
-        companies={companies}
-        customerOptions={customerOptions}
-        companyOptions={companyOptions}
-        orders={orders}
-        disabled={loading}
-        lang={lang}
-        onChange={(next) => handlePartyChange("supplier", next)}
+      <SectionHeading
+        num={1}
+        icon={Boxes}
+        title={t(lang, "comv.step1_title", "Booking & Customer")}
+        subtitle={
+          step1SubStep === "1A"
+            ? t(lang, "comv.substep_1a_desc", "Customer, company, consignee/shipper and related party information")
+            : step1SubStep === "1B"
+            ? t(lang, "comv.substep_1b_desc", "Import/export/transit movement, transport mode and operational movement details")
+            : t(lang, "comv.substep_1c_desc", "Origin, destination, loading/unloading location, ports, borders and route information")
+        }
       />
 
-      <PartyRolePanel
-        roleKey="buyer"
-        label={tt("role_buyer", "Buyer")}
-        selection={partySelections.buyer}
-        customers={customers}
-        companies={companies}
-        customerOptions={customerOptions}
-        companyOptions={companyOptions}
-        orders={orders}
-        disabled={loading}
-        lang={lang}
-        onChange={(next) => handlePartyChange("buyer", next)}
-      />
+      {/* Sub-step Progress Navigator (1A -> 1B -> 1C) */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs">
+        <button
+          type="button"
+          onClick={() => setStep1SubStep("1A")}
+          className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
+            step1SubStep === "1A"
+              ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
+          }`}
+        >
+          <Users className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1A" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
+          <span className="hidden sm:inline truncate">{t(lang, "comv.substep_1a_title", "1A — Customer & Parties")}</span>
+          <span className="inline sm:hidden truncate">1A: Parties</span>
+          {isComplete1A ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+        </button>
 
-      {/* Movement Type & Shipment Type — movement kept fully independent from transport mode (spec point 4) */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className={labelClass}>{tt("movement_type", "Movement Type")} *</label>
-          <select
-            value={formData.movement_type}
-            onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
-            className={selectClass}
-          >
-            <option value="import">{tt("mv_import", "Import")}</option>
-            <option value="export">{tt("mv_export", "Export")}</option>
-            <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
-            <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
-            <option value="down_transit">{t(lang, "comv.mv_down_transit", "Down Transit")}</option>
-            <option value="domestic">{t(lang, "comv.mv_local_domestic", "Local / Domestic")}</option>
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>{tt("shipment_type", "Shipment Type")}</label>
-          <select
-            value={formData.shipment_type}
-            onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
-            className={selectClass}
-          >
-            <option value="FCL">{tt("ship_fcl", "FCL (Full Container Load)")}</option>
-            <option value="LCL">{tt("ship_lcl", "LCL (Less than Container)")}</option>
-            <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
-            <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
-          </select>
-        </div>
+        <button
+          type="button"
+          onClick={() => setStep1SubStep("1B")}
+          className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
+            step1SubStep === "1B"
+              ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
+          }`}
+        >
+          <Truck className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1B" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
+          <span className="hidden sm:inline truncate">{t(lang, "comv.substep_1b_title", "1B — Mode & Movement")}</span>
+          <span className="inline sm:hidden truncate">1B: Movement</span>
+          {isComplete1B ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStep1SubStep("1C")}
+          className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
+            step1SubStep === "1C"
+              ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
+          }`}
+        >
+          <Route className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
+          <span className="hidden sm:inline truncate">{t(lang, "comv.substep_1c_title", "1C — Route & Locations")}</span>
+          <span className="inline sm:hidden truncate">1C: Route</span>
+          {isComplete1C ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+        </button>
       </div>
 
-      {/* Transport Mode — Sea / Road / Air / Rail only (spec point 4: never mixed with movement type) */}
-      <div>
-        <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { key: "by_sea", label: tt("tm_by_sea", "By Sea"), icon: Anchor },
-            { key: "by_road", label: tt("tm_by_road", "By Road"), icon: MapPin },
-            { key: "by_air", label: tt("tm_by_air", "By Air"), icon: Plane },
-            { key: "by_rail", label: t(lang, "comv.tm_by_rail", "By Rail"), icon: Route }
-          ].map(({ key, label, icon: Icon }) => (
+      {/* ========================================================================= */}
+      {/* SUB-STEP 1A: CUSTOMER & PARTIES                                           */}
+      {/* ========================================================================= */}
+      {step1SubStep === "1A" && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
+          {/* Serial bar — role-gated visibility; Global Bill/Shipping No. always shown */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
+            {canSeeSerial("super", ctx) ? (
+              <div className="space-y-0.5">
+                <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_super_admin", "Super Admin")}</div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.super_admin_serial || "—"}</div>
+              </div>
+            ) : null}
+            {canSeeSerial("country", ctx) ? (
+              <div className="space-y-0.5">
+                <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_country", "Country Serial")}</div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.country_serial || "—"}</div>
+              </div>
+            ) : null}
+            {canSeeSerial("branch", ctx) ? (
+              <div className="space-y-0.5">
+                <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_branch", "Branch Serial")}</div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.branch_serial || "—"}</div>
+              </div>
+            ) : null}
+            <div className="space-y-0.5">
+              <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_global_bill", "Global Bill / Shipping No.")}</div>
+              <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || t(lang, "comv.serial_auto", "Auto on Save")}</div>
+            </div>
+          </div>
+
+          {/* Customer / ERP Ledger Account Search & Select */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-1.5">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-blue-600" />
+                <span>{t(lang, "comv.customer_ledger_account_req", "Customer / Ledger Account *")}</span>
+              </label>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900/60">
+                  <Wallet className="h-3 w-3" />
+                  <span>{t(lang, "comv.erp_ledger_integrated", "ERP Ledger & Customer Integrated")}</span>
+                </span>
+                {formData.customer_name ? (
+                  <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                    ✓ {formData.customer_name}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <SearchSelect
+              label={t(lang, "comv.select_customer_account", "Select Customer Account")}
+              value={formData.customer_id}
+              options={customerOptions}
+              placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
+              onValueChange={handleCustomerSelection}
+              disabled={loading}
+              searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
+              emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
+            />
+
+            {/* Live ERP Account & Ledger Details Card */}
+            {(selectedCustomer || selectedAccount) ? (
+              <div className="rounded-xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-blue-50/40 p-3 text-xs dark:border-slate-800 dark:from-slate-850 dark:to-slate-900 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-2 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-black text-[10px]">
+                      {selectedAccount?.code ? "ACC" : "CST"}
+                    </span>
+                    <div>
+                      <div className="font-black text-slate-900 dark:text-slate-100 text-xs">
+                        {selectedCustomer?.customer_name || selectedAccount?.name}
+                      </div>
+                      <div className="text-[10.5px] font-semibold text-slate-500">
+                        {t(lang, "comv.acc_code", "Account Code")}: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{selectedAccount?.code || selectedCustomer?.person_code || "—"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Current Balance Badge */}
+                  <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+                    <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="text-[10px] font-semibold text-slate-500">{t(lang, "comv.acc_balance", "Ledger Balance")}:</span>
+                    <span className={`font-black font-mono text-[11px] ${
+                      selectedAccount?.current_balance != null && Number(selectedAccount.current_balance) < 0
+                        ? "text-rose-600 dark:text-rose-400"
+                        : "text-emerald-700 dark:text-emerald-400"
+                    }`}>
+                      {selectedAccount?.current_balance != null
+                        ? `${selectedAccount.currency || ""} ${Number(selectedAccount.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : "0.00"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-slate-500 font-medium">{t(lang, "comv.acc_company", "Company:")}</span>{" "}
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomer?.company_name || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-medium">{t(lang, "comv.acc_contact", "Contact:")}</span>{" "}
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomer?.mobile || selectedCustomer?.contact_person || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-medium">{t(lang, "comv.acc_country", "Country / Branch:")}</span>{" "}
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomer?.country_name || "—"} {selectedCustomer?.city_name ? `(${selectedCustomer.city_name})` : ""}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-800/80">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.customer_id) {
+                        handlePartyChange("supplier", {
+                          ...partySelections.supplier,
+                          customerId: formData.customer_id,
+                          customerName: formData.customer_name,
+                          companyName: selectedCustomer?.company_name || partySelections.supplier.companyName || "",
+                          addressText: selectedCustomer?.address || partySelections.supplier.addressText || "",
+                          addressSource: "ERP Master Synced"
+                        });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50/80 px-2 py-1 text-[10.5px] font-bold text-blue-700 hover:bg-blue-100 transition"
+                  >
+                    ✓ {t(lang, "comv.autofill_supplier", "Use Customer as Supplier / Order Party")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={copyCustomerToBuyer}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    + Copy to Buyer / Consignee
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <PartyRolePanel
+            roleKey="supplier"
+            label={tt("role_supplier", "Supplier / Order Party")}
+            required
+            selection={partySelections.supplier}
+            customers={customers}
+            companies={companies}
+            customerOptions={customerOptions}
+            companyOptions={companyOptions}
+            orders={orders}
+            disabled={loading}
+            lang={lang}
+            onChange={(next) => handlePartyChange("supplier", next)}
+          />
+
+          <PartyRolePanel
+            roleKey="buyer"
+            label={tt("role_buyer", "Buyer")}
+            selection={partySelections.buyer}
+            customers={customers}
+            companies={companies}
+            customerOptions={customerOptions}
+            companyOptions={companyOptions}
+            orders={orders}
+            disabled={loading}
+            lang={lang}
+            onChange={(next) => handlePartyChange("buyer", next)}
+          />
+
+          {/* Sub-step 1A Action */}
+          <div className="flex justify-end pt-2">
             <button
-              key={key}
               type="button"
-              onClick={() => setFormData((current) => ({ ...current, transport_mode: key as TransportMode }))}
-              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${
-                formData.transport_mode === key
-                  ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
-                  : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-              }`}
+              onClick={() => setStep1SubStep("1B")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
             >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
+              <span>{t(lang, "comv.next_substep_1b", "Continue to Transport Mode & Movement (1B)")}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Loading / Receiving Country + Location (spec point 4) */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-          <Route className="h-3.5 w-3.5 text-blue-600" />
-          <span>{t(lang, "comv.route_countries_req", "Loading & Destination *")}</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div className="space-y-2">
-            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-              {t(lang, "comv.loading_country_step", "Loading Country *")}
-            </label>
-            <select value={formData.loading_country_id} onChange={(e) => handleLoadingCountryChange(e.target.value)} className={selectClass}>
-              <option value="">{t(lang, "comv.select_loading_country_ph", "— Select Loading Country —")}</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <select
-              value={formData.loading_city_id}
-              onChange={(e) => setFormData((current) => ({ ...current, loading_city_id: e.target.value }))}
-              disabled={!formData.loading_country_id}
-              className={selectClass}
-            >
-              <option value="">{t(lang, "comv.select_loading_location_ph", "— Select Location / City —")}</option>
-              {loadingCities.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-              {t(lang, "comv.receiving_country_step", "Final Destination Country *")}
-            </label>
-            <select value={formData.receiving_country_id} onChange={(e) => handleReceivingCountryChange(e.target.value)} className={selectClass}>
-              <option value="">{t(lang, "comv.select_receiving_country_ph", "— Select Receiving Country —")}</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <select
-              value={formData.receiving_city_id}
-              onChange={(e) => setFormData((current) => ({ ...current, receiving_city_id: e.target.value }))}
-              disabled={!formData.receiving_country_id}
-              className={selectClass}
-            >
-              <option value="">{t(lang, "comv.select_receiving_location_ph", "— Select Location / City —")}</option>
-              {receivingCities.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className={labelClass}>{tt("loading_port", "Loading Port")}</label>
-          <select value={formData.loading_port_id} onChange={(e) => handleLoadingPortChange(e.target.value)} className={selectClass}>
-            <option value="">{tt("select_loading_port", "Select Loading Port")}</option>
-            {ports.map((port) => (
-              <option key={port.id} value={port.id}>{port.port_name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>{tt("destination_port", "Destination Port")}</label>
-          <select value={formData.destination_port_id} onChange={(e) => handleDestinationPortChange(e.target.value)} className={selectClass}>
-            <option value="">{tt("select_destination_port", "Select Destination Port")}</option>
-            {ports.map((port) => (
-              <option key={port.id} value={port.id}>{port.port_name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {/* ========================================================================= */}
+      {/* SUB-STEP 1B: TRANSPORT MODE & MOVEMENT                                    */}
+      {/* ========================================================================= */}
+      {step1SubStep === "1B" && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
+          {/* Movement Type & Shipment Type */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelClass}>{tt("movement_type", "Movement Type")} *</label>
+              <select
+                value={formData.movement_type}
+                onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
+                className={selectClass}
+              >
+                <option value="import">{tt("mv_import", "Import")}</option>
+                <option value="export">{tt("mv_export", "Export")}</option>
+                <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+                <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
+                <option value="down_transit">{t(lang, "comv.mv_down_transit", "Down Transit")}</option>
+                <option value="domestic">{t(lang, "comv.mv_local_domestic", "Local / Domestic")}</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>{tt("shipment_type", "Shipment Type")}</label>
+              <select
+                value={formData.shipment_type}
+                onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
+                className={selectClass}
+              >
+                <option value="FCL">{tt("ship_fcl", "FCL (Full Container Load)")}</option>
+                <option value="LCL">{tt("ship_lcl", "LCL (Less than Container)")}</option>
+                <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
+                <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
+              </select>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className={labelClass}>{tt("expected_loading_date", "Expected Loading Date")}</label>
-          <input
-            type="date"
-            value={formData.expected_loading_date}
-            onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>{tt("route_reference", "Route / Reference")}</label>
-          <input
-            type="text"
-            placeholder={tt("route_ph", "e.g. Karachi to Kabul via Torkham")}
-            value={formData.route_name}
-            onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
-            className={inputClass}
-          />
-        </div>
-      </div>
+          {/* Transport Mode Cards */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { key: "by_sea", label: tt("tm_by_sea", "By Sea"), icon: Anchor },
+                { key: "by_road", label: tt("tm_by_road", "By Road"), icon: Truck },
+                { key: "by_air", label: tt("tm_by_air", "By Air"), icon: Plane },
+                { key: "by_rail", label: t(lang, "comv.tm_by_rail", "By Rail"), icon: Route }
+              ].map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFormData((current) => ({ ...current, transport_mode: key as TransportMode }))}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all ${
+                    formData.transport_mode === key
+                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300 ring-2 ring-blue-500/20"
+                      : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div>
-        <label className={labelClass}>{tt("cargo_container_details", "Cargo / Container Details")}</label>
-        <input
-          type="text"
-          placeholder={tt("cargo_ph", "e.g. 40ft High Cube Container")}
-          value={formData.cargo_details}
-          onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
-          className={inputClass}
-        />
-      </div>
+          {/* Operational Movement & Load Type */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelClass}>Load Type (Full / Partial / Haulage)</label>
+              <select
+                value={formData.load_type || ""}
+                onChange={(e) => setFormData((current) => ({ ...current, load_type: e.target.value as LoadType }))}
+                className={selectClass}
+              >
+                <option value="">— Standard / Auto —</option>
+                <option value="full_truck">Full Truck (FTL)</option>
+                <option value="partial_load">Partial Load (LTL)</option>
+                <option value="container_haulage">Container Haulage</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>{tt("expected_loading_date", "Expected Loading Date")}</label>
+              <input
+                type="date"
+                value={formData.expected_loading_date}
+                onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>{tt("cargo_container_details", "Cargo / Container Details")}</label>
+            <input
+              type="text"
+              placeholder={tt("cargo_ph", "e.g. 40ft High Cube Container / 22 MT Dry Cargo")}
+              value={formData.cargo_details}
+              onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+
+          {/* Sub-step 1B Navigation */}
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              onClick={() => setStep1SubStep("1A")}
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>{t(lang, "comv.prev_substep_1a", "Back to Customer & Parties (1A)")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep1SubStep("1C")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
+            >
+              <span>{t(lang, "comv.next_substep_1c", "Continue to Route & Locations (1C)")}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-STEP 1C: ROUTE / PORT / LOCATION DETAILS                              */}
+      {/* ========================================================================= */}
+      {step1SubStep === "1C" && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
+          {/* Loading / Receiving Country + Location */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+            <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Route className="h-3.5 w-3.5 text-blue-600" />
+              <span>{t(lang, "comv.route_countries_req", "Loading & Destination *")}</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  {t(lang, "comv.loading_country_step", "Loading Country *")}
+                </label>
+                <select value={formData.loading_country_id} onChange={(e) => handleLoadingCountryChange(e.target.value)} className={selectClass}>
+                  <option value="">{t(lang, "comv.select_loading_country_ph", "— Select Loading Country —")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={formData.loading_city_id}
+                  onChange={(e) => setFormData((current) => ({ ...current, loading_city_id: e.target.value }))}
+                  disabled={!formData.loading_country_id}
+                  className={selectClass}
+                >
+                  <option value="">{t(lang, "comv.select_loading_location_ph", "— Select Location / City —")}</option>
+                  {loadingCities.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  {t(lang, "comv.receiving_country_step", "Final Destination Country *")}
+                </label>
+                <select value={formData.receiving_country_id} onChange={(e) => handleReceivingCountryChange(e.target.value)} className={selectClass}>
+                  <option value="">{t(lang, "comv.select_receiving_country_ph", "— Select Receiving Country —")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={formData.receiving_city_id}
+                  onChange={(e) => setFormData((current) => ({ ...current, receiving_city_id: e.target.value }))}
+                  disabled={!formData.receiving_country_id}
+                  className={selectClass}
+                >
+                  <option value="">{t(lang, "comv.select_receiving_location_ph", "— Select Location / City —")}</option>
+                  {receivingCities.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelClass}>{tt("loading_port", "Loading Port")}</label>
+              <select value={formData.loading_port_id} onChange={(e) => handleLoadingPortChange(e.target.value)} className={selectClass}>
+                <option value="">{tt("select_loading_port", "Select Loading Port")}</option>
+                {ports.map((port) => (
+                  <option key={port.id} value={port.id}>{port.port_name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>{tt("destination_port", "Destination Port")}</label>
+              <select value={formData.destination_port_id} onChange={(e) => handleDestinationPortChange(e.target.value)} className={selectClass}>
+                <option value="">{tt("select_destination_port", "Select Destination Port")}</option>
+                {ports.map((port) => (
+                  <option key={port.id} value={port.id}>{port.port_name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>{tt("route_reference", "Route / Reference")}</label>
+            <input
+              type="text"
+              placeholder={tt("route_ph", "e.g. Karachi to Kabul via Torkham")}
+              value={formData.route_name}
+              onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+
+          {/* Route Summary & Journey Card */}
+          {(selectedLoadingCountry || selectedReceivingCountry || formData.route_name) ? (
+            <div className="rounded-xl border border-blue-200/70 bg-blue-50/40 p-3 dark:border-blue-900/50 dark:bg-blue-950/20 text-xs space-y-1.5">
+              <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                <Route className="h-3.5 w-3.5 text-blue-600" />
+                <span>Journey Preview</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                <span className="bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                  {selectedLoadingCountry?.name || "Origin Country"}{selectedLoadingCity ? ` (${selectedLoadingCity.name})` : ""}
+                </span>
+                <ArrowRight className="h-3 w-3 text-blue-500 shrink-0" />
+                <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded uppercase text-[10px] font-black">
+                  {formData.transport_mode.replace("by_", "")} • {formData.movement_type}
+                </span>
+                <ArrowRight className="h-3 w-3 text-blue-500 shrink-0" />
+                <span className="bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                  {selectedReceivingCountry?.name || "Destination Country"}{selectedReceivingCity ? ` (${selectedReceivingCity.name})` : ""}
+                </span>
+              </div>
+              {selectedLoadingPort || selectedDestinationPort ? (
+                <div className="text-[10.5px] text-slate-500">
+                  Ports: {selectedLoadingPort?.port_name || "—"} ➔ {selectedDestinationPort?.port_name || "—"}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Sub-step 1C Navigation */}
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              onClick={() => setStep1SubStep("1B")}
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>{t(lang, "comv.prev_substep_1b", "Back to Movement & Mode (1B)")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onAdvanceToStep2}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+            >
+              <span>{t(lang, "comv.proceed_step_2", "Proceed to Step 2 (Pickup, Goods & Truck)")}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -908,6 +908,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                 {/* Documents Table */}
                 {formData.documents.length > 0 && (
                   <div className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
+                    <div className="overflow-x-auto">
                     <table className="w-full text-xs text-left">
                       <thead className="bg-muted/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                         <tr>
@@ -938,6 +939,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
 

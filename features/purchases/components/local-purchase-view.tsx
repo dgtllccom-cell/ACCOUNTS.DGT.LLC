@@ -1397,9 +1397,9 @@ export function LocalPurchaseView({
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
               <span>{t(lang, "purchase.crumb_home", "Home")}</span>
-              <span>&gt;</span>
+              <span className="inline-block rtl:rotate-180">&gt;</span>
               <span>{t(lang, "purchase.crumb_purchase", "Purchase")}</span>
-              <span>&gt;</span>
+              <span className="inline-block rtl:rotate-180">&gt;</span>
               <span className="text-slate-800 dark:text-slate-200 font-bold">{t(lang, "lp.crumb_local_purchase", "Local Purchase Booking")}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -1409,7 +1409,7 @@ export function LocalPurchaseView({
                 onClick={() => setIsFormOpen(false)}
                 className="h-8 text-xs font-bold px-3.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg"
               >
-                &larr; {t(lang, "lp.back_to_registry", "Back to Registry")}
+                <span className="inline-block rtl:rotate-180">&larr;</span> {t(lang, "lp.back_to_registry", "Back to Registry")}
               </Button>
             </div>
           </div>
@@ -1937,7 +1937,7 @@ export function LocalPurchaseView({
                       onClick={() => setCurrentStep(2)}
                       className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
                     >
-                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5" />
+                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>
@@ -2247,7 +2247,7 @@ export function LocalPurchaseView({
                       onClick={() => setCurrentStep(1)}
                       className="w-1/3 h-9 rounded-xl text-xs font-bold"
                     >
-                      <ArrowLeft className="h-3.5 w-3.5" /> {th("Back")}
+                      <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {th("Back")}
                     </Button>
                     <Button
                       type="button"
@@ -2261,7 +2261,7 @@ export function LocalPurchaseView({
                       onClick={() => setCurrentStep(3)}
                       className="w-1/3 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1"
                     >
-                      {t(lang, "lp.next_logistics", "Next: Logistics")} <ArrowRight className="h-3.5 w-3.5" />
+                      {t(lang, "lp.next_logistics", "Next: Logistics")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>
@@ -2540,11 +2540,11 @@ export function LocalPurchaseView({
                   <div className="flex gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}
                       className="w-1/2 h-9 rounded-xl text-xs font-bold">
-                      <ArrowLeft className="h-3.5 w-3.5" /> {th("Back")}
+                      <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {th("Back")}
                     </Button>
                     <Button type="button" onClick={() => setCurrentStep(4)}
                       className="w-1/2 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
-                      {t(lang, "lp.next_review", "Next: Review")} <ArrowRight className="h-3.5 w-3.5" />
+                      {t(lang, "lp.next_review", "Next: Review")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>
@@ -2629,7 +2629,7 @@ export function LocalPurchaseView({
                     <div className="flex gap-2">
                       <Button type="button" variant="outline" onClick={() => setCurrentStep(3)}
                         className="w-1/2 h-9 rounded-xl text-xs font-bold border-slate-300">
-                        <ArrowLeft className="h-3.5 w-3.5" /> {t(lang, "common.back", "Back")}
+                        <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {t(lang, "common.back", "Back")}
                       </Button>
                       <Button type="button" variant="outline"
                         onClick={() => { setIsFormOpen(false); alert(t(lang, "lp.bill_saved_draft", "Bill saved to draft.")); }}

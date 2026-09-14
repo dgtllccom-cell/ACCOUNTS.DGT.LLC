@@ -497,7 +497,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 </div>
 
                 {/* 4 Step Tabs */}
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
                   {[
                     { id: "parties", label: t(lang, "tl.tab_parties") },
                     { id: "bl", label: t(lang, "tl.tab_bl") },

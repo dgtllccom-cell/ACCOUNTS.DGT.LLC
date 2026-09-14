@@ -1,6 +1,25 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "comv.substep_1a_title"
+  | "comv.substep_1a_desc"
+  | "comv.substep_1b_title"
+  | "comv.substep_1b_desc"
+  | "comv.substep_1c_title"
+  | "comv.substep_1c_desc"
+  | "comv.acc_balance"
+  | "comv.acc_code"
+  | "comv.acc_contact"
+  | "comv.parties_info"
+  | "comv.next_substep_1b"
+  | "comv.next_substep_1c"
+  | "comv.prev_substep_1a"
+  | "comv.prev_substep_1b"
+  | "comv.proceed_step_2"
+  | "comv.erp_ledger_integrated"
+  | "comv.autofill_supplier"
+  | "comv.active_balance"
+
   | "rules.access_restricted_title"
   | "rules.access_restricted_desc"
   | "rules.return_to_dashboard"
@@ -7811,6 +7830,25 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "comv.substep_1a_title": "1A — Customer & Parties",
+  "comv.substep_1a_desc": "Customer, company, consignee/shipper and related party information",
+  "comv.substep_1b_title": "1B — Transport Mode & Movement",
+  "comv.substep_1b_desc": "Import/export/transit movement, transport mode and operational movement details",
+  "comv.substep_1c_title": "1C — Route / Port / Location Details",
+  "comv.substep_1c_desc": "Origin, destination, loading/unloading location, ports, borders and route information",
+  "comv.acc_balance": "Ledger Balance",
+  "comv.acc_code": "Account Code",
+  "comv.acc_contact": "Contact Phone / Mobile",
+  "comv.parties_info": "Related Parties & Roles",
+  "comv.next_substep_1b": "Continue to Transport Mode & Movement (1B)",
+  "comv.next_substep_1c": "Continue to Route & Locations (1C)",
+  "comv.prev_substep_1a": "Back to Customer & Parties (1A)",
+  "comv.prev_substep_1b": "Back to Movement & Mode (1B)",
+  "comv.proceed_step_2": "Proceed to Step 2 (Pickup, Goods & Truck)",
+  "comv.erp_ledger_integrated": "ERP Ledger & Customer Integrated",
+  "comv.autofill_supplier": "Use Customer as Supplier / Order Party",
+  "comv.active_balance": "Current Balance",
+
   "rules.access_restricted_title": "Form Access Restricted",
   "rules.access_restricted_desc": "This form has not been allotted to your account by the administrator. Only allotted modules are accessible.",
   "rules.return_to_dashboard": "Return to Dashboard",
@@ -25937,6 +25975,25 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "comv.substep_1a_title": "1A — کسٹمر اور فریقین",
+  "comv.substep_1a_desc": "کسٹمر، کمپنی، مال بھیجنے اور وصول کنندہ کی معلومات",
+  "comv.substep_1b_title": "1B — ٹرانسپورٹ موڈ اور نقل و حرکت",
+  "comv.substep_1b_desc": "درآمد/برآمد/ٹرانزٹ نقل و حرکت، ٹرانسپورٹ موڈ اور آپریشنل تفصیلات",
+  "comv.substep_1c_title": "1C — روٹ / پورٹ / مقام کی تفصیلات",
+  "comv.substep_1c_desc": "روانگی، منزل، لوڈنگ و ان لوڈنگ کے مقامات، بندرگاہیں اور بارڈرز",
+  "comv.acc_balance": "کھاتہ بیلنس",
+  "comv.acc_code": "اکاؤنٹ کوڈ",
+  "comv.acc_contact": "رابطہ نمبر / موبائل",
+  "comv.parties_info": "متعلقہ فریقین اور کردار",
+  "comv.next_substep_1b": "ٹرانسپورٹ موڈ اور نقل و حرکت پر جائیں (1B)",
+  "comv.next_substep_1c": "روٹ اور مقامات کی تفصیلات پر جائیں (1C)",
+  "comv.prev_substep_1a": "کسٹمر اور فریقین پر واپس جائیں (1A)",
+  "comv.prev_substep_1b": "ٹرانسپورٹ اور موڈ پر واپس جائیں (1B)",
+  "comv.proceed_step_2": "مرحلہ 2 پر جائیں (مال، لوڈنگ اور ٹرک)",
+  "comv.erp_ledger_integrated": "ای آر پی لیجر اور کسٹمر مربوط ہے",
+  "comv.autofill_supplier": "کسٹمر کو ہی بطور سپلائر / آرڈر پارٹی استعمال کریں",
+  "comv.active_balance": "موجودہ بقایا",
+
   "rules.access_restricted_title": "فارم کی رسائی محدود ہے",
   "rules.access_restricted_desc": "یہ فارم منتظم کی طرف سے آپ کے اکاؤنٹ کے لیے تفویض نہیں کیا گیا ہے۔ صرف تفویض کردہ فارمز ہی کھولے جا سکتے ہیں۔",
   "rules.return_to_dashboard": "ڈیش بورڈ پر واپس جائیں",
@@ -44038,6 +44095,25 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "comv.substep_1a_title": "1A — العميل والأطراف",
+  "comv.substep_1a_desc": "معلومات العميل والشركة والمرسل إليه والشاحن والأطراف ذات الصلة",
+  "comv.substep_1b_title": "1B — وسيلة النقل وحركة الشحن",
+  "comv.substep_1b_desc": "حركة الاستيراد والتصدير والترانزيت ووسيلة النقل وتفاصيل التشغيل",
+  "comv.substep_1c_title": "1C — تفاصيل المسار والميناء والمواقع",
+  "comv.substep_1c_desc": "نقطة الانطلاق والوجهة ومواقع التحميل والتفريغ والموانئ والحدود",
+  "comv.acc_balance": "رصيد الحساب",
+  "comv.acc_code": "رمز الحساب",
+  "comv.acc_contact": "رقم الاتصال / الهاتف",
+  "comv.parties_info": "الأطراف والأدوار المرتبطة",
+  "comv.next_substep_1b": "المتابعة إلى وسيلة النقل وحركة الشحن (1B)",
+  "comv.next_substep_1c": "المتابعة إلى تفاصيل المسار والمواقع (1C)",
+  "comv.prev_substep_1a": "الرجوع إلى العميل والأطراف (1A)",
+  "comv.prev_substep_1b": "الرجوع إلى وسيلة النقل والحركة (1B)",
+  "comv.proceed_step_2": "الانتقال إلى الخطوة 2 (البضاعة والاستلام والشاحنة)",
+  "comv.erp_ledger_integrated": "مرتبط مع دفتر الأستاذ والعملاء في النظام",
+  "comv.autofill_supplier": "استخدام العميل كمورد / طرف الطلب",
+  "comv.active_balance": "الرصيد الحالي",
+
   "rules.access_restricted_title": "الوصول إلى النموذج مقيد",
   "rules.access_restricted_desc": "لم يتم تخصيص هذا النموذج لحسابك من قبل المشرف. يمكنك فقط الوصول إلى الوحدات المخصصة لك.",
   "rules.return_to_dashboard": "العودة إلى لوحة التحكم",
@@ -62141,6 +62217,25 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "comv.substep_1a_title": "1A — مشتری و طرف‌ها",
+  "comv.substep_1a_desc": "اطلاعات مشتری، شرکت، فرستنده و گیرنده کالا و طرف‌های مرتبط",
+  "comv.substep_1b_title": "1B — شیوه حمل و نقل و جابجایی",
+  "comv.substep_1b_desc": "عملیات واردات، صادرات، ترانزیت، حالت حمل و جزئیات جابجایی",
+  "comv.substep_1c_title": "1C — جزئیات مسیر، بندر و موقعیت‌ها",
+  "comv.substep_1c_desc": "مبدا، مقصد، محل بارگیری و تخلیه، بنادر، مرزها و مسیر",
+  "comv.acc_balance": "تراز حساب",
+  "comv.acc_code": "کد حساب",
+  "comv.acc_contact": "شماره تماس / موبایل",
+  "comv.parties_info": "طرف‌ها و نقش‌های مرتبط",
+  "comv.next_substep_1b": "ادامه به شیوه حمل و نقل و جابجایی (1B)",
+  "comv.next_substep_1c": "ادامه به جزئیات مسیر و موقعیت‌ها (1C)",
+  "comv.prev_substep_1a": "بازگشت به مشتری و طرف‌ها (1A)",
+  "comv.prev_substep_1b": "بازگشت به شیوه و جابجایی (1B)",
+  "comv.proceed_step_2": "رفتن به مرحله ۲ (کالا، بارگیری و کامیون)",
+  "comv.erp_ledger_integrated": "یکپارچه‌شده با دفتر کل و مشتری در سیستم",
+  "comv.autofill_supplier": "استفاده از مشتری به عنوان تامین‌کننده / طرف سفارش",
+  "comv.active_balance": "مانده حساب جاری",
+
   "rules.access_restricted_title": "دسترسی به فرم محدود شده است",
   "rules.access_restricted_desc": "این فرم توسط مدیر به حساب شما اختصاص داده نشده است. فقط ماژول‌های اختصاص‌یافته قابل دسترسی هستند.",
   "rules.return_to_dashboard": "بازگشت به داشبورد",
@@ -80243,6 +80338,25 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "comv.substep_1a_title": "1A — پیرودونکی او اړوندې خواوې",
+  "comv.substep_1a_desc": "د پیرودونکي، شرکت، بار وړونکي او ترلاسه کونکي اړوند معلومات",
+  "comv.substep_1b_title": "1B — د ترانسپورت طریقه او حرکت",
+  "comv.substep_1b_desc": "واردات، صادرات، ترانزیت، د ترانسپورت حالت او عملیاتي تفصیالت",
+  "comv.substep_1c_title": "1C — د لارې، بندر او ځای تفصیالت",
+  "comv.substep_1c_desc": "مبدا، منزل، د بارولو او کوزولو ځایونه، بندرونه او سرحدونه",
+  "comv.acc_balance": "د حساب بیلانس",
+  "comv.acc_code": "د حساب کوډ",
+  "comv.acc_contact": "د اړیکې شمېره / موبایل",
+  "comv.parties_info": "اړوندې خواوې او رولونه",
+  "comv.next_substep_1b": "د ترانسپورت حالت او حرکت ته دوام ورکړئ (1B)",
+  "comv.next_substep_1c": "د لارې او ځایونو تفصیالتو ته دوام ورکړئ (1C)",
+  "comv.prev_substep_1a": "پیرودونکي او اړوندو خواوو ته بېرته ستنېدل (1A)",
+  "comv.prev_substep_1b": "حرکت او ترانسپورت ته بېرته ستنېدل (1B)",
+  "comv.proceed_step_2": "دوهم ګام ته لاړ شئ (مال، بارول او موټر)",
+  "comv.erp_ledger_integrated": "د سیستم د حساب او پیرودونکي سره وصل شوی",
+  "comv.autofill_supplier": "پیرودونکی د اکمالونکي / امر کوونکي په توګه وکاروئ",
+  "comv.active_balance": "اوسنی پاتې حساب",
+
   "rules.access_restricted_title": "د فورم لاسرسی محدود دی",
   "rules.access_restricted_desc": "دا فورم د مدیر لخوا ستاسو حساب ته نه دی ځانګړی شوی. یوازې ځانګړي شوي ماډلونه د لاسرسي وړ دي.",
   "rules.return_to_dashboard": "ډشبورډ ته بېرته ستنېدل",

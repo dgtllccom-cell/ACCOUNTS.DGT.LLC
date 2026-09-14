@@ -1314,7 +1314,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             {/* Action Selector */}
             <div className="space-y-1.5">
               <Label className="font-bold">{tt("bankroz.select_clearance_action", "Select Clearance Action")}</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <Button
                   type="button"
                   size="sm"

@@ -394,7 +394,7 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
               {tt("bdash.inventory_customers", "Inventory & Customers")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 grid-cols-3">
+          <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-3">
             <div className="rounded-xl border border-border p-3 bg-muted/40">
               <PackageOpen className="mb-2 h-4.5 w-4.5 text-cyan-500" />
               <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.products", "Products")}</p>

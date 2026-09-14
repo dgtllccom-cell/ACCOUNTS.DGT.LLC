@@ -143,7 +143,7 @@ function PremiumNodeItem({
             aria-label={t(lang, "nav.toggle_submenu", "Toggle submenu")}
             aria-expanded={isOpen}
           >
-            <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", isOpen ? "rotate-90" : "rotate-0")} />
+            <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", isOpen ? "rotate-90" : "rotate-0 rtl:rotate-180")} />
           </button>
         ) : null}
       </div>

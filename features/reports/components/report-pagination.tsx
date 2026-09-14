@@ -97,7 +97,7 @@ export function ReportPagination({
                 : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:border-indigo-300 dark:hover:border-indigo-700"
             )}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
           </button>
 
           {/* Page numbers */}
@@ -133,7 +133,7 @@ export function ReportPagination({
                 : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:border-indigo-300 dark:hover:border-indigo-700"
             )}
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
           </button>
         </div>
       </div>
