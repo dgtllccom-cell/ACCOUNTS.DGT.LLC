@@ -605,6 +605,10 @@ export function SalesOrderWizard({ session }) {
   const [dbReceivedPorts, setDbReceivedPorts] = useState([]);
   const [mainBranches, setMainBranches] = useState([]);
   const [cityBranches, setCityBranches] = useState([]);
+  // Country-to-Country Sale: destination-scope branch lists, mirroring mainBranches/cityBranches
+  // but keyed off form.destCountryId/destCountryBranchId instead of the source (selling) scope.
+  const [destMainBranches, setDestMainBranches] = useState([]);
+  const [destCityBranches, setDestCityBranches] = useState([]);
   const [scopeConfirmed, setScopeConfirmed] = useState(true);
   const [showScopeModal, setShowScopeModal] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
@@ -679,6 +683,50 @@ export function SalesOrderWizard({ session }) {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [form.countryId, form.countryBranchId]);
+
+  // Country-to-Country Sale: load destination Main Branches when destCountryId changes.
+  useEffect(() => {
+    let cancelled = false;
+    const destCountryId = form.destCountryId;
+    if (!destCountryId) {
+      setDestMainBranches([]);
+      return;
+    }
+    async function loadDestCountryBranches() {
+      try {
+        const res = await fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(destCountryId)}&lang=${lang}`).then(r => r.json());
+        const list = res?.data?.branches || res?.branches || [];
+        if (!cancelled) setDestMainBranches(list);
+      } catch (err) {
+        console.error("Failed to load destination country branches:", err);
+      }
+    }
+    loadDestCountryBranches();
+    return () => { cancelled = true; };
+  }, [form.destCountryId]);
+
+  // Country-to-Country Sale: load destination City Branches when destCountryId/destCountryBranchId changes.
+  useEffect(() => {
+    let cancelled = false;
+    const destCountryId = form.destCountryId;
+    if (!destCountryId) {
+      setDestCityBranches([]);
+      return;
+    }
+    async function loadDestCityBranches() {
+      try {
+        const queryParams = new URLSearchParams({ countryId: destCountryId });
+        if (form.destCountryBranchId) queryParams.append("countryBranchId", form.destCountryBranchId);
+        const res = await fetch(`/api/erp/locations/branches/city?${queryParams.toString()}&lang=${lang}`).then(r => r.json());
+        const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
+        if (!cancelled) setDestCityBranches(list);
+      } catch (err) {
+        console.error("Failed to load destination city branches:", err);
+      }
+    }
+    loadDestCityBranches();
+    return () => { cancelled = true; };
+  }, [form.destCountryId, form.destCountryBranchId]);
 
   const mapEnterpriseAccount = (acc) => ({
     accountCode: acc.code || acc.account_number || "",
@@ -3249,6 +3297,72 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               />
                             </label>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Destination Branch (Country-to-Country Sale) */}
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/10 space-y-2.5">
+                      <div className="flex items-center gap-2 border-b border-emerald-100 pb-1.5 dark:border-emerald-900/40">
+                        <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                          <Globe2 className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                            {t(lang, "ctransfer.destination", "Destination Country / Branch")}
+                          </h5>
+                          <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                            {t(lang, "ctransfer.sale_subtitle", "Sales orders scoped for transfer from a selling country/branch to a destination (owning) country/branch.")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {t(lang, "purchase.destination_country_colon", "Destination Country:")}
+                          </label>
+                          <select
+                            value={form.destCountryId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCountryId: e.target.value, destCountryBranchId: "", destCityBranchId: "" }))}
+                            className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          >
+                            <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
+                            {(allCountries.length ? allCountries : countries).map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {t(lang, "common.branch", "Main Branch")}
+                          </label>
+                          <select
+                            value={form.destCountryBranchId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCountryBranchId: e.target.value, destCityBranchId: "" }))}
+                            disabled={!form.destCountryId}
+                            className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 disabled:opacity-50"
+                          >
+                            <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
+                            {destMainBranches.map((b) => (
+                              <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {t(lang, "common.branch", "City Branch")}
+                          </label>
+                          <select
+                            value={form.destCityBranchId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCityBranchId: e.target.value }))}
+                            disabled={!form.destCountryId}
+                            className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 disabled:opacity-50"
+                          >
+                            <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
+                            {destCityBranches.map((b) => (
+                              <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                     </div>

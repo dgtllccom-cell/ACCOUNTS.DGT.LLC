@@ -3,7 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { supportedLanguageSchema } from "@/lib/api/erp-validation";
@@ -19,6 +19,9 @@ const salesOrderUpdateSchema = z.object({
   countryId: uuidSchema.optional(),
   countryBranchId: uuidSchema.optional(),
   cityBranchId: uuidSchema.optional(),
+  destCountryId: uuidSchema.optional().nullable(),
+  destCountryBranchId: uuidSchema.optional().nullable(),
+  destCityBranchId: uuidSchema.optional().nullable(),
   customerAccountId: uuidSchema.optional().nullable(),
   customerLedgerId: uuidSchema.optional().nullable(),
   purchaseOrderId: uuidSchema.optional().nullable(),
@@ -65,12 +68,21 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return NextResponse.json({ ok: false, error: { message: "Sales order not found" } }, { status: 404 });
     }
 
-    authorizeApiScope(session, {
+    // Dual-scope: a Country Sale is visible to its source (selling) branch OR its
+    // destination (owning) branch — mirrors purchase_orders' authorizeApiScopeEither.
+    authorizeApiScopeEither(session, {
       resource: "sales",
       action: "read",
-      countryId: (row as any).country_id,
-      countryBranchId: (row as any).country_branch_id,
-      cityBranchId: (row as any).city_branch_id
+      source: {
+        countryId: (row as any).country_id,
+        countryBranchId: (row as any).country_branch_id,
+        cityBranchId: (row as any).city_branch_id
+      },
+      destination: {
+        countryId: (row as any).dest_country_id ?? null,
+        countryBranchId: (row as any).dest_country_branch_id ?? null,
+        cityBranchId: (row as any).dest_city_branch_id ?? null
+      }
     });
 
     // record_translations sits over per-language base tables with RLS gated on
@@ -137,6 +149,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (body.countryId !== undefined) patch.country_id = body.countryId;
     if (body.countryBranchId !== undefined) patch.country_branch_id = body.countryBranchId;
     if (body.cityBranchId !== undefined) patch.city_branch_id = body.cityBranchId;
+    if (body.destCountryId !== undefined) patch.dest_country_id = body.destCountryId;
+    if (body.destCountryBranchId !== undefined) patch.dest_country_branch_id = body.destCountryBranchId;
+    if (body.destCityBranchId !== undefined) patch.dest_city_branch_id = body.destCityBranchId;
     if (body.customerAccountId !== undefined) patch.customer_account_id = body.customerAccountId;
     if (body.customerLedgerId !== undefined) patch.customer_ledger_id = body.customerLedgerId;
     if (body.purchaseOrderId !== undefined) patch.purchase_order_id = body.purchaseOrderId;

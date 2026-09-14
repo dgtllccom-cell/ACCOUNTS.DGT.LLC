@@ -73,6 +73,11 @@ const salesOrderSchema = z.object({
   countryId: optionalUuidSchema,
   countryBranchId: optionalUuidSchema,
   cityBranchId: optionalUuidSchema,
+  // Country-to-Country Sale: optional destination scope, mirrors the existing
+  // Country-to-Country Purchase pattern (app/api/erp/purchases/orders/route.ts).
+  destCountryId: optionalUuidSchema,
+  destCountryBranchId: optionalUuidSchema,
+  destCityBranchId: optionalUuidSchema,
   customerAccountId: optionalUuidSchema,
   customerLedgerId: optionalUuidSchema,
   purchaseOrderId: optionalUuidSchema,
@@ -374,6 +379,11 @@ export async function POST(request: NextRequest) {
       country_id: effective.countryId,
       country_branch_id: effective.countryBranchId,
       city_branch_id: effective.cityBranchId,
+      // Country-to-Country Sale: optional destination scope, distinct from the selling
+      // scope above. Left null for a plain same-country sale.
+      dest_country_id: body.destCountryId ?? null,
+      dest_country_branch_id: body.destCountryBranchId ?? null,
+      dest_city_branch_id: body.destCityBranchId ?? null,
       customer_account_id: body.customerAccountId ?? null,
       customer_ledger_id: body.customerLedgerId ?? null,
       purchase_order_id: body.purchaseOrderId ?? null,
