@@ -1455,15 +1455,15 @@ export function CustomerOrderManagementView() {
   return (
     <div className="w-full space-y-4 pb-12" dir={isRtl ? "rtl" : "ltr"}>
       {/* Workspace header: entry and live report share one visual system. */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/25">
-              <Route className="h-5 w-5" />
+      <div className="rounded-2xl border border-slate-200/90 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-400">
+              <Route className="h-4 w-4" />
             </span>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <div className="flex flex-wrap items-center gap-1.5">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white sm:text-[22px]">{tt("title", "Customer Order")}</h1>
+                <h1 className="text-sm font-black tracking-tight text-slate-900 dark:text-white">{tt("title", "Customer Order")}</h1>
                 <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/50 dark:text-emerald-300">
                   {t(lang, "comv.four_step_wizard", "4-Step Progressive Wizard")}
                 </span>

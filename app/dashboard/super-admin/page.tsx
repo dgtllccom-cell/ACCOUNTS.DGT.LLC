@@ -196,10 +196,15 @@ export default async function SuperAdminDashboardPage() {
     <SuperAdminDashboardSettingsProvider>
       <div className="min-h-screen space-y-6 p-4 text-foreground lg:p-6">
         <SuperAdminDashboardLiveRefresh />
-        <section className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-extrabold"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />{tr("dash.super_admin_control_center", "Super Admin Control Center")}</h1>
-            <p className="mt-1 text-xs font-medium text-muted-foreground">{tr("dash.live_db_overview_subtitle", "Live database overview. No demo or fallback statistics.")}</p>
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-2 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400">
+              <span className="block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            </div>
+            <div>
+              <h1 className="text-sm font-black text-foreground">{tr("dash.super_admin_control_center", "Super Admin Control Center")}</h1>
+              <p className="text-[10.5px] font-medium text-muted-foreground">{tr("dash.live_db_overview_subtitle", "Live database overview. No demo or fallback statistics.")}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2"><SuperAdminDashboardSettingsPanel /><SyncLedgersButton /></div>
         </section>

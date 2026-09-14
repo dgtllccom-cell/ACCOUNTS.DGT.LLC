@@ -2085,22 +2085,19 @@ function ReportHeader({
         ? th("View and analyze ledger entries across users and branches in your country")
         : th("View ledger entries and account activity for your branch, country or statement period.");
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-xs lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <nav className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5" aria-label="Breadcrumb">
+        <nav className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label="Breadcrumb">
           <Link href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
             {th("Dashboard")}
           </Link>
-          <ChevronRight className="h-3 w-3 text-slate-300 dark:text-slate-700" aria-hidden />
+          <ChevronRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-700" aria-hidden />
           <span>{th("Ledgers")}</span>
-          <ChevronRight className="h-3 w-3 text-slate-300 dark:text-slate-700" aria-hidden />
+          <ChevronRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-700" aria-hidden />
           <span className="text-slate-700 dark:text-slate-300">{title}</span>
         </nav>
-        <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-          {th("LEDGERS")}
-        </div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground max-w-xl">{subtitle}</p>
+        <h1 className="text-sm font-black tracking-tight text-foreground">{title}</h1>
+        <p className="mt-0.5 text-[10.5px] text-muted-foreground max-w-xl">{subtitle}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
