@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from "postgres";
 import fs from "fs";
 
@@ -8,7 +9,7 @@ if (!dbUrl && fs.existsSync(".env.local")) {
   if (m) dbUrl = m[1].trim();
 }
 if (!dbUrl) {
-  dbUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  dbUrl = resolveDbUrl("prod");
 }
 
 const sql = postgres(dbUrl, {
