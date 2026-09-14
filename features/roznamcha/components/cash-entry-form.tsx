@@ -65,7 +65,6 @@ import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznam
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
 import { translateNarrationBlock } from "@/lib/i18n/table-headers";
-import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { localizeTerm } from "@/lib/i18n/transliteration";
 
 function getRoznamchaCategoryLabel(row: any) {
@@ -126,47 +125,10 @@ const CURRENCY_FULL_NAMES: Record<string, string> = {
   BHD: "Bahraini Dinar"
 };
 
-const COUNTRY_BANKS: Record<string, string[]> = {
-  AE: [
-    "Dubai Islamic Bank",
-    "Emirates NBD",
-    "Abu Dhabi Commercial Bank (ADCB)",
-    "Mashreq Bank",
-    "First Abu Dhabi Bank (FAB)",
-    "Abu Dhabi Islamic Bank (ADIB)",
-    "RAKBANK",
-    "Commercial Bank of Dubai (CBD)",
-    "Sharjah Islamic Bank"
-  ],
-  PK: [
-    "Habib Bank Limited (HBL)",
-    "Meezan Bank",
-    "MCB Bank",
-    "United Bank Limited (UBL)",
-    "Bank Alfalah",
-    "Allied Bank Limited (ABL)",
-    "Faysal Bank",
-    "Askari Bank",
-    "Bank of Punjab (BOP)"
-  ],
-  IN: [
-    "State Bank of India (SBI)",
-    "HDFC Bank",
-    "ICICI Bank",
-    "Axis Bank",
-    "Punjab National Bank (PNB)",
-    "Bank of Baroda",
-    "Kotak Mahindra Bank"
-  ],
-  AF: [
-    "Da Afghanistan Bank",
-    "Afghanistan International Bank (AIB)",
-    "Azizi Bank",
-    "Kabul Bank / New Kabul Bank",
-    "Maiwand Bank",
-    "Ghazanfar Bank"
-  ]
-};
+// NOTE: the free-text COUNTRY_BANKS list this used to hold was removed —
+// the Bank Details section now uses the real Bank Master via BankPicker
+// (see "RULE: Always use BankPicker — never create a free-text bank input"
+// in features/banks/components/bank-picker.tsx).
 
 type SessionResponse = {
   user: { id: string; email: string | null; fullName: string | null };
@@ -622,10 +584,6 @@ export function CashEntryForm({
   const activeCountryIso = useMemo(() => {
     return ((selectedCountry as any)?.iso2 || (selectedCountry as any)?.code || "AE").toUpperCase();
   }, [selectedCountry]);
-
-  const countryBankList = useMemo(() => {
-    return COUNTRY_BANKS[activeCountryIso] || COUNTRY_BANKS["AE"] || [];
-  }, [activeCountryIso]);
 
   const backdropSelection = useMemo(() => ({
     iso2: (selectedCountry as { iso2?: string } | null)?.iso2 ?? null,
@@ -2749,7 +2707,7 @@ export function CashEntryForm({
               </div>
 
               <div className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className={cn("grid grid-cols-1 gap-3", !isLocalCurrency && "sm:grid-cols-2")}>
                   {/* Left sub-column: Serials */}
                   <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
                     <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.journal_serial", "Journal Serial")}</span>
@@ -2789,28 +2747,31 @@ export function CashEntryForm({
                     </span>
                   </div>
 
-                  {/* Right sub-column: Exchange Rate */}
-                  <div className="grid grid-cols-[75px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
-                    <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                      {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
-                    </span>
+                  {/* Right sub-column: Exchange Rate — only relevant when the transaction
+                      actually converts currency; a same-currency entry has no rate to show. */}
+                  {!isLocalCurrency && (
+                    <div className="grid grid-cols-[75px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
+                      <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                        {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
+                      </span>
 
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
-                    <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                      {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
-                    </span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
+                      <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
+                        {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
+                      </span>
 
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                      {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
-                    </span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                        {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
+                      </span>
 
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                      {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
-                    </span>
-                  </div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
+                      <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                        {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -3363,40 +3324,36 @@ export function CashEntryForm({
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div className="space-y-1">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Bank Name ({activeCountryIso || "Bank"}) <span className="text-red-500">*</span>
+                                Bank ({activeCountryIso || "Bank"}) <span className="text-red-500">*</span>
                               </Label>
-                              <select
-                                value={typeDetails.bankName || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankName: e.target.value }))}
-                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
-                              >
-                                <option value="">Select Bank...</option>
-                                {countryBankList.map((b) => (
-                                  <option key={b} value={b}>{b}</option>
-                                ))}
-                                <option value="CUSTOM">Other / Custom Bank...</option>
-                              </select>
+                              <BankPicker
+                                label=""
+                                value={typeDetails.bankId || ""}
+                                onValueChange={async (bankId) => {
+                                  setTypeDetails((p) => ({ ...p, bankId }));
+                                  if (!bankId) return;
+                                  try {
+                                    const bank = await getBankById(bankId);
+                                    setTypeDetails((p) => ({
+                                      ...p,
+                                      bankName: bank?.bank_name || p.bankName,
+                                      bankAccount: bank?.account_number || bank?.iban_number || p.bankAccount
+                                    }));
+                                  } catch {
+                                    // ignore — bankId is still saved, account/name populate on next successful lookup
+                                  }
+                                }}
+                              />
                             </div>
-
-                            {typeDetails.bankName === "CUSTOM" || (!countryBankList.includes(typeDetails.bankName || "") && typeDetails.bankName) ? (
-                              <div className="space-y-1">
-                                <Label className="text-[10px] font-bold text-slate-500 uppercase">Custom Bank Name</Label>
-                                <Input
-                                  value={typeDetails.customBankName || (typeDetails.bankName === "CUSTOM" ? "" : typeDetails.bankName) || ""}
-                                  onChange={(e) => setTypeDetails((p) => ({ ...p, customBankName: e.target.value, bankName: e.target.value }))}
-                                  placeholder="Enter bank name"
-                                  className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
-                                />
-                              </div>
-                            ) : null}
 
                             <div className="space-y-1">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">Bank Account / IBAN</Label>
                               <Input
                                 value={typeDetails.bankAccount || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankAccount: e.target.value }))}
-                                placeholder="AE00 0000 0000 0000 0000"
-                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                                readOnly
+                                placeholder="Select a bank to auto-fill"
+                                title="Populated automatically from the Bank Master — edit the bank record to change it"
+                                className="h-8.5 text-xs font-mono font-bold bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 cursor-not-allowed"
                               />
                             </div>
 
@@ -3610,9 +3567,9 @@ export function CashEntryForm({
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-                        <div className="sm:col-span-3 space-y-1">
+                        <div className={cn("space-y-1", isLocalCurrency ? "sm:col-span-6" : "sm:col-span-3")}>
                           <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                            Quantity (Foreign Amount) <span className="text-red-500">*</span>
+                            {isLocalCurrency ? "Amount" : "Quantity (Foreign Amount)"} <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             value={calcAmount}
@@ -3622,47 +3579,54 @@ export function CashEntryForm({
                           />
                         </div>
 
-                        <div className="sm:col-span-3 space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                            Transaction Rate ({branchCurrency || "AED"}) <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            value={exchangeRate}
-                            onChange={(e) => setExchangeRate(e.target.value)}
-                            placeholder="3.6730"
-                            className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                          />
-                        </div>
+                        {/* Rate / operation toggle only apply to a real currency conversion —
+                            a same-currency entry has no rate, so hide them and free the space
+                            for the Amount and Converted Amount fields. */}
+                        {!isLocalCurrency && (
+                          <>
+                            <div className="sm:col-span-3 space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                                Transaction Rate ({branchCurrency || "AED"}) <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                value={exchangeRate}
+                                onChange={(e) => setExchangeRate(e.target.value)}
+                                placeholder="3.6730"
+                                className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                              />
+                            </div>
 
-                        <div className="sm:col-span-1 flex justify-center pb-0.5">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setCalcOp(calcOp === "mul" ? "div" : "mul")}
-                            className="h-9 w-9 rounded-xl border-slate-200 dark:border-slate-700"
-                            title="Toggle Operation"
-                          >
-                            <ArrowLeftRight className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        </div>
+                            <div className="sm:col-span-1 flex justify-center pb-0.5">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setCalcOp(calcOp === "mul" ? "div" : "mul")}
+                                className="h-9 w-9 rounded-xl border-slate-200 dark:border-slate-700"
+                                title="Toggle Operation"
+                              >
+                                <ArrowLeftRight className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            </div>
 
-                        <div className="sm:col-span-2 space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Operation</Label>
-                          <select
-                            value={calcOp}
-                            onChange={(e) => setCalcOp(e.target.value as any)}
-                            className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-bold outline-none"
-                          >
-                            <option value="mul">Multiply (x)</option>
-                            <option value="div">Divide (/)</option>
-                          </select>
-                        </div>
+                            <div className="sm:col-span-2 space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Operation</Label>
+                              <select
+                                value={calcOp}
+                                onChange={(e) => setCalcOp(e.target.value as any)}
+                                className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-bold outline-none"
+                              >
+                                <option value="mul">Multiply (x)</option>
+                                <option value="div">Divide (/)</option>
+                              </select>
+                            </div>
+                          </>
+                        )}
 
-                        <div className="sm:col-span-3">
+                        <div className={cn(isLocalCurrency ? "sm:col-span-6" : "sm:col-span-3")}>
                           <div className="p-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-right">
                             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">
-                              Converted Amount
+                              {isLocalCurrency ? "Final Amount" : "Converted Amount"}
                             </span>
                             <span className="font-mono font-black text-sm text-emerald-700 dark:text-emerald-300">
                               {calcFinal !== null ? fmtAmount(calcFinal) : (finalPayment ? fmtAmount(Number(finalPayment)) : "165,375.00")} {branchCurrency || "AED"}
@@ -4311,7 +4275,6 @@ export function CashEntryForm({
                           <td className="p-3 text-center border border-slate-200 dark:border-slate-800">
                             {idx === 0 ? (
                               <div className="flex items-center justify-center gap-1.5">
-                                <RecordTranslationCorrectionDialog recordTable="roznamcha_entries" recordId={row.id} onSaved={fetchRecentEntries} />
                                 {canEditOrDelete && (
                                   <Button
                                     type="button"
