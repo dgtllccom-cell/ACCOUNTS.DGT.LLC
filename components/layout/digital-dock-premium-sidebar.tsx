@@ -351,6 +351,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
       { label: "Clearing Truck Registration", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
       { label: "Shipping Handovers", href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
+      { label: "Clearing Workspace", href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: "Logistics Tracking Dashboard", href: "/dashboard/logistics", icon: BarChart3 },
     ],
   },

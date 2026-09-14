@@ -290,6 +290,9 @@ export async function createLegHandoff(
     toCountryId: string;
     toCountryBranchId?: string | null;
     toCityBranchId?: string | null;
+    toUserId?: string | null;
+    requestedTask?: string | null;
+    priority?: "normal" | "high" | "urgent" | null;
     narration?: string | null;
   }
 ) {
@@ -320,6 +323,7 @@ export async function createLegHandoff(
     destCountryId: input.toCountryId,
     destCountryBranchId: input.toCountryBranchId ?? null,
     destCityBranchId: input.toCityBranchId ?? null,
+    receiverUserId: input.toUserId ?? null,
     sourceTable: "clearing_customer_order_legs",
     sourceId: input.legId,
     narration: input.narration ?? `${leg.order_no} — Leg ${leg.leg_no} handoff`,
@@ -333,6 +337,10 @@ export async function createLegHandoff(
       legNo: leg.leg_no,
       customerName: leg.customer_name,
       transportMode: leg.transport_mode,
+      targetUrl: `/dashboard/clearing-agent/customer-order/${leg.order_id}/workflow?leg=${leg.id}`,
+      requestedTask: input.requestedTask || "Leg Handover Task",
+      currentStage: leg.stage || "handover",
+      priority: input.priority || "normal",
     },
   });
 
@@ -396,6 +404,123 @@ export async function syncLegFromTransferAction(
   }
 
   await logActivity(session, `transfer_${transferRow.status}`, legId, leg.order_id, leg.order_country_id, { transferId: transferRow.id });
+}
+
+// ─── 6. CLEARING / CUSTOMS — country-aware, per leg ────────────────────────
+// Uses the SAME clearing_customer_order_legs customs columns and the SAME
+// clearance_type/duty_treatment/customs_status vocabulary already validated
+// by clearing-customer-order-service.ts (LEG_CLEARANCE_TYPES etc.) — no
+// second customs data model. Which of those columns a form shows/requires is
+// decided by lib/services/clearing-country-customs-config.ts, keyed off the
+// leg's own customs_country_id (never assumed from the cross-border pair —
+// clearanceType is always an explicit choice, so import/export/transit stay
+// correct regardless of direction).
+
+export async function recordLegCustoms(
+  session: ErpSession,
+  input: {
+    legId: string;
+    customsCountryId?: string | null;
+    customsPointText?: string | null;
+    customsClearingAgentId?: string | null;
+    clearanceType: "import" | "export" | "transit";
+    dutyTreatment: "duty_payable" | "no_duty_exempt" | "transit_bonded" | "pending";
+    dutyAmount?: number | null;
+    dutyCurrency?: string | null;
+    dutyPayer?: string | null;
+    customsReceiptRef?: string | null;
+    billOfEntryNo?: string | null;
+    pgmNumber?: string | null;
+    declarationReference?: string | null;
+    taxAmount?: number | null;
+    otherCharges?: number | null;
+    customsStatus: "not_applicable" | "pending" | "submitted" | "cleared" | "held" | "rejected";
+    customsClearanceDate?: string | null;
+  }
+) {
+  const leg = await loadLegWithOrder(input.legId);
+  if (!leg) throw new ApiClientError("Leg not found.", { status: 404 });
+  if (!legInSessionScope(session, leg)) {
+    throw new ApiClientError("This leg is outside your scope.", { status: 403 });
+  }
+
+  await withLocalPg(async (sql) => {
+    await sql`
+      update public.clearing_customer_order_legs
+      set customs_country_id = ${input.customsCountryId ?? null},
+          customs_point_text = ${input.customsPointText ?? null},
+          customs_clearing_agent_id = ${input.customsClearingAgentId ?? null},
+          clearance_type = ${input.clearanceType},
+          duty_treatment = ${input.dutyTreatment},
+          duty_amount = ${input.dutyAmount ?? null},
+          duty_currency = ${input.dutyCurrency ?? null},
+          duty_payer = ${input.dutyPayer ?? null},
+          customs_receipt_ref = ${input.customsReceiptRef ?? null},
+          bill_of_entry_no = ${input.billOfEntryNo ?? null},
+          pgm_number = ${input.pgmNumber ?? null},
+          declaration_reference = ${input.declarationReference ?? null},
+          tax_amount = ${input.taxAmount ?? null},
+          other_charges = ${input.otherCharges ?? null},
+          customs_status = ${input.customsStatus},
+          customs_clearance_date = ${input.customsClearanceDate ?? null},
+          updated_at = now()
+      where id = ${input.legId}::uuid`;
+  });
+
+  if (input.customsStatus === "cleared") {
+    await setLegStage(input.legId, leg.order_id, "customs_clearing");
+  }
+
+  await logActivity(session, "customs_recorded", input.legId, leg.order_id, leg.order_country_id, {
+    clearanceType: input.clearanceType,
+    dutyTreatment: input.dutyTreatment,
+    customsStatus: input.customsStatus,
+  });
+
+  return { customsStatus: input.customsStatus };
+}
+
+// ─── CLEARING WORKSPACE — legs across orders that need clearing attention ──
+
+export async function listClearingWorkspaceLegs(
+  session: ErpSession,
+  filters: { customsCountryId?: string | null; customsStatus?: string | null; limit?: number }
+) {
+  return withLocalPg(async (sql) => {
+    const countryIds = session.countryIds ?? [];
+    const countryBranchIds = session.countryBranchIds ?? [];
+    const cityBranchIds = session.cityBranchIds ?? [];
+    const scopeClause = session.isSuperAdmin
+      ? sql`true`
+      : sql`(
+          l.responsible_country_branch_id = any(${countryBranchIds}::uuid[])
+          or l.responsible_city_branch_id = any(${cityBranchIds}::uuid[])
+          or o.country_id = any(${countryIds}::uuid[])
+          or o.country_branch_id = any(${countryBranchIds}::uuid[])
+          or o.city_branch_id = any(${cityBranchIds}::uuid[])
+        )`;
+    const countryClause = filters.customsCountryId ? sql`and l.customs_country_id = ${filters.customsCountryId}::uuid` : sql``;
+    const statusClause = filters.customsStatus ? sql`and l.customs_status = ${filters.customsStatus}` : sql`and l.customs_status <> 'not_applicable'`;
+    const limit = filters.limit || 100;
+
+    const rows = (await sql`
+      select
+        l.id, l.leg_no, l.order_id, l.stage, l.transport_mode,
+        l.from_country_name, l.to_country_name,
+        l.customs_country_id, cc.name as customs_country_name, cc.iso2 as customs_country_iso2,
+        l.clearance_type, l.duty_treatment, l.customs_status,
+        l.bill_of_entry_no, l.pgm_number, l.declaration_reference, l.customs_receipt_ref,
+        l.duty_amount, l.duty_currency, l.tax_amount, l.other_charges,
+        o.order_no, o.customer_name
+      from public.clearing_customer_order_legs l
+      join public.clearing_customer_orders o on o.id = l.order_id and o.deleted_at is null
+      left join public.countries cc on cc.id = l.customs_country_id
+      where l.deleted_at is null and ${scopeClause} ${countryClause} ${statusClause}
+      order by l.stage_updated_at desc
+      limit ${limit}
+    `) as unknown as any[];
+    return rows;
+  });
 }
 
 export { acceptHandover, returnTransferForCorrection, rejectInterCountryTransfer, completeHandover };

@@ -710,6 +710,7 @@ export type CreateHandoverInput = {
   destCountryId: string;
   destCountryBranchId?: string | null;
   destCityBranchId?: string | null;
+  receiverUserId?: string | null;
   sourceTable?: string | null;
   sourceId?: string | null;
   narration?: string | null;
@@ -761,7 +762,7 @@ export async function createHandoverTransfer(
         source_country_id, source_country_branch_id, source_city_branch_id,
         dest_country_id, dest_country_branch_id, dest_city_branch_id,
         narration, remarks, status, global_reference_id,
-        sender_user_id, created_by,
+        sender_user_id, receiver_user_id, created_by,
         bill_number, container_number, order_reference, bl_number, job_number,
         customer_party_name, reference_date, claim_category, claim_description,
         metadata
@@ -770,7 +771,7 @@ export async function createHandoverTransfer(
         ${input.sourceCountryId}, ${input.sourceCountryBranchId ?? null}, ${input.sourceCityBranchId ?? null},
         ${input.destCountryId}, ${input.destCountryBranchId ?? null}, ${input.destCityBranchId ?? null},
         ${input.narration ?? null}, ${input.remarks ?? null}, 'pending', ${globalRefId},
-        ${input.session.userId}, ${input.session.userId},
+        ${input.session.userId}, ${input.receiverUserId ?? null}, ${input.session.userId},
         ${input.billNumber ?? null}, ${input.containerNumber ?? null}, ${input.orderReference ?? null},
         ${input.blNumber ?? null}, ${input.jobNumber ?? null},
         ${input.customerPartyName ?? null}, ${refDate}, ${input.transferType},
@@ -1022,23 +1023,31 @@ export async function listTransferCenterItems(filters: {
           or t.source_country_branch_id = any(${countryBranchIds}::uuid[]) or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
           or t.source_city_branch_id = any(${cityBranchIds}::uuid[]) or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
           or t.created_by = ${session.userId}::uuid
+          or t.receiver_user_id = ${session.userId}::uuid
+          or t.sender_user_id = ${session.userId}::uuid
         )`;
 
     const destInScope = session.isSuperAdmin
       ? sql`true`
       : sql`(
-          t.dest_country_id = any(${countryIds}::uuid[])
-          or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
-          or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
+          t.receiver_user_id = ${session.userId}::uuid
+          or (t.receiver_user_id is null and (
+             t.dest_country_id = any(${countryIds}::uuid[])
+             or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
+             or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
+          ))
         )`;
 
     const sourceInScope = session.isSuperAdmin
       ? sql`true`
       : sql`(
-          t.source_country_id = any(${countryIds}::uuid[])
-          or t.source_country_branch_id = any(${countryBranchIds}::uuid[])
-          or t.source_city_branch_id = any(${cityBranchIds}::uuid[])
+          t.sender_user_id = ${session.userId}::uuid
           or t.created_by = ${session.userId}::uuid
+          or (t.sender_user_id is null and (
+             t.source_country_id = any(${countryIds}::uuid[])
+             or t.source_country_branch_id = any(${countryBranchIds}::uuid[])
+             or t.source_city_branch_id = any(${cityBranchIds}::uuid[])
+          ))
         )`;
 
     const typeClause =

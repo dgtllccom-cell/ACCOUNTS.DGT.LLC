@@ -1,6 +1,69 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "tc.any_branch_staff"
+  | "tc.assignee_user"
+  | "tc.breadcrumb_dashboard"
+  | "tc.canonical_workflow_context"
+  | "tc.heading"
+  | "tc.instructions"
+  | "tc.kpi_accepted"
+  | "tc.kpi_action_required"
+  | "tc.kpi_closed"
+  | "tc.kpi_completed"
+  | "tc.kpi_delegated"
+  | "tc.kpi_in_progress"
+  | "tc.kpi_incoming"
+  | "tc.kpi_needs_review"
+  | "tc.kpi_returned"
+  | "tc.kpi_sent"
+  | "tc.no_matches"
+  | "tc.open_linked_desc"
+  | "tc.open_linked_form"
+  | "tc.order_reference"
+  | "tc.refresh"
+  | "tc.requested_task"
+  | "tc.search_ph"
+  | "tc.subtitle"
+  | "tc.workflow_stage"
+  | "owf.customs_clearing_action"
+  | "owf.customs_country"
+  | "owf.clearance_type"
+  | "owf.duty_treatment"
+  | "owf.clearance_import"
+  | "owf.clearance_export"
+  | "owf.clearance_transit"
+  | "owf.duty_duty_payable"
+  | "owf.duty_no_duty_exempt"
+  | "owf.duty_transit_bonded"
+  | "owf.duty_pending"
+  | "owf.customs_status_not_applicable"
+  | "owf.customs_status_pending"
+  | "owf.customs_status_submitted"
+  | "owf.customs_status_cleared"
+  | "owf.customs_status_held"
+  | "owf.customs_status_rejected"
+  | "owf.err_customs_required"
+  | "cwk.title"
+  | "cwk.subtitle"
+  | "cwk.all_countries"
+  | "cwk.all_statuses"
+  | "cwk.status_pending"
+  | "cwk.status_submitted"
+  | "cwk.status_cleared"
+  | "cwk.status_held"
+  | "cwk.status_rejected"
+  | "cwk.col_order"
+  | "cwk.col_route"
+  | "cwk.col_customs_country"
+  | "cwk.col_clearance_type"
+  | "cwk.col_reference"
+  | "cwk.col_status"
+  | "cwk.open"
+  | "cwk.empty"
+  | "cwk.clearance_import"
+  | "cwk.clearance_export"
+  | "cwk.clearance_transit"
   | "owf.assign"
   | "owf.assign_to"
   | "owf.assign_truck_task"
@@ -26272,6 +26335,69 @@ const en: Dict = {
   "owf.result_verified": "Verified",
   "owf.result_discrepancy": "Discrepancy",
   "owf.result_returned": "Returned",
+  "owf.customs_clearing_action": "Customs / Clearing",
+  "owf.customs_country": "Customs Country",
+  "owf.clearance_type": "Clearance Type",
+  "owf.duty_treatment": "Duty Treatment",
+  "owf.clearance_import": "Import",
+  "owf.clearance_export": "Export",
+  "owf.clearance_transit": "Transit",
+  "owf.duty_duty_payable": "Duty Payable",
+  "owf.duty_no_duty_exempt": "No Duty / Exempt",
+  "owf.duty_transit_bonded": "Transit / Bonded",
+  "owf.duty_pending": "Pending",
+  "owf.customs_status_not_applicable": "Not Applicable",
+  "owf.customs_status_pending": "Pending",
+  "owf.customs_status_submitted": "Submitted",
+  "owf.customs_status_cleared": "Cleared",
+  "owf.customs_status_held": "Held",
+  "owf.customs_status_rejected": "Rejected",
+  "owf.err_customs_required": "{field} is required to mark this leg cleared.",
+  "cwk.title": "Clearing & Customs Workspace",
+  "cwk.subtitle": "Legs across every Customer Order currently needing clearing attention, by country.",
+  "cwk.all_countries": "All Customs Countries",
+  "cwk.all_statuses": "All Statuses",
+  "cwk.status_pending": "Pending",
+  "cwk.status_submitted": "Submitted",
+  "cwk.status_cleared": "Cleared",
+  "cwk.status_held": "Held",
+  "cwk.status_rejected": "Rejected",
+  "cwk.col_order": "Order",
+  "cwk.col_route": "Route",
+  "cwk.col_customs_country": "Customs Country",
+  "cwk.col_clearance_type": "Clearance Type",
+  "cwk.col_reference": "Reference",
+  "cwk.col_status": "Status",
+  "cwk.open": "Open",
+  "cwk.empty": "Nothing needs clearing attention right now.",
+  "cwk.clearance_import": "Import",
+  "cwk.clearance_export": "Export",
+  "cwk.clearance_transit": "Transit",
+  "tc.any_branch_staff": "Any Authorized Branch Staff",
+  "tc.assignee_user": "Target User (Optional Handover Recipient)",
+  "tc.breadcrumb_dashboard": "Dashboard",
+  "tc.canonical_workflow_context": "Canonical ERP Workflow Context",
+  "tc.heading": "Transfer & Handover Center",
+  "tc.instructions": "Instructions / Message",
+  "tc.kpi_accepted": "Accepted",
+  "tc.kpi_action_required": "Action Required",
+  "tc.kpi_closed": "Successfully Closed",
+  "tc.kpi_completed": "Completed",
+  "tc.kpi_delegated": "Delegated by you",
+  "tc.kpi_in_progress": "In Active Progress",
+  "tc.kpi_incoming": "Incoming Tasks",
+  "tc.kpi_needs_review": "Needs Correction",
+  "tc.kpi_returned": "Returned",
+  "tc.kpi_sent": "Sent Handovers",
+  "tc.no_matches": "No matching handovers.",
+  "tc.open_linked_desc": "Opens the original canonical ERP record — ZERO duplicate records or parallel forms.",
+  "tc.open_linked_form": "OPEN LINKED FORM",
+  "tc.order_reference": "Order / Record Reference",
+  "tc.refresh": "Refresh",
+  "tc.requested_task": "Requested Next Task",
+  "tc.search_ph": "Search transfers, orders, parties...",
+  "tc.subtitle": "User-to-user task delegation and branch operational handovers across canonical ERP records.",
+  "tc.workflow_stage": "Workflow Stage",
 };
 
 const ur: Dict = {
@@ -44545,6 +44671,69 @@ const ur: Dict = {
   "owf.result_verified": "تصدیق شدہ",
   "owf.result_discrepancy": "فرق",
   "owf.result_returned": "واپس شدہ",
+  "owf.customs_clearing_action": "کسٹمز / کلیئرنگ",
+  "owf.customs_country": "کسٹمز ملک",
+  "owf.clearance_type": "کلیئرنس کی قسم",
+  "owf.duty_treatment": "ڈیوٹی ٹریٹمنٹ",
+  "owf.clearance_import": "درآمد",
+  "owf.clearance_export": "برآمد",
+  "owf.clearance_transit": "ٹرانزٹ",
+  "owf.duty_duty_payable": "ڈیوٹی قابل ادائیگی",
+  "owf.duty_no_duty_exempt": "کوئی ڈیوٹی نہیں / مستثنیٰ",
+  "owf.duty_transit_bonded": "ٹرانزٹ / بانڈڈ",
+  "owf.duty_pending": "زیر التوا",
+  "owf.customs_status_not_applicable": "لاگو نہیں",
+  "owf.customs_status_pending": "زیر التوا",
+  "owf.customs_status_submitted": "جمع کرایا گیا",
+  "owf.customs_status_cleared": "کلیئر",
+  "owf.customs_status_held": "روکا گیا",
+  "owf.customs_status_rejected": "مسترد",
+  "owf.err_customs_required": "اس لیگ کو کلیئر نشان زد کرنے کے لیے {field} درکار ہے۔",
+  "cwk.title": "کلیئرنگ اینڈ کسٹمز ورک اسپیس",
+  "cwk.subtitle": "ہر کسٹمر آرڈر کے وہ لیگز جنہیں ملک کے لحاظ سے کلیئرنگ توجہ درکار ہے۔",
+  "cwk.all_countries": "تمام کسٹمز ممالک",
+  "cwk.all_statuses": "تمام حیثیتیں",
+  "cwk.status_pending": "زیر التوا",
+  "cwk.status_submitted": "جمع کرایا گیا",
+  "cwk.status_cleared": "کلیئر",
+  "cwk.status_held": "روکا گیا",
+  "cwk.status_rejected": "مسترد",
+  "cwk.col_order": "آرڈر",
+  "cwk.col_route": "روٹ",
+  "cwk.col_customs_country": "کسٹمز ملک",
+  "cwk.col_clearance_type": "کلیئرنس کی قسم",
+  "cwk.col_reference": "حوالہ",
+  "cwk.col_status": "حیثیت",
+  "cwk.open": "کھولیں",
+  "cwk.empty": "فی الحال کسی چیز کو کلیئرنگ توجہ کی ضرورت نہیں۔",
+  "cwk.clearance_import": "درآمد",
+  "cwk.clearance_export": "برآمد",
+  "cwk.clearance_transit": "ٹرانزٹ",
+  "tc.any_branch_staff": "کوئی بھی مجاز برانچ عملہ",
+  "tc.assignee_user": "ہدف صارف (اختیاری وصول کنندہ)",
+  "tc.breadcrumb_dashboard": "ڈیش بورڈ",
+  "tc.canonical_workflow_context": "معیاری ای آر پی ورک فلو سیاق",
+  "tc.heading": "ٹرانسفر و ہینڈ اوور سینٹر",
+  "tc.instructions": "ہدایات / پیغام",
+  "tc.kpi_accepted": "منظور شدہ",
+  "tc.kpi_action_required": "کارروائی درکار ہے",
+  "tc.kpi_closed": "کامیابی سے بند",
+  "tc.kpi_completed": "مکمل",
+  "tc.kpi_delegated": "آپ کی طرف سے تفویض کردہ",
+  "tc.kpi_in_progress": "فعال پیش رفت میں",
+  "tc.kpi_incoming": "موصولہ ٹاسک",
+  "tc.kpi_needs_review": "تصحیح درکار ہے",
+  "tc.kpi_returned": "واپس شدہ",
+  "tc.kpi_sent": "بھیجے گئے ہینڈ اوورز",
+  "tc.no_matches": "کوئی مماثل ہینڈ اوور نہیں۔",
+  "tc.open_linked_desc": "اصل معیاری ای آر پی ریکارڈ کھولتا ہے — کوئی نقل یا متوازی فارم نہیں۔",
+  "tc.open_linked_form": "منسلک فارم کھولیں",
+  "tc.order_reference": "آرڈر / ریکارڈ حوالہ",
+  "tc.refresh": "ریفریش کریں",
+  "tc.requested_task": "درخواست کردہ اگلا ٹاسک",
+  "tc.search_ph": "ٹرانسفرز، آرڈرز، فریقین تلاش کریں...",
+  "tc.subtitle": "صارف سے صارف ٹاسک تفویض اور برانچ آپریشنل ہینڈ اوورز، معیاری ای آر پی ریکارڈز کے پار۔",
+  "tc.workflow_stage": "ورک فلو مرحلہ",
 };
 
 const ar: Dict = {
@@ -62820,6 +63009,69 @@ const ar: Dict = {
   "owf.result_verified": "تم التحقق",
   "owf.result_discrepancy": "تباين",
   "owf.result_returned": "معاد",
+  "owf.customs_clearing_action": "الجمارك / التخليص",
+  "owf.customs_country": "بلد الجمارك",
+  "owf.clearance_type": "نوع التخليص",
+  "owf.duty_treatment": "معاملة الرسوم",
+  "owf.clearance_import": "استيراد",
+  "owf.clearance_export": "تصدير",
+  "owf.clearance_transit": "عبور",
+  "owf.duty_duty_payable": "الرسوم مستحقة",
+  "owf.duty_no_duty_exempt": "بدون رسوم / معفى",
+  "owf.duty_transit_bonded": "عبور / مضمون",
+  "owf.duty_pending": "قيد الانتظار",
+  "owf.customs_status_not_applicable": "غير منطبق",
+  "owf.customs_status_pending": "قيد الانتظار",
+  "owf.customs_status_submitted": "تم الإرسال",
+  "owf.customs_status_cleared": "تم التخليص",
+  "owf.customs_status_held": "محتجز",
+  "owf.customs_status_rejected": "مرفوض",
+  "owf.err_customs_required": "{field} مطلوب لوضع علامة على هذه المرحلة كمخلصة.",
+  "cwk.title": "مساحة عمل التخليص والجمارك",
+  "cwk.subtitle": "المراحل عبر كل طلب عميل تحتاج حاليًا إلى اهتمام التخليص، حسب البلد.",
+  "cwk.all_countries": "جميع بلدان الجمارك",
+  "cwk.all_statuses": "جميع الحالات",
+  "cwk.status_pending": "قيد الانتظار",
+  "cwk.status_submitted": "تم الإرسال",
+  "cwk.status_cleared": "تم التخليص",
+  "cwk.status_held": "محتجز",
+  "cwk.status_rejected": "مرفوض",
+  "cwk.col_order": "الطلب",
+  "cwk.col_route": "المسار",
+  "cwk.col_customs_country": "بلد الجمارك",
+  "cwk.col_clearance_type": "نوع التخليص",
+  "cwk.col_reference": "المرجع",
+  "cwk.col_status": "الحالة",
+  "cwk.open": "فتح",
+  "cwk.empty": "لا شيء يحتاج إلى اهتمام التخليص الآن.",
+  "cwk.clearance_import": "استيراد",
+  "cwk.clearance_export": "تصدير",
+  "cwk.clearance_transit": "عبور",
+  "tc.any_branch_staff": "أي موظف فرع مخول",
+  "tc.assignee_user": "المستخدم المستهدف (مستلم اختياري)",
+  "tc.breadcrumb_dashboard": "لوحة التحكم",
+  "tc.canonical_workflow_context": "سياق سير عمل ERP القياسي",
+  "tc.heading": "مركز النقل والتسليم",
+  "tc.instructions": "تعليمات / رسالة",
+  "tc.kpi_accepted": "مقبول",
+  "tc.kpi_action_required": "الإجراء مطلوب",
+  "tc.kpi_closed": "أُغلق بنجاح",
+  "tc.kpi_completed": "مكتمل",
+  "tc.kpi_delegated": "مفوّض من قبلك",
+  "tc.kpi_in_progress": "قيد التقدم النشط",
+  "tc.kpi_incoming": "المهام الواردة",
+  "tc.kpi_needs_review": "يحتاج إلى تصحيح",
+  "tc.kpi_returned": "معاد",
+  "tc.kpi_sent": "التسليمات المرسلة",
+  "tc.no_matches": "لا توجد تسليمات مطابقة.",
+  "tc.open_linked_desc": "يفتح سجل ERP القياسي الأصلي — بدون سجلات مكررة أو نماذج موازية.",
+  "tc.open_linked_form": "فتح النموذج المرتبط",
+  "tc.order_reference": "مرجع الطلب / السجل",
+  "tc.refresh": "تحديث",
+  "tc.requested_task": "المهمة التالية المطلوبة",
+  "tc.search_ph": "البحث في التحويلات والطلبات والأطراف...",
+  "tc.subtitle": "تفويض المهام بين المستخدمين وتسليمات العمليات بين الفروع عبر سجلات ERP القياسية.",
+  "tc.workflow_stage": "مرحلة سير العمل",
 };
 
 const fa: Dict = {
@@ -81094,6 +81346,69 @@ const fa: Dict = {
   "owf.result_verified": "تأییدشده",
   "owf.result_discrepancy": "مغایرت",
   "owf.result_returned": "بازگشتی",
+  "owf.customs_clearing_action": "گمرک / ترخیص",
+  "owf.customs_country": "کشور گمرکی",
+  "owf.clearance_type": "نوع ترخیص",
+  "owf.duty_treatment": "نحوه عوارض",
+  "owf.clearance_import": "واردات",
+  "owf.clearance_export": "صادرات",
+  "owf.clearance_transit": "ترانزیت",
+  "owf.duty_duty_payable": "عوارض قابل پرداخت",
+  "owf.duty_no_duty_exempt": "بدون عوارض / معاف",
+  "owf.duty_transit_bonded": "ترانزیت / انبار گمرکی",
+  "owf.duty_pending": "در انتظار",
+  "owf.customs_status_not_applicable": "غیرقابل اجرا",
+  "owf.customs_status_pending": "در انتظار",
+  "owf.customs_status_submitted": "ارسال شده",
+  "owf.customs_status_cleared": "ترخیص شده",
+  "owf.customs_status_held": "متوقف شده",
+  "owf.customs_status_rejected": "رد شده",
+  "owf.err_customs_required": "{field} برای علامت‌گذاری این مرحله به‌عنوان ترخیص‌شده الزامی است.",
+  "cwk.title": "فضای کاری ترخیص و گمرک",
+  "cwk.subtitle": "مراحل مربوط به هر سفارش مشتری که در حال حاضر نیاز به توجه ترخیص دارند، بر اساس کشور.",
+  "cwk.all_countries": "همه کشورهای گمرکی",
+  "cwk.all_statuses": "همه وضعیت‌ها",
+  "cwk.status_pending": "در انتظار",
+  "cwk.status_submitted": "ارسال شده",
+  "cwk.status_cleared": "ترخیص شده",
+  "cwk.status_held": "متوقف شده",
+  "cwk.status_rejected": "رد شده",
+  "cwk.col_order": "سفارش",
+  "cwk.col_route": "مسیر",
+  "cwk.col_customs_country": "کشور گمرکی",
+  "cwk.col_clearance_type": "نوع ترخیص",
+  "cwk.col_reference": "مرجع",
+  "cwk.col_status": "وضعیت",
+  "cwk.open": "باز کردن",
+  "cwk.empty": "در حال حاضر چیزی نیاز به توجه ترخیص ندارد.",
+  "cwk.clearance_import": "واردات",
+  "cwk.clearance_export": "صادرات",
+  "cwk.clearance_transit": "ترانزیت",
+  "tc.any_branch_staff": "هر کارمند مجاز شعبه",
+  "tc.assignee_user": "کاربر هدف (گیرنده اختیاری)",
+  "tc.breadcrumb_dashboard": "داشبورد",
+  "tc.canonical_workflow_context": "زمینه گردش کار استاندارد ERP",
+  "tc.heading": "مرکز انتقال و تحویل",
+  "tc.instructions": "دستورالعمل‌ها / پیام",
+  "tc.kpi_accepted": "پذیرفته‌شده",
+  "tc.kpi_action_required": "نیاز به اقدام",
+  "tc.kpi_closed": "با موفقیت بسته شد",
+  "tc.kpi_completed": "تکمیل‌شده",
+  "tc.kpi_delegated": "توسط شما واگذار شده",
+  "tc.kpi_in_progress": "در حال پیشرفت فعال",
+  "tc.kpi_incoming": "وظایف دریافتی",
+  "tc.kpi_needs_review": "نیاز به اصلاح دارد",
+  "tc.kpi_returned": "بازگشتی",
+  "tc.kpi_sent": "تحویل‌های ارسال‌شده",
+  "tc.no_matches": "هیچ تحویل مطابقی یافت نشد.",
+  "tc.open_linked_desc": "رکورد اصلی استاندارد ERP را باز می‌کند — بدون رکورد تکراری یا فرم موازی.",
+  "tc.open_linked_form": "باز کردن فرم مرتبط",
+  "tc.order_reference": "مرجع سفارش / رکورد",
+  "tc.refresh": "بازخوانی",
+  "tc.requested_task": "وظیفه بعدی درخواستی",
+  "tc.search_ph": "جستجوی انتقال‌ها، سفارش‌ها، طرف‌ها...",
+  "tc.subtitle": "واگذاری وظیفه کاربر به کاربر و تحویل‌های عملیاتی شعبه در سراسر رکوردهای استاندارد ERP.",
+  "tc.workflow_stage": "مرحله گردش کار",
 };
 
 const ps: Dict = {
@@ -99374,6 +99689,69 @@ const ps: Dict = {
   "owf.result_verified": "تایید شوی",
   "owf.result_discrepancy": "توپیر",
   "owf.result_returned": "بېرته شوی",
+  "owf.customs_clearing_action": "ګمرک / پاکول",
+  "owf.customs_country": "د ګمرک هیواد",
+  "owf.clearance_type": "د پاکولو ډول",
+  "owf.duty_treatment": "د محصول چلند",
+  "owf.clearance_import": "واردول",
+  "owf.clearance_export": "صادرول",
+  "owf.clearance_transit": "ترانزیت",
+  "owf.duty_duty_payable": "محصول د تادیې وړ",
+  "owf.duty_no_duty_exempt": "پرته له محصول / معاف",
+  "owf.duty_transit_bonded": "ترانزیت / بانډ شوی",
+  "owf.duty_pending": "په تمه",
+  "owf.customs_status_not_applicable": "پلي کېدونکی نه دی",
+  "owf.customs_status_pending": "په تمه",
+  "owf.customs_status_submitted": "سپارل شوی",
+  "owf.customs_status_cleared": "پاک شوی",
+  "owf.customs_status_held": "ساتل شوی",
+  "owf.customs_status_rejected": "رد شوی",
+  "owf.err_customs_required": "د دې پړاو د پاک کولو لپاره {field} اړین دی.",
+  "cwk.title": "د پاکولو او ګمرک کاري ځای",
+  "cwk.subtitle": "د هر پیرودونکي امر هغه پړاوونه چې اوس مهال د هیواد له مخې د پاکولو پاملرنې ته اړتیا لري.",
+  "cwk.all_countries": "ټول ګمرکي هیوادونه",
+  "cwk.all_statuses": "ټول حالتونه",
+  "cwk.status_pending": "په تمه",
+  "cwk.status_submitted": "سپارل شوی",
+  "cwk.status_cleared": "پاک شوی",
+  "cwk.status_held": "ساتل شوی",
+  "cwk.status_rejected": "رد شوی",
+  "cwk.col_order": "امر",
+  "cwk.col_route": "لار",
+  "cwk.col_customs_country": "د ګمرک هیواد",
+  "cwk.col_clearance_type": "د پاکولو ډول",
+  "cwk.col_reference": "حواله",
+  "cwk.col_status": "حالت",
+  "cwk.open": "پرانول",
+  "cwk.empty": "اوس مهال هیڅ شی د پاکولو پاملرنې ته اړتیا نلري.",
+  "cwk.clearance_import": "واردول",
+  "cwk.clearance_export": "صادرول",
+  "cwk.clearance_transit": "ترانزیت",
+  "tc.any_branch_staff": "هر مجاز شوی د څانګې کارکونکی",
+  "tc.assignee_user": "موخه کاروونکی (اختیاري ترلاسه کوونکی)",
+  "tc.breadcrumb_dashboard": "ډشبورډ",
+  "tc.canonical_workflow_context": "معیاري ERP د کار جریان شرایط",
+  "tc.heading": "د لېږد او سپارنې مرکز",
+  "tc.instructions": "لارښوونې / پیغام",
+  "tc.kpi_accepted": "منل شوی",
+  "tc.kpi_action_required": "اقدام ته اړتیا",
+  "tc.kpi_closed": "په بریالیتوب سره تړل شوی",
+  "tc.kpi_completed": "بشپړ شوی",
+  "tc.kpi_delegated": "ستاسو لخوا سپارل شوی",
+  "tc.kpi_in_progress": "په فعاله پرمختګ کې",
+  "tc.kpi_incoming": "راتلونکي دندې",
+  "tc.kpi_needs_review": "سمون ته اړتیا لري",
+  "tc.kpi_returned": "بېرته شوی",
+  "tc.kpi_sent": "لېږل شوې سپارنې",
+  "tc.no_matches": "هېڅ مطابقه سپارنه نشته.",
+  "tc.open_linked_desc": "اصلي معیاري ERP ریکارډ خلاصوي — پرته له کاپي شویو ریکارډونو یا موازي فارمونو.",
+  "tc.open_linked_form": "تړلی فارم خلاص کړئ",
+  "tc.order_reference": "د امر / ریکارډ حواله",
+  "tc.refresh": "تازه کول",
+  "tc.requested_task": "غوښتل شوی راتلونکی دنده",
+  "tc.search_ph": "لېږدونه، امرونه، لوریان ولټوئ...",
+  "tc.subtitle": "د کاروونکي څخه کاروونکي ته دندې سپارنه او د څانګې عملیاتي سپارنې د معیاري ERP ریکارډونو په اوږدو کې.",
+  "tc.workflow_stage": "د کار جریان پړاو",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

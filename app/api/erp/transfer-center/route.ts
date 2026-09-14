@@ -76,6 +76,7 @@ const createSchema = z.object({
   destCountryId: z.string().uuid(),
   destCountryBranchId: z.string().uuid().nullish(),
   destCityBranchId: z.string().uuid().nullish(),
+  receiverUserId: z.string().uuid().nullish(),
   sourceTable: z.string().trim().max(64).nullish(),
   sourceId: z.string().uuid().nullish(),
   narration: z.string().trim().max(2000).nullish(),
@@ -96,8 +97,13 @@ export async function POST(request: NextRequest) {
     const session = await requireErpSession();
     const body = createSchema.parse(await request.json());
 
-    if (body.sourceCountryId === body.destCountryId && body.sourceCityBranchId === body.destCityBranchId) {
-      throw new Error("Source and destination must differ (country, branch, or city branch).");
+    const isSameBranch =
+      body.sourceCountryId === body.destCountryId &&
+      (body.sourceCountryBranchId || null) === (body.destCountryBranchId || null) &&
+      (body.sourceCityBranchId || null) === (body.destCityBranchId || null);
+
+    if (isSameBranch && !body.receiverUserId) {
+      throw new Error("Source and destination must differ unless a specific receiver user is assigned for task handover.");
     }
 
     authorizeApiScopeEither(session, {
@@ -116,6 +122,7 @@ export async function POST(request: NextRequest) {
       destCountryId: body.destCountryId,
       destCountryBranchId: body.destCountryBranchId ?? null,
       destCityBranchId: body.destCityBranchId ?? null,
+      receiverUserId: body.receiverUserId ?? null,
       sourceTable: body.sourceTable ?? null,
       sourceId: body.sourceId ?? null,
       narration: body.narration ?? null,

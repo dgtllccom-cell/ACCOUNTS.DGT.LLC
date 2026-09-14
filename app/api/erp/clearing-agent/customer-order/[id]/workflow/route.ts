@@ -45,11 +45,19 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
         const legIds = ((order as any).legs || []).map((l: any) => l.id);
         if (!legIds.length) return [];
         const rows = (await sql`
-          select id, transfer_no, transfer_type, status, source_id, dest_country_id, dest_country_branch_id,
-                 dest_city_branch_id, created_at, accepted_at, completed_at, return_reason, rejection_reason
-          from public.inter_country_transfers
-          where source_table = 'clearing_customer_order_legs' and source_id = any(${legIds}::uuid[]) and deleted_at is null
-          order by created_at desc
+          select t.id, t.transfer_no, t.transfer_type, t.status, t.source_id, t.dest_country_id, t.dest_country_branch_id,
+                 t.dest_city_branch_id, t.created_at, t.accepted_at, t.completed_at, t.return_reason, t.rejection_reason,
+                 t.narration, t.remarks, t.metadata, t.sender_user_id, t.receiver_user_id,
+                 sp.full_name as sender_name, rp.full_name as receiver_name
+          from public.inter_country_transfers t
+          left join public.profiles sp on sp.id = t.sender_user_id
+          left join public.profiles rp on rp.id = t.receiver_user_id
+          where (
+            (t.source_table = 'clearing_customer_order_legs' and t.source_id = any(${legIds}::uuid[]))
+            or (t.source_table = 'clearing_customer_orders' and t.source_id = ${id}::uuid)
+            or t.order_reference = ${(order as any).order_no}
+          ) and t.deleted_at is null
+          order by t.created_at desc
         `) as unknown as any[];
         return rows;
       }),

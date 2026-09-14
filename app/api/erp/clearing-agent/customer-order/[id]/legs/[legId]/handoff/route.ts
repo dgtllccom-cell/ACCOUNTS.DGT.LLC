@@ -10,6 +10,9 @@ const schema = z.object({
   toCountryId: z.string().uuid(),
   toCountryBranchId: z.string().uuid().nullish(),
   toCityBranchId: z.string().uuid().nullish(),
+  toUserId: z.string().uuid().nullish(),
+  requestedTask: z.string().trim().max(200).nullish(),
+  priority: z.enum(["normal", "high", "urgent"]).nullish(),
   narration: z.string().trim().max(2000).nullish(),
 });
 
