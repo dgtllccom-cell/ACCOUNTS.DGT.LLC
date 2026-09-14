@@ -23,6 +23,23 @@ const STAGES = [
   "booking", "truck_assignment", "goods_verification", "loading",
   "customs_clearing", "shipment_bl", "handover", "destination_review", "completed",
 ] as const;
+
+const FIELD_I18N_KEY: Record<CustomsFieldKey, string> = {
+  billOfEntryNo: "field_bill_of_entry_no",
+  pgmNumber: "field_pgm_number",
+  declarationReference: "field_declaration_reference",
+  customsReceiptRef: "field_customs_receipt_ref",
+  dutyAmount: "field_duty_amount",
+  taxAmount: "field_tax_amount",
+  otherCharges: "field_other_charges",
+};
+
+const FIELD_I18N_OVERRIDE: Record<string, Partial<Record<CustomsFieldKey, string>>> = {
+  PK: { billOfEntryNo: "field_bill_of_entry_no_pk", pgmNumber: "field_pgm_number_pk" },
+  AE: { customsReceiptRef: "field_customs_receipt_ref_ae" },
+  AF: { declarationReference: "field_declaration_reference_af" },
+  IN: { billOfEntryNo: "field_bill_of_entry_no_in" },
+};
 type Stage = (typeof STAGES)[number];
 
 type Leg = {
@@ -513,7 +530,10 @@ function CustomsDialog({ open, onClose, orderId, leg, s, onDone }: { open: boole
   const config = getCountryCustomsFieldConfig(selectedCountry?.iso2 || null);
 
   function fieldLabel(key: CustomsFieldKey) {
-    return config.fieldLabels[key] || key;
+    const iso2 = selectedCountry?.iso2;
+    const overrideKey = iso2 ? FIELD_I18N_OVERRIDE[iso2]?.[key] : undefined;
+    const i18nKey = overrideKey || FIELD_I18N_KEY[key];
+    return s.t(i18nKey, config.fieldLabels[key] || key);
   }
   function isVisible(key: CustomsFieldKey) {
     return config.fields.includes(key);

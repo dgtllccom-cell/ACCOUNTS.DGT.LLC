@@ -44,6 +44,18 @@ export type UiKey =
   | "owf.customs_status_held"
   | "owf.customs_status_rejected"
   | "owf.err_customs_required"
+  | "owf.field_bill_of_entry_no"
+  | "owf.field_pgm_number"
+  | "owf.field_declaration_reference"
+  | "owf.field_customs_receipt_ref"
+  | "owf.field_duty_amount"
+  | "owf.field_tax_amount"
+  | "owf.field_other_charges"
+  | "owf.field_bill_of_entry_no_pk"
+  | "owf.field_pgm_number_pk"
+  | "owf.field_customs_receipt_ref_ae"
+  | "owf.field_declaration_reference_af"
+  | "owf.field_bill_of_entry_no_in"
   | "cwk.title"
   | "cwk.subtitle"
   | "cwk.all_countries"
@@ -26353,6 +26365,18 @@ const en: Dict = {
   "owf.customs_status_held": "Held",
   "owf.customs_status_rejected": "Rejected",
   "owf.err_customs_required": "{field} is required to mark this leg cleared.",
+  "owf.field_bill_of_entry_no": "Bill of Entry No.",
+  "owf.field_pgm_number": "PGM Number",
+  "owf.field_declaration_reference": "Customs Declaration Reference",
+  "owf.field_customs_receipt_ref": "Customs Receipt Reference",
+  "owf.field_duty_amount": "Duty Amount",
+  "owf.field_tax_amount": "Tax Amount",
+  "owf.field_other_charges": "Other Charges",
+  "owf.field_bill_of_entry_no_pk": "Bill of Entry No. (Pakistan Customs)",
+  "owf.field_pgm_number_pk": "PGM Number (WeBOC)",
+  "owf.field_customs_receipt_ref_ae": "Customs Declaration Number (Dubai Trade)",
+  "owf.field_declaration_reference_af": "ASYCUDA Declaration Reference",
+  "owf.field_bill_of_entry_no_in": "Bill of Entry No. (ICEGATE)",
   "cwk.title": "Clearing & Customs Workspace",
   "cwk.subtitle": "Legs across every Customer Order currently needing clearing attention, by country.",
   "cwk.all_countries": "All Customs Countries",
@@ -44689,6 +44713,18 @@ const ur: Dict = {
   "owf.customs_status_held": "روکا گیا",
   "owf.customs_status_rejected": "مسترد",
   "owf.err_customs_required": "اس لیگ کو کلیئر نشان زد کرنے کے لیے {field} درکار ہے۔",
+  "owf.field_bill_of_entry_no": "بل آف انٹری نمبر",
+  "owf.field_pgm_number": "پی جی ایم نمبر",
+  "owf.field_declaration_reference": "کسٹمز ڈیکلریشن حوالہ",
+  "owf.field_customs_receipt_ref": "کسٹمز رسید حوالہ",
+  "owf.field_duty_amount": "ڈیوٹی رقم",
+  "owf.field_tax_amount": "ٹیکس رقم",
+  "owf.field_other_charges": "دیگر اخراجات",
+  "owf.field_bill_of_entry_no_pk": "بل آف انٹری نمبر (پاکستان کسٹمز)",
+  "owf.field_pgm_number_pk": "پی جی ایم نمبر (WeBOC)",
+  "owf.field_customs_receipt_ref_ae": "کسٹمز ڈیکلریشن نمبر (Dubai Trade)",
+  "owf.field_declaration_reference_af": "ASYCUDA ڈیکلریشن حوالہ",
+  "owf.field_bill_of_entry_no_in": "بل آف انٹری نمبر (ICEGATE)",
   "cwk.title": "کلیئرنگ اینڈ کسٹمز ورک اسپیس",
   "cwk.subtitle": "ہر کسٹمر آرڈر کے وہ لیگز جنہیں ملک کے لحاظ سے کلیئرنگ توجہ درکار ہے۔",
   "cwk.all_countries": "تمام کسٹمز ممالک",
@@ -63027,6 +63063,18 @@ const ar: Dict = {
   "owf.customs_status_held": "محتجز",
   "owf.customs_status_rejected": "مرفوض",
   "owf.err_customs_required": "{field} مطلوب لوضع علامة على هذه المرحلة كمخلصة.",
+  "owf.field_bill_of_entry_no": "رقم بيان الجمرك",
+  "owf.field_pgm_number": "رقم PGM",
+  "owf.field_declaration_reference": "مرجع الإقرار الجمركي",
+  "owf.field_customs_receipt_ref": "مرجع إيصال الجمارك",
+  "owf.field_duty_amount": "مبلغ الرسوم الجمركية",
+  "owf.field_tax_amount": "مبلغ الضريبة",
+  "owf.field_other_charges": "رسوم أخرى",
+  "owf.field_bill_of_entry_no_pk": "رقم بيان الجمرك (جمارك باكستان)",
+  "owf.field_pgm_number_pk": "رقم PGM (WeBOC)",
+  "owf.field_customs_receipt_ref_ae": "رقم البيان الجمركي (Dubai Trade)",
+  "owf.field_declaration_reference_af": "مرجع إقرار ASYCUDA",
+  "owf.field_bill_of_entry_no_in": "رقم بيان الجمرك (ICEGATE)",
   "cwk.title": "مساحة عمل التخليص والجمارك",
   "cwk.subtitle": "المراحل عبر كل طلب عميل تحتاج حاليًا إلى اهتمام التخليص، حسب البلد.",
   "cwk.all_countries": "جميع بلدان الجمارك",
@@ -81364,6 +81412,18 @@ const fa: Dict = {
   "owf.customs_status_held": "متوقف شده",
   "owf.customs_status_rejected": "رد شده",
   "owf.err_customs_required": "{field} برای علامت‌گذاری این مرحله به‌عنوان ترخیص‌شده الزامی است.",
+  "owf.field_bill_of_entry_no": "شماره اظهارنامه ورودی گمرک",
+  "owf.field_pgm_number": "شماره PGM",
+  "owf.field_declaration_reference": "شماره مرجع اظهارنامه گمرکی",
+  "owf.field_customs_receipt_ref": "شماره مرجع رسید گمرکی",
+  "owf.field_duty_amount": "مبلغ عوارض گمرکی",
+  "owf.field_tax_amount": "مبلغ مالیات",
+  "owf.field_other_charges": "سایر هزینه‌ها",
+  "owf.field_bill_of_entry_no_pk": "شماره اظهارنامه ورودی (گمرک پاکستان)",
+  "owf.field_pgm_number_pk": "شماره PGM (WeBOC)",
+  "owf.field_customs_receipt_ref_ae": "شماره اظهارنامه گمرکی (Dubai Trade)",
+  "owf.field_declaration_reference_af": "شماره مرجع اظهارنامه ASYCUDA",
+  "owf.field_bill_of_entry_no_in": "شماره اظهارنامه ورودی (ICEGATE)",
   "cwk.title": "فضای کاری ترخیص و گمرک",
   "cwk.subtitle": "مراحل مربوط به هر سفارش مشتری که در حال حاضر نیاز به توجه ترخیص دارند، بر اساس کشور.",
   "cwk.all_countries": "همه کشورهای گمرکی",
@@ -99707,6 +99767,18 @@ const ps: Dict = {
   "owf.customs_status_held": "ساتل شوی",
   "owf.customs_status_rejected": "رد شوی",
   "owf.err_customs_required": "د دې پړاو د پاک کولو لپاره {field} اړین دی.",
+  "owf.field_bill_of_entry_no": "د ننوتلو بیان شمېره",
+  "owf.field_pgm_number": "د PGM شمېره",
+  "owf.field_declaration_reference": "د ګمرکي اعلان حواله",
+  "owf.field_customs_receipt_ref": "د ګمرک رسید حواله",
+  "owf.field_duty_amount": "د محصول اندازه",
+  "owf.field_tax_amount": "د مالیې اندازه",
+  "owf.field_other_charges": "نور لګښتونه",
+  "owf.field_bill_of_entry_no_pk": "د ننوتلو بیان شمېره (د پاکستان ګمرک)",
+  "owf.field_pgm_number_pk": "د PGM شمېره (WeBOC)",
+  "owf.field_customs_receipt_ref_ae": "د ګمرکي اعلان شمېره (Dubai Trade)",
+  "owf.field_declaration_reference_af": "د ASYCUDA اعلان حواله",
+  "owf.field_bill_of_entry_no_in": "د ننوتلو بیان شمېره (ICEGATE)",
   "cwk.title": "د پاکولو او ګمرک کاري ځای",
   "cwk.subtitle": "د هر پیرودونکي امر هغه پړاوونه چې اوس مهال د هیواد له مخې د پاکولو پاملرنې ته اړتیا لري.",
   "cwk.all_countries": "ټول ګمرکي هیوادونه",

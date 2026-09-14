@@ -6,14 +6,15 @@ describe("User-to-User Work Transfer & RBAC Scope Architecture", () => {
     const sourceCityBranchId = "89bf01e5-6b47-4f93-b684-2a6ffae91234";
     const destCountryId = "74a7482f-e8b0-4f59-a292-9a008c2a969f";
     const destCityBranchId = "89bf01e5-6b47-4f93-b684-2a6ffae91234";
-    const receiverUserId = "11111111-2222-3333-4444-555555555555";
+    const receiverUserId: string | null = "11111111-2222-3333-4444-555555555555";
+    const noReceiverUserId: string | null = null;
 
     const isSameBranch =
       sourceCountryId === destCountryId &&
       sourceCityBranchId === destCityBranchId;
 
     // Without receiverUserId, same branch is rejected
-    expect(isSameBranch && !null).toBe(true);
+    expect(isSameBranch && !noReceiverUserId).toBe(true);
 
     // With receiverUserId, same branch handover is permitted
     expect(isSameBranch && !receiverUserId).toBe(false);
