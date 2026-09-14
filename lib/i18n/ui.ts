@@ -1,6 +1,65 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "owf.assign"
+  | "owf.assign_to"
+  | "owf.assign_truck_task"
+  | "owf.bl_container"
+  | "owf.booked"
+  | "owf.cancel"
+  | "owf.cartons"
+  | "owf.customs"
+  | "owf.dest_branch"
+  | "owf.dest_country"
+  | "owf.discrepancy_found"
+  | "owf.discrepancy_notes_ph"
+  | "owf.driver"
+  | "owf.driver_mobile"
+  | "owf.driver_name"
+  | "owf.err_discrepancy_notes"
+  | "owf.err_required"
+  | "owf.goods_verification"
+  | "owf.handoffs"
+  | "owf.leg"
+  | "owf.legs"
+  | "owf.narration_ph"
+  | "owf.no_legs"
+  | "owf.not_found"
+  | "owf.registered_truck"
+  | "owf.select"
+  | "owf.select_leg"
+  | "owf.send"
+  | "owf.send_handoff"
+  | "owf.submit"
+  | "owf.temporary_truck"
+  | "owf.truck"
+  | "owf.truck_number"
+  | "owf.verification_history"
+  | "owf.verified_accept"
+  | "owf.verified_cartons"
+  | "owf.verified_gross_weight"
+  | "owf.verified_net_weight"
+  | "owf.verified_quantity"
+  | "owf.stage_booking"
+  | "owf.stage_truck_assignment"
+  | "owf.stage_goods_verification"
+  | "owf.stage_loading"
+  | "owf.stage_customs_clearing"
+  | "owf.stage_shipment_bl"
+  | "owf.stage_handover"
+  | "owf.stage_destination_review"
+  | "owf.stage_completed"
+  | "owf.status_pending"
+  | "owf.status_accepted"
+  | "owf.status_rejected"
+  | "owf.status_returned"
+  | "owf.status_cancelled"
+  | "owf.status_resubmitted"
+  | "owf.status_completed"
+  | "owf.result_pending"
+  | "owf.result_verified"
+  | "owf.result_discrepancy"
+  | "owf.result_returned"
   | "tc.title"
   | "tc.new_handover"
   | "tc.tab_incoming"
@@ -6309,7 +6368,7 @@ export type UiKey =
   | "sales.ster_err_load_sales_record" | "sales.ster_err_transfer_payment" | "sales.ster_err_processing_transfer" | "sales.ster_sales_record_not_found" | "sales.ster_customer_account_debit_fallback" | "sales.ster_sales_account_credit_fallback"
   | "purchase.wiz_unnamed_account" | "purchase.wiz_no_code" | "purchase.wiz_pending_ellipsis"
   | "purchase.wiz_account_not_found" | "purchase.wiz_account_loaded" | "purchase.wiz_type_purchase" | "purchase.wiz_type_sales" | "purchase.wiz_country_name_required" | "purchase.wiz_goods_hscode_required" | "purchase.wiz_account_name_code_required" | "purchase.wiz_company_name_required"
-  | "purchase.wiz_err_account_lookup" | "purchase.wiz_err_booking_lookup" | "purchase.wiz_err_load_order_by_id" | "purchase.wiz_err_create_port" | "purchase.wiz_err_order_save" | "purchase.wiz_err_roznamcha_transfer" | "purchase.wiz_err_delete_booking" | "purchase.wiz_err_create_country" | "purchase.wiz_err_create_good" | "purchase.wiz_err_create_account" | "purchase.wiz_err_create_company" | "purchase.wiz_err_create_good_master" | "purchase.wiz_err_save_variation" | "purchase.wiz_err_update_hs_code"
+  | "purchase.wiz_err_account_lookup" | "purchase.wiz_err_country_req" | "purchase.wiz_err_branch_req" | "purchase.wiz_err_purchase_acct_req" | "purchase.wiz_err_sales_acct_req" | "purchase.wiz_err_booking_lookup" | "purchase.wiz_err_load_order_by_id" | "purchase.wiz_err_create_port" | "purchase.wiz_err_order_save" | "purchase.wiz_err_roznamcha_transfer" | "purchase.wiz_err_delete_booking" | "purchase.wiz_err_create_country" | "purchase.wiz_err_create_good" | "purchase.wiz_err_create_account" | "purchase.wiz_err_create_company" | "purchase.wiz_err_create_good_master" | "purchase.wiz_err_save_variation" | "purchase.wiz_err_update_hs_code"
   | "purchase.wiz_add_good_variation" | "purchase.wiz_specify_size_brand" | "purchase.wiz_control_account" | "purchase.wiz_create_new_report" | "purchase.wiz_create_and_save" | "purchase.wiz_create_new_company" | "purchase.wiz_adding_to_company_registry" | "purchase.wiz_transfer_to_payment_module"
   | "purchase.wiz_ph_country_example" | "purchase.wiz_ph_goods_name_example" | "purchase.wiz_ph_brand_example" | "purchase.wiz_ph_size_example" | "purchase.wiz_ph_account_name_example" | "purchase.wiz_ph_auto" | "purchase.wiz_ph_report_name_example" | "purchase.wiz_ph_optional_description" | "purchase.wiz_ph_additional_notes" | "purchase.wiz_ph_company_example" | "purchase.wiz_ph_company_legal_example" | "purchase.wiz_confirm_delete_booking" | "purchase.wiz_deleted_reverted" | "purchase.wiz_fill_brand_size" | "purchase.wiz_email_triggered" | "purchase.wiz_whatsapp_triggered" | "purchase.wiz_checkup_triggered"
   | "hr.pp_search_placeholder"
@@ -13847,6 +13906,10 @@ const en: Dict = {
   "purchase.wiz_adding_to_company_registry": "Adding to Company Master Settings registry",
   "purchase.wiz_transfer_to_payment_module": "Transfer to Payment Module",
   "purchase.wiz_err_account_lookup": "Account lookup failed.",
+  "purchase.wiz_err_country_req": "Please select a Country before proceeding.",
+  "purchase.wiz_err_branch_req": "Please select a Branch before proceeding.",
+  "purchase.wiz_err_purchase_acct_req": "Please select a Purchase Account (DR) before proceeding.",
+  "purchase.wiz_err_sales_acct_req": "Please select a Sales Account (CR) before proceeding.",
   "purchase.wiz_err_booking_lookup": "Purchase booking lookup failed.",
   "purchase.wiz_err_load_order_by_id": "Failed to load purchase order by ID.",
   "purchase.wiz_err_create_port": "Failed to create port.",
@@ -26150,6 +26213,65 @@ const en: Dict = {
   "tc.status_cancelled": "Cancelled",
   "tc.status_resubmitted": "Resubmitted",
   "tc.status_completed": "Completed",
+  "owf.assign": "Assign",
+  "owf.assign_to": "Assign To...",
+  "owf.assign_truck_task": "Assign Truck / Task",
+  "owf.bl_container": "BL / Container",
+  "owf.booked": "Booked",
+  "owf.cancel": "Cancel",
+  "owf.cartons": "cartons",
+  "owf.customs": "Customs",
+  "owf.dest_branch": "Destination Branch",
+  "owf.dest_country": "Destination Country",
+  "owf.discrepancy_found": "Discrepancy Found",
+  "owf.discrepancy_notes_ph": "Describe the discrepancy...",
+  "owf.driver": "Driver",
+  "owf.driver_mobile": "Driver Mobile",
+  "owf.driver_name": "Driver Name",
+  "owf.err_discrepancy_notes": "Discrepancy notes are required.",
+  "owf.err_required": "This field is required.",
+  "owf.goods_verification": "Goods Verification",
+  "owf.handoffs": "Transfer Center Handoffs",
+  "owf.leg": "Leg",
+  "owf.legs": "Route Legs",
+  "owf.narration_ph": "Note for the receiving office...",
+  "owf.no_legs": "No route legs recorded.",
+  "owf.not_found": "Order not found.",
+  "owf.registered_truck": "Registered Truck",
+  "owf.select": "Select...",
+  "owf.select_leg": "Select a leg.",
+  "owf.send": "Send",
+  "owf.send_handoff": "Send Handoff",
+  "owf.submit": "Submit",
+  "owf.temporary_truck": "Temporary Truck",
+  "owf.truck": "Truck",
+  "owf.truck_number": "Truck Number",
+  "owf.verification_history": "Verification History",
+  "owf.verified_accept": "Verified / Accept",
+  "owf.verified_cartons": "Verified Cartons",
+  "owf.verified_gross_weight": "Verified Gross Weight (kg)",
+  "owf.verified_net_weight": "Verified Net Weight (kg)",
+  "owf.verified_quantity": "Verified Quantity",
+  "owf.stage_booking": "Booking / Customer Order",
+  "owf.stage_truck_assignment": "Truck / Transport Assignment",
+  "owf.stage_goods_verification": "Goods Verification",
+  "owf.stage_loading": "Loading",
+  "owf.stage_customs_clearing": "Customs / Clearing",
+  "owf.stage_shipment_bl": "Shipment / B/L",
+  "owf.stage_handover": "Handover",
+  "owf.stage_destination_review": "Destination Review",
+  "owf.stage_completed": "Delivered / Completed",
+  "owf.status_pending": "Pending",
+  "owf.status_accepted": "Accepted",
+  "owf.status_rejected": "Rejected",
+  "owf.status_returned": "Returned",
+  "owf.status_cancelled": "Cancelled",
+  "owf.status_resubmitted": "Resubmitted",
+  "owf.status_completed": "Completed",
+  "owf.result_pending": "Pending",
+  "owf.result_verified": "Verified",
+  "owf.result_discrepancy": "Discrepancy",
+  "owf.result_returned": "Returned",
 };
 
 const ur: Dict = {
@@ -30408,6 +30530,10 @@ const ur: Dict = {
   "purchase.wiz_adding_to_company_registry": "کمپنی ماسٹر سیٹنگز رجسٹری میں شامل کیا جا رہا ہے",
   "purchase.wiz_transfer_to_payment_module": "پیمنٹ ماڈیول میں منتقل کریں",
   "purchase.wiz_err_account_lookup": "اکاؤنٹ تلاش کرنے میں ناکامی۔",
+  "purchase.wiz_err_country_req": "آگے بڑھنے سے پہلے براہ کرم ملک منتخب کریں۔",
+  "purchase.wiz_err_branch_req": "آگے بڑھنے سے پہلے براہ کرم برانچ منتخب کریں۔",
+  "purchase.wiz_err_purchase_acct_req": "آگے بڑھنے سے پہلے براہ کرم خریداری اکاؤنٹ (DR) منتخب کریں۔",
+  "purchase.wiz_err_sales_acct_req": "آگے بڑھنے سے پہلے براہ کرم فروخت اکاؤنٹ (CR) منتخب کریں۔",
   "purchase.wiz_err_booking_lookup": "پرچیز بکنگ تلاش کرنے میں ناکامی۔",
   "purchase.wiz_err_load_order_by_id": "ID کے ذریعے پرچیز آرڈر لوڈ کرنے میں ناکامی۔",
   "purchase.wiz_err_create_port": "پورٹ بنانے میں ناکامی۔",
@@ -44360,6 +44486,65 @@ const ur: Dict = {
   "tc.status_cancelled": "منسوخ",
   "tc.status_resubmitted": "دوبارہ جمع شدہ",
   "tc.status_completed": "مکمل",
+  "owf.assign": "تفویض کریں",
+  "owf.assign_to": "تفویض کریں...",
+  "owf.assign_truck_task": "ٹرک / ٹاسک تفویض کریں",
+  "owf.bl_container": "بی ایل / کنٹینر",
+  "owf.booked": "بک شدہ",
+  "owf.cancel": "منسوخ کریں",
+  "owf.cartons": "کارٹن",
+  "owf.customs": "کسٹمز",
+  "owf.dest_branch": "منزل برانچ",
+  "owf.dest_country": "منزل ملک",
+  "owf.discrepancy_found": "فرق پایا گیا",
+  "owf.discrepancy_notes_ph": "فرق بیان کریں...",
+  "owf.driver": "ڈرائیور",
+  "owf.driver_mobile": "ڈرائیور موبائل",
+  "owf.driver_name": "ڈرائیور کا نام",
+  "owf.err_discrepancy_notes": "فرق کے ریمارکس درکار ہیں۔",
+  "owf.err_required": "یہ خانہ درکار ہے۔",
+  "owf.goods_verification": "سامان کی تصدیق",
+  "owf.handoffs": "ٹرانسفر سینٹر ہینڈ اوورز",
+  "owf.leg": "لیگ",
+  "owf.legs": "روٹ لیگز",
+  "owf.narration_ph": "وصول کرنے والے دفتر کے لیے نوٹ...",
+  "owf.no_legs": "کوئی روٹ لیگ درج نہیں۔",
+  "owf.not_found": "آرڈر نہیں ملا۔",
+  "owf.registered_truck": "رجسٹرڈ ٹرک",
+  "owf.select": "منتخب کریں...",
+  "owf.select_leg": "ایک لیگ منتخب کریں۔",
+  "owf.send": "بھیجیں",
+  "owf.send_handoff": "ہینڈ اوور بھیجیں",
+  "owf.submit": "جمع کرائیں",
+  "owf.temporary_truck": "عارضی ٹرک",
+  "owf.truck": "ٹرک",
+  "owf.truck_number": "ٹرک نمبر",
+  "owf.verification_history": "تصدیق کی تاریخ",
+  "owf.verified_accept": "تصدیق شدہ / منظور",
+  "owf.verified_cartons": "تصدیق شدہ کارٹن",
+  "owf.verified_gross_weight": "تصدیق شدہ مجموعی وزن (کلوگرام)",
+  "owf.verified_net_weight": "تصدیق شدہ خالص وزن (کلوگرام)",
+  "owf.verified_quantity": "تصدیق شدہ مقدار",
+  "owf.stage_booking": "بکنگ / کسٹمر آرڈر",
+  "owf.stage_truck_assignment": "ٹرک / ٹرانسپورٹ تفویض",
+  "owf.stage_goods_verification": "سامان کی تصدیق",
+  "owf.stage_loading": "لوڈنگ",
+  "owf.stage_customs_clearing": "کسٹمز / کلیئرنگ",
+  "owf.stage_shipment_bl": "شپمنٹ / بی ایل",
+  "owf.stage_handover": "ہینڈ اوور",
+  "owf.stage_destination_review": "منزل کا جائزہ",
+  "owf.stage_completed": "ڈیلیور / مکمل",
+  "owf.status_pending": "زیر التوا",
+  "owf.status_accepted": "منظور شدہ",
+  "owf.status_rejected": "مسترد",
+  "owf.status_returned": "واپس شدہ",
+  "owf.status_cancelled": "منسوخ",
+  "owf.status_resubmitted": "دوبارہ جمع شدہ",
+  "owf.status_completed": "مکمل",
+  "owf.result_pending": "زیر التوا",
+  "owf.result_verified": "تصدیق شدہ",
+  "owf.result_discrepancy": "فرق",
+  "owf.result_returned": "واپس شدہ",
 };
 
 const ar: Dict = {
@@ -48573,6 +48758,10 @@ const ar: Dict = {
   "purchase.wiz_adding_to_company_registry": "الإضافة إلى سجل إعدادات الشركة الرئيسي",
   "purchase.wiz_transfer_to_payment_module": "النقل إلى وحدة الدفع",
   "purchase.wiz_err_account_lookup": "فشل البحث عن الحساب.",
+  "purchase.wiz_err_country_req": "يرجى تحديد الدولة قبل المتابعة.",
+  "purchase.wiz_err_branch_req": "يرجى تحديد الفرع قبل المتابعة.",
+  "purchase.wiz_err_purchase_acct_req": "يرجى تحديد حساب المشتريات (مدين) قبل المتابعة.",
+  "purchase.wiz_err_sales_acct_req": "يرجى تحديد حساب المبيعات (دائن) قبل المتابعة.",
   "purchase.wiz_err_booking_lookup": "فشل البحث عن حجز الشراء.",
   "purchase.wiz_err_load_order_by_id": "فشل تحميل أمر الشراء بواسطة المعرّف.",
   "purchase.wiz_err_create_port": "فشل إنشاء الميناء.",
@@ -62572,6 +62761,65 @@ const ar: Dict = {
   "tc.status_cancelled": "ملغى",
   "tc.status_resubmitted": "أُعيد إرساله",
   "tc.status_completed": "مكتمل",
+  "owf.assign": "تعيين",
+  "owf.assign_to": "تعيين إلى...",
+  "owf.assign_truck_task": "تعيين شاحنة / مهمة",
+  "owf.bl_container": "بوليصة الشحن / الحاوية",
+  "owf.booked": "المحجوز",
+  "owf.cancel": "إلغاء",
+  "owf.cartons": "كراتين",
+  "owf.customs": "الجمارك",
+  "owf.dest_branch": "فرع الوجهة",
+  "owf.dest_country": "بلد الوجهة",
+  "owf.discrepancy_found": "تم العثور على تباين",
+  "owf.discrepancy_notes_ph": "صف التباين...",
+  "owf.driver": "السائق",
+  "owf.driver_mobile": "جوال السائق",
+  "owf.driver_name": "اسم السائق",
+  "owf.err_discrepancy_notes": "ملاحظات التباين مطلوبة.",
+  "owf.err_required": "هذا الحقل مطلوب.",
+  "owf.goods_verification": "التحقق من البضائع",
+  "owf.handoffs": "تسليمات مركز النقل",
+  "owf.leg": "المرحلة",
+  "owf.legs": "مراحل الطريق",
+  "owf.narration_ph": "ملاحظة للمكتب المستلم...",
+  "owf.no_legs": "لم يتم تسجيل مراحل طريق.",
+  "owf.not_found": "الطلب غير موجود.",
+  "owf.registered_truck": "شاحنة مسجلة",
+  "owf.select": "اختر...",
+  "owf.select_leg": "حدد مرحلة.",
+  "owf.send": "إرسال",
+  "owf.send_handoff": "إرسال التسليم",
+  "owf.submit": "إرسال",
+  "owf.temporary_truck": "شاحنة مؤقتة",
+  "owf.truck": "الشاحنة",
+  "owf.truck_number": "رقم الشاحنة",
+  "owf.verification_history": "سجل التحقق",
+  "owf.verified_accept": "تم التحقق / قبول",
+  "owf.verified_cartons": "الكراتين الموثقة",
+  "owf.verified_gross_weight": "الوزن الإجمالي الموثق (كجم)",
+  "owf.verified_net_weight": "الوزن الصافي الموثق (كجم)",
+  "owf.verified_quantity": "الكمية الموثقة",
+  "owf.stage_booking": "الحجز / طلب العميل",
+  "owf.stage_truck_assignment": "تعيين الشاحنة / النقل",
+  "owf.stage_goods_verification": "التحقق من البضائع",
+  "owf.stage_loading": "التحميل",
+  "owf.stage_customs_clearing": "الجمارك / التخليص",
+  "owf.stage_shipment_bl": "الشحنة / بوليصة الشحن",
+  "owf.stage_handover": "التسليم",
+  "owf.stage_destination_review": "مراجعة الوجهة",
+  "owf.stage_completed": "تم التسليم / مكتمل",
+  "owf.status_pending": "قيد الانتظار",
+  "owf.status_accepted": "مقبول",
+  "owf.status_rejected": "مرفوض",
+  "owf.status_returned": "معاد",
+  "owf.status_cancelled": "ملغى",
+  "owf.status_resubmitted": "أُعيد إرساله",
+  "owf.status_completed": "مكتمل",
+  "owf.result_pending": "قيد الانتظار",
+  "owf.result_verified": "تم التحقق",
+  "owf.result_discrepancy": "تباين",
+  "owf.result_returned": "معاد",
 };
 
 const fa: Dict = {
@@ -66785,6 +67033,10 @@ const fa: Dict = {
   "purchase.wiz_adding_to_company_registry": "در حال افزودن به فهرست تنظیمات اصلی شرکت",
   "purchase.wiz_transfer_to_payment_module": "انتقال به ماژول پرداخت",
   "purchase.wiz_err_account_lookup": "جستجوی حساب ناموفق بود.",
+  "purchase.wiz_err_country_req": "لطفاً قبل از ادامه یک کشور را انتخاب کنید.",
+  "purchase.wiz_err_branch_req": "لطفاً قبل از ادامه یک شعبه را انتخاب کنید.",
+  "purchase.wiz_err_purchase_acct_req": "لطفاً قبل از ادامه حساب خرید (بدهکار) را انتخاب کنید.",
+  "purchase.wiz_err_sales_acct_req": "لطفاً قبل از ادامه حساب فروش (بستانکار) را انتخاب کنید.",
   "purchase.wiz_err_booking_lookup": "جستجوی رزرو خرید ناموفق بود.",
   "purchase.wiz_err_load_order_by_id": "بارگذاری سفارش خرید با شناسه ناموفق بود.",
   "purchase.wiz_err_create_port": "ایجاد بندر ناموفق بود.",
@@ -80783,6 +81035,65 @@ const fa: Dict = {
   "tc.status_cancelled": "لغوشده",
   "tc.status_resubmitted": "دوباره ارسال شده",
   "tc.status_completed": "تکمیل‌شده",
+  "owf.assign": "تخصیص",
+  "owf.assign_to": "تخصیص به...",
+  "owf.assign_truck_task": "تخصیص کامیون / وظیفه",
+  "owf.bl_container": "بارنامه / کانتینر",
+  "owf.booked": "رزرو شده",
+  "owf.cancel": "لغو",
+  "owf.cartons": "کارتن",
+  "owf.customs": "گمرک",
+  "owf.dest_branch": "شعبه مقصد",
+  "owf.dest_country": "کشور مقصد",
+  "owf.discrepancy_found": "مغایرت یافت شد",
+  "owf.discrepancy_notes_ph": "مغایرت را شرح دهید...",
+  "owf.driver": "راننده",
+  "owf.driver_mobile": "موبایل راننده",
+  "owf.driver_name": "نام راننده",
+  "owf.err_discrepancy_notes": "یادداشت مغایرت الزامی است.",
+  "owf.err_required": "این فیلد الزامی است.",
+  "owf.goods_verification": "تأیید کالا",
+  "owf.handoffs": "تحویل‌های مرکز انتقال",
+  "owf.leg": "مرحله",
+  "owf.legs": "مراحل مسیر",
+  "owf.narration_ph": "یادداشت برای دفتر دریافت‌کننده...",
+  "owf.no_legs": "هیچ مرحله مسیری ثبت نشده است.",
+  "owf.not_found": "سفارش یافت نشد.",
+  "owf.registered_truck": "کامیون ثبت‌شده",
+  "owf.select": "انتخاب کنید...",
+  "owf.select_leg": "یک مرحله را انتخاب کنید.",
+  "owf.send": "ارسال",
+  "owf.send_handoff": "ارسال تحویل",
+  "owf.submit": "ارسال",
+  "owf.temporary_truck": "کامیون موقت",
+  "owf.truck": "کامیون",
+  "owf.truck_number": "شماره کامیون",
+  "owf.verification_history": "تاریخچه تأیید",
+  "owf.verified_accept": "تأییدشده / پذیرفتن",
+  "owf.verified_cartons": "کارتن‌های تأییدشده",
+  "owf.verified_gross_weight": "وزن ناخالص تأییدشده (کیلوگرم)",
+  "owf.verified_net_weight": "وزن خالص تأییدشده (کیلوگرم)",
+  "owf.verified_quantity": "مقدار تأییدشده",
+  "owf.stage_booking": "رزرو / سفارش مشتری",
+  "owf.stage_truck_assignment": "تخصیص کامیون / حمل‌ونقل",
+  "owf.stage_goods_verification": "تأیید کالا",
+  "owf.stage_loading": "بارگیری",
+  "owf.stage_customs_clearing": "گمرک / ترخیص",
+  "owf.stage_shipment_bl": "محموله / بارنامه",
+  "owf.stage_handover": "تحویل",
+  "owf.stage_destination_review": "بازبینی مقصد",
+  "owf.stage_completed": "تحویل شده / تکمیل شده",
+  "owf.status_pending": "در انتظار",
+  "owf.status_accepted": "پذیرفته‌شده",
+  "owf.status_rejected": "رد شده",
+  "owf.status_returned": "بازگشتی",
+  "owf.status_cancelled": "لغوشده",
+  "owf.status_resubmitted": "دوباره ارسال شده",
+  "owf.status_completed": "تکمیل‌شده",
+  "owf.result_pending": "در انتظار",
+  "owf.result_verified": "تأییدشده",
+  "owf.result_discrepancy": "مغایرت",
+  "owf.result_returned": "بازگشتی",
 };
 
 const ps: Dict = {
@@ -84991,6 +85302,10 @@ const ps: Dict = {
   "purchase.wiz_adding_to_company_registry": "د شرکت اصلي تنظیماتو فهرست ته اضافه کیږي",
   "purchase.wiz_transfer_to_payment_module": "تادیاتو ماډول ته لېږدول",
   "purchase.wiz_err_account_lookup": "د حساب لټون ناکام شو.",
+  "purchase.wiz_err_country_req": "مهرباني وکړئ مخکې له دې چې پرمخ لاړ شئ هیواد وټاکئ.",
+  "purchase.wiz_err_branch_req": "مهرباني وکړئ مخکې له دې چې پرمخ لاړ شئ څانګه وټاکئ.",
+  "purchase.wiz_err_purchase_acct_req": "مهرباني وکړئ مخکې له دې چې پرمخ لاړ شئ د پیرودلو حساب (DR) وټاکئ.",
+  "purchase.wiz_err_sales_acct_req": "مهرباني وکړئ مخکې له دې چې پرمخ لاړ شئ د پلور حساب (CR) وټاکئ.",
   "purchase.wiz_err_booking_lookup": "د پیرودلو بکنګ لټون ناکام شو.",
   "purchase.wiz_err_load_order_by_id": "د ID له مخې د پیرودلو امر بارول ناکام شول.",
   "purchase.wiz_err_create_port": "د بندر جوړول ناکام شول.",
@@ -99000,6 +99315,65 @@ const ps: Dict = {
   "tc.status_cancelled": "لغوه شوی",
   "tc.status_resubmitted": "بیا سپارل شوی",
   "tc.status_completed": "بشپړ شوی",
+  "owf.assign": "ټاکل",
+  "owf.assign_to": "ته وسپارئ...",
+  "owf.assign_truck_task": "لاری / دنده وسپارئ",
+  "owf.bl_container": "بي ال / ټانکر",
+  "owf.booked": "بک شوی",
+  "owf.cancel": "لغوه کول",
+  "owf.cartons": "کارتنونه",
+  "owf.customs": "ګمرک",
+  "owf.dest_branch": "د موخې څانګه",
+  "owf.dest_country": "د موخې هیواد",
+  "owf.discrepancy_found": "توپیر وموندل شو",
+  "owf.discrepancy_notes_ph": "توپیر تشریح کړئ...",
+  "owf.driver": "موټروان",
+  "owf.driver_mobile": "د موټروان موبایل",
+  "owf.driver_name": "د موټروان نوم",
+  "owf.err_discrepancy_notes": "د توپیر یادښتونه اړین دي.",
+  "owf.err_required": "دا ساحه اړینه ده.",
+  "owf.goods_verification": "د توکو تایید",
+  "owf.handoffs": "د لېږد مرکز سپارنې",
+  "owf.leg": "پړاو",
+  "owf.legs": "د لارې پړاوونه",
+  "owf.narration_ph": "د ترلاسه کوونکي دفتر لپاره یادښت...",
+  "owf.no_legs": "د لارې هېڅ پړاو ثبت نه دی شوی.",
+  "owf.not_found": "امر ونه موندل شو.",
+  "owf.registered_truck": "ثبت شوې لاری",
+  "owf.select": "وټاکئ...",
+  "owf.select_leg": "یو پړاو وټاکئ.",
+  "owf.send": "لېږل",
+  "owf.send_handoff": "سپارنه لېږل",
+  "owf.submit": "سپارل",
+  "owf.temporary_truck": "لنډمهاله لاری",
+  "owf.truck": "لاری",
+  "owf.truck_number": "د لارۍ شمېره",
+  "owf.verification_history": "د تایید تاریخچه",
+  "owf.verified_accept": "تایید شوی / منل",
+  "owf.verified_cartons": "تایید شوي کارتنونه",
+  "owf.verified_gross_weight": "تایید شوی ټول وزن (کيلوګرام)",
+  "owf.verified_net_weight": "تایید شوی خالص وزن (کيلوګرام)",
+  "owf.verified_quantity": "تایید شوې اندازه",
+  "owf.stage_booking": "بکنګ / د پیرودونکي امر",
+  "owf.stage_truck_assignment": "لاری / لېږد وسپارنه",
+  "owf.stage_goods_verification": "د توکو تایید",
+  "owf.stage_loading": "بارول",
+  "owf.stage_customs_clearing": "ګمرک / پاکول",
+  "owf.stage_shipment_bl": "بار / بي ال",
+  "owf.stage_handover": "سپارنه",
+  "owf.stage_destination_review": "د موخې بیاکتنه",
+  "owf.stage_completed": "وسپارل شوی / بشپړ شوی",
+  "owf.status_pending": "په تمه",
+  "owf.status_accepted": "منل شوی",
+  "owf.status_rejected": "رد شوی",
+  "owf.status_returned": "بېرته شوی",
+  "owf.status_cancelled": "لغوه شوی",
+  "owf.status_resubmitted": "بیا سپارل شوی",
+  "owf.status_completed": "بشپړ شوی",
+  "owf.result_pending": "په تمه",
+  "owf.result_verified": "تایید شوی",
+  "owf.result_discrepancy": "توپیر",
+  "owf.result_returned": "بېرته شوی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

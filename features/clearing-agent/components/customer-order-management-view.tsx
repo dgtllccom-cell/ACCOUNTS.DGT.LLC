@@ -1917,9 +1917,13 @@ export function CustomerOrderManagementView() {
                         >
                           <td className="px-3.5 py-3 font-bold text-slate-400">{index + 1}</td>
                           <td className="px-3.5 py-3">
-                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                            <a
+                              href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
+                              className="font-mono font-bold text-blue-600 hover:underline dark:text-blue-400"
+                              title="Shipping / Clearing pipeline — truck, goods verification, customs, handover"
+                            >
                               {order.order_no || `CL-${order.id.slice(0, 6)}`}
-                            </span>
+                            </a>
                           </td>
                           <td className="px-3.5 py-3 whitespace-nowrap text-slate-500 font-medium">{dateText}</td>
                           <td className="px-3.5 py-3">

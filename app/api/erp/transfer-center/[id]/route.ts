@@ -20,6 +20,11 @@ import {
   resubmitTransfer,
   returnTransferForCorrection,
 } from "@/lib/services/inter-country-transfer-service";
+// Phase 2 sync hook: after a shipping-handover-type transfer changes status,
+// mirror that onto its originating clearing_customer_order_legs row (stage,
+// responsible branch/user) so the Transfer Center and the operational leg
+// never drift apart. A no-op for every other transfer_type/source_table.
+import { syncLegFromTransferAction } from "@/lib/services/clearing-order-workflow-service";
 
 const idSchema = z.object({ id: z.string().uuid() });
 const patchSchema = z.discriminatedUnion("action", [
@@ -33,7 +38,7 @@ const patchSchema = z.discriminatedUnion("action", [
 async function loadForScopeCheck(id: string) {
   return withLocalPg(async (sql) => {
     const r = await sql`
-      select id, transfer_type, source_country_id, source_country_branch_id, source_city_branch_id,
+      select id, transfer_type, source_table, source_id, source_country_id, source_country_branch_id, source_city_branch_id,
              dest_country_id, dest_country_branch_id, dest_city_branch_id
       from public.inter_country_transfers
       where id = ${id} and deleted_at is null
@@ -77,20 +82,48 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       throw new ApiClientError("Neither the source nor destination scope of this record is allowed for this user.", { status: 403 });
     }
 
+    let result: unknown;
+    let newStatus: string | null = null;
     switch (body.action) {
       case "accept":
-        return apiOk(await acceptHandover({ session, transferId: id, note: body.note ?? null }));
+        result = await acceptHandover({ session, transferId: id, note: body.note ?? null });
+        newStatus = "accepted";
+        break;
       case "return":
-        return apiOk(await returnTransferForCorrection({ session, transferId: id, reason: body.reason }));
+        result = await returnTransferForCorrection({ session, transferId: id, reason: body.reason });
+        newStatus = "returned";
+        break;
       case "reject":
-        return apiOk(await rejectInterCountryTransfer({ session, transferId: id, reason: body.reason }));
+        result = await rejectInterCountryTransfer({ session, transferId: id, reason: body.reason });
+        newStatus = "rejected";
+        break;
       case "resubmit":
-        return apiOk(await resubmitTransfer({ session, transferId: id, narration: body.narration ?? null, remarks: body.remarks ?? null }));
+        result = await resubmitTransfer({ session, transferId: id, narration: body.narration ?? null, remarks: body.remarks ?? null });
+        break;
       case "complete":
-        return apiOk(await completeHandover({ session, transferId: id, note: body.note ?? null }));
+        result = await completeHandover({ session, transferId: id, note: body.note ?? null });
+        newStatus = "completed";
+        break;
       default:
         throw new ApiClientError("Unknown action.", { status: 400 });
     }
+
+    if (newStatus) {
+      try {
+        await syncLegFromTransferAction(session, {
+          id: row.id,
+          source_table: row.source_table ?? null,
+          source_id: row.source_id ?? null,
+          status: newStatus,
+          dest_country_branch_id: row.dest_country_branch_id ?? null,
+          dest_city_branch_id: row.dest_city_branch_id ?? null,
+        });
+      } catch {
+        // the transfer action itself already succeeded; a sync failure must not undo it
+      }
+    }
+
+    return apiOk(result);
   } catch (error) {
     return handleApiError(error);
   }

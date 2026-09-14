@@ -132,21 +132,26 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-left">
-                <Th className="px-3 py-2.5">{s.t("c_job", "Job No")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_job", "Job No.")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_account_no", "Account No.")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_party", "Customer / Company")}</Th>
                 <Th className="px-3 py-2.5">{s.t("c_domain", "Domain")}</Th>
-                <Th className="px-3 py-2.5">{s.t("c_file", "Document")}</Th>
-                <Th className="px-3 py-2.5">{s.t("c_type", "Type")}</Th>
-                <Th className="px-3 py-2.5">{s.t("c_scope", "Country / Branch / Agent")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_scope", "Country / Branch / City")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_file", "Document Name (Title)")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_type", "Document Type")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_uploaded_by", "Uploaded By")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_datetime", "Upload Date/Time")}</Th>
                 <Th className="px-3 py-2.5">{s.t("c_match", "Match")}</Th>
-                <Th className="px-3 py-2.5">{s.t("c_status", "Status")}</Th>
+                <Th className="px-3 py-2.5">{s.t("c_status", "Review Status")}</Th>
+                <Th className="px-3 py-2.5 text-right">{s.t("c_actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-3 py-10 text-center text-slate-400"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></td></tr>
+                <tr><td colSpan={12} className="px-3 py-10 text-center text-slate-400"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></td></tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-12 text-center">
+                  <td colSpan={12} className="px-3 py-12 text-center">
                     <div className="flex flex-col items-center justify-center space-y-3">
                       <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
                         <UploadCloud className="h-8 w-8 text-slate-400 dark:text-slate-500" />
@@ -174,13 +179,17 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                 rows.map((r) => (
                   <tr key={r.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40" onClick={() => setOpenId(r.id)}>
                     <td className="px-3 py-2 font-mono font-bold text-slate-700 dark:text-slate-200">{r.job_no}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-amber-700 dark:text-amber-400 font-semibold">{r.account_no || r.extraction_summary?.account_code || r.extraction_summary?.account_no || "—"}</td>
+                    <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{r.customer_name || r.company_name || r.extraction_summary?.vendor_name || r.extraction_summary?.party_name || "—"}</td>
                     <td className="px-3 py-2 text-slate-500">{s.t(`domain_${r.operational_domain}`, r.operational_domain)}</td>
+                    <td className="px-3 py-2 text-slate-500 truncate max-w-[150px]">{[r.country_name, r.city_branch_name || r.country_branch_name].filter(Boolean).join(" / ") || "—"}</td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                      {r.original_filename}
+                      <div className="font-semibold truncate max-w-[160px]">{r.document_title || r.document_reference || r.original_filename}</div>
                       <div className="text-[10px] text-slate-400">{(r.file_size / 1024).toFixed(0)} KB · {r.page_count || "?"} pg</div>
                     </td>
                     <td className="px-3 py-2 text-slate-500">{r.doc_type_code ? `${s.t(`dt_${r.doc_type_code}`, r.doc_type_code)} (${Math.round((r.doc_type_confidence || 0) * 100)}%)` : "—"}</td>
-                    <td className="px-3 py-2 text-slate-500">{[r.country_name, r.city_branch_name || r.country_branch_name, r.clearing_agent_name].filter(Boolean).join(" / ") || "—"}</td>
+                    <td className="px-3 py-2 text-slate-500 text-[11px]">{r.uploaded_by_name || "Admin"}</td>
+                    <td className="px-3 py-2 text-slate-400 text-[10px] font-mono">{r.created_at ? new Date(r.created_at).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td>
                     <td className="px-3 py-2">
                       <span className={`text-[10px] font-bold ${r.match_status === "out_of_scope" ? "text-rose-600" : r.match_status === "auto" ? "text-emerald-600" : "text-slate-500"}`}>
                         {s.t(`ms_${r.match_status}`, r.match_status)}
@@ -197,6 +206,19 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                           </span>
                         ) : null}
                       </div>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenId(r.id);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100"
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                        {s.t("review_btn", "Review")}
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -562,6 +584,11 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
   const [countryId, setCountryId] = useState<string>("");
   const [branchId, setBranchId] = useState<string>("");
 
+  // Canonical Accounts & Verification states
+  const [enterpriseAccounts, setEnterpriseAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [isCorrecting, setIsCorrecting] = useState<boolean>(false);
+
   useEffect(() => {
     if (!toast?.show) return;
     const timer = setTimeout(() => {
@@ -606,6 +633,22 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     const tm = data?.job?.target_module;
     if (tm && !purpose) setPurpose(tm);
   }, [data?.job?.target_module, purpose]);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const url = countryId
+          ? `/api/erp/accounting/accounts?countryId=${countryId}`
+          : `/api/erp/accounting/accounts`;
+        const res = await apiGet<{ accounts?: any[]; data?: any[] }>(url);
+        const accts = res?.accounts || res?.data || (Array.isArray(res) ? res : []);
+        setEnterpriseAccounts(accts);
+      } catch (err) {
+        console.warn("Failed to load canonical accounts:", err);
+      }
+    };
+    void fetchAccounts();
+  }, [countryId]);
 
   const isSuperAdmin = sessionData?.scopes?.isSuperAdmin || sessionData?.roles?.includes("super_admin") || sessionData?.scopes?.summary?.level === "global";
   const isCountryAdmin = sessionData?.roles?.includes("country_admin") || sessionData?.scopes?.summary?.level === "country";
@@ -655,6 +698,9 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
               countryBranchId: branchId || d.country_branch_id,
               cityBranchId: d.city_branch_id,
               branchId: branchId || d.country_branch_id || d.city_branch_id,
+              purchaseAccountId: selectedAccountId || d.draft_payload?.purchaseAccountId || "",
+              salesAccountId: selectedAccountId || d.draft_payload?.salesAccountId || "",
+              companyId: enterpriseAccounts.find((a) => a.id === selectedAccountId)?.company_id || d.company_id || d.draft_payload?.companyId,
             },
             goodsEntries: d.line_items,
             linkMode: d.link_mode,
@@ -1183,6 +1229,86 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
               </div>
             ) : null}
 
+            {/* VERIFICATION & LINKING PROMPT BAR */}
+            <div className="rounded-2xl border border-blue-200/80 bg-white p-4 shadow-sm dark:border-blue-900/40 dark:bg-slate-900">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
+                      {s.t("prompt_correct_title", "Is this extracted entry correct?")}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {s.t("prompt_correct_sub", "Compare the original document with extracted ERP fields. Confirm to link or enter correction mode.")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={async () => {
+                      await prepareDraft("append_existing");
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {s.t("btn_yes_confirm", "YES — Confirm & Link")}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={async () => {
+                      setIsCorrecting(true);
+                      if (job.status !== "review") {
+                        await act("review");
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50/70 px-4 py-2.5 text-xs font-black text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition-all disabled:opacity-50"
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    {s.t("btn_no_correct", "NO — Correct / Review")}
+                  </button>
+                </div>
+              </div>
+
+              {/* Account Match Required Alert & Canonical Selector */}
+              {!selectedAccountId && !data?.matches?.some((m: any) => m.match_kind === "account_master") && (
+                <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50/60 p-3 text-xs dark:border-amber-800/80 dark:bg-amber-950/30">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold mb-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>{s.t("acct_match_req", "Account Match Required")}</span>
+                    <span className="text-[10.5px] font-normal text-amber-700 dark:text-amber-400">
+                      — No canonical ledger account was automatically matched. Please select the canonical ERP account below:
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={selectedAccountId}
+                      onChange={(e) => setSelectedAccountId(e.target.value)}
+                      className="h-9 min-w-[280px] rounded-xl border border-amber-300 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-amber-700 dark:bg-slate-900 dark:text-slate-100 outline-none"
+                    >
+                      <option value="">{s.t("choose_canonical_acct", "— Select Canonical Account Master —")}</option>
+                      {enterpriseAccounts.map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.code ? `${acc.code} — ` : ""}{acc.name} ({acc.currency || "AED"}{acc.classification ? ` · ${acc.classification}` : ""})
+                        </option>
+                      ))}
+                    </select>
+                    {selectedAccountId && (
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        ✓ Canonical Account Selected
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* SIDE-BY-SIDE BALANCED SPLIT LAYOUT */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* LEFT: ORIGINAL DOCUMENT PREVIEW (Wide, Sticky, Full Height) */}
@@ -1253,7 +1379,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                   </div>
                   <div className="space-y-2">
                     {(data?.fields ?? []).map((f) => (
-                      <FieldRow key={f.id} s={s} f={f} editable={["review", "qvc"].includes(job.status)} onSave={saveField} />
+                      <FieldRow key={f.id} s={s} f={f} editable={isCorrecting || ["review", "qvc"].includes(job.status)} onSave={saveField} />
                     ))}
                     {(data?.fields ?? []).length === 0 ? (
                       <p className="py-6 text-center text-xs text-slate-400">

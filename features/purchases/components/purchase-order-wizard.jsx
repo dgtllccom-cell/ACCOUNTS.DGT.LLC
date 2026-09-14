@@ -132,6 +132,7 @@ const DEFAULT_FORM = {
   destCountryId: "",
   destCountryBranchId: "",
   destCityBranchId: "",
+  purchaseAccountId: "",
   purchaseAccountNo: "",
   purchaseAccountName: "",
   purchaseAccountBranch: "",
@@ -147,6 +148,7 @@ const DEFAULT_FORM = {
   purchaseAccountManualReferenceNumber: "",
   purchaseAccountMobile: "",
   purchaseAccountWhatsapp: "",
+  salesAccountId: "",
   salesAccountNo: "",
   salesAccountName: "",
   salesAccountBranch: "",
@@ -715,6 +717,8 @@ export function PurchaseOrderWizard({ session }) {
     const comp = acc.company_name || acc.companyName || acc.company?.name || (acc.code === "UAE-DUB-AC-0003" ? "DALIAN SUNSHINE IMP. & EXP." : "");
 
     return {
+      id: acc.id || null,
+      accountId: acc.id || null,
       accountCode: acc.code || acc.account_number || "",
       accountName: acc.name || "",
       contactPerson: contact,
@@ -1707,8 +1711,18 @@ export function PurchaseOrderWizard({ session }) {
       }
     }
     
-    // Filter by form selected country & branch - allow global/unassigned accounts
+    // Filter by form selected country - allow global/unassigned accounts
     if (form.countryId && form.countryId !== "All" && acc.countryId && acc.countryId !== form.countryId) {
+      return false;
+    }
+
+    // Country branch match: allow accounts matching countryBranchId or unassigned
+    if (form.countryBranchId && acc.countryBranchId && acc.countryBranchId !== form.countryBranchId) {
+      return false;
+    }
+
+    // City branch match: allow accounts matching cityBranchId or parent country branch accounts (cityBranchId is null)
+    if (form.cityBranchId && acc.cityBranchId && acc.cityBranchId !== form.cityBranchId) {
       return false;
     }
     
@@ -1750,11 +1764,13 @@ export function PurchaseOrderWizard({ session }) {
     const entityId = richAccount.customerId || richAccount.customer_id || richAccount.id || accountNo;
     const contactPerson = richAccount.contactPerson || richAccount.contact_person || (accountNo === "UAE-DUB-AC-0003" ? "Lily" : "");
     const bankName = richAccount.bankName || richAccount.bank_name || (accountNo === "UAE-DUB-AC-0003" ? "CHINA CONSTRUCTION BANK (DALIAN BRANCH)" : "");
+    const resolvedAccountId = richAccount.id || richAccount.accountId || null;
 
     setForm((prev) => ({
       ...prev,
       ...(type === "purchase"
         ? {
+            purchaseAccountId: resolvedAccountId,
             purchaseAccountNo: accountNo,
             purchaseAccountName: accountName,
             purchaseAccountBranch: branchName,
@@ -1781,6 +1797,7 @@ export function PurchaseOrderWizard({ session }) {
             purchaseAccountWhatsapp: richAccount.whatsapp ?? richAccount.customers?.whatsapp ?? "",
           }
         : {
+            salesAccountId: resolvedAccountId,
             salesAccountNo: accountNo,
             salesAccountName: accountName,
             salesAccountBranch: branchName,
@@ -2225,6 +2242,26 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
     }
   };
 
+  const validateStep1Ownership = () => {
+    if (!form.countryId) {
+      alert(t(lang, "purchase.wiz_err_country_req", "Please select a Country before proceeding."));
+      return false;
+    }
+    if (!form.countryBranchId && !form.branchCode && !form.branchName) {
+      alert(t(lang, "purchase.wiz_err_branch_req", "Please select a Branch before proceeding."));
+      return false;
+    }
+    if (!form.purchaseAccountNo) {
+      alert(t(lang, "purchase.wiz_err_purchase_acct_req", "Please select a Purchase Account (DR) before proceeding."));
+      return false;
+    }
+    if (!form.salesAccountNo) {
+      alert(t(lang, "purchase.wiz_err_sales_acct_req", "Please select a Sales Account (CR) before proceeding."));
+      return false;
+    }
+    return true;
+  };
+
   const buildPurchaseOrderPayload = (ledgerPostingStatus = "Pending", customOrderNo = null) => {
     const usdRate = Number(form.exchangeRate || 1);
     const cleanUuid = (val) => (val && typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()) ? val.trim() : null);
@@ -2293,6 +2330,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       destCountryBranchId: cleanUuid(form.destCountryBranchId),
       destCityBranchId: cleanUuid(form.destCityBranchId),
       supplierCompanyId: cleanUuid(form.purchaseCompanyId),
+      purchaseAccountId: cleanUuid(form.purchaseAccountId),
+      salesAccountId: cleanUuid(form.salesAccountId),
+      purchaseAccountNo: form.purchaseAccountNo || "",
+      salesAccountNo: form.salesAccountNo || "",
       purchaseOrderNo: customOrderNo || form.purchaseOrderNo,
       purchaseContractNo: form.purchaseContractNo || form.purchaseOrderNo,
       currencyCode: form.currencyType || "USD",
@@ -3256,10 +3297,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
     <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
         <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
           <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab1_booking", "1 Booking")}</button>
-          <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab2_goods", "2 Goods")}</button>
-          <button type="button" onClick={() => setActiveTab("shipping")} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "shipping" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-          <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab4_reports", "4 Reports")}</button>
-          <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab5_verify", "5 Verify")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab2_goods", "2 Goods")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "shipping" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab4_reports", "4 Reports")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab5_verify", "5 Verify")}</button>
         </div>
         <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
           <span className="relative flex h-2 w-2 ml-1">
@@ -4900,7 +4941,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             <div className="pt-2">
                               <button
                                 type="button"
-                                onClick={() => setActiveTab("goods")}
+                                onClick={() => {
+                                  if (validateStep1Ownership()) {
+                                    setActiveTab("goods");
+                                  }
+                                }}
                                 className="w-full h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
                               >
                                 <span>{t(lang, "purchase.next_word", "Next")}</span>

@@ -44,7 +44,8 @@ import {
   Check,
   RotateCcw,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -339,6 +340,10 @@ export function DocumentManager() {
 
   // Modals
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [smartUploadOpen, setSmartUploadOpen] = useState<boolean>(false);
+  const [smartUploadFile, setSmartUploadFile] = useState<File | null>(null);
+  const [smartUploadTitle, setSmartUploadTitle] = useState<string>("");
+  const [smartUploadDocType, setSmartUploadDocType] = useState<string>("Document");
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
   const [scanStatus, setScanStatus] = useState<string>("");
   const [scanError, setScanError] = useState<string>("");
@@ -648,6 +653,86 @@ export function DocumentManager() {
       await fetchDocs();
     } catch (err) {
       console.error("Upload error:", err);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function submitSmartUpload() {
+    if (!smartUploadFile) {
+      alert(t("file_req", "Please select a file to upload."));
+      return;
+    }
+    if (!smartUploadTitle.trim()) {
+      alert(t("title_req", "Document Name / Title is mandatory."));
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const docTypeValue = smartUploadDocType || selectedDocumentType || "Document";
+      const destinationFileName = smartUploadFile.name;
+      const destinationPath = buildDocumentFolderPath({
+        countryName: activeCountry?.name || sessionCtx?.countryName,
+        branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
+        companyCode: selectedCompanyCode || null,
+        companyName: selectedCompanyName || null,
+        personAccountCode: selectedPersonCode || selectedAccountCode || null,
+        personAccountName: selectedPersonName || selectedAccountName || null,
+        personAccountType: selectedPersonType || null,
+        accountCode: selectedAccountCode || null,
+        accountName: selectedAccountName || null,
+        moduleType: moduleLabel,
+        documentType: docTypeValue
+      });
+
+      const payload = new FormData();
+      payload.append("title", smartUploadTitle.trim());
+      payload.append("file_name", destinationFileName);
+      payload.append("file_type", smartUploadFile.type || "pdf");
+      payload.append("file_size", String(smartUploadFile.size));
+      payload.append("country_id", selectedCountryId || "");
+      payload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
+      payload.append("country_branch_id", selectedMainBranchId || "");
+      payload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
+      payload.append("city_branch_id", selectedCityBranchId || "");
+      payload.append("city_branch_name", activeCityBranch?.name || "");
+      payload.append("company_id", selectedCompanyId || "");
+      payload.append("company_code", selectedCompanyCode || "");
+      payload.append("company_name", selectedCompanyName || "");
+      payload.append("account_id", selectedAccountId || "");
+      payload.append("account_code", selectedAccountCode || "");
+      payload.append("account_name", selectedAccountName || "");
+      payload.append("person_account_id", selectedPersonId || "");
+      payload.append("person_account_code", selectedPersonCode || "");
+      payload.append("person_account_name", selectedPersonName || "");
+      payload.append("person_account_type", selectedPersonType || "");
+      payload.append("module_type", moduleLabel);
+      payload.append("document_type", docTypeValue);
+      payload.append("source_module", moduleLabel);
+      payload.append("document_path", destinationPath);
+      payload.append("storage_key", `${destinationPath}/${destinationFileName}`);
+      payload.append("created_by", sessionCtx?.userName || "Admin User");
+      payload.append("file", smartUploadFile, smartUploadFile.name);
+
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        body: payload
+      });
+      const resJson = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resJson.error || "Failed to upload document.");
+      }
+
+      setSmartUploadOpen(false);
+      setSmartUploadFile(null);
+      setSmartUploadTitle("");
+      await fetchDocs();
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err instanceof Error ? err.message : "Error uploading document.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1188,7 +1273,7 @@ export function DocumentManager() {
                   type="button"
                   onClick={() => {
                     setIsActionsMenuOpen(false);
-                    fileInputRef.current?.click();
+                    setSmartUploadOpen(true);
                   }}
                   disabled={isUploading}
                   className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-blue-50 text-blue-800 dark:hover:bg-blue-950 dark:text-blue-300 transition-colors"
@@ -1764,33 +1849,74 @@ export function DocumentManager() {
                                                 (d) => d.account_code === acc.accountCode || d.account_id === acc.accountId
                                               ).length;
                                               return (
-                                                <div
-                                                  key={acc.accountId || acc.accountCode}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedAccountId(acc.accountId);
-                                                    setSelectedAccountCode(acc.accountCode);
-                                                    setSelectedAccountName(acc.accountName);
-                                                    setSelectedModule("all");
-                                                  }}
-                                                  className={cn(
-                                                    "flex items-center justify-between px-1.5 py-1 rounded-md cursor-pointer text-[9.5px] transition-colors",
-                                                    isSelectedAcc
-                                                      ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-black border border-amber-300"
-                                                      : "hover:bg-slate-100 text-slate-700 dark:text-slate-300"
-                                                  )}
-                                                  title={`${acc.manualReferenceNumber || acc.accountCode} • ${acc.accountName}`}
-                                                >
-                                                  <span className="flex min-w-0 items-center gap-1">
-                                                    <CreditCard className="h-2.5 w-2.5 text-amber-600 shrink-0" />
-                                                    <span className="max-w-[84px] shrink-0 truncate font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
-                                                      {acc.manualReferenceNumber || acc.accountCode}
+                                                <div key={acc.accountId || acc.accountCode} className="space-y-0.5">
+                                                  <div
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setSelectedAccountId(acc.accountId);
+                                                      setSelectedAccountCode(acc.accountCode);
+                                                      setSelectedAccountName(acc.accountName);
+                                                      setSelectedModule("all");
+                                                    }}
+                                                    className={cn(
+                                                      "flex items-center justify-between px-1.5 py-1 rounded-md cursor-pointer text-[9.5px] transition-colors",
+                                                      isSelectedAcc
+                                                        ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-black border border-amber-300"
+                                                        : "hover:bg-slate-100 text-slate-700 dark:text-slate-300"
+                                                    )}
+                                                    title={`${acc.manualReferenceNumber || acc.accountCode} • ${acc.accountName}`}
+                                                  >
+                                                    <span className="flex min-w-0 items-center gap-1">
+                                                      <CreditCard className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                                                      <span className="max-w-[84px] shrink-0 truncate font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
+                                                        {acc.manualReferenceNumber || acc.accountCode}
+                                                      </span>
+                                                      <span className="min-w-0 truncate">{acc.accountName}</span>
                                                     </span>
-                                                    <span className="min-w-0 truncate">{acc.accountName}</span>
-                                                  </span>
-                                                  <span className="ms-1 text-[8.5px] font-mono text-slate-400 shrink-0">
-                                                    {accDocCount}
-                                                  </span>
+                                                    <span className="ms-1 text-[8.5px] font-mono text-slate-400 shrink-0">
+                                                      {accDocCount}
+                                                    </span>
+                                                  </div>
+
+                                                  {/* Level 5: 10 Canonical Categories directly nested under this Account Folder */}
+                                                  {isSelectedAcc && (
+                                                    <div className="pl-3 space-y-0.5 border-l-2 border-amber-400 dark:border-amber-600 ml-1.5 my-1">
+                                                      {DEFAULT_MODULE_FOLDERS.map((catName) => {
+                                                        const isCatSelected = selectedModule === catName;
+                                                        const catCount = documents.filter(
+                                                          (d) =>
+                                                            (d.account_code === acc.accountCode || d.account_id === acc.accountId) &&
+                                                            d.module_type === catName
+                                                        ).length;
+                                                        return (
+                                                          <div
+                                                            key={catName}
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setSelectedAccountId(acc.accountId);
+                                                              setSelectedAccountCode(acc.accountCode);
+                                                              setSelectedAccountName(acc.accountName);
+                                                              setSelectedModule(catName);
+                                                            }}
+                                                            className={cn(
+                                                              "flex items-center justify-between px-1.5 py-0.5 rounded text-[8.5px] cursor-pointer transition-colors",
+                                                              isCatSelected
+                                                                ? "bg-emerald-600 text-white font-black shadow-xs"
+                                                                : "hover:bg-slate-100 text-slate-600 dark:text-slate-400 font-semibold"
+                                                            )}
+                                                          >
+                                                            <span className="truncate flex items-center gap-1">
+                                                              <Folder className="h-2 w-2 shrink-0" />
+                                                              {catName}
+                                                            </span>
+                                                            <span className={cn("ms-1 text-[8px] font-mono", isCatSelected ? "text-emerald-100" : "text-slate-400")}>
+                                                              {catCount}
+                                                            </span>
+                                                          </div>
+                                                        );
+                                                      })}
+                                                    </div>
+                                                  )}
                                                 </div>
                                               );
                                             })}
@@ -1972,7 +2098,7 @@ export function DocumentManager() {
                 <div className="flex items-center justify-center gap-2 pt-1">
                   <Button
                     size="sm"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setSmartUploadOpen(true)}
                     className="rounded-xl bg-blue-600 text-white text-xs font-bold"
                   >
                     <Upload className="h-3.5 w-3.5 mr-1" />
@@ -2186,6 +2312,183 @@ export function DocumentManager() {
           </div>
         </div>
       </div>
+
+      {/* ── Modal: Smart Document Upload with Mandatory Name ── */}
+      <Dialog open={smartUploadOpen} onOpenChange={setSmartUploadOpen}>
+        <DialogContent className="max-w-lg rounded-2xl p-6 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
+              <Upload className="h-5 w-5 text-blue-600" />
+              {t("smart_upload_title", "Smart Document Upload & Filing")}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            {/* Inherited Pre-populated Metadata (Read-Only) */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  {t("inherited_metadata", "INHERITED HIERARCHY & CONTEXT")}
+                </span>
+                <span className="rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[9px] font-bold">
+                  Auto-Prefilled
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("country", "Country")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                    {activeCountry?.name || sessionCtx?.countryName || "All Countries"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("branch", "Branch / City")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                    {activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "Main Office"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("account_folder", "Account Folder")}</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400 truncate block">
+                    {selectedAccountCode ? `${selectedAccountCode} — ${selectedAccountName}` : "General (No Account Folder)"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("category_folder", "Category Folder")}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400 truncate block">
+                    {selectedModule === "all" ? "Purchase Documents" : selectedModule}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("uploaded_by", "Uploaded By")}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 truncate block">
+                    {sessionCtx?.userName || "Admin User"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("date_time", "Date & Time")}</span>
+                  <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 block">
+                    {new Date().toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* File Picker */}
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                {t("select_file", "Original File *")}
+              </label>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 p-4 text-center hover:border-blue-500 transition-colors bg-white dark:bg-slate-900"
+              >
+                <Upload className="mx-auto h-6 w-6 text-slate-400 mb-1.5" />
+                {smartUploadFile ? (
+                  <div>
+                    <p className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 truncate">
+                      {smartUploadFile.name}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {formatBytes(smartUploadFile.size)} · {smartUploadFile.type || "Document"}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      {t("click_to_pick", "Click to select a file (PDF, Images, Excel, Word)")}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Max 50 MB</p>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setSmartUploadFile(f);
+                      if (!smartUploadTitle.trim()) {
+                        setSmartUploadTitle(f.name.replace(/\.[^/.]+$/, ""));
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Mandatory Document Name / Title */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-slate-800 dark:text-slate-200">
+                  {t("doc_title_mandatory", "Document Name / Title *")}
+                </label>
+                <span className="text-[10px] font-bold text-rose-500">Required</span>
+              </div>
+              <Input
+                type="text"
+                required
+                value={smartUploadTitle}
+                onChange={(e) => setSmartUploadTitle(e.target.value)}
+                placeholder="e.g. Kandahar Grain Supplier Invoice Sept 2026"
+                className="h-10 rounded-xl text-xs font-semibold"
+              />
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+                ℹ️ Both this meaningful title and original filename ({smartUploadFile ? smartUploadFile.name : "e.g. IMG_847362.jpg"}) are preserved and searchable.
+              </p>
+            </div>
+
+            {/* Document Type Selector */}
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {t("document_type", "Document Type")}
+              </label>
+              <select
+                value={smartUploadDocType}
+                onChange={(e) => setSmartUploadDocType(e.target.value)}
+                className="h-9 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none"
+              >
+                {DOCUMENT_TYPES.map((dt) => (
+                  <option key={dt} value={dt}>{dt}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSmartUploadOpen(false);
+                setSmartUploadFile(null);
+                setSmartUploadTitle("");
+              }}
+              className="rounded-xl text-xs"
+            >
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button
+              onClick={submitSmartUpload}
+              disabled={isUploading || !smartUploadFile || !smartUploadTitle.trim()}
+              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-40"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  {t("uploading", "Uploading...")}
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  {t("confirm_upload", "Confirm & Upload Document")}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Modal 1: Camera Document Capture ── */}
       <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
