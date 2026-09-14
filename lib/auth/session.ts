@@ -398,8 +398,11 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       // Re-validate against the database on EVERY request so a disablement /
       // permission change / scope change / mobile-profile change is enforced on
       // the next protected request — not only after a voluntary re-login.
+      // `admin` is hoisted out of the `!isBootstrap` block so the signed-cookie
+      // fallback below can still resolve city-branch -> country-branch/country
+      // hierarchy scope with a real client, instead of silently skipping it.
+      let admin: any = null;
       if (!isBootstrap) {
-        let admin: any = null;
         try { admin = createSupabaseAdminClient(); } catch { admin = null; }
         if (admin) {
           try {
@@ -425,9 +428,14 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         }
       }
 
-      // Fallback (bootstrap super admin, or no service-role key in local dev):
-      // trust the signed, non-forgeable cookie. Custom permission sets cannot be
-      // loaded here, so use role-template permissions.
+      // Fallback (bootstrap super admin, a synthetic dev-session identity, or
+      // no service-role key in local dev): trust the signed, non-forgeable
+      // cookie. Custom permission sets cannot be loaded here, so use
+      // role-template permissions. Still resolve the city-branch/country-branch
+      // hierarchy with `admin` when we have one (bootstrap identities skip this
+      // — isSuperAdmin short-circuits resolveHierarchyScopes anyway) so a
+      // city-branch-only assignment reached via this path still inherits its
+      // parent country-branch/country scope, same as the DB-driven path above.
       const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => {
         const d = (a as any).operationalDomain;
         return {
@@ -443,7 +451,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       });
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
-      const resolvedScopes = await resolveHierarchyScopes(null, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin);
+      const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin);
       const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
       return {
         userId: temp.userId,

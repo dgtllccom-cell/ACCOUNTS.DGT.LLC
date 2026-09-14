@@ -123,14 +123,7 @@ async function buildAccountListViaLocalPg(
     `;
 
     return {
-      accounts: (rows as unknown as Array<{
-        id: string;
-        code: string;
-        name: string;
-        kind: string | null;
-        currency: string | null;
-        status: string | null;
-      }>).map((row) => ({
+      accounts: (rows as unknown as Array<Record<string, any>>).map((row) => ({
         ...row,
         is_active: String(row.status ?? "").toLowerCase() === "active"
       })),
@@ -360,7 +353,7 @@ export async function GET(request: NextRequest) {
 
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
-    if (!hasRealServiceRoleKey()) {
+    try {
       const result = await buildAccountListViaLocalPg(session, scope, limit);
       try {
         result.accounts = await localizeRecordFields<any>(result.accounts, "enterprise_accounts", ["name"], lang);
@@ -368,6 +361,8 @@ export async function GET(request: NextRequest) {
         // keep original account names
       }
       return apiOk(result);
+    } catch {
+      // fallback to Supabase query below if local pg pool is unavailable
     }
 
     let supabase = await createApiSupabaseClient();
@@ -380,7 +375,13 @@ export async function GET(request: NextRequest) {
       .order("code", { ascending: true });
 
     if (!session.isSuperAdmin) {
-      const conditions: string[] = ["country_id.is.null", "scope.eq.super_admin"];
+      // Global "super admin scope" accounts (country_id null AND scope=super_admin)
+      // must be a single AND-group, NOT two independent OR branches — otherwise
+      // `country_id.is.null` alone matches every account with a null country_id
+      // (including ordinary branch-level accounts whose country_id was never
+      // populated), regardless of `scope`, leaking accounts from unrelated
+      // countries/branches to any non-super-admin caller.
+      const conditions: string[] = ["and(country_id.is.null,scope.eq.super_admin)"];
       if (session.cityBranchIds && session.cityBranchIds.length > 0) {
         conditions.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
       }
