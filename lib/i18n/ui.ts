@@ -86620,6 +86620,7 @@ const ps: Dict = {
   "nav.country_receiving": "د هېواد ترلاسه کول",
   "ctransfer.title": "د هېواد لېږد رجسټر",
   "ctransfer.subtitle": "د پیرودلو امرونه چې د سرچینې هېواد/څانګې څخه منزل هېواد/څانګې ته لېږدولو لپاره ټاکل شوي دي.",
+  "ctransfer.sale_subtitle": "د پلورلو امرونه چې د پلورونکي هېواد/څانګې څخه منزل (مالک) هېواد/څانګې ته لېږدولو لپاره ټاکل شوي دي.",
   "ctransfer.search": "د پی او / توکو / عرضه کونکي لټون...",
   "ctransfer.total_transfers": "ټول د هېواد لېږدونه",
   "ctransfer.total_value": "د لېږد ټوله ارزښت",
