@@ -35,6 +35,7 @@ export type RoznamchaEntryRow = {
   source_transaction_type?: string | null;
   source_transaction_id?: string | null;
   source_reference_no?: string | null;
+  operational_domain?: string | null;
   roznamcha_lines?: RoznamchaLineRow[] | null;
 };
 

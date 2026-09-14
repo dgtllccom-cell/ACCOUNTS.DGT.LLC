@@ -124,6 +124,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     // (and humanise the bill UUID into the title).
     pathname?.startsWith("/dashboard/bill-cost-profit/bill/") ||
     pathname === "/dashboard/bill-cost-profit/reports" ||
+    pathname?.startsWith("/dashboard/purchase/local-purchase") ||
     pathname?.startsWith("/dashboard/new-entry/users/all");
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);

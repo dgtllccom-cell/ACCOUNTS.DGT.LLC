@@ -73,6 +73,14 @@ export async function GET(request: NextRequest) {
 
       const safeSearch = search ? search.replace(/[%,]/g, "") : null;
 
+      // Business/Shipping domain visibility: Super Admin and a "both"-domain assignment
+      // (Branch Operations Admin) see every domain; a single-domain user only sees their
+      // own domain, PLUS any legacy/unclassified entry (operational_domain IS NULL) posted
+      // before this column was populated, so existing historical data never disappears.
+      const domainAllowed = session.isSuperAdmin || session.operationalDomains?.includes("both")
+        ? null
+        : (session.operationalDomains ?? ["business"]);
+
       const entryRows = await sql`
         select
           e.id, e.type, e.country_id, e.country_branch_id, e.city_branch_id,
@@ -81,6 +89,7 @@ export async function GET(request: NextRequest) {
           e.entry_serial_number, e.entry_date, e.payment_method_id, e.reference_no, e.narration, e.status,
           e.created_by, e.approved_by, e.approved_at, e.posted_at, e.created_at, e.updated_at,
           e.source_module, e.source_transaction_type, e.source_transaction_id, e.source_reference_no,
+          e.operational_domain,
           case when c.id is not null then jsonb_build_object('name', c.name, 'currency_code', c.currency_code) else null end as countries,
           case when cb.id is not null then jsonb_build_object('name', cb.name, 'code', cb.code) else null end as country_branches,
           case when cib.id is not null then jsonb_build_object('name', cib.name, 'code', cib.code) else null end as city_branches,
@@ -101,6 +110,7 @@ export async function GET(request: NextRequest) {
           and (${session.isSuperAdmin
             ? sql`true`
             : sql`(e.city_branch_id = any(${cityIds}) or e.country_branch_id = any(${countryBranchIds}) or e.country_id = any(${countryIds}))`})
+          and (${domainAllowed ? sql`(e.operational_domain is null or e.operational_domain = any(${domainAllowed}))` : sql`true`})
           and (${fromDate ? sql`e.entry_date >= ${fromDate}` : sql`true`})
           and (${toDate ? sql`e.entry_date <= ${toDate}` : sql`true`})
           and (${safeSearch ? sql`(
@@ -160,7 +170,7 @@ export async function GET(request: NextRequest) {
       .select(
         // Disambiguate profiles embedding (created_by vs approved_by) by pinning to the FK.
         // We keep the `profiles` key in the response for backward compatibility with the UI types.
-        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_serial_number, branch_serial_number, usd_rate, usd_amount)"
+        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, operational_domain, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_serial_number, branch_serial_number, usd_rate, usd_amount)"
       )
       .is("deleted_at", null)
       .order("entry_date", { ascending: false });

@@ -537,6 +537,25 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
   // BankPicker (see features/roznamcha/components/cash-entry-form.tsx).
   const bankId = (body as any).bankId ?? (body.paymentDetails as any)?.bankId ?? null;
 
+  // Business/Shipping domain visibility: roznamcha_entries.operational_domain existed as a
+  // column (20261122_shipping_billing_receipts_approval.sql) but was never populated or read
+  // anywhere — resolve it from the FIRST posting line's ledger -> enterprise_accounts
+  // .operational_domain (the actual source of truth for domain, not the category label,
+  // since e.g. a "bank"/"cash" category entry can be either domain depending on which
+  // ledger it posts to) before the entry insert, so list/report views can filter by it.
+  let operationalDomain: string | null = null;
+  const firstLedgerId = body.lines?.[0]?.ledgerId ?? null;
+  if (firstLedgerId) {
+    const domainRows = await sql`
+      select ea.operational_domain
+      from public.ledgers l
+      left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
+      where l.id = ${firstLedgerId}
+      limit 1
+    `;
+    operationalDomain = domainRows[0]?.operational_domain ?? null;
+  }
+
   const entryRows = await sql`
     insert into public.roznamcha_entries (
       type, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, entry_date,
@@ -544,7 +563,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number,
       main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number,
       source_module, source_transaction_type, source_transaction_id, source_reference_no,
-      entry_category, bank_id, posted_at
+      entry_category, bank_id, operational_domain, posted_at
     ) values (
       ${body.type}, ${effectiveCountryId}, ${body.countryBranchId ?? null}, ${body.cityBranchId ?? null},
       ${body.journalNo}, ${body.voucherNo}, ${body.entryDate}, ${body.paymentMethodId ?? null},
@@ -553,7 +572,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       ${transactionSerials.branchTransactionSerialNumber}, ${transactionSerials.mainBranchTransactionSerialNumber},
       ${transactionSerials.cityBranchTransactionSerialNumber}, ${transactionSerials.entrySerialNumber},
       ${body.sourceModule ?? null}, ${body.sourceTransactionType ?? null}, ${body.sourceTransactionId ?? null},
-      ${body.sourceReferenceNo ?? null}, ${entryCategory}, ${bankId}, now()
+      ${body.sourceReferenceNo ?? null}, ${entryCategory}, ${bankId}, ${operationalDomain}, now()
     )
     returning id
   `;

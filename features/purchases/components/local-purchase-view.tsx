@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import {
@@ -11,7 +12,8 @@ import {
   Pin, X, Layers, Tag, Globe, Pencil, ShieldAlert,
   CreditCard, Truck, Flag, UserCheck, ChevronDown,
   ArrowRight, ArrowLeft, Percent, Warehouse, MapPin, ListPlus,
-  Printer, Send, FileSpreadsheet, Eye, MoreVertical, Edit3, Clock
+  Printer, Send, FileSpreadsheet, Eye, MoreVertical, Edit3, Clock,
+  RefreshCw, Share2
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-p
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
+import { cn } from "@/lib/utils";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -241,6 +244,7 @@ export function LocalPurchaseView({
   companies,
   countries = []
 }: LocalPurchaseViewProps) {
+  const router = useRouter();
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const isGlobalUser = Boolean(session?.isSuperAdmin || session?.isSuperAdmin === true || session?.roles?.includes?.("super_admin"));
@@ -305,6 +309,8 @@ export function LocalPurchaseView({
   // Draft Bill Items List & Action Menu State
   const [draftItems, setDraftItems] = useState<any[]>([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
+  const [isTopActionsOpen, setIsTopActionsOpen] = useState(false);
 
   // Scope Selection Modal State
   const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
@@ -313,11 +319,23 @@ export function LocalPurchaseView({
   const [scopeCityBranchId, setScopeCityBranchId] = useState("");
 
   useEffect(() => {
-    const handleClickOutside = () => setActiveActionMenuId(null);
-    if (activeActionMenuId) {
-      window.addEventListener("click", handleClickOutside);
-    }
-    return () => window.removeEventListener("click", handleClickOutside);
+    const handleClickOutside = () => {
+      setActiveActionMenuId(null);
+      setActionMenuAnchor(null);
+      setIsTopActionsOpen(false);
+    };
+    const handleScroll = () => {
+      if (activeActionMenuId) {
+        setActiveActionMenuId(null);
+        setActionMenuAnchor(null);
+      }
+    };
+    window.addEventListener("click", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      window.removeEventListener("click", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
   }, [activeActionMenuId]);
 
   // Permission Check
@@ -1298,57 +1316,93 @@ export function LocalPurchaseView({
 
   return (
     <div className="w-full px-3 sm:px-6 py-4 space-y-6" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
-            <ShoppingCart className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-800 tracking-tight">{t(lang, "lp.title", "Local Purchase Registry")}</h1>
-            <p className="text-xs text-slate-500 font-medium">{t(lang, "lp.subtitle", "Record market purchases with custom empty weights and automated ledger postings.")}</p>
+      {/* Consolidated Top Action Bar (Patti) — combines Title, Scope, Search, Report Type, New/Back, Actions & Close [X] */}
+      <section data-erp-page-actions className="no-print flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-3.5 py-2 shadow-xs backdrop-blur-md transition-all dark:border-slate-800 dark:bg-slate-900/95 sm:px-4">
+        {/* Left Side: Modern "Jadeed Model" Back Button + Title with Badge & Subtitle */}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (isFormOpen) {
+                setIsFormOpen(false);
+              } else if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/dashboard");
+              }
+            }}
+            className="group inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:border-blue-400 hover:bg-blue-50/80 hover:text-blue-700 hover:shadow-xs active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40 dark:hover:text-blue-400"
+            title={isFormOpen ? t(lang, "lp.back_to_registry", "Back to Registry") : t(lang, "pa.back", "Back")}
+            aria-label={t(lang, "pa.back", "Back")}
+          >
+            <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-white text-slate-600 shadow-2xs transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-slate-700 dark:text-slate-300">
+              <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5 rtl:rotate-180 rtl:group-hover:translate-x-0.5" />
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-wider hidden sm:inline">
+              {isFormOpen ? t(lang, "lp.back_to_registry", "Registry") : t(lang, "pa.back", "Back")}
+            </span>
+          </button>
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="rounded-xl bg-blue-50 p-2 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-400">
+              <ShoppingCart className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="truncate text-xs font-black text-slate-900 dark:text-slate-100 sm:text-sm">
+                  {isFormOpen ? t(lang, "lp.voucher_title", "Local Purchase Booking Voucher") : t(lang, "lp.title", "Local Purchase Registry")}
+                </h1>
+                <span className="hidden xl:inline-flex px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
+                  {isFormOpen ? "ENTRY MODE" : "ERP REGISTRY"}
+                </span>
+              </div>
+              <p className="hidden md:block truncate text-[9.5px] font-medium text-slate-400 dark:text-slate-400">
+                {isFormOpen
+                  ? t(lang, "purchase.voucher_subtitle", "Official Bill / Confirmation — document backing for Goods, Shipping & Payment")
+                  : t(lang, "lp.subtitle", "Record market purchases with custom empty weights and automated ledger postings.")}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Consolidated control bar: one branch-scope dropdown + search + one report/workflow
-            dropdown + create button — replaces the previous 3 separate scope dropdowns and the
-            separate tab bar lower on the page. */}
-        <div className="flex flex-wrap items-end gap-3">
-          <BranchScopeDropdown
-            lang={lang}
-            countries={countryOptions}
-            countryBranches={countryBranches.map((b: any) => ({ id: b.id, name: b.name, code: b.code, countryId: b.countryId || b.country_id }))}
-            cityBranches={cityBranches.map((c: any) => ({ id: c.id, name: c.name, code: c.code, countryBranchId: c.countryBranchId || c.country_branch_id }))}
-            value={{ countryId: selectedCountryId, countryBranchId: selectedBranchId, cityBranchId: selectedCityBranchId }}
-            onChange={(next) => {
-              setSelectedCountryId(next.countryId);
-              setSelectedBranchId(next.countryBranchId);
-              setSelectedCityBranchId(next.cityBranchId);
-            }}
-          />
-
-          {/* Global Search Bar */}
-          <div className="flex flex-col gap-1 w-48 sm:w-60">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t(lang, "lp.search_label", "Search")}</span>
-            <div className="relative">
-              <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder={t(lang, "lp.search_placeholder", "Search item, vendor...")}
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-200 ps-8 pe-3 text-xs outline-none bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-semibold text-slate-800"
+        {/* Right Side: Scope, Search, Report Type, New Purchase / Back, Actions & Close [X] */}
+        <div className="flex flex-wrap items-center gap-2">
+          {!isFormOpen ? (
+            <>
+              {/* Consolidated Branch Scope */}
+              <BranchScopeDropdown
+                lang={lang}
+                countries={countryOptions}
+                countryBranches={countryBranches.map((b: any) => ({ id: b.id, name: b.name, code: b.code, countryId: b.countryId || b.country_id }))}
+                cityBranches={cityBranches.map((c: any) => ({ id: c.id, name: c.name, code: c.code, countryBranchId: c.countryBranchId || c.country_branch_id }))}
+                value={{ countryId: selectedCountryId, countryBranchId: selectedBranchId, cityBranchId: selectedCityBranchId }}
+                onChange={(next) => {
+                  setSelectedCountryId(next.countryId);
+                  setSelectedBranchId(next.countryBranchId);
+                  setSelectedCityBranchId(next.cityBranchId);
+                }}
               />
-            </div>
-          </div>
 
-          {!isFormOpen && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t(lang, "lp.workflow_label", "Report Type")}</span>
+              {/* Global Search Bar */}
+              <div className="relative w-40 sm:w-52">
+                <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder={t(lang, "lp.search_placeholder", "Search item, vendor...")}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="h-8 w-full rounded-xl border border-slate-200 ps-8 pe-3 text-[11px] outline-none bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                />
+              </div>
+
+              {/* Report Type Selector */}
               <div className="relative">
                 <select
                   value={activeTab}
                   onChange={e => setActiveTab(e.target.value as "all" | "accepted" | "posted")}
-                  className="h-9 w-52 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-bold outline-none focus:border-blue-500"
+                  className="h-8 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   <option value="all">{t(lang, "lp.all_purchases", "All Purchases Registry")}</option>
                   <option value="accepted">
@@ -1358,37 +1412,108 @@ export function LocalPurchaseView({
                   <option value="posted">{t(lang, "lp.posted_ledger", "Posted Ledger Entries")}</option>
                 </select>
                 {activeTab !== "accepted" && acceptedCount > 0 && (
-                  <span className="pointer-events-none absolute -end-1.5 -top-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm">
+                  <span className="pointer-events-none absolute -end-1 -top-1 rounded-full bg-red-500 px-1 py-0.2 text-[8px] font-black text-white shadow-sm">
                     {acceptedCount}
                   </span>
                 )}
               </div>
-            </div>
-          )}
 
-          {!isFormOpen ? (
-            <Button
-              onClick={() => {
-                setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
-                setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
-                setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
-                setIsScopeModalOpen(true);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
-            >
-              <Plus className="h-3.5 w-3.5" /> {t(lang, "lp.create_button", "New Purchase")}
-            </Button>
+              {/* New Purchase Button */}
+              <Button
+                type="button"
+                onClick={() => {
+                  setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
+                  setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
+                  setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
+                  setIsScopeModalOpen(true);
+                }}
+                className="h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition active:scale-95"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t(lang, "lp.create_button", "New Purchase")}</span>
+              </Button>
+            </>
           ) : (
             <Button
+              type="button"
               onClick={() => setIsFormOpen(false)}
               variant="outline"
-              className="border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-4 h-9 rounded-xl shadow-xs"
+              className="h-8 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-3 shadow-2xs"
             >
               {t(lang, "lp.back_to_registry", "Back to Registry")}
             </Button>
           )}
+
+          {/* Top Bar Page Actions Dropdown */}
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTopActionsOpen((prev) => !prev)}
+              className="h-8 gap-1 rounded-xl border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              title={t(lang, "pa.page_actions", "Page actions")}
+            >
+              <MoreVertical className="h-3.5 w-3.5 text-slate-500" />
+              <span className="hidden sm:inline">{t(lang, "pa.actions", "Actions")}</span>
+            </Button>
+
+            {isTopActionsOpen && (
+              <div className="absolute right-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 py-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTopActionsOpen(false);
+                    window.print();
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                >
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  {t(lang, "pa.print", "Print")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTopActionsOpen(false);
+                    loadHistory();
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-emerald-600" />
+                  {t(lang, "common.refresh", "Refresh")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTopActionsOpen(false);
+                    if (typeof window !== "undefined") {
+                      navigator.clipboard?.writeText(window.location.href);
+                      alert("Link copied to clipboard!");
+                    }
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-purple-600" />
+                  {t(lang, "pa.copy_link", "Copy Link")}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Close Page Button [X] */}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 w-8 rounded-xl border-rose-200/80 bg-rose-50/70 text-rose-600 shadow-2xs hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 active:scale-95 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-400"
+            title={t(lang, "pa.close", "Close")}
+            aria-label={t(lang, "pa.close_current_page", "Close current page")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
+      </section>
 
       {/* Local Purchase Voucher Header & 4-Column Cards matching Screenshot 5 */}
       {isFormOpen && (
@@ -3005,7 +3130,7 @@ export function LocalPurchaseView({
                       <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.sub_total", "Sub Total")}</Th>
                       <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_tax_amt", "Tax Amt")}</Th>
                       <Th className="px-2 py-2 border-r border-slate-700 text-right font-black">{t(lang, "lp.col_final_amount", "Final Amount")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_status", "Status")}</Th>
+                      <Th className="px-3 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_posting_status", "Posting & Transfer Status")}</Th>
                       <Th className="px-2 py-2 text-center">{t(lang, "lp.col_actions", "Actions")}</Th>
                     </tr>
                   </thead>
@@ -3027,7 +3152,6 @@ export function LocalPurchaseView({
                       </tr>
                     ) : (
                       filteredPurchases.map((row, rowIndex) => {
-                        const rowStatus = row.status || row.bill_status || "draft";
                         const postingState = deriveLocalPurchasePostingState(row);
                         const rowCurrency = row.local_currency || row.localCurrency || row.purchase_currency || row.purchaseCurrency || "PKR";
                         const rowFinalCost = Number(row.final_cost || row.finalCost || row.purchase_cost || row.purchaseCost || 0);
@@ -3043,6 +3167,11 @@ export function LocalPurchaseView({
                         const countrySerial = row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || "—";
                         const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || "—";
                         const voucherCode = row.journal_serial_no || row.serial_no || row.serialNo || row.bill_no || row.billNo || "—";
+
+                        const rowStatus = String(row.status || row.bill_status || "draft").toLowerCase();
+                        const isTransferred = rowStatus === "posted" || rowStatus === "transferred" || Boolean(row.transferred_at) || Boolean(row.roznamcha_entry_id);
+                        const hasRoznamcha = Boolean(row.roznamcha_entry_id);
+                        const hasLedger = Boolean(rowStatus === "posted" || row.journal_entry_id || row.roznamcha_entry_id);
 
                         const badge = postingState.visualStatus === "black"
                           ? { bg: "bg-black border-black", text: "text-white", label: "BLACK" }
@@ -3075,19 +3204,101 @@ export function LocalPurchaseView({
                             <td className="px-2 py-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150">
                               {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
-                            <td className="px-2 py-2 text-center border-r border-slate-150">
-                              <span
-                                className={`inline-flex px-2 py-0.5 rounded-full text-[8px] font-black uppercase border ${badge.bg} ${badge.text}`}
-                                title={postingState.reason}
-                              >
-                                {badge.label}
-                              </span>
+                            <td className="px-2.5 py-2 text-center border-r border-slate-150">
+                              <div className="flex flex-col items-center justify-center gap-1">
+                                {/* Row Primary Status Badge & Audit Seal */}
+                                <div className="flex items-center justify-center gap-1 flex-wrap">
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wide border shadow-2xs",
+                                      isTransferred
+                                        ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                                        : rowStatus === "accepted"
+                                        ? "bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                                        : "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                                    )}
+                                  >
+                                    {isTransferred ? (
+                                      <>
+                                        <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                                        <span>{t(lang, "lp.col_posted", "POSTED / TRANSFERRED")}</span>
+                                      </>
+                                    ) : rowStatus === "accepted" ? (
+                                      <span>{t(lang, "lp.posted_accepted", "ACCEPTED (READY)")}</span>
+                                    ) : (
+                                      <span>{t(lang, "lp.draft_bills", "DRAFT")}</span>
+                                    )}
+                                  </span>
+
+                                  {/* Canonical RED / BLACK Audit Seal Badge */}
+                                  <span
+                                    className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${badge.bg} ${badge.text}`}
+                                    title={postingState.reason}
+                                  >
+                                    {badge.label}
+                                  </span>
+                                </div>
+
+                                {/* Roznamcha & General Ledger Posting Status */}
+                                <div className="flex items-center justify-center gap-1 text-[8.5px] font-mono flex-wrap">
+                                  {hasRoznamcha ? (
+                                    <span
+                                      className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400"
+                                      title={`Roznamcha Entry: ${row.roznamcha_entry_id || "Posted"}`}
+                                    >
+                                      <Check className="h-2.5 w-2.5 text-emerald-600" />
+                                      {t(lang, "lp.roznamcha_transferred", "Roznamcha: Transferred")}
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-500 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                                      title="Not yet posted to Daily Roznamcha"
+                                    >
+                                      <Clock className="h-2.5 w-2.5 text-slate-400" />
+                                      {t(lang, "lp.roznamcha_pending", "Roznamcha: Pending")}
+                                    </span>
+                                  )}
+
+                                  {hasLedger ? (
+                                    <span
+                                      className="inline-flex items-center gap-0.5 rounded bg-teal-50 px-1.5 py-0.5 font-bold text-teal-700 border border-teal-200 dark:bg-teal-950/30 dark:border-teal-800 dark:text-teal-400"
+                                      title={`General Ledger: Posted via Dual-Entry`}
+                                    >
+                                      <Check className="h-2.5 w-2.5 text-teal-600" />
+                                      {t(lang, "lp.ledger_posted", "Ledger: Posted")}
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-500 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                                      title="Not yet posted to General Ledger"
+                                    >
+                                      <Clock className="h-2.5 w-2.5 text-slate-400" />
+                                      {t(lang, "lp.ledger_pending", "Ledger: Pending")}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-2 py-2 text-center relative" onClick={(e) => e.stopPropagation()}>
                               <div className="relative inline-block text-left">
                                 <button
                                   type="button"
-                                  onClick={() => setActiveActionMenuId(activeActionMenuId === row.id ? null : row.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (activeActionMenuId === row.id) {
+                                      setActiveActionMenuId(null);
+                                      setActionMenuAnchor(null);
+                                    } else {
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setActiveActionMenuId(row.id);
+                                      setActionMenuAnchor({
+                                        id: row.id,
+                                        top: rect.top,
+                                        bottom: rect.bottom,
+                                        right: Math.max(12, window.innerWidth - rect.right),
+                                      });
+                                    }
+                                  }}
                                   className="p-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1 font-bold text-[10px]"
                                   title={t(lang, "lp.col_actions", "Actions")}
                                 >
@@ -3095,14 +3306,29 @@ export function LocalPurchaseView({
                                 </button>
 
                                 {activeActionMenuId === row.id && (
-                                  <div className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-white shadow-xl border border-slate-200 z-30 py-1 space-y-0.5 animate-in fade-in text-left">
+                                  <div
+                                    style={
+                                      actionMenuAnchor && actionMenuAnchor.id === row.id
+                                        ? {
+                                            position: "fixed",
+                                            right: `${actionMenuAnchor.right}px`,
+                                            ...(actionMenuAnchor.top > 220
+                                              ? { bottom: `${Math.max(10, window.innerHeight - actionMenuAnchor.top + 6)}px` }
+                                              : { top: `${actionMenuAnchor.bottom + 6}px` }),
+                                            zIndex: 99999,
+                                          }
+                                        : undefined
+                                    }
+                                    className="w-52 rounded-xl bg-white shadow-2xl border border-slate-200 z-50 py-1.5 space-y-0.5 animate-in fade-in text-left dark:bg-slate-900 dark:border-slate-800"
+                                  >
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setSelectedRowForVoucher(row);
                                         setActiveActionMenuId(null);
+                                        setActionMenuAnchor(null);
                                       }}
-                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition"
+                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                       <Eye className="h-3.5 w-3.5 text-blue-600" /> {th("View Voucher")}
                                     </button>
@@ -3112,16 +3338,17 @@ export function LocalPurchaseView({
                                       onClick={() => {
                                         setSelectedRowForVoucher(row);
                                         setActiveActionMenuId(null);
+                                        setActionMenuAnchor(null);
                                         setTimeout(() => printDomFragmentViaModal("printable-modal-voucher", "Local Purchase Voucher"), 350);
                                       }}
-                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition"
+                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                       <Printer className="h-3.5 w-3.5 text-purple-600" /> {th("Print / Export PDF")}
                                     </button>
 
                                     {rowStatus !== "draft" && (
                                       <div className="px-3 py-1.5">
-                                        <AddExpenseBillButton sourceId={row.id} lang={lang} variant="ghost" className="h-auto w-full justify-start p-0 text-[10px] font-bold text-slate-700 hover:text-indigo-600" />
+                                        <AddExpenseBillButton sourceId={row.id} lang={lang} variant="ghost" className="h-auto w-full justify-start p-0 text-[10px] font-bold text-slate-700 hover:text-indigo-600 dark:text-slate-200" />
                                       </div>
                                     )}
 
@@ -3167,8 +3394,9 @@ export function LocalPurchaseView({
                                           if (row.country_branch_id || row.countryBranchId) setSelectedBranchId(row.country_branch_id || row.countryBranchId);
                                           if (row.city_branch_id || row.cityBranchId) setSelectedCityBranchId(row.city_branch_id || row.cityBranchId);
                                           setActiveActionMenuId(null);
+                                          setActionMenuAnchor(null);
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition"
+                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                       >
                                         <Edit3 className="h-3.5 w-3.5 text-emerald-600" /> {th("Edit Draft")}
                                       </button>
@@ -3179,6 +3407,7 @@ export function LocalPurchaseView({
                                         type="button"
                                         onClick={async () => {
                                           setActiveActionMenuId(null);
+                                          setActionMenuAnchor(null);
                                           if (!confirm("Accept this bill? Serial numbers will be generated.")) return;
                                           try {
                                             const res = await fetch("/api/erp/purchases/local-purchase/accept", {
@@ -3194,7 +3423,7 @@ export function LocalPurchaseView({
                                             alert(err.message);
                                           }
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition"
+                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition dark:text-blue-400 dark:hover:bg-slate-800"
                                       >
                                         <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" /> {th("Accept Bill")}
                                       </button>
@@ -3205,6 +3434,7 @@ export function LocalPurchaseView({
                                         type="button"
                                         onClick={async () => {
                                           setActiveActionMenuId(null);
+                                          setActionMenuAnchor(null);
                                           if (!confirm(th("Transfer & Post this bill? Journal, Roznamcha, and Ledger entries will be created."))) return;
                                           try {
                                             const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
@@ -3220,7 +3450,7 @@ export function LocalPurchaseView({
                                             alert(err.message);
                                           }
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition"
+                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition dark:text-emerald-400 dark:hover:bg-slate-800"
                                       >
                                         <Send className="h-3.5 w-3.5 text-emerald-600" /> {th("Transfer & Post")}
                                       </button>
@@ -3231,6 +3461,7 @@ export function LocalPurchaseView({
                                         type="button"
                                         onClick={async () => {
                                           setActiveActionMenuId(null);
+                                          setActionMenuAnchor(null);
                                           if (!confirm("Delete this draft bill permanently?")) return;
                                           try {
                                             const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.id}`, { method: "DELETE" });
@@ -3241,7 +3472,7 @@ export function LocalPurchaseView({
                                             alert(err.message);
                                           }
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100"
+                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 dark:text-red-400 dark:hover:bg-slate-800"
                                       >
                                         <Trash2 className="h-3.5 w-3.5 text-red-600" /> {th("Delete Draft")}
                                       </button>

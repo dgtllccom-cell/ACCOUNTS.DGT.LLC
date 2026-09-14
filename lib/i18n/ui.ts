@@ -4426,6 +4426,11 @@ export type UiKey =
   | "lp.bills_label"
   | "lp.local_purchase_bills_title"
   | "lp.records_label"
+  | "lp.col_posting_status"
+  | "lp.roznamcha_transferred"
+  | "lp.roznamcha_pending"
+  | "lp.ledger_posted"
+  | "lp.ledger_pending"
   | "branch.wizard_step1_title"
   | "branch.wizard_step1_desc"
   | "branch.wizard_step2_title"
@@ -12977,6 +12982,11 @@ const en: Dict = {
   "lp.bills_label": "bills",
   "lp.local_purchase_bills_title": "Local Purchase Bills",
   "lp.records_label": "Record(s)",
+  "lp.col_posting_status": "Posting & Transfer Status",
+  "lp.roznamcha_transferred": "Roznamcha: Transferred",
+  "lp.roznamcha_pending": "Roznamcha: Pending",
+  "lp.ledger_posted": "Ledger: Posted",
+  "lp.ledger_pending": "Ledger: Pending",
   // Tax System
   "nav.tax": "Tax Setup & Rates",
   "nav.tax_settings": "Country Tax Settings",
@@ -31144,6 +31154,11 @@ const ur: Dict = {
   "lp.bills_label": "بل",
   "lp.local_purchase_bills_title": "لوکل خریداری بل",
   "lp.records_label": "ریکارڈ",
+  "lp.col_posting_status": "پوسٹنگ اور ٹرانسفر کی حیثیت",
+  "lp.roznamcha_transferred": "روزنامچہ: منتقل شدہ",
+  "lp.roznamcha_pending": "روزنامچہ: زیر التواء",
+  "lp.ledger_posted": "لیجر: پوسٹ شدہ",
+  "lp.ledger_pending": "لیجر: زیر التواء",
   // Tax System Urdu
   "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
   "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
@@ -49200,6 +49215,11 @@ const ar: Dict = {
   "lp.bills_label": "فواتير",
   "lp.local_purchase_bills_title": "فواتير الشراء المحلي",
   "lp.records_label": "سجل",
+  "lp.col_posting_status": "حالة الترحيل والتحويل",
+  "lp.roznamcha_transferred": "الروزنامجة: تم التحويل",
+  "lp.roznamcha_pending": "الروزنامجة: قيد الانتظار",
+  "lp.ledger_posted": "دفتر الأستاذ: مرحل",
+  "lp.ledger_pending": "دفتر الأستاذ: قيد الانتظار",
   // Tax System Arabic
   "nav.tax": "إعدادات الضرائب والنسب",
   "nav.tax_settings": "إعدادات ضرائب الدولة",
@@ -67270,6 +67290,11 @@ const fa: Dict = {
   "lp.bills_label": "صورتحساب",
   "lp.local_purchase_bills_title": "صورتحساب‌های خرید محلی",
   "lp.records_label": "رکورد",
+  "lp.col_posting_status": "وضعیت ثبت و انتقال",
+  "lp.roznamcha_transferred": "روزنامچه: منتقل شده",
+  "lp.roznamcha_pending": "روزنامچه: در انتظار",
+  "lp.ledger_posted": "دفتر کل: ثبت شده",
+  "lp.ledger_pending": "دفتر کل: در انتظار",
   "nav.account_setup_report": "گزارش تنظیم حساب",
   "nav.account_type": "نوع حساب",
   "nav.afghanistan": "افغانستان",
@@ -85371,6 +85396,11 @@ const ps: Dict = {
   "lp.bills_label": "بېلونه",
   "lp.local_purchase_bills_title": "د سيمه‌ييزو پيرودونو بېلونه",
   "lp.records_label": "ریکارډ",
+  "lp.col_posting_status": "د ثبت او انتقال حالت",
+  "lp.roznamcha_transferred": "روزنامچه: انتقال شوی",
+  "lp.roznamcha_pending": "روزنامچه: پاتې",
+  "lp.ledger_posted": "لېجر: ثبت شوی",
+  "lp.ledger_pending": "لېجر: پاتې",
   "nav.account_setup_report": "د حساب تنظیم راپور",
   "nav.account_type": "د حساب ډول",
   "nav.afghanistan": "افغانستان",
