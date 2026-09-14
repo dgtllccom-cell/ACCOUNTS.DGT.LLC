@@ -46,6 +46,7 @@ type SessionInfo = {
     countryBranchIds: string[];
     cityBranchIds: string[];
     isSuperAdmin: boolean;
+    operationalDomains?: string[] | null;
   };
   isSuperAdmin?: boolean;
 };
@@ -97,6 +98,7 @@ type SuperAdminRoznamchaRow = {
   sourceEntry: RoznamchaEntryRow;
   remainingBalance?: number;
   balanceUsd?: number;
+  operationalDomain: string | null;
 };
 
 type FilterState = {
@@ -108,6 +110,7 @@ type FilterState = {
   voucherType: string;
   partySearch: string;
   currency: string;
+  domain: string;
 };
 
 type ReportMode = "daily_summary" | "branch_wise" | "user_wise";
@@ -480,7 +483,8 @@ function toBaseRow(entry: RoznamchaEntryRow, lines: RoznamchaLineRow[]): SuperAd
     primaryLedgerId,
     primaryAccountId,
     lines,
-    sourceEntry: entry
+    sourceEntry: entry,
+    operationalDomain: entry.operational_domain ?? null
   };
 }
 
@@ -563,7 +567,8 @@ function lineToRow(
     primaryLedgerId,
     primaryAccountId,
     lines: allLines,
-    sourceEntry: entry
+    sourceEntry: entry,
+    operationalDomain: entry.operational_domain ?? null
   };
 }
 
@@ -578,6 +583,9 @@ function filterRows(
       if (filters.countryId !== "all" && row.countryId !== filters.countryId) return false;
       if (filters.branchId !== "all" && row.cityBranchId !== filters.branchId && row.countryBranchId !== filters.branchId) return false;
       if (filters.voucherType !== "all" && row.type !== filters.voucherType) return false;
+      // Legacy/unclassified entries (operational_domain IS NULL, posted before this column
+      // existed) always pass through a domain filter so historical data never disappears.
+      if (filters.domain !== "all" && row.operationalDomain && row.operationalDomain !== filters.domain) return false;
       if (filters.fromDate && row.entryDate < filters.fromDate) return false;
       if (filters.toDate && row.entryDate > filters.toDate) return false;
       if (filters.currency && filters.currency !== "all" && (row.currency || "").toUpperCase() !== filters.currency.toUpperCase()) return false;
@@ -1208,7 +1216,8 @@ function SuperAdminRoznamchaReportViewContent({
     userName: "all",
     voucherType: "all",
     partySearch: "",
-    currency: "all"
+    currency: "all",
+    domain: "all"
   });
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     fromDate: "",
@@ -1218,7 +1227,8 @@ function SuperAdminRoznamchaReportViewContent({
     userName: "all",
     voucherType: "all",
     partySearch: "",
-    currency: "all"
+    currency: "all",
+    domain: "all"
   });
 
   // Exchange Rates State
@@ -1250,6 +1260,14 @@ function SuperAdminRoznamchaReportViewContent({
   const canViewConversionColumns = useMemo(() => {
     const roles = (sessionInfo?.roles ?? []).map((role) => String(role).toLowerCase());
     return Boolean(sessionInfo?.scopes?.isSuperAdmin || roles.includes("super_admin"));
+  }, [sessionInfo]);
+
+  // Business/Shipping domain toggle: only meaningful for users who can actually see both
+  // domains at once (Super Admin, or a "both"-domain / Branch Operations Admin assignment).
+  // Single-domain users are already server-side restricted to their own domain, so a
+  // client toggle would be a no-op for them.
+  const showDomainFilter = useMemo(() => {
+    return Boolean(sessionInfo?.scopes?.isSuperAdmin || sessionInfo?.scopes?.operationalDomains?.includes("both"));
   }, [sessionInfo]);
 
   async function loadReport(rangeFilters: FilterState = appliedFilters) {
@@ -1495,7 +1513,8 @@ function SuperAdminRoznamchaReportViewContent({
       voucherType: "all",
       userName: "all",
       partySearch: "",
-      currency: "all"
+      currency: "all",
+      domain: "all"
     };
     setDraftFilters(reset);
     setAppliedFilters(reset);
@@ -1861,6 +1880,27 @@ function SuperAdminRoznamchaReportViewContent({
                     triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-semibold text-slate-700 outline-none w-full"
                   />
                 </div>
+                {showDomainFilter && (
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-slate-500 font-bold">{th("Domain")}</Label>
+                    <SearchSelect
+                      label=""
+                      value={draftFilters.domain}
+                      placeholder={th("All Domains")}
+                      options={[
+                        { value: "all", label: th("All Domains") },
+                        { value: "business", label: th("Business") },
+                        { value: "shipping", label: th("Shipping") }
+                      ]}
+                      disabled={loading}
+                      onValueChange={(val) => {
+                        setDraftFilters((cur) => ({ ...cur, domain: val }));
+                        setAppliedFilters((cur) => ({ ...cur, domain: val }));
+                      }}
+                      triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-semibold text-slate-700 outline-none w-full"
+                    />
+                  </div>
+                )}
                 <div className="space-y-1">
                   <Label className="text-[10px] text-slate-500 font-bold">{th("Account / Party")}</Label>
                   <div className="relative">

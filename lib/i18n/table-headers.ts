@@ -2866,6 +2866,9 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "EXPORT JSON": { ur: "JSON برآمد کریں", ar: "تصدير JSON", fa: "برون‌سپاری JSON", ps: "JSON صادر کړئ" },
   "SOLE PROPRIETORSHIP": { ur: "واحد ملکیت", ar: "ملكية فردية", fa: "مالکیت انفرادی", ps: "انفرادي مالکیت" },
   "NO CONTACT": { ur: "کوئی رابطہ نہیں", ar: "لا يوجد اتصال", fa: "بدون تماس", ps: "اړیکه نشته" },
+  "SHIPPING": { ur: "شپنگ", ar: "الشحن", fa: "حمل و نقل", ps: "بار وړل" },
+  "DOMAIN": { ur: "ڈومین", ar: "النطاق", fa: "حوزه", ps: "ډومین" },
+  "ALL DOMAINS": { ur: "تمام ڈومینز", ar: "جميع النطاقات", fa: "همه حوزه‌ها", ps: "ټول ډومینونه" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
