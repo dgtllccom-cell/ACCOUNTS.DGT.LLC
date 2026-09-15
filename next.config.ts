@@ -236,9 +236,14 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
-    preloadEntriesOnStart: false,
+    // workerThreads: true reintroduces the exact DataCloneError this project's
+    // build-worker-sanitizer.cjs was written to work around (confirmed live on
+    // the VPS build: DATA_CLONE_ERR: 25) — keep it false. preloadEntriesOnStart
+    // reverted alongside it since the two were changed together without being
+    // validated against the actual VPS build environment.
+    preloadEntriesOnStart: true,
     webpackBuildWorker: false,
-    workerThreads: true,
+    workerThreads: false,
     serverActions: {
       bodySizeLimit: "100mb",
     },
