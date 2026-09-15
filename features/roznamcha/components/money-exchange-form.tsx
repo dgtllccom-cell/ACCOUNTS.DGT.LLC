@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type MoneyExchangeEntry = {
   id?: string;
@@ -861,7 +862,10 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       <Input className="h-8 text-xs font-semibold" value={mobile} onChange={e => setMobile(e.target.value)} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.details_label", "Details")}</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.details_label", "Details")}</Label>
+                        <VoiceDictateButton context="roznamcha" lang={lang} value={details} onChange={setDetails} />
+                      </div>
                       <Input className="h-8 text-xs font-semibold" value={details} onChange={e => setDetails(e.target.value)} />
                     </div>
                   </div>

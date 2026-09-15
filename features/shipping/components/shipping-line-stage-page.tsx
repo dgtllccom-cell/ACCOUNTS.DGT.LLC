@@ -28,6 +28,7 @@ import { ShippingLinePicker } from "@/features/shipping/components/shipping-line
 import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type ShippingLineStagePageProps = {
   title: string;
@@ -697,7 +698,15 @@ export function ShippingLineStagePage({
 
                   {/* Section 4: Carrier Remarks */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-foreground">{tt("slstage.carrier_remarks", "Carrier Remarks & Transshipment Info")}</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold text-foreground">{tt("slstage.carrier_remarks", "Carrier Remarks & Transshipment Info")}</Label>
+                      <VoiceDictateButton
+                        context="shipping"
+                        lang={lang}
+                        value={remarks}
+                        onChange={setRemarks}
+                      />
+                    </div>
                     <textarea
                       rows={3}
                       value={remarks}

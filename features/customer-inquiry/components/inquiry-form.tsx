@@ -5,6 +5,7 @@ import { Sparkles, PencilLine, Loader2, CheckCircle2, Link2, AlertCircle } from 
 import { Button } from "@/components/ui/button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { AiVoiceTextEntry } from "./ai-voice-text-entry";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { INQUIRY_SOURCES, type InquiryDraft, type InquirySource } from "../lib/shared";
 
 type FormState = {
@@ -127,9 +128,19 @@ export function InquiryForm({
     }
   }
 
-  const field = (label: string, k: keyof FormState, opts?: { textarea?: boolean; type?: string; placeholder?: string }) => (
+  const field = (label: string, k: keyof FormState, opts?: { textarea?: boolean; type?: string; placeholder?: string; voice?: boolean }) => (
     <div>
-      <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{label}</label>
+      <div className="mb-1 flex items-center justify-between">
+        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">{label}</label>
+        {opts?.voice && (
+          <VoiceDictateButton
+            context="customer"
+            lang={s.lang}
+            value={String(form[k] ?? "")}
+            onChange={(next) => set(k, next as any)}
+          />
+        )}
+      </div>
       {opts?.textarea ? (
         <textarea
           value={String(form[k] ?? "")}
@@ -235,9 +246,9 @@ export function InquiryForm({
                 ))}
               </select>
             </div>
-            <div className="sm:col-span-2">{field(s.t("f_summary", "Inquiry Summary"), "inquirySummary")}</div>
-            <div className="sm:col-span-2">{field(s.t("f_meeting_notes", "Meeting / Inquiry Notes"), "meetingNotes", { textarea: true })}</div>
-            <div className="sm:col-span-2">{field(s.t("f_requirements", "Requirements"), "requirements", { textarea: true })}</div>
+            <div className="sm:col-span-2">{field(s.t("f_summary", "Inquiry Summary"), "inquirySummary", { voice: true })}</div>
+            <div className="sm:col-span-2">{field(s.t("f_meeting_notes", "Meeting / Inquiry Notes"), "meetingNotes", { textarea: true, voice: true })}</div>
+            <div className="sm:col-span-2">{field(s.t("f_requirements", "Requirements"), "requirements", { textarea: true, voice: true })}</div>
             {field(s.t("f_follow_up", "Follow-up Date"), "followUpDate", { type: "date" })}
             <div>
               <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{s.t("f_assigned_to", "Assigned User")}</label>

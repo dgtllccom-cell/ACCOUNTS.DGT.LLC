@@ -25,6 +25,7 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { t } from "@/lib/i18n/ui";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -1135,7 +1136,15 @@ export function TruckRecreationWizard({
                 </h2>
                 <div className="space-y-2.5">
                   <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.remarks", "Remarks (Optional)")}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.remarks", "Remarks (Optional)")}</span>
+                      <VoiceDictateButton
+                        context="clearing"
+                        lang={activeLang}
+                        value={form.remarks}
+                        onChange={(next) => setForm((p) => ({ ...p, remarks: next }))}
+                      />
+                    </div>
                     <textarea
                       rows={2}
                       value={form.remarks}

@@ -68,6 +68,7 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 
@@ -953,12 +954,15 @@ function getInitialPurchaseOrderNo(): string {
   return new URLSearchParams(window.location.search).get("salesOrderNo") ?? "";
 }
 
-function FieldBlock({ label, required, children, className }: { label: string; required?: boolean; children: ReactNode; className?: string }) {
+function FieldBlock({ label, required, children, className, action }: { label: string; required?: boolean; children: ReactNode; className?: string; action?: ReactNode }) {
   return (
     <label className={cn("block min-w-0", className)}>
-      <span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        {label}
-        {required ? <span className="text-red-500"> *</span> : null}
+      <span className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span>
+          {label}
+          {required ? <span className="text-red-500"> *</span> : null}
+        </span>
+        {action}
       </span>
       {children}
     </label>
@@ -5991,7 +5995,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
                   {translateHeader(currentLanguage, "3. Narration / Remarks")}
                 </div>
-                <FieldBlock label={t("comments_label", currentLanguage)}>
+                <FieldBlock
+                  label={t("comments_label", currentLanguage)}
+                  action={<VoiceDictateButton context="accounts" lang={currentLanguage} value={remarks} onChange={setRemarks} />}
+                >
                   <textarea
                     rows={3}
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

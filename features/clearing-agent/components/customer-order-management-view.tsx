@@ -58,6 +58,7 @@ import { ClearingAgentPicker } from "@/features/shipping/components/clearing-age
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
 import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { listCities } from "@/features/locations/location-api";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import {
@@ -4116,7 +4117,15 @@ function Step2PickupGoodsTruck({
       </div>
 
       <div>
-        <label className={labelClass}>{tt("remarks", "Remarks")}</label>
+        <div className="mb-1 flex items-center justify-between">
+          <label className={labelClass}>{tt("remarks", "Remarks")}</label>
+          <VoiceDictateButton
+            context="clearing"
+            lang={lang}
+            value={formData.remarks}
+            onChange={(next) => setFormData((current) => ({ ...current, remarks: next }))}
+          />
+        </div>
         <textarea
           rows={2}
           placeholder={tt("remarks_ph", "Additional instructions or notes...")}
@@ -4715,7 +4724,15 @@ function Step3RouteVesselCustoms({
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("remarks", "Remarks")}</label>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase">{tt("remarks", "Remarks")}</label>
+                  <VoiceDictateButton
+                    context="clearing"
+                    lang={lang}
+                    value={leg.remarks}
+                    onChange={(next) => updateLeg(idx, { remarks: next })}
+                  />
+                </div>
                 <textarea rows={2} value={leg.remarks} onChange={(e) => updateLeg(idx, { remarks: e.target.value })} className={inputClass} />
               </div>
             </div>

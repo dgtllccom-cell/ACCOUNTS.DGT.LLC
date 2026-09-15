@@ -1,7 +1,7 @@
 "use client";
 
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Download, Mail, MoreVertical, Printer, RefreshCcw, Save, Search, Ship, SquareArrowOutUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { ClearingAgentPicker } from "@/features/shipping/components/clearing-age
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
 import { apiGet } from "@/lib/api/client";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type OptionRow = {
   id: string;
@@ -749,7 +750,19 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                       {_("ble.warn_complete_gate", "Complete Purchase Confirmation, Loading, and Shipment Details before generating Bill of Lading.")}
                     </div>
                   ) : null}
-                  <Field label={_("ble.lbl_remarks", "Remarks")} value={form.carrierRemarks} onChange={(v) => updateField("carrierRemarks", v)} />
+                  <Field
+                    label={_("ble.lbl_remarks", "Remarks")}
+                    value={form.carrierRemarks}
+                    onChange={(v) => updateField("carrierRemarks", v)}
+                    voice={
+                      <VoiceDictateButton
+                        context="shipping"
+                        lang={lang}
+                        value={form.carrierRemarks}
+                        onChange={(next) => updateField("carrierRemarks", next)}
+                      />
+                    }
+                  />
                   <Button type="button" size="lg" className="h-11 w-full bg-cyan-600 text-sm font-bold text-white shadow-md shadow-cyan-600/25 hover:bg-cyan-500 disabled:opacity-50 disabled:shadow-none" onClick={saveRecord} disabled={saving || !canGenerateBl}>
                     <Save className="mr-2 h-4 w-4" /> {saving ? _("ble.btn_generating", "Generating...") : _("ble.btn_generate_bl", "Generate Bill of Lading")}
                   </Button>
@@ -934,7 +947,8 @@ function Field({
   type = "text",
   placeholder,
   asSelect = false,
-  options = []
+  options = [],
+  voice
 }: {
   label: string;
   value: string;
@@ -943,10 +957,15 @@ function Field({
   asSelect?: boolean;
   options?: { value: string; label: string }[];
   onChange: (value: string) => void;
+  /** optional VoiceDictateButton rendered next to the label, for free-text fields */
+  voice?: ReactNode;
 }) {
   return (
     <div className="space-y-1">
-      <Label className="text-[10px] uppercase text-muted-foreground">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-[10px] uppercase text-muted-foreground">{label}</Label>
+        {voice}
+      </div>
       {asSelect ? (
         <select value={value} onChange={(event) => onChange(event.target.value)} className="h-8 w-full rounded border bg-background px-2 text-xs text-foreground">
           {options.map((option) => (

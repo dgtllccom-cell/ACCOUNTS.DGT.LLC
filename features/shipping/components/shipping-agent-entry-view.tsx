@@ -10,6 +10,7 @@ import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker, type ClearingAgentRow as ClearingAgentPickerRow } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker, type ShippingLineRow as ShippingLinePickerRow } from "@/features/shipping/components/shipping-line-picker";
 import { apiGet } from "@/lib/api/client";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type ShippingAgentRow = {
   id: string;
@@ -308,7 +309,15 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.remarks", "Remarks")}</label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-xs font-semibold text-foreground/80">{tt("common.remarks", "Remarks")}</label>
+              <VoiceDictateButton
+                context="shipping"
+                lang={lang}
+                value={form.remarks}
+                onChange={(next) => setForm({ ...form, remarks: next })}
+              />
+            </div>
             <textarea
               rows={2}
               placeholder={tt("sae.ph_remarks", "Additional contact details, agency terms...")}

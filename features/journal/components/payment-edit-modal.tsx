@@ -9,6 +9,7 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 
 export function PaymentEditModal({
@@ -214,7 +215,10 @@ export function PaymentEditModal({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs font-bold uppercase text-slate-500">{t(lang, "pem.pem_remarks_narration", "Remarks / Narration")}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-bold uppercase text-slate-500">{t(lang, "pem.pem_remarks_narration", "Remarks / Narration")}</Label>
+            <VoiceDictateButton context="accounts" lang={lang} value={narration} onChange={setNarration} />
+          </div>
           <Input value={narration} onChange={e => setNarration(e.target.value)} placeholder={t(lang, "pem.pem_enter_details_ph", "Enter details...")} className="h-9 text-sm" />
         </div>
 
