@@ -4621,6 +4621,7 @@ export type UiKey =
   | "lp.user_name"
   | "lp.date_time"
   | "lp.total_local_purchase_bills"
+  | "lp.handover_default_task"
   | "lp.total_purchase_amount"
   | "lp.total_tax_amount"
   | "lp.total_final_amount"
@@ -13356,6 +13357,7 @@ const en: Dict = {
   "lp.user_name": "User Name",
   "lp.date_time": "Date & Time",
   "lp.total_local_purchase_bills": "Total Local Purchase Bills",
+  "lp.handover_default_task": "Please continue this local purchase bill to the next step.",
   "lp.total_purchase_amount": "Total Purchase Amount",
   "lp.total_tax_amount": "Total Tax Amount",
   "lp.total_final_amount": "Total Final Amount",
@@ -31828,6 +31830,7 @@ const ur: Dict = {
   "lp.user_name": "صارف کا نام",
   "lp.date_time": "تاریخ اور وقت",
   "lp.total_local_purchase_bills": "کل لوکل خریداری بل",
+  "lp.handover_default_task": "براہ کرم اس لوکل خریداری بل کو اگلے مرحلے تک جاری رکھیں۔",
   "lp.total_purchase_amount": "کل خریداری رقم",
   "lp.total_tax_amount": "کل ٹیکس رقم",
   "lp.total_final_amount": "کل حتمی رقم",
@@ -50183,6 +50186,7 @@ const ar: Dict = {
   "lp.user_name": "اسم المستخدم",
   "lp.date_time": "التاريخ والوقت",
   "lp.total_local_purchase_bills": "إجمالي فواتير الشراء المحلي",
+  "lp.handover_default_task": "يرجى متابعة فاتورة الشراء المحلي هذه إلى الخطوة التالية.",
   "lp.total_purchase_amount": "إجمالي مبلغ الشراء",
   "lp.total_tax_amount": "إجمالي مبلغ الضريبة",
   "lp.total_final_amount": "إجمالي المبلغ النهائي",
@@ -68552,6 +68556,7 @@ const fa: Dict = {
   "lp.user_name": "نام کاربر",
   "lp.date_time": "تاریخ و زمان",
   "lp.total_local_purchase_bills": "مجموع صورتحساب‌های خرید محلی",
+  "lp.handover_default_task": "لطفاً این صورتحساب خرید محلی را به مرحله بعد ادامه دهید.",
   "lp.total_purchase_amount": "مجموع مبلغ خرید",
   "lp.total_tax_amount": "مجموع مبلغ مالیات",
   "lp.total_final_amount": "مجموع مبلغ نهایی",
@@ -86952,6 +86957,7 @@ const ps: Dict = {
   "lp.user_name": "د کارن نوم",
   "lp.date_time": "نېټه او وخت",
   "lp.total_local_purchase_bills": "د سيمه‌ييزو پيرودونو ټول بېلونه",
+  "lp.handover_default_task": "مهرباني وکړئ دا سيمه‌ييز پيرودنې بېل بلې مرحلې ته دوام ورکړئ.",
   "lp.total_purchase_amount": "د پیرود ټوله اندازه",
   "lp.total_tax_amount": "د مالیې ټوله اندازه",
   "lp.total_final_amount": "وروستۍ ټوله اندازه",

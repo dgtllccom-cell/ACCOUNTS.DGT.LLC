@@ -28,6 +28,7 @@ import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { cn } from "@/lib/utils";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -281,6 +282,10 @@ export function LocalPurchaseView({
   const [showCountryReport, setShowCountryReport] = useState(false);
   // Tabs for Local Purchase & Payment modules workflow
   const [activeTab, setActiveTab] = useState<"all" | "accepted" | "posted">("all");
+  // Assign a saved bill (any status) to another user via the canonical Transfer
+  // Center / TaskHandoverModal engine — same record, no duplicate workflow.
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false);
+  const [handoverTargetRow, setHandoverTargetRow] = useState<any | null>(null);
 
   // Warehouse setup list and states
   const [warehousesList, setWarehousesList] = useState<any[]>([]);
@@ -3500,6 +3505,19 @@ export function LocalPurchaseView({
                                         <Trash2 className="h-3.5 w-3.5 text-red-600" /> {th("Delete Draft")}
                                       </button>
                                     )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveActionMenuId(null);
+                                        setActionMenuAnchor(null);
+                                        setHandoverTargetRow(row);
+                                        setHandoverModalOpen(true);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 dark:text-blue-400 dark:hover:bg-slate-800"
+                                    >
+                                      <Share2 className="h-3.5 w-3.5 text-blue-600" /> {th("Assign to Another User")}
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -4156,7 +4174,30 @@ export function LocalPurchaseView({
         </div>
       )}
 
-
+      {handoverModalOpen && handoverTargetRow ? (
+        <TaskHandoverModal
+          open={handoverModalOpen}
+          onClose={() => {
+            setHandoverModalOpen(false);
+            setHandoverTargetRow(null);
+          }}
+          orderReference={handoverTargetRow.manual_bill_no || handoverTargetRow.entry_serial || handoverTargetRow.journal_serial_no || handoverTargetRow.id}
+          sourceTable="local_purchases"
+          sourceId={handoverTargetRow.id}
+          targetUrl={`/dashboard/purchase/local-purchase?id=${handoverTargetRow.id}`}
+          defaultTask={t(lang, "lp.handover_default_task", "Please continue this local purchase bill to the next step.")}
+          sourceCountryId={handoverTargetRow.country_id || handoverTargetRow.countryId || null}
+          sourceCountryBranchId={handoverTargetRow.country_branch_id || handoverTargetRow.countryBranchId || null}
+          sourceCityBranchId={handoverTargetRow.city_branch_id || handoverTargetRow.cityBranchId || null}
+          domain="business"
+          customerPartyName={handoverTargetRow.supplierName || handoverTargetRow.supplier_name || null}
+          onSuccess={() => {
+            setHandoverModalOpen(false);
+            setHandoverTargetRow(null);
+          }}
+          lang={lang}
+        />
+      ) : null}
     </div>
   );
 }
