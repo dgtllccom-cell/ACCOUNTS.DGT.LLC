@@ -18,6 +18,9 @@ const branchRulesPayloadSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ error: "Only Super Admin can view branch rules and permissions." }, { status: 403 });
+    }
     const { searchParams } = new URL(request.url);
     const scopeType = searchParams.get("scopeType") as "country" | "country_branch" | "city_branch" | null;
     const scopeId = searchParams.get("scopeId");
