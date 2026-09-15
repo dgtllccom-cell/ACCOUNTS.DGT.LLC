@@ -1385,6 +1385,12 @@ export function CustomerOrderManagementView() {
   };
 
   const handleSaveProgress = async (advanceStep: boolean = false) => {
+    // Re-entrancy guard: some step-transition buttons aren't individually
+    // disabled while saving, so a double-click under high API latency could
+    // otherwise fire two overlapping saves — creating a duplicate draft order
+    // and double-advancing currentStep when both responses resolve.
+    if (saving) return;
+
     // Cross-border road rule: a real registered truck (Truck Master) is required
     // once the leg actually crosses a country border; a temporary one-time truck
     // is only for local/short transfers (warehouse<->port, yard<->warehouse, etc).

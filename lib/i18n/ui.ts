@@ -1,4 +1,4 @@
-import type { SupportedLanguage } from "@/lib/i18n/languages";
+﻿import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
   | "tc.any_branch_staff"
@@ -6444,6 +6444,7 @@ export type UiKey =
   | "sales.sodash_err_update_status" | "sales.sodash_tab_dashboard_overview" | "sales.sodash_tab_draft_bookings" | "sales.sodash_tab_confirmed_sales"
   | "sales.sodash_tab_finalized_orders"
   | "sales.sodash_search_ph" | "sales.sodash_print_sales_order_title"
+  | "sales.sodash_refresh" | "sales.sodash_subtitle"
   | "sales.sbjr_search_records" | "sales.sbjr_branch_scope" | "sales.sbjr_export_csv" | "sales.sbjr_loading_registry" | "sales.sbjr_no_orders_found"
   | "sales.sbjr_search_ph"
   | "sales.quot_sales_quotation_title" | "sales.quot_form_word" | "sales.quot_send_to_customer_btn" | "sales.quot_quotation_word" | "sales.quot_valid_until_label" | "sales.quot_bill_to_label" | "sales.quot_terms_label" | "sales.quot_delivery_label" | "sales.quot_disc_pct_label" | "sales.quot_tax_pct_label" | "sales.quot_customer_acceptance_label" | "sales.quot_signature_stamp_label"
@@ -14084,6 +14085,8 @@ const en: Dict = {
   "sales.sodash_tab_finalized_orders": "Finalized Orders",
   "sales.sodash_search_ph": "Search order no, customer...",
   "sales.sodash_print_sales_order_title": "Print Sales Order",
+  "sales.sodash_refresh": "Refresh",
+  "sales.sodash_subtitle": "Real-time sales order tracking across every country and branch.",
   "sales.sbjr_search_records": "Search Records",
   "sales.sbjr_branch_scope": "Branch Scope",
   "sales.sbjr_export_csv": "Export CSV",
@@ -28197,6 +28200,8 @@ const ur: Dict = {
   "sales.sodash_tab_finalized_orders": "حتمی آرڈرز",
   "sales.sodash_search_ph": "آرڈر نمبر، کسٹمر تلاش کریں...",
   "sales.sodash_print_sales_order_title": "سیلز آرڈر پرنٹ کریں",
+  "sales.sodash_refresh": "\u062a\u0627\u0632\u06c1 \u06a9\u0631\u06cc\u06ba",
+  "sales.sodash_subtitle": "\u06c1\u0631 \u0645\u0644\u06a9 \u0627\u0648\u0631 \u0634\u0627\u062e \u0645\u06cc\u06ba \u0633\u06cc\u0644\u0632 \u0622\u0631\u0688\u0631\u0632 \u06a9\u06cc \u0631\u06cc\u0626\u0644 \u0679\u0627\u0626\u0645 \u0679\u0631\u06cc\u06a9\u0646\u06af\u06d4",
   "sales.sbjr_search_records": "ریکارڈز تلاش کریں",
   "sales.sbjr_branch_scope": "برانچ دائرہ کار",
   "sales.sbjr_export_csv": "CSV برآمد کریں",
@@ -46565,6 +46570,8 @@ const ar: Dict = {
   "sales.sodash_tab_finalized_orders": "الأوامر النهائية",
   "sales.sodash_search_ph": "البحث عن رقم الأمر، العميل...",
   "sales.sodash_print_sales_order_title": "طباعة أمر البيع",
+  "sales.sodash_refresh": "\u062a\u062d\u062f\u064a\u062b",
+  "sales.sodash_subtitle": "\u062a\u062a\u0628\u0639 \u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0628\u064a\u0639 \u0641\u064a \u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0641\u0639\u0644\u064a \u0639\u0628\u0631 \u0643\u0644 \u062f\u0648\u0644\u0629 \u0648\u0641\u0631\u0639.",
   "sales.sbjr_search_records": "البحث في السجلات",
   "sales.sbjr_branch_scope": "نطاق الفرع",
   "sales.sbjr_export_csv": "تصدير CSV",
@@ -64985,6 +64992,8 @@ const fa: Dict = {
   "sales.sodash_tab_finalized_orders": "سفارش‌های نهایی‌شده",
   "sales.sodash_search_ph": "جستجوی شماره سفارش، مشتری...",
   "sales.sodash_print_sales_order_title": "چاپ سفارش فروش",
+  "sales.sodash_refresh": "\u0628\u0647`u200c\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc",
+  "sales.sodash_subtitle": "\u0631\u062f\u06cc\u0627\u0628\u06cc \u0633\u0641\u0627\u0631\u0634`u200c\u0647\u0627\u06cc \u0641\u0631\u0648\u0634 \u062f\u0631 \u0644\u062d\u0638\u0647 \u062f\u0631 \u062a\u0645\u0627\u0645 \u06a9\u0634\u0648\u0631\u0647\u0627 \u0648 \u0634\u0639\u0628\u0627\u062a.",
   "sales.sbjr_search_records": "جستجوی سوابق",
   "sales.sbjr_branch_scope": "محدوده شعبه",
   "sales.sbjr_export_csv": "خروجی CSV",
@@ -83404,6 +83413,8 @@ const ps: Dict = {
   "sales.sodash_tab_finalized_orders": "پای ته رسېدلي امرونه",
   "sales.sodash_search_ph": "د امر شمېره، پیرودونکی ولټوئ...",
   "sales.sodash_print_sales_order_title": "د پلور امر چاپ کړئ",
+  "sales.sodash_refresh": "\u062a\u0627\u0632\u0647 \u06a9\u0648\u0644",
+  "sales.sodash_subtitle": "\u062f \u0647\u0631 \u0647\u06cc\u0648\u0627\u062f \u0627\u0648 \u0628\u0631\u0627\u0646\u0686 \u06a9\u06d0 \u062f \u067e\u0644\u0648\u0631 \u0627\u0645\u0631\u0648\u0646\u0648 \u0631\u06cc\u0644 \u067c\u0627\u06cc\u0645 \u067c\u0631\u06cc\u06a9\u0646\u06ab.",
   "sales.sbjr_search_records": "ریکارډونه ولټوئ",
   "sales.sbjr_branch_scope": "د برانچ ساحه",
   "sales.sbjr_export_csv": "CSV صادرول",
