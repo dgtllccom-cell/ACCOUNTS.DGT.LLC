@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { BranchRulesDrawer, type BranchRulesScope } from "./branch-rules-drawer";
 
 type CityBranchNode = {
   id: string;
@@ -693,6 +694,7 @@ export function BranchGeneralReportView({
   const [activeActionAnchorRect, setActiveActionAnchorRect] = useState<DOMRect | null>(null);
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [branchDetailModal, setBranchDetailModal] = useState<{ country: CountryNode; branch: MainBranchNode } | null>(null);
+  const [rulesDrawerScope, setRulesDrawerScope] = useState<BranchRulesScope | null>(null);
 
   function openActionDropdown(id: string, btn: HTMLButtonElement) {
     if (activeActionDropdownId === id) {
@@ -1721,23 +1723,57 @@ export function BranchGeneralReportView({
                             </span>
                           </td>
                           <td className="p-2 relative">
-                            <div className="flex items-center justify-center gap-1.5">
+                            <div className="flex items-center justify-center gap-1">
                               <button
                                 type="button"
                                 onClick={() => setBranchDetailModal({ country, branch: mainBranch || { id: country.id, name: `${country.name} Main Branch`, code: country.code, localCurrency: country.currency, status: country.status, isMain: true, cityBranches: [] } })}
-                                className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[9px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                title={tt("bgr.view_country_main_city_branches", "View Country Main Branch & City Branches")}
+                                className="inline-flex items-center gap-0.5 rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[8.5px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all"
+                                title={tt("bgr.view", "View")}
                               >
-                                <Eye className="h-3 w-3" />
+                                <Eye className="h-2.5 w-2.5" />
                                 {tt("bgr.view", "View")}
                               </button>
                               <button
                                 type="button"
-                                onClick={(e) => openActionDropdown(country.id, e.currentTarget)}
-                                className="action-dropdown-trigger inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[9px] font-bold text-slate-700 shadow-xs hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                onClick={() => {
+                                  window.location.href = `/dashboard/settings/countries?edit=${encodeURIComponent(country.id)}`;
+                                }}
+                                className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-white px-2 py-0.5 text-[8.5px] font-bold text-indigo-700 shadow-xs hover:bg-indigo-50 transition-all"
+                                title={tt("bgr.edit", "Edit")}
                               >
-                                {tt("bgr.actions", "Actions")}
-                                <ChevronRight className={cn("h-2.5 w-2.5 transition-transform duration-150", activeActionDropdownId === country.id ? "rotate-90" : "")} />
+                                <PencilLine className="h-2.5 w-2.5" />
+                                {tt("bgr.edit", "Edit")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setRulesDrawerScope({
+                                  scopeType: "country",
+                                  scopeId: country.id,
+                                  scopeName: country.name,
+                                  parentHierarchy: [country.name]
+                                })}
+                                className="inline-flex items-center gap-0.5 rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[8.5px] font-black text-purple-700 shadow-xs hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer"
+                                title="Rules & Permission Management"
+                              >
+                                <Shield className="h-2.5 w-2.5 text-purple-600" />
+                                Rules
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleUserScope(countryUserScopeId)}
+                                className="inline-flex items-center gap-0.5 rounded border border-slate-300 bg-white px-2 py-0.5 text-[8.5px] font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-all"
+                                title="View / manage users"
+                              >
+                                <Users className="h-2.5 w-2.5 text-slate-600" />
+                                Users
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => openActionDropdown(country.id, e.currentTarget)}
+                                className="action-dropdown-trigger inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[8.5px] font-bold text-slate-600 hover:bg-slate-100"
+                                title={tt("bgr.actions", "Actions")}
+                              >
+                                <MoreHorizontal className="h-2.5 w-2.5" />
                               </button>
                             </div>
                             {/* Portal dropdown - rendered at body level to escape table overflow:hidden */}
@@ -1912,24 +1948,36 @@ export function BranchGeneralReportView({
                                                     {tt("bgr.edit", "Edit")}
                                                   </button>
                                                   <button
-                                                    onClick={() => {
-                                                      window.location.href = `/dashboard/users/new?cityBranchId=${encodeURIComponent(cityBranch.id)}&countryId=${encodeURIComponent(country.id)}`;
-                                                    }}
-                                                    className="rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[8px] font-bold text-indigo-700 hover:bg-indigo-100 shadow-sm transition-all inline-flex items-center gap-0.5"
-                                                    title={`Create new user for ${cityBranch.name}`}
+                                                    type="button"
+                                                    onClick={() => setRulesDrawerScope({
+                                                      scopeType: "city_branch",
+                                                      scopeId: cityBranch.id,
+                                                      scopeName: `${cityBranch.cityName || ""} - ${cityBranch.name}`,
+                                                      parentHierarchy: [country.name, mainBranch?.name || "Main Branch", cityBranch.name]
+                                                    })}
+                                                    className="rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[8px] font-black text-purple-700 hover:bg-purple-100 hover:border-purple-400 shadow-sm transition-all inline-flex items-center gap-0.5 cursor-pointer"
+                                                    title={`Rules & Permissions for ${cityBranch.name}`}
                                                   >
-                                                    <UserPlus className="h-2.5 w-2.5" />
-                                                    {tt("bgr.create_user", "Create User")}
+                                                    <Shield className="h-2.5 w-2.5 text-purple-600" />
+                                                    Rules
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => toggleUserScope(cityUserScopeId)}
+                                                    className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[8px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    title={`View users for ${cityBranch.name}`}
+                                                  >
+                                                    <Users className="h-2.5 w-2.5 text-slate-600" />
+                                                    Users
                                                   </button>
                                                   <button
                                                     type="button"
                                                     onClick={() => handleDeleteCityBranch(cityBranch.id, cityBranch.name, cityBranch.code)}
                                                     disabled={deletingBranchId === cityBranch.id}
-                                                    className="rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-[8px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[8px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5"
                                                     title={`Delete / Deactivate branch ${cityBranch.name}`}
                                                   >
                                                     <Trash2 className="h-2.5 w-2.5" />
-                                                    {deletingBranchId === cityBranch.id ? "..." : (lang === "ur" ? "حذف" : lang === "ps" ? "ړنګول" : "Delete")}
                                                   </button>
                                                 </div>
                                               </td>
@@ -2106,6 +2154,18 @@ export function BranchGeneralReportView({
           </div>
         </div>,
         document.body
+      )}
+
+      {rulesDrawerScope && (
+        <BranchRulesDrawer
+          isOpen={Boolean(rulesDrawerScope)}
+          onClose={() => setRulesDrawerScope(null)}
+          scope={rulesDrawerScope}
+          lang={lang as any}
+          onSaved={() => {
+            void loadReport();
+          }}
+        />
       )}
     </div>
   );

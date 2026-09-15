@@ -633,6 +633,13 @@ export const accountUpdateSchema = scopeSchema.partial().extend({
   customerId: optionalUuidSchema,
   companyId: optionalUuidSchema,
   bankId: optionalUuidSchema,
+  warehouseId: optionalUuidSchema,
+  warehouseIds: z.array(z.string()).default([]),
+  requirements: z.object({
+    companyRequired: z.boolean().default(false),
+    bankRequired: z.boolean().default(false),
+    warehouseRequired: z.boolean().default(false)
+  }).optional(),
   contacts: z.array(z.object({ type: z.string(), value: z.string() })).optional()
 });
 
@@ -652,6 +659,13 @@ export const enterpriseAccountCreateSchema = scopeSchema.extend({
   customerId: optionalUuidSchema,
   companyId: optionalUuidSchema,
   bankId: optionalUuidSchema,
+  warehouseId: optionalUuidSchema,
+  warehouseIds: z.array(z.string()).default([]),
+  requirements: z.object({
+    companyRequired: z.boolean().default(false),
+    bankRequired: z.boolean().default(false),
+    warehouseRequired: z.boolean().default(false)
+  }).optional(),
   shippingLineId: optionalUuidSchema,
   status: z.string().trim().max(80).optional(),
   contacts: z.array(z.object({ type: z.string(), value: z.string() })).default([]),

@@ -309,8 +309,8 @@ export function NewAccountSetup({
     });
   }, [reportRows, sidebarFilter]);
 
-  // Step state (5 Steps matching canonical design)
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  // Step state (Dynamic steps matching canonical design)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
 
   // Branch / Account form state (Step 1)
   const [countries, setCountries] = useState<LocationCountry[]>([]);
@@ -450,42 +450,64 @@ export function NewAccountSetup({
   const [loadingAccount, setLoadingAccount] = useState(false);
   const [actionsPortal, setActionsPortal] = useState<HTMLElement | null>(null);
 
-  // Dynamic active steps list based on accountTitle, category and subType (5 steps total)
-  const activeSteps = useMemo(() => {
-    const steps: number[] = [1];
-    const isExpense = category === "EX" || accountTitle === "Expenses Account";
-    const isBank = accountTitle === "Bank";
-    const isCompany = accountTitle === "Company" || (accountTitle === "Customer" && subType === "Business Account");
-    const isPersonal = accountTitle === "Personal" || (accountTitle === "Customer" && subType !== "Business Account") || accountTitle === "Employee";
+  // Requirements toggles for dynamic adaptive workflow
+  const [companyRequired, setCompanyRequired] = useState(true);
+  const [bankRequired, setBankRequired] = useState(false);
+  const [warehouseRequired, setWarehouseRequired] = useState(false);
 
-    if (isExpense) {
-      steps.push(5);
-    } else if (isBank) {
-      steps.push(4, 5);
-    } else if (isCompany) {
-      steps.push(2, 3, 4, 5);
-    } else if (isPersonal) {
-      steps.push(2, 5);
-    } else {
-      steps.push(2, 3, 4, 5);
+  // Dynamic active steps list based on accountTitle, category and subType + requirements
+  const activeStepDefs = useMemo(() => {
+    const list: Array<{ id: 1 | 2 | 3 | 4 | 5 | 6; key: string; title: string; subtitle: string }> = [
+      { id: 1, key: "basic", title: getLabel("step1Label", lang), subtitle: lang === "ur" ? "بنیادی اکاؤنٹ سیٹ اپ" : "Basic account setup" }
+    ];
+
+    const isExpense = category === "EX" || accountTitle === "Expenses Account";
+    const isPersonal = accountTitle === "Personal" || accountTitle === "Employee";
+
+    if (!isExpense && !isPersonal) {
+      // Step 2: Customer Information
+      if (accountTitle === "Customer" || primaryType === "customers_trade") {
+        list.push({ id: 2, key: "customer", title: getLabel("step2Label", lang), subtitle: lang === "ur" ? "کسٹمر کی معلومات" : "Customer information" });
+      }
+
+      // Step 3: Company Information (if required or company entity)
+      if (companyRequired || accountTitle === "Company") {
+        list.push({ id: 3, key: "company", title: getLabel("step3Label", lang), subtitle: lang === "ur" ? "کاروباری ادارے کی تفصیلات" : "Business entity details" });
+      }
+
+      // Step 4: Bank Information (if required or bank entity)
+      if (bankRequired || accountTitle === "Bank") {
+        list.push({ id: 4, key: "bank", title: getLabel("step4Label", lang), subtitle: lang === "ur" ? "بینکنگ کی معلومات" : "Banking information" });
+      }
+
+      // Step 5: Dedicated Warehouse Allocation (if required)
+      if (warehouseRequired) {
+        list.push({ id: 5, key: "warehouse", title: getLabel("step5Label", lang), subtitle: lang === "ur" ? "گودام کی تخصیص" : "Warehouse allocation" });
+      }
     }
-    return steps;
-  }, [category, accountTitle, subType]);
+
+    // Step 6: Verify and complete
+    list.push({ id: 6, key: "review", title: getLabel("step6Label", lang), subtitle: lang === "ur" ? "تصدیق اور تکمیل" : "Verify and complete" });
+
+    return list;
+  }, [category, accountTitle, primaryType, companyRequired, bankRequired, warehouseRequired, lang]);
+
+  const activeSteps = useMemo(() => activeStepDefs.map((s) => s.id), [activeStepDefs]);
 
   const prevStep = useMemo(() => {
     const idx = activeSteps.indexOf(currentStep);
-    return idx > 0 ? (activeSteps[idx - 1] as 1 | 2 | 3 | 4 | 5) : 1;
+    return idx > 0 ? (activeSteps[idx - 1] as 1 | 2 | 3 | 4 | 5 | 6) : (activeSteps[0] as 1 | 2 | 3 | 4 | 5 | 6);
   }, [activeSteps, currentStep]);
 
   const nextStep = useMemo(() => {
     const idx = activeSteps.indexOf(currentStep);
-    return idx !== -1 && idx < activeSteps.length - 1 ? (activeSteps[idx + 1] as 1 | 2 | 3 | 4 | 5) : 5;
+    return idx !== -1 && idx < activeSteps.length - 1 ? (activeSteps[idx + 1] as 1 | 2 | 3 | 4 | 5 | 6) : (activeSteps[activeSteps.length - 1] as 1 | 2 | 3 | 4 | 5 | 6);
   }, [activeSteps, currentStep]);
 
-  // If currentStep becomes inactive because of dropdown change, reset to 1
+  // If currentStep becomes inactive because of dropdown change or toggles, reset to 1
   useEffect(() => {
     if (!activeSteps.includes(currentStep)) {
-      setCurrentStep(1);
+      setCurrentStep(activeSteps[0] as 1 | 2 | 3 | 4 | 5 | 6);
     }
   }, [activeSteps, currentStep]);
 
@@ -602,6 +624,36 @@ export function NewAccountSetup({
               setLinkedCountries(acc.linked_countries);
             }
 
+            if (Array.isArray(acc.warehouses) && acc.warehouses.length > 0) {
+              setLinkedWarehouses(acc.warehouses.map((w: any) => ({
+                id: w.id,
+                name: w.name || "Warehouse",
+                code: w.code,
+                address: w.address,
+                isPrimary: Boolean(w.is_primary)
+              })));
+              setWarehouseRequired(true);
+              const primaryWh = acc.warehouses.find((w: any) => w.is_primary) || acc.warehouses[0];
+              if (primaryWh) {
+                setLinkedWarehouseId(primaryWh.id);
+              }
+            } else if (acc.warehouse_id) {
+              setLinkedWarehouseId(acc.warehouse_id);
+              setWarehouseRequired(true);
+              setLinkedWarehouses([{
+                id: acc.warehouse_id,
+                name: "Primary Warehouse",
+                isPrimary: true
+              }]);
+            }
+
+            if (acc.company_id) {
+              setCompanyRequired(true);
+            }
+            if (acc.bank_id) {
+              setBankRequired(true);
+            }
+
             if (typeof window !== "undefined") {
               const storedWhKey = localStorage.getItem(`account_warehouse_${acc.id}`) || localStorage.getItem(`account_warehouse_${acc.account_number || acc.code}`);
               if (storedWhKey) {
@@ -610,6 +662,10 @@ export function NewAccountSetup({
                   if (parsedWh?.id) {
                     setLinkedWarehouseId(parsedWh.id);
                     if (parsedWh.detail) setWarehouseDetail(parsedWh.detail);
+                  }
+                  if (Array.isArray(parsedWh?.warehouses) && parsedWh.warehouses.length > 0) {
+                    setLinkedWarehouses(parsedWh.warehouses);
+                    setWarehouseRequired(true);
                   }
                 } catch (e) {}
               }
@@ -630,7 +686,7 @@ export function NewAccountSetup({
     };
   }, [initialAccountId, lang]);
 
-  // Master record links â€” IDs come from Master Form pickers
+  // Master record links — IDs come from Master Form pickers
   const [linkedCustomerId, setLinkedCustomerId] = useState<string | null>(null);
   const [linkedCustomerName, setLinkedCustomerName] = useState("");
   const [linkedCompanyId, setLinkedCompanyId] = useState<string | null>(null);
@@ -638,6 +694,15 @@ export function NewAccountSetup({
   const [linkedBankId, setLinkedBankId] = useState<string | null>(null);
   const [linkedBankName, setLinkedBankName] = useState("");
   const [linkedWarehouseId, setLinkedWarehouseId] = useState<string | null>(null);
+  const [linkedWarehouses, setLinkedWarehouses] = useState<Array<{
+    id: string;
+    name: string;
+    code?: string;
+    address?: string;
+    isPrimary?: boolean;
+  }>>([]);
+  const [pickerWarehouseId, setPickerWarehouseId] = useState("");
+  const [pickerWarehouseRecord, setPickerWarehouseRecord] = useState<any>(null);
   const [linkedShippingLineId, setLinkedShippingLineId] = useState<string | null>(null);
   const [linkedShippingLineName, setLinkedShippingLineName] = useState("");
   const [shippingLinesList, setShippingLinesList] = useState<Array<{ id: string; name: string; shipping_line_code?: string; linked_countries?: string[] }>>([]);
@@ -1107,6 +1172,7 @@ export function NewAccountSetup({
     try {
       if (initialAccountId) {
         // Edit mode!
+        const effectiveWhId = linkedWarehouses.find((w) => w.isPrimary)?.id || linkedWarehouses[0]?.id || linkedWarehouseId || null;
         await apiPatch<any>(`/api/erp/accounting/accounts/${initialAccountId}`, {
           scope,
           operationalDomain,
@@ -1117,6 +1183,13 @@ export function NewAccountSetup({
           customerId: linkedCustomerId,
           companyId: linkedCompanyId,
           bankId: linkedBankId,
+          warehouseId: effectiveWhId,
+          warehouseIds: linkedWarehouses.map((w) => w.id),
+          requirements: {
+            companyRequired,
+            bankRequired,
+            warehouseRequired
+          },
           shippingLineId: linkedShippingLineId || null,
           linkedCountries:
             primaryType === "others_country" ||
@@ -1136,9 +1209,9 @@ export function NewAccountSetup({
           categoryId: selectedCategoryId || null,
           contacts
         });
-        if (typeof window !== "undefined" && linkedWarehouseId) {
+        if (typeof window !== "undefined" && (effectiveWhId || linkedWarehouses.length > 0)) {
           try {
-            const whData = JSON.stringify({ id: linkedWarehouseId, detail: warehouseDetail });
+            const whData = JSON.stringify({ id: effectiveWhId, warehouses: linkedWarehouses, detail: warehouseDetail });
             if (initialAccountId) localStorage.setItem(`account_warehouse_${initialAccountId}`, whData);
             if (accountCode) localStorage.setItem(`account_warehouse_${accountCode}`, whData);
           } catch (e) {}
@@ -1150,6 +1223,7 @@ export function NewAccountSetup({
         }, 1500);
       } else {
         // Create mode!
+        const effectiveWhId = linkedWarehouses.find((w) => w.isPrimary)?.id || linkedWarehouses[0]?.id || linkedWarehouseId || null;
         const response = await apiPost<AccountCreateResponse>("/api/erp/accounting/accounts", {
           scope,
           operationalDomain,
@@ -1160,6 +1234,13 @@ export function NewAccountSetup({
           customerId: linkedCustomerId,
           companyId: linkedCompanyId,
           bankId: linkedBankId,
+          warehouseId: effectiveWhId,
+          warehouseIds: linkedWarehouses.map((w) => w.id),
+          requirements: {
+            companyRequired,
+            bankRequired,
+            warehouseRequired
+          },
           shippingLineId: linkedShippingLineId || null,
           linkedCountries:
             primaryType === "others_country" ||
@@ -1202,9 +1283,9 @@ export function NewAccountSetup({
           ...current
         ]);
         setAccountCode(response.accountNumber);
-        if (typeof window !== "undefined" && linkedWarehouseId) {
+        if (typeof window !== "undefined" && (effectiveWhId || linkedWarehouses.length > 0)) {
           try {
-            const whData = JSON.stringify({ id: linkedWarehouseId, detail: warehouseDetail });
+            const whData = JSON.stringify({ id: effectiveWhId, warehouses: linkedWarehouses, detail: warehouseDetail });
             localStorage.setItem(`account_warehouse_${response.accountId}`, whData);
             localStorage.setItem(`account_warehouse_${response.accountNumber}`, whData);
           } catch (e) {}
@@ -1355,24 +1436,26 @@ export function NewAccountSetup({
         </div>
       </div>
 
-      {/* ── 5-Step Stepper Wizard (Matching Image 1) ────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-        {[
-          { id: 1, title: getLabel("step1Label", lang), subtitle: lang === "ur" ? "بنیادی اکاؤنٹ سیٹ اپ" : "Basic account setup" },
-          { id: 2, title: getLabel("step2Label", lang), subtitle: lang === "ur" ? "کسٹمر کی معلومات" : "Customer information" },
-          { id: 3, title: getLabel("step3Label", lang), subtitle: lang === "ur" ? "کاروباری ادارے کی تفصیلات" : "Business entity details" },
-          { id: 4, title: getLabel("step4Label", lang), subtitle: lang === "ur" ? "بینکنگ کی معلومات" : "Banking information" },
-          { id: 5, title: getLabel("step6Label", lang), subtitle: lang === "ur" ? "تصدیق اور تکمیل" : "Verify and complete" }
-        ].map((s) => {
+      {/* ── Dynamic Adaptive Stepper Wizard ────────────────── */}
+      <div className={cn(
+        "grid gap-2.5",
+        activeStepDefs.length === 6 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" :
+        activeStepDefs.length === 5 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" :
+        activeStepDefs.length === 4 ? "grid-cols-2 sm:grid-cols-4" :
+        activeStepDefs.length === 3 ? "grid-cols-1 sm:grid-cols-3" :
+        "grid-cols-1 sm:grid-cols-2"
+      )}>
+        {activeStepDefs.map((s, stepIndex) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
+          const displayStepNumber = stepIndex + 1;
           return (
             <button
               key={s.id}
               type="button"
               onClick={() => {
                 if (s.id === 1 || (s.id > 1 && country && branchType && branch)) {
-                  setCurrentStep(s.id as any);
+                  setCurrentStep(s.id);
                 }
               }}
               className={cn(
@@ -1394,7 +1477,7 @@ export function NewAccountSetup({
                     : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                 )}
               >
-                {completed ? "✓" : s.id}
+                {completed ? "✓" : displayStepNumber}
               </span>
               <div className="flex flex-col min-w-0">
                 <span className={cn("text-xs font-bold truncate", active ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white")}>
@@ -1548,6 +1631,118 @@ export function NewAccountSetup({
                   </div>
                 </div>
               )}
+
+              {/* ── Setup Requirements & Linked Masters Toggles ─────────────────── */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        {getLabel("accountRequirementsTitle", lang)}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {getLabel("accountRequirementsDesc", lang)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                    {activeStepDefs.length} {lang === "ur" ? "مراحل فعال" : "Steps Active"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Company Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setCompanyRequired((v) => !v)}
+                    className={cn(
+                      "flex flex-col justify-between p-3 rounded-xl border text-left transition-all",
+                      companyRequired
+                        ? "bg-blue-50/80 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 shadow-xs"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80 hover:border-slate-300"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <Building2 className={cn("h-4 w-4", companyRequired ? "text-blue-600" : "text-slate-400")} />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {getLabel("companyRequiredLabel", lang)}
+                        </span>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                        companyRequired ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                      )}>
+                        {companyRequired ? getLabel("includedInFlow", lang) : getLabel("skippedInFlow", lang)}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                      {getLabel("companyRequiredDesc", lang)}
+                    </p>
+                  </button>
+
+                  {/* Bank Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setBankRequired((v) => !v)}
+                    className={cn(
+                      "flex flex-col justify-between p-3 rounded-xl border text-left transition-all",
+                      bankRequired
+                        ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 shadow-xs"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80 hover:border-slate-300"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <Landmark className={cn("h-4 w-4", bankRequired ? "text-emerald-600" : "text-slate-400")} />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {getLabel("bankRequiredLabel", lang)}
+                        </span>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                        bankRequired ? "bg-emerald-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                      )}>
+                        {bankRequired ? getLabel("includedInFlow", lang) : getLabel("skippedInFlow", lang)}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                      {getLabel("bankRequiredDesc", lang)}
+                    </p>
+                  </button>
+
+                  {/* Warehouse Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setWarehouseRequired((v) => !v)}
+                    className={cn(
+                      "flex flex-col justify-between p-3 rounded-xl border text-left transition-all",
+                      warehouseRequired
+                        ? "bg-purple-50/80 dark:bg-purple-950/40 border-purple-300 dark:border-purple-700 shadow-xs"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80 hover:border-slate-300"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <Warehouse className={cn("h-4 w-4", warehouseRequired ? "text-purple-600" : "text-slate-400")} />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {getLabel("warehouseRequiredLabel", lang)}
+                        </span>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                        warehouseRequired ? "bg-purple-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                      )}>
+                        {warehouseRequired ? getLabel("includedInFlow", lang) : getLabel("skippedInFlow", lang)}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                      {getLabel("warehouseRequiredDesc", lang)}
+                    </p>
+                  </button>
+                </div>
+              </div>
 
               {/* ── Country & Branch Pickers ───────────────────────────────── */}
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
@@ -2416,38 +2611,217 @@ export function NewAccountSetup({
             </div>
           )}
 
-          {/* Step 5: Review & Save (Includes Warehouse Details & Verification) */}
+          {/* Step 5: Warehouse Allocation (Canonical Multi-Warehouse) */}
           {currentStep === 5 && (
             <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
               <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs">5</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-xs font-black text-white shadow-xs">5</span>
                 <div>
                   <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    {getLabel("step", lang)} 5: {getLabel("step6Label", lang)}
+                    {getLabel("step", lang)} 5: {getLabel("step5Label", lang)}
                   </h2>
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    {lang === "ur" ? "گودام کی تخصیص، اکاؤنٹ تفصیلات کا حتمی جائزہ اور توثیق" : "Warehouse allocation, final account review, and ledger verification"}
+                    {lang === "ur"
+                      ? "گودام کی تخصیص اور کثیر گودام ربط (بغیر ڈپلیکیٹ کسٹمر)"
+                      : "Canonical multi-warehouse allocation without duplicate customer accounts"}
                   </p>
                 </div>
               </div>
 
-              {/* Warehouse Assignment Subsection */}
+              {/* Warehouse Picker & Add to Account Action */}
               <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                  <Warehouse className="h-4 w-4 text-blue-600" />
-                  <span>{getLabel("warehouse", lang)} / {getLabel("warehouseDetails", lang)}</span>
+                  <Warehouse className="h-4 w-4 text-purple-600" />
+                  <span>{getLabel("warehouseMaster", lang)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {getLabel("warehousePickerHelp", lang)}
                 </p>
-                <div className="max-w-md">
-                  <WarehousePicker
-                    label={getLabel("warehouseMaster", lang)}
-                    value={linkedWarehouseId ?? ""}
-                    onValueChange={(val) => setLinkedWarehouseId(val || null)}
-                    onSelectRecord={(rec) => setWarehouseDetail(rec)}
-                    placeholder={getLabel("searchExistingWarehouses", lang)}
-                  />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                  <div className="flex-1">
+                    <WarehousePicker
+                      label={getLabel("warehouse", lang)}
+                      value={pickerWarehouseId}
+                      onValueChange={(val) => setPickerWarehouseId(val || "")}
+                      onSelectRecord={(rec) => setPickerWarehouseRecord(rec)}
+                      placeholder={getLabel("searchExistingWarehouses", lang)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!pickerWarehouseId) return;
+                      if (linkedWarehouses.some((w) => w.id === pickerWarehouseId)) {
+                        setMessage(lang === "ur" ? "یہ گودام پہلے ہی شامل ہے!" : "Warehouse already linked!");
+                        return;
+                      }
+                      const name = pickerWarehouseRecord?.name || "Warehouse";
+                      const isFirst = linkedWarehouses.length === 0;
+                      const nextItem = {
+                        id: pickerWarehouseId,
+                        name,
+                        code: pickerWarehouseRecord?.code,
+                        address: pickerWarehouseRecord?.address,
+                        isPrimary: isFirst,
+                      };
+                      setLinkedWarehouses((prev) => [...prev, nextItem]);
+                      if (isFirst) {
+                        setLinkedWarehouseId(pickerWarehouseId);
+                        setWarehouseDetail(pickerWarehouseRecord);
+                      }
+                      setPickerWarehouseId("");
+                      setPickerWarehouseRecord(null);
+                      setMessage("");
+                    }}
+                    disabled={!pickerWarehouseId}
+                    className="h-10 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    {getLabel("addWarehouseToAccount", lang)}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Linked Warehouses Table / Card List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-purple-600" />
+                    {getLabel("linkedWarehousesTitle", lang)} ({linkedWarehouses.length})
+                  </h3>
+                  {linkedWarehouses.length > 0 && (
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ✓ {lang === "ur" ? "مربوط" : "Connected"}
+                    </span>
+                  )}
+                </div>
+
+                {linkedWarehouses.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-xs text-slate-400">
+                    <Warehouse className="h-8 w-8 mx-auto mb-2 opacity-40 text-purple-600" />
+                    <p>{getLabel("noWarehousesLinked", lang)}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="p-3">{getLabel("warehouse", lang)}</th>
+                          <th className="p-3">{getLabel("branchCode", lang)}</th>
+                          <th className="p-3">{getLabel("status", lang)}</th>
+                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {linkedWarehouses.map((wh) => (
+                          <tr key={wh.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-semibold text-slate-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <Warehouse className="h-4 w-4 text-purple-600 shrink-0" />
+                                <div>
+                                  <span>{wh.name}</span>
+                                  {wh.address && <p className="text-[10px] text-slate-400 font-normal truncate max-w-xs">{wh.address}</p>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 font-mono text-[11px] text-slate-500">{wh.code || "-"}</td>
+                            <td className="p-3">
+                              {wh.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[10px]">
+                                  ★ {getLabel("primaryWarehouse", lang)}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLinkedWarehouses((prev) =>
+                                      prev.map((item) => ({ ...item, isPrimary: item.id === wh.id }))
+                                    );
+                                    setLinkedWarehouseId(wh.id);
+                                  }}
+                                  className="text-[10px] font-bold text-slate-500 hover:text-purple-600 hover:underline"
+                                >
+                                  {getLabel("setAsPrimary", lang)}
+                                </button>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setLinkedWarehouses((prev) => {
+                                    const next = prev.filter((item) => item.id !== wh.id);
+                                    if (wh.isPrimary && next.length > 0) {
+                                      next[0].isPrimary = true;
+                                      setLinkedWarehouseId(next[0].id);
+                                    } else if (next.length === 0) {
+                                      setLinkedWarehouseId(null);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="h-7 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs px-2 rounded-lg cursor-pointer"
+                              >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                {getLabel("disconnect", lang)}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Canonical Multi-Warehouse Guarantee Notice */}
+              <div className="rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/60 p-3 flex items-start gap-2.5 text-xs text-purple-900 dark:text-purple-200">
+                <ShieldCheck className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  {getLabel("multiWarehouseCanonicalNote", lang)}
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-purple-700/20 cursor-pointer"
+                >
+                  <span>{linkedWarehouses.length > 0 ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Review & Save (Includes Full Verification & Save) */}
+          {currentStep === 6 && (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs">
+                  {activeStepDefs.length}
+                </span>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {getLabel("step", lang)} {activeStepDefs.length}: {getLabel("step6Label", lang)}
+                  </h2>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {lang === "ur" ? "اکاؤنٹ تفصیلات کا حتمی جائزہ اور توثیق" : "Final account review, master verification and ledger activation"}
+                  </p>
                 </div>
               </div>
 
@@ -2513,6 +2887,34 @@ export function NewAccountSetup({
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Linked Warehouses Summary (Canonical Multi-Warehouse) */}
+              {(linkedWarehouses.length > 0 || linkedWarehouseId) && (
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 text-xs space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <Warehouse className="h-3.5 w-3.5 text-purple-600" />
+                    {getLabel("linkedWarehousesTitle", lang)} ({linkedWarehouses.length || 1})
+                  </h3>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {linkedWarehouses.length > 0 ? (
+                      linkedWarehouses.map((wh) => (
+                        <span
+                          key={wh.id}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200 text-xs font-medium"
+                        >
+                          {wh.isPrimary && <span className="text-purple-600 font-bold">★</span>}
+                          <span>{wh.name}</span>
+                          {wh.code && <span className="font-mono text-[10px] text-purple-500">({wh.code})</span>}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200 text-xs font-medium">
+                        ★ {warehouseDetail?.name || "Warehouse"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -2621,7 +3023,7 @@ export function NewAccountSetup({
               setCurrentStep(step as any);
             }}
           />
-          {currentStep === 5 && (
+          {currentStep === activeSteps[activeSteps.length - 1] && (
             <div className="bg-white rounded-xl border border-slate-200 shadow p-5 mt-4 flex items-center justify-between sticky bottom-4 z-10 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex flex-col gap-1 text-[11px] font-semibold text-slate-500">
                 <span>{getLabel("country", lang)}: <b className="text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</b></span>

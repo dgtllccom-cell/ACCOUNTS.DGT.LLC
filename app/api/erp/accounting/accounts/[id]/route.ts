@@ -34,6 +34,8 @@ const updateSchema = scopeSchema.extend({
   companyId: optionalUuidSchema,
   bankId: optionalUuidSchema,
   shippingLineId: optionalUuidSchema,
+  warehouseId: optionalUuidSchema,
+  warehouseIds: z.array(z.string()).optional(),
   linkedCountries: z.array(z.string()).optional(),
   contacts: z.array(z.object({ type: z.string(), value: z.string() })).optional()
 });
@@ -65,7 +67,29 @@ async function loadAccount(id: string) {
     if (res.data) data = res.data;
   }
 
-  return data as
+  let warehouses: any[] = [];
+  if (data?.id) {
+    try {
+      const { data: whRows } = await admin
+        .from("enterprise_account_warehouses")
+        .select("warehouse_id, is_primary, company_id, customer_id, warehouses(id, warehouse_name, warehouse_code, country_id, full_address, status)")
+        .eq("account_id", data.id);
+      if (whRows) {
+        warehouses = whRows.map((r: any) => ({
+          warehouseId: r.warehouse_id,
+          isPrimary: r.is_primary,
+          warehouseName: r.warehouses?.warehouse_name,
+          warehouseCode: r.warehouses?.warehouse_code,
+          fullAddress: r.warehouses?.full_address,
+          status: r.warehouses?.status
+        }));
+      }
+    } catch {}
+  }
+
+  if (!data) return null;
+
+  return { ...data, warehouses } as
     | {
         id: string;
         scope: "super_admin" | "country" | "main_branch" | "city_branch";
@@ -95,6 +119,7 @@ async function loadAccount(id: string) {
         current_balance: string | number;
         status: "active" | "archived";
         is_control_account: boolean;
+        warehouses?: any[];
         created_at: string;
         updated_at: string;
         deleted_at: string | null;
@@ -298,6 +323,35 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           })
           .catch((err: any) => console.error("Failed to register updated account name translations:", err));
       });
+    }
+
+    if (body.warehouseIds !== undefined || body.warehouseId !== undefined) {
+      const warehousesToUpdate = Array.from(
+        new Set([
+          ...(body.warehouseIds || []),
+          ...(body.warehouseId ? [body.warehouseId] : [])
+        ].filter(Boolean))
+      );
+
+      try {
+        await admin.from("enterprise_account_warehouses").delete().eq("account_id", targetId);
+        for (let i = 0; i < warehousesToUpdate.length; i++) {
+          const whId = warehousesToUpdate[i];
+          await admin.from("enterprise_account_warehouses").insert({
+            account_id: targetId,
+            warehouse_id: whId,
+            company_id: (updatedAccount as any)?.company_id || current.company_id || null,
+            customer_id: (updatedAccount as any)?.customer_id || current.customer_id || null,
+            is_primary: i === 0
+          });
+          await admin.from("warehouses").update({
+            account_id: targetId,
+            company_id: (updatedAccount as any)?.company_id || current.company_id || null
+          }).eq("id", whId);
+        }
+      } catch (whErr) {
+        console.error("Failed to update enterprise_account_warehouses on PATCH:", whErr);
+      }
     }
 
     if (actorId) {

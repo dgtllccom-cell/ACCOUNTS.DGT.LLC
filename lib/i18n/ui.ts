@@ -6470,6 +6470,47 @@ export type UiKey =
   | "erp.person_dup_email"
   | "erp.person_dup_use_existing"
   | "erp.person_dup_create_new"
+  | "erp.company_dup_title"
+  | "erp.company_dup_desc"
+  | "erp.company_dup_desc2"
+  | "erp.company_dup_legal_name"
+  | "erp.company_dup_owner"
+  | "erp.company_dup_use_existing"
+  | "erp.company_dup_create_new"
+  | "pcc.title"
+  | "pcc.subtitle"
+  | "pcc.pick_scope"
+  | "pcc.effective_count"
+  | "pcc.module"
+  | "pcc.action_view"
+  | "pcc.action_create"
+  | "pcc.action_edit"
+  | "pcc.action_delete"
+  | "pcc.action_approve"
+  | "pcc.action_export"
+  | "pcc.status_denied"
+  | "pcc.status_custom"
+  | "pcc.status_inherited"
+  | "pcc.status_none"
+  | "pcc.grant_custom"
+  | "pcc.deny"
+  | "pcc.only_super_admin_can_save"
+  | "pcc.saving"
+  | "pcc.save_rules"
+  | "pcc.save_success"
+  | "pcc.save_error"
+  | "pcc.user_rules_title"
+  | "pcc.search_user"
+  | "pcc.no_users_found"
+  | "pcc.clear"
+  | "pcc.role_default"
+  | "pcc.permissions_count"
+  | "pcc.custom_override"
+  | "pcc.none_set"
+  | "pcc.effective"
+  | "pcc.effective_note_custom"
+  | "pcc.effective_note_role"
+  | "pcc.super_admin_only"
   | "orgchart.title"
   | "orgchart.subtitle"
   | "orgchart.stat_countries"
@@ -6674,6 +6715,47 @@ export type UiKey =
   | "erp.person_dup_email"
   | "erp.person_dup_use_existing"
   | "erp.person_dup_create_new"
+  | "erp.company_dup_title"
+  | "erp.company_dup_desc"
+  | "erp.company_dup_desc2"
+  | "erp.company_dup_legal_name"
+  | "erp.company_dup_owner"
+  | "erp.company_dup_use_existing"
+  | "erp.company_dup_create_new"
+  | "pcc.title"
+  | "pcc.subtitle"
+  | "pcc.pick_scope"
+  | "pcc.effective_count"
+  | "pcc.module"
+  | "pcc.action_view"
+  | "pcc.action_create"
+  | "pcc.action_edit"
+  | "pcc.action_delete"
+  | "pcc.action_approve"
+  | "pcc.action_export"
+  | "pcc.status_denied"
+  | "pcc.status_custom"
+  | "pcc.status_inherited"
+  | "pcc.status_none"
+  | "pcc.grant_custom"
+  | "pcc.deny"
+  | "pcc.only_super_admin_can_save"
+  | "pcc.saving"
+  | "pcc.save_rules"
+  | "pcc.save_success"
+  | "pcc.save_error"
+  | "pcc.user_rules_title"
+  | "pcc.search_user"
+  | "pcc.no_users_found"
+  | "pcc.clear"
+  | "pcc.role_default"
+  | "pcc.permissions_count"
+  | "pcc.custom_override"
+  | "pcc.none_set"
+  | "pcc.effective"
+  | "pcc.effective_note_custom"
+  | "pcc.effective_note_role"
+  | "pcc.super_admin_only"
   | "orgchart.title"
   | "orgchart.subtitle"
   | "orgchart.stat_countries"
@@ -9374,6 +9456,47 @@ const en: Dict = {
   "erp.person_dup_email": "Email",
   "erp.person_dup_use_existing": "Use This Person",
   "erp.person_dup_create_new": "Create New Anyway",
+  "erp.company_dup_title": "Possible Duplicate Company",
+  "erp.company_dup_desc": "We found existing company record(s) that may match",
+  "erp.company_dup_desc2": "Use the existing Company ID instead of creating a duplicate, or continue if this is genuinely a different company.",
+  "erp.company_dup_legal_name": "Legal Name",
+  "erp.company_dup_owner": "Owner",
+  "erp.company_dup_use_existing": "Use This Company",
+  "erp.company_dup_create_new": "Create New Anyway",
+  "pcc.title": "Permission Control Center",
+  "pcc.subtitle": "Super Admin → Country → Main Branch → City Branch → User → Effective Permissions",
+  "pcc.pick_scope": "Pick a Country, Main Branch or City Branch above to view and edit its rules.",
+  "pcc.effective_count": "Effective permissions",
+  "pcc.module": "Module",
+  "pcc.action_view": "View",
+  "pcc.action_create": "Create",
+  "pcc.action_edit": "Edit",
+  "pcc.action_delete": "Delete",
+  "pcc.action_approve": "Approve",
+  "pcc.action_export": "Export",
+  "pcc.status_denied": "Denied",
+  "pcc.status_custom": "Custom",
+  "pcc.status_inherited": "Inherited",
+  "pcc.status_none": "None",
+  "pcc.grant_custom": "Grant (custom)",
+  "pcc.deny": "Deny",
+  "pcc.only_super_admin_can_save": "Only Super Admin can save scope rules. Writes are rejected server-side for any other role.",
+  "pcc.saving": "Saving...",
+  "pcc.save_rules": "Save Rules",
+  "pcc.save_success": "Rules saved successfully.",
+  "pcc.save_error": "Failed to save rules.",
+  "pcc.user_rules_title": "User Rules & Effective Permissions",
+  "pcc.search_user": "Search user by name or role...",
+  "pcc.no_users_found": "No users found.",
+  "pcc.clear": "Clear",
+  "pcc.role_default": "Role Default",
+  "pcc.permissions_count": "permissions",
+  "pcc.custom_override": "Custom Override",
+  "pcc.none_set": "None set",
+  "pcc.effective": "Effective",
+  "pcc.effective_note_custom": "This user has a custom permission set — it fully replaces the role default (never widened back to role defaults).",
+  "pcc.effective_note_role": "This user has no custom override — effective permissions are the role default.",
+  "pcc.super_admin_only": "This screen is restricted to Super Admin.",
   "purchase.step4_verify_subtitle": "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.",
   "purchase.opt_advance_payment": "Advance Payment",
   "purchase.opt_invoice": "Invoice",
@@ -28823,6 +28946,47 @@ const ur: Dict = {
   "erp.person_dup_email": "ای میل",
   "erp.person_dup_use_existing": "یہ شخص استعمال کریں",
   "erp.person_dup_create_new": "پھر بھی نیا بنائیں",
+  "erp.company_dup_title": "ممکنہ ڈپلیکیٹ کمپنی",
+  "erp.company_dup_desc": "ہمیں موجودہ کمپنی کا ریکارڈ ملا جو مماثل ہو سکتا ہے",
+  "erp.company_dup_desc2": "نیا ڈپلیکیٹ بنانے کے بجائے موجودہ کمپنی آئی ڈی استعمال کریں، یا اگر یہ واقعی ایک مختلف کمپنی ہے تو جاری رکھیں۔",
+  "erp.company_dup_legal_name": "قانونی نام",
+  "erp.company_dup_owner": "مالک",
+  "erp.company_dup_use_existing": "یہ کمپنی استعمال کریں",
+  "erp.company_dup_create_new": "پھر بھی نیا بنائیں",
+  "pcc.title": "پرمیشن کنٹرول سینٹر",
+  "pcc.subtitle": "سپر ایڈمن → ملک → مین برانچ → سٹی برانچ → صارف → مؤثر اجازتیں",
+  "pcc.pick_scope": "قواعد دیکھنے اور ترمیم کرنے کے لیے اوپر ملک، مین برانچ یا سٹی برانچ منتخب کریں۔",
+  "pcc.effective_count": "مؤثر اجازتیں",
+  "pcc.module": "ماڈیول",
+  "pcc.action_view": "دیکھیں",
+  "pcc.action_create": "بنائیں",
+  "pcc.action_edit": "ترمیم",
+  "pcc.action_delete": "حذف کریں",
+  "pcc.action_approve": "منظوری",
+  "pcc.action_export": "ایکسپورٹ",
+  "pcc.status_denied": "مسترد",
+  "pcc.status_custom": "کسٹم",
+  "pcc.status_inherited": "وراثتی",
+  "pcc.status_none": "کوئی نہیں",
+  "pcc.grant_custom": "دیں (کسٹم)",
+  "pcc.deny": "مسترد کریں",
+  "pcc.only_super_admin_can_save": "صرف سپر ایڈمن اسکوپ قواعد محفوظ کر سکتا ہے۔ کسی اور کردار کے لیے سرور کی جانب سے تحریر مسترد کر دی جاتی ہے۔",
+  "pcc.saving": "محفوظ ہو رہا ہے...",
+  "pcc.save_rules": "قواعد محفوظ کریں",
+  "pcc.save_success": "قواعد کامیابی سے محفوظ ہو گئے۔",
+  "pcc.save_error": "قواعد محفوظ کرنے میں ناکامی۔",
+  "pcc.user_rules_title": "صارف کے قواعد اور مؤثر اجازتیں",
+  "pcc.search_user": "نام یا کردار کے ذریعے صارف تلاش کریں...",
+  "pcc.no_users_found": "کوئی صارف نہیں ملا۔",
+  "pcc.clear": "صاف کریں",
+  "pcc.role_default": "کردار کی طے شدہ",
+  "pcc.permissions_count": "اجازتیں",
+  "pcc.custom_override": "کسٹم اوور رائیڈ",
+  "pcc.none_set": "کوئی سیٹ نہیں",
+  "pcc.effective": "مؤثر",
+  "pcc.effective_note_custom": "اس صارف کے پاس کسٹم اجازت سیٹ ہے — یہ کردار کی طے شدہ کو مکمل طور پر تبدیل کرتی ہے (کبھی بھی کردار کی طے شدہ پر واپس وسیع نہیں ہوتی)۔",
+  "pcc.effective_note_role": "اس صارف کے پاس کوئی کسٹم اوور رائیڈ نہیں ہے — مؤثر اجازتیں کردار کی طے شدہ ہیں۔",
+  "pcc.super_admin_only": "یہ اسکرین صرف سپر ایڈمن کے لیے محدود ہے۔",
   "purchase.step4_verify_subtitle": "حتمی تصدیق سے پہلے پرنٹ ایبل دستاویز کے حصے، اکاؤنٹ پوسٹنگز، مال کی فہرست، ادائیگی کی شرائط، اور لوڈنگ شیڈول کی تصدیق کریں۔",
   "purchase.opt_advance_payment": "ایڈوانس ادائیگی",
   "purchase.opt_invoice": "انوائس",
@@ -47133,6 +47297,47 @@ const ar: Dict = {
   "erp.person_dup_email": "البريد الإلكتروني",
   "erp.person_dup_use_existing": "استخدام هذا الشخص",
   "erp.person_dup_create_new": "إنشاء جديد على أي حال",
+  "erp.company_dup_title": "شركة مكررة محتملة",
+  "erp.company_dup_desc": "وجدنا سجل (سجلات) شركة موجودة قد تتطابق",
+  "erp.company_dup_desc2": "استخدم رقم الشركة الحالي بدلاً من إنشاء سجل مكرر، أو تابع إذا كانت هذه شركة مختلفة حقًا.",
+  "erp.company_dup_legal_name": "الاسم القانوني",
+  "erp.company_dup_owner": "المالك",
+  "erp.company_dup_use_existing": "استخدام هذه الشركة",
+  "erp.company_dup_create_new": "إنشاء جديد على أي حال",
+  "pcc.title": "مركز التحكم في الصلاحيات",
+  "pcc.subtitle": "المدير العام ← الدولة ← الفرع الرئيسي ← فرع المدينة ← المستخدم ← الصلاحيات الفعلية",
+  "pcc.pick_scope": "اختر دولة أو فرعًا رئيسيًا أو فرع مدينة أعلاه لعرض قواعده وتعديلها.",
+  "pcc.effective_count": "الصلاحيات الفعلية",
+  "pcc.module": "الوحدة",
+  "pcc.action_view": "عرض",
+  "pcc.action_create": "إنشاء",
+  "pcc.action_edit": "تعديل",
+  "pcc.action_delete": "حذف",
+  "pcc.action_approve": "اعتماد",
+  "pcc.action_export": "تصدير",
+  "pcc.status_denied": "مرفوض",
+  "pcc.status_custom": "مخصص",
+  "pcc.status_inherited": "موروث",
+  "pcc.status_none": "لا شيء",
+  "pcc.grant_custom": "منح (مخصص)",
+  "pcc.deny": "رفض",
+  "pcc.only_super_admin_can_save": "يمكن للمدير العام فقط حفظ قواعد النطاق. يتم رفض الكتابة من جانب الخادم لأي دور آخر.",
+  "pcc.saving": "جارٍ الحفظ...",
+  "pcc.save_rules": "حفظ القواعد",
+  "pcc.save_success": "تم حفظ القواعد بنجاح.",
+  "pcc.save_error": "فشل حفظ القواعد.",
+  "pcc.user_rules_title": "قواعد المستخدم والصلاحيات الفعلية",
+  "pcc.search_user": "ابحث عن مستخدم بالاسم أو الدور...",
+  "pcc.no_users_found": "لم يتم العثور على مستخدمين.",
+  "pcc.clear": "مسح",
+  "pcc.role_default": "افتراضي الدور",
+  "pcc.permissions_count": "صلاحيات",
+  "pcc.custom_override": "تجاوز مخصص",
+  "pcc.none_set": "لا يوجد",
+  "pcc.effective": "فعّال",
+  "pcc.effective_note_custom": "لدى هذا المستخدم مجموعة صلاحيات مخصصة — تحل محل افتراضي الدور بالكامل (لا يتم توسيعها أبدًا لتعود إلى افتراضي الدور).",
+  "pcc.effective_note_role": "لا يوجد لدى هذا المستخدم تجاوز مخصص — الصلاحيات الفعلية هي افتراضي الدور.",
+  "pcc.super_admin_only": "هذه الشاشة مقصورة على المدير العام.",
   "purchase.step4_verify_subtitle": "تحقق من أقسام المستند القابل للطباعة، ترحيلات الحسابات، بيان البضائع، شروط الدفع، وجداول التحميل قبل التحقق النهائي.",
   "purchase.opt_advance_payment": "دفعة مقدمة",
   "purchase.opt_invoice": "فاتورة",
@@ -65496,6 +65701,47 @@ const fa: Dict = {
   "erp.person_dup_email": "ایمیل",
   "erp.person_dup_use_existing": "استفاده از این شخص",
   "erp.person_dup_create_new": "در هر صورت جدید ایجاد شود",
+  "erp.company_dup_title": "احتمال شرکت تکراری",
+  "erp.company_dup_desc": "ما رکورد(های) شرکت موجودی را یافتیم که ممکن است مطابقت داشته باشد",
+  "erp.company_dup_desc2": "به‌جای ایجاد یک رکورد تکراری، از شناسه شرکت موجود استفاده کنید، یا اگر واقعاً شرکت دیگری است ادامه دهید.",
+  "erp.company_dup_legal_name": "نام قانونی",
+  "erp.company_dup_owner": "مالک",
+  "erp.company_dup_use_existing": "استفاده از این شرکت",
+  "erp.company_dup_create_new": "در هر صورت جدید ایجاد شود",
+  "pcc.title": "مرکز کنترل مجوزها",
+  "pcc.subtitle": "مدیر ارشد ← کشور ← شعبه اصلی ← شعبه شهری ← کاربر ← مجوزهای مؤثر",
+  "pcc.pick_scope": "برای مشاهده و ویرایش قوانین، یک کشور، شعبه اصلی یا شعبه شهری را در بالا انتخاب کنید.",
+  "pcc.effective_count": "مجوزهای مؤثر",
+  "pcc.module": "ماژول",
+  "pcc.action_view": "مشاهده",
+  "pcc.action_create": "ایجاد",
+  "pcc.action_edit": "ویرایش",
+  "pcc.action_delete": "حذف",
+  "pcc.action_approve": "تأیید",
+  "pcc.action_export": "خروجی",
+  "pcc.status_denied": "رد شده",
+  "pcc.status_custom": "سفارشی",
+  "pcc.status_inherited": "به ارث رسیده",
+  "pcc.status_none": "هیچ‌کدام",
+  "pcc.grant_custom": "اعطا (سفارشی)",
+  "pcc.deny": "رد کردن",
+  "pcc.only_super_admin_can_save": "فقط مدیر ارشد می‌تواند قوانین محدوده را ذخیره کند. نوشتن برای هر نقش دیگری در سمت سرور رد می‌شود.",
+  "pcc.saving": "در حال ذخیره...",
+  "pcc.save_rules": "ذخیره قوانین",
+  "pcc.save_success": "قوانین با موفقیت ذخیره شد.",
+  "pcc.save_error": "ذخیره قوانین ناموفق بود.",
+  "pcc.user_rules_title": "قوانین کاربر و مجوزهای مؤثر",
+  "pcc.search_user": "جستجوی کاربر بر اساس نام یا نقش...",
+  "pcc.no_users_found": "کاربری یافت نشد.",
+  "pcc.clear": "پاک کردن",
+  "pcc.role_default": "پیش‌فرض نقش",
+  "pcc.permissions_count": "مجوز",
+  "pcc.custom_override": "بازنویسی سفارشی",
+  "pcc.none_set": "تنظیم نشده",
+  "pcc.effective": "مؤثر",
+  "pcc.effective_note_custom": "این کاربر یک مجموعه مجوز سفارشی دارد — کاملاً جایگزین پیش‌فرض نقش می‌شود (هرگز به پیش‌فرض نقش گسترش نمی‌یابد).",
+  "pcc.effective_note_role": "این کاربر بازنویسی سفارشی ندارد — مجوزهای مؤثر همان پیش‌فرض نقش است.",
+  "pcc.super_admin_only": "این صفحه فقط برای مدیر ارشد محدود شده است.",
   "purchase.step4_verify_subtitle": "بخش‌های سند قابل چاپ، ثبت حساب‌ها، فهرست کالا، شرایط پرداخت و برنامه بارگیری را قبل از تایید نهایی بررسی کنید.",
   "purchase.opt_advance_payment": "پیش‌پرداخت",
   "purchase.opt_invoice": "فاکتور",
@@ -83856,6 +84102,47 @@ const ps: Dict = {
   "erp.person_dup_email": "بریښنالیک",
   "erp.person_dup_use_existing": "دا شخص وکاروئ",
   "erp.person_dup_create_new": "په هرصورت نوی جوړ کړئ",
+  "erp.company_dup_title": "احتمالي تکراري شرکت",
+  "erp.company_dup_desc": "موږ د شتون لرونکي شرکت ریکارډ(ونه) وموندل چې ممکن ورته وي",
+  "erp.company_dup_desc2": "د یو نوي تکراري ریکارډ جوړولو پرځای، شتون لرونکی د شرکت ID وکاروئ، یا که دا واقعا بله شرکت ده نو دوام ورکړئ.",
+  "erp.company_dup_legal_name": "قانوني نوم",
+  "erp.company_dup_owner": "مالک",
+  "erp.company_dup_use_existing": "دا شرکت وکاروئ",
+  "erp.company_dup_create_new": "په هرصورت نوی جوړ کړئ",
+  "pcc.title": "د اجازې کنټرول مرکز",
+  "pcc.subtitle": "سوپر ایډمین ← هیواد ← اصلي څانګه ← ښاري څانګه ← کاروونکی ← مؤثر اجازې",
+  "pcc.pick_scope": "د قواعدو لیدلو او سمولو لپاره پورته یو هیواد، اصلي څانګه یا ښاري څانګه غوره کړئ.",
+  "pcc.effective_count": "مؤثر اجازې",
+  "pcc.module": "ماډول",
+  "pcc.action_view": "کتنه",
+  "pcc.action_create": "جوړول",
+  "pcc.action_edit": "سمول",
+  "pcc.action_delete": "ړنګول",
+  "pcc.action_approve": "تصویب",
+  "pcc.action_export": "صادرول",
+  "pcc.status_denied": "رد شوی",
+  "pcc.status_custom": "دودیز",
+  "pcc.status_inherited": "میراثي",
+  "pcc.status_none": "هیڅ یو",
+  "pcc.grant_custom": "ورکړه (دودیز)",
+  "pcc.deny": "رد کول",
+  "pcc.only_super_admin_can_save": "یوازې سوپر ایډمین کولی شي د ساحې قواعد خوندي کړي. لیکل د هر بل رول لپاره د سرور له لوري رد کیږي.",
+  "pcc.saving": "خوندي کیږي...",
+  "pcc.save_rules": "قواعد خوندي کړئ",
+  "pcc.save_success": "قواعد په بریالیتوب سره خوندي شول.",
+  "pcc.save_error": "د قواعدو خوندي کول ناکام شول.",
+  "pcc.user_rules_title": "د کاروونکي قواعد او مؤثر اجازې",
+  "pcc.search_user": "د نوم یا رول له مخې کاروونکی ولټوئ...",
+  "pcc.no_users_found": "هیڅ کاروونکی ونه موندل شو.",
+  "pcc.clear": "پاکول",
+  "pcc.role_default": "د رول تلواله",
+  "pcc.permissions_count": "اجازې",
+  "pcc.custom_override": "دودیز بدلون",
+  "pcc.none_set": "هیڅ ټاکل شوی نه دی",
+  "pcc.effective": "مؤثر",
+  "pcc.effective_note_custom": "دا کاروونکی یو دودیز د اجازې سیټ لري — دا د رول تلواله بشپړ ډول بدلوي (هیڅکله بیرته د رول تلوالې ته نه پراخیږي).",
+  "pcc.effective_note_role": "دا کاروونکی هیڅ دودیز بدلون نلري — مؤثر اجازې د رول تلواله دي.",
+  "pcc.super_admin_only": "دا سکرین یوازې سوپر ایډمین ته محدود دی.",
   "purchase.step4_verify_subtitle": "د وروستي تصدیق دمخه د چاپ وړ سند برخې، د حساب ثبتونه، د مالونو لیست، د تادیې شرایط، او د بارولو مهالویش وګورئ.",
   "purchase.opt_advance_payment": "مخکینۍ تادیه",
   "purchase.opt_invoice": "انوائس",

@@ -740,6 +740,52 @@ export async function POST(request: NextRequest) {
           throw new Error("Account creation did not return a record ID.");
         }
 
+        // Persist multi-warehouse linkages into enterprise_account_warehouses (dedicated
+        // junction table for this canonical Account — NOT the legacy account_warehouses
+        // table, which references the separate chart-of-accounts-style `accounts` table)
+        const warehousesToLink = Array.from(
+          new Set([
+            ...(body.warehouseIds || []),
+            ...(body.warehouseId ? [body.warehouseId] : [])
+          ].filter(Boolean))
+        );
+
+        if (warehousesToLink.length > 0) {
+          for (let i = 0; i < warehousesToLink.length; i++) {
+            const whId = warehousesToLink[i];
+            try {
+              await tx`
+                insert into enterprise_account_warehouses (
+                  account_id,
+                  warehouse_id,
+                  company_id,
+                  customer_id,
+                  is_primary
+                ) values (
+                  ${accountId}::uuid,
+                  ${whId}::uuid,
+                  ${validCompanyId ? validCompanyId : null},
+                  ${validCustomerId ? validCustomerId : null},
+                  ${i === 0}
+                )
+                on conflict (account_id, warehouse_id) do update set
+                  company_id = excluded.company_id,
+                  customer_id = excluded.customer_id,
+                  is_primary = excluded.is_primary;
+              `;
+
+              await tx`
+                update warehouses
+                set account_id = ${accountId}::uuid,
+                    company_id = coalesce(${validCompanyId ? validCompanyId : null}, company_id)
+                where id = ${whId}::uuid;
+              `;
+            } catch (whErr) {
+              console.error("Error linking warehouse to account:", whErr);
+            }
+          }
+        }
+
         const creditNormal = body.kind === "liability" || body.kind === "equity" || body.kind === "income";
         let parentLedgerId: string | null = null;
 

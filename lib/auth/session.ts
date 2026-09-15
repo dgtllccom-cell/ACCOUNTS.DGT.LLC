@@ -394,6 +394,59 @@ async function resolveErpSessionFromDb(
 
   const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
 
+  // 3b. Apply Branch Rules & Scoped Permission Overrides / Denials
+  if (!isSuperAdmin) {
+    try {
+      const scopeIdsToCheck = [
+        ...resolvedScopes.cityBranchIds,
+        ...resolvedScopes.countryBranchIds,
+        ...resolvedScopes.countryIds
+      ].filter(Boolean);
+
+      if (scopeIdsToCheck.length > 0) {
+        const { data: branchRuleRows } = await db
+          .from("branch_rules")
+          .select("scope_type, scope_id, permissions, denied_permissions, allowed_domains")
+          .in("scope_id", scopeIdsToCheck);
+
+        if (branchRuleRows && branchRuleRows.length > 0) {
+          const deniedSet = new Set<string>();
+          const grantedSet = new Set<string>();
+          branchRuleRows.forEach((br: any) => {
+            if (Array.isArray(br.denied_permissions)) {
+              br.denied_permissions.forEach((dp: string) => deniedSet.add(dp));
+            }
+            if (Array.isArray(br.permissions)) {
+              br.permissions.forEach((gp: string) => grantedSet.add(gp));
+            }
+          });
+
+          // Custom grants from Country/Main Branch/City Branch rules widen the role
+          // default set (e.g. a Super Admin can grant a specific country's users an
+          // extra module without changing their role). Applied BEFORE the deny pass
+          // below so an explicit deny at any level in the chain always wins, even
+          // over a custom grant at another level — matching the Permission Control
+          // Center's own inherited→custom→denied precedence.
+          if (grantedSet.size > 0) {
+            permissions = [...new Set([...permissions, ...grantedSet])];
+          }
+
+          // Strip any denied permissions (including wildcard matches like "users:*")
+          if (deniedSet.size > 0) {
+            permissions = permissions.filter((p) => {
+              if (deniedSet.has(p)) return false;
+              const resource = p.split(":")[0];
+              if (deniedSet.has(`${resource}:*`)) return false;
+              return true;
+            });
+          }
+        }
+      }
+    } catch {
+      // Graceful fallback: maintain role default permissions if branch_rules lookup errors
+    }
+  }
+
   return {
     userId: identity.userId,
     email: identity.email,
@@ -478,7 +531,48 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
       const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
-      const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+      let perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+
+      // Same branch_rules custom-grant/deny application as resolveErpSessionFromDb,
+      // so a synthetic dev-session identity or DB-unreachable fallback session is
+      // still subject to Country/Main Branch/City Branch rules, not just role
+      // defaults — keeping this path's enforcement consistent with the primary one.
+      if (!isSuperAdmin && admin) {
+        try {
+          const scopeIdsToCheck = [
+            ...resolvedScopes.cityBranchIds,
+            ...resolvedScopes.countryBranchIds,
+            ...resolvedScopes.countryIds
+          ].filter(Boolean);
+
+          if (scopeIdsToCheck.length > 0) {
+            const { data: branchRuleRows } = await admin
+              .from("branch_rules")
+              .select("scope_type, scope_id, permissions, denied_permissions, allowed_domains")
+              .in("scope_id", scopeIdsToCheck);
+
+            if (branchRuleRows && branchRuleRows.length > 0) {
+              const deniedSet = new Set<string>();
+              const grantedSet = new Set<string>();
+              branchRuleRows.forEach((br: any) => {
+                if (Array.isArray(br.denied_permissions)) br.denied_permissions.forEach((dp: string) => deniedSet.add(dp));
+                if (Array.isArray(br.permissions)) br.permissions.forEach((gp: string) => grantedSet.add(gp));
+              });
+              if (grantedSet.size > 0) perms = [...new Set([...perms, ...grantedSet])];
+              if (deniedSet.size > 0) {
+                perms = perms.filter((p) => {
+                  if (deniedSet.has(p)) return false;
+                  const resource = p.split(":")[0];
+                  if (deniedSet.has(`${resource}:*`)) return false;
+                  return true;
+                });
+              }
+            }
+          }
+        } catch {
+          // Graceful fallback: maintain role default permissions if branch_rules lookup errors
+        }
+      }
       return {
         userId: temp.userId,
         email: temp.email,

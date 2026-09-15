@@ -58,6 +58,8 @@ import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { cn } from "@/lib/utils";
+import { CompanyDuplicateWarningModal, type CompanyDuplicateCandidate } from "@/components/erp/company-duplicate-warning-modal";
+import { nameMatches } from "@/lib/utils/person-duplicate-match";
 
 export type CompanyContactItem = {
   id: string;
@@ -257,6 +259,11 @@ export function CompanyIncorporationForm({
   const [saving, setSaving] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
+  // Duplicate-company warning before a fresh (non-edit) company registration
+  const [dupCandidates, setDupCandidates] = useState<CompanyDuplicateCandidate[]>([]);
+  const [dupSearchedName, setDupSearchedName] = useState("");
+  const [pendingSaveIsDraft, setPendingSaveIsDraft] = useState(false);
+
   // AI Document intake draft
   const intake = useIntakeDraft("companies");
 
@@ -420,6 +427,39 @@ export function CompanyIncorporationForm({
 
   // Save / Submit
   async function handleSaveCompany(isDraft = false) {
+    // Duplicate check before creating a BRAND NEW company master row — search existing
+    // companies by the typed name and warn if a close match already exists, instead of
+    // silently re-registering the same company under a second row. Editing an existing
+    // company (initialCompanyId set) never needs this check.
+    const trimmedName = companyNameEn.trim();
+    if (!initialCompanyId && trimmedName) {
+      setSaving(true);
+      try {
+        const res: any = await apiGet(`/api/erp/companies?q=${encodeURIComponent(trimmedName)}&limit=10`);
+        const matches = ((res?.companies ?? []) as any[]).filter((c) => nameMatches(c.name, trimmedName));
+        if (matches.length > 0) {
+          setDupCandidates(matches.map((c) => ({
+            id: c.id,
+            companyCode: c.company_code,
+            name: c.name,
+            legalName: c.legal_name,
+            ownerName: c.owner_name
+          })));
+          setDupSearchedName(trimmedName);
+          setPendingSaveIsDraft(isDraft);
+          setSaving(false);
+          return;
+        }
+      } catch {
+        // If the duplicate-check search itself fails, fall through to save — never block
+        // registration on a search-availability issue.
+      }
+      setSaving(false);
+    }
+    await saveCompanyNow(isDraft);
+  }
+
+  async function saveCompanyNow(isDraft = false) {
     setSaving(true);
     setSaveSuccessMessage(null);
     try {
@@ -1533,6 +1573,23 @@ export function CompanyIncorporationForm({
           </div>
         </SimpleModal>
       )}
+
+      {dupCandidates.length > 0 ? (
+        <CompanyDuplicateWarningModal
+          lang={lang}
+          searchedName={dupSearchedName}
+          candidates={dupCandidates}
+          onUseExisting={(companyId) => {
+            setDupCandidates([]);
+            if (onSave) onSave({ id: companyId } as any);
+          }}
+          onCreateAnyway={() => {
+            setDupCandidates([]);
+            void saveCompanyNow(pendingSaveIsDraft);
+          }}
+          onCancel={() => setDupCandidates([])}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1855,6 +1855,118 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "تحدث",
     fa: "صحبت کنید",
     ps: "خبرې وکړئ"
+  },
+  accountRequirementsTitle: {
+    en: "Account Setup Requirements & Linked Masters",
+    ur: "اکاؤنٹ سیٹ اپ کے تقاضے اور منسلک ماسٹرز",
+    ar: "متطلبات إعداد الحساب والبيانات الرئيسية المرتبطة",
+    fa: "الزامات راه‌اندازی حساب و داده‌های اصلی مرتبط",
+    ps: "د حساب تنظیم کولو اړتیاوې او تړل شوي ماسټرونه"
+  },
+  accountRequirementsDesc: {
+    en: "Configure mandatory linked entities and adaptive workflow steps for this account",
+    ur: "اس اکاؤنٹ کے لیے لازمی منسلک اداروں اور متحرک ورک فلو مراحل کو ترتیب دیں",
+    ar: "تكوين الكيانات المرتبطة الإلزامية وخطوات سير العمل التكيفية لهذا الحساب",
+    fa: "پیکربندی موجودیت‌های مرتبط اجباری و مراحل گردش کار تطبیقی برای این حساب",
+    ps: "د دې حساب لپاره لازمي تړل شوي ادارې او تطبیقي کاري بهیر مرحلې تنظیم کړئ"
+  },
+  companyRequiredLabel: {
+    en: "Company Required?",
+    ur: "کمپنی درکار ہے؟",
+    ar: "هل الشركة مطلوبة؟",
+    fa: "آیا شرکت الزامی است؟",
+    ps: "ایا شرکت ته اړتیا ده؟"
+  },
+  companyRequiredDesc: {
+    en: "Include corporate company entity linkage step",
+    ur: "کارپوریٹ کمپنی ادارہ منسلک کرنے کا مرحلہ شامل کریں",
+    ar: "تضمين خطوة ربط الكيان المؤسسي للشركة",
+    fa: "شامل کردن مرحله پیوند شرکت حقوقی",
+    ps: "د شرکت د تړل کیدو مرحله شامله کړئ"
+  },
+  bankRequiredLabel: {
+    en: "Bank Required?",
+    ur: "بینک درکار ہے؟",
+    ar: "هل البنك مطلوب؟",
+    fa: "آیا بانک الزامی است؟",
+    ps: "ایا بانک ته اړتیا ده؟"
+  },
+  bankRequiredDesc: {
+    en: "Include dedicated bank settlement linkage step",
+    ur: "بینک سیٹلمنٹ منسلک کرنے کا مرحلہ شامل کریں",
+    ar: "تضمين خطوة ربط التسوية المصرفية المخصصة",
+    fa: "شامل کردن مرحله پیوند تسویه بانکی اختصاصی",
+    ps: "د ځانګړي بانک د تصفیې د تړلو مرحله شامله کړئ"
+  },
+  warehouseRequiredLabel: {
+    en: "Warehouse Required?",
+    ur: "گودام درکار ہے؟",
+    ar: "هل المستودع مطلوب؟",
+    fa: "آیا انبار الزامی است؟",
+    ps: "ایا ګودام ته اړتیا ده؟"
+  },
+  warehouseRequiredDesc: {
+    en: "Allocate one or multiple warehouses without duplicate customers",
+    ur: "ڈپلیکیٹ کسٹمرز کے بغیر ایک یا کثیر گوداموں کو تفویض کریں",
+    ar: "تخصيص مستودع واحد أو مستودعات متعددة بدون تكرار العملاء",
+    fa: "تخصیص یک یا چند انبار بدون ایجاد مشتری تکراری",
+    ps: "د مکرر پیرودونکو پرته یو یا څو ګودامونه تخصیص کړئ"
+  },
+  includedInFlow: {
+    en: "Included in Steps",
+    ur: "مراحل میں شامل",
+    ar: "مدرج في الخطوات",
+    fa: "موجود در مراحل",
+    ps: "په مرحلو کې شامل"
+  },
+  skippedInFlow: {
+    en: "Skipped",
+    ur: "چھوڑا گیا",
+    ar: "تم التخطي",
+    fa: "نادیده‌گرفته شده",
+    ps: "پرېښودل شوی"
+  },
+  linkedWarehousesTitle: {
+    en: "Linked Warehouses (Canonical Multi-Warehouse)",
+    ur: "منسلک گودام (کثیر گودام تخصیص)",
+    ar: "المستودعات المرتبطة (مستودعات متعددة)",
+    fa: "انبارهای متصل (چند انباری قانونی)",
+    ps: "تړل شوي ګودامونه (څو ګودامونه)"
+  },
+  addWarehouseToAccount: {
+    en: "Add Warehouse to Account",
+    ur: "اکاؤنٹ میں گودام شامل کریں",
+    ar: "إضافة مستودع إلى الحساب",
+    fa: "افزودن انبار به حساب",
+    ps: "حساب ته ګودام اضافه کړئ"
+  },
+  setAsPrimary: {
+    en: "Set as Primary",
+    ur: "بنیادی بنائیں",
+    ar: "تعيين كأساسي",
+    fa: "تنظیم به عنوان اصلی",
+    ps: "د اصلي په توګه وټاکئ"
+  },
+  primaryWarehouse: {
+    en: "Primary Warehouse",
+    ur: "بنیادی گودام",
+    ar: "المستودع الرئيسي",
+    fa: "انبار اصلی",
+    ps: "اصلي ګودام"
+  },
+  noWarehousesLinked: {
+    en: "No warehouses linked yet. Use the picker above to link one or more warehouses.",
+    ur: "ابھی تک کوئی گودام منسلک نہیں ہوا۔ اوپر دیے گئے سلیکٹر سے ایک یا زیادہ گودام شامل کریں۔",
+    ar: "لم يتم ربط أي مستودع بعد. استخدم المحدد أعلاه لربط مستودع واحد أو أكثر.",
+    fa: "هنوز انباری متصل نشده است. از انتخابگر بالا برای اتصال یک یا چند انبار استفاده کنید.",
+    ps: "تر اوسه هیڅ ګودام نه دی تړل شوی. د پورتنۍ ټاکونکي څخه کار واخلئ ترڅو یو یا څو ګودامونه وټاکئ."
+  },
+  multiWarehouseCanonicalNote: {
+    en: "All linked warehouses map directly to this single canonical customer and account. Zero duplicate accounts created.",
+    ur: "تمام منسلک گودام براہ راست اسی واحد کسٹمر اور اکاؤنٹ سے مربوط ہوں گے۔ کوئی ڈپلیکیٹ اکاؤنٹ نہیں بنایا جائے گا۔",
+    ar: "ترتبط جميع المستودعات مباشرة بهذا العميل والحساب الواحد. لا يتم إنشاء أي حسابات مكررة.",
+    fa: "همه انبارهای مرتبط مستقیماً به این حساب و مشتری واحد متصل می‌شوند. هیچ حساب تکراری ایجاد نمی‌شود.",
+    ps: "ټول تړل شوي ګودامونه مستقیم له دې واحد حساب او پیرودونکي سره نښلي. هیڅ تکراري حساب نه رامینځته کیږي."
   }
 };
 

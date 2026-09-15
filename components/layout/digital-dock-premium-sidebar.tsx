@@ -148,6 +148,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "User Registration", href: "/dashboard/new-entry/users/registration", icon: Users },
           { label: "All Users Directory", href: "/dashboard/new-entry/users/all", icon: Users },
+          { label: "Permission Control Center", href: "/dashboard/permissions/control-center", icon: ShieldCheck, roles: ["super_admin"] },
         ],
       },
       {
