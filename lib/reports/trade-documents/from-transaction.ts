@@ -39,6 +39,8 @@ function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
     const rate = n(pick(g, "coursePrice", "unitPrice", "price", "priceRateC1", "purchase_rate", "rate"));
     const amount = n(pick(g, "finalAmount", "totalAmount", "amount", "final_cost", "lineTotal"));
     const unit = pick(g, "qtyName", "unit", "quantity_name", "uom");
+    const discount = n(pick(g, "discount", "discountAmount", "discount_amount"));
+    const taxAmount = n(pick(g, "taxAmount", "tax_amount", "vatAmount", "gstAmount"));
     return {
       description: pick(g, "goodsName", "description", "productName", "goods_name", "name"),
       hsCode: pick(g, "hsCode", "chsCode", "hs_code", "pctCode", "hsPctCode"),
@@ -52,6 +54,8 @@ function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
       netWeight: netW,
       grossWeight: grossW ?? (netW != null ? Math.round(netW * 1.03) : undefined),
       amount: amount ?? (qty != null && rate != null ? qty * rate : undefined),
+      discount,
+      taxAmount,
     };
   });
 }

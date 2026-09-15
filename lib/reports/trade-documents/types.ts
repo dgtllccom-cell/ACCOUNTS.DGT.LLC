@@ -27,6 +27,9 @@ export type TradeLineItem = {
   netWeight?: number | null;
   grossWeight?: number | null;
   amount?: number | null;
+  /** optional — only populated when present on the source line; never fabricated */
+  discount?: number | null;
+  taxAmount?: number | null;
 };
 
 export type BeneficiaryBank = {
