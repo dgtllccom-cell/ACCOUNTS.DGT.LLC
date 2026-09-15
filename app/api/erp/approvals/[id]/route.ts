@@ -33,7 +33,7 @@ async function applyEnterpriseAccountDecision(
 ) {
   const accountResult = await supabase
     .from("enterprise_accounts")
-    .select("id, status, approval_request_id")
+    .select("id, status, approval_request_id, account_number")
     .eq("id", current.target_id)
     .maybeSingle();
   if (accountResult.error) throw new Error(accountResult.error.message);
@@ -60,6 +60,7 @@ async function applyEnterpriseAccountDecision(
 
   const history = await supabase.from("enterprise_account_history").insert({
     enterprise_account_id: current.target_id,
+    account_number: accountResult.data.account_number,
     event_type: approved ? "approved" : "approval_rejected",
     created_by: actorId,
     details: {
