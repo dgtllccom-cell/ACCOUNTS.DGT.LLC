@@ -727,6 +727,14 @@ export function DashboardFrame({
                       type="button"
                       onClick={() => {
                         setProfileMenuOpen(false);
+                        // sessionStorage survives a same-tab navigation, so a live
+                        // Support Allow-Once grant would otherwise still read as
+                        // "active" for whoever signs into this tab next.
+                        try {
+                          sessionStorage.removeItem("erp_support_allow_once");
+                        } catch {
+                          // sessionStorage unavailable — nothing to clear
+                        }
                         fetch("/api/erp/auth/logout", { method: "POST" }).then(() => {
                           window.location.href = "/";
                         });

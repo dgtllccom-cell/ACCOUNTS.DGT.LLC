@@ -148,6 +148,34 @@ export function SafeSupportAssistant({
     }
   }, []);
 
+  // The mount-time check above only catches a grant that was already expired
+  // on load. A grant that expires while this tab stays open (component never
+  // remounts) must still stop reading as "active" — clear it the moment its
+  // 15 minutes are actually up, not just on the next page load.
+  useEffect(() => {
+    if (!activeGrant) return;
+    const msRemaining = new Date(activeGrant.expiresAt).getTime() - Date.now();
+    if (msRemaining <= 0) {
+      setActiveGrant(null);
+      try {
+        sessionStorage.removeItem("erp_support_allow_once");
+      } catch {
+        // sessionStorage unavailable
+      }
+      return;
+    }
+    const timer = setTimeout(() => {
+      void logSupportAccess("allow_once_revoked", pathname, { reason: "Grant expired (15 minutes)" });
+      setActiveGrant(null);
+      try {
+        sessionStorage.removeItem("erp_support_allow_once");
+      } catch {
+        // sessionStorage unavailable
+      }
+    }, msRemaining);
+    return () => clearTimeout(timer);
+  }, [activeGrant, pathname]);
+
   const tips = useMemo(() => GENERIC_TIPS, []);
 
   function handleOpen() {
