@@ -236,9 +236,9 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
-    preloadEntriesOnStart: true,
+    preloadEntriesOnStart: false,
     webpackBuildWorker: false,
-    workerThreads: false,
+    workerThreads: true,
     serverActions: {
       bodySizeLimit: "100mb",
     },

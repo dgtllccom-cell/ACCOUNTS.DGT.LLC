@@ -66,6 +66,7 @@ type ProfileRow = {
 
 type PermissionSetRow = {
   permissions: string[] | null;
+  source: string | null;
 };
 
 type AssignmentRow = {
@@ -374,12 +375,21 @@ async function resolveErpSessionFromDb(
   // A non-bootstrap user with no active assignment has been revoked.
   if (!roles.length && !isBootstrapEmail) return null;
 
-  // 3. Effective permissions — the user's SAVED custom set wins; role defaults
-  //    are only a fallback. Never widen a custom set to role defaults.
+  // 3. Effective permissions — a genuinely CUSTOM saved set wins over role
+  //    defaults (never widened). But a set stamped source="role_default" was
+  //    never a deliberate override — it was just a snapshot of the role's
+  //    permissions taken at some earlier point (e.g. at user creation), and
+  //    silently goes stale whenever enterpriseRolePermissions[role] is fixed
+  //    or extended later (confirmed in practice: an inter_branch_transfers
+  //    :approve fix to main_branch_admin/city_branch_admin never reached
+  //    already-provisioned users on this path, leaving Accept broken for
+  //    them specifically). Recompute live from the role definition for those
+  //    rows instead of trusting the stored array.
   let permissions: string[] = [];
   try {
-    const permResult = (await db.from("user_permission_sets").select("permissions").eq("user_id", identity.userId).maybeSingle()) as { data: PermissionSetRow | null };
-    const explicit = permResult?.data?.permissions ?? null;
+    const permResult = (await db.from("user_permission_sets").select("permissions, source").eq("user_id", identity.userId).maybeSingle()) as { data: PermissionSetRow | null };
+    const source = permResult?.data?.source ?? null;
+    const explicit = source === "role_default" ? null : (permResult?.data?.permissions ?? null);
     permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
   } catch { permissions = []; }
   if (!permissions.length) {
