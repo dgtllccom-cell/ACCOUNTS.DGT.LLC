@@ -47,6 +47,7 @@ import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t as tUi } from "@/lib/i18n/ui";
@@ -2040,10 +2041,12 @@ export function PurchaseOrderManagementDashboard() {
 
   const pageHeaderContent = (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4">
-      <div>
-        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">{tr("Purchase Transfer Payment")}</h1>
-        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">{tr("Logistics ERP Master Console")}</p>
-      </div>
+      <DashboardPageHeader
+        titleKey="nav.purchase_order_management"
+        titleFallback="Purchase Order Management"
+        descKey="pom.subtitle"
+        descFallback="Real-time purchase order tracking across every country and branch."
+      />
     </div>
   );
 

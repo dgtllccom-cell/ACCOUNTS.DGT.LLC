@@ -8059,6 +8059,7 @@ export type UiKey =
   | "comv.estimated_expense"
   | "comv.actual_expense"
   | "comv.expense_currency"
+  | "pom.subtitle"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -26444,6 +26445,7 @@ const en: Dict = {
   "tc.accept_task": "Accept Task",
   "tc.complete_task": "Mark Done",
   "tc.transfer_next": "Handover to Next User",
+  "pom.subtitle": "Real-time purchase order tracking across every country and branch.",
 };
 
 const ur: Dict = {
@@ -44803,6 +44805,7 @@ const ur: Dict = {
   "tc.accept_task": "ٹاسک قبول کریں",
   "tc.complete_task": "مکمل نشان زد کریں",
   "tc.transfer_next": "اگلے صارف کو ہینڈ اوور کریں",
+  "pom.subtitle": "ہر ملک اور برانچ میں خریداری آرڈرز کی ریئل ٹائم ٹریکنگ۔",
 };
 
 const ar: Dict = {
@@ -63164,6 +63167,7 @@ const ar: Dict = {
   "tc.accept_task": "قبول المهمة",
   "tc.complete_task": "تحديد كمكتمل",
   "tc.transfer_next": "تسليم إلى المستخدم التالي",
+  "pom.subtitle": "تتبع أوامر الشراء في الوقت الفعلي عبر كل دولة وفرع.",
 };
 
 const fa: Dict = {
@@ -81524,6 +81528,7 @@ const fa: Dict = {
   "tc.accept_task": "پذیرفتن کار",
   "tc.complete_task": "علامت‌گذاری به عنوان انجام‌شده",
   "tc.transfer_next": "واگذاری به کاربر بعدی",
+  "pom.subtitle": "ردیابی لحظه‌ای سفارش‌های خرید در تمام کشورها و شعب.",
 };
 
 const ps: Dict = {
@@ -99890,6 +99895,7 @@ const ps: Dict = {
   "tc.accept_task": "کار ومنئ",
   "tc.complete_task": "بشپړ په نښه کړئ",
   "tc.transfer_next": "راتلونکي کاروونکي ته وسپارئ",
+  "pom.subtitle": "په هر هیواد او څانګه کې د پیرود فرمایشونو ریښتیني وخت تعقیب.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
