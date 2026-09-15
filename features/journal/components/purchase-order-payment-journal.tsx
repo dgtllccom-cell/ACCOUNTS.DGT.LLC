@@ -68,6 +68,7 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { Th } from "@/components/ui/translated-th";
@@ -994,12 +995,15 @@ function getInitialPurchaseOrderNo(): string {
   }
 }
 
-function FieldBlock({ label, required, children, className }: { label: string; required?: boolean; children: ReactNode; className?: string }) {
+function FieldBlock({ label, required, children, className, action }: { label: string; required?: boolean; children: ReactNode; className?: string; action?: ReactNode }) {
   return (
     <label className={cn("block min-w-0", className)}>
-      <span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        {label}
-        {required ? <span className="text-red-500"> *</span> : null}
+      <span className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span>
+          {label}
+          {required ? <span className="text-red-500"> *</span> : null}
+        </span>
+        {action}
       </span>
       {children}
     </label>
@@ -5516,7 +5520,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             </div>
                           </FieldBlock>
 
-                          <FieldBlock label={t("comments_label", currentLanguage)}>
+                          <FieldBlock
+                            label={t("comments_label", currentLanguage)}
+                            action={<VoiceDictateButton context="accounts" lang={currentLanguage} value={remarks} onChange={setRemarks} />}
+                          >
                             <textarea
                               rows={2}
                               className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
