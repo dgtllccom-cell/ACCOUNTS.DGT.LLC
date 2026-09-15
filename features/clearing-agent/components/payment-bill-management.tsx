@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Loader2, RefreshCw, FileText, CheckCircle2, DollarSign, Receipt, CreditCard, Filter, ArrowUpRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, RefreshCw, FileText, CheckCircle2, DollarSign, Receipt, CreditCard, Filter, ArrowUpRight, Send } from "lucide-react";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -77,6 +78,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [form, setForm] = useState<any>(EMPTY_BILL);
+  const [handoffModalOpen, setHandoffModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   // Auto-calculated total bill amount
@@ -525,6 +527,38 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
         {isEditing && form.id ? (
           <CustomerChargesPanel billId={form.id} customerId={form.customer_id || null} orderId={form.order_id || null} lang={lang} />
         ) : null}
+
+        {isEditing && form.id ? (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setHandoffModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {tt("tc.handover_task", "Handover / Delegate Task to User")}
+            </button>
+          </div>
+        ) : null}
+
+        {handoffModalOpen && form.id && (
+          <TaskHandoverModal
+            open={handoffModalOpen}
+            onClose={() => setHandoffModalOpen(false)}
+            orderReference={form.bill_no || form.order_no || form.id}
+            sourceTable="clearing_payment_bills"
+            sourceId={form.id}
+            targetUrl={`/dashboard/clearing-agent/payment-bill?id=${form.id}`}
+            defaultTask={tt("tc.please_complete_work", "Please review and complete assigned work.")}
+            sourceCountryId={form.country_id || null}
+            sourceCountryBranchId={form.country_branch_id || null}
+            sourceCityBranchId={form.city_branch_id || null}
+            domain="business"
+            customerPartyName={form.customer_name || form.agent_name || null}
+            onSuccess={() => setHandoffModalOpen(false)}
+            lang={lang}
+          />
+        )}
 
         {/* Payment Bill Register Table */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">

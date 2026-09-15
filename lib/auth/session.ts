@@ -136,6 +136,16 @@ function getAssignmentRoots(assignments: RoleAssignmentScope[]) {
   const cIds: string[] = [];
   const cbIds: string[] = [];
   const cityIds: string[] = [];
+  // Narrower roots: only counted when the assignment's role genuinely holds
+  // authority AT that level (no more-specific column also set on the same
+  // row) — used to drive DOWNWARD expansion in resolveHierarchyScopes().
+  // Without this split, a city-branch assignment's denormalized parent
+  // country_branch_id/country_id (see below) would be treated the same as
+  // a real main_branch_admin/country_admin grant and silently widen a
+  // city-scoped user's cityBranchIds to every sibling city under that same
+  // branch — defeating city-level RBAC for every such user.
+  const downwardCIds: string[] = [];
+  const downwardCbIds: string[] = [];
 
   // A city-branch assignment row commonly also carries its own parent
   // country_branch_id/country_id (denormalized at assignment time) — collect
@@ -148,12 +158,17 @@ function getAssignmentRoots(assignments: RoleAssignmentScope[]) {
     if (a.cityBranchId) cityIds.push(a.cityBranchId);
     if (a.countryBranchId) cbIds.push(a.countryBranchId);
     if (a.countryId) cIds.push(a.countryId);
+
+    if (a.countryBranchId && !a.cityBranchId) downwardCbIds.push(a.countryBranchId);
+    if (a.countryId && !a.countryBranchId && !a.cityBranchId) downwardCIds.push(a.countryId);
   }
 
   return {
     initialCountryIds: uniqueStrings(cIds),
     initialCountryBranchIds: uniqueStrings(cbIds),
-    initialCityBranchIds: uniqueStrings(cityIds)
+    initialCityBranchIds: uniqueStrings(cityIds),
+    downwardCountryIds: uniqueStrings(downwardCIds),
+    downwardCountryBranchIds: uniqueStrings(downwardCbIds)
   };
 }
 
@@ -162,7 +177,9 @@ async function resolveHierarchyScopes(
   initialCountryIds: string[],
   initialCountryBranchIds: string[],
   initialCityBranchIds: string[],
-  isSuperAdmin: boolean
+  isSuperAdmin: boolean,
+  downwardCountryIds: string[] = initialCountryIds,
+  downwardCountryBranchIds: string[] = initialCountryBranchIds
 ): Promise<{ countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] }> {
   if (isSuperAdmin || !supabase) {
     return {
@@ -176,12 +193,15 @@ async function resolveHierarchyScopes(
   const finalCountryBranchIds = new Set(initialCountryBranchIds);
   const finalCityBranchIds = new Set(initialCityBranchIds);
 
-  // 1. Resolve DOWNWARD from country authority roots
-  if (initialCountryIds.length > 0) {
+  // 1. Resolve DOWNWARD from country authority roots — only countryIds that
+  //    represent a genuine country-level grant (no countryBranchId/cityBranchId
+  //    also set on that same assignment row), never a narrower assignment's
+  //    denormalized parent country_id.
+  if (downwardCountryIds.length > 0) {
     try {
       const [cbRes, cityRes] = await Promise.all([
-        supabase.from("country_branches").select("id").in("country_id", initialCountryIds).is("deleted_at", null),
-        supabase.from("city_branches").select("id").in("country_id", initialCountryIds).is("deleted_at", null)
+        supabase.from("country_branches").select("id").in("country_id", downwardCountryIds).is("deleted_at", null),
+        supabase.from("city_branches").select("id").in("country_id", downwardCountryIds).is("deleted_at", null)
       ]);
       cbRes?.data?.forEach((r: any) => { if (r.id) finalCountryBranchIds.add(r.id); });
       cityRes?.data?.forEach((r: any) => { if (r.id) finalCityBranchIds.add(r.id); });
@@ -190,13 +210,19 @@ async function resolveHierarchyScopes(
     }
   }
 
-  // 2. Resolve DOWNWARD from country branch roots
-  if (initialCountryBranchIds.length > 0) {
+  // 2. Resolve DOWNWARD from country branch roots — only countryBranchIds that
+  //    represent a genuine main-branch-level grant (no cityBranchId also set
+  //    on that same assignment row). A city-branch_admin's assignment carries
+  //    its parent countryBranchId too, but that is denormalized context, not
+  //    a grant over every sibling city branch — using the unfiltered set here
+  //    was the root cause of a city-scoped user's cityBranchIds silently
+  //    widening to every city under the same main branch.
+  if (downwardCountryBranchIds.length > 0) {
     try {
       const { data: cityRes } = await supabase
         .from("city_branches")
         .select("id")
-        .in("country_branch_id", initialCountryBranchIds)
+        .in("country_branch_id", downwardCountryBranchIds)
         .is("deleted_at", null);
       cityRes?.forEach((r: any) => { if (r.id) finalCityBranchIds.add(r.id); });
     } catch (e) {
@@ -363,10 +389,10 @@ async function resolveErpSessionFromDb(
     permissions = ["*:*", ...permissions];
   }
 
-  const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(assignments);
+  const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(assignments);
   const isSuperAdmin = roles.includes("super_admin") || isBootstrapEmail;
 
-  const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin);
+  const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
 
   return {
     userId: identity.userId,
@@ -449,9 +475,9 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           mobileProfile: normalizeMobileProfile((a as any).mobileProfile),
         };
       });
-      const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
+      const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
-      const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin);
+      const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
       const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
       return {
         userId: temp.userId,
