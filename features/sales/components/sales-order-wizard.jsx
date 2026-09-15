@@ -40,10 +40,15 @@ import {
   Truck,
   MessageSquare,
   Loader2,
-  Users
+  Users,
+  Send,
+  Repeat2,
+  CheckCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
@@ -551,6 +556,46 @@ export function SalesOrderWizard({ session }) {
   const [registerRefreshKey, setRegisterRefreshKey] = useState(0);
   const [accountLookupMessage, setAccountLookupMessage] = useState("");
   const [accountLookupLoading, setAccountLookupLoading] = useState(null);
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false);
+  const [activeHandover, setActiveHandover] = useState(null);
+  const [activeHandoverLoading, setActiveHandoverLoading] = useState(false);
+
+  const transferIdParam = searchParams.get("transferId");
+  useEffect(() => {
+    if (!transferIdParam) return;
+    async function loadTransfer() {
+      setActiveHandoverLoading(true);
+      try {
+        const res = await fetch("/api/erp/transfer-center", { credentials: "include" });
+        const json = await res.json();
+        if (json.ok && json.data?.items) {
+          const found = json.data.items.find((item) => item.id === transferIdParam);
+          if (found) {
+            setActiveHandover(found);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load active handover:", err);
+      } finally {
+        setActiveHandoverLoading(false);
+      }
+    }
+    loadTransfer();
+  }, [transferIdParam]);
+
+  async function runHandoverAction(transferId, action) {
+    try {
+      await fetch(`/api/erp/transfer-center/${transferId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action })
+      });
+      setActiveHandover((prev) => prev ? { ...prev, status: action === "accept" ? "accepted" : "completed" } : null);
+    } catch (err) {
+      console.error("Handover action failed:", err);
+    }
+  }
 
   const dropdownRef = React.useRef(null);
   const customerDropdownRef = React.useRef(null);
@@ -2660,6 +2705,50 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   };
   return (
     <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+      {activeHandover && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/30 animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                <Repeat2 className="h-4 w-4" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
+                    {t(lang, "tc.active_handover_task", "Active Handover Task")}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
+                    {activeHandover.metadata?.requestedTask || activeHandover.narration || t(lang, "tc.task_assigned", "Task Assigned")}
+                  </Badge>
+                  {activeHandover.metadata?.priority && (
+                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[9px] uppercase">
+                      {activeHandover.metadata.priority}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}"</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {activeHandover.status === "pending" && (
+                <Button size="sm" type="button" onClick={() => void runHandoverAction(activeHandover.id, "accept")} className="gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {t(lang, "tc.accept_task", "Accept Task")}
+                </Button>
+              )}
+              {activeHandover.status === "accepted" && (
+                <Button size="sm" type="button" onClick={() => void runHandoverAction(activeHandover.id, "complete")} className="gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+                  <CheckCheck className="h-3.5 w-3.5" /> {t(lang, "tc.complete_task", "Mark Done")}
+                </Button>
+              )}
+              <Button size="sm" type="button" variant="outline" onClick={() => setHandoverModalOpen(true)} className="gap-1.5 text-xs font-bold border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300">
+                <Send className="h-3.5 w-3.5" /> {t(lang, "tc.transfer_next", "Handover to Next User")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {isSuperAdmin && showScopeModal ? (
         <SimpleModal
           isOpen={true}
@@ -2898,6 +2987,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       >
                         <FileText className="h-3.5 w-3.5 text-blue-500" />
                         <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setViewDropdownOpen(false); setHandoverModalOpen(true); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <Send className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>{t(lang, "tc.handover_task", "Handover / Delegate Task to User")}</span>
                       </button>
                       <button
                         type="button"
@@ -5937,6 +6034,32 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             countryId: form.countryId || null,
             countryBranchId: form.countryBranchId || null,
             cityBranchId: form.cityBranchId || null,
+          }}
+        />
+      )}
+
+      {handoverModalOpen && (
+        <TaskHandoverModal
+          open={handoverModalOpen}
+          onClose={() => setHandoverModalOpen(false)}
+          orderReference={form.salesOrderNo || form.salesContractNo || "New Sales Booking"}
+          sourceTable="sales_orders"
+          sourceId={savedOrderId || undefined}
+          targetUrl={
+            savedOrderId
+              ? `/dashboard/sales/sales-booking-journal-report?id=${savedOrderId}`
+              : `/dashboard/sales/sales-booking-journal-report`
+          }
+          currentStage={activeTab}
+          defaultTask={t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}
+          sourceCountryId={form.countryId || null}
+          sourceCountryBranchId={form.countryBranchId || null}
+          sourceCityBranchId={form.cityBranchId || null}
+          domain="business"
+          customerPartyName={form.customerAccountName || form.salesAccountName || form.customerName}
+          lang={lang}
+          onSuccess={() => {
+            setHandoverModalOpen(false);
           }}
         />
       )}

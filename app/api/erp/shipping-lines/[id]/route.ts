@@ -15,11 +15,7 @@ async function localizeShippingLine(shippingLine: any, lang: ReturnType<typeof n
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    try {
-      await requireErpSession();
-    } catch {
-      // Allow read fallback
-    }
+    await requireErpSession();
 
     const params = await context.params;
     const id = uuidSchema.parse(params.id);

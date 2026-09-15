@@ -9,11 +9,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 
 export async function GET(request: NextRequest) {
   try {
-    try {
-      await requireErpSession();
-    } catch {
-      // Allow read fallback, matching companies/route.ts's convention.
-    }
+    await requireErpSession();
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");

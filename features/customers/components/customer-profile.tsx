@@ -17,6 +17,7 @@ import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { Party360Modal } from "./party-360-modal";
 import { SendToCustomerModal } from "./send-to-customer-modal";
 import { CustomerAutoReplyPanel } from "./customer-auto-reply-panel";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 
 type CustomerRow = {
   id: string;
@@ -65,6 +66,7 @@ export function CustomerProfile({
   const [error, setError] = useState<string | null>(null);
   const [showErpLinks, setShowErpLinks] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [handoffModalOpen, setHandoffModalOpen] = useState(false);
 
   useEffect(() => {
     if (!customerId) return;
@@ -322,6 +324,15 @@ export function CustomerProfile({
               >
                 <Printer className="h-4 w-4 text-amber-500" />
                 <span className="hidden sm:inline">{t(lang, "wh.print_report", "Print / Report")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setHandoffModalOpen(true)}
+                className="gap-1.5 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs h-9 px-3 rounded-xl shadow-xs"
+              >
+                <Send className="h-4 w-4 text-purple-500" />
+                <span className="hidden sm:inline">{t(lang, "tc.handover_btn", "Handover")}</span>
               </Button>
             </div>
 
@@ -659,6 +670,25 @@ export function CustomerProfile({
           lang={lang}
           defaultFormType="customer"
         />
+
+        {handoffModalOpen && (
+          <TaskHandoverModal
+            open={handoffModalOpen}
+            onClose={() => setHandoffModalOpen(false)}
+            orderReference={customer.person_code || customer.customer_name}
+            sourceTable="customers"
+            sourceId={customer.id}
+            targetUrl={`/dashboard/settings/customers/setup?customerId=${customer.id}`}
+            defaultTask={t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}
+            sourceCountryId={customer.country_id || null}
+            sourceCountryBranchId={null}
+            sourceCityBranchId={null}
+            domain="business"
+            customerPartyName={customer.customer_name}
+            onSuccess={() => setHandoffModalOpen(false)}
+            lang={lang}
+          />
+        )}
       </div>
     );
   }
@@ -761,6 +791,14 @@ export function CustomerProfile({
             className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Printer className="h-4 w-4" />
+          </button>
+          {/* Handover */}
+          <button
+            onClick={() => setHandoffModalOpen(true)}
+            title={t(lang, "tc.handover_task", "Handover / Delegate Task to User")}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-purple-400 hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <Send className="h-4 w-4" />
           </button>
         </div>
       </header>
@@ -1088,6 +1126,25 @@ export function CustomerProfile({
         lang={lang}
         defaultFormType="customer"
       />
+
+      {handoffModalOpen && (
+        <TaskHandoverModal
+          open={handoffModalOpen}
+          onClose={() => setHandoffModalOpen(false)}
+          orderReference={customer.person_code || customer.customer_name}
+          sourceTable="customers"
+          sourceId={customer.id}
+          targetUrl={`/dashboard/settings/customers/setup?customerId=${customer.id}`}
+          defaultTask={t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}
+          sourceCountryId={customer.country_id || null}
+          sourceCountryBranchId={null}
+          sourceCityBranchId={null}
+          domain="business"
+          customerPartyName={customer.customer_name}
+          onSuccess={() => setHandoffModalOpen(false)}
+          lang={lang}
+        />
+      )}
     </div>
   );
 }

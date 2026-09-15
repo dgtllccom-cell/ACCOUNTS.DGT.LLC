@@ -12,21 +12,32 @@ import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
-    try {
-      await requireErpSession();
-    } catch {
-      // Allow read fallback
-    }
+    const session = await requireErpSession();
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
     const ownerPersonId = request.nextUrl.searchParams.get("ownerPersonId");
-    const countryId = request.nextUrl.searchParams.get("countryId");
+    let countryId = request.nextUrl.searchParams.get("countryId");
     const countryBranchId = request.nextUrl.searchParams.get("countryBranchId");
     const cityBranchId = request.nextUrl.searchParams.get("cityBranchId");
     const isBranchOperativeParam = request.nextUrl.searchParams.get("isBranchOperative");
     const isBranchOperative = isBranchOperativeParam !== null ? isBranchOperativeParam === "true" : undefined;
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+
+    authorizeApiScope(session, {
+      resource: "companies",
+      action: "read",
+      countryId,
+      countryBranchId,
+      cityBranchId
+    });
+
+    // Enforce session scope: if the caller is not super admin and passed no
+    // countryId, restrict to their assigned country so this endpoint can't be
+    // used to browse every company in the system.
+    if (!session.isSuperAdmin && !countryId && session.countryIds.length > 0) {
+      countryId = session.countryIds[0];
+    }
 
     const result = await companiesService.search({
       query,
