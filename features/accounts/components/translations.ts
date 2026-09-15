@@ -260,6 +260,76 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "نام حساب",
     ps: "د حساب نوم"
   },
+  accountCode: {
+    en: "Account Code",
+    ur: "اکاؤنٹ کوڈ",
+    ar: "رمز الحساب",
+    fa: "کد حساب",
+    ps: "د حساب کوډ"
+  },
+  accountType: {
+    en: "Account Type",
+    ur: "اکاؤنٹ کی قسم",
+    ar: "نوع الحساب",
+    fa: "نوع حساب",
+    ps: "د حساب ډول"
+  },
+  customerName: {
+    en: "Customer Name",
+    ur: "کسٹمر کا نام",
+    ar: "اسم العميل",
+    fa: "نام مشتری",
+    ps: "د پیرودونکي نوم"
+  },
+  companyName: {
+    en: "Company Name",
+    ur: "کمپنی کا نام",
+    ar: "اسم الشركة",
+    fa: "نام شرکت",
+    ps: "د شرکت نوم"
+  },
+  bankName: {
+    en: "Bank Name",
+    ur: "بینک کا نام",
+    ar: "اسم البنك",
+    fa: "نام بانک",
+    ps: "د بانک نوم"
+  },
+  branchName: {
+    en: "Branch Name",
+    ur: "برانچ کا نام",
+    ar: "اسم الفرع",
+    fa: "نام شعبه",
+    ps: "د څانګې نوم"
+  },
+  branchCode: {
+    en: "Branch Code",
+    ur: "برانچ کوڈ",
+    ar: "رمز الفرع",
+    fa: "کد شعبه",
+    ps: "د څانګې کوډ"
+  },
+  currency: {
+    en: "Currency",
+    ur: "کرنسی",
+    ar: "العملة",
+    fa: "ارز",
+    ps: "پیسه"
+  },
+  createdBy: {
+    en: "Created By",
+    ur: "تخلیق کردہ از",
+    ar: "أُنشئ بواسطة",
+    fa: "ایجاد شده توسط",
+    ps: "جوړ شوی د"
+  },
+  status: {
+    en: "Status",
+    ur: "حیثیت",
+    ar: "الحالة",
+    fa: "وضعیت",
+    ps: "حالت"
+  },
   manualReference: {
     en: "Manual Reference Number",
     ur: "دستی حوالہ نمبر",

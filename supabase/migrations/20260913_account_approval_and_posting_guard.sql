@@ -173,4 +173,8 @@ CREATE TRIGGER roznamcha_lines_enterprise_account_active_guard
 COMMENT ON FUNCTION public.assert_enterprise_account_active_for_posting() IS
   'Prevents ledger and roznamcha postings against pending or archived enterprise accounts.';
 
+INSERT INTO public.erp_schema_migrations (name, status)
+VALUES ('20260913_account_approval_and_posting_guard', 'applied')
+ON CONFLICT (name) DO UPDATE SET status = 'applied', applied_at = now();
+
 NOTIFY pgrst, 'reload schema';
