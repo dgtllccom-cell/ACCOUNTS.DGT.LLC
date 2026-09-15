@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
+import { requireErpSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const session = await requireErpSession();
+  if (!session.isSuperAdmin) {
+    return NextResponse.json({ error: "Super Admin access required." }, { status: 403 });
+  }
   try {
     const success = await ensureEmployeesTable();
     if (success) {

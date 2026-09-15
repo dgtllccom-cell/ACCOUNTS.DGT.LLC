@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
+import { requireErpSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const session = await requireErpSession();
+  if (!session.isSuperAdmin) {
+    return NextResponse.json({ success: false, error: "Super Admin access required." }, { status: 403 });
+  }
   try {
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
