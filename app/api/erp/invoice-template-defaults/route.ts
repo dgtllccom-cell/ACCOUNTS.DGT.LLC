@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiError, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { canAccessCountryBranch, canAccessCityBranch } from "@/lib/permissions/middleware";
 import {
   resolveInvoiceTemplateDefaultServer,
   saveInvoiceTemplateDefaultServer,
@@ -59,10 +60,14 @@ export async function POST(request: NextRequest) {
       if (!session.isSuperAdmin && !(session.countryIds || []).includes(body.scopeId || "")) {
         return apiError("FORBIDDEN", "Not authorized for this country", 403);
       }
+    } else if (body.scopeType === "country_branch") {
+      if (!canAccessCountryBranch(session, body.scopeId || null)) {
+        return apiError("FORBIDDEN", "Not authorized for this branch", 403);
+      }
     } else {
-      // country_branch / city_branch — scoped admins may set defaults inside their own hierarchy.
-      if (!session.isSuperAdmin && !(session.countryIds || []).length) {
-        return apiError("FORBIDDEN", "Not authorized to set a branch default template", 403);
+      // city_branch
+      if (!canAccessCityBranch(session, body.scopeId || null)) {
+        return apiError("FORBIDDEN", "Not authorized for this city branch", 403);
       }
     }
 
