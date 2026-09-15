@@ -32,9 +32,11 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { t } from "@/lib/i18n/ui";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
-import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
+import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
+import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
+
 
 type SalesOrder = {
   [key: string]: any;
@@ -238,11 +240,39 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   }
 
   return (
-    <div className="space-y-6 text-slate-800 bg-white min-h-screen pb-16">
-      
-      {/* Search Header Controls */}
-      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between shadow-sm">
-        <div className="flex border border-slate-200 bg-white p-1 rounded-xl shadow-xs">
+    <div className="space-y-6 text-slate-800 bg-white dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-16">
+
+      {/* Shared ERP Dashboard Page Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-2">
+        <DashboardPageHeader
+          titleKey="nav.sales_order_management"
+          titleFallback="Sales Order Management"
+          descKey="sales.sodash_subtitle"
+          descFallback="Real-time sales order tracking across every country and branch."
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={() => loadOrders()}
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-slate-200 text-xs font-bold"
+          >
+            <RefreshCcw className="h-3.5 w-3.5 mr-1.5" />
+            {t(activeLang, "sales.sodash_refresh", "Refresh")}
+          </Button>
+          <Button
+            onClick={() => router.push("/dashboard/sales/new-sales-booking-order")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-100"
+          >
+            + {t(activeLang, "sales.sodash_create_booking", "Create Booking")}
+          </Button>
+        </div>
+      </div>
+
+
+      {/* Lifecycle tab strip + Search Controls */}
+      <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+        <div className="flex border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1 rounded-xl shadow-xs">
           {lifecycleTabs.map((tab) => (
             <button
               key={tab}
@@ -267,19 +297,12 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t(activeLang, "sales.sodash_search_ph", "Search order no, customer...")}
-              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-800 placeholder-slate-400"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100 placeholder-slate-400"
             />
           </div>
-          <Button
-            onClick={() => {
-              router.push("/dashboard/sales/new-sales-booking-order");
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-100"
-          >
-            + {t(activeLang, "sales.sodash_create_booking", "Create Booking")}
-          </Button>
         </div>
       </div>
+
 
       {/* Aggregate Cards with soft colors and proper spacing */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
