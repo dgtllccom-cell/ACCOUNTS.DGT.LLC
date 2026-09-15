@@ -187,7 +187,17 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   try {
     const session = await requireErpSession();
     const { id } = await context.params;
-    const body = updateSchema.parse(await request.json());
+    const rawBody = await request.json();
+    const body = updateSchema.parse(rawBody);
+    // optionalUuidSchema (used for customerId/companyId/bankId/shippingLineId/
+    // warehouseId) preprocesses an ABSENT field to null, the same as an
+    // explicitly-cleared one — so `body.field !== undefined` can't tell "the
+    // caller omitted this field, leave it alone" from "the caller wants it
+    // cleared". A partial PATCH that only sends e.g. manualReferenceNumber
+    // must not silently wipe the account's customer/company/bank/warehouse
+    // links. Gate those specific merges on presence in the raw JSON body
+    // instead; the zod-validated `body.*` value is still what gets written.
+    const rawHas = (key: string) => Object.prototype.hasOwnProperty.call(rawBody ?? {}, key);
     const admin = createSupabaseAdminClient() as any;
     
     let actorId = isUuid(session.userId) ? session.userId : null;
@@ -233,7 +243,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     };
 
     if (body.scope) updatePayload.scope = body.scope;
-    if (body.parentId !== undefined) updatePayload.parent_id = body.parentId;
+    if (rawHas("parentId")) updatePayload.parent_id = body.parentId;
     if (body.code !== undefined) updatePayload.code = body.code;
     if (body.manualReferenceNumber !== undefined) updatePayload.manual_reference_number = body.manualReferenceNumber?.trim() || null;
     if (body.name !== undefined) updatePayload.name = body.name;
@@ -245,10 +255,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     }
     if (body.status !== undefined) updatePayload.status = body.status;
     if (body.isControlAccount !== undefined) updatePayload.is_control_account = body.isControlAccount;
-    if (body.customerId !== undefined) updatePayload.customer_id = body.customerId;
-    if (body.companyId !== undefined) updatePayload.company_id = body.companyId;
-    if (body.bankId !== undefined) updatePayload.bank_id = body.bankId;
-    if (body.shippingLineId !== undefined) updatePayload.shipping_line_id = body.shippingLineId;
+    if (rawHas("customerId")) updatePayload.customer_id = body.customerId;
+    if (rawHas("companyId")) updatePayload.company_id = body.companyId;
+    if (rawHas("bankId")) updatePayload.bank_id = body.bankId;
+    if (rawHas("shippingLineId")) updatePayload.shipping_line_id = body.shippingLineId;
     if (body.linkedCountries !== undefined) updatePayload.linked_countries = body.linkedCountries;
     if (body.contacts !== undefined) updatePayload.contacts = body.contacts;
     if (nextScope === "super_admin") {
@@ -325,7 +335,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       });
     }
 
-    if (body.warehouseIds !== undefined || body.warehouseId !== undefined) {
+    if (rawHas("warehouseIds") || rawHas("warehouseId")) {
       const warehousesToUpdate = Array.from(
         new Set([
           ...(body.warehouseIds || []),
