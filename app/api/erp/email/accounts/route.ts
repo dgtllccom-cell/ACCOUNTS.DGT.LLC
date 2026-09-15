@@ -64,6 +64,9 @@ async function resolveProviderId(admin: any, emailAddress: string) {
 export async function GET(_request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Only Super Admin can view email account configuration." } }, { status: 403 });
+    }
     const admin = createSupabaseAdminClient() as any;
 
     const { data: accounts, error } = await admin
@@ -184,6 +187,9 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Only Super Admin can create email accounts." } }, { status: 403 });
+    }
     const body = createSchema.parse(await request.json());
     const admin = createSupabaseAdminClient() as any;
 
@@ -232,6 +238,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Only Super Admin can update email accounts." } }, { status: 403 });
+    }
     const body = updateSchema.parse(await request.json());
     const admin = createSupabaseAdminClient() as any;
 
@@ -292,6 +301,9 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Only Super Admin can delete email accounts." } }, { status: 403 });
+    }
     const { searchParams } = request.nextUrl;
     const id = searchParams.get("id");
 

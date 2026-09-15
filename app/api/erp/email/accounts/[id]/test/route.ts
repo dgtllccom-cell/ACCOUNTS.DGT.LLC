@@ -13,6 +13,12 @@ export async function POST(
 ) {
   try {
     const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json(
+        { ok: false, error: { code: "FORBIDDEN", message: "Only Super Admin can test email account connections." } },
+        { status: 403 }
+      );
+    }
     const { id } = await params;
     const admin = createSupabaseAdminClient() as any;
 

@@ -4,6 +4,8 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveCountryEmailConfig } from "@/lib/email/country-email-config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canAccessCountry, canAccessCountryBranch, canAccessCityBranch } from "@/lib/permissions/middleware";
+import { ApiClientError } from "@/lib/api/response";
 
 const querySchema = z.object({
   countryId: z.string().uuid().or(z.literal("")).transform(v => v || null).nullable().optional(),
@@ -106,6 +108,19 @@ export async function GET(request: NextRequest) {
       if (defaultCountry.data) {
         countryId = defaultCountry.data.id;
       }
+    }
+
+    // The scope resolved above can come from an explicit query param or from a linked
+    // document's own scope, either of which could name a country/branch the caller isn't
+    // assigned to. This config exposes another branch's configured sender identity, SMTP
+    // host and username (not the decrypted password) — still real information a caller
+    // should only see for their own scope, so verify it before querying erp_email_accounts.
+    if (
+      !canAccessCityBranch(session, scope.cityBranchId) ||
+      !canAccessCountryBranch(session, countryBranchId) ||
+      !canAccessCountry(session, countryId)
+    ) {
+      throw new ApiClientError("You do not have access to the email configuration for this scope.", { status: 403, code: "FORBIDDEN" });
     }
 
     const countryRes = countryId
