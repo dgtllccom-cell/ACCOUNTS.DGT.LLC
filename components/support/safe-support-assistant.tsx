@@ -182,17 +182,23 @@ export function SafeSupportAssistant({
     }
   }
 
-  async function handleRevokeAllowOnce() {
+  async function handleRevokeAllowOnce(reason: string) {
     setLoadingAction("revoke");
     try {
-      await logSupportAccess("allow_once_revoked", pathname, {
-        reason: "User manually revoked temporary grant"
-      });
+      await logSupportAccess("allow_once_revoked", pathname, { reason });
       setActiveGrant(null);
       sessionStorage.removeItem("erp_support_allow_once");
     } finally {
       setLoadingAction(null);
     }
+  }
+
+  // The spec requires the grant to expire on modal close, not just on an explicit
+  // Revoke click or the 15-minute timer — closing the assistant ends the support
+  // session, so any temporary access it opened should end with it.
+  function handleCloseModal() {
+    setOpen(false);
+    if (activeGrant) void handleRevokeAllowOnce("Support modal closed");
   }
 
   return (
@@ -216,7 +222,7 @@ export function SafeSupportAssistant({
       {open ? (
         <SimpleModal
           title={t(lang, "support.modal_title", "Support")}
-          onClose={() => setOpen(false)}
+          onClose={handleCloseModal}
           className="w-[95vw] max-w-lg rounded-3xl font-sans shadow-2xl"
         >
           <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 p-5 text-xs text-slate-800 dark:text-slate-200">
@@ -282,7 +288,7 @@ export function SafeSupportAssistant({
                   </div>
                   <button
                     type="button"
-                    onClick={handleRevokeAllowOnce}
+                    onClick={() => handleRevokeAllowOnce("User manually revoked temporary grant")}
                     disabled={loadingAction === "revoke"}
                     className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
                   >

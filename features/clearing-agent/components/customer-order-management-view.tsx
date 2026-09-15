@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Anchor,
   ArrowLeft,
@@ -58,6 +59,7 @@ import { ShippingLinePicker } from "@/features/shipping/components/shipping-line
 import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { listCities } from "@/features/locations/location-api";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import {
   BranchScopeDropdown,
   type BranchScopeValue,
@@ -622,6 +624,7 @@ export function CustomerOrderManagementView() {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const userContext = useBranchUserContext();
+  const searchParams = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [step1SubStep, setStep1SubStep] = useState<"1A" | "1B" | "1C">("1A");
@@ -642,6 +645,11 @@ export function CustomerOrderManagementView() {
   const [saving, setSaving] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  // Step 4 final confirm: instead of resetting immediately, offer "Continue Myself"
+  // vs. "Assign to Another User" (reuses the canonical TaskHandoverModal / Transfer
+  // Center — same order, no duplicate record) before clearing the wizard.
+  const [justCompletedOrder, setJustCompletedOrder] = useState<{ id: string; orderNo: string; countryId: string | null; customerName: string | null } | null>(null);
+  const [handoffModalOpen, setHandoffModalOpen] = useState(false);
   const [approvalActionOrderId, setApprovalActionOrderId] = useState<string | null>(null);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
@@ -1284,6 +1292,18 @@ export function CustomerOrderManagementView() {
     setCurrentStep(progress.step >= 4 ? 4 : ((progress.step + 1) as any));
   };
 
+  // Deep-link support: a Handover Inbox "Open Linked Form" click lands here with
+  // ?id=<orderId> — auto-open the SAME order (never a fresh blank form) once the
+  // orders list has loaded far enough to find it.
+  useEffect(() => {
+    if (isFormOpen) return;
+    const targetId = searchParams?.get("id");
+    if (!targetId || orders.length === 0) return;
+    const target = orders.find((o) => o.id === targetId);
+    if (target) loadEditOrder(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, orders, isFormOpen]);
+
   const handleExportCsv = () => {
     if (!orders.length) return;
     const headers = [
@@ -1523,7 +1543,14 @@ export function CustomerOrderManagementView() {
       if (advanceStep && currentStep < 4) {
         setCurrentStep((s) => (s + 1) as any);
       } else if (advanceStep && currentStep === 4) {
-        resetForm();
+        // Offer the handover choice before clearing the wizard — resetForm() runs
+        // only after the user picks "Continue Myself" or finishes an assignment.
+        setJustCompletedOrder({
+          id: savedOrder?.id,
+          orderNo: savedOrder?.order_no || "",
+          countryId: formData.loading_country_id || formData.receiving_country_id || null,
+          customerName: partySelections.supplier.customerName || formData.customer_name || null
+        });
       }
     } catch (error: any) {
       alert(`${tt("err_save_failed", "Save failed")}: ${error?.message || error}`);
@@ -1619,6 +1646,51 @@ export function CustomerOrderManagementView() {
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
           <span>{successMessage}</span>
         </div>
+      ) : null}
+
+      {justCompletedOrder && !handoffModalOpen ? (
+        <SimpleModal
+          title={tt("handover_choice_title", "Order Confirmed — What Next?")}
+          onClose={() => { setJustCompletedOrder(null); resetForm(); }}
+          className="w-[95vw] max-w-md rounded-3xl font-sans shadow-2xl"
+        >
+          <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3 p-5 text-xs text-slate-800 dark:text-slate-200">
+            <p className="text-slate-600 dark:text-slate-300">
+              {tt("handover_choice_desc", "Order")} <span className="font-bold text-slate-900 dark:text-white">{justCompletedOrder.orderNo}</span> {tt("handover_choice_desc2", "is saved. Continue working on it yourself, or hand it off to another user for the next step.")}
+            </p>
+            <button
+              type="button"
+              onClick={() => { setJustCompletedOrder(null); resetForm(); }}
+              className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 transition"
+            >
+              {tt("continue_myself", "Continue Myself")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setHandoffModalOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-2.5 transition dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+            >
+              {tt("assign_another_user", "Assign to Another User")}
+            </button>
+          </div>
+        </SimpleModal>
+      ) : null}
+
+      {handoffModalOpen && justCompletedOrder ? (
+        <TaskHandoverModal
+          open={handoffModalOpen}
+          onClose={() => setHandoffModalOpen(false)}
+          orderReference={justCompletedOrder.orderNo}
+          sourceTable="clearing_customer_orders"
+          sourceId={justCompletedOrder.id}
+          targetUrl={`/dashboard/clearing-agent/customer-order?id=${justCompletedOrder.id}`}
+          defaultTask={tt("handover_default_task", "Please continue this customer order to the next step.")}
+          sourceCountryId={justCompletedOrder.countryId}
+          domain="business"
+          customerPartyName={justCompletedOrder.customerName}
+          onSuccess={() => { setHandoffModalOpen(false); setJustCompletedOrder(null); resetForm(); }}
+          lang={lang}
+        />
       ) : null}
 
       {!isFormOpen ? (

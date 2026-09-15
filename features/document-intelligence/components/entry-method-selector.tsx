@@ -18,9 +18,50 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { FilePlus2, ScanLine, FileClock, X, Loader2, ChevronRight, Sparkles, ShieldCheck, ArrowRight, Zap } from "lucide-react";
+import { FilePlus2, ScanLine, FileClock, X, Loader2, ChevronRight, Sparkles, ShieldCheck, ArrowRight, Zap, Mic } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet } from "@/lib/api/client";
+import { VoiceFormFill } from "@/components/voice-form-fill";
+import type { VoiceContext } from "@/lib/services/voice-context-interpreter";
+import type { VoiceInterpretationResult } from "@/lib/services/voice-context-interpreter";
+
+/** Map a targetModule string to a VoiceContext for the interpreter. */
+const MODULE_VOICE_CONTEXT: Record<string, VoiceContext> = {
+  purchase_orders: "purchase",
+  sales_orders: "sales",
+  roznamcha: "roznamcha",
+  expenses: "expenses",
+  accounts: "accounts",
+  customers: "customer",
+  companies: "company",
+  banks: "bank",
+  employees: "employee",
+  goods: "goods",
+  purchase_loading: "loading",
+  goods_received: "receiving",
+  shipping: "shipping",
+  clearing: "clearing",
+  customer_orders: "clearing",
+  document_intake: "document_intake",
+};
+
+export const VOICE_PREFILL_KEY = "di_voice_prefill";
+
+export function readVoicePrefill(targetModule: string): { fields: Record<string, string | number | null>; interpretation: { action: string; confidence: number } } | null {
+  try {
+    const raw = sessionStorage.getItem(VOICE_PREFILL_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.targetModule !== targetModule) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function clearVoicePrefill() {
+  try { sessionStorage.removeItem(VOICE_PREFILL_KEY); } catch { /* ignore */ }
+}
 
 export type EntryDraft = Record<string, any>;
 
@@ -67,7 +108,7 @@ export function EntryMethodSelector({
 }) {
   const s = useErpScreen("dintake", lang);
   const router = useRouter();
-  const [mode, setMode] = useState<"choose" | "manual" | "drafts">(skipGate ? "manual" : "choose");
+  const [mode, setMode] = useState<"choose" | "manual" | "drafts" | "voice">(skipGate ? "manual" : "choose");
   const [drafts, setDrafts] = useState<EntryDraft[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -225,8 +266,8 @@ export function EntryMethodSelector({
           </button>
         </div>
 
-        {/* 3 Interactive Cards */}
-        <div className="grid gap-5 md:grid-cols-3">
+        {/* 4 Interactive Cards */}
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {/* Card 1: Manual Entry */}
           <button
             type="button"
@@ -332,7 +373,78 @@ export function EntryMethodSelector({
               </div>
             </div>
           </button>
+
+          {/* Card 4: AI Voice Entry */}
+          <button
+            type="button"
+            onClick={() => setMode("voice")}
+            className="group relative flex h-full flex-col justify-between rounded-2xl border border-slate-200/90 bg-gradient-to-b from-slate-50/60 to-white p-6 text-start shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-xl hover:shadow-cyan-500/10 dark:border-slate-800 dark:from-slate-900/60 dark:to-slate-900 dark:hover:border-cyan-500/70"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/25 transition-transform duration-300 group-hover:scale-110">
+                  <Mic className="h-6 w-6" />
+                </div>
+                <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                  {s.t("em_voice_badge", "5 Languages")}
+                </span>
+              </div>
+              
+              <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                {s.t("em_voice", "AI Voice Entry")}
+              </h3>
+              
+              <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                {s.t("em_voice_desc", "Speak the record in Pashto, Urdu, English, Arabic or Farsi. AI extracts amounts, parties, dates and fields. You review and apply.")}
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+              <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
+                {s.t("em_start_voice", "Start Speaking")}
+              </span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-50 text-cyan-600 transition-all duration-300 group-hover:translate-x-1 group-hover:bg-cyan-600 group-hover:text-white dark:bg-cyan-950/60 dark:text-cyan-300 dark:group-hover:bg-cyan-500">
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </div>
+          </button>
         </div>
+
+        {/* Voice mode panel — shown inline below the cards */}
+        {mode === "voice" && (
+          <div className="mt-6 rounded-2xl border border-cyan-900/30 bg-gradient-to-r from-[#071329] via-[#0b1d3d] to-[#071329] p-5 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-cyan-300">
+                🎤 {s.t("em_voice_panel_title", "AI Voice — Speak to Pre-fill the Form")}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMode("choose")}
+                className="rounded-lg p-1 text-slate-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-3 text-[11px] text-slate-400">
+              {s.t("em_voice_panel_desc", "Once you apply the voice fields below, the form will open pre-filled. Review all values before saving.")}
+            </p>
+            <VoiceFormFill
+              context={MODULE_VOICE_CONTEXT[targetModule] ?? "purchase"}
+              lang={s.lang as any}
+              onApply={(fields, interp) => {
+                // Store voice result in sessionStorage so the form can read it on mount
+                try {
+                  sessionStorage.setItem(
+                    VOICE_PREFILL_KEY,
+                    JSON.stringify({ targetModule, fields, interpretation: { action: interp.interpretedAction, confidence: interp.confidence } })
+                  );
+                } catch { /* ignore */ }
+                setMode("manual");
+              }}
+            />
+          </div>
+        )}
 
         {/* Footer info bar */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-5 dark:border-slate-800">
