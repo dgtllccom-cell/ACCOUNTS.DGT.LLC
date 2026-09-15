@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateConversation } from "@/lib/services/return-sms-reply-service";
 import { generateContextualAiReply } from "@/lib/services/ai-reply-generator";
+
+function verifyMetaSignature(rawBody: string, signatureHeader: string | null, appSecret: string): boolean {
+  if (!signatureHeader?.startsWith("sha256=")) return false;
+  const expected = createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+  const provided = signatureHeader.slice("sha256=".length);
+  const expectedBuf = Buffer.from(expected, "hex");
+  const providedBuf = Buffer.from(provided, "hex");
+  if (expectedBuf.length !== providedBuf.length) return false;
+  return timingSafeEqual(expectedBuf, providedBuf);
+}
 
 // Webhook handler must always be dynamic — never statically cached
 export const dynamic = "force-dynamic";
@@ -45,7 +56,19 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json();
+    const appSecret = process.env.WHATSAPP_APP_SECRET || "";
+    if (!appSecret) {
+      return NextResponse.json(
+        { error: "WhatsApp webhook is not configured. Set WHATSAPP_APP_SECRET.", ownerActionRequired: true },
+        { status: 503 }
+      );
+    }
+    const rawBody = await request.text();
+    const signatureHeader = request.headers.get("x-hub-signature-256");
+    if (!verifyMetaSignature(rawBody, signatureHeader, appSecret)) {
+      return NextResponse.json({ error: "Invalid webhook signature." }, { status: 401 });
+    }
+    const payload = JSON.parse(rawBody);
     const admin = createSupabaseAdminClient() as any;
 
     const entry = payload?.entry?.[0];

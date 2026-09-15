@@ -164,7 +164,7 @@ function normalizeDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>) {
+async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, session?: Awaited<ReturnType<typeof requireErpSession>>) {
   return await withLocalPg(async (sql) => {
     const countryRowsRaw = await sql<CountryRow[]>`select id, name, iso2, iso3, currency_code, is_active from countries where deleted_at is null order by name asc`;
     const branchRowsRaw = await sql<CountryBranchRow[]>`select id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from country_branches where deleted_at is null order by name asc`;
@@ -179,6 +179,22 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>) {
     let countryRows = countryRowsRaw as CountryRow[];
     let branchRows = branchRowsRaw as CountryBranchRow[];
     let cityRows = cityRowsRaw as CityBranchRow[];
+
+    // Enforce Country Manager RBAC Scoping
+    if (session && !session.isSuperAdmin) {
+      const allowedCountryIds = new Set(session.countryIds || []);
+      const allowedBranchIds = new Set(session.countryBranchIds || []);
+      if (allowedCountryIds.size > 0) {
+        countryRows = countryRows.filter((c) => allowedCountryIds.has(c.id));
+        branchRows = branchRows.filter((b) => allowedCountryIds.has(b.country_id));
+        cityRows = cityRows.filter((cb) => allowedCountryIds.has(cb.country_id));
+      } else if (allowedBranchIds.size > 0) {
+        branchRows = branchRows.filter((b) => allowedBranchIds.has(b.id));
+        const branchCountryIds = new Set(branchRows.map((b) => b.country_id));
+        countryRows = countryRows.filter((c) => branchCountryIds.has(c.id));
+        cityRows = cityRows.filter((cb) => allowedBranchIds.has(cb.country_branch_id));
+      }
+    }
     let profileRowsLocalized = profileRowsRaw as ProfileRow[];
     try {
       countryRows = await localizeRecordFields<any>(countryRows, "countries", ["name"], lang);
@@ -361,25 +377,35 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>) {
     });
 
     const superAdminUsers = allUserDetails.filter((u) => u.role === "super_admin" || u.countryName === "Global");
-    const superAdminBranches = [
-      {
-        id: "super-admin-branch",
-        name: "Global Executive Headquarters & Clearing Agent Super Admin",
-        code: "HQ-SUPERADMIN",
-        users: superAdminUsers
-      }
-    ];
+    const isNonSuperAdmin = Boolean(session && !session.isSuperAdmin);
+    const superAdminBranches = isNonSuperAdmin
+      ? []
+      : [
+          {
+            id: "super-admin-branch",
+            name: "Global Executive Headquarters & Clearing Agent Super Admin",
+            code: "HQ-SUPERADMIN",
+            users: superAdminUsers
+          }
+        ];
+
+    const scopedUsers = isNonSuperAdmin
+      ? allUserDetails.filter((u) => {
+          const userCountry = countries.some((c) => c.name === u.countryName);
+          return userCountry && u.role !== "super_admin";
+        })
+      : allUserDetails;
 
     const totalActiveBranches = branchRows.filter((branch) => branch.status === "active").length + cityRows.filter((branch) => branch.status === "active").length;
     const summary = {
       totalCountries: countries.length,
       totalMainBranches: branchRows.length,
       totalCityBranches: cityRows.length,
-      totalActiveUsers: allUserDetails.filter((user) => user.status === "Active").length,
+      totalActiveUsers: scopedUsers.filter((user) => user.status === "Active").length,
       totalActiveBranches,
       totalInactiveBranches: branchRows.length + cityRows.length - totalActiveBranches,
       totalMainAccounts: 0,
-      users: allUserDetails
+      users: scopedUsers
     };
 
     return {
@@ -394,12 +420,13 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>) {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    if (!session.isSuperAdmin) {
-      return apiError("FORBIDDEN", "Super Admin access is required.", 403);
+    const isCountryManager = session.roles?.some((r) => r === "country_admin" || r === "main_branch_admin");
+    if (!session.isSuperAdmin && !isCountryManager) {
+      return apiError("FORBIDDEN", "Administrative access is required.", 403);
     }
 
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
-    const viaPg = await loadViaPg(lang);
+    const viaPg = await loadViaPg(lang, session);
     if (viaPg) {
       return apiOk(viaPg);
     }

@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 export default async function UsersPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");
-  if (!session.isSuperAdmin) {
+
+  const isCountryManager = session.roles?.some((r) => r === "country_admin" || r === "main_branch_admin");
+  if (!session.isSuperAdmin && !isCountryManager) {
     const role = session.roles?.[0];
     const target = role ? dashboardByRole[role] : "/dashboard";
     redirect((target || "/dashboard") as Route);

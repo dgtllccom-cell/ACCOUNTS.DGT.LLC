@@ -357,7 +357,7 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
             targetUrl={`/dashboard/clearing-agent/customer-order/${order.id}/workflow?leg=${selectedLeg.id}`}
             currentStage={selectedLeg.stage || order.current_stage}
             defaultTask={s.t("task_default_truck", "Complete Truck Details & Loading")}
-            sourceCountryId={(order as any).country_id || "74a7482f-e8b0-4f59-a292-9a008c2a969f"}
+            sourceCountryId={(order as any).country_id || null}
             sourceCountryBranchId={(order as any).country_branch_id || selectedLeg.responsible_country_branch_id}
             sourceCityBranchId={(order as any).city_branch_id || selectedLeg.responsible_city_branch_id}
             domain="shipping"

@@ -26,6 +26,17 @@ export type UiKey =
   | "tc.search_ph"
   | "tc.subtitle"
   | "tc.workflow_stage"
+  | "tc.handover_task"
+  | "tc.handover_btn"
+  | "tc.active_handover_task"
+  | "tc.task_assigned"
+  | "tc.assigned_by"
+  | "tc.branch_user"
+  | "tc.instruction"
+  | "tc.please_complete_work"
+  | "tc.accept_task"
+  | "tc.complete_task"
+  | "tc.transfer_next"
   | "owf.customs_clearing_action"
   | "owf.customs_country"
   | "owf.clearance_type"
@@ -26422,6 +26433,17 @@ const en: Dict = {
   "tc.search_ph": "Search transfers, orders, parties...",
   "tc.subtitle": "User-to-user task delegation and branch operational handovers across canonical ERP records.",
   "tc.workflow_stage": "Workflow Stage",
+  "tc.handover_task": "Handover / Delegate Task to User",
+  "tc.handover_btn": "Handover",
+  "tc.active_handover_task": "Active Handover Task",
+  "tc.task_assigned": "Task Assigned",
+  "tc.assigned_by": "Assigned by",
+  "tc.branch_user": "Branch User",
+  "tc.instruction": "Instruction",
+  "tc.please_complete_work": "Please review and complete assigned work.",
+  "tc.accept_task": "Accept Task",
+  "tc.complete_task": "Mark Done",
+  "tc.transfer_next": "Handover to Next User",
 };
 
 const ur: Dict = {
@@ -44770,6 +44792,17 @@ const ur: Dict = {
   "tc.search_ph": "ٹرانسفرز، آرڈرز، فریقین تلاش کریں...",
   "tc.subtitle": "صارف سے صارف ٹاسک تفویض اور برانچ آپریشنل ہینڈ اوورز، معیاری ای آر پی ریکارڈز کے پار۔",
   "tc.workflow_stage": "ورک فلو مرحلہ",
+  "tc.handover_task": "صارف کو ٹاسک ہینڈ اوور / تفویض کریں",
+  "tc.handover_btn": "ہینڈ اوور",
+  "tc.active_handover_task": "فعال ہینڈ اوور ٹاسک",
+  "tc.task_assigned": "تفویض کردہ ٹاسک",
+  "tc.assigned_by": "تفویض کنندہ",
+  "tc.branch_user": "برانچ صارف",
+  "tc.instruction": "ہدایات",
+  "tc.please_complete_work": "براہ کرم جائزہ لیں اور تفویض کردہ کام مکمل کریں۔",
+  "tc.accept_task": "ٹاسک قبول کریں",
+  "tc.complete_task": "مکمل نشان زد کریں",
+  "tc.transfer_next": "اگلے صارف کو ہینڈ اوور کریں",
 };
 
 const ar: Dict = {
@@ -63120,6 +63153,17 @@ const ar: Dict = {
   "tc.search_ph": "البحث في التحويلات والطلبات والأطراف...",
   "tc.subtitle": "تفويض المهام بين المستخدمين وتسليمات العمليات بين الفروع عبر سجلات ERP القياسية.",
   "tc.workflow_stage": "مرحلة سير العمل",
+  "tc.handover_task": "تسليم / تفويض المهمة إلى المستخدم",
+  "tc.handover_btn": "تسليم",
+  "tc.active_handover_task": "مهمة التسليم النشطة",
+  "tc.task_assigned": "المهمة المعينة",
+  "tc.assigned_by": "تم التعيين بواسطة",
+  "tc.branch_user": "مستخدم الفرع",
+  "tc.instruction": "التعليمات",
+  "tc.please_complete_work": "يرجى المراجعة واستكمال العمل المخصص.",
+  "tc.accept_task": "قبول المهمة",
+  "tc.complete_task": "تحديد كمكتمل",
+  "tc.transfer_next": "تسليم إلى المستخدم التالي",
 };
 
 const fa: Dict = {
@@ -81469,6 +81513,17 @@ const fa: Dict = {
   "tc.search_ph": "جستجوی انتقال‌ها، سفارش‌ها، طرف‌ها...",
   "tc.subtitle": "واگذاری وظیفه کاربر به کاربر و تحویل‌های عملیاتی شعبه در سراسر رکوردهای استاندارد ERP.",
   "tc.workflow_stage": "مرحله گردش کار",
+  "tc.handover_task": "واگذاری / تفویض کار به کاربر",
+  "tc.handover_btn": "واگذاری",
+  "tc.active_handover_task": "کار واگذاری فعال",
+  "tc.task_assigned": "کار تخصیص‌یافته",
+  "tc.assigned_by": "تخصیص‌یافته توسط",
+  "tc.branch_user": "کاربر شعبه",
+  "tc.instruction": "دستورالعمل",
+  "tc.please_complete_work": "لطفاً کار محول‌شده را بررسی و تکمیل کنید.",
+  "tc.accept_task": "پذیرفتن کار",
+  "tc.complete_task": "علامت‌گذاری به عنوان انجام‌شده",
+  "tc.transfer_next": "واگذاری به کاربر بعدی",
 };
 
 const ps: Dict = {
@@ -99824,6 +99879,17 @@ const ps: Dict = {
   "tc.search_ph": "لېږدونه، امرونه، لوریان ولټوئ...",
   "tc.subtitle": "د کاروونکي څخه کاروونکي ته دندې سپارنه او د څانګې عملیاتي سپارنې د معیاري ERP ریکارډونو په اوږدو کې.",
   "tc.workflow_stage": "د کار جریان پړاو",
+  "tc.handover_task": "کار کاروونکي ته سپارل / وسپارل",
+  "tc.handover_btn": "سپارنه",
+  "tc.active_handover_task": "فعال سپارل شوی کار",
+  "tc.task_assigned": "ټاکل شوی کار",
+  "tc.assigned_by": "ټاکل شوی له لوري",
+  "tc.branch_user": "د څانګې کاروونکی",
+  "tc.instruction": "لارښوونه",
+  "tc.please_complete_work": "مهرباني وکړئ ټاکل شوی کار بیاکتنه او بشپړ کړئ.",
+  "tc.accept_task": "کار ومنئ",
+  "tc.complete_task": "بشپړ په نښه کړئ",
+  "tc.transfer_next": "راتلونکي کاروونکي ته وسپارئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -71,6 +71,7 @@ import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { UserProfileReportModal, UserProfileData } from "./user-profile-report-modal";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; cityName?: string; local_currency: string; country_branch_id: string };
@@ -172,6 +173,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlUserId = userIdProp || searchParams.get("userId");
+  const erpScope = useErpScope();
 
   const activeLang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
@@ -619,11 +621,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     (async () => {
       setLoadingCountries(true);
       try {
-        const rows = await listCountries({ withBranchesOnly: true });
+        let rows = await listCountries({ withBranchesOnly: true });
+        if (!erpScope.isSuperAdmin && erpScope.countryIds && erpScope.countryIds.length > 0) {
+          rows = rows.filter((r) => erpScope.countryIds?.includes(r.id));
+        }
         if (!cancelled) {
           setCountries(rows);
           if (rows.length > 0 && !countryId) {
-            const defaultCountry = rows.find((r) => r.name.toLowerCase().includes("pakistan")) || rows[0];
+            const defaultCountry = rows.find((r) => erpScope.countryIds?.includes(r.id)) || rows[0];
             if (defaultCountry) setCountryId(defaultCountry.id);
           }
         }
@@ -2030,6 +2035,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     >
                       {roleOptions
                         .filter((r) => DOMAIN_ROLES[operationalDomain].includes(r.value))
+                        .filter((r) => {
+                          if (erpScope.isSuperAdmin) return true;
+                          return r.value !== "super_admin" && r.value !== "country_admin";
+                        })
                         .map((r) => (
                           <option key={r.value} value={r.value}>
                             {centralT(activeLang, r.labelKey as never, r.label)} — {centralT(activeLang, r.helpKey as never, r.help)}

@@ -9,6 +9,18 @@ import { generateContextualAiReply } from "@/lib/services/ai-reply-generator";
  */
 export async function POST(request: NextRequest) {
   try {
+    const expectedSecret = process.env.RETURN_SMS_EMAIL_WEBHOOK_SECRET || "";
+    if (!expectedSecret) {
+      return NextResponse.json(
+        { error: "Email webhook is not configured. Set RETURN_SMS_EMAIL_WEBHOOK_SECRET.", ownerActionRequired: true },
+        { status: 503 }
+      );
+    }
+    const providedSecret = request.headers.get("x-webhook-secret") || request.nextUrl.searchParams.get("secret") || "";
+    if (providedSecret !== expectedSecret) {
+      return NextResponse.json({ error: "Invalid webhook secret." }, { status: 401 });
+    }
+
     const payload = await request.json();
 
     const fromEmail = payload.from || payload.sender || payload.envelope?.from;

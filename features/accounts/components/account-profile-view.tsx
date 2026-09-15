@@ -33,7 +33,8 @@ import {
   Sparkles,
   Pencil,
   Star,
-  Award
+  Award,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api/client";
@@ -42,6 +43,7 @@ import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { getLabel } from "./translations";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -197,6 +199,7 @@ export function AccountProfileView({
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"all" | "01" | "02" | "03" | "04" | "05">("all");
   const [selectedReportType, setSelectedReportType] = useState<string>("certificate");
+  const [handoffModalOpen, setHandoffModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -604,9 +607,40 @@ export function AccountProfileView({
               <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />
               {getLabel("exportPdf", lang) || "Export PDF"}
             </Button>
+
+            {selectedRow && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setHandoffModalOpen(true)}
+                className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <Send className="h-3.5 w-3.5 mr-1 text-purple-500" />
+                {t(lang, "tc.handover_btn", "Handover")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
+
+      {selectedRow && (
+        <TaskHandoverModal
+          open={handoffModalOpen}
+          onClose={() => setHandoffModalOpen(false)}
+          orderReference={selectedRow.accountCode}
+          sourceTable="enterprise_accounts"
+          sourceId={selectedRow.accountId}
+          targetUrl={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}
+          defaultTask={t(lang, "tc.handover_task", "Account Review / Handover")}
+          sourceCountryId={selectedRow.countryId || null}
+          sourceCityBranchId={selectedRow.cityId || null}
+          domain="business"
+          customerPartyName={selectedRow.accountName}
+          onSuccess={() => setHandoffModalOpen(false)}
+          lang={lang}
+        />
+      )}
 
       {/* ── Main Document Container ─────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 space-y-6">

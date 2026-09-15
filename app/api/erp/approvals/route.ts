@@ -14,14 +14,24 @@ export async function GET() {
     authorize(session, { resource: "approvals", action: "read" });
 
     const supabase = await createApiSupabaseClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("approval_requests")
       .select(
         "id, request_no, action, status, target_table, target_id, country_id, country_branch_id, city_branch_id, requested_by, approved_by, rejected_by, decided_at, reason, rejection_reason, created_at, updated_at"
       )
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(50);
+      .is("deleted_at", null);
+
+    // createApiSupabaseClient() returns a service-role client in production
+    // (bypasses RLS) — scope must be enforced here explicitly for anyone who
+    // isn't a Super Admin, matching can_approve_erp_scope's DB-side rule.
+    if (!session.isSuperAdmin) {
+      if (session.countryIds.length === 0) {
+        return apiOk({ approvals: [], limit: 50 });
+      }
+      query = query.in("country_id", session.countryIds);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false }).limit(50);
 
     if (error) {
       throw new Error(error.message);

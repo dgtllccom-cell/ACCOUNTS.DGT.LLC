@@ -28,10 +28,15 @@ export type TaskHandoverModalProps = {
   targetUrl: string;
   currentStage?: string;
   defaultTask?: string;
-  sourceCountryId: string;
+  sourceCountryId: string | null;
   sourceCountryBranchId?: string | null;
   sourceCityBranchId?: string | null;
   domain?: "shipping" | "business" | "both";
+  /** Overrides the transfer_type sent to /api/erp/transfer-center. Defaults to
+   * "shipping_handover" for domain="shipping" and "other" otherwise — pass an
+   * explicit value (e.g. "truck_task", "goods_verification", "clearing_bill")
+   * only when the target module has its own recognised canonical type. */
+  transferType?: "financial_claim" | "shipping_handover" | "purchase_booking" | "truck_task" | "goods_verification" | "clearing_bill" | "other";
   customerPartyName?: string | null;
   onSuccess?: () => void;
   lang?: string | null;
@@ -64,6 +69,7 @@ export function TaskHandoverModal({
   sourceCountryBranchId,
   sourceCityBranchId,
   domain = "shipping",
+  transferType,
   customerPartyName,
   onSuccess,
   lang,
@@ -120,17 +126,23 @@ export function TaskHandoverModal({
       return;
     }
 
+    const effectiveSourceCountryId = sourceCountryId || selectedAssignee?.countryId || null;
+    if (!effectiveSourceCountryId) {
+      setError(s.t("err_no_source_country", "This record has no country assigned — cannot determine handover scope."));
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
     try {
-      const destCountryId = selectedAssignee?.countryId || sourceCountryId;
+      const destCountryId = selectedAssignee?.countryId || effectiveSourceCountryId;
       const destCountryBranchId = selectedAssignee?.countryBranchId || sourceCountryBranchId || null;
       const destCityBranchId = selectedAssignee?.cityBranchId || sourceCityBranchId || null;
 
       await apiPost("/api/erp/transfer-center", {
-        transferType: domain === "shipping" ? "shipping_handover" : "purchase_booking",
-        sourceCountryId,
+        transferType: transferType || (domain === "shipping" ? "shipping_handover" : "other"),
+        sourceCountryId: effectiveSourceCountryId,
         sourceCountryBranchId: sourceCountryBranchId || null,
         sourceCityBranchId: sourceCityBranchId || null,
         destCountryId,
@@ -266,7 +278,7 @@ export function TaskHandoverModal({
                       : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
                   }`}
                 >
-                  {p}
+                  {s.t(`priority_${p}`, p)}
                 </button>
               ))}
             </div>

@@ -48,10 +48,15 @@ import {
   ShoppingCart,
   Calendar,
   MapPin,
-  Clock
+  Clock,
+  Send,
+  Repeat2,
+  CheckCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
@@ -435,6 +440,46 @@ export function PurchaseOrderWizard({ session }) {
   const [draftPrefillId, setDraftPrefillId] = useState("");
   const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const [tradeDocsInitialType, setTradeDocsInitialType] = useState("commercial_invoice");
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false);
+  const [activeHandover, setActiveHandover] = useState(null);
+  const [activeHandoverLoading, setActiveHandoverLoading] = useState(false);
+
+  const transferIdParam = searchParams.get("transferId");
+  useEffect(() => {
+    if (!transferIdParam) return;
+    async function loadTransfer() {
+      setActiveHandoverLoading(true);
+      try {
+        const res = await fetch("/api/erp/transfer-center", { credentials: "include" });
+        const json = await res.json();
+        if (json.ok && json.data?.items) {
+          const found = json.data.items.find((item) => item.id === transferIdParam);
+          if (found) {
+            setActiveHandover(found);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load active handover:", err);
+      } finally {
+        setActiveHandoverLoading(false);
+      }
+    }
+    loadTransfer();
+  }, [transferIdParam]);
+
+  async function runHandoverAction(transferId, action) {
+    try {
+      await fetch(`/api/erp/transfer-center/${transferId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action })
+      });
+      setActiveHandover((prev) => prev ? { ...prev, status: action === "accept" ? "accepted" : "completed" } : null);
+    } catch (err) {
+      console.error("Handover action failed:", err);
+    }
+  }
   const draftConsumedRef = useRef(false);
 
   // Pre-fill from a reviewed AI Document Intake draft (Entry Method Selector →
@@ -3360,6 +3405,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         </Button>
         <Button
           type="button"
+          onClick={() => setHandoverModalOpen(true)}
+          className="flex items-center gap-1 h-8 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md font-bold text-[10px] rounded-lg"
+          title={t(lang, "tc.handover_task", "Handover / Delegate Task to User")}
+        >
+          <Send className="h-3.5 w-3.5" /> {t(lang, "tc.handover_btn", "Handover")}
+        </Button>
+        <Button
+          type="button"
           onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
           className="flex items-center gap-1 h-8 px-2.5 bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-md font-bold text-[10px] rounded-lg"
         >
@@ -3658,6 +3711,52 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       {draftPrefillRef && (
         <div className="rounded-lg bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
           {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {draftPrefillRef}. {t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
+        </div>
+      )}
+
+      {/* Active Task Handover Banner */}
+      {activeHandover && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/30 animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                <Repeat2 className="h-4 w-4" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
+                    {t(lang, "tc.active_handover_task", "Active Handover Task")}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
+                    {activeHandover.metadata?.requestedTask || activeHandover.narration || t(lang, "tc.task_assigned", "Task Assigned")}
+                  </Badge>
+                  {activeHandover.metadata?.priority && (
+                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[9px] uppercase">
+                      {activeHandover.metadata.priority}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}"</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {activeHandover.status === "pending" && (
+                <Button size="sm" type="button" onClick={() => void runHandoverAction(activeHandover.id, "accept")} className="gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {t(lang, "tc.accept_task", "Accept Task")}
+                </Button>
+              )}
+              {activeHandover.status === "accepted" && (
+                <Button size="sm" type="button" onClick={() => void runHandoverAction(activeHandover.id, "complete")} className="gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+                  <CheckCheck className="h-3.5 w-3.5" /> {t(lang, "tc.complete_task", "Mark Done")}
+                </Button>
+              )}
+              <Button size="sm" type="button" variant="outline" onClick={() => setHandoverModalOpen(true)} className="gap-1.5 text-xs font-bold border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300">
+                <Send className="h-3.5 w-3.5" /> {t(lang, "tc.transfer_next", "Handover to Next User")}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
       {isSuperAdmin && showScopeModal && (
@@ -7472,6 +7571,32 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             countryId: form.countryId || null,
             countryBranchId: form.countryBranchId || null,
             cityBranchId: form.cityBranchId || null,
+          }}
+        />
+      )}
+
+      {handoverModalOpen && (
+        <TaskHandoverModal
+          open={handoverModalOpen}
+          onClose={() => setHandoverModalOpen(false)}
+          orderReference={form.purchaseOrderNo || form.purchaseContractNo || "New Purchase Booking"}
+          sourceTable="purchase_orders"
+          sourceId={savedOrderId || form.purchaseOrderNo || undefined}
+          targetUrl={
+            savedOrderId
+              ? `/dashboard/purchase/purchase-booking-journal-report?id=${savedOrderId}`
+              : `/dashboard/purchase/purchase-booking-journal-report`
+          }
+          currentStage={activeTab}
+          defaultTask="Verify Goods & Ledger Account"
+          sourceCountryId={form.countryId}
+          sourceCountryBranchId={form.countryBranchId}
+          sourceCityBranchId={form.cityBranchId}
+          domain="business"
+          customerPartyName={form.purchaseAccountName || form.salesAccountName}
+          lang={lang}
+          onSuccess={() => {
+            setHandoverModalOpen(false);
           }}
         />
       )}
