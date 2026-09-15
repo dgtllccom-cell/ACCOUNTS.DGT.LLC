@@ -4,11 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, Loader2, Paperclip, Link2, UserCheck, ArrowRightLeft, History, Languages,
-  CheckCircle2, XCircle, Download, Trash2, ListPlus,
+  CheckCircle2, XCircle, Download, Trash2, ListPlus, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { fmtDate, fmtDateTime, statusTone, type InquiryStatus } from "../lib/shared";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 
 export function InquiryDetailModal({
   inquiryId,
@@ -28,6 +29,7 @@ export function InquiryDetailModal({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [handoffModalOpen, setHandoffModalOpen] = useState(false);
   const [tab, setTab] = useState<"detail" | "history">("detail");
   const [assignees, setAssignees] = useState<{ userId: string; name: string | null }[]>([]);
   const [linkQ, setLinkQ] = useState("");
@@ -258,6 +260,11 @@ export function InquiryDetailModal({
                   {inq.linked_task_id && (
                     <a href={`/dashboard/user-tasks?id=${inq.linked_task_id}`} className="text-[10.5px] text-blue-600 hover:underline flex items-center gap-1"><ListPlus className="h-3 w-3" />{s.t("open_task", "Open the linked follow-up task")}</a>
                   )}
+                  <div className="pt-1">
+                    <Button type="button" size="sm" variant="outline" className="h-7 text-[11px] gap-1" onClick={() => setHandoffModalOpen(true)}>
+                      <Send className="h-3 w-3" /> {s.tGlobal("tc.handover_task", "Handover / Delegate Task to User")}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -280,6 +287,24 @@ export function InquiryDetailModal({
           )}
         </div>
       </div>
+      {handoffModalOpen && inq && (
+        <TaskHandoverModal
+          open={handoffModalOpen}
+          onClose={() => setHandoffModalOpen(false)}
+          orderReference={inq.customer_name || inquiryId}
+          sourceTable="customer_inquiries"
+          sourceId={inquiryId}
+          targetUrl={`/dashboard/customer-inquiries?id=${inquiryId}`}
+          defaultTask={s.tGlobal("tc.please_complete_work", "Please review and complete assigned work.")}
+          sourceCountryId={inq.country_id || null}
+          sourceCountryBranchId={inq.country_branch_id || null}
+          sourceCityBranchId={inq.city_branch_id || null}
+          domain="business"
+          customerPartyName={inq.customer_name || null}
+          onSuccess={() => setHandoffModalOpen(false)}
+          lang={langProp}
+        />
+      )}
     </div>,
     node,
   );

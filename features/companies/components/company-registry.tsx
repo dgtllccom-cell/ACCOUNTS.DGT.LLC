@@ -25,7 +25,8 @@ import {
   Globe,
   Layers,
   ChevronRight,
-  Check
+  Check,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
@@ -284,6 +286,7 @@ export function CompanyRegistry({
   const [selectedGroupProfile, setSelectedGroupProfile] = useState<GroupProfileData | null>(null);
   const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [handoffTarget, setHandoffTarget] = useState<{ id: string; name: string; countryId: string | null } | null>(null);
   const [openContactMenuId, setOpenContactMenuId] = useState<string | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [openCreateModal, setOpenCreateModal] = useState(false);
@@ -1303,6 +1306,19 @@ export function CompanyRegistry({
                                 <span>Print Master Profile (A4)</span>
                               </button>
 
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  const compId = c.companies[0]?.id || c.id;
+                                  setHandoffTarget({ id: compId, name: c.accountName || c.raw?.name || compId, countryId: c.raw?.country_id || null });
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition cursor-pointer"
+                              >
+                                <Send className="h-4 w-4 text-indigo-600" />
+                                <span>{t(lang, "tc.handover_task", "Handover / Delegate Task to User")}</span>
+                              </button>
+
                               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
                               <button
@@ -1440,6 +1456,26 @@ export function CompanyRegistry({
           name={selected360Party.name}
           lang={lang as any}
           onClose={() => setSelected360Party(null)}
+        />
+      )}
+
+      {/* ── TASK HANDOVER MODAL ── */}
+      {handoffTarget && (
+        <TaskHandoverModal
+          open={Boolean(handoffTarget)}
+          onClose={() => setHandoffTarget(null)}
+          orderReference={handoffTarget.name}
+          sourceTable="companies"
+          sourceId={handoffTarget.id}
+          targetUrl={`/dashboard/settings/company-setup?companyId=${handoffTarget.id}`}
+          defaultTask={t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}
+          sourceCountryId={handoffTarget.countryId}
+          sourceCountryBranchId={null}
+          sourceCityBranchId={null}
+          domain="business"
+          customerPartyName={handoffTarget.name}
+          onSuccess={() => setHandoffTarget(null)}
+          lang={lang}
         />
       )}
 
