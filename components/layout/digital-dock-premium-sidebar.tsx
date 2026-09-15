@@ -39,7 +39,6 @@ import {
   FileText,
   Globe,
   Globe2,
-  Headphones,
   History,
   Home,
   Landmark,
@@ -74,6 +73,7 @@ import {
   X,
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { SafeSupportAssistant } from "@/components/support/safe-support-assistant";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 
@@ -1141,33 +1141,9 @@ export function DigitalDockPremiumSidebar({
         })}
       </nav>
 
-      {/* 3. Need Help? Card */}
-      <div className="p-3 pt-2">
-        <div className="rounded-2xl bg-[#eff6ff] p-3.5 border border-blue-100/70">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-[#2563eb]">
-              <Headphones className="h-5 w-5 text-[#2563eb]" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13.5px] font-bold text-[#0a192f] leading-tight">
-                {tr("Need Help?")}
-              </p>
-              <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">
-                {tr("Contact our support team")}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              window.open("mailto:support@dgt.llc?subject=ERP%20Support%20Request", "_blank");
-            }}
-            className="mt-3 w-full py-2 px-3 bg-white text-[#2563eb] font-bold text-xs rounded-xl shadow-xs border border-blue-200/80 hover:bg-blue-50 transition-colors text-center cursor-pointer"
-          >
-            {tr("Get Support")}
-          </button>
-        </div>
-      </div>
+      {/* 3. Support — small, professional entry point (replaces the old large "Need
+          Help?" card). Guidance-only in this phase; see components/support/safe-support-assistant.tsx. */}
+      <SafeSupportAssistant lang={lang} pathname={pathname} />
 
       {/* 4. Collapse Menu Footer */}
       <div className="border-t border-slate-100 px-4 py-2.5">

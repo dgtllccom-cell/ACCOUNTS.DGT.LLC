@@ -6511,6 +6511,16 @@ export type UiKey =
   | "pcc.effective_note_custom"
   | "pcc.effective_note_role"
   | "pcc.super_admin_only"
+  | "support.open_button"
+  | "support.modal_title"
+  | "support.guidance_only_badge"
+  | "support.current_page_label"
+  | "support.tip_search"
+  | "support.tip_create"
+  | "support.tip_scope"
+  | "support.tip_export"
+  | "support.safety_note"
+  | "support.contact_team_button"
   | "orgchart.title"
   | "orgchart.subtitle"
   | "orgchart.stat_countries"
@@ -6756,6 +6766,16 @@ export type UiKey =
   | "pcc.effective_note_custom"
   | "pcc.effective_note_role"
   | "pcc.super_admin_only"
+  | "support.open_button"
+  | "support.modal_title"
+  | "support.guidance_only_badge"
+  | "support.current_page_label"
+  | "support.tip_search"
+  | "support.tip_create"
+  | "support.tip_scope"
+  | "support.tip_export"
+  | "support.safety_note"
+  | "support.contact_team_button"
   | "orgchart.title"
   | "orgchart.subtitle"
   | "orgchart.stat_countries"
@@ -9497,6 +9517,16 @@ const en: Dict = {
   "pcc.effective_note_custom": "This user has a custom permission set — it fully replaces the role default (never widened back to role defaults).",
   "pcc.effective_note_role": "This user has no custom override — effective permissions are the role default.",
   "pcc.super_admin_only": "This screen is restricted to Super Admin.",
+  "support.open_button": "Support",
+  "support.modal_title": "Support",
+  "support.guidance_only_badge": "Guidance Only — no records are read",
+  "support.current_page_label": "You are on:",
+  "support.tip_search": "Use the search and filter bar at the top of a list to narrow results.",
+  "support.tip_create": "A \"New\" or \"+\" button on a list screen starts a fresh entry.",
+  "support.tip_scope": "Your Country / Branch scope is shown near the top — it limits what you can see and edit.",
+  "support.tip_export": "Most reports have a Print / PDF / Export action in their action menu.",
+  "support.safety_note": "This assistant only shows general guidance and never bypasses your access rules or reads a specific record without your explicit one-time permission. Every support interaction is logged.",
+  "support.contact_team_button": "Contact Support Team",
   "purchase.step4_verify_subtitle": "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.",
   "purchase.opt_advance_payment": "Advance Payment",
   "purchase.opt_invoice": "Invoice",
@@ -28987,6 +29017,16 @@ const ur: Dict = {
   "pcc.effective_note_custom": "اس صارف کے پاس کسٹم اجازت سیٹ ہے — یہ کردار کی طے شدہ کو مکمل طور پر تبدیل کرتی ہے (کبھی بھی کردار کی طے شدہ پر واپس وسیع نہیں ہوتی)۔",
   "pcc.effective_note_role": "اس صارف کے پاس کوئی کسٹم اوور رائیڈ نہیں ہے — مؤثر اجازتیں کردار کی طے شدہ ہیں۔",
   "pcc.super_admin_only": "یہ اسکرین صرف سپر ایڈمن کے لیے محدود ہے۔",
+  "support.open_button": "سپورٹ",
+  "support.modal_title": "سپورٹ",
+  "support.guidance_only_badge": "صرف رہنمائی — کوئی ریکارڈ نہیں پڑھا جاتا",
+  "support.current_page_label": "آپ اس صفحے پر ہیں:",
+  "support.tip_search": "نتائج کو محدود کرنے کے لیے فہرست کے اوپر تلاش اور فلٹر بار استعمال کریں۔",
+  "support.tip_create": "فہرست کی اسکرین پر \"نیا\" یا \"+\" بٹن نئی انٹری شروع کرتا ہے۔",
+  "support.tip_scope": "آپ کا ملک / برانچ اسکوپ اوپر دکھایا گیا ہے — یہ محدود کرتا ہے کہ آپ کیا دیکھ اور ترمیم کر سکتے ہیں۔",
+  "support.tip_export": "زیادہ تر رپورٹس میں ان کے ایکشن مینو میں پرنٹ / پی ڈی ایف / ایکسپورٹ کا آپشن ہوتا ہے۔",
+  "support.safety_note": "یہ اسسٹنٹ صرف عمومی رہنمائی دکھاتا ہے اور کبھی بھی آپ کے رسائی کے قواعد کو نظرانداز نہیں کرتا یا آپ کی واضح یک بارہ اجازت کے بغیر کوئی مخصوص ریکارڈ نہیں پڑھتا۔ ہر سپورٹ تعامل کو ریکارڈ کیا جاتا ہے۔",
+  "support.contact_team_button": "سپورٹ ٹیم سے رابطہ کریں",
   "purchase.step4_verify_subtitle": "حتمی تصدیق سے پہلے پرنٹ ایبل دستاویز کے حصے، اکاؤنٹ پوسٹنگز، مال کی فہرست، ادائیگی کی شرائط، اور لوڈنگ شیڈول کی تصدیق کریں۔",
   "purchase.opt_advance_payment": "ایڈوانس ادائیگی",
   "purchase.opt_invoice": "انوائس",
@@ -47338,6 +47378,16 @@ const ar: Dict = {
   "pcc.effective_note_custom": "لدى هذا المستخدم مجموعة صلاحيات مخصصة — تحل محل افتراضي الدور بالكامل (لا يتم توسيعها أبدًا لتعود إلى افتراضي الدور).",
   "pcc.effective_note_role": "لا يوجد لدى هذا المستخدم تجاوز مخصص — الصلاحيات الفعلية هي افتراضي الدور.",
   "pcc.super_admin_only": "هذه الشاشة مقصورة على المدير العام.",
+  "support.open_button": "الدعم",
+  "support.modal_title": "الدعم",
+  "support.guidance_only_badge": "إرشاد فقط — لا يتم قراءة أي سجلات",
+  "support.current_page_label": "أنت الآن في:",
+  "support.tip_search": "استخدم شريط البحث والتصفية أعلى القائمة لتضييق النتائج.",
+  "support.tip_create": "زر \"جديد\" أو \"+\" في شاشة القائمة يبدأ إدخالاً جديدًا.",
+  "support.tip_scope": "يظهر نطاق الدولة / الفرع الخاص بك بالأعلى — وهو يحدد ما يمكنك رؤيته وتعديله.",
+  "support.tip_export": "تحتوي معظم التقارير على خيار طباعة / PDF / تصدير ضمن قائمة إجراءاتها.",
+  "support.safety_note": "يعرض هذا المساعد إرشادات عامة فقط ولا يتجاوز أبدًا قواعد الوصول الخاصة بك أو يقرأ سجلًا محددًا دون إذنك الصريح لمرة واحدة. يتم تسجيل كل تفاعل مع الدعم.",
+  "support.contact_team_button": "التواصل مع فريق الدعم",
   "purchase.step4_verify_subtitle": "تحقق من أقسام المستند القابل للطباعة، ترحيلات الحسابات، بيان البضائع، شروط الدفع، وجداول التحميل قبل التحقق النهائي.",
   "purchase.opt_advance_payment": "دفعة مقدمة",
   "purchase.opt_invoice": "فاتورة",
@@ -65742,6 +65792,16 @@ const fa: Dict = {
   "pcc.effective_note_custom": "این کاربر یک مجموعه مجوز سفارشی دارد — کاملاً جایگزین پیش‌فرض نقش می‌شود (هرگز به پیش‌فرض نقش گسترش نمی‌یابد).",
   "pcc.effective_note_role": "این کاربر بازنویسی سفارشی ندارد — مجوزهای مؤثر همان پیش‌فرض نقش است.",
   "pcc.super_admin_only": "این صفحه فقط برای مدیر ارشد محدود شده است.",
+  "support.open_button": "پشتیبانی",
+  "support.modal_title": "پشتیبانی",
+  "support.guidance_only_badge": "فقط راهنمایی — هیچ رکوردی خوانده نمی‌شود",
+  "support.current_page_label": "شما در این صفحه هستید:",
+  "support.tip_search": "برای محدود کردن نتایج، از نوار جستجو و فیلتر در بالای فهرست استفاده کنید.",
+  "support.tip_create": "دکمه \"جدید\" یا \"+\" در صفحه فهرست، یک ورودی جدید را شروع می‌کند.",
+  "support.tip_scope": "محدوده کشور / شعبه شما در بالا نشان داده شده است — این تعیین می‌کند چه چیزی را می‌بینید و ویرایش می‌کنید.",
+  "support.tip_export": "بیشتر گزارش‌ها دارای گزینه چاپ / PDF / خروجی در منوی اقدامات خود هستند.",
+  "support.safety_note": "این دستیار فقط راهنمایی کلی نشان می‌دهد و هرگز قوانین دسترسی شما را دور نمی‌زند یا بدون اجازه صریح یک‌باره شما رکورد خاصی را نمی‌خواند. هر تعامل با پشتیبانی ثبت می‌شود.",
+  "support.contact_team_button": "تماس با تیم پشتیبانی",
   "purchase.step4_verify_subtitle": "بخش‌های سند قابل چاپ، ثبت حساب‌ها، فهرست کالا، شرایط پرداخت و برنامه بارگیری را قبل از تایید نهایی بررسی کنید.",
   "purchase.opt_advance_payment": "پیش‌پرداخت",
   "purchase.opt_invoice": "فاکتور",
@@ -84143,6 +84203,16 @@ const ps: Dict = {
   "pcc.effective_note_custom": "دا کاروونکی یو دودیز د اجازې سیټ لري — دا د رول تلواله بشپړ ډول بدلوي (هیڅکله بیرته د رول تلوالې ته نه پراخیږي).",
   "pcc.effective_note_role": "دا کاروونکی هیڅ دودیز بدلون نلري — مؤثر اجازې د رول تلواله دي.",
   "pcc.super_admin_only": "دا سکرین یوازې سوپر ایډمین ته محدود دی.",
+  "support.open_button": "ملاتړ",
+  "support.modal_title": "ملاتړ",
+  "support.guidance_only_badge": "یوازې لارښوونه — هیڅ ریکارډ نه لوستل کیږي",
+  "support.current_page_label": "تاسو پدې پاڼه یاست:",
+  "support.tip_search": "د پایلو محدودولو لپاره د لیست په سر کې د لټون او فلټر بار وکاروئ.",
+  "support.tip_create": "د لیست پاڼه کې \"نوی\" یا \"+\" تڼۍ یوه نوې ننوتنه پیلوي.",
+  "support.tip_scope": "ستاسو د هیواد / څانګې ساحه پورته ښودل شوې ده — دا محدودوي چې تاسو څه لیدلی او سمولی شئ.",
+  "support.tip_export": "ډیری راپورونه د خپلو کړنو مینو کې د پرنټ / PDF / صادرولو اختیار لري.",
+  "support.safety_note": "دا مرستیال یوازې عمومي لارښوونه ښیي او هیڅکله ستاسو د لاسرسي قواعد نه غورځوي یا ستاسو د صریح یو ځلي اجازې پرته کوم ځانګړی ریکارډ نه لولي. د ملاتړ هر تعامل ثبت کیږي.",
+  "support.contact_team_button": "د ملاتړ ټیم سره اړیکه ونیسئ",
   "purchase.step4_verify_subtitle": "د وروستي تصدیق دمخه د چاپ وړ سند برخې، د حساب ثبتونه، د مالونو لیست، د تادیې شرایط، او د بارولو مهالویش وګورئ.",
   "purchase.opt_advance_payment": "مخکینۍ تادیه",
   "purchase.opt_invoice": "انوائس",
