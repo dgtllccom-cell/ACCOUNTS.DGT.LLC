@@ -116,129 +116,48 @@ export function CompanyIncorporationForm({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(2);
 
   // --- Owner / Account Selection State ---
-  const [ownerPersonId, setOwnerPersonId] = useState(initialOwnerPersonId || "ACC-001");
-  const [ownerName, setOwnerName] = useState("Asmatullah Abdullah");
-  const [ownerAccountCode, setOwnerAccountCode] = useState("ACC-001");
-  const [ownerEmail, setOwnerEmail] = useState("asmat@dgt.ae");
-  const [ownerPhone, setOwnerPhone] = useState("+91 98765 43210");
-  const [ownerCountry, setOwnerCountry] = useState("India");
-  const [ownerMainBranch, setOwnerMainBranch] = useState("Mumbai - MH");
-  const [ownerLinkedCompaniesCount, setOwnerLinkedCompaniesCount] = useState(3);
-  const [ownerSearchQuery, setOwnerSearchQuery] = useState("Asmatullah Abdullah (ACC-001)");
+  const [ownerPersonId, setOwnerPersonId] = useState(initialOwnerPersonId || "");
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerAccountCode, setOwnerAccountCode] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [ownerPhone, setOwnerPhone] = useState("");
+  const [ownerCountry, setOwnerCountry] = useState("");
+  const [ownerMainBranch, setOwnerMainBranch] = useState("");
+  const [ownerLinkedCompaniesCount, setOwnerLinkedCompaniesCount] = useState(0);
+  const [ownerSearchQuery, setOwnerSearchQuery] = useState("");
   const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
 
-  // Available owners list (fetched or default)
-  const [availableOwners, setAvailableOwners] = useState<any[]>([
-    {
-      id: "ACC-001",
-      name: "Asmatullah Abdullah",
-      code: "ACC-001",
-      email: "asmat@dgt.ae",
-      phone: "+91 98765 43210",
-      country: "India",
-      countryFlag: "🇮🇳",
-      branch: "Mumbai - MH",
-      companiesCount: 3
-    },
-    {
-      id: "ACC-002",
-      name: "Haji Abdul Rahim",
-      code: "ACC-002",
-      email: "rahim@dgt.ae",
-      phone: "+971 50 123 4567",
-      country: "United Arab Emirates",
-      countryFlag: "🇦🇪",
-      branch: "Deira - Dubai",
-      companiesCount: 2
-    },
-    {
-      id: "ACC-003",
-      name: "Mohammad Tariq",
-      code: "ACC-003",
-      email: "tariq@dgt.ae",
-      phone: "+92 300 1234567",
-      country: "Pakistan",
-      countryFlag: "🇵🇰",
-      branch: "Karachi Main",
-      companiesCount: 1
-    }
-  ]);
+  // Available owners list — populated only from the real customers/parties API
+  // below (never seeded with fake people: a hardcoded "default" owner here
+  // would let a company get silently registered under the wrong party).
+  const [availableOwners, setAvailableOwners] = useState<any[]>([]);
 
-  // Existing Sister Companies under this Owner
-  const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<any[]>([
-    {
-      id: "comp-1",
-      name: "Damaan Trading India Pvt Ltd",
-      license: "UDYAM-MH-01-2023",
-      structure: "Pvt Ltd",
-      status: "Active"
-    },
-    {
-      id: "comp-2",
-      name: "Damaan Logistics India",
-      license: "IEC-2714083621",
-      structure: "Pvt Ltd",
-      status: "Active"
-    },
-    {
-      id: "comp-3",
-      name: "Damaan Retail India",
-      license: "UDYAM-MH-08-2024",
-      structure: "LLP",
-      status: "Active"
-    }
-  ]);
+  // Existing Sister Companies under this Owner — populated once a real owner
+  // is selected and their real companies are fetched (see handleSelectOwner).
+  const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<any[]>([]);
 
-  // Mini Stats
-  const [statCompanies, setStatCompanies] = useState(3);
-  const [statBanks, setStatBanks] = useState(4);
-  const [statEmployees, setStatEmployees] = useState(28);
-  const [statSerials, setStatSerials] = useState(18);
+  // Mini Stats — reflect the real selected owner once known; never fake counts.
+  const [statCompanies, setStatCompanies] = useState(0);
+  const [statBanks, setStatBanks] = useState(0);
+  const [statEmployees, setStatEmployees] = useState(0);
+  const [statSerials, setStatSerials] = useState(0);
 
   // --- Right Form: New Company Fields ---
-  const [companyNameEn, setCompanyNameEn] = useState("Damaan Logistics India Pvt Ltd");
-  const [companyNameLocal, setCompanyNameLocal] = useState("दामाआन लॉजिस्टिक्स इंडिया प्रा. लि.");
-  const [legalStructure, setLegalStructure] = useState("Private Limited Company (Pvt Ltd)");
-  const [baseCurrency, setBaseCurrency] = useState("INR - Indian Rupee (₹)");
-  const [selectedCountry, setSelectedCountry] = useState("India");
-  const [selectedMainBranch, setSelectedMainBranch] = useState("Mumbai - Maharashtra");
-  const [natureOfBusiness, setNatureOfBusiness] = useState("Logistics / Transportation");
+  const [companyNameEn, setCompanyNameEn] = useState("");
+  const [companyNameLocal, setCompanyNameLocal] = useState("");
+  const [legalStructure, setLegalStructure] = useState("");
+  const [baseCurrency, setBaseCurrency] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedMainBranch, setSelectedMainBranch] = useState("");
+  const [natureOfBusiness, setNatureOfBusiness] = useState("");
 
   // Registration IDs
-  const [regPan, setRegPan] = useState("AAACD1234F");
-  const [regCin, setRegCin] = useState("U63030MH2024PTC123456");
-  const [regGstin, setRegGstin] = useState("27AAACD1234F1Z5");
+  const [regPan, setRegPan] = useState("");
+  const [regCin, setRegCin] = useState("");
+  const [regGstin, setRegGstin] = useState("");
 
-  // --- Contacts & Contact Methods ---
-  const [contacts, setContacts] = useState<CompanyContactItem[]>([
-    {
-      id: "cnt-1",
-      type: "Main Contact",
-      name: "Rohan Mehta",
-      designation: "Director",
-      email: "rohan@damaan.in",
-      phone: "+91 98765 43210",
-      whatsapp: "+91 98765 43210"
-    },
-    {
-      id: "cnt-2",
-      type: "Accounts",
-      name: "Priya Sharma",
-      designation: "Accounts",
-      email: "accounts@damaan.in",
-      phone: "+91 97654 21098",
-      whatsapp: "+91 97654 21098"
-    },
-    {
-      id: "cnt-3",
-      type: "Compliance",
-      name: "Suresh Iyer",
-      designation: "Legal",
-      email: "legal@damaan.in",
-      phone: "+91 99112 33445",
-      whatsapp: "+91 99112 33445"
-    }
-  ]);
+  // --- Contacts & Contact Methods --- (starts empty; the user adds real contacts)
+  const [contacts, setContacts] = useState<CompanyContactItem[]>([]);
 
   // Modal for Adding / Editing a Contact
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -251,7 +170,7 @@ export function CompanyIncorporationForm({
   const [contactFormWhatsapp, setContactFormWhatsapp] = useState("");
 
   // Share Link State
-  const shareLinkUrl = `https://app.dgt.ae/register?acc=${ownerAccountCode || "ACC-001"}`;
+  const shareLinkUrl = ownerAccountCode ? `https://app.dgt.ae/register?acc=${ownerAccountCode}` : "";
   const [copiedLink, setCopiedLink] = useState(false);
   const [linkGenerated, setLinkGenerated] = useState(true);
 
@@ -427,6 +346,24 @@ export function CompanyIncorporationForm({
 
   // Save / Submit
   async function handleSaveCompany(isDraft = false) {
+    // The required (*) fields on screen were previously decorative — nothing stopped a
+    // final save with them left blank (or, before this fix, left at their old hardcoded
+    // fake defaults). A draft may still be incomplete; a final save may not.
+    if (!isDraft) {
+      const missing: string[] = [];
+      if (!companyNameEn.trim()) missing.push("Company Name");
+      if (!legalStructure) missing.push("Legal Structure");
+      if (!baseCurrency) missing.push("Base Currency");
+      if (!selectedCountry) missing.push("Country");
+      if (!selectedMainBranch) missing.push("Main Branch / City");
+      if (!natureOfBusiness) missing.push("Business Type / Nature of Business");
+      if (!ownerName.trim()) missing.push("Owner");
+      if (missing.length > 0) {
+        alert(`Please complete the required fields before saving: ${missing.join(", ")}.`);
+        return;
+      }
+    }
+
     // Duplicate check before creating a BRAND NEW company master row — search existing
     // companies by the typed name and warn if a close match already exists, instead of
     // silently re-registering the same company under a second row. Editing an existing
@@ -471,7 +408,7 @@ export function CompanyIncorporationForm({
         businessType: legalStructure,
         registrationType: "PAN / CIN / GSTIN",
         licenseNumber: regGstin || regPan || regCin,
-        baseCurrency: baseCurrency.split(" - ")[0] || "INR",
+        baseCurrency: baseCurrency ? baseCurrency.split(" - ")[0] : undefined,
         address: selectedMainBranch,
         contacts: contacts.map((c) => ({
           type: `${c.type} (${c.designation})`,
@@ -994,6 +931,7 @@ export function CompanyIncorporationForm({
                     onChange={(e) => setLegalStructure(e.target.value)}
                     className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                   >
+                    <option value="">— Select Legal Structure —</option>
                     <option value="Private Limited Company (Pvt Ltd)">Private Limited Company (Pvt Ltd)</option>
                     <option value="Limited Liability Company (LLC)">Limited Liability Company (LLC)</option>
                     <option value="Sole Proprietorship">Sole Proprietorship</option>
@@ -1012,6 +950,7 @@ export function CompanyIncorporationForm({
                     onChange={(e) => setBaseCurrency(e.target.value)}
                     className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                   >
+                    <option value="">— Select Base Currency —</option>
                     <option value="INR - Indian Rupee (₹)">INR - Indian Rupee (₹)</option>
                     <option value="USD - US Dollar ($)">USD - US Dollar ($)</option>
                     <option value="AED - UAE Dirham (د.إ)">AED - UAE Dirham (د.إ)</option>
@@ -1034,6 +973,7 @@ export function CompanyIncorporationForm({
                       onChange={(e) => setSelectedCountry(e.target.value)}
                       className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                     >
+                      <option value="">— Select Country —</option>
                       <option value="India">🇮🇳 India</option>
                       <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
                       <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
@@ -1056,6 +996,7 @@ export function CompanyIncorporationForm({
                       onChange={(e) => setSelectedMainBranch(e.target.value)}
                       className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                     >
+                      <option value="">— Select Main Branch / City —</option>
                       <option value="Mumbai - Maharashtra">🏢 Mumbai - Maharashtra</option>
                       <option value="Delhi - NCR">🏢 Delhi - NCR</option>
                       <option value="Deira - Dubai">🏢 Deira - Dubai</option>
@@ -1080,6 +1021,7 @@ export function CompanyIncorporationForm({
                     onChange={(e) => setNatureOfBusiness(e.target.value)}
                     className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                   >
+                    <option value="">— Select Business Type —</option>
                     <option value="Logistics / Transportation">Logistics / Transportation</option>
                     <option value="Trading & General Order Supplier">Trading &amp; General Order Supplier</option>
                     <option value="Retail & Wholesale">Retail &amp; Wholesale</option>
