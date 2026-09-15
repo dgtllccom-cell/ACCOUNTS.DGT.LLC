@@ -54,6 +54,7 @@ import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
+import { ActiveRecordProvider } from "@/lib/support/active-record-context";
 
 export function DashboardFrame({
   children,
@@ -463,6 +464,7 @@ export function DashboardFrame({
   }
 
   return (
+    <ActiveRecordProvider>
     <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Persistent Sidebar (Collapsible via << Collapse Menu or Menu button) */}
       {!sidebarCollapsed && (
@@ -1009,5 +1011,6 @@ export function DashboardFrame({
         </div>
       </CommandDialog>
     </div>
+    </ActiveRecordProvider>
   );
 }

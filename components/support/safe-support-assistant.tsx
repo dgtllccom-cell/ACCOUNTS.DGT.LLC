@@ -5,6 +5,7 @@ import { LifeBuoy, Mail, ShieldCheck, Search, SlidersHorizontal, Plus, Download,
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { useActiveRecord } from "@/lib/support/active-record-context";
 
 type GuidanceTip = { icon: typeof Search; key: string; fallback: string };
 
@@ -91,7 +92,7 @@ const ALLOW_ONCE_TEXT = {
 async function logSupportAccess(
   action: "guidance_opened" | "contact_support_clicked" | "allow_once_requested" | "allow_once_granted" | "allow_once_revoked",
   pathname: string,
-  extra?: { reason?: string; durationMinutes?: number; recordId?: string | null }
+  extra?: { reason?: string; durationMinutes?: number; recordId?: string | null; recordTable?: string | null }
 ) {
   try {
     const res = await fetch("/api/erp/support/audit", {
@@ -111,6 +112,9 @@ interface ActiveGrant {
   grantToken: string;
   expiresAt: string;
   reason?: string;
+  recordTable?: string | null;
+  recordId?: string | null;
+  recordLabel?: string | null;
 }
 
 export function SafeSupportAssistant({
@@ -126,6 +130,7 @@ export function SafeSupportAssistant({
   const [allowOnceReason, setAllowOnceReason] = useState("");
   const [activeGrant, setActiveGrant] = useState<ActiveGrant | null>(null);
   const [loadingAction, setLoadingAction] = useState<"grant" | "revoke" | null>(null);
+  const activeRecord = useActiveRecord();
 
   const safeLang = (["en", "ur", "ar", "fa", "ps"].includes(lang) ? lang : "en") as keyof typeof ALLOW_ONCE_TEXT;
   const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
@@ -176,6 +181,36 @@ export function SafeSupportAssistant({
     return () => clearTimeout(timer);
   }, [activeGrant, pathname]);
 
+  // Consent is scoped to one record — if the page the assistant is mounted
+  // over moves on to a different record (or away from a record entirely),
+  // a still-live grant no longer applies to what's on screen and must end,
+  // not silently carry over to whatever the user navigated to next.
+  useEffect(() => {
+    if (!activeGrant || !activeGrant.recordId) return;
+    // A null activeRecord only means "this page hasn't registered one yet" (it
+    // populates asynchronously after its own data loads) — never treat that as
+    // "the user left the record" and revoke; only a POSITIVELY DIFFERENT
+    // record proves the user moved on.
+    if (!activeRecord) return;
+    const stillSameRecord = activeRecord.table === activeGrant.recordTable && activeRecord.id === activeGrant.recordId;
+    if (!stillSameRecord) {
+      void logSupportAccess("allow_once_revoked", pathname, {
+        reason: "Active record changed",
+        recordId: activeGrant.recordId,
+        recordTable: activeGrant.recordTable
+      });
+      setActiveGrant(null);
+      try {
+        sessionStorage.removeItem("erp_support_allow_once");
+      } catch {
+        // sessionStorage unavailable
+      }
+    }
+    // Only re-check when the record identity actually changes, not on every
+    // render (activeGrant itself changing is handled by the effect above).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRecord?.table, activeRecord?.id]);
+
   const tips = useMemo(() => GENERIC_TIPS, []);
 
   function handleOpen() {
@@ -193,13 +228,18 @@ export function SafeSupportAssistant({
     try {
       const res = await logSupportAccess("allow_once_granted", pathname, {
         reason: allowOnceReason.trim() || undefined,
-        durationMinutes: 15
+        durationMinutes: 15,
+        recordId: activeRecord?.id ?? undefined,
+        recordTable: activeRecord?.table ?? undefined
       });
       if (res?.data?.grantToken && res?.data?.expiresAt) {
         const grant: ActiveGrant = {
           grantToken: res.data.grantToken,
           expiresAt: res.data.expiresAt,
-          reason: allowOnceReason.trim() || undefined
+          reason: allowOnceReason.trim() || undefined,
+          recordTable: activeRecord?.table ?? null,
+          recordId: activeRecord?.id ?? null,
+          recordLabel: activeRecord?.label ?? null
         };
         setActiveGrant(grant);
         sessionStorage.setItem("erp_support_allow_once", JSON.stringify(grant));
@@ -293,6 +333,21 @@ export function SafeSupportAssistant({
                 {tr.sectionDesc}
               </p>
 
+              {activeRecord ? (
+                <p className="text-[11px] rounded-lg bg-blue-100/70 dark:bg-blue-900/30 px-2.5 py-1.5 text-blue-800 dark:text-blue-300">
+                  {t(lang, "support.scoped_to_record", "Access will be scoped to this record:")}{" "}
+                  <span className="font-bold">{activeRecord.label || `${activeRecord.table} · ${activeRecord.id}`}</span>
+                </p>
+              ) : (
+                <p className="text-[11px] rounded-lg bg-amber-100/70 dark:bg-amber-900/30 px-2.5 py-1.5 text-amber-800 dark:text-amber-300">
+                  {t(
+                    lang,
+                    "support.no_record_detected",
+                    "No specific record detected on this page — this consent stays page-level and read-only until a record-aware screen is opened."
+                  )}
+                </p>
+              )}
+
               {activeGrant ? (
                 <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 p-3 space-y-2 dark:border-emerald-800 dark:bg-emerald-950/40">
                   <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-300 font-bold text-xs">
@@ -306,6 +361,12 @@ export function SafeSupportAssistant({
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-0.5">
+                    {activeGrant.recordId ? (
+                      <p>
+                        <span className="font-semibold">{t(lang, "support.scoped_to_record", "Access will be scoped to this record:")}</span>{" "}
+                        {activeGrant.recordLabel || `${activeGrant.recordTable} · ${activeGrant.recordId}`}
+                      </p>
+                    ) : null}
                     <p>
                       <span className="font-semibold">{tr.expiresAt}</span>{" "}
                       {new Date(activeGrant.expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}

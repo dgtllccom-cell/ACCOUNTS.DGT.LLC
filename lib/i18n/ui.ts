@@ -6516,6 +6516,8 @@ export type UiKey =
   | "support.open_button"
   | "support.modal_title"
   | "support.guidance_only_badge"
+  | "support.scoped_to_record"
+  | "support.no_record_detected"
   | "support.current_page_label"
   | "support.tip_search"
   | "support.tip_create"
@@ -6771,6 +6773,8 @@ export type UiKey =
   | "support.open_button"
   | "support.modal_title"
   | "support.guidance_only_badge"
+  | "support.scoped_to_record"
+  | "support.no_record_detected"
   | "support.current_page_label"
   | "support.tip_search"
   | "support.tip_create"
@@ -9522,6 +9526,8 @@ const en: Dict = {
   "support.open_button": "Support",
   "support.modal_title": "Support",
   "support.guidance_only_badge": "Guidance Only — no records are read",
+  "support.scoped_to_record": "Access will be scoped to this record:",
+  "support.no_record_detected": "No specific record detected on this page — this consent stays page-level and read-only until a record-aware screen is opened.",
   "support.current_page_label": "You are on:",
   "support.tip_search": "Use the search and filter bar at the top of a list to narrow results.",
   "support.tip_create": "A \"New\" or \"+\" button on a list screen starts a fresh entry.",
@@ -29034,6 +29040,8 @@ const ur: Dict = {
   "support.open_button": "سپورٹ",
   "support.modal_title": "سپورٹ",
   "support.guidance_only_badge": "صرف رہنمائی — کوئی ریکارڈ نہیں پڑھا جاتا",
+  "support.scoped_to_record": "رسائی صرف اس ریکارڈ تک محدود ہوگی:",
+  "support.no_record_detected": "اس صفحے پر کوئی مخصوص ریکارڈ شناخت نہیں ہوا — یہ رضامندی صفحے کی سطح تک اور صرف پڑھنے تک محدود رہے گی جب تک کوئی ریکارڈ سے منسلک اسکرین نہ کھولی جائے۔",
   "support.current_page_label": "آپ اس صفحے پر ہیں:",
   "support.tip_search": "نتائج کو محدود کرنے کے لیے فہرست کے اوپر تلاش اور فلٹر بار استعمال کریں۔",
   "support.tip_create": "فہرست کی اسکرین پر \"نیا\" یا \"+\" بٹن نئی انٹری شروع کرتا ہے۔",
@@ -47405,6 +47413,8 @@ const ar: Dict = {
   "support.open_button": "الدعم",
   "support.modal_title": "الدعم",
   "support.guidance_only_badge": "إرشاد فقط — لا يتم قراءة أي سجلات",
+  "support.scoped_to_record": "سيقتصر الوصول على هذا السجل:",
+  "support.no_record_detected": "لم يتم اكتشاف سجل محدد في هذه الصفحة — ستبقى هذه الموافقة على مستوى الصفحة وللقراءة فقط حتى يتم فتح شاشة مرتبطة بسجل.",
   "support.current_page_label": "أنت الآن في:",
   "support.tip_search": "استخدم شريط البحث والتصفية أعلى القائمة لتضييق النتائج.",
   "support.tip_create": "زر \"جديد\" أو \"+\" في شاشة القائمة يبدأ إدخالاً جديدًا.",
@@ -65829,6 +65839,8 @@ const fa: Dict = {
   "support.open_button": "پشتیبانی",
   "support.modal_title": "پشتیبانی",
   "support.guidance_only_badge": "فقط راهنمایی — هیچ رکوردی خوانده نمی‌شود",
+  "support.scoped_to_record": "دسترسی فقط به این رکورد محدود خواهد شد:",
+  "support.no_record_detected": "هیچ رکورد مشخصی در این صفحه شناسایی نشد — این رضایت در سطح صفحه و فقط‌خواندنی باقی می‌ماند تا زمانی که یک صفحه مرتبط با رکورد باز شود.",
   "support.current_page_label": "شما در این صفحه هستید:",
   "support.tip_search": "برای محدود کردن نتایج، از نوار جستجو و فیلتر در بالای فهرست استفاده کنید.",
   "support.tip_create": "دکمه \"جدید\" یا \"+\" در صفحه فهرست، یک ورودی جدید را شروع می‌کند.",
@@ -84250,6 +84262,8 @@ const ps: Dict = {
   "support.open_button": "ملاتړ",
   "support.modal_title": "ملاتړ",
   "support.guidance_only_badge": "یوازې لارښوونه — هیڅ ریکارډ نه لوستل کیږي",
+  "support.scoped_to_record": "لاسرسی به یوازې پدې ریکارډ پورې محدود وي:",
+  "support.no_record_detected": "پدې مخ کې کوم ځانګړی ریکارډ ونه موندل شو — دا رضایت به د مخ په کچه او یوازې د لوستلو لپاره پاتې شي تر څو چې د ریکارډ سره تړلی سکرین ونه خلاصیږي.",
   "support.current_page_label": "تاسو پدې پاڼه یاست:",
   "support.tip_search": "د پایلو محدودولو لپاره د لیست په سر کې د لټون او فلټر بار وکاروئ.",
   "support.tip_create": "د لیست پاڼه کې \"نوی\" یا \"+\" تڼۍ یوه نوې ننوتنه پیلوي.",
