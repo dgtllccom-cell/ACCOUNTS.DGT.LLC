@@ -9,6 +9,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type AllocationType = "business" | "shipping" | "split" | "unallocated";
 
@@ -308,7 +309,15 @@ export function CustomerReceiptsManagementView({ lang: langProp }: { lang: Suppo
         ) : null}
 
         <div>
-          <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("remarks", "Remarks")}</label>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="block text-xs font-semibold text-slate-300">{tt("remarks", "Remarks")}</label>
+            <VoiceDictateButton
+              context="shipping"
+              lang={lang}
+              value={form.remarks}
+              onChange={(next) => setForm((f) => ({ ...f, remarks: next }))}
+            />
+          </div>
           <textarea
             rows={2}
             value={form.remarks}
