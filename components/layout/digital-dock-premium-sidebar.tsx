@@ -235,6 +235,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Detailed Ledger Statement", href: "/dashboard/ledger/detailed", icon: FileText },
       { label: "Ledger General Report", href: "/dashboard/ledger/general-report", icon: FileBarChart },
       { label: "Outstanding Ledgers Report", href: "/dashboard/ledger/outstanding", icon: FileSpreadsheet },
+      { label: "Journal Reporting", href: "/dashboard/reports/journal", icon: BarChart3 },
     ],
   },
   {
