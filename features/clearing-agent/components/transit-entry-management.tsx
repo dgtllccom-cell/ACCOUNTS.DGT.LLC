@@ -37,6 +37,7 @@ import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { QrCode as QrCodeGraphic } from "@/components/ui/qr-code";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 export interface TransitDocument {
   id: string;
@@ -966,9 +967,17 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
 
               {/* SECTION 7: NOTES (Optional) */}
               <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-2 pb-1 border-b border-border/80">
-                  {tt("transit.sec_notes", "NOTES")} <span className="text-[10px] lowercase text-muted-foreground font-normal">{tt("transit.notes_optional", "(Optional)")}</span>
-                </h3>
+                <div className="mb-2 flex items-center justify-between border-b border-border/80 pb-1">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400">
+                    {tt("transit.sec_notes", "NOTES")} <span className="text-[10px] lowercase text-muted-foreground font-normal">{tt("transit.notes_optional", "(Optional)")}</span>
+                  </h3>
+                  <VoiceDictateButton
+                    context="clearing"
+                    lang={lang}
+                    value={formData.notes}
+                    onChange={(next) => handleInputChange("notes", next)}
+                  />
+                </div>
                 <textarea
                   rows={2}
                   value={formData.notes}

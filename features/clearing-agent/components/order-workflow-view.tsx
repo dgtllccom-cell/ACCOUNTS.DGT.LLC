@@ -14,6 +14,7 @@ import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { cn } from "@/lib/utils";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import {
   getCountryCustomsFieldConfig, CLEARANCE_TYPES, DUTY_TREATMENTS, CUSTOMS_STATUSES,
   type CustomsFieldKey,
@@ -490,7 +491,17 @@ function GoodsVerificationDialog({ open, onClose, orderId, legId, order, s, onDo
             <option value="discrepancy">{s.t("discrepancy_found", "Discrepancy Found")}</option>
           </select>
           {form.result === "discrepancy" && (
-            <textarea value={form.discrepancyNotes} onChange={(e) => setForm((f) => ({ ...f, discrepancyNotes: e.target.value }))} rows={3} placeholder={s.t("discrepancy_notes_ph", "Describe the discrepancy...")} className="w-full rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+            <div className="space-y-1">
+              <div className="flex justify-end">
+                <VoiceDictateButton
+                  context="clearing"
+                  lang={s.lang}
+                  value={form.discrepancyNotes}
+                  onChange={(next) => setForm((f) => ({ ...f, discrepancyNotes: next }))}
+                />
+              </div>
+              <textarea value={form.discrepancyNotes} onChange={(e) => setForm((f) => ({ ...f, discrepancyNotes: e.target.value }))} rows={3} placeholder={s.t("discrepancy_notes_ph", "Describe the discrepancy...")} className="w-full rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+            </div>
           )}
         </div>
         <DialogFooter>

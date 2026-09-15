@@ -13,6 +13,7 @@ import { ClearingAgentPicker } from "@/features/shipping/components/clearing-age
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { CustomerChargesPanel } from "@/features/clearing-agent/components/customer-charges-panel";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type PaymentBillRow = {
   id: string;
@@ -501,7 +502,15 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.remarks", "Remarks / Notes")}</label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-300">{tt("clbill.remarks", "Remarks / Notes")}</label>
+              <VoiceDictateButton
+                context="clearing"
+                lang={lang}
+                value={form.remarks}
+                onChange={(next) => setForm({ ...form, remarks: next })}
+              />
+            </div>
             <textarea
               rows={2}
               placeholder={tt("clbill.remarks_ph", "Additional billing details, agent notes or reference details...")}

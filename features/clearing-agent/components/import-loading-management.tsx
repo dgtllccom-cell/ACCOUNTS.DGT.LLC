@@ -11,6 +11,7 @@ import { TruckAttachments } from "@/features/clearing-agent/components/truck-att
 import { Th } from "@/components/ui/translated-th";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
 type Row = {
   id: string; import_date: string | null; import_serial: string | null; import_bill_number: string | null;
@@ -233,7 +234,15 @@ export function ImportLoadingManagementView({ lang }: { lang: SupportedLanguage 
                 </div>
               </div>
               <label className="block sm:col-span-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "il.remarks")}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "il.remarks")}</span>
+                  <VoiceDictateButton
+                    context="clearing"
+                    lang={lang}
+                    value={form.remarks}
+                    onChange={(next) => setForm({ ...form, remarks: next })}
+                  />
+                </div>
                 <textarea value={form.remarks ?? ""} onChange={(e) => setForm({ ...form, remarks: e.target.value })} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
               </label>
               {form.id ? <div className="sm:col-span-2 border-t border-slate-100 pt-3 dark:border-slate-800"><TruckAttachments entityId={form.id} entityKey="import_loading" /></div> : null}
