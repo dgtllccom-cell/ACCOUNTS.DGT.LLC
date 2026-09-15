@@ -60,7 +60,7 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
   step4Label: {
     en: "Bank Details",
     ur: "بینک کی تفصیلات",
-    ar: "بینک کی تفصیلات",
+    ar: "تفاصيل البنك",
     fa: "جزئیات بانک",
     ps: "د بانک توضیحات"
   },
@@ -329,6 +329,139 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "الحالة",
     fa: "وضعیت",
     ps: "حالت"
+  },
+  branch: {
+    en: "Branch",
+    ur: "برانچ",
+    ar: "الفرع",
+    fa: "شعبه",
+    ps: "څانګه"
+  },
+  phone: {
+    en: "Phone",
+    ur: "فون",
+    ar: "الهاتف",
+    fa: "تلفن",
+    ps: "تلیفون"
+  },
+  address: {
+    en: "Address",
+    ur: "پتہ",
+    ar: "العنوان",
+    fa: "آدرس",
+    ps: "پته"
+  },
+  registrationNo: {
+    en: "Registration No.",
+    ur: "رجسٹریشن نمبر",
+    ar: "رقم التسجيل",
+    fa: "شماره ثبت",
+    ps: "د راجستر شمېره"
+  },
+  bankBranch: {
+    en: "Bank Branch",
+    ur: "بینک برانچ",
+    ar: "فرع البنك",
+    fa: "شعبه بانک",
+    ps: "د بانک څانګه"
+  },
+  personalInformation: {
+    en: "Personal Information",
+    ur: "ذاتی معلومات",
+    ar: "المعلومات الشخصية",
+    fa: "اطلاعات شخصی",
+    ps: "شخصي معلومات"
+  },
+  locationInformation: {
+    en: "Location Information",
+    ur: "مقام کی معلومات",
+    ar: "معلومات الموقع",
+    fa: "اطلاعات مکان",
+    ps: "د ځای معلومات"
+  },
+  contactInformation: {
+    en: "Contact Information",
+    ur: "رابطے کی معلومات",
+    ar: "معلومات الاتصال",
+    fa: "اطلاعات تماس",
+    ps: "د اړیکو معلومات"
+  },
+  documentInformation: {
+    en: "Document Information",
+    ur: "دستاویزی معلومات",
+    ar: "معلومات المستند",
+    fa: "اطلاعات سند",
+    ps: "د سند معلومات"
+  },
+  exportPdf: {
+    en: "Export PDF",
+    ur: "PDF ایکسپورٹ کریں",
+    ar: "تصدير PDF",
+    fa: "خروجی PDF",
+    ps: "PDF صادرول"
+  },
+  date: {
+    en: "Date",
+    ur: "تاریخ",
+    ar: "التاريخ",
+    fa: "تاریخ",
+    ps: "نېټه"
+  },
+  preparedBy: {
+    en: "Prepared By",
+    ur: "تیار کنندہ",
+    ar: "أُعِدّ بواسطة",
+    fa: "تهیه‌کننده",
+    ps: "چمتو کوونکی"
+  },
+  authorizedBy: {
+    en: "Authorized By",
+    ur: "منظور کنندہ",
+    ar: "المخول بالتوقيع",
+    fa: "تأییدکننده",
+    ps: "اجازه ورکوونکی"
+  },
+  loadingAccountDetails: {
+    en: "Loading account details...",
+    ur: "اکاؤنٹ کی تفصیلات لوڈ ہو رہی ہیں...",
+    ar: "جارٍ تحميل تفاصيل الحساب...",
+    fa: "در حال بارگذاری جزئیات حساب...",
+    ps: "د حساب توضیحات بارېږي..."
+  },
+  whoDoesThisBelongTo: {
+    en: "Who does this belong to?",
+    ur: "یہ کس سے تعلق رکھتا ہے؟",
+    ar: "لمن ينتمي هذا؟",
+    fa: "این متعلق به کیست؟",
+    ps: "دا د چا پورې اړه لري؟"
+  },
+  generatedOnSave: {
+    en: "Generated on save",
+    ur: "محفوظ کرنے پر تیار ہوگا",
+    ar: "سيتم إنشاؤه عند الحفظ",
+    fa: "هنگام ذخیره تولید می‌شود",
+    ps: "د خوندي کولو پر مهال جوړېږي"
+  },
+  linked: {
+    en: "Linked",
+    ur: "منسلک",
+    ar: "مرتبط",
+    fa: "متصل",
+    ps: "نښلول شوی"
+  },
+  disconnect: {
+    en: "Disconnect",
+    ur: "منقطع کریں",
+    ar: "فصل الارتباط",
+    fa: "قطع ارتباط",
+    ps: "اړیکه پرې کول"
+  },
+  cancel: {
+    en: "Cancel",
+    ur: "منسوخ کریں",
+    ar: "إلغاء",
+    fa: "لغو",
+    ps: "لغوه کول"
   },
   manualReference: {
     en: "Manual Reference Number",
