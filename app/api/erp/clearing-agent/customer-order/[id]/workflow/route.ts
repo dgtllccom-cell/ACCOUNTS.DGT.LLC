@@ -68,7 +68,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       const [loc] = await localizeRecordFields<any>(
         [order as any],
         "clearing_customer_orders",
-        ["customer_name", "route_name", "cargo_details", "remarks", "goods_name", "exporter_name", "importer_name", "buyer_name", "notify_party_name"],
+        ["customer_name", "route_name", "cargo_details", "remarks", "goods_name", "exporter_name", "importer_name", "buyer_name", "notify_party_name", "consignee_name"],
         lang
       );
       localizedOrder = loc ?? order;

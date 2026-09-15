@@ -233,7 +233,8 @@ const PARTY_ROLES: Array<{ key: PartyRoleKey; label: string; labelKey: string; r
   { key: "importer", label: "Importer", labelKey: "role_importer", required: true },
   { key: "exporter", label: "Exporter", labelKey: "role_exporter", required: true },
   { key: "notify_party", label: "Notify Party", labelKey: "role_notify_party" },
-  { key: "buyer", label: "Buyer", labelKey: "role_buyer" }
+  { key: "buyer", label: "Buyer", labelKey: "role_buyer" },
+  { key: "consignee", label: "Consignee", labelKey: "role_consignee" }
 ];
 
 const EMPTY_FORM = {
@@ -270,6 +271,7 @@ const EMPTY_FORM = {
   notify_party_required: false,
   notify_party_name: "",
   buyer_name: "",
+  consignee_name: "",
   loading_country_id: "",
   loading_country_name: "",
   loading_state_province_id: "",
@@ -327,7 +329,8 @@ function emptyPartyState(): Record<PartyRoleKey, PartySelection> {
     importer: emptyPartySelection(),
     exporter: emptyPartySelection(),
     notify_party: emptyPartySelection(),
-    buyer: emptyPartySelection()
+    buyer: emptyPartySelection(),
+    consignee: emptyPartySelection()
   };
 }
 
@@ -1151,6 +1154,7 @@ export function CustomerOrderManagementView() {
       notify_party_required: Boolean(order.notify_party_required),
       notify_party_name: order.notify_party_name || "",
       buyer_name: order.buyer_name || "",
+      consignee_name: order.consignee_name || "",
       loading_country_id: order.loading_country_id || "",
       loading_country_name: order.loading_country_name || "",
       loading_state_province_id: o.loading_state_province_id || "",
@@ -1408,6 +1412,7 @@ export function CustomerOrderManagementView() {
         exporter_name: partySelections.exporter.customerName || formData.exporter_name || null,
         importer_name: partySelections.importer.customerName || formData.importer_name || null,
         buyer_name: partySelections.buyer.customerName || formData.buyer_name || null,
+        consignee_name: partySelections.consignee.customerName || formData.consignee_name || null,
         notify_party_name: partySelections.notify_party.customerName || formData.notify_party_name || null,
         party_links: Object.entries(partySelections)
           .filter(([, s]) => Boolean(s.customerName || s.companyName || s.addressText))
@@ -3154,14 +3159,15 @@ function Step1BookingCustomer({
 
   const copyCustomerToBuyer = () => {
     if (!formData.customer_id) return;
-    handlePartyChange("buyer", {
-      ...partySelections.buyer,
+    const copied = {
       customerId: formData.customer_id,
       customerName: formData.customer_name,
       companyName: partySelections.supplier.companyName || selectedCustomer?.company_name || "",
       addressText: partySelections.supplier.addressText || selectedCustomer?.address || "",
       addressSource: "Copied from Customer"
-    });
+    };
+    handlePartyChange("buyer", { ...partySelections.buyer, ...copied });
+    handlePartyChange("consignee", { ...partySelections.consignee, ...copied });
   };
 
   return (
@@ -3396,6 +3402,20 @@ function Step1BookingCustomer({
             disabled={loading}
             lang={lang}
             onChange={(next) => handlePartyChange("buyer", next)}
+          />
+
+          <PartyRolePanel
+            roleKey="consignee"
+            label={tt("role_consignee", "Consignee")}
+            selection={partySelections.consignee}
+            customers={customers}
+            companies={companies}
+            customerOptions={customerOptions}
+            companyOptions={companyOptions}
+            orders={orders}
+            disabled={loading}
+            lang={lang}
+            onChange={(next) => handlePartyChange("consignee", next)}
           />
 
           {/* Sub-step 1A Action */}

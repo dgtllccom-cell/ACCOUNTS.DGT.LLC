@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       notifyPartyRequired: body.notify_party_required ?? body.notifyPartyRequired ?? false,
       notifyPartyName: body.notify_party_name ?? body.notifyPartyName ?? null,
       buyerName: body.buyer_name ?? body.buyerName ?? null,
+      consigneeName: body.consignee_name ?? body.consigneeName ?? null,
       loadingSource: body.loading_source ?? body.loadingSource ?? null,
       loadingSourceName: body.loading_source_name ?? body.loadingSourceName ?? null,
       loadingCountryId: body.loading_country_id ?? body.loadingCountryId ?? null,

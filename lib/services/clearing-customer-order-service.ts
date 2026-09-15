@@ -2,7 +2,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type PartyRoleKey = "supplier" | "importer" | "exporter" | "notify_party" | "buyer";
+export type PartyRoleKey = "supplier" | "importer" | "exporter" | "notify_party" | "buyer" | "consignee";
 
 export type PartyLinkInput = {
   roleKey: PartyRoleKey;
@@ -35,6 +35,7 @@ export type ClearingCustomerOrderInput = {
   notifyPartyRequired?: boolean;
   notifyPartyName?: string | null;
   buyerName?: string | null;
+  consigneeName?: string | null;
   loadingSource?: string | null;
   loadingSourceName?: string | null;
   loadingCountryId?: string | null;
@@ -187,7 +188,7 @@ function trimOrNull(value: unknown) {
 }
 
 function normalizeRole(roleKey: string): PartyRoleKey | null {
-  if (roleKey === "supplier" || roleKey === "importer" || roleKey === "exporter" || roleKey === "notify_party" || roleKey === "buyer") {
+  if (roleKey === "supplier" || roleKey === "importer" || roleKey === "exporter" || roleKey === "notify_party" || roleKey === "buyer" || roleKey === "consignee") {
     return roleKey;
   }
   return null;
@@ -506,6 +507,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         notify_party_required: Boolean(input.notifyPartyRequired),
         notify_party_name: trimOrNull(input.notifyPartyName),
         buyer_name: trimOrNull(input.buyerName),
+        consignee_name: trimOrNull(input.consigneeName),
         loading_source: trimOrNull(input.loadingSource),
         loading_source_name: trimOrNull(input.loadingSourceName),
         loading_country_id: trimOrNull(input.loadingCountryId),
@@ -587,6 +589,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               notify_party_required = ${orderPayload.notify_party_required},
               notify_party_name = ${orderPayload.notify_party_name},
               buyer_name = ${orderPayload.buyer_name},
+              consignee_name = ${orderPayload.consignee_name},
               loading_source = ${orderPayload.loading_source},
               loading_source_name = ${orderPayload.loading_source_name},
               loading_country_id = ${orderPayload.loading_country_id},
@@ -648,6 +651,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             goods_variation_label, goods_brand, goods_size, goods_origin_country_name,
             route_name, shipment_type, transport_mode, movement_type,
             exporter_name, importer_name, notify_party_required, notify_party_name, buyer_name,
+            consignee_name,
             loading_source, loading_source_name, loading_country_id, loading_country_name,
             receiving_country_id, receiving_country_name, loading_port_id, loading_port_name,
             destination_port_id, destination_port_name, cargo_details, expected_loading_date, remarks,
@@ -668,7 +672,9 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.goods_origin_country_name}, ${orderPayload.route_name},
             ${orderPayload.shipment_type}, ${orderPayload.transport_mode}, ${orderPayload.movement_type},
             ${orderPayload.exporter_name}, ${orderPayload.importer_name}, ${orderPayload.notify_party_required},
-            ${orderPayload.notify_party_name}, ${orderPayload.buyer_name}, ${orderPayload.loading_source},
+            ${orderPayload.notify_party_name}, ${orderPayload.buyer_name},
+            ${orderPayload.consignee_name},
+            ${orderPayload.loading_source},
             ${orderPayload.loading_source_name}, ${orderPayload.loading_country_id}, ${orderPayload.loading_country_name},
             ${orderPayload.receiving_country_id}, ${orderPayload.receiving_country_name}, ${orderPayload.loading_port_id},
             ${orderPayload.loading_port_name}, ${orderPayload.destination_port_id}, ${orderPayload.destination_port_name},
