@@ -2590,5 +2590,485 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-12T12:25:05.228Z"
+  },
+  {
+    "key": "invtpl.center_template_tab",
+    "lang": "ur",
+    "value": "تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.center_template_tab",
+    "lang": "ar",
+    "value": "تیمبلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.center_template_tab",
+    "lang": "fa",
+    "value": "تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.center_template_tab",
+    "lang": "ps",
+    "value": "تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.choose_template",
+    "lang": "ur",
+    "value": "چوسی تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.choose_template",
+    "lang": "ar",
+    "value": "تشوسی تیمبلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.choose_template",
+    "lang": "fa",
+    "value": "چوسی تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.choose_template",
+    "lang": "ps",
+    "value": "چوسی تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.col_discount",
+    "lang": "ur",
+    "value": "رعایت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.col_discount",
+    "lang": "ar",
+    "value": "خصم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.col_discount",
+    "lang": "fa",
+    "value": "تخفیف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.col_discount",
+    "lang": "ps",
+    "value": "تخفیف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.default_badge",
+    "lang": "ur",
+    "value": "دیفاورلت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.default_badge",
+    "lang": "ar",
+    "value": "دیفولت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.default_badge",
+    "lang": "fa",
+    "value": "دیفولت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.default_badge",
+    "lang": "ps",
+    "value": "دیفاولت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.display_options",
+    "lang": "ur",
+    "value": "دیسپلای وپتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.display_options",
+    "lang": "ar",
+    "value": "دیسبلای وبتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.display_options",
+    "lang": "fa",
+    "value": "دیسپلای وپتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.display_options",
+    "lang": "ps",
+    "value": "دیسپلای وپتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.saving",
+    "lang": "ur",
+    "value": "ساورینگ…",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.saving",
+    "lang": "ar",
+    "value": "سوینج…",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.saving",
+    "lang": "fa",
+    "value": "سوینگ…",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.saving",
+    "lang": "ps",
+    "value": "ساوینگ…",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.set_default",
+    "lang": "ur",
+    "value": "سیت دیفاورلت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.set_default",
+    "lang": "ar",
+    "value": "سیت دیفولت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.set_default",
+    "lang": "fa",
+    "value": "سیت دیفولت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.set_default",
+    "lang": "ps",
+    "value": "سیت دیفاولت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_logo",
+    "lang": "ur",
+    "value": "کمپنی لوگو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_logo",
+    "lang": "ar",
+    "value": "شعار الشركة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_logo",
+    "lang": "fa",
+    "value": "لوگوی شرکت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_logo",
+    "lang": "ps",
+    "value": "د شرکت لوگو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_terms",
+    "lang": "ur",
+    "value": "ترمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_terms",
+    "lang": "ar",
+    "value": "ترمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_terms",
+    "lang": "fa",
+    "value": "ترمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.show_terms",
+    "lang": "ps",
+    "value": "ترمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.sign_for",
+    "lang": "ur",
+    "value": "کے لیے",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.sign_for",
+    "lang": "ar",
+    "value": "لأجل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.sign_for",
+    "lang": "fa",
+    "value": "برای",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.sign_for",
+    "lang": "ps",
+    "value": "لپاره",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_classic",
+    "lang": "ur",
+    "value": "کلاسسیک",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_classic",
+    "lang": "ar",
+    "value": "الإجمالياسسیک",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_classic",
+    "lang": "fa",
+    "value": "مجموعاسسیک",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_classic",
+    "lang": "ps",
+    "value": "ټولاسسیک",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_compact",
+    "lang": "ur",
+    "value": "کومپاکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_compact",
+    "lang": "ar",
+    "value": "إلىممعکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_compact",
+    "lang": "fa",
+    "value": "بهمپاکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_compact",
+    "lang": "ps",
+    "value": "تهمپاکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_modern",
+    "lang": "ur",
+    "value": "مودرن",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_modern",
+    "lang": "ar",
+    "value": "مودرن",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_modern",
+    "lang": "fa",
+    "value": "مودرن",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_modern",
+    "lang": "ps",
+    "value": "مودرن",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_premium",
+    "lang": "ur",
+    "value": "پریمیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_premium",
+    "lang": "ar",
+    "value": "بریمیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_premium",
+    "lang": "fa",
+    "value": "پریمیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_premium",
+    "lang": "ps",
+    "value": "پریمیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_professional",
+    "lang": "ur",
+    "value": "پروفیسسیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_professional",
+    "lang": "ar",
+    "value": "بروفیسسیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_professional",
+    "lang": "fa",
+    "value": "پروفیسسیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "invtpl.template_professional",
+    "lang": "ps",
+    "value": "پروفیسسیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-15T20:28:31.807Z"
   }
 ]

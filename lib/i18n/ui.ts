@@ -1,6 +1,37 @@
 ﻿import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "invtpl.center_template_tab"
+  | "invtpl.choose_template"
+  | "invtpl.col_discount"
+  | "invtpl.default_badge"
+  | "invtpl.default_save_failed"
+  | "invtpl.default_saved"
+  | "invtpl.desc_classic"
+  | "invtpl.desc_compact"
+  | "invtpl.desc_modern"
+  | "invtpl.desc_premium"
+  | "invtpl.desc_professional"
+  | "invtpl.display_options"
+  | "invtpl.matched_scope_hint"
+  | "invtpl.qr_placeholder"
+  | "invtpl.saving"
+  | "invtpl.scope_city_branch"
+  | "invtpl.scope_country"
+  | "invtpl.scope_country_branch"
+  | "invtpl.scope_global"
+  | "invtpl.set_default"
+  | "invtpl.set_default_hint"
+  | "invtpl.show_bank"
+  | "invtpl.show_logo"
+  | "invtpl.show_terms"
+  | "invtpl.sign_for"
+  | "invtpl.stamp_here"
+  | "invtpl.template_classic"
+  | "invtpl.template_compact"
+  | "invtpl.template_modern"
+  | "invtpl.template_premium"
+  | "invtpl.template_professional"
   | "tc.any_branch_staff"
   | "tc.assignee_user"
   | "tc.breadcrumb_dashboard"
@@ -8168,6 +8199,37 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "invtpl.center_template_tab": "Template",
+  "invtpl.choose_template": "Choose Template",
+  "invtpl.col_discount": "Discount",
+  "invtpl.default_badge": "Default",
+  "invtpl.default_save_failed": "Could not save default template",
+  "invtpl.default_saved": "Default template saved",
+  "invtpl.desc_classic": "Traditional bordered table layout",
+  "invtpl.desc_compact": "Dense, minimal layout for short / single-line invoices",
+  "invtpl.desc_modern": "Clean sans-serif design with a single color accent",
+  "invtpl.desc_premium": "Elaborate design with extra branding emphasis",
+  "invtpl.desc_professional": "Formal letterhead style with centered header",
+  "invtpl.display_options": "Display Options",
+  "invtpl.matched_scope_hint": "Using the default set for",
+  "invtpl.qr_placeholder": "Scan to verify",
+  "invtpl.saving": "Saving…",
+  "invtpl.scope_city_branch": "This City Branch",
+  "invtpl.scope_country": "This Country",
+  "invtpl.scope_country_branch": "This Main Branch",
+  "invtpl.scope_global": "Whole Company (Global)",
+  "invtpl.set_default": "Set Default",
+  "invtpl.set_default_hint": "Saves this template as the default for the scope selected above.",
+  "invtpl.show_bank": "Bank Details",
+  "invtpl.show_logo": "Logo",
+  "invtpl.show_terms": "Terms",
+  "invtpl.sign_for": "For",
+  "invtpl.stamp_here": "Stamp & Seal",
+  "invtpl.template_classic": "Classic",
+  "invtpl.template_compact": "Compact",
+  "invtpl.template_modern": "Modern",
+  "invtpl.template_premium": "Premium",
+  "invtpl.template_professional": "Professional",
   "comv.substep_1a_title": "1A — Customer & Parties",
   "comv.substep_1a_desc": "Customer, company, consignee/shipper and related party information",
   "comv.substep_1b_title": "1B — Transport Mode & Movement",
@@ -45029,6 +45091,37 @@ const ur: Dict = {
   "tc.complete_task": "مکمل نشان زد کریں",
   "tc.transfer_next": "اگلے صارف کو ہینڈ اوور کریں",
   "pom.subtitle": "ہر ملک اور برانچ میں خریداری آرڈرز کی ریئل ٹائم ٹریکنگ۔",
+  "invtpl.center_template_tab": "ٹیمپلیٹ",
+  "invtpl.choose_template": "ٹیمپلیٹ منتخب کریں",
+  "invtpl.col_discount": "رعایت",
+  "invtpl.default_badge": "ڈیفالٹ",
+  "invtpl.default_save_failed": "ڈیفالٹ ٹیمپلیٹ محفوظ نہ ہو سکا",
+  "invtpl.default_saved": "ڈیفالٹ ٹیمپلیٹ محفوظ ہو گیا",
+  "invtpl.desc_classic": "روایتی بارڈر والا جدولی لے آؤٹ",
+  "invtpl.desc_compact": "مختصر / ایک سطر والے انوائسز کے لیے سادہ، جامع لے آؤٹ",
+  "invtpl.desc_modern": "ایک رنگ کی جھلک کے ساتھ صاف ستھرا جدید ڈیزائن",
+  "invtpl.desc_premium": "برانڈنگ پر زیادہ زور کے ساتھ شاندار ڈیزائن",
+  "invtpl.desc_professional": "درمیان میں سرنامے کے ساتھ رسمی لیٹر ہیڈ طرز",
+  "invtpl.display_options": "ڈسپلے کے اختیارات",
+  "invtpl.matched_scope_hint": "کے لیے مقرر کردہ ڈیفالٹ استعمال ہو رہا ہے",
+  "invtpl.qr_placeholder": "تصدیق کے لیے اسکین کریں",
+  "invtpl.saving": "محفوظ ہو رہا ہے…",
+  "invtpl.scope_city_branch": "یہ سٹی برانچ",
+  "invtpl.scope_country": "یہ ملک",
+  "invtpl.scope_country_branch": "یہ مرکزی برانچ",
+  "invtpl.scope_global": "پوری کمپنی (عالمی)",
+  "invtpl.set_default": "بطور ڈیفالٹ مقرر کریں",
+  "invtpl.set_default_hint": "یہ اوپر منتخب کردہ دائرہ کار کے لیے اس ٹیمپلیٹ کو بطور ڈیفالٹ محفوظ کرتا ہے۔",
+  "invtpl.show_bank": "بینک کی تفصیلات",
+  "invtpl.show_logo": "لوگو",
+  "invtpl.show_terms": "شرائط",
+  "invtpl.sign_for": "برائے",
+  "invtpl.stamp_here": "مہر و دستخط",
+  "invtpl.template_classic": "کلاسک",
+  "invtpl.template_compact": "کومپیکٹ",
+  "invtpl.template_modern": "جدید",
+  "invtpl.template_premium": "پریمیم",
+  "invtpl.template_professional": "پیشہ ورانہ",
 };
 
 const ar: Dict = {
@@ -63451,6 +63544,37 @@ const ar: Dict = {
   "tc.complete_task": "تحديد كمكتمل",
   "tc.transfer_next": "تسليم إلى المستخدم التالي",
   "pom.subtitle": "تتبع أوامر الشراء في الوقت الفعلي عبر كل دولة وفرع.",
+  "invtpl.center_template_tab": "قالب",
+  "invtpl.choose_template": "اختر القالب",
+  "invtpl.col_discount": "خصم",
+  "invtpl.default_badge": "افتراضي",
+  "invtpl.default_save_failed": "تعذر حفظ القالب الافتراضي",
+  "invtpl.default_saved": "تم حفظ القالب الافتراضي",
+  "invtpl.desc_classic": "تخطيط جدولي تقليدي بحدود",
+  "invtpl.desc_compact": "تخطيط مكثف وبسيط للفواتير القصيرة / ذات السطر الواحد",
+  "invtpl.desc_modern": "تصميم أنيق بخط بلا زوائد بلمسة لون واحدة",
+  "invtpl.desc_premium": "تصميم فاخر مع تركيز إضافي على الهوية التجارية",
+  "invtpl.desc_professional": "طراز ترويسة رسمية برأسية في المنتصف",
+  "invtpl.display_options": "خيارات العرض",
+  "invtpl.matched_scope_hint": "يتم استخدام الافتراضي المحدد لـ",
+  "invtpl.qr_placeholder": "امسح للتحقق",
+  "invtpl.saving": "جارٍ الحفظ…",
+  "invtpl.scope_city_branch": "هذا الفرع المحلي",
+  "invtpl.scope_country": "هذا البلد",
+  "invtpl.scope_country_branch": "هذا الفرع الرئيسي",
+  "invtpl.scope_global": "الشركة بأكملها (عام)",
+  "invtpl.set_default": "تعيين كافتراضي",
+  "invtpl.set_default_hint": "يحفظ هذا القالب كافتراضي للنطاق المحدد أعلاه.",
+  "invtpl.show_bank": "تفاصيل البنك",
+  "invtpl.show_logo": "الشعار",
+  "invtpl.show_terms": "الشروط",
+  "invtpl.sign_for": "لـ",
+  "invtpl.stamp_here": "الختم والتوقيع",
+  "invtpl.template_classic": "كلاسيكي",
+  "invtpl.template_compact": "مضغوط",
+  "invtpl.template_modern": "عصري",
+  "invtpl.template_premium": "مميز",
+  "invtpl.template_professional": "احترافي",
 };
 
 const fa: Dict = {
@@ -81872,6 +81996,37 @@ const fa: Dict = {
   "tc.complete_task": "علامت‌گذاری به عنوان انجام‌شده",
   "tc.transfer_next": "واگذاری به کاربر بعدی",
   "pom.subtitle": "ردیابی لحظه‌ای سفارش‌های خرید در تمام کشورها و شعب.",
+  "invtpl.center_template_tab": "قالب",
+  "invtpl.choose_template": "انتخاب قالب",
+  "invtpl.col_discount": "تخفیف",
+  "invtpl.default_badge": "پیش‌فرض",
+  "invtpl.default_save_failed": "ذخیره قالب پیش‌فرض ممکن نشد",
+  "invtpl.default_saved": "قالب پیش‌فرض ذخیره شد",
+  "invtpl.desc_classic": "چیدمان جدولی سنتی با کادر",
+  "invtpl.desc_compact": "چیدمان فشرده و ساده برای فاکتورهای کوتاه / تک‌خطی",
+  "invtpl.desc_modern": "طراحی ساده و مدرن با یک رنگ برجسته",
+  "invtpl.desc_premium": "طراحی پرکار با تأکید بیشتر بر برند",
+  "invtpl.desc_professional": "سربرگ رسمی با هدر وسط‌چین",
+  "invtpl.display_options": "گزینه‌های نمایش",
+  "invtpl.matched_scope_hint": "استفاده از پیش‌فرض تنظیم‌شده برای",
+  "invtpl.qr_placeholder": "برای تأیید اسکن کنید",
+  "invtpl.saving": "در حال ذخیره…",
+  "invtpl.scope_city_branch": "این شعبه شهری",
+  "invtpl.scope_country": "این کشور",
+  "invtpl.scope_country_branch": "این شعبه اصلی",
+  "invtpl.scope_global": "کل شرکت (سراسری)",
+  "invtpl.set_default": "تنظیم به‌عنوان پیش‌فرض",
+  "invtpl.set_default_hint": "این قالب را به‌عنوان پیش‌فرض برای محدوده انتخاب‌شده در بالا ذخیره می‌کند.",
+  "invtpl.show_bank": "مشخصات بانکی",
+  "invtpl.show_logo": "آرم",
+  "invtpl.show_terms": "شرایط",
+  "invtpl.sign_for": "برای",
+  "invtpl.stamp_here": "مهر و امضا",
+  "invtpl.template_classic": "کلاسیک",
+  "invtpl.template_compact": "فشرده",
+  "invtpl.template_modern": "مدرن",
+  "invtpl.template_premium": "ویژه",
+  "invtpl.template_professional": "حرفه‌ای",
 };
 
 const ps: Dict = {
@@ -100299,6 +100454,37 @@ const ps: Dict = {
   "tc.complete_task": "بشپړ په نښه کړئ",
   "tc.transfer_next": "راتلونکي کاروونکي ته وسپارئ",
   "pom.subtitle": "په هر هیواد او څانګه کې د پیرود فرمایشونو ریښتیني وخت تعقیب.",
+  "invtpl.center_template_tab": "ټمپلیټ",
+  "invtpl.choose_template": "ټمپلیټ وټاکئ",
+  "invtpl.col_discount": "تخفیف",
+  "invtpl.default_badge": "ډیفالټ",
+  "invtpl.default_save_failed": "ډیفالټ ټمپلیټ خوندي نه شو",
+  "invtpl.default_saved": "ډیفالټ ټمپلیټ خوندي شو",
+  "invtpl.desc_classic": "دودیز پوله لرونکی جدول ترتیب",
+  "invtpl.desc_compact": "د لنډو / یو-کرښې فاکتورونو لپاره ګڼ، ساده ترتیب",
+  "invtpl.desc_modern": "د یو رنګ ټکي سره پاک عصري ډیزاین",
+  "invtpl.desc_premium": "د زیات برانډینګ تاکید سره ښکلی ډیزاین",
+  "invtpl.desc_professional": "د مرکزي سرلیک سره رسمي لیټرهیډ ډول",
+  "invtpl.display_options": "د ښودنې اختیارونه",
+  "invtpl.matched_scope_hint": "د ټاکل شوي ډیفالټ کارول کیږي لپاره",
+  "invtpl.qr_placeholder": "د تصدیق لپاره سکین کړئ",
+  "invtpl.saving": "خوندي کیږي…",
+  "invtpl.scope_city_branch": "دا ښاري څانګه",
+  "invtpl.scope_country": "دا هیواد",
+  "invtpl.scope_country_branch": "دا اصلي څانګه",
+  "invtpl.scope_global": "ټوله شرکت (نړیوال)",
+  "invtpl.set_default": "د ډیفالټ په توګه وټاکئ",
+  "invtpl.set_default_hint": "دا ټمپلیټ د پورته ټاکل شوي ساحې لپاره د ډیفالټ په توګه خوندي کوي.",
+  "invtpl.show_bank": "د بانک توضیحات",
+  "invtpl.show_logo": "لوگو",
+  "invtpl.show_terms": "شرطونه",
+  "invtpl.sign_for": "لپاره",
+  "invtpl.stamp_here": "مهر او لاسلیک",
+  "invtpl.template_classic": "کلاسیک",
+  "invtpl.template_compact": "کومپیکټ",
+  "invtpl.template_modern": "عصري",
+  "invtpl.template_premium": "پریمیم",
+  "invtpl.template_professional": "مسلکي",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
