@@ -2762,6 +2762,12 @@ export function CustomerOrderManagementView() {
                     trucksList={trucksList}
                     warehousesList={warehousesList}
                     goodsMasterList={goodsMasterList}
+                    onSelectSubStep={(sub) => {
+                      setStep1SubStep(sub);
+                      if (sub === "1A") setCurrentStep(1);
+                      else if (sub === "1B") setCurrentStep(2);
+                      else if (sub === "1C") setCurrentStep(3);
+                    }}
                     onAdvanceToStep2={() => {
                       setStep1SubStep("1B");
                       setCurrentStep(2);
@@ -2844,7 +2850,7 @@ export function CustomerOrderManagementView() {
                         disabled={saving}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        <span>Continue to Transport (1B)</span>
+                        <span>Continue to Pickup & Goods (1B)</span>
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     ) : currentStep === 2 ? (
@@ -2857,7 +2863,7 @@ export function CustomerOrderManagementView() {
                         disabled={saving}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        <span>Continue to Route (1C)</span>
+                        <span>Continue to Route & Delivery (1C)</span>
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     ) : currentStep === 3 ? (
@@ -2960,80 +2966,147 @@ export function CustomerOrderManagementView() {
                   </div>
                 </div>
 
-                {/* Prominent Customer Account Live Report Header Card */}
-                <div className="rounded-xl border border-blue-200/80 bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-white p-3.5 dark:border-blue-900/60 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900 space-y-3 shadow-2xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-100 pb-2.5 dark:border-blue-900/40">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-xs shadow-xs">
-                        <Users className="h-4 w-4" />
+                {/* Customer Account Live Report — Formal Document / Message Layout (Voice note + Image 3 Reference) */}
+                <div className="rounded-xl border border-blue-200/90 bg-white p-4 shadow-sm dark:border-blue-900/60 dark:bg-slate-900 space-y-3.5">
+                  {/* Top Bar: Customer Name, Badges & Live Ledger Balance */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm shadow-md shadow-blue-600/20">
+                        <Users className="h-5 w-5" />
                       </span>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                            {tt("customer", "Customer Account Live Report")}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-slate-900 dark:text-white">
+                            {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || "— Select Customer Account —"}
                           </span>
-                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                            {selectedAccountInfo?.code ? "ACC" : "CST"}
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                            {selectedAccountInfo?.code || selectedCustomerInfo?.person_code || "ACC"}
+                          </span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                            {selectedAccountInfo?.currency || "USD"}
                           </span>
                         </div>
-                        <div className="text-sm font-black text-slate-900 dark:text-white">
-                          {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || "— Select Customer Account —"}
+                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                          <span>{tt("customer_profile", "Customer & Account Document")}</span>
+                          <span>•</span>
+                          <span className="text-slate-400">ID: {formData.customer_id ? formData.customer_id.slice(0, 8) : "—"}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Live Ledger Balance */}
-                    <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                    {/* Live Ledger Balance Badge */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
                       <CreditCard className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase text-slate-400 leading-none">Live Ledger Balance</div>
-                        <div className={`font-black font-mono text-sm leading-tight ${
+                      <div className="text-right">
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">Live Ledger Balance</div>
+                        <div className={`font-black font-mono text-sm leading-tight mt-0.5 ${
                           selectedAccountInfo?.current_balance != null && Number(selectedAccountInfo.current_balance) < 0
                             ? "text-rose-600 dark:text-rose-400"
-                            : "text-emerald-700 dark:text-emerald-400"
+                            : "text-emerald-600 dark:text-emerald-400"
                         }`}>
                           {selectedAccountInfo?.current_balance != null
-                            ? `${selectedAccountInfo.currency || ""} ${Number(selectedAccountInfo.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ? `${selectedAccountInfo.currency || "USD"} ${Number(selectedAccountInfo.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             : "0.00"}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Customer Meta Badges in 4 Columns */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
-                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Account Code</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
-                        {selectedAccountInfo?.code || selectedCustomerInfo?.person_code || "—"}
-                      </span>
+                  {/* 2-Column Document Layout (Billing Address & Shipping Destination) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                    {/* COLUMN 1: BILLING ADDRESS */}
+                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                          <Building2 className="h-3 w-3" />
+                          BILLING ADDRESS
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
+                        <div className="font-bold text-slate-900 dark:text-white">
+                          {selectedCustomerInfo?.contact_person || selectedCustomerInfo?.customer_name || formData.customer_name || "—"}
+                        </div>
+                        {selectedCustomerInfo?.company_name ? (
+                          <div className="text-slate-600 dark:text-slate-400 font-medium">
+                            {selectedCustomerInfo.company_name}
+                          </div>
+                        ) : null}
+                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
+                          {selectedCustomerInfo?.address || "Address on customer file"}
+                        </div>
+                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
+                          {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).join(", ") || "—"}
+                        </div>
+                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                            <span className="font-semibold text-slate-500">Phone:</span>
+                            <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
+                          </div>
+                          {selectedCustomerInfo?.whatsapp ? (
+                            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                              <span className="font-semibold text-slate-500">WhatsApp:</span>
+                              <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo.whatsapp}</span>
+                            </div>
+                          ) : null}
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 truncate">
+                            <span className="font-semibold text-slate-500">Email:</span>
+                            <span className="text-slate-800 dark:text-slate-200 truncate">{selectedCustomerInfo?.email || "—"}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
-                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Contact Phone</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
-                        {selectedCustomerInfo?.mobile || selectedCustomerInfo?.contact_person || "—"}
-                      </span>
+                    {/* COLUMN 2: SHIPPING ADDRESS / DELIVERY DESTINATION */}
+                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                          <Truck className="h-3 w-3" />
+                          SHIPPING & DELIVERY DESTINATION
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
+                        <div className="font-bold text-slate-900 dark:text-white">
+                          {formData.customer_name || selectedCustomerInfo?.customer_name || "Consignee / Delivery Target"}
+                        </div>
+                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
+                          {formData.final_delivery_location || (formData.destination_port_name ? `Port: ${formData.destination_port_name}` : "Delivery destination pending input")}
+                        </div>
+                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
+                          {[formData.destination_city, formData.receiving_country_name || selectedCustomerInfo?.country_name].filter(Boolean).join(", ") || "—"}
+                        </div>
+                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                            <span className="font-semibold text-slate-500">Transport:</span>
+                            <span className="font-bold text-blue-600 dark:text-blue-400 uppercase">
+                              {formData.transport_mode.replace("by_", "By ")} ({formData.movement_type})
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                            <span className="font-semibold text-slate-500">Planned Dispatch:</span>
+                            <span className="font-mono text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 truncate">
+                            <span className="font-semibold text-slate-500">Warehouse Source:</span>
+                            <span className="text-slate-800 dark:text-slate-200 truncate">{formData.goods_items?.[0]?.warehouseName || formData.loading_source_name || "Primary Warehouse"}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  </div>
 
-                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
-                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Email Address</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
-                        {selectedCustomerInfo?.email || "—"}
-                      </span>
+                  {/* REMARKS (Directly matching Image 3) */}
+                  <div className="rounded-lg border border-slate-200/60 bg-slate-50/40 p-2.5 dark:border-slate-800/80 dark:bg-slate-850/40 text-xs">
+                    <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                      REMARKS & INSTRUCTIONS
                     </div>
-
-                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
-                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Country & City</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
-                        {selectedCustomerInfo?.country_name || "—"} {selectedCustomerInfo?.city_name ? `(${selectedCustomerInfo.city_name})` : ""}
-                      </span>
+                    <div className="text-slate-600 dark:text-slate-300 italic text-[11px]">
+                      {formData.remarks || "No additional instructions entered for this customer order."}
                     </div>
                   </div>
 
                   {/* Secondary Related Parties if set */}
                   {(partySelections.supplier?.companyName || partySelections.buyer?.companyName) ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-blue-100/60 dark:border-blue-900/30 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800 text-xs">
                       {partySelections.supplier?.companyName ? (
                         <div className="flex items-center gap-2 rounded-lg bg-white/70 p-1.5 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-800">
                           <Building2 className="h-3 w-3 text-purple-600 shrink-0" />
@@ -3694,6 +3767,7 @@ function Step1BookingCustomer({
   setFormData,
   step1SubStep,
   setStep1SubStep,
+  onSelectSubStep,
   accounts,
   customers,
   customerOptions,
@@ -3727,6 +3801,7 @@ function Step1BookingCustomer({
   setFormData: SetFormData;
   step1SubStep: "1A" | "1B" | "1C";
   setStep1SubStep: (sub: "1A" | "1B" | "1C") => void;
+  onSelectSubStep?: (sub: "1A" | "1B" | "1C") => void;
   accounts: AccountRow[];
   customers: CustomerRow[];
   customerOptions: SearchSelectOption[];
@@ -3873,13 +3948,21 @@ function Step1BookingCustomer({
   );
   const totalGoodsMt = useMemo(() => (totalGoodsKg / 1000).toFixed(2), [totalGoodsKg]);
 
+  const selectSub = (sub: "1A" | "1B" | "1C") => {
+    if (onSelectSubStep) {
+      onSelectSubStep(sub);
+    } else {
+      setStep1SubStep(sub);
+    }
+  };
+
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
       {/* Dynamic 1A / 1B / 1C Sub-step Navigator */}
       <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs">
         <button
           type="button"
-          onClick={() => setStep1SubStep("1A")}
+          onClick={() => selectSub("1A")}
           className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
             step1SubStep === "1A"
               ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
@@ -3893,7 +3976,7 @@ function Step1BookingCustomer({
 
         <button
           type="button"
-          onClick={() => setStep1SubStep("1B")}
+          onClick={() => selectSub("1B")}
           className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
             step1SubStep === "1B"
               ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
@@ -3909,7 +3992,7 @@ function Step1BookingCustomer({
 
         <button
           type="button"
-          onClick={() => setStep1SubStep("1C")}
+          onClick={() => selectSub("1C")}
           className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
             step1SubStep === "1C"
               ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
@@ -3928,56 +4011,42 @@ function Step1BookingCustomer({
       {/* 1A — CUSTOMER & ORDER BASICS                                              */}
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          {/* Automatically generated Serials Bar */}
-          <div className="rounded-xl border border-slate-200/90 bg-gradient-to-r from-slate-50 to-blue-50/40 p-3 dark:border-slate-800 dark:from-slate-850 dark:to-slate-900">
-            <div className="flex items-center justify-between border-b border-slate-200/60 pb-2 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-[10px]">
+        <div className="space-y-3.5 animate-in fade-in duration-150">
+          {/* Compact Serials & Timestamp Bar (Reduces form bulk) */}
+          <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-850">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-[10px] font-black text-white">
                   1A
                 </span>
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Customer & Order Basics
+                <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">Serials:</span>
+                <span className="font-mono text-blue-700 dark:text-blue-300 font-bold">
+                  {formData.super_admin_serial || formData.order_no || "Auto"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-mono text-slate-600 dark:text-slate-300">
+                  {formData.country_serial || "Auto"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-mono text-slate-600 dark:text-slate-300">
+                  {formData.branch_serial || "Auto"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                  {formData.entry_serial || "Auto"}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                <Calendar className="h-3.5 w-3.5 text-blue-600" />
+              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                <Calendar className="h-3 w-3 text-blue-600" />
                 <span>{formData.order_date || new Date().toISOString().split("T")[0]}</span>
                 <span>•</span>
                 <span>{formData.order_time || new Date().toTimeString().slice(0, 5)}</span>
               </div>
             </div>
-
-            <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
-                <div className="text-[9px] font-bold uppercase text-slate-400">Global Serial</div>
-                <div className="font-mono text-xs font-black text-blue-600 dark:text-blue-400 truncate">
-                  {formData.super_admin_serial || formData.order_no || "Auto"}
-                </div>
-              </div>
-              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
-                <div className="text-[9px] font-bold uppercase text-slate-400">Country Serial</div>
-                <div className="font-mono text-xs font-black text-slate-800 dark:text-slate-200 truncate">
-                  {formData.country_serial || "Auto"}
-                </div>
-              </div>
-              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
-                <div className="text-[9px] font-bold uppercase text-slate-400">Branch Serial</div>
-                <div className="font-mono text-xs font-black text-slate-800 dark:text-slate-200 truncate">
-                  {formData.branch_serial || "Auto"}
-                </div>
-              </div>
-              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
-                <div className="text-[9px] font-bold uppercase text-slate-400">Entry Serial</div>
-                <div className="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">
-                  {formData.entry_serial || "Auto"}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* 1. Customer Account SearchSelect */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-blue-600" />
@@ -4001,7 +4070,7 @@ function Step1BookingCustomer({
               emptyLabel="No matching customers found"
             />
 
-            {/* Minimal tag summary underneath input (No large duplicate card!) */}
+            {/* Minimal tag summary underneath input */}
             {selectedCustomer || selectedAccount ? (
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-300">
                 <span className="font-bold text-slate-900 dark:text-white">
@@ -4023,74 +4092,47 @@ function Step1BookingCustomer({
             ) : null}
           </div>
 
-          {/* 2. Ship Type & Movement Type Selectors */}
+          {/* 2. Ship Type & Movement Type Selectors — Compact 2-Column Dropdowns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Ship Type */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            {/* Ship Type Dropdown */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Ship className="h-4 w-4 text-blue-600" />
                 <span>Ship Type *</span>
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    { key: "by_sea", label: "By Sea", icon: Ship, emoji: "🚢" },
-                    { key: "by_road", label: "By Road", icon: Truck, emoji: "🚛" },
-                    { key: "by_air", label: "By Air", icon: Plane, emoji: "✈️" },
-                    { key: "by_rail", label: "By Train", icon: Route, emoji: "🚆" }
-                  ] as const
-                ).map(({ key, label, emoji }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFormData((curr) => ({ ...curr, transport_mode: key }))}
-                    className={`flex items-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all ${
-                      formData.transport_mode === key
-                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
-                        : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
-                  >
-                    <span className="text-base leading-none">{emoji}</span>
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
+              <select
+                value={formData.transport_mode}
+                onChange={(e) => setFormData((curr) => ({ ...curr, transport_mode: e.target.value as any }))}
+                className={selectClass}
+              >
+                <option value="by_sea">🚢 By Sea (Ocean Vessel / Container)</option>
+                <option value="by_road">🚛 By Road (Truck / Trailer / Road Freight)</option>
+                <option value="by_air">✈️ By Air (Air Freight / Cargo)</option>
+                <option value="by_rail">🚆 By Train (Rail Freight)</option>
+              </select>
             </div>
 
-            {/* Movement Type */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            {/* Movement Type Dropdown */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Repeat2 className="h-4 w-4 text-purple-600" />
                 <span>Movement Type *</span>
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    { key: "import", label: "Import", icon: ArrowLeft },
-                    { key: "export", label: "Export", icon: ArrowRight },
-                    { key: "up_transit", label: "Up Transit", icon: Route },
-                    { key: "down_transit", label: "Down Transit", icon: Route }
-                  ] as const
-                ).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFormData((curr) => ({ ...curr, movement_type: key }))}
-                    className={`flex items-center justify-center rounded-xl border py-2.5 px-2 text-xs font-bold transition-all ${
-                      formData.movement_type === key
-                        ? "border-purple-600 bg-purple-50 text-purple-700 shadow-xs dark:border-purple-500 dark:bg-purple-950/60 dark:text-purple-300"
-                        : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
-                  >
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
+              <select
+                value={formData.movement_type}
+                onChange={(e) => setFormData((curr) => ({ ...curr, movement_type: e.target.value as any }))}
+                className={selectClass}
+              >
+                <option value="import">Import</option>
+                <option value="export">Export</option>
+                <option value="up_transit">Up Transit</option>
+                <option value="down_transit">Down Transit</option>
+              </select>
             </div>
           </div>
 
-          {/* 1A Next Action */}
-          <div className="flex items-center justify-between pt-2">
+          {/* 1A Reset Action */}
+          <div className="flex items-center justify-end pt-1">
             <button
               type="button"
               onClick={() => {
@@ -4102,20 +4144,9 @@ function Step1BookingCustomer({
                   transport_mode: "by_sea"
                 }));
               }}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
             >
-              Reset 1A
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStep1SubStep("1B");
-                onAdvanceToStep2();
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
-            >
-              <span>Continue to Pickup & Goods (1B)</span>
-              <ChevronRight className="h-4 w-4" />
+              Reset 1A Form
             </button>
           </div>
         </div>
@@ -4146,7 +4177,7 @@ function Step1BookingCustomer({
             </div>
             <button
               type="button"
-              onClick={() => setStep1SubStep("1A")}
+              onClick={() => selectSub("1A")}
               className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline"
             >
               <Pencil className="h-3 w-3" />
@@ -4516,86 +4547,83 @@ function Step1BookingCustomer({
                     </div>
                   </div>
 
-                  {/* Warehouse Source for this goods item */}
-                  <div className="pt-1">
-                    <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Warehouse / Pickup Location
+                  {/* Warehouse Source for this goods item — Compact Dropdown */}
+                  <div className="pt-1.5 space-y-1.5">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Warehouse className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Warehouse / Pickup Location *</span>
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
-                      {(
-                        [
-                          { key: "company_warehouse", label: "Company Warehouse" },
-                          { key: "same", label: "Same Warehouse" },
-                          { key: "customer_warehouse", label: "Customer Warehouse" },
-                          { key: "other", label: "Other Warehouse" }
-                        ] as const
-                      ).map(({ key, label }) => (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => {
-                            if (key === "customer_warehouse") {
-                              updateGoodsItem(gIdx, {
-                                warehouseSourceType: key,
-                                warehouseName: selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse",
-                                warehouseAddressText: selectedCustomer?.address || "Customer Address"
-                              });
-                            } else {
-                              updateGoodsItem(gIdx, { warehouseSourceType: key });
-                            }
-                          }}
-                          className={`rounded-lg border px-2 py-1.5 text-[11px] font-bold transition-all text-center ${
-                            item.warehouseSourceType === key
-                              ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-300"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Conditional warehouse selector */}
-                    {item.warehouseSourceType === "company_warehouse" && (
-                      <SearchSelect
-                        label=""
-                        value={item.warehouseId}
-                        placeholder="Select Company Warehouse..."
-                        options={(warehousesList || []).map((w: any) => ({
-                          value: w.id,
-                          label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
-                          keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
-                        }))}
-                        onValueChange={(warehouseId) => {
-                          const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
-                          const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
-                          updateGoodsItem(gIdx, {
-                            warehouseId,
-                            warehouseName: w?.warehouse_name || w?.name || "",
-                            warehouseAddressText: addr
-                          });
-                          if (gIdx === 0) {
-                            setFormData((c) => ({
-                              ...c,
-                              loading_source_warehouse_id: warehouseId,
-                              loading_source_name: w?.warehouse_name || w?.name || ""
-                            }));
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={item.warehouseSourceType}
+                        onChange={(e) => {
+                          const key = e.target.value as any;
+                          if (key === "customer_warehouse") {
+                            updateGoodsItem(gIdx, {
+                              warehouseSourceType: key,
+                              warehouseName: selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse",
+                              warehouseAddressText: selectedCustomer?.address || "Customer Address"
+                            });
+                          } else {
+                            updateGoodsItem(gIdx, { warehouseSourceType: key });
                           }
                         }}
-                        searchPlaceholder="Search warehouses..."
-                        emptyLabel="No warehouses found"
-                      />
-                    )}
+                        className={selectClass}
+                      >
+                        <option value="company_warehouse">🏢 Company Warehouse</option>
+                        <option value="same">🔁 Same Warehouse (First Item Location)</option>
+                        <option value="customer_warehouse">👤 Customer Warehouse</option>
+                        <option value="other">📍 Other / Custom Warehouse</option>
+                      </select>
 
-                    {item.warehouseSourceType === "customer_warehouse" && (
-                      <div className="rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                        <span className="font-bold">Address: </span>
-                        <span>{selectedCustomer?.address || "Customer address on record"}</span>
-                      </div>
-                    )}
+                      {/* Conditional warehouse selector / address */}
+                      {item.warehouseSourceType === "company_warehouse" && (
+                        <SearchSelect
+                          label=""
+                          value={item.warehouseId}
+                          placeholder="Select Company Warehouse..."
+                          options={(warehousesList || []).map((w: any) => ({
+                            value: w.id,
+                            label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
+                            keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
+                          }))}
+                          onValueChange={(warehouseId) => {
+                            const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
+                            const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
+                            updateGoodsItem(gIdx, {
+                              warehouseId,
+                              warehouseName: w?.warehouse_name || w?.name || "",
+                              warehouseAddressText: addr
+                            });
+                            if (gIdx === 0) {
+                              setFormData((c) => ({
+                                ...c,
+                                loading_source_warehouse_id: warehouseId,
+                                loading_source_name: w?.warehouse_name || w?.name || ""
+                              }));
+                            }
+                          }}
+                          searchPlaceholder="Search warehouses..."
+                          emptyLabel="No warehouses found"
+                        />
+                      )}
+
+                      {item.warehouseSourceType === "customer_warehouse" && (
+                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-between">
+                          <span className="font-bold truncate">{selectedCustomer?.customer_name || "Customer"}&apos;s Warehouse</span>
+                          <span className="text-[11px] text-slate-500 truncate max-w-[160px]">{selectedCustomer?.address || "Address on record"}</span>
+                        </div>
+                      )}
+
+                      {item.warehouseSourceType === "same" && (
+                        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-850 dark:text-slate-400 flex items-center">
+                          <span>Using pickup warehouse from Item #1</span>
+                        </div>
+                      )}
+                    </div>
 
                     {item.warehouseSourceType === "other" && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                         <input
                           type="text"
                           placeholder="Warehouse / yard name"
@@ -4627,29 +4655,6 @@ function Step1BookingCustomer({
               </span>
             </div>
           </div>
-
-          {/* 1B Navigation Actions */}
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={() => setStep1SubStep("1A")}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span>Back to 1A</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStep1SubStep("1C");
-                if (onAdvanceToStep3) onAdvanceToStep3();
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
-            >
-              <span>Continue to Route & Delivery (1C)</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
         </div>
       )}
 
@@ -4679,14 +4684,14 @@ function Step1BookingCustomer({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setStep1SubStep("1A")}
+                onClick={() => selectSub("1A")}
                 className="text-[11px] font-bold text-blue-600 underline"
               >
                 [Edit 1A]
               </button>
               <button
                 type="button"
-                onClick={() => setStep1SubStep("1B")}
+                onClick={() => selectSub("1B")}
                 className="text-[11px] font-bold text-blue-600 underline"
               >
                 [Edit 1B]
@@ -5092,39 +5097,6 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* 1C Bottom Actions: Direct Confirm & Save Customer Order! */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setStep1SubStep("1B")}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span>Back to 1B</span>
-            </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onSaveDraft}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
-              >
-                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                <span>Save Draft</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={onConfirmSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 transition"
-              >
-                {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                <span>Confirm & Save Customer Order</span>
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
