@@ -134,8 +134,12 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
   }, []);
 
   const loadSavedViews = useCallback(() => {
-    apiGet<SavedView[]>("/api/erp/reports/saved?module=journal_reporting")
-      .then(setSavedViews)
+    // /api/erp/reports/saved returns { success, data } (not the { ok, data }
+    // envelope apiFetch/apiGet unwrap) — same shape components/reports/builder/
+    // saved-reports-manager.tsx already reads directly for this same endpoint.
+    fetch("/api/erp/reports/saved?module=journal_reporting", { credentials: "include", cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => setSavedViews(Array.isArray(json?.data) ? json.data : []))
       .catch(() => setSavedViews([]));
   }, []);
   useEffect(() => {
