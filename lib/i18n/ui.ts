@@ -6952,6 +6952,7 @@ export type UiKey =
   | "email_mgmt.resolving_config" | "email_mgmt.default_official_mail"
   | "email_mgmt.download_attachment" | "email_mgmt.link_erp_doc"
   | "email_mgmt.create_purchase_order" | "email_mgmt.create_invoice" | "email_mgmt.create_payment"
+  | "email_mgmt.test_email_body" | "email_mgmt.test_timestamp" | "email_mgmt.test_from_erp"
   | "inv.title" | "inv.stock_in" | "inv.stock_out" | "inv.adjustment" | "inv.all_types"
   | "inv.movement_id" | "inv.movement_type" | "inv.available_qty" | "inv.on_hand_qty"
   | "inv.chs_code" | "inv.goods_item" | "inv.goods_name" | "inv.country_scope"
@@ -15068,6 +15069,9 @@ const en: Dict = {
   "email_mgmt.create_purchase_order": "Create Purchase Order",
   "email_mgmt.create_invoice": "Create Invoice",
   "email_mgmt.create_payment": "Create Payment",
+  "email_mgmt.test_email_body": "Test email from DGT ERP",
+  "email_mgmt.test_timestamp": "Time",
+  "email_mgmt.test_from_erp": "ERP Mailbox Test",
   "inv.title": "Stock & Inventory Management",
   "inv.saving": "Saving...",
   "inv.stock_in": "Stock In",
@@ -33701,6 +33705,9 @@ const ur: Dict = {
   "email_mgmt.create_purchase_order": "خریداری آرڈر بنائیں",
   "email_mgmt.create_invoice": "انوائس بنائیں",
   "email_mgmt.create_payment": "ادائیگی بنائیں",
+  "email_mgmt.test_email_body": "ڈی جی ٹی ای آر پی سے ٹیسٹ ای میل",
+  "email_mgmt.test_timestamp": "وقت",
+  "email_mgmt.test_from_erp": "ای آر پی میل باکس ٹیسٹ",
   "inv.title": "اسٹاک اور انوینٹری مینجمنٹ",
   "inv.saving": "محفوظ ہو رہا ہے...",
   "inv.stock_in": "اسٹاک ان",
@@ -52242,6 +52249,9 @@ const ar: Dict = {
   "email_mgmt.create_purchase_order": "إنشاء أمر شراء",
   "email_mgmt.create_invoice": "إنشاء فاتورة",
   "email_mgmt.create_payment": "إنشاء دفعة",
+  "email_mgmt.test_email_body": "رسالة اختبار من نظام DGT ERP",
+  "email_mgmt.test_timestamp": "الوقت",
+  "email_mgmt.test_from_erp": "اختبار صندوق البريد ERP",
   "inv.title": "إدارة المخزون والمستودعات",
   "inv.saving": "جارٍ الحفظ...",
   "inv.stock_in": "مخزون وارد",
@@ -70820,6 +70830,9 @@ const fa: Dict = {
   "email_mgmt.create_purchase_order": "ایجاد سفارش خرید",
   "email_mgmt.create_invoice": "ایجاد فاکتور",
   "email_mgmt.create_payment": "ایجاد پرداخت",
+  "email_mgmt.test_email_body": "ایمیل تست از سیستم DGT ERP",
+  "email_mgmt.test_timestamp": "وقت",
+  "email_mgmt.test_from_erp": "تست صندوق پستی ERP",
   "inv.title": "مدیریت موجودی و انبار",
   "inv.saving": "در حال ذخیره...",
   "inv.stock_in": "ورود موجودی",
@@ -89404,6 +89417,9 @@ const ps: Dict = {
   "email_mgmt.create_purchase_order": "د پیرود آرډر جوړول",
   "email_mgmt.create_invoice": "انوائس جوړول",
   "email_mgmt.create_payment": "تادیه جوړول",
+  "email_mgmt.test_email_body": "د DGT ERP څخه ٹیسٹ ای میل",
+  "email_mgmt.test_timestamp": "وخت",
+  "email_mgmt.test_from_erp": "ERP میل باکس ٹیسٹ",
   "inv.title": "د سټاک او انوینټري مدیریت",
   "inv.saving": "خوندي کیږي...",
   "inv.stock_in": "سټاک ان",
