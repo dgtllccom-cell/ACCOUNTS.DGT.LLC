@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
 import { apiOk, handleApiError } from "@/lib/api/response";
-import { createServerSupabaseClient } from "@/lib/supabase/client";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 

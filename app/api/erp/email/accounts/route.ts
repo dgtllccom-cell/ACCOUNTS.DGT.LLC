@@ -64,9 +64,6 @@ async function resolveProviderId(admin: any, emailAddress: string) {
 export async function GET(_request: NextRequest) {
   try {
     const session = await requireErpSession();
-    if (!session.isSuperAdmin) {
-      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Only Super Admin can view email account configuration." } }, { status: 403 });
-    }
     const admin = createSupabaseAdminClient() as any;
 
     const { data: accounts, error } = await admin
@@ -102,7 +99,15 @@ export async function GET(_request: NextRequest) {
       return "DGT LLC";
     }
 
-    const rows = (accounts || []).map((acc: any) => {
+    const filteredAccounts = (accounts || []).filter((acc: any) => {
+      if (session.isSuperAdmin) return true;
+      const matchCountry = acc.country_id && (session.countryIds || []).includes(acc.country_id);
+      const matchCityBranch = acc.city_branch_id && (session.cityBranchIds || []).includes(acc.city_branch_id);
+      const matchCountryBranch = acc.country_branch_id && (session.countryBranchIds || []).includes(acc.country_branch_id);
+      return Boolean(matchCountry || matchCityBranch || matchCountryBranch);
+    });
+
+    const rows = (filteredAccounts || []).map((acc: any) => {
       const settings = acc.settings || {};
       const country: any = acc.country_id ? countryMap.get(acc.country_id) : null;
       const countryBranch: any = acc.country_branch_id ? countryBranchMap.get(acc.country_branch_id) : null;

@@ -105,9 +105,10 @@ export async function GET(
 
     // Fetch recent messages
     const messages: EmailMessage[] = [];
-    const msgSet = await client.search({ all: true }, { limit: 50 });
+    const searchResult = await client.search({ all: true });
+    const uids: number[] = Array.isArray(searchResult) ? searchResult.slice(-50) : [];
 
-    for (const uid of msgSet) {
+    for (const uid of uids) {
       const message = await client.fetchOne(uid, {
         source: true,
         envelope: true
@@ -123,9 +124,13 @@ export async function GET(
           message.envelope?.from?.[0]?.address ||
           headerLines.find((l) => l.startsWith("From:"))?.replace("From:", "").trim() ||
           "unknown";
+        const dateRaw = message.envelope?.date;
         const date =
-          message.envelope?.date?.toISOString() ||
-          new Date().toISOString();
+          dateRaw instanceof Date
+            ? dateRaw.toISOString()
+            : typeof dateRaw === "string"
+              ? dateRaw
+              : new Date().toISOString();
 
         messages.push({
           id: `${accountId}-${uid}`,
@@ -133,7 +138,7 @@ export async function GET(
           subject,
           date,
           preview: headerLines.slice(0, 3).join(" ").substring(0, 100),
-          isRead: !message.flags?.includes("\\Unseen"),
+          isRead: message.flags ? !message.flags.has("\\Unseen") : true,
           folder
         });
       }
