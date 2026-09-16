@@ -922,6 +922,12 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
     } catch (error) {
       console.warn("Customer-order translation sync failed after save; preserving saved shipping order.", error);
     }
+    try {
+      const { ensureCustomerBillForOrder } = await import("@/lib/services/clearing-customer-bill-service");
+      await ensureCustomerBillForOrder(result.order.id, input.createdBy ?? null);
+    } catch (error) {
+      console.warn("Auto-generation of customer bill failed after order save (non-fatal):", error);
+    }
     return result;
   });
 }

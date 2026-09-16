@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   Anchor,
   ArrowLeft,
@@ -21,6 +22,7 @@ import {
   Plane,
   Plus,
   Printer,
+  Receipt,
   RefreshCw,
   Repeat2,
   Route,
@@ -258,6 +260,8 @@ export type CustomerOrderGoodsItem = {
   warehouseId: string;
   warehouseName: string;
   warehouseAddressText: string;
+  photoUrl?: string;
+  photoName?: string;
   remarks?: string;
 
   // Compatibility fields for Live Report & UI
@@ -286,6 +290,8 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
     warehouseId: "",
     warehouseName: "",
     warehouseAddressText: "",
+    photoUrl: "",
+    photoName: "",
     remarks: "",
     goods_name: "",
     qty_unit: "Bags",
@@ -2647,6 +2653,17 @@ export function CustomerOrderManagementView() {
                   )}
                 </div>
 
+                {/* View Customer Bill */}
+                {(editingOrderId || (formData as any).id) ? (
+                  <Link
+                    href={`/dashboard/clearing-agent/customer-bill?orderId=${editingOrderId || (formData as any).id || ""}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
+                  >
+                    <Receipt className="h-3.5 w-3.5" />
+                    <span>{t(lang, "cbill.view_customer_bill", "View Customer Bill")}</span>
+                  </Link>
+                ) : null}
+
                 {/* Save Draft */}
                 <button
                   type="button"
@@ -3494,6 +3511,7 @@ export function CustomerOrderManagementView() {
                           <th className="py-2.5 px-3 text-right">Total KG</th>
                           <th className="py-2.5 px-3 text-right">Total MT</th>
                           <th className="py-2.5 px-3">Warehouse Source</th>
+                          <th className="py-2.5 px-3 text-center">Quality Photo</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
@@ -3532,6 +3550,27 @@ export function CustomerOrderManagementView() {
                               </td>
                               <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
                                 {it.warehouseName || formData.loading_source_name || "Primary Warehouse"}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                {it.photoUrl ? (
+                                  <div className="inline-flex items-center justify-center gap-1">
+                                    <img
+                                      src={it.photoUrl}
+                                      alt="Inspection"
+                                      className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700 shadow-2xs"
+                                    />
+                                    <a
+                                      href={it.photoUrl}
+                                      download={it.photoName || `inspection-${idx + 1}.jpg`}
+                                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition"
+                                      title="Download quality photo"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400">—</span>
+                                )}
                               </td>
                             </tr>
                           );
@@ -3996,11 +4035,99 @@ function Step1BookingCustomer({
     });
   };
 
+  // Step 1B Goods Draft & Edit State (Voice note: enter once, save to table, repeat)
+  const [draftGoodsItem, setDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
+  const [editingGoodsIdx, setEditingGoodsIdx] = useState<number | null>(null);
+
+  const handleDraftGoodsChange = (field: keyof CustomerOrderGoodsItem, value: any) => {
+    setDraftGoodsItem((curr) => {
+      const updated = { ...curr, [field]: value };
+      if (field === "quantity" || field === "kgPerQty") {
+        const q = Number(field === "quantity" ? value : updated.quantity) || 0;
+        const k = Number(field === "kgPerQty" ? value : updated.kgPerQty) || 0;
+        updated.totalKg = String(q * k);
+      }
+      return updated;
+    });
+  };
+
+  const handleGoodsPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setDraftGoodsItem((c) => ({
+        ...c,
+        photoUrl: dataUrl,
+        photoName: file.name
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveDraftGoods = () => {
+    if (!draftGoodsItem.goodsName && !draftGoodsItem.goodsId) {
+      alert(tt("enter_goods_name", "Please select or enter Goods Name"));
+      return;
+    }
+    const qty = Number(draftGoodsItem.quantity) || 1;
+    const kg = Number(draftGoodsItem.kgPerQty) || 50;
+    const total = String(qty * kg);
+    const itemToSave: CustomerOrderGoodsItem = {
+      ...draftGoodsItem,
+      goodsName: draftGoodsItem.goodsName || "Goods Item",
+      quantity: String(qty),
+      kgPerQty: String(kg),
+      totalKg: total
+    };
+
+    setFormData((current) => {
+      let updatedItems = [...(current.goods_items || [])];
+      if (editingGoodsIdx !== null && editingGoodsIdx >= 0 && editingGoodsIdx < updatedItems.length) {
+        updatedItems[editingGoodsIdx] = itemToSave;
+      } else {
+        // Replace empty default item if it's the only one
+        if (updatedItems.length === 1 && !updatedItems[0].goodsName && !updatedItems[0].goodsId) {
+          updatedItems = [itemToSave];
+        } else {
+          updatedItems.push(itemToSave);
+        }
+      }
+      const totalQty = updatedItems.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
+      const totalGrossKg = updatedItems.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+      const first = updatedItems[0];
+      return {
+        ...current,
+        goods_items: updatedItems,
+        goods_id: first?.goodsId || "",
+        goods_name: updatedItems.map((g) => g.goodsName).filter(Boolean).join(", "),
+        goods_unit: first?.unit || "Bags",
+        goods_quantity: String(totalQty),
+        goods_gross_weight: String(totalGrossKg),
+        goods_net_weight: String(totalGrossKg)
+      };
+    });
+
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
+  };
+
+  const handleEditGoodsRow = (idx: number) => {
+    const item = formData.goods_items?.[idx];
+    if (!item) return;
+    setDraftGoodsItem({ ...item });
+    setEditingGoodsIdx(idx);
+  };
+
+  const handleCancelEditGoods = () => {
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
+  };
+
   const addGoodsItem = () => {
-    setFormData((current) => ({
-      ...current,
-      goods_items: [...(current.goods_items || [defaultGoodsItem()]), defaultGoodsItem()]
-    }));
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
   };
 
   const removeGoodsItem = (idx: number) => {
@@ -4022,6 +4149,10 @@ function Step1BookingCustomer({
         goods_net_weight: String(totalKg)
       };
     });
+    if (editingGoodsIdx === idx) {
+      setDraftGoodsItem(defaultGoodsItem());
+      setEditingGoodsIdx(null);
+    }
   };
 
   // Pre-fill 1B warehouse into 1C origin warehouse automatically
@@ -4189,11 +4320,11 @@ function Step1BookingCustomer({
 
           {/* 2. Ship Type & Movement Type Selectors — Compact 2-Column Dropdowns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Ship Type Dropdown */}
+            {/* Shipping / Transport Mode Dropdown */}
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Ship className="h-4 w-4 text-blue-600" />
-                <span>Ship Type *</span>
+                <span>Shipping / Transport Mode *</span>
               </label>
               <select
                 value={formData.transport_mode}
@@ -4280,176 +4411,150 @@ function Step1BookingCustomer({
             </button>
           </div>
 
-          {/* Truck / Pre-Carriage Section */}
+          {/* Truck / Pre-Carriage Section — Compact 1-Vehicle Selection */}
           <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Truck className="h-4 w-4 text-blue-600" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Truck / Pre-Carriage Vehicle
+                  Truck / Fleet Assignment (Single Vehicle per Order)
                 </span>
               </div>
               <span className="text-[10px] font-bold text-slate-400">Road / Transport</span>
             </div>
 
-            {/* 3 Truck Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setFormData((c) => ({ ...c, truck_assignment_mode: "permanent" }))}
-                className={`rounded-xl border p-2.5 text-left text-xs font-bold transition-all ${
-                  formData.truck_assignment_mode === "permanent"
-                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
-                    : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                }`}
-              >
-                <div className="text-[10px] uppercase text-slate-400">Option 1</div>
-                <div>Permanent Truck</div>
-                <div className="text-[9.5px] font-normal text-slate-500">From System Master</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFormData((c) => ({ ...c, truck_assignment_mode: "hired" }))}
-                className={`rounded-xl border p-2.5 text-left text-xs font-bold transition-all ${
-                  formData.truck_assignment_mode === "hired"
-                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
-                    : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                }`}
-              >
-                <div className="text-[10px] uppercase text-slate-400">Option 2</div>
-                <div>Hired / External Truck</div>
-                <div className="text-[9.5px] font-normal text-slate-500">Manual Entry & PO</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((c) => ({
-                    ...c,
-                    truck_assignment_mode: "later",
-                    truck_id: "",
-                    truck_number: "TO BE ASSIGNED"
-                  }))
-                }
-                className={`rounded-xl border p-2.5 text-left text-xs font-bold transition-all ${
-                  formData.truck_assignment_mode === "later"
-                    ? "border-amber-600 bg-amber-50 text-amber-700 shadow-xs dark:border-amber-500 dark:bg-amber-950/60 dark:text-amber-300"
-                    : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                }`}
-              >
-                <div className="text-[10px] uppercase text-slate-400">Option 3</div>
-                <div>Assign Later</div>
-                <div className="text-[9.5px] font-normal text-slate-500">Unblocks Booking</div>
-              </button>
-            </div>
-
-            {/* Truck Form Fields based on Option */}
-            {formData.truck_assignment_mode === "permanent" && (
-              <div className="space-y-2 pt-1">
-                <SearchSelect
-                  label="Select Permanent Truck *"
-                  value={formData.truck_id}
-                  placeholder="Search truck by number, registration, driver or make..."
-                  options={(trucksList || []).map((t: any) => ({
-                    value: t.id,
-                    label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
-                    keywords: [t.truck_number, t.registration_number, t.driver_name, t.driver_mobile, t.make, t.model, t.transport_company].filter(Boolean).join(" ")
-                  }))}
-                  onValueChange={(truckId) => {
-                    const trk = (trucksList || []).find((t: any) => t.id === truckId);
-                    if (trk) {
-                      setFormData((c) => ({
-                        ...c,
-                        truck_id: trk.id,
-                        truck_number: trk.truck_number || trk.registration_number || "",
-                        truck_driver_name: trk.driver_name || "",
-                        truck_driver_mobile: trk.driver_mobile || trk.driver_phone || "",
-                        truck_transport_company: trk.transport_company || trk.owner_name || "",
-                        truck_details: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
-                      }));
-                    }
+            {/* Truck Assignment Dropdown & Inputs */}
+            <div className="space-y-2.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Truck Assignment Mode *
+                </label>
+                <select
+                  value={formData.truck_assignment_mode}
+                  onChange={(e) => {
+                    const mode = e.target.value as "permanent" | "hired" | "later";
+                    setFormData((c) => ({
+                      ...c,
+                      truck_assignment_mode: mode,
+                      truck_id: mode === "later" ? "" : c.truck_id,
+                      truck_number: mode === "later" ? "TO BE ASSIGNED" : (mode === "permanent" ? c.truck_number : "")
+                    }));
                   }}
-                  searchPlaceholder="Search truck..."
-                  emptyLabel="No matching trucks found"
-                />
+                  className={selectClass}
+                >
+                  <option value="permanent">Option 1: Permanent Truck (From Fleet Master)</option>
+                  <option value="hired">Option 2: Hired / External Truck (Manual Entry)</option>
+                  <option value="later">Option 3: Assign Later (Unblock Booking)</option>
+                </select>
+              </div>
 
-                {formData.truck_number ? (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
-                      <span className="text-slate-400 ml-2">Driver: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
+              {/* Truck Form Fields based on Dropdown Selection */}
+              {formData.truck_assignment_mode === "permanent" && (
+                <div className="space-y-2">
+                  <SearchSelect
+                    label="Select Permanent Truck *"
+                    value={formData.truck_id}
+                    placeholder="Search truck by number, registration, driver or make..."
+                    options={(trucksList || []).map((t: any) => ({
+                      value: t.id,
+                      label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
+                      keywords: [t.truck_number, t.registration_number, t.driver_name, t.driver_mobile, t.make, t.model, t.transport_company].filter(Boolean).join(" ")
+                    }))}
+                    onValueChange={(truckId) => {
+                      const trk = (trucksList || []).find((t: any) => t.id === truckId);
+                      if (trk) {
+                        setFormData((c) => ({
+                          ...c,
+                          truck_id: trk.id,
+                          truck_number: trk.truck_number || trk.registration_number || "",
+                          truck_driver_name: trk.driver_name || "",
+                          truck_driver_mobile: trk.driver_mobile || trk.driver_phone || "",
+                          truck_transport_company: trk.transport_company || trk.owner_name || "",
+                          truck_details: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
+                        }));
+                      }
+                    }}
+                    searchPlaceholder="Search truck..."
+                    emptyLabel="No matching trucks found"
+                  />
+
+                  {formData.truck_number ? (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
+                        <span className="text-slate-400 ml-2">Driver: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
+                      </div>
+                      {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
                     </div>
-                    {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
+                  ) : null}
+                </div>
+              )}
+
+              {formData.truck_assignment_mode === "hired" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Truck / Registration No *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.truck_number}
+                      onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
+                      placeholder="e.g. TL-9988-KHI"
+                      className={inputClass}
+                    />
                   </div>
-                ) : null}
-              </div>
-            )}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Driver Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.truck_driver_name}
+                      onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
+                      placeholder="Driver full name"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Driver Mobile
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.truck_driver_mobile}
+                      onChange={(e) => setFormData((c) => ({ ...c, truck_driver_mobile: e.target.value }))}
+                      placeholder="+92 300 1234567"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      PO / Hire Reference
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.truck_po_ref || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, truck_po_ref: e.target.value }))}
+                      placeholder="e.g. PO-8874 / Hire Agmt"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              )}
 
-            {formData.truck_assignment_mode === "hired" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Truck / Registration No *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_number}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
-                    placeholder="e.g. TL-9988-KHI"
-                    className={inputClass}
-                  />
+              {formData.truck_assignment_mode === "later" && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <BadgeInfo className="h-4 w-4 text-amber-600" />
+                    <span>Truck To Be Assigned Later</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
+                    This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Driver Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_driver_name}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
-                    placeholder="Driver full name"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Driver Mobile
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_driver_mobile}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_mobile: e.target.value }))}
-                    placeholder="+92 300 1234567"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    PO / Hire Reference
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_po_ref || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_po_ref: e.target.value }))}
-                    placeholder="e.g. PO-8874 / Hire Agmt"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            )}
-
-            {formData.truck_assignment_mode === "later" && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-                <div className="font-bold flex items-center gap-1.5">
-                  <BadgeInfo className="h-4 w-4 text-amber-600" />
-                  <span>Truck To Be Assigned Later</span>
-                </div>
-                <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
-                  This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Operational Dates: Planned vs Actual Pickup & Dispatch */}
@@ -4512,232 +4617,349 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Multiple Goods Section */}
+          {/* Multiple Goods Section with Save-to-Table & Manifest Grid */}
           <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-600" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Goods / Items Breakdown ({formData.goods_items?.length || 1})
+                  Goods & Cargo Breakdown ({(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length} Items)
                 </span>
               </div>
               <button
                 type="button"
-                onClick={addGoodsItem}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+                onClick={() => {
+                  setDraftGoodsItem(defaultGoodsItem());
+                  setEditingGoodsIdx(null);
+                }}
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>+ Add Goods</span>
+                <span>+ New Goods Item</span>
               </button>
             </div>
 
-            {/* Goods Items Cards */}
-            <div className="space-y-3">
-              {(formData.goods_items || [defaultGoodsItem()]).map((item, gIdx) => (
-                <div
-                  key={gIdx}
-                  className="rounded-xl border border-slate-200/90 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40"
-                >
-                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-700/60">
-                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px] font-black">
-                        {gIdx + 1}
-                      </span>
-                      <span>Goods #{gIdx + 1}: {item.goodsName || "New Item"}</span>
-                    </span>
-                    {(formData.goods_items || []).length > 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => removeGoodsItem(gIdx)}
-                        className="text-rose-600 hover:text-rose-700 p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                        title="Remove Goods Item"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    ) : null}
-                  </div>
+            {/* Goods Entry / Edit Input Form */}
+            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                    {editingGoodsIdx !== null ? editingGoodsIdx + 1 : (formData.goods_items || []).length + 1}
+                  </span>
+                  <span>{editingGoodsIdx !== null ? `Edit Goods Item #${editingGoodsIdx + 1}` : "Add Goods Item"}</span>
+                </span>
+                {editingGoodsIdx !== null ? (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditGoods}
+                    className="text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 underline font-medium"
+                  >
+                    Cancel Edit
+                  </button>
+                ) : null}
+              </div>
 
-                  {/* Goods Name from Master */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Goods Name (from Goods Master) *
-                    </label>
-                    <SearchSelect
-                      label=""
-                      value={item.goodsId}
-                      placeholder="Select or search goods from master..."
-                      options={(goodsMasterList || []).map((g: any) => ({
-                        value: g.id,
-                        label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
-                        keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
-                      }))}
-                      onValueChange={(goodsId) => {
-                        const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
-                        updateGoodsItem(gIdx, {
-                          goodsId,
-                          goodsName: found?.goods_name || found?.name || item.goodsName,
-                          goodsChsCode: found?.chs_code || ""
-                        });
+              {/* Row 1: Goods Master Selection */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Goods Name (from Goods Master or New Item) *
+                </label>
+                <SearchSelect
+                  label=""
+                  value={draftGoodsItem.goodsId}
+                  placeholder="Select or search goods from master..."
+                  options={(goodsMasterList || []).map((g: any) => ({
+                    value: g.id,
+                    label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
+                    keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
+                  }))}
+                  onValueChange={(goodsId) => {
+                    const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
+                    handleDraftGoodsChange("goodsId", goodsId);
+                    handleDraftGoodsChange("goodsName", found?.goods_name || found?.name || draftGoodsItem.goodsName);
+                    handleDraftGoodsChange("goodsChsCode", found?.chs_code || "");
+                  }}
+                  searchPlaceholder="Search goods..."
+                  emptyLabel="No goods found in master"
+                />
+              </div>
+
+              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total KG */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Qty Unit</label>
+                  <select
+                    value={draftGoodsItem.unit}
+                    onChange={(e) => handleDraftGoodsChange("unit", e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="Bags">Bags</option>
+                    <option value="Cartons">Cartons</option>
+                    <option value="Pallets">Pallets</option>
+                    <option value="Packages">Packages</option>
+                    <option value="Boxes">Boxes</option>
+                    <option value="MT">MT</option>
+                    <option value="KG">KG</option>
+                    <option value="Loose">Loose</option>
+                    <option value="Containers">Containers</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Quantity *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={draftGoodsItem.quantity}
+                    onChange={(e) => handleDraftGoodsChange("quantity", e.target.value)}
+                    className={inputClass}
+                    placeholder="1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">KG Per Qty *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={draftGoodsItem.kgPerQty}
+                    onChange={(e) => handleDraftGoodsChange("kgPerQty", e.target.value)}
+                    className={inputClass}
+                    placeholder="50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-1">
+                    Total KG (Auto)
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={draftGoodsItem.totalKg || "0"}
+                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Warehouse Location & Quality Photo Upload */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-emerald-200/50 dark:border-emerald-900/40">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Warehouse className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Warehouse / Pickup Location *</span>
+                  </label>
+                  <div className="space-y-1.5">
+                    <select
+                      value={draftGoodsItem.warehouseSourceType}
+                      onChange={(e) => {
+                        const key = e.target.value as any;
+                        if (key === "customer_warehouse") {
+                          handleDraftGoodsChange("warehouseSourceType", key);
+                          handleDraftGoodsChange("warehouseName", selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse");
+                          handleDraftGoodsChange("warehouseAddressText", selectedCustomer?.address || "Customer Address");
+                        } else {
+                          handleDraftGoodsChange("warehouseSourceType", key);
+                        }
                       }}
-                      searchPlaceholder="Search goods..."
-                      emptyLabel="No goods found in master"
-                    />
-                  </div>
+                      className={selectClass}
+                    >
+                      <option value="company_warehouse">🏢 Company Warehouse</option>
+                      <option value="customer_warehouse">👤 Customer Warehouse</option>
+                      <option value="other">📍 Other / Custom Warehouse</option>
+                    </select>
 
-                  {/* Quantity, Unit, KG Per Qty, Total KG */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Qty Unit</label>
-                      <select
-                        value={item.unit}
-                        onChange={(e) => updateGoodsItem(gIdx, { unit: e.target.value })}
-                        className={selectClass}
-                      >
-                        <option value="Bags">Bags</option>
-                        <option value="Cartons">Cartons</option>
-                        <option value="Pallets">Pallets</option>
-                        <option value="Packages">Packages</option>
-                        <option value="Boxes">Boxes</option>
-                        <option value="MT">MT</option>
-                        <option value="KG">KG</option>
-                        <option value="Loose">Loose</option>
-                        <option value="Containers">Containers</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Quantity *</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.quantity}
-                        onChange={(e) => updateGoodsItem(gIdx, { quantity: e.target.value })}
-                        className={inputClass}
-                        placeholder="1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">KG Per Qty *</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.kgPerQty}
-                        onChange={(e) => updateGoodsItem(gIdx, { kgPerQty: e.target.value })}
-                        className={inputClass}
-                        placeholder="50"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 mb-1">
-                        Total KG (Auto)
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        value={item.totalKg || "0"}
-                        className="w-full rounded-xl border border-emerald-300 bg-emerald-50/70 px-3 py-2 text-xs font-mono font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Warehouse Source for this goods item — Compact Dropdown */}
-                  <div className="pt-1.5 space-y-1.5">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Warehouse className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Warehouse / Pickup Location *</span>
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <select
-                        value={item.warehouseSourceType}
-                        onChange={(e) => {
-                          const key = e.target.value as any;
-                          if (key === "customer_warehouse") {
-                            updateGoodsItem(gIdx, {
-                              warehouseSourceType: key,
-                              warehouseName: selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse",
-                              warehouseAddressText: selectedCustomer?.address || "Customer Address"
-                            });
-                          } else {
-                            updateGoodsItem(gIdx, { warehouseSourceType: key });
-                          }
+                    {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
+                      <SearchSelect
+                        label=""
+                        value={draftGoodsItem.warehouseId}
+                        placeholder="Select Company Warehouse..."
+                        options={(warehousesList || []).map((w: any) => ({
+                          value: w.id,
+                          label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
+                          keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
+                        }))}
+                        onValueChange={(warehouseId) => {
+                          const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
+                          const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
+                          handleDraftGoodsChange("warehouseId", warehouseId);
+                          handleDraftGoodsChange("warehouseName", w?.warehouse_name || w?.name || "");
+                          handleDraftGoodsChange("warehouseAddressText", addr);
                         }}
-                        className={selectClass}
-                      >
-                        <option value="company_warehouse">🏢 Company Warehouse</option>
-                        <option value="same">🔁 Same Warehouse (First Item Location)</option>
-                        <option value="customer_warehouse">👤 Customer Warehouse</option>
-                        <option value="other">📍 Other / Custom Warehouse</option>
-                      </select>
+                        searchPlaceholder="Search warehouses..."
+                        emptyLabel="No warehouses found"
+                      />
+                    )}
 
-                      {/* Conditional warehouse selector / address */}
-                      {item.warehouseSourceType === "company_warehouse" && (
-                        <SearchSelect
-                          label=""
-                          value={item.warehouseId}
-                          placeholder="Select Company Warehouse..."
-                          options={(warehousesList || []).map((w: any) => ({
-                            value: w.id,
-                            label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
-                            keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
-                          }))}
-                          onValueChange={(warehouseId) => {
-                            const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
-                            const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
-                            updateGoodsItem(gIdx, {
-                              warehouseId,
-                              warehouseName: w?.warehouse_name || w?.name || "",
-                              warehouseAddressText: addr
-                            });
-                            if (gIdx === 0) {
-                              setFormData((c) => ({
-                                ...c,
-                                loading_source_warehouse_id: warehouseId,
-                                loading_source_name: w?.warehouse_name || w?.name || ""
-                              }));
-                            }
-                          }}
-                          searchPlaceholder="Search warehouses..."
-                          emptyLabel="No warehouses found"
-                        />
-                      )}
-
-                      {item.warehouseSourceType === "customer_warehouse" && (
-                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-between">
-                          <span className="font-bold truncate">{selectedCustomer?.customer_name || "Customer"}&apos;s Warehouse</span>
-                          <span className="text-[11px] text-slate-500 truncate max-w-[160px]">{selectedCustomer?.address || "Address on record"}</span>
-                        </div>
-                      )}
-
-                      {item.warehouseSourceType === "same" && (
-                        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-850 dark:text-slate-400 flex items-center">
-                          <span>Using pickup warehouse from Item #1</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {item.warehouseSourceType === "other" && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    {draftGoodsItem.warehouseSourceType === "other" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         <input
                           type="text"
-                          placeholder="Warehouse / yard name"
-                          value={item.warehouseName}
-                          onChange={(e) => updateGoodsItem(gIdx, { warehouseName: e.target.value })}
+                          placeholder="Warehouse name"
+                          value={draftGoodsItem.warehouseName}
+                          onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
                           className={inputClass}
                         />
                         <input
                           type="text"
-                          placeholder="Full address / location details"
-                          value={item.warehouseAddressText}
-                          onChange={(e) => updateGoodsItem(gIdx, { warehouseAddressText: e.target.value })}
+                          placeholder="Address / Yard location"
+                          value={draftGoodsItem.warehouseAddressText}
+                          onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
                           className={inputClass}
                         />
                       </div>
                     )}
                   </div>
                 </div>
-              ))}
+
+                {/* Quality / Inspection Photo Upload */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Quality / Loading Inspection Photo</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:border-blue-500 hover:text-blue-600 dark:border-slate-750 dark:bg-slate-850 dark:text-slate-300 transition">
+                      <Download className="h-3.5 w-3.5 text-slate-400 rotate-180" />
+                      <span>{draftGoodsItem.photoName ? draftGoodsItem.photoName : "Attach Photo (File / Camera)"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleGoodsPhotoUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    {draftGoodsItem.photoUrl ? (
+                      <div className="relative group">
+                        <img
+                          src={draftGoodsItem.photoUrl}
+                          alt="Quality inspection"
+                          className="h-9 w-9 rounded-lg object-cover border border-slate-300 dark:border-slate-700 shadow-2xs"
+                        />
+                        <a
+                          href={draftGoodsItem.photoUrl}
+                          download={draftGoodsItem.photoName || "quality-photo.jpg"}
+                          className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-1 shadow hover:bg-blue-700"
+                          title="Download photo"
+                        >
+                          <Download className="h-2.5 w-2.5" />
+                        </a>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action: Save Goods Item to Table Button */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
+                <button
+                  type="button"
+                  onClick={handleSaveDraftGoods}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 transition"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{editingGoodsIdx !== null ? "✓ Update Goods Item" : "+ Save Goods to Table"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Goods Manifest Table */}
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-850">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
+                  <tr>
+                    <th className="py-2.5 px-3">#</th>
+                    <th className="py-2.5 px-3">Goods Description</th>
+                    <th className="py-2.5 px-3">Unit</th>
+                    <th className="py-2.5 px-3 text-right">Quantity</th>
+                    <th className="py-2.5 px-3 text-right">KG/Unit</th>
+                    <th className="py-2.5 px-3 text-right">Total KG</th>
+                    <th className="py-2.5 px-3 text-right">Total MT</th>
+                    <th className="py-2.5 px-3">Warehouse Source</th>
+                    <th className="py-2.5 px-3 text-center">Quality Photo</th>
+                    <th className="py-2.5 px-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
+                  {(formData.goods_items || []).filter((it) => it.goodsName || it.goodsId || Number(it.quantity) > 0).map((it, idx) => {
+                    const q = parseFloat(String(it.quantity || 0)) || 0;
+                    const kg = parseFloat(String(it.totalKg || 0)) || 0;
+                    const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
+                    const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
+
+                    return (
+                      <tr key={it.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                          <div>{it.goodsName || it.goods_name || "General Cargo"}</div>
+                          {it.goodsChsCode ? (
+                            <span className="inline-block text-[9.5px] font-mono text-slate-400">CHS: {it.goodsChsCode}</span>
+                          ) : null}
+                        </td>
+                        <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
+                          {it.unit || "Bags"}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
+                          {q.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
+                          {kgPer.toFixed(1)} kg
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
+                          {kg.toLocaleString()} kg
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                          {mt} MT
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
+                          {it.warehouseName || "Warehouse"}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          {it.photoUrl ? (
+                            <div className="inline-flex items-center gap-1">
+                              <img
+                                src={it.photoUrl}
+                                alt="Thumbnail"
+                                className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700"
+                              />
+                              <a
+                                href={it.photoUrl}
+                                download={it.photoName || `goods-photo-${idx + 1}.jpg`}
+                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                                title="Download Quality Photo"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </a>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEditGoodsRow(idx)}
+                              className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                              title="Edit Item"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeGoodsItem(idx)}
+                              className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                              title="Remove Item"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
             {/* Total Goods Weights Bar */}
