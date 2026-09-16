@@ -8323,6 +8323,40 @@ export type UiKey =
   | "jrpt.generated_at"
   | "jrpt.error_loading"
   | "jrpt.excel_exported"
+  | "email_settings.title"
+  | "email_settings.subtitle"
+  | "email_settings.loading"
+  | "email_settings.no_accounts"
+  | "email_settings.smtp_host"
+  | "email_settings.smtp_port"
+  | "email_settings.smtp_user"
+  | "email_settings.security"
+  | "email_settings.last_test"
+  | "email_settings.testing"
+  | "email_settings.test_smtp"
+  | "email_settings.cancel"
+  | "email_settings.update_credential"
+  | "email_settings.new_password"
+  | "email_settings.password_placeholder"
+  | "email_settings.password_note"
+  | "email_settings.smtp_host_optional"
+  | "email_settings.smtp_port_optional"
+  | "email_settings.use_tls"
+  | "email_settings.saving"
+  | "email_settings.save_verify"
+  | "email_settings.info_title"
+  | "email_settings.step_1"
+  | "email_settings.step_1_desc"
+  | "email_settings.step_2"
+  | "email_settings.step_2_desc"
+  | "email_settings.step_3"
+  | "email_settings.step_3_desc"
+  | "email_settings.step_4"
+  | "email_settings.step_4_desc"
+  | "email_settings.forbidden"
+  | "email_settings.not_found"
+  | "email_settings.imap_missing_config"
+  | "email_settings.imap_verified"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -26929,6 +26963,40 @@ const en: Dict = {
   "jrpt.generated_at": "Generated",
   "jrpt.error_loading": "Failed to load journal report data.",
   "jrpt.excel_exported": "Excel (CSV) file downloaded.",
+  "email_settings.title": "Email Account Settings",
+  "email_settings.subtitle": "Manage email credentials, test connections, and monitor account status",
+  "email_settings.loading": "Loading email accounts...",
+  "email_settings.no_accounts": "No email accounts configured",
+  "email_settings.smtp_host": "SMTP Host",
+  "email_settings.smtp_port": "SMTP Port",
+  "email_settings.smtp_user": "Username",
+  "email_settings.security": "Security",
+  "email_settings.last_test": "Last Test",
+  "email_settings.testing": "Testing...",
+  "email_settings.test_smtp": "Test SMTP",
+  "email_settings.cancel": "Cancel",
+  "email_settings.update_credential": "Update Credential",
+  "email_settings.new_password": "New Password",
+  "email_settings.password_placeholder": "Enter new password",
+  "email_settings.password_note": "Password will be encrypted before storage",
+  "email_settings.smtp_host_optional": "SMTP Host (Optional)",
+  "email_settings.smtp_port_optional": "SMTP Port (Optional)",
+  "email_settings.use_tls": "Use TLS/SSL",
+  "email_settings.saving": "Saving & Testing...",
+  "email_settings.save_verify": "Save & Verify",
+  "email_settings.info_title": "How This Works",
+  "email_settings.step_1": "Update Password in Hostinger",
+  "email_settings.step_1_desc": "Change your mailbox password in your Hostinger control panel",
+  "email_settings.step_2": "Click Update Credential",
+  "email_settings.step_2_desc": "Enter the new password in this screen and click Save & Verify",
+  "email_settings.step_3": "Automatic Testing",
+  "email_settings.step_3_desc": "The system encrypts and tests SMTP/IMAP authentication automatically",
+  "email_settings.step_4": "Connection Activated",
+  "email_settings.step_4_desc": "On success, the credential is stored securely and activated for use",
+  "email_settings.forbidden": "Only Super Admin can test email account connections.",
+  "email_settings.not_found": "Email account not found.",
+  "email_settings.imap_missing_config": "IMAP parameters missing. Host, Username, and Password are required.",
+  "email_settings.imap_verified": "IMAP connection verified successfully!",
 };
 
 const ur: Dict = {
@@ -45509,6 +45577,40 @@ const ur: Dict = {
   "jrpt.generated_at": "تیار شدہ",
   "jrpt.error_loading": "جرنل رپورٹ ڈیٹا لوڈ کرنے میں ناکامی۔",
   "jrpt.excel_exported": "ایکسل (CSV) فائل ڈاؤن لوڈ ہو گئی۔",
+  "email_settings.title": "ای میل اکاؤنٹ سیٹنگز",
+  "email_settings.subtitle": "ای میل کی اعتبارات کو سنبھالیں، کنکشن کو ٹیسٹ کریں، اور اکاؤنٹ کی حالت کو نظر میں رکھیں",
+  "email_settings.loading": "ای میل اکاؤنٹس لوڈ ہو رہے ہیں...",
+  "email_settings.no_accounts": "کوئی ای میل اکاؤنٹ کنفیگر نہیں ہے",
+  "email_settings.smtp_host": "SMTP ہوسٹ",
+  "email_settings.smtp_port": "SMTP پورٹ",
+  "email_settings.smtp_user": "صارف نام",
+  "email_settings.security": "سیکیورٹی",
+  "email_settings.last_test": "آخری ٹیسٹ",
+  "email_settings.testing": "ٹیسٹ ہو رہا ہے...",
+  "email_settings.test_smtp": "SMTP ٹیسٹ کریں",
+  "email_settings.cancel": "منسوخ کریں",
+  "email_settings.update_credential": "اعتبار اپڈیٹ کریں",
+  "email_settings.new_password": "نیا پاس ورڈ",
+  "email_settings.password_placeholder": "نیا پاس ورڈ درج کریں",
+  "email_settings.password_note": "پاس ورڈ اسٹوریج سے پہلے  انکرپٹ کیا جائے گا",
+  "email_settings.smtp_host_optional": "SMTP ہوسٹ (اختیاری)",
+  "email_settings.smtp_port_optional": "SMTP پورٹ (اختیاری)",
+  "email_settings.use_tls": "TLS/SSL استعمال کریں",
+  "email_settings.saving": "محفوظ اور ٹیسٹ ہو رہا ہے...",
+  "email_settings.save_verify": "محفوظ اور تصدیق کریں",
+  "email_settings.info_title": "یہ کیسے کام کرتا ہے",
+  "email_settings.step_1": "Hostinger میں پاس ورڈ اپڈیٹ کریں",
+  "email_settings.step_1_desc": "اپنے Hostinger کنٹرول پینل میں میل بکس پاس ورڈ تبدیل کریں",
+  "email_settings.step_2": "اعتبار اپڈیٹ کریں کلک کریں",
+  "email_settings.step_2_desc": "اس اسکرین میں نیا پاس ورڈ درج کریں اور محفوظ اور تصدیق کریں پر کلک کریں",
+  "email_settings.step_3": "خودکار ٹیسٹنگ",
+  "email_settings.step_3_desc": "سسٹم خودکار طور پر SMTP/IMAP کو انکرپٹ اور ٹیسٹ کرتا ہے",
+  "email_settings.step_4": "کنکشن سرگرم ہوا",
+  "email_settings.step_4_desc": "کامیابی پر، اعتبار محفوظ طریقے سے محفوظ اور استعمال کے لیے سرگرم ہے",
+  "email_settings.forbidden": "صرف سپر ایڈمن ای میل اکاؤنٹ کنکشن ٹیسٹ کر سکتا ہے۔",
+  "email_settings.not_found": "ای میل اکاؤنٹ نہیں ملا۔",
+  "email_settings.imap_missing_config": "IMAP پیرامیٹرز غائب ہیں۔ میزبان، صارف نام، اور پاس ورڈ کی ضرورت ہے۔",
+  "email_settings.imap_verified": "IMAP کنکشن کامیابی سے تصدیق شدہ!",
 };
 
 const ar: Dict = {
@@ -64091,6 +64193,40 @@ const ar: Dict = {
   "jrpt.generated_at": "تم الإنشاء",
   "jrpt.error_loading": "فشل تحميل بيانات تقرير اليومية.",
   "jrpt.excel_exported": "تم تنزيل ملف إكسل (CSV).",
+  "email_settings.title": "إعدادات حساب البريد الإلكتروني",
+  "email_settings.subtitle": "إدارة بيانات اعتماد البريد الإلكتروني واختبار الاتصالات ومراقبة حالة الحساب",
+  "email_settings.loading": "جاري تحميل حسابات البريد الإلكتروني...",
+  "email_settings.no_accounts": "لا توجد حسابات بريد إلكتروني معروفة",
+  "email_settings.smtp_host": "مضيف SMTP",
+  "email_settings.smtp_port": "منفذ SMTP",
+  "email_settings.smtp_user": "اسم المستخدم",
+  "email_settings.security": "الأمن",
+  "email_settings.last_test": "آخر اختبار",
+  "email_settings.testing": "اختبار جاري...",
+  "email_settings.test_smtp": "اختبار SMTP",
+  "email_settings.cancel": "إلغاء",
+  "email_settings.update_credential": "تحديث بيانات الاعتماد",
+  "email_settings.new_password": "كلمة المرور الجديدة",
+  "email_settings.password_placeholder": "أدخل كلمة مرور جديدة",
+  "email_settings.password_note": "سيتم تشفير كلمة المرور قبل التخزين",
+  "email_settings.smtp_host_optional": "مضيف SMTP (اختياري)",
+  "email_settings.smtp_port_optional": "منفذ SMTP (اختياري)",
+  "email_settings.use_tls": "استخدم TLS/SSL",
+  "email_settings.saving": "الحفظ والاختبار جاري...",
+  "email_settings.save_verify": "حفظ والتحقق",
+  "email_settings.info_title": "كيف يعمل هذا",
+  "email_settings.step_1": "تحديث كلمة المرور في Hostinger",
+  "email_settings.step_1_desc": "غير كلمة مرور صندوق البريد في لوحة تحكم Hostinger",
+  "email_settings.step_2": "انقر فوق تحديث بيانات الاعتماد",
+  "email_settings.step_2_desc": "أدخل كلمة المرور الجديدة في هذه الشاشة وانقر فوق حفظ والتحقق",
+  "email_settings.step_3": "الاختبار الآلي",
+  "email_settings.step_3_desc": "يقوم النظام تلقائيًا بتشفير واختبار مصادقة SMTP/IMAP",
+  "email_settings.step_4": "الاتصال مُفعّل",
+  "email_settings.step_4_desc": "عند النجاح، يتم تخزين بيانات الاعتماد بشكل آمن وتفعيلها للاستخدام",
+  "email_settings.forbidden": "فقط الإدارة العليا يمكنها اختبار اتصالات حساب البريد الإلكتروني.",
+  "email_settings.not_found": "حساب البريد الإلكتروني غير موجود.",
+  "email_settings.imap_missing_config": "معاملات IMAP مفقودة. المضيف واسم المستخدم وكلمة المرور مطلوبة.",
+  "email_settings.imap_verified": "تم التحقق من اتصال IMAP بنجاح!",
 };
 
 const fa: Dict = {
@@ -82672,6 +82808,40 @@ const fa: Dict = {
   "jrpt.generated_at": "تولید شده",
   "jrpt.error_loading": "بارگذاری داده‌های گزارش روزنامه ناموفق بود.",
   "jrpt.excel_exported": "فایل اکسل (CSV) دانلود شد.",
+  "email_settings.title": "تنظیمات حساب ایمیل",
+  "email_settings.subtitle": "مدیریت اعتبارات ایمیل، تست اتصالات و نظارت بر وضعیت حساب",
+  "email_settings.loading": "بارگذاری حسابات ایمیل...",
+  "email_settings.no_accounts": "هیچ حساب ایمیل پیکربندی نشده",
+  "email_settings.smtp_host": "میزبان SMTP",
+  "email_settings.smtp_port": "درگاه SMTP",
+  "email_settings.smtp_user": "نام کاربری",
+  "email_settings.security": "امنیت",
+  "email_settings.last_test": "آخرین تست",
+  "email_settings.testing": "در حال آزمایش...",
+  "email_settings.test_smtp": "تست SMTP",
+  "email_settings.cancel": "لغو",
+  "email_settings.update_credential": "بروزرسانی اعتبارات",
+  "email_settings.new_password": "رمز عبور جدید",
+  "email_settings.password_placeholder": "رمز عبور جدید را وارد کنید",
+  "email_settings.password_note": "رمز عبور قبل ذخیره رمزگذاری خواهد شد",
+  "email_settings.smtp_host_optional": "میزبان SMTP (اختیاری)",
+  "email_settings.smtp_port_optional": "درگاه SMTP (اختیاری)",
+  "email_settings.use_tls": "استفاده از TLS/SSL",
+  "email_settings.saving": "ذخیره و آزمایش در حال انجام...",
+  "email_settings.save_verify": "ذخیره و تأیید",
+  "email_settings.info_title": "این چگونه کار می کند",
+  "email_settings.step_1": "بروزرسانی رمز عبور در Hostinger",
+  "email_settings.step_1_desc": "رمز عبور صندوق پستی خود را در پنل کنترل Hostinger تغییر دهید",
+  "email_settings.step_2": "بر روی بروزرسانی اعتبارات کلیک کنید",
+  "email_settings.step_2_desc": "رمز عبور جدید را در این صفحه وارد کنید و بر روی ذخیره و تأیید کلیک کنید",
+  "email_settings.step_3": "آزمایش خودکار",
+  "email_settings.step_3_desc": "سیستم به صورت خودکار تصدیق SMTP/IMAP را رمزگذاری و تست می کند",
+  "email_settings.step_4": "اتصال فعال شد",
+  "email_settings.step_4_desc": "در صورت موفقیت، اعتبارات به طور ایمن ذخیره و برای استفاده فعال می شوند",
+  "email_settings.forbidden": "فقط Super Admin می تواند اتصالات حساب ایمیل را آزمایش کند.",
+  "email_settings.not_found": "حساب ایمیل یافت نشد.",
+  "email_settings.imap_missing_config": "پارامترهای IMAP گمشده است. میزبان، نام کاربری و رمز عبور مورد نیاز است.",
+  "email_settings.imap_verified": "اتصال IMAP با موفقیت تأیید شد!",
 };
 
 const ps: Dict = {
@@ -101259,6 +101429,40 @@ const ps: Dict = {
   "jrpt.generated_at": "جوړ شوی",
   "jrpt.error_loading": "د جرنل راپور ډاټا لوډ کول ونشول.",
   "jrpt.excel_exported": "د ایکسل (CSV) فایل ډاونلوډ شو.",
+  "email_settings.title": "د ای میل حساب ترتیبات",
+  "email_settings.subtitle": "د ای میل اعتماد اداره کول، اتصالات آزمایشی، او د حساب حالت نظارت",
+  "email_settings.loading": "د ای میل حسابات لوډ کیدل...",
+  "email_settings.no_accounts": "هیچ ای میل حساب کنفیگر شوی نیست",
+  "email_settings.smtp_host": "SMTP میزبان",
+  "email_settings.smtp_port": "SMTP بندرگاه",
+  "email_settings.smtp_user": "کاروونکی نوم",
+  "email_settings.security": "امنیت",
+  "email_settings.last_test": "وروستی آزمایش",
+  "email_settings.testing": "آزمایش کیدل...",
+  "email_settings.test_smtp": "SMTP آزمایش کولو",
+  "email_settings.cancel": "منسوخ کولو",
+  "email_settings.update_credential": "د اعتماد تازه کول",
+  "email_settings.new_password": "نیا رمز",
+  "email_settings.password_placeholder": "نیا رمز داخل کولو",
+  "email_settings.password_note": "رمز د محفوظ کولو دمخه انکوڈ شي",
+  "email_settings.smtp_host_optional": "SMTP میزبان (اختیاری)",
+  "email_settings.smtp_port_optional": "SMTP بندرگاه (اختیاری)",
+  "email_settings.use_tls": "TLS/SSL استعمال کولو",
+  "email_settings.saving": "محفوظ او آزمایشې جاري...",
+  "email_settings.save_verify": "محفوظ او تصدیق",
+  "email_settings.info_title": "دا څنګه کار کوي",
+  "email_settings.step_1": "د Hostinger میں رمز تازه کولو",
+  "email_settings.step_1_desc": "خپل د ای میل صندوق رمز د Hostinger کنترول پینل میں تبدیل کولو",
+  "email_settings.step_2": "د اعتماد تازه کول کلیک کولو",
+  "email_settings.step_2_desc": "نیا رمز په دې پاڼه کې داخل کولو او محفوظ او تصدیق کلیک کولو",
+  "email_settings.step_3": "خودکار آزمایش",
+  "email_settings.step_3_desc": "سیستم د SMTP/IMAP احراز الهویت خودکاره انکوڈ او آزمایشې کوي",
+  "email_settings.step_4": "اتصال فعال شو",
+  "email_settings.step_4_desc": "کامیابۍ کې، اعتماد محفوظ طریقې سره محفوظ او استعمال لپاره فعال کیږي",
+  "email_settings.forbidden": "صرف Super Admin د ای میل حساب اتصالات آزمایش کولی شي.",
+  "email_settings.not_found": "د ای میل حساب پیدا نشو.",
+  "email_settings.imap_missing_config": "IMAP پیرامیترونه ورک شوي. میزبان، کاروونکی نوم، او رمز مطلوب دي.",
+  "email_settings.imap_verified": "IMAP اتصال کامیابې سره تصدیق شو!",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
