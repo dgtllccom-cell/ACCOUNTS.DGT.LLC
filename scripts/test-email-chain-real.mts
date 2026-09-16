@@ -193,7 +193,7 @@ async function runChain() {
       let searchFound = false;
       await imap(toConfig, async (client) => {
         await client.mailboxOpen("INBOX");
-        const searchResults = await client.search({ subject: testSubject });
+        const searchResults = await client.search(["SUBJECT", testSubject]);
         searchFound = Array.isArray(searchResults) && searchResults.length > 0;
       });
       console.log(`  ${searchFound ? "✅" : "❌"} SEARCH: ${searchFound ? "Found" : "Not found"}`);

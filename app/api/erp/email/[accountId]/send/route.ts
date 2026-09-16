@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { decrypt } from "@/lib/crypto";
 import nodemailer from "nodemailer";
 import { ImapFlow } from "imapflow";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 
 export const dynamic = "force-dynamic";
 
@@ -39,12 +38,7 @@ export async function POST(
       );
     }
 
-    const admin = createSupabaseAdminClient() as any;
-    const { data: account } = await admin
-      .from("erp_email_accounts")
-      .select("*, erp_email_providers(smtp_host, smtp_port, imap_host, imap_port)")
-      .eq("id", accountId)
-      .single();
+    const account = await resolveMailboxAccount(accountId);
 
     if (!account) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
@@ -52,40 +46,33 @@ export async function POST(
 
     const canAccess =
       session.isSuperAdmin ||
-      (account.country_id && session.countryIds?.includes(account.country_id)) ||
-      (account.country_branch_id && session.countryBranchIds?.includes(account.country_branch_id)) ||
-      (account.city_branch_id && session.cityBranchIds?.includes(account.city_branch_id));
+      (account.countryId && session.countryIds?.includes(account.countryId)) ||
+      (account.countryBranchId && session.countryBranchIds?.includes(account.countryBranchId)) ||
+      (account.cityBranchId && session.cityBranchIds?.includes(account.cityBranchId));
 
     if (!canAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    const settings = account.settings || {};
-    const smtpPass = settings.smtp_password ? decrypt(settings.smtp_password) : null;
-    const imapPass = settings.imap_password ? decrypt(settings.imap_password) : null;
-
-    if (!smtpPass) {
+    if (!account.smtpPass) {
       return NextResponse.json(
         { error: "SMTP password not configured" },
         { status: 400 }
       );
     }
 
-    const smtpHost = account.erp_email_providers?.smtp_host || "smtp.titan.email";
-    const smtpPort = account.erp_email_providers?.smtp_port || 587;
-    const smtpUser = settings.smtp_user || account.email_address;
-
     const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
+      host: account.smtpHost,
+      port: account.smtpPort,
       secure: false,
-      auth: { user: smtpUser, pass: smtpPass }
+      auth: { user: account.smtpUser, pass: account.smtpPass }
     });
 
-    const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${account.email_address.split('@')[1]}>`;
+    const domain = account.emailAddress.split("@")[1] || "dgt.llc";
+    const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${domain}>`;
 
     const mailOptions: any = {
-      from: account.email_address,
+      from: account.emailAddress,
       to: validation.data.to,
       cc: validation.data.cc || undefined,
       bcc: validation.data.bcc || undefined,
@@ -105,30 +92,26 @@ export async function POST(
 
     await transporter.sendMail(mailOptions);
 
-    if (imapPass) {
-      const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
-      const imapPort = account.erp_email_providers?.imap_port || 993;
-      const imapUser = settings.imap_user || account.email_address;
-
+    if (account.imapPass) {
       const imapClient = new ImapFlow({
-        host: imapHost,
-        port: imapPort,
+        host: account.imapHost,
+        port: account.imapPort,
         secure: true,
-        auth: { user: imapUser, pass: imapPass }
+        auth: { user: account.imapUser, pass: account.imapPass }
       });
 
       try {
         await imapClient.connect();
 
         const sentDate = new Date().toUTCString();
-        const sentRfc5322 = `From: ${account.email_address}
+        const sentRfc5322 = `From: ${account.emailAddress}
 To: ${validation.data.to}
-${validation.data.cc ? `Cc: ${validation.data.cc}` : ''}
+${validation.data.cc ? `Cc: ${validation.data.cc}` : ""}
 Subject: ${validation.data.subject}
 Date: ${sentDate}
 Message-ID: ${messageId}
-${validation.data.inReplyTo ? `In-Reply-To: ${validation.data.inReplyTo}` : ''}
-${validation.data.references ? `References: ${validation.data.references.join(" ")}` : ''}
+${validation.data.inReplyTo ? `In-Reply-To: ${validation.data.inReplyTo}` : ""}
+${validation.data.references ? `References: ${validation.data.references.join(" ")}` : ""}
 Content-Type: text/plain; charset=utf-8
 
 ${validation.data.body}`;

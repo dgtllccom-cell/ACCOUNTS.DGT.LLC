@@ -147,87 +147,10 @@ export function CommunicationCenterDashboard({ session }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-5 py-5 text-slate-900" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
-        <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100">
-                <MessageCircle className="h-3.5 w-3.5" />
-                {tt("cc.new_module", "New Separate Module")}
-              </div>
-              <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{tt("cc.title", "Communication Center")}</h1>
-              <p className="mt-1 max-w-3xl text-sm text-slate-500">
-                {tt("cc.description", "Central email, WhatsApp, CRM, follow-ups, campaigns and communication reports for multi-country ERP operations.")}
-              </p>
-            </div>
-            <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:min-w-[420px]">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">{tt("cc.active_sender", "Active sender")}</span>
-                <span className="font-semibold text-slate-950">{sender.fromName ?? "Not configured"}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">{tt("cc.opt_email", "Email")}</span>
-                <span className="font-medium text-blue-700">{sender.fromEmail ?? "Not configured"}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">{tt("cc.opt_whatsapp", "WhatsApp")}</span>
-                <span className="font-medium text-emerald-700">{sender.whatsappNumber ?? "Not configured"}</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {notice ? (
-          <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800">{notice}</div>
-        ) : null}
-
-        {/* Hub Clarification & Email Quick Access Banner */}
-        <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-sky-50 to-slate-50 p-4 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-                <Mail className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-slate-950">
-                  {lang === "ur"
-                    ? "مرکزی کمیونیکیشن حب اور برانچ ای میل ورک اسپیس"
-                    : "Central Communication Hub & Branch Mailboxes"}
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-600">
-                  {lang === "ur"
-                    ? "یہ صفحہ تمام کمیونیکیشن چینلز (ای میل، واٹس ایپ، سی آر ایم) کا مشترکہ جائزہ ہے۔ باضابطہ برانچ ای میلز (چمن، کوئٹہ، دبئی، قندھار، ہیڈ آفس) کے لیے نیچے دیے گئے بٹن پر کلک کریں یا سائیڈ بار میں Email منتخب کریں۔"
-                    : "This page provides an aggregated overview for all channels (Email, WhatsApp, CRM Leads). For the complete 3-column email workspace for branch mailboxes (Chaman, Quetta, Dubai, Kandahar, Head Office), click below or select Email in the sidebar."}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab("email")}
-                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition ${
-                  activeTab === "email"
-                    ? "bg-slate-900 text-white"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                <Mail className="h-3.5 w-3.5" />
-                {activeTab === "email" ? "Viewing Email Workspace" : "Open Branch Email System"}
-              </button>
-              <Link
-                href="/dashboard/messages/email"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition"
-              >
-                <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
-                Full Email App
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+    <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="mx-auto flex max-w-[1700px] flex-col gap-4">
+        {/* Top Navigation Tabs Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs">
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -237,8 +160,10 @@ export function CommunicationCenterDashboard({ session }: Props) {
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-                    active ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                    active
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -247,13 +172,53 @@ export function CommunicationCenterDashboard({ session }: Props) {
               );
             })}
           </div>
+          <Link
+            href="/dashboard/messages/email"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950 transition"
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
+            <span>{lang === "ur" ? "فل اسکرین ای میل ورک اسپیس" : "Fullscreen Email App"}</span>
+          </Link>
         </div>
 
+        {notice ? (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800">{notice}</div>
+        ) : null}
+
         {activeTab === "email" ? (
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden p-2">
+          <div className="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
             <EmailWorkspace session={session} />
           </div>
         ) : (
+          <>
+            <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    {tt("cc.new_module", "Multi-Channel Hub")}
+                  </div>
+                  <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{tt("cc.title", "Communication Center")}</h1>
+                  <p className="mt-1 max-w-3xl text-sm text-slate-500">
+                    {tt("cc.description", "Central email, WhatsApp, CRM, follow-ups, campaigns and communication reports for multi-country ERP operations.")}
+                  </p>
+                </div>
+                <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:min-w-[420px]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">{tt("cc.active_sender", "Active sender")}</span>
+                    <span className="font-semibold text-slate-950">{sender.fromName ?? "Not configured"}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">{tt("cc.opt_email", "Email")}</span>
+                    <span className="font-medium text-blue-700">{sender.fromEmail ?? "Not configured"}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">{tt("cc.opt_whatsapp", "WhatsApp")}</span>
+                    <span className="font-medium text-emerald-700">{sender.whatsappNumber ?? "Not configured"}</span>
+                  </div>
+                </div>
+              </div>
+            </header>
           <>
             <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               {cards.map((card) => {

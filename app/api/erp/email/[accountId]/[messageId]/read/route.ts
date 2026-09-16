@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { decrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +32,7 @@ export async function PATCH(
       );
     }
 
-    const admin = createSupabaseAdminClient() as any;
-    const { data: account } = await admin
-      .from("erp_email_accounts")
-      .select("*, erp_email_providers(imap_host, imap_port)")
-      .eq("id", accountId)
-      .single();
+    const account = await resolveMailboxAccount(accountId);
 
     if (!account) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
@@ -47,27 +41,25 @@ export async function PATCH(
     // RBAC check
     const canAccess =
       session.isSuperAdmin ||
-      (account.country_id && session.countryIds?.includes(account.country_id)) ||
-      (account.country_branch_id && session.countryBranchIds?.includes(account.country_branch_id)) ||
-      (account.city_branch_id && session.cityBranchIds?.includes(account.city_branch_id));
+      (account.countryId && session.countryIds?.includes(account.countryId)) ||
+      (account.countryBranchId && session.countryBranchIds?.includes(account.countryBranchId)) ||
+      (account.cityBranchId && session.cityBranchIds?.includes(account.cityBranchId));
 
     if (!canAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    const settings = account.settings || {};
-    const imapPass = settings.imap_password ? decrypt(settings.imap_password) : null;
-
-    if (!imapPass) {
+    if (!account.imapPass) {
       return NextResponse.json(
         { error: "IMAP password not configured" },
         { status: 400 }
       );
     }
 
-    const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
-    const imapPort = account.erp_email_providers?.imap_port || 993;
-    const imapUser = settings.imap_user || account.email_address;
+    const imapHost = account.imapHost;
+    const imapPort = account.imapPort;
+    const imapUser = account.imapUser;
+    const imapPass = account.imapPass;
 
     // Connect to IMAP and mark as read/unread
     const client = new ImapFlow({

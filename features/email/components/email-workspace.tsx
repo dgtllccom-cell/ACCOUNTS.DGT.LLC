@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Mail,
   Send,
@@ -44,7 +44,6 @@ interface MailboxAccount {
   branchName: string;
   country: string;
   scope: 'super_admin' | 'country_admin' | 'city_branch';
-  count: number;
 }
 
 interface EmailItem {
@@ -67,210 +66,13 @@ interface EmailItem {
 }
 
 const ALL_MAILBOXES: MailboxAccount[] = [
-  { id: 'all', email: 'all@dgt.llc', branchName: 'All Branches (Consolidated)', country: 'Global', scope: 'super_admin', count: 125 },
-  { id: 'chaman', email: 'chaman@dgt.llc', branchName: 'Chaman Branch', country: 'Pakistan', scope: 'city_branch', count: 18 },
-  { id: 'quetta', email: 'quetta@dgt.llc', branchName: 'Quetta Branch', country: 'Pakistan', scope: 'city_branch', count: 12 },
-  { id: 'dubai', email: 'dubai@dgt.llc', branchName: 'Dubai Branch', country: 'United Arab Emirates', scope: 'city_branch', count: 34 },
-  { id: 'kandahar', email: 'kandahar@dgt.llc', branchName: 'Kandahar Branch', country: 'Afghanistan', scope: 'city_branch', count: 5 },
-  { id: 'dgtllc', email: 'dgtllc@dgt.llc', branchName: 'DGT Head Office', country: 'Global', scope: 'super_admin', count: 56 }
+  { id: 'dubai', email: 'dubai@dgt.llc', branchName: 'Dubai Branch', country: 'United Arab Emirates', scope: 'city_branch' },
+  { id: 'chaman', email: 'chaman@dgt.llc', branchName: 'Chaman Branch', country: 'Pakistan', scope: 'city_branch' },
+  { id: 'quetta', email: 'quetta@dgt.llc', branchName: 'Quetta Branch', country: 'Pakistan', scope: 'city_branch' },
+  { id: 'kandahar', email: 'kandahar@dgt.llc', branchName: 'Kandahar Branch', country: 'Afghanistan', scope: 'city_branch' },
+  { id: 'dgtllc', email: 'dgtllc@dgt.llc', branchName: 'DGT Head Office', country: 'Global', scope: 'super_admin' }
 ];
 
-const INITIAL_EMAILS: EmailItem[] = [
-  {
-    id: 'msg-1',
-    senderName: 'John Doe',
-    senderEmail: 'john@customer.com',
-    recipientEmail: 'chaman@dgt.llc',
-    subject: 'Shipment Documents - Urgent',
-    preview: 'Please find the attached BL and invoice for your reference...',
-    date: '10:24 AM',
-    fullDate: '10:24 AM Sep 16, 2026',
-    isRead: false,
-    isStarred: true,
-    hasAttachment: true,
-    folder: 'inbox',
-    avatarInitials: 'JD',
-    avatarBg: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300',
-    body: `Dear Team,
-
-Please find the attached BL and invoice for your reference.
-Kindly confirm once you receive the documents.
-
-Best regards,
-John Doe
-Global Trading Co.`,
-    attachments: [
-      { name: 'BL_123456.pdf', size: '245 KB', type: 'pdf' },
-      { name: 'Invoice_7890.xlsx', size: '128 KB', type: 'excel' }
-    ]
-  },
-  {
-    id: 'msg-2',
-    senderName: 'Sarah Connor',
-    senderEmail: 'sarah@skynet-logistics.com',
-    recipientEmail: 'chaman@dgt.llc',
-    subject: 'Re: Quotation Request',
-    preview: 'Thank you for the updated quotation. We would like to proceed with...',
-    date: '09:15 AM',
-    fullDate: '09:15 AM Sep 16, 2026',
-    isRead: true,
-    isStarred: true,
-    hasAttachment: false,
-    folder: 'inbox',
-    avatarInitials: 'SC',
-    avatarBg: 'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-950 dark:text-pink-300',
-    body: `Hi Team,
-
-Thank you for the updated quotation. We would like to proceed with the 4x 40ft HC containers from Jebel Ali to Karachi port.
-
-Please advise the transit time and earliest booking schedule.
-
-Regards,
-Sarah Connor`,
-  },
-  {
-    id: 'msg-3',
-    senderName: 'Rahim Ahmad',
-    senderEmail: 'rahim@ahmadbrothers.pk',
-    recipientEmail: 'chaman@dgt.llc',
-    subject: 'Payment Confirmation',
-    preview: 'We have received the payment. Thanks! Receipt will follow shortly.',
-    date: 'Yesterday',
-    fullDate: '04:45 PM Sep 15, 2026',
-    isRead: true,
-    isStarred: false,
-    hasAttachment: false,
-    folder: 'inbox',
-    avatarInitials: 'RA',
-    avatarBg: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300',
-    body: `Assalam-o-Alaikum,
-
-We have received the payment for invoice #INV-2026-981.
-The original cash roznamcha voucher and official stamped receipt will be sent via clearing agent.
-
-Thank you,
-Rahim Ahmad`,
-  },
-  {
-    id: 'msg-4',
-    senderName: 'Ahmed Khan',
-    senderEmail: 'ahmed@karachitransit.com',
-    recipientEmail: 'chaman@dgt.llc',
-    subject: 'New Order - Containers',
-    preview: 'Please arrange the containers as discussed during our call yesterday...',
-    date: 'Yesterday',
-    fullDate: '02:10 PM Sep 15, 2026',
-    isRead: true,
-    isStarred: true,
-    hasAttachment: true,
-    folder: 'inbox',
-    avatarInitials: 'AK',
-    avatarBg: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300',
-    body: `Dear Management,
-
-Please arrange the 2x refrigerated containers for Chaman border transit by tomorrow morning.
-Drivers have been assigned and vehicle registration details are attached.
-
-Thanks,
-Ahmed Khan`,
-    attachments: [
-      { name: 'Vehicle_List_Chaman.pdf', size: '180 KB', type: 'pdf' }
-    ]
-  },
-  {
-    id: 'msg-5',
-    senderName: 'Logistics Group',
-    senderEmail: 'dispatch@dgt.llc',
-    recipientEmail: 'chaman@dgt.llc',
-    subject: 'Vessel ETA Update',
-    preview: 'The vessel ETA has been changed to September 18th due to weather...',
-    date: 'Sep 14',
-    fullDate: '11:30 AM Sep 14, 2026',
-    isRead: true,
-    isStarred: true,
-    hasAttachment: true,
-    folder: 'inbox',
-    avatarInitials: 'LG',
-    avatarBg: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300',
-    body: `Team Alert,
-
-The vessel MSC AURELIA carrying batch #PK-CHM-902 has updated ETA to September 18 at Karachi QICT port.
-Please alert the customs clearing team in Quetta and Chaman accordingly.
-
-Logistics Operations Desk`,
-    attachments: [
-      { name: 'Port_Schedule_QICT.pdf', size: '310 KB', type: 'pdf' }
-    ]
-  },
-  {
-    id: 'msg-6',
-    senderName: 'Muhammad Tariq',
-    senderEmail: 'tariq.customs@clearing.dgt.llc',
-    recipientEmail: 'chaman@dgt.llc',
-    subject: 'Customs Clearance',
-    preview: 'Documents are approved. Release order is expected by 3 PM.',
-    date: 'Sep 14',
-    fullDate: '09:00 AM Sep 14, 2026',
-    isRead: true,
-    isStarred: false,
-    hasAttachment: false,
-    folder: 'inbox',
-    avatarInitials: 'MT',
-    avatarBg: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300',
-    body: `Respected Asmatullah Sahib,
-
-Customs examination for transit GD #54109 is finished with zero objections.
-Expected gate-out release by 3:00 PM today. Trucks will depart towards Chaman border tonight.
-
-Muhammad Tariq
-Clearing Incharge`,
-  },
-  {
-    id: 'msg-7',
-    senderName: 'Fatima Shipping',
-    senderEmail: 'ops@fatimashipping.ae',
-    recipientEmail: 'dubai@dgt.llc',
-    subject: 'Container Release',
-    preview: 'Container has been released from port. Delivery order issued.',
-    date: 'Sep 13',
-    fullDate: '03:15 PM Sep 13, 2026',
-    isRead: true,
-    isStarred: false,
-    hasAttachment: false,
-    folder: 'inbox',
-    avatarInitials: 'FS',
-    avatarBg: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300',
-    body: `Hello Dubai Branch,
-
-Please find confirmation that delivery orders for 5x units under BL #DGT-AE-8834 are approved at Jebel Ali Gate 4.
-
-Warm regards,
-Fatima Shipping Agency`,
-  },
-  {
-    id: 'msg-8',
-    senderName: 'Zahir Zaman',
-    senderEmail: 'zahir@kandahar-traders.af',
-    recipientEmail: 'kandahar@dgt.llc',
-    subject: 'Meeting Schedule',
-    preview: 'Can we schedule a meeting next week to discuss seasonal fruit export contracts?',
-    date: 'Sep 13',
-    fullDate: '11:10 AM Sep 13, 2026',
-    isRead: true,
-    isStarred: false,
-    hasAttachment: false,
-    folder: 'inbox',
-    avatarInitials: 'ZZ',
-    avatarBg: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300',
-    body: `Dear Kandahar Branch Team,
-
-We would like to meet next Tuesday at our office to finalize the export transport contracts for fresh pomegranate shipments.
-
-Please confirm availability.
-
-Zahir Zaman`,
-  }
-];
 
 export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   const s = useErpScreen('email_system');

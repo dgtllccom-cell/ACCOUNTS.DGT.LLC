@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { decrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 
 export const dynamic = "force-dynamic";
 
-interface EmailMessage {
+export interface EmailMessage {
   id: string;
+  uid: number;
   from: string;
+  fromName: string;
+  to: string;
   subject: string;
   date: string;
   preview: string;
+  body: string;
   isRead: boolean;
+  isStarred: boolean;
+  hasAttachment: boolean;
   folder: string;
 }
 
@@ -24,123 +29,110 @@ export async function GET(
     const session = await requireErpSession();
     const { accountId } = await params;
     const { searchParams } = new URL(request.url);
-    const folder = searchParams.get("folder") || "inbox";
+    const folder = (searchParams.get("folder") || "inbox").toLowerCase();
 
-    // Verify access to this mailbox
-    const admin = createSupabaseAdminClient() as any;
-    const { data: account } = await admin
-      .from("erp_email_accounts")
-      .select("*, erp_email_providers(host, imap_host, imap_port)")
-      .eq("id", accountId)
-      .single();
-
+    const account = await resolveMailboxAccount(accountId);
     if (!account) {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+      return NextResponse.json({ error: "Account not found or credentials missing" }, { status: 404 });
     }
 
     // Check RBAC - user must have access to this mailbox
     const canAccess =
       session.isSuperAdmin ||
-      (account.country_id && session.countryIds?.includes(account.country_id)) ||
-      (account.country_branch_id &&
-        session.countryBranchIds?.includes(account.country_branch_id)) ||
-      (account.city_branch_id &&
-        session.cityBranchIds?.includes(account.city_branch_id));
+      (account.countryId && session.countryIds?.includes(account.countryId)) ||
+      (account.countryBranchId && session.countryBranchIds?.includes(account.countryBranchId)) ||
+      (account.cityBranchId && session.cityBranchIds?.includes(account.cityBranchId));
 
     if (!canAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Parse stored credentials
-    const settings = account.settings || {};
-    const smtpPass = settings.smtp_password
-      ? decrypt(settings.smtp_password)
-      : null;
-    const imapPass = settings.imap_password
-      ? decrypt(settings.imap_password)
-      : smtpPass;
-
-    if (!imapPass) {
-      return NextResponse.json(
-        { error: "IMAP password not configured" },
-        { status: 400 }
-      );
-    }
-
-    const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
-    const imapPort = account.erp_email_providers?.imap_port || 993;
-    const imapUser = settings.imap_user || account.email_address;
-
     // Connect to IMAP
     const client = new ImapFlow({
-      host: imapHost,
-      port: imapPort,
+      host: account.imapHost,
+      port: account.imapPort,
       secure: true,
       auth: {
-        user: imapUser,
-        pass: imapPass
+        user: account.imapUser,
+        pass: account.imapPass
       }
     });
 
     await client.connect();
 
-    // Select folder (map folder names to IMAP mailbox names)
+    // Map folder names for Titan and standard IMAP
     const folderMap: Record<string, string> = {
       inbox: "INBOX",
-      sent: "[Gmail]/Sent Mail",
-      drafts: "[Gmail]/Drafts",
-      trash: "[Gmail]/Trash",
-      archived: "[Gmail]/All Mail",
-      starred: "[Gmail]/Starred"
+      sent: "Sent",
+      drafts: "Drafts",
+      trash: "Trash",
+      archived: "Archive",
+      archive: "Archive",
+      spam: "Spam",
+      starred: "INBOX"
     };
 
-    const mailboxName = folderMap[folder] || "INBOX";
+    const targetMailbox = folderMap[folder] || "INBOX";
 
     try {
-      await client.mailboxOpen(mailboxName);
-    } catch (e) {
-      // Fallback for non-Gmail servers
-      await client.mailboxOpen(folder === "inbox" ? "INBOX" : folder);
+      await client.mailboxOpen(targetMailbox);
+    } catch {
+      try {
+        await client.mailboxOpen(targetMailbox.toUpperCase());
+      } catch {
+        await client.mailboxOpen("INBOX");
+      }
     }
 
     // Fetch recent messages
+    const searchCriteria = folder === "starred" ? { flagged: true } : { all: true };
+    const searchResult = await client.search(searchCriteria);
+    const uids: number[] = Array.isArray(searchResult) ? searchResult.slice(-50).reverse() : [];
+
     const messages: EmailMessage[] = [];
-    const searchResult = await client.search({ all: true });
-    const uids: number[] = Array.isArray(searchResult) ? searchResult.slice(-50) : [];
 
     for (const uid of uids) {
-      const message = await client.fetchOne(uid, {
-        source: true,
-        envelope: true
-      });
-
-      if (message) {
-        const headerLines = (message.source?.toString() || "").split("\n");
-        const subject =
-          message.envelope?.subject ||
-          headerLines.find((l) => l.startsWith("Subject:"))?.replace("Subject:", "").trim() ||
-          "(no subject)";
-        const from =
-          message.envelope?.from?.[0]?.address ||
-          headerLines.find((l) => l.startsWith("From:"))?.replace("From:", "").trim() ||
-          "unknown";
-        const dateRaw = message.envelope?.date;
-        const date =
-          dateRaw instanceof Date
-            ? dateRaw.toISOString()
-            : typeof dateRaw === "string"
-              ? dateRaw
-              : new Date().toISOString();
-
-        messages.push({
-          id: `${accountId}-${uid}`,
-          from,
-          subject,
-          date,
-          preview: headerLines.slice(0, 3).join(" ").substring(0, 100),
-          isRead: message.flags ? !message.flags.has("\\Unseen") : true,
-          folder
+      try {
+        const message = await client.fetchOne(uid, {
+          source: true,
+          envelope: true,
+          flags: true
         });
+
+        if (message && typeof message === "object") {
+          const raw = message.source ? message.source.toString() : "";
+          const bodyIndex = raw.indexOf("\r\n\r\n") !== -1 ? raw.indexOf("\r\n\r\n") + 4 : raw.indexOf("\n\n") !== -1 ? raw.indexOf("\n\n") + 2 : -1;
+          const body = bodyIndex !== -1 ? raw.slice(bodyIndex) : "";
+
+          const subject = message.envelope?.subject || "(no subject)";
+          const from = message.envelope?.from?.[0]?.address || "unknown";
+          const fromName = message.envelope?.from?.[0]?.name || from.split("@")[0] || "Unknown";
+          const to = message.envelope?.to?.[0]?.address || account.emailAddress;
+          const dateRaw = message.envelope?.date;
+          const date = dateRaw instanceof Date ? dateRaw.toISOString() : typeof dateRaw === "string" ? dateRaw : new Date().toISOString();
+
+          const hasAttachment = raw.toLowerCase().includes("content-disposition: attachment") || raw.toLowerCase().includes("filename=");
+          const isRead = message.flags ? !message.flags.has("\\Unseen") : true;
+          const isStarred = message.flags ? message.flags.has("\\Flagged") : false;
+
+          messages.push({
+            id: `${account.id}-${uid}`,
+            uid,
+            from,
+            fromName,
+            to,
+            subject,
+            date,
+            preview: body.slice(0, 140).replace(/\s+/g, " ").trim() || subject,
+            body,
+            isRead,
+            isStarred,
+            hasAttachment,
+            folder
+          });
+        }
+      } catch (msgErr) {
+        console.warn(`Failed to fetch message UID ${uid}:`, msgErr);
       }
     }
 
@@ -151,10 +143,7 @@ export async function GET(
     console.error("IMAP fetch error:", error);
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch emails"
+        error: error instanceof Error ? error.message : "Failed to fetch emails"
       },
       { status: 500 }
     );
