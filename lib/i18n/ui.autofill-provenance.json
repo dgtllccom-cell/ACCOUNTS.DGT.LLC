@@ -3070,5 +3070,229 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-15T20:28:31.807Z"
+  },
+  {
+    "key": "email_workspace.select_all",
+    "lang": "ur",
+    "value": "سیلیکت الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.select_all",
+    "lang": "ar",
+    "value": "سیلیکت الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.select_all",
+    "lang": "fa",
+    "value": "سیلیکت الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.select_all",
+    "lang": "ps",
+    "value": "سیلیکت الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.refresh",
+    "lang": "ur",
+    "value": "ریفریش کریں",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.refresh",
+    "lang": "ar",
+    "value": "تحديث",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.refresh",
+    "lang": "fa",
+    "value": "بازخوانی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.refresh",
+    "lang": "ps",
+    "value": "تازه کول",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply",
+    "lang": "ur",
+    "value": "ریپلی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply",
+    "lang": "ar",
+    "value": "ریبلی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply",
+    "lang": "fa",
+    "value": "ریپلی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply",
+    "lang": "ps",
+    "value": "ریپلی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply_all",
+    "lang": "ur",
+    "value": "ریپلی الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply_all",
+    "lang": "ar",
+    "value": "ریبلی الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply_all",
+    "lang": "fa",
+    "value": "ریپلی الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.reply_all",
+    "lang": "ps",
+    "value": "ریپلی الل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.forward",
+    "lang": "ur",
+    "value": "فورورد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.forward",
+    "lang": "ar",
+    "value": "فورورد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.forward",
+    "lang": "fa",
+    "value": "فورورد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.forward",
+    "lang": "ps",
+    "value": "فورورد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.archive",
+    "lang": "ur",
+    "value": "رچیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.archive",
+    "lang": "ar",
+    "value": "رتشیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.archive",
+    "lang": "fa",
+    "value": "رچیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.archive",
+    "lang": "ps",
+    "value": "رچیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.delete",
+    "lang": "ur",
+    "value": "دیلیتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.delete",
+    "lang": "ar",
+    "value": "دیلیتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.delete",
+    "lang": "fa",
+    "value": "دیلیتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_workspace.delete",
+    "lang": "ps",
+    "value": "دیلیتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-16T19:54:07.000Z"
   }
 ]

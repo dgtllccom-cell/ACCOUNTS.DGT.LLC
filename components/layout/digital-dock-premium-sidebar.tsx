@@ -521,9 +521,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: "All Messages",
     icon: MessageSquare,
     children: [
-      { label: "All Messages / Communication Center", href: "/dashboard/communication-center", icon: MessageSquare },
-      { label: "WhatsApp", href: "/dashboard/messages/whatsapp", icon: MessageCircle },
       { label: "Email", href: "/dashboard/messages/email", icon: Mail },
+      { label: "WhatsApp", href: "/dashboard/messages/whatsapp", icon: MessageCircle },
+      { label: "Communication Center Hub", href: "/dashboard/communication-center", icon: MessageSquare },
       { label: "Customer Inquiries & Calls", href: "/dashboard/customer-inquiries", icon: PhoneCall },
       { label: "Inquiry Follow-ups", href: "/dashboard/customer-inquiries/follow-ups", icon: Clock },
       { label: "SMS & Customer Responses", href: "/dashboard/return-sms-reply", icon: FileText },

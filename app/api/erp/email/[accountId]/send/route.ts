@@ -4,17 +4,24 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import nodemailer from "nodemailer";
+import { ImapFlow } from "imapflow";
 
 export const dynamic = "force-dynamic";
 
 const sendSchema = z.object({
-  to: z.string().email("Invalid recipient email"),
-  subject: z.string().min(1, "Subject required"),
-  body: z.string().min(1, "Message required"),
+  to: z.string().email(),
   cc: z.string().email().optional().or(z.literal("")),
-  bcc: z.string().email().optional().or(z.literal(""))
+  bcc: z.string().email().optional().or(z.literal("")),
+  subject: z.string().min(1),
+  body: z.string().min(1),
+  inReplyTo: z.string().optional(),
+  references: z.array(z.string()).optional()
 });
 
+/**
+ * POST /api/erp/email/[accountId]/send
+ * Send email via SMTP and append to Sent folder (sent sync)
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ accountId: string }> }
@@ -32,11 +39,10 @@ export async function POST(
       );
     }
 
-    // Verify access to this mailbox
     const admin = createSupabaseAdminClient() as any;
     const { data: account } = await admin
       .from("erp_email_accounts")
-      .select("*, erp_email_providers(smtp_host, smtp_port)")
+      .select("*, erp_email_providers(smtp_host, smtp_port, imap_host, imap_port)")
       .eq("id", accountId)
       .single();
 
@@ -44,24 +50,19 @@ export async function POST(
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    // Check RBAC
     const canAccess =
       session.isSuperAdmin ||
       (account.country_id && session.countryIds?.includes(account.country_id)) ||
-      (account.country_branch_id &&
-        session.countryBranchIds?.includes(account.country_branch_id)) ||
-      (account.city_branch_id &&
-        session.cityBranchIds?.includes(account.city_branch_id));
+      (account.country_branch_id && session.countryBranchIds?.includes(account.country_branch_id)) ||
+      (account.city_branch_id && session.cityBranchIds?.includes(account.city_branch_id));
 
     if (!canAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Get credentials
     const settings = account.settings || {};
-    const smtpPass = settings.smtp_password
-      ? decrypt(settings.smtp_password)
-      : null;
+    const smtpPass = settings.smtp_password ? decrypt(settings.smtp_password) : null;
+    const imapPass = settings.imap_password ? decrypt(settings.imap_password) : null;
 
     if (!smtpPass) {
       return NextResponse.json(
@@ -70,53 +71,83 @@ export async function POST(
       );
     }
 
-    const smtpHost =
-      account.erp_email_providers?.smtp_host || "smtp.titan.email";
+    const smtpHost = account.erp_email_providers?.smtp_host || "smtp.titan.email";
     const smtpPort = account.erp_email_providers?.smtp_port || 587;
     const smtpUser = settings.smtp_user || account.email_address;
 
-    // Create transporter
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      secure: smtpPort === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass
-      }
+      secure: false,
+      auth: { user: smtpUser, pass: smtpPass }
     });
 
-    // Send email
-    const info = await transporter.sendMail({
+    const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${account.email_address.split('@')[1]}>`;
+
+    const mailOptions: any = {
       from: account.email_address,
       to: validation.data.to,
       cc: validation.data.cc || undefined,
       bcc: validation.data.bcc || undefined,
       subject: validation.data.subject,
-      html: validation.data.body,
-      replyTo: account.reply_to || undefined
-    });
+      text: validation.data.body,
+      messageId,
+      headers: {}
+    };
 
-    // Log to database
-    await admin.from("audit_logs").insert({
-      action: "email.send",
-      resource_type: "email_account",
-      resource_id: accountId,
-      description: `Email sent to ${validation.data.to}`,
-      user_id: session.userId,
-      metadata: {
-        messageId: info.messageId,
-        recipient: validation.data.to,
-        subject: validation.data.subject
+    if (validation.data.inReplyTo) {
+      mailOptions.headers["In-Reply-To"] = validation.data.inReplyTo;
+    }
+
+    if (validation.data.references && validation.data.references.length > 0) {
+      mailOptions.headers["References"] = validation.data.references.join(" ");
+    }
+
+    await transporter.sendMail(mailOptions);
+
+    if (imapPass) {
+      const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
+      const imapPort = account.erp_email_providers?.imap_port || 993;
+      const imapUser = settings.imap_user || account.email_address;
+
+      const imapClient = new ImapFlow({
+        host: imapHost,
+        port: imapPort,
+        secure: true,
+        auth: { user: imapUser, pass: imapPass }
+      });
+
+      try {
+        await imapClient.connect();
+
+        const sentDate = new Date().toUTCString();
+        const sentRfc5322 = `From: ${account.email_address}
+To: ${validation.data.to}
+${validation.data.cc ? `Cc: ${validation.data.cc}` : ''}
+Subject: ${validation.data.subject}
+Date: ${sentDate}
+Message-ID: ${messageId}
+${validation.data.inReplyTo ? `In-Reply-To: ${validation.data.inReplyTo}` : ''}
+${validation.data.references ? `References: ${validation.data.references.join(" ")}` : ''}
+Content-Type: text/plain; charset=utf-8
+
+${validation.data.body}`;
+
+        await imapClient.append("[Gmail]/Sent Mail", sentRfc5322, ["\Seen"]);
+        await imapClient.logout();
+      } catch (imapErr) {
+        console.error("Failed to append to sent folder:", imapErr);
       }
-    });
+    }
 
     return NextResponse.json({
       success: true,
-      messageId: info.messageId
+      messageId,
+      message: "Email sent successfully"
     });
+
   } catch (error) {
-    console.error("SMTP send error:", error);
+    console.error("Send error:", error);
     return NextResponse.json(
       {
         error:

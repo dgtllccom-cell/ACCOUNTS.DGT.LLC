@@ -44,11 +44,12 @@ function extractEmailAddress(from: string): string {
 
 /**
  * Group emails into threads
- * Strategy: Group by normalized subject + participant set
- * Then link via In-Reply-To and References headers
+ * PRIMARY Strategy: Link via Message-ID, In-Reply-To, References headers
+ * FALLBACK Strategy: Group by normalized subject + participant set (only if headers don't link)
  */
 export function threadEmails(emails: ThreadedEmail[]): EmailThread[] {
   const threadMap = new Map<string, EmailThread>();
+  const messageIdMap = new Map<string, EmailThread>();
 
   // Sort by date (oldest first)
   const sortedEmails = [...emails].sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -57,25 +58,24 @@ export function threadEmails(emails: ThreadedEmail[]): EmailThread[] {
     let threadKey: string | null = null;
     let targetThread: EmailThread | null = null;
 
-    // Strategy 1: Check if email is a reply (has In-Reply-To or References)
+    // PRIMARY Strategy: Check if email is a reply using Message-ID headers
     if (email.inReplyTo || email.references?.length) {
-      // Look for existing thread with matching message IDs
-      for (const [key, thread] of threadMap) {
-        for (const existingEmail of thread.emails) {
-          if (
-            email.inReplyTo === existingEmail.messageId ||
-            email.references?.includes(existingEmail.messageId || '')
-          ) {
-            threadKey = key;
-            targetThread = thread;
+      // Look for thread containing the referenced message
+      if (email.inReplyTo && messageIdMap.has(email.inReplyTo)) {
+        targetThread = messageIdMap.get(email.inReplyTo)!;
+        threadKey = targetThread.threadId;
+      } else if (email.references?.length) {
+        for (const refId of email.references) {
+          if (messageIdMap.has(refId)) {
+            targetThread = messageIdMap.get(refId)!;
+            threadKey = targetThread.threadId;
             break;
           }
         }
-        if (threadKey) break;
       }
     }
 
-    // Strategy 2: Group by normalized subject + participant set
+    // FALLBACK Strategy: Group by normalized subject + participant set (only if headers don't link)
     if (!targetThread) {
       const normalizedSubject = normalizeSubject(email.subject);
       const participants = new Set([
@@ -89,7 +89,7 @@ export function threadEmails(emails: ThreadedEmail[]): EmailThread[] {
       if (threadMap.has(threadKey)) {
         targetThread = threadMap.get(threadKey)!;
 
-        // Verify subject match (normalized)
+        // Verify subject match (normalized) to avoid cross-conversation linking
         const existingNormalized = normalizeSubject(targetThread.subject);
         if (existingNormalized !== normalizedSubject) {
           // Create new thread if subject differs
@@ -127,6 +127,11 @@ export function threadEmails(emails: ThreadedEmail[]): EmailThread[] {
     // Update participants
     targetThread.participants.add(extractEmailAddress(email.from));
     targetThread.participants.add(extractEmailAddress(email.to));
+
+    // Register this email's Message-ID for future reply linkage (primary strategy)
+    if (email.messageId) {
+      messageIdMap.set(email.messageId, targetThread);
+    }
   }
 
   // Convert to array and sort by lastDate descending

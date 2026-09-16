@@ -4,7 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
-import nodemailer from "nodemailer";
+import { simpleParser } from "mailparser";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +13,13 @@ const saveDraftSchema = z.object({
   body: z.string().min(1, "Body required"),
   to: z.string().email("Valid recipient email required"),
   cc: z.string().email().optional().or(z.literal("")),
-  bcc: z.string().email().optional().or(z.literal("")),
-  attachments: z.array(z.object({
-    name: z.string(),
-    content: z.string(),
-    contentType: z.string()
-  })).optional()
+  bcc: z.string().email().optional().or(z.literal(""))
 });
 
+/**
+ * POST /api/erp/email/[accountId]/drafts
+ * Save draft to IMAP Drafts folder (IMAP Canonical architecture)
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ accountId: string }> }
@@ -41,7 +40,7 @@ export async function POST(
     const admin = createSupabaseAdminClient() as any;
     const { data: account } = await admin
       .from("erp_email_accounts")
-      .select("*, erp_email_providers(host, smtp_host, smtp_port)")
+      .select("*, erp_email_providers(imap_host, imap_port)")
       .eq("id", accountId)
       .single();
 
@@ -60,78 +59,68 @@ export async function POST(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Get credentials
+    // Get IMAP credentials (drafts stored in IMAP, not database)
     const settings = account.settings || {};
-    const smtpPass = settings.smtp_password ? decrypt(settings.smtp_password) : null;
+    const imapPass = settings.imap_password ? decrypt(settings.imap_password) : null;
 
-    if (!smtpPass) {
+    if (!imapPass) {
       return NextResponse.json(
-        { error: "SMTP password not configured" },
+        { error: "IMAP password not configured" },
         { status: 400 }
       );
     }
 
-    const smtpHost = account.erp_email_providers?.smtp_host || "smtp.titan.email";
-    const smtpPort = account.erp_email_providers?.smtp_port || 587;
-    const smtpUser = settings.smtp_user || account.email_address;
+    const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
+    const imapPort = account.erp_email_providers?.imap_port || 993;
+    const imapUser = settings.imap_user || account.email_address;
 
-    // Create draft as email in Drafts folder via IMAP
-    // Note: This is a simplified approach; full draft saving would require IMAP APPEND
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: false,
-      auth: { user: smtpUser, pass: smtpPass }
+    // Connect to IMAP and save draft
+    const client = new ImapFlow({
+      host: imapHost,
+      port: imapPort,
+      secure: true,
+      auth: { user: imapUser, pass: imapPass }
     });
 
-    // Compose draft message
-    const draftMessage = {
-      from: account.email_address,
-      to: validation.data.to,
-      cc: validation.data.cc || undefined,
-      bcc: validation.data.bcc || undefined,
-      subject: `[DRAFT] ${validation.data.subject}`,
-      text: validation.data.body,
-      headers: {
-        "X-Draft": "true",
-        "X-Draft-Timestamp": new Date().toISOString()
+    try {
+      await client.connect();
+
+      // Compose RFC 5322 draft message
+      const draftDate = new Date().toUTCString();
+      const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${account.email_address.split('@')[1]}>`;
+
+      const draftRfc5322 = `From: ${account.email_address}
+To: ${validation.data.to}
+${validation.data.cc ? `Cc: ${validation.data.cc}` : ''}
+${validation.data.bcc ? `Bcc: ${validation.data.bcc}` : ''}
+Subject: ${validation.data.subject}
+Date: ${draftDate}
+Message-ID: ${messageId}
+X-Draft: true
+X-Draft-Timestamp: ${new Date().toISOString()}
+Content-Type: text/plain; charset=utf-8
+
+${validation.data.body}`;
+
+      // Append to Drafts folder with \Draft flag
+      await client.append("[Gmail]/Drafts", draftRfc5322, ["\\Draft"]);
+
+      await client.logout();
+
+      return NextResponse.json({
+        success: true,
+        messageId,
+        message: "Draft saved to IMAP Drafts folder"
+      });
+
+    } catch (imapError) {
+      console.error("IMAP append error:", imapError);
+      throw imapError;
+    } finally {
+      if (client.mailbox) {
+        try { await client.logout(); } catch (e) { /* ignore */ }
       }
-    };
-
-    // For proper IMAP draft support, we would need to:
-    // 1. Connect to IMAP with credentials
-    // 2. Use IMAP APPEND to add message to Drafts folder
-    // For now, store in database and retrieve from there
-
-    // Store draft in database (simplified - create new table for drafts)
-    const { data: draft, error: draftError } = await admin
-      .from("erp_email_drafts")
-      .insert({
-        account_id: accountId,
-        subject: validation.data.subject,
-        body: validation.data.body,
-        to: validation.data.to,
-        cc: validation.data.cc,
-        bcc: validation.data.bcc,
-        created_by: session.userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (draftError) {
-      return NextResponse.json(
-        { error: `Failed to save draft: ${draftError.message}` },
-        { status: 500 }
-      );
     }
-
-    return NextResponse.json({
-      success: true,
-      draftId: draft.id,
-      message: "Draft saved successfully"
-    });
 
   } catch (error) {
     console.error("Draft save error:", error);
@@ -147,7 +136,10 @@ export async function POST(
   }
 }
 
-// GET drafts
+/**
+ * GET /api/erp/email/[accountId]/drafts
+ * Fetch drafts from IMAP Drafts folder (IMAP Canonical architecture)
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ accountId: string }> }
@@ -159,7 +151,7 @@ export async function GET(
     const admin = createSupabaseAdminClient() as any;
     const { data: account } = await admin
       .from("erp_email_accounts")
-      .select("*")
+      .select("*, erp_email_providers(imap_host, imap_port)")
       .eq("id", accountId)
       .single();
 
@@ -178,15 +170,76 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Fetch drafts
-    const { data: drafts } = await admin
-      .from("erp_email_drafts")
-      .select("*")
-      .eq("account_id", accountId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+    // Get IMAP credentials
+    const settings = account.settings || {};
+    const imapPass = settings.imap_password ? decrypt(settings.imap_password) : null;
 
-    return NextResponse.json({ drafts: drafts || [] });
+    if (!imapPass) {
+      return NextResponse.json(
+        { error: "IMAP password not configured" },
+        { status: 400 }
+      );
+    }
+
+    const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
+    const imapPort = account.erp_email_providers?.imap_port || 993;
+    const imapUser = settings.imap_user || account.email_address;
+
+    // Connect to IMAP and fetch drafts
+    const client = new ImapFlow({
+      host: imapHost,
+      port: imapPort,
+      secure: true,
+      auth: { user: imapUser, pass: imapPass }
+    });
+
+    try {
+      await client.connect();
+
+      // Open Drafts folder (try Gmail first, fallback to standard)
+      try {
+        await client.mailboxOpen("[Gmail]/Drafts");
+      } catch {
+        await client.mailboxOpen("Drafts");
+      }
+
+      // Search for all messages
+      const searchResult = await client.search({ all: true });
+      const uids = Array.isArray(searchResult) ? searchResult.slice(-50) : [];
+
+      const drafts = [];
+      for (const uid of uids) {
+        try {
+          const message = await client.fetchOne(uid, { source: true });
+          if (message?.source) {
+            const parsed = await simpleParser(message.source as any);
+            drafts.push({
+              id: `${accountId}-${uid}`,
+              uid,
+              subject: parsed.subject || "(no subject)",
+              to: parsed.to?.text || "",
+              cc: parsed.cc?.text || "",
+              body: parsed.text || "",
+              date: parsed.date?.toISOString() || new Date().toISOString()
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to parse draft UID ${uid}:`, err);
+        }
+      }
+
+      await client.logout();
+
+      return NextResponse.json({ drafts });
+
+    } catch (imapError) {
+      console.error("IMAP fetch error:", imapError);
+      throw imapError;
+    } finally {
+      if (client.mailbox) {
+        try { await client.logout(); } catch (e) { /* ignore */ }
+      }
+    }
 
   } catch (error) {
     console.error("Draft fetch error:", error);

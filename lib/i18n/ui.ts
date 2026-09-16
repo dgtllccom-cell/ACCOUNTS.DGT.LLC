@@ -8365,7 +8365,7 @@ export type UiKey =
   | "email_messages.col_from"
   | "email_messages.col_subject"
   | "email_messages.col_date"
-  | "email_workspace.title" | "email_workspace.compose" | "email_workspace.inbox" | "email_workspace.sent" | "email_workspace.drafts" | "email_workspace.archived" | "email_workspace.trash" | "email_workspace.starred" | "email_workspace.loading" | "email_workspace.no_messages" | "email_workspace.compose_new" | "email_workspace.recipient" | "email_workspace.subject" | "email_workspace.message_body" | "email_workspace.cancel" | "email_workspace.send" | "email_workspace.cc" | "email_workspace.bcc" | "email_workspace.sending" | "email_workspace.send_failed" | "email_workspace.send_error"
+  | "email_workspace.title" | "email_workspace.compose" | "email_workspace.inbox" | "email_workspace.sent" | "email_workspace.drafts" | "email_workspace.archived" | "email_workspace.trash" | "email_workspace.starred" | "email_workspace.loading" | "email_workspace.no_messages" | "email_workspace.compose_new" | "email_workspace.recipient" | "email_workspace.subject" | "email_workspace.message_body" | "email_workspace.cancel" | "email_workspace.send" | "email_workspace.cc" | "email_workspace.bcc" | "email_workspace.sending" | "email_workspace.send_failed" | "email_workspace.send_error" | "email_workspace.select_all" | "email_workspace.refresh" | "email_workspace.reply" | "email_workspace.reply_all" | "email_workspace.forward" | "email_workspace.archive" | "email_workspace.delete" | "email_workspace.draft_saved" | "email_workspace.draft_fetch_failed"
   | "cbill.title"
   | "cbill.subtitle"
   | "cbill.customer_bill_generated"
@@ -27118,6 +27118,15 @@ const en: Dict = {
   "email_workspace.sending": "Sending...",
   "email_workspace.send_failed": "Failed to send email",
   "email_workspace.send_error": "Network error",
+  "email_workspace.select_all": "Select All",
+  "email_workspace.refresh": "Refresh",
+  "email_workspace.reply": "Reply",
+  "email_workspace.reply_all": "Reply All",
+  "email_workspace.forward": "Forward",
+  "email_workspace.archive": "Archive",
+  "email_workspace.delete": "Delete",
+  "email_workspace.draft_saved": "Draft saved successfully",
+  "email_workspace.draft_fetch_failed": "Failed to fetch drafts",
   "cbill.title": "Customer Bill",
   "cbill.subtitle": "Create, review and post shipping customer bills linked directly to customer orders and accounting ledgers.",
   "cbill.customer_bill_generated": "Customer Bill Generated",
@@ -45912,6 +45921,13 @@ const ur: Dict = {
   "cbill.charge_delivery": "مقامی ڈلیوری اور ٹرانسپورٹ",
   "cbill.charge_demurrage": "ڈیمریج اور تاخیری جرمانہ",
   "cbill.charge_other": "دیگر متفرق اخراجات",
+  "email_workspace.select_all": "سیلیکت الل",
+  "email_workspace.refresh": "ریفریش کریں",
+  "email_workspace.reply": "ریپلی",
+  "email_workspace.reply_all": "ریپلی الل",
+  "email_workspace.forward": "فورورد",
+  "email_workspace.archive": "رچیوی",
+  "email_workspace.delete": "دیلیتی",
 };
 
 const ar: Dict = {
@@ -64640,6 +64656,13 @@ const ar: Dict = {
   "cbill.charge_delivery": "التوصيل والنقل الداخلي",
   "cbill.charge_demurrage": "غرامات التأخير والأرضيات",
   "cbill.charge_other": "رسوم ومصاريف متفرقة أخرى",
+  "email_workspace.select_all": "سیلیکت الل",
+  "email_workspace.refresh": "تحديث",
+  "email_workspace.reply": "ریبلی",
+  "email_workspace.reply_all": "ریبلی الل",
+  "email_workspace.forward": "فورورد",
+  "email_workspace.archive": "رتشیوی",
+  "email_workspace.delete": "دیلیتی",
 };
 
 const fa: Dict = {
@@ -83367,6 +83390,13 @@ const fa: Dict = {
   "cbill.charge_delivery": "تحویل محلی و حمل داخلی",
   "cbill.charge_demurrage": "هزینه توقف و جریمه تاخیر",
   "cbill.charge_other": "سایر هزینه‌های متفرقه",
+  "email_workspace.select_all": "سیلیکت الل",
+  "email_workspace.refresh": "بازخوانی",
+  "email_workspace.reply": "ریپلی",
+  "email_workspace.reply_all": "ریپلی الل",
+  "email_workspace.forward": "فورورد",
+  "email_workspace.archive": "رچیوی",
+  "email_workspace.delete": "دیلیتی",
 };
 
 const ps: Dict = {
@@ -102100,6 +102130,13 @@ const ps: Dict = {
   "cbill.charge_delivery": "ځایی تحویلي او لیږد",
   "cbill.charge_demurrage": "د ځنډ جریمه او ډیمریج",
   "cbill.charge_other": "نور متفرقه لګښتونه",
+  "email_workspace.select_all": "سیلیکت الل",
+  "email_workspace.refresh": "تازه کول",
+  "email_workspace.reply": "ریپلی",
+  "email_workspace.reply_all": "ریپلی الل",
+  "email_workspace.forward": "فورورد",
+  "email_workspace.archive": "رچیوی",
+  "email_workspace.delete": "دیلیتی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
