@@ -27132,6 +27132,7 @@ const en: Dict = {
   "cbill.charge_delivery": "Local Delivery & Haulage",
   "cbill.charge_demurrage": "Demurrage & Detention",
   "cbill.charge_other": "Other Miscellaneous Charges",
+  "comv.goods_items": "line items",
 };
 
 const ur: Dict = {
@@ -27249,6 +27250,7 @@ const ur: Dict = {
   "comv.customsstatus_cleared": "کلیئر",
   "comv.customsstatus_held": "روکا گیا",
   "comv.customsstatus_rejected": "مسترد",
+  "comv.goods_items": "لائن اشیاء",
   "com.editing_label": "ترمیم جاری:",
   "com.editing_fallback_order": "آرڈر",
   "com.csv_chs_code": "CHS کوڈ",
@@ -64027,6 +64029,7 @@ const ar: Dict = {
   "comv.customsstatus_cleared": "تم التخليص",
   "comv.customsstatus_held": "موقوف",
   "comv.customsstatus_rejected": "مرفوض",
+  "comv.goods_items": "عناصر البضائع",
   "com.editing_label": "التعديل:",
   "com.editing_fallback_order": "الطلب",
   "com.csv_chs_code": "رمز CHS",
@@ -82709,6 +82712,7 @@ const fa: Dict = {
   "comv.customsstatus_cleared": "ترخیص شده",
   "comv.customsstatus_held": "متوقف شده",
   "comv.customsstatus_rejected": "رد شده",
+  "comv.goods_items": "اقلام کالا",
   "com.editing_label": "در حال ویرایش:",
   "com.editing_fallback_order": "سفارش",
   "com.csv_chs_code": "کد CHS",
@@ -101397,6 +101401,7 @@ const ps: Dict = {
   "comv.customsstatus_cleared": "خلاص شو",
   "comv.customsstatus_held": "ودرول شوی",
   "comv.customsstatus_rejected": "رد شو",
+  "comv.goods_items": "د کالو کلام",
   "com.editing_label": "سمون:",
   "com.editing_fallback_order": "امر",
   "com.csv_chs_code": "د CHS کوډ",
