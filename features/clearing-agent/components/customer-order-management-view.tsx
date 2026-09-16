@@ -41,7 +41,9 @@ import {
   Sparkles,
   ChevronDown,
   Trash2,
-  X
+  X,
+  Hash,
+  Train
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -241,9 +243,175 @@ const PARTY_ROLES: Array<{ key: PartyRoleKey; label: string; labelKey: string; r
   { key: "consignee", label: "Consignee", labelKey: "role_consignee" }
 ];
 
+export type CustomerOrderGoodsItem = {
+  id?: string;
+  goodsId: string;
+  goodsName: string;
+  goodsChsCode?: string;
+  goodsVariationId?: string;
+  goodsVariationLabel?: string;
+  unit: string;
+  quantity: string;
+  kgPerQty: string;
+  totalKg: string;
+  warehouseSourceType: "same" | "company_warehouse" | "customer_warehouse" | "other";
+  warehouseId: string;
+  warehouseName: string;
+  warehouseAddressText: string;
+  remarks?: string;
+
+  // Compatibility fields for Live Report & UI
+  goods_name?: string;
+  qty_unit?: string;
+  kg_per_qty?: string;
+  total_weight_kg?: string;
+  packaging_type?: string;
+  bags_cartons?: string;
+  warehouse_source?: string;
+  warehouse_name?: string;
+};
+
+export function defaultGoodsItem(): CustomerOrderGoodsItem {
+  return {
+    goodsId: "",
+    goodsName: "",
+    goodsChsCode: "",
+    goodsVariationId: "",
+    goodsVariationLabel: "",
+    unit: "Bags",
+    quantity: "1",
+    kgPerQty: "50",
+    totalKg: "50",
+    warehouseSourceType: "company_warehouse",
+    warehouseId: "",
+    warehouseName: "",
+    warehouseAddressText: "",
+    remarks: "",
+    goods_name: "",
+    qty_unit: "Bags",
+    kg_per_qty: "50",
+    total_weight_kg: "50",
+    packaging_type: "Bags",
+    bags_cartons: "1",
+    warehouse_source: "company",
+    warehouse_name: ""
+  };
+}
+
 const EMPTY_FORM = {
+  // Serials & Timestamps
+  order_date: "",
+  order_time: "",
+  super_admin_serial: "",
+  global_serial: "",
+  country_serial: "",
+  branch_serial: "",
+  entry_serial: "",
+  order_no: "",
+  status: "pending",
+
+  // 1A Customer & Basics
   customer_id: "",
   customer_name: "",
+  shipment_type: "FCL",
+  transport_mode: "by_sea" as TransportMode,
+  shipment_mode: "by_sea" as TransportMode,
+  movement_type: "import" as MovementType,
+
+  // 1B Truck & Pre-Carriage
+  truck_assignment_mode: "permanent" as "permanent" | "hired" | "later",
+  truck_mode: "permanent" as "permanent" | "hired" | "later",
+  truck_registration_type: "registered" as "registered" | "temporary",
+  truck_id: "",
+  truck_number: "",
+  truck_driver_name: "",
+  truck_driver_mobile: "",
+  truck_owner_name: "",
+  truck_transport_company: "",
+  truck_po_ref: "",
+  truck_details: "",
+
+  // 1B Dates
+  planned_pickup_date: "",
+  actual_pickup_date: "",
+  planned_dispatch_date: "",
+  actual_dispatch_date: "",
+
+  // 1B Multi-Goods
+  goods_items: [defaultGoodsItem()] as CustomerOrderGoodsItem[],
+
+  // 1B Loading Details
+  load_type: "" as LoadType | "",
+  loading_source: "shipping_warehouse" as LoadingSource,
+  loading_source_name: "",
+  loading_source_warehouse_id: "",
+  loading_source_container_ref: "",
+  cargo_details: "",
+  expected_loading_date: new Date().toISOString().split("T")[0],
+
+  // 1C Dynamic Route Fields (Mode-specific)
+  // By Road
+  exit_border_port_id: "",
+  exit_border_port_name: "",
+  planned_border_exit_date: "",
+  entry_border_port_id: "",
+  entry_border_port_name: "",
+  border_entry_date: "",
+  destination_state_province: "",
+  destination_city: "",
+  final_delivery_location: "",
+
+  // Dynamic Route Aliases for Live Report
+  route_origin_warehouse: "",
+  route_exit_border: "",
+  route_planned_exit_date: "",
+  route_entry_border: "",
+  route_entry_date: "",
+  route_dest_state_city: "",
+  route_final_delivery_location: "",
+
+  // By Sea
+  loading_port_id: "",
+  loading_port_name: "",
+  destination_port_id: "",
+  destination_port_name: "",
+
+  // By Air
+  origin_airport_id: "",
+  origin_airport_name: "",
+  destination_airport_id: "",
+  destination_airport_name: "",
+  route_origin_airport: "",
+  route_dest_airport: "",
+
+  // By Train
+  origin_rail_station: "",
+  destination_rail_station: "",
+  route_origin_station: "",
+  route_dest_station: "",
+
+  // 1C Operational Tracking Dates
+  planned_departure_date: "",
+  actual_departure_date: "",
+  planned_arrival_date: "",
+  actual_arrival_date: "",
+
+  // Locations / Countries
+  loading_country_id: "",
+  loading_country_name: "",
+  loading_state_province_id: "",
+  loading_district_id: "",
+  loading_city_id: "",
+  loading_area_id: "",
+  receiving_country_id: "",
+  receiving_country_name: "",
+  receiving_state_province_id: "",
+  receiving_district_id: "",
+  receiving_city_id: "",
+  receiving_area_id: "",
+  route_name: "",
+
+  // Legacy single-goods and parties fields for full backward compatibility
   goods_id: "",
   goods_variation_id: "",
   goods_name: "",
@@ -261,54 +429,13 @@ const EMPTY_FORM = {
   goods_gross_weight: "",
   goods_empty_weight: "",
   goods_net_weight: "",
-  route_name: "",
-  shipment_type: "FCL",
-  transport_mode: "by_sea" as TransportMode,
-  movement_type: "import" as MovementType,
-  load_type: "" as LoadType | "",
-  loading_source: "shipping_warehouse" as LoadingSource,
-  loading_source_name: "",
-  loading_source_warehouse_id: "",
-  loading_source_container_ref: "",
   exporter_name: "",
   importer_name: "",
   notify_party_required: false,
   notify_party_name: "",
   buyer_name: "",
   consignee_name: "",
-  loading_country_id: "",
-  loading_country_name: "",
-  loading_state_province_id: "",
-  loading_district_id: "",
-  loading_city_id: "",
-  loading_area_id: "",
-  receiving_country_id: "",
-  receiving_country_name: "",
-  receiving_state_province_id: "",
-  receiving_district_id: "",
-  receiving_city_id: "",
-  receiving_area_id: "",
-  loading_port_id: "",
-  loading_port_name: "",
-  destination_port_id: "",
-  destination_port_name: "",
-  cargo_details: "",
-  expected_loading_date: new Date().toISOString().split("T")[0],
   remarks: "",
-  order_no: "",
-  status: "pending",
-  super_admin_serial: "",
-  country_serial: "",
-  branch_serial: "",
-  entry_serial: "",
-  // By Road truck
-  truck_registration_type: "registered" as "registered" | "temporary",
-  truck_id: "",
-  truck_number: "",
-  truck_driver_name: "",
-  truck_driver_mobile: "",
-  truck_owner_name: "",
-  truck_transport_company: "",
   legs: [] as RouteLeg[],
   loadingAllocations: [] as LoadingAllocation[]
 };
@@ -657,6 +784,11 @@ export function CustomerOrderManagementView() {
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
   const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
 
+  // Master data lists for 1B & 1C
+  const [trucksList, setTrucksList] = useState<any[]>([]);
+  const [warehousesList, setWarehousesList] = useState<any[]>([]);
+  const [goodsMasterList, setGoodsMasterList] = useState<any[]>([]);
+
   // Enterprise Branch Scope Hierarchy
   const [branchScope, setBranchScope] = useState<BranchScopeValue>({
     countryId: "",
@@ -752,7 +884,7 @@ export function CustomerOrderManagementView() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes, accountRes] = await Promise.all([
+      const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes, accountRes, truckRes, warehouseRes, goodsRes] = await Promise.all([
         fetch("/api/erp/clearing-agent/customer-order"),
         fetch("/api/erp/customers?limit=250"),
         fetch("/api/erp/companies?limit=250"),
@@ -763,10 +895,13 @@ export function CustomerOrderManagementView() {
         fetch("/api/branch-management/country-branches"),
         fetch("/api/branch-management/city-branches"),
         fetch("/api/erp/user-tasks/assignees"),
-        fetch("/api/erp/accounting/accounts?limit=1000").catch(() => null)
+        fetch("/api/erp/accounting/accounts?limit=1000").catch(() => null),
+        fetch("/api/erp/master-data/trucks?selectable=true&limit=250").catch(() => null),
+        fetch("/api/erp/master-data/warehouses?limit=250").catch(() => null),
+        fetch("/api/erp/goods?limit=250").catch(() => null)
       ]);
 
-      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson, accountJson] = await Promise.all([
+      const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson, accountJson, truckJson, warehouseJson, goodsJson] = await Promise.all([
         orderRes.json(),
         customerRes.json(),
         companyRes.json(),
@@ -777,7 +912,10 @@ export function CustomerOrderManagementView() {
         countryBranchRes.json().catch(() => null),
         cityBranchRes.json().catch(() => null),
         assigneeRes.json().catch(() => null),
-        accountRes ? accountRes.json().catch(() => null) : null
+        accountRes ? accountRes.json().catch(() => null) : null,
+        truckRes ? truckRes.json().catch(() => null) : null,
+        warehouseRes ? warehouseRes.json().catch(() => null) : null,
+        goodsRes ? goodsRes.json().catch(() => null) : null
       ]);
 
       const extractArray = (json: any, keys: string[]) => {
@@ -803,6 +941,9 @@ export function CustomerOrderManagementView() {
       setPorts(extractArray(portJson, ["ports", "data"]));
       setClearingAgents(extractArray(agentJson, ["clearingAgents", "data"]));
       setShippingLines(extractArray(lineJson, ["shippingLines", "data"]));
+      setTrucksList(extractArray(truckJson, ["trucks", "data"]));
+      setWarehousesList(extractArray(warehouseJson, ["warehouses", "data"]));
+      setGoodsMasterList(extractArray(goodsJson, ["goods", "data"]));
       setCountryBranches(
         extractArray(countryBranchJson, ["countryBranches", "data"]).map((b: any) => ({
           id: b.id,
@@ -1126,8 +1267,47 @@ export function CustomerOrderManagementView() {
   const isSeaMode = formData.transport_mode === "by_sea";
   const isRoadMode = formData.transport_mode === "by_road";
 
+  const generateSerials = () => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+
+    const today = `${yyyy}-${mm}-${dd}`;
+    const nowTime = `${hh}:${min}`;
+    const randNum = Math.floor(1000 + Math.random() * 9000);
+    const seqNum = String((orders.length || 0) + 1).padStart(4, "0");
+
+    const globalSerial = `CL-ORD-${yyyy}${mm}-${randNum}`;
+    const countryPrefix = (userContext.context as any)?.countryCode || (userContext.context as any)?.countryId || "INTL";
+    const branchPrefix = (userContext.context as any)?.branchCode || userContext.context?.branchId || "HQ";
+    const countrySerial = `${countryPrefix}-ORD-${seqNum}`;
+    const branchSerial = `${branchPrefix}-ORD-${seqNum}`;
+    const entrySerial = `ENT-${seqNum}`;
+
+    return { globalSerial, countrySerial, branchSerial, entrySerial, today, nowTime };
+  };
+
   const resetForm = () => {
-    setFormData({ ...EMPTY_FORM });
+    const s = generateSerials();
+    setFormData({
+      ...EMPTY_FORM,
+      order_no: s.globalSerial,
+      super_admin_serial: s.globalSerial,
+      global_serial: s.globalSerial,
+      country_serial: s.countrySerial,
+      branch_serial: s.branchSerial,
+      entry_serial: s.entrySerial,
+      order_date: s.today,
+      order_time: s.nowTime,
+      expected_loading_date: s.today,
+      planned_pickup_date: s.today,
+      planned_dispatch_date: s.today,
+      planned_departure_date: s.today,
+      goods_items: [defaultGoodsItem()]
+    });
     setPartySelections(emptyPartyState());
     setEditingOrderId(null);
     setCurrentStep(1);
@@ -1144,9 +1324,58 @@ export function CustomerOrderManagementView() {
     setEditingOrderId(order.id);
     setStep1SubStep("1A");
     setIsFormOpen(true);
+
+    // Reconstruct goods items
+    const loadedGoodsItems: CustomerOrderGoodsItem[] =
+      Array.isArray(order.loading_allocations) && order.loading_allocations.length > 0
+        ? order.loading_allocations.map((row: Record<string, any>, idx: number) => {
+            const parsedKgMatch = row.remarks?.match(/\(([\d.]+)\s*kg\//i)?.[1];
+            const q = row.quantity != null ? String(row.quantity) : "1";
+            const k = parsedKgMatch || (idx === 0 && order.goods_quantity && order.goods_gross_weight ? String(Math.round(Number(order.goods_gross_weight) / Math.max(1, Number(order.goods_quantity)))) : "50");
+            const tot = String((Number(q) || 0) * (Number(k) || 0));
+            return {
+              id: row.id,
+              goodsId: idx === 0 ? (order.goods_id || "") : "",
+              goodsName: idx === 0 ? (order.goods_name || "") : (row.remarks?.split(" (")[0] || order.goods_name || "Goods Item"),
+              goodsChsCode: idx === 0 ? (order.goods_chs_code || "") : "",
+              goodsVariationId: idx === 0 ? (order.goods_variation_id || "") : "",
+              goodsVariationLabel: idx === 0 ? (order.goods_variation_label || "") : "",
+              unit: row.unit || order.goods_unit || "Bags",
+              quantity: q,
+              kgPerQty: k,
+              totalKg: tot,
+              warehouseSourceType: (row.warehouse_id ? "company_warehouse" : "other") as any,
+              warehouseId: row.warehouse_id || "",
+              warehouseName: row.warehouse_name || "",
+              warehouseAddressText: row.source_location_text || "",
+              remarks: row.remarks || ""
+            };
+          })
+        : [
+            {
+              goodsId: order.goods_id || "",
+              goodsName: order.goods_name || "",
+              goodsChsCode: order.goods_chs_code || "",
+              goodsVariationId: order.goods_variation_id || "",
+              goodsVariationLabel: order.goods_variation_label || "",
+              unit: order.goods_unit || "Bags",
+              quantity: order.goods_quantity != null ? String(order.goods_quantity) : "1",
+              kgPerQty: order.goods_quantity && order.goods_gross_weight ? String(Math.round(Number(order.goods_gross_weight) / Math.max(1, Number(order.goods_quantity)))) : "50",
+              totalKg: order.goods_gross_weight != null ? String(order.goods_gross_weight) : "50",
+              warehouseSourceType: order.loading_source === "customer_warehouse" ? "customer_warehouse" : "company_warehouse",
+              warehouseId: o.loading_source_warehouse_id || "",
+              warehouseName: order.loading_source_name || "",
+              warehouseAddressText: "",
+              remarks: ""
+            }
+          ];
+
     setFormData({
+      ...EMPTY_FORM,
       customer_id: order.customer_id || "",
       customer_name: order.customer_name || "",
+      order_date: o.order_date || (order.created_at ? order.created_at.split("T")[0] : ""),
+      order_time: o.order_time || (order.created_at && order.created_at.includes("T") ? order.created_at.split("T")[1]?.slice(0, 5) : ""),
       goods_id: order.goods_id || "",
       goods_variation_id: order.goods_variation_id || "",
       goods_name: order.goods_name || "",
@@ -1204,6 +1433,7 @@ export function CustomerOrderManagementView() {
       country_serial: o.country_serial || "",
       branch_serial: o.branch_serial || "",
       entry_serial: o.entry_serial || "",
+      truck_assignment_mode: (o.truck_id ? "permanent" : o.truck_number === "TO BE ASSIGNED" ? "later" : o.truck_number ? "hired" : "permanent") as any,
       truck_registration_type: (o.truck_registration_type as "registered" | "temporary") || "registered",
       truck_id: o.truck_id || "",
       truck_number: o.truck_number || "",
@@ -1211,6 +1441,32 @@ export function CustomerOrderManagementView() {
       truck_driver_mobile: o.truck_driver_mobile || "",
       truck_owner_name: o.truck_owner_name || "",
       truck_transport_company: o.truck_transport_company || "",
+      truck_po_ref: o.truck_po_ref || "",
+      truck_details: o.truck_details ? (typeof o.truck_details === "string" ? o.truck_details : JSON.stringify(o.truck_details)) : "",
+      planned_pickup_date: o.planned_pickup_date || (o.expected_loading_date ? o.expected_loading_date.split("T")[0] : ""),
+      actual_pickup_date: o.actual_pickup_date || "",
+      planned_dispatch_date: o.planned_dispatch_date || "",
+      actual_dispatch_date: o.actual_dispatch_date || "",
+      goods_items: loadedGoodsItems,
+      exit_border_port_id: o.exit_border_port_id || "",
+      exit_border_port_name: o.exit_border_port_name || "",
+      planned_border_exit_date: o.planned_border_exit_date || "",
+      entry_border_port_id: o.entry_border_port_id || "",
+      entry_border_port_name: o.entry_border_port_name || "",
+      border_entry_date: o.border_entry_date || "",
+      destination_state_province: o.destination_state_province || "",
+      destination_city: o.destination_city || "",
+      final_delivery_location: o.final_delivery_location || "",
+      origin_airport_id: o.origin_airport_id || "",
+      origin_airport_name: o.origin_airport_name || "",
+      destination_airport_id: o.destination_airport_id || "",
+      destination_airport_name: o.destination_airport_name || "",
+      origin_rail_station: o.origin_rail_station || "",
+      destination_rail_station: o.destination_rail_station || "",
+      planned_departure_date: o.planned_departure_date || "",
+      actual_departure_date: o.actual_departure_date || "",
+      planned_arrival_date: o.planned_arrival_date || "",
+      actual_arrival_date: o.actual_arrival_date || "",
       legs: Array.isArray(o.legs)
         ? o.legs.map((leg: Record<string, any>, idx: number) => ({
             id: leg.id,
@@ -1432,25 +1688,149 @@ export function CustomerOrderManagementView() {
     setSuccessMessage("");
     try {
       const supplier = partySelections.supplier;
-      const isFinalConfirm = advanceStep && currentStep === 4;
+      const isFinalConfirm = advanceStep && (currentStep === 4 || currentStep === 3);
+
+      const goodsItems = formData.goods_items && formData.goods_items.length > 0 ? formData.goods_items : [defaultGoodsItem()];
+      const firstGoods = goodsItems[0];
+      const totalQuantity = goodsItems.reduce((acc, g) => acc + (Number(g.quantity) || 0), 0);
+      const totalGrossKg = goodsItems.reduce((acc, g) => acc + (Number(g.totalKg) || 0), 0);
+      const aggregatedGoodsNames = goodsItems.map((g) => g.goodsName).filter(Boolean).join(", ") || formData.goods_name || null;
+
+      // Determine effective truck values based on truck_assignment_mode
+      let effTruckId = formData.truck_id || null;
+      let effTruckNumber = formData.truck_number || null;
+      let effDriverName = formData.truck_driver_name || null;
+      let effDriverMobile = formData.truck_driver_mobile || null;
+      let effTransportCo = formData.truck_transport_company || null;
+
+      if (formData.truck_assignment_mode === "later") {
+        effTruckId = null;
+        effTruckNumber = "TO BE ASSIGNED";
+        effDriverName = null;
+        effDriverMobile = null;
+        effTransportCo = null;
+      }
+
+      // Map multi-goods to loading allocations
+      const effectiveAllocations = goodsItems.map((g, idx) => ({
+        id: g.id || undefined,
+        rowSerial: idx + 1,
+        warehouseId: g.warehouseId || formData.loading_source_warehouse_id || null,
+        warehouseName: g.warehouseName || (g.warehouseSourceType === "customer_warehouse" ? "Customer Warehouse" : "Company Warehouse"),
+        sourceLocationText: g.warehouseAddressText || g.warehouseName || formData.loading_source_name || null,
+        quantity: Number(g.quantity) || 0,
+        unit: g.unit || "Bags",
+        remarks: `${g.goodsName || 'Goods'}${g.kgPerQty ? ` (${g.kgPerQty} kg/${g.unit || 'unit'})` : ""} • Total: ${g.totalKg || 0} kg`
+      }));
+
+      // Route legs
+      const legsToSave =
+        formData.legs && formData.legs.length > 0
+          ? formData.legs.map((leg) => ({
+              id: leg.id,
+              legNo: leg.legNo,
+              fromCountryId: leg.fromCountryId || null,
+              fromCountryName: leg.fromCountryName || null,
+              toCountryId: leg.toCountryId || null,
+              toCountryName: leg.toCountryName || null,
+              fromLocationText: leg.fromLocationText || null,
+              toLocationText: leg.toLocationText || null,
+              transportMode: leg.transportMode || null,
+              responsibleCountryBranchId: leg.responsibleCountryBranchId || null,
+              responsibleCityBranchId: leg.responsibleCityBranchId || null,
+              responsibleClearingAgentId: leg.responsibleClearingAgentId || null,
+              truckId: effTruckId,
+              truckRegistrationType: leg.truckRegistrationType || (formData.truck_assignment_mode === "permanent" ? "registered" : "temporary"),
+              truckNumber: effTruckNumber,
+              truckDriverName: effDriverName,
+              truckDriverMobile: effDriverMobile,
+              shippingLineId: leg.shippingLineId || null,
+              vesselName: leg.vesselName || null,
+              voyageNumber: leg.voyageNumber || null,
+              containerNumber: leg.containerNumber || null,
+              sealNumber: leg.sealNumber || null,
+              blNumber: leg.blNumber || null,
+              portOfLoading: leg.portOfLoading || formData.loading_port_name || null,
+              portOfDischarge: leg.portOfDischarge || formData.destination_port_name || null,
+              etd: leg.etd || null,
+              eta: leg.eta || null,
+              customsCountryId: leg.customsCountryId || null,
+              customsPointText: leg.customsPointText || null,
+              customsClearingAgentId: leg.customsClearingAgentId || null,
+              clearanceType: leg.clearanceType || null,
+              dutyTreatment: leg.dutyTreatment || null,
+              dutyAmount: leg.dutyAmount ? Number(leg.dutyAmount) : null,
+              dutyCurrency: leg.dutyCurrency || null,
+              dutyPayer: leg.dutyPayer || null,
+              customsReceiptRef: leg.customsReceiptRef || null,
+              customsClearanceDate: leg.customsClearanceDate || null,
+              plannedDeparture: leg.plannedDeparture || formData.planned_departure_date || null,
+              actualDeparture: leg.actualDeparture || formData.actual_departure_date || null,
+              plannedArrival: leg.plannedArrival || formData.planned_arrival_date || null,
+              actualArrival: leg.actualArrival || formData.actual_arrival_date || null,
+              status: leg.status || "pending",
+              handoverId: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leg.handoverId) ? leg.handoverId : null,
+              remarks: leg.remarks || null,
+              responsibleUserId: leg.responsibleUserId || null,
+              billOfEntryNo: leg.billOfEntryNo || null,
+              pgmNumber: leg.pgmNumber || null,
+              declarationReference: leg.declarationReference || null,
+              taxAmount: leg.taxAmount ? Number(leg.taxAmount) : null,
+              otherCharges: leg.otherCharges ? Number(leg.otherCharges) : null,
+              customsStatus: leg.customsStatus || "not_applicable",
+              estimatedExpenseAmount: leg.estimatedExpenseAmount ? Number(leg.estimatedExpenseAmount) : null,
+              actualExpenseAmount: leg.actualExpenseAmount ? Number(leg.actualExpenseAmount) : null,
+              expenseCurrency: leg.expenseCurrency || null
+            }))
+          : [
+              {
+                legNo: 1,
+                transportMode: formData.transport_mode || "by_sea",
+                fromCountryId: formData.loading_country_id || null,
+                fromCountryName: formData.loading_country_name || null,
+                toCountryId: formData.receiving_country_id || null,
+                toCountryName: formData.receiving_country_name || null,
+                fromLocationText: formData.loading_source_name || firstGoods.warehouseName || null,
+                toLocationText: formData.final_delivery_location || formData.destination_port_name || null,
+                portOfLoading: formData.loading_port_name || null,
+                portOfDischarge: formData.destination_port_name || null,
+                truckId: effTruckId,
+                truckRegistrationType: formData.truck_assignment_mode === "permanent" ? "registered" : "temporary",
+                truckNumber: effTruckNumber,
+                truckDriverName: effDriverName,
+                truckDriverMobile: effDriverMobile,
+                status: "pending",
+                plannedDeparture: formData.planned_departure_date || null,
+                actualDeparture: formData.actual_departure_date || null,
+                plannedArrival: formData.planned_arrival_date || null,
+                actualArrival: formData.actual_arrival_date || null
+              }
+            ];
+
       const payload = {
         ...formData,
         status: isFinalConfirm ? "booking_confirmed" : formData.status || "pending",
         customer_id: supplier.customerId || formData.customer_id || null,
         customer_name: supplier.customerName || formData.customer_name || null,
-        goods_id: formData.goods_id || null,
-        goods_variation_id: formData.goods_variation_id || null,
-        goods_name: formData.goods_name || null,
-        goods_chs_code: formData.goods_chs_code || null,
-        goods_variation_label: formData.goods_variation_label || null,
+        goods_id: firstGoods.goodsId || formData.goods_id || null,
+        goods_variation_id: firstGoods.goodsVariationId || formData.goods_variation_id || null,
+        goods_name: aggregatedGoodsNames,
+        goods_chs_code: firstGoods.goodsChsCode || formData.goods_chs_code || null,
+        goods_variation_label: firstGoods.goodsVariationLabel || formData.goods_variation_label || null,
         goods_brand: formData.goods_brand || null,
         goods_size: formData.goods_size || null,
         goods_origin_country_name: formData.goods_origin_country_name || null,
-        goods_quantity: formData.goods_quantity ? Number(formData.goods_quantity) : null,
-        goods_bags_cartons: formData.goods_bags_cartons ? Number(formData.goods_bags_cartons) : null,
-        goods_gross_weight: formData.goods_gross_weight ? Number(formData.goods_gross_weight) : null,
+        goods_quantity: totalQuantity || (formData.goods_quantity ? Number(formData.goods_quantity) : null),
+        goods_unit: firstGoods.unit || formData.goods_unit || "Bags",
+        goods_bags_cartons: totalQuantity || (formData.goods_bags_cartons ? Number(formData.goods_bags_cartons) : null),
+        goods_gross_weight: totalGrossKg || (formData.goods_gross_weight ? Number(formData.goods_gross_weight) : null),
         goods_empty_weight: formData.goods_empty_weight ? Number(formData.goods_empty_weight) : null,
-        goods_net_weight: formData.goods_net_weight ? Number(formData.goods_net_weight) : null,
+        goods_net_weight: totalGrossKg || (formData.goods_net_weight ? Number(formData.goods_net_weight) : null),
+        truck_id: effTruckId,
+        truck_number: effTruckNumber,
+        truck_driver_name: effDriverName,
+        truck_driver_mobile: effDriverMobile,
+        truck_transport_company: effTransportCo,
         exporter_name: partySelections.exporter.customerName || formData.exporter_name || null,
         importer_name: partySelections.importer.customerName || formData.importer_name || null,
         buyer_name: partySelections.buyer.customerName || formData.buyer_name || null,
@@ -1467,74 +1847,8 @@ export function CustomerOrderManagementView() {
             selectedAddressText: selection.addressText || null,
             selectedAddressSource: selection.addressSource || null
           } satisfies PartyLinkInput)),
-        legs: formData.legs.map((leg) => ({
-          id: leg.id,
-          legNo: leg.legNo,
-          fromCountryId: leg.fromCountryId || null,
-          fromCountryName: leg.fromCountryName || null,
-          toCountryId: leg.toCountryId || null,
-          toCountryName: leg.toCountryName || null,
-          fromLocationText: leg.fromLocationText || null,
-          toLocationText: leg.toLocationText || null,
-          transportMode: leg.transportMode || null,
-          responsibleCountryBranchId: leg.responsibleCountryBranchId || null,
-          responsibleCityBranchId: leg.responsibleCityBranchId || null,
-          responsibleClearingAgentId: leg.responsibleClearingAgentId || null,
-          truckId: leg.truckId || null,
-          truckRegistrationType: leg.truckRegistrationType || null,
-          truckNumber: leg.truckNumber || null,
-          truckDriverName: leg.truckDriverName || null,
-          truckDriverMobile: leg.truckDriverMobile || null,
-          shippingLineId: leg.shippingLineId || null,
-          vesselName: leg.vesselName || null,
-          voyageNumber: leg.voyageNumber || null,
-          containerNumber: leg.containerNumber || null,
-          sealNumber: leg.sealNumber || null,
-          blNumber: leg.blNumber || null,
-          portOfLoading: leg.portOfLoading || null,
-          portOfDischarge: leg.portOfDischarge || null,
-          etd: leg.etd || null,
-          eta: leg.eta || null,
-          customsCountryId: leg.customsCountryId || null,
-          customsPointText: leg.customsPointText || null,
-          customsClearingAgentId: leg.customsClearingAgentId || null,
-          clearanceType: leg.clearanceType || null,
-          dutyTreatment: leg.dutyTreatment || null,
-          dutyAmount: leg.dutyAmount ? Number(leg.dutyAmount) : null,
-          dutyCurrency: leg.dutyCurrency || null,
-          dutyPayer: leg.dutyPayer || null,
-          customsReceiptRef: leg.customsReceiptRef || null,
-          customsClearanceDate: leg.customsClearanceDate || null,
-          plannedDeparture: leg.plannedDeparture || null,
-          actualDeparture: leg.actualDeparture || null,
-          plannedArrival: leg.plannedArrival || null,
-          actualArrival: leg.actualArrival || null,
-          status: leg.status || "pending",
-          // handover_id is a real FK into business_shipping_handovers — only forward it
-          // if it actually looks like a UUID, otherwise a pasted free-text reference
-          // would fail the column's uuid cast at insert time.
-          handoverId: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leg.handoverId) ? leg.handoverId : null,
-          remarks: leg.remarks || null,
-          responsibleUserId: leg.responsibleUserId || null,
-          billOfEntryNo: leg.billOfEntryNo || null,
-          pgmNumber: leg.pgmNumber || null,
-          declarationReference: leg.declarationReference || null,
-          taxAmount: leg.taxAmount ? Number(leg.taxAmount) : null,
-          otherCharges: leg.otherCharges ? Number(leg.otherCharges) : null,
-          customsStatus: leg.customsStatus || "not_applicable",
-          estimatedExpenseAmount: leg.estimatedExpenseAmount ? Number(leg.estimatedExpenseAmount) : null,
-          actualExpenseAmount: leg.actualExpenseAmount ? Number(leg.actualExpenseAmount) : null,
-          expenseCurrency: leg.expenseCurrency || null
-        })),
-        loadingAllocations: formData.loadingAllocations?.map((alloc) => ({
-          id: alloc.id,
-          rowSerial: alloc.rowSerial,
-          warehouseId: alloc.warehouseId || null,
-          sourceLocationText: alloc.sourceLocationText || null,
-          quantity: alloc.quantity ? Number(alloc.quantity) : 0,
-          unit: alloc.unit || null,
-          remarks: alloc.remarks || null
-        })) ?? []
+        legs: legsToSave,
+        loadingAllocations: effectiveAllocations
       };
 
       const response = await fetch(
@@ -1650,18 +1964,18 @@ export function CustomerOrderManagementView() {
   const stepsList = [
     {
       num: 1,
-      title: t(lang, "comv.step1_name", "Booking & Customer"),
-      desc: t(lang, "comv.step1_desc", "Customer, Movement, Mode & Route")
+      title: "1A: " + t(lang, "comv.step1_name", "Customer & Basics"),
+      desc: t(lang, "comv.step1_desc", "Serials, Customer, Ship & Movement")
     },
     {
       num: 2,
-      title: t(lang, "comv.step2_name", "Pickup, Goods & Truck"),
-      desc: t(lang, "comv.step2_desc", "Pickup Source, Goods & Transport")
+      title: "1B: " + t(lang, "comv.step2_name", "Pickup, Truck & Goods"),
+      desc: t(lang, "comv.step2_desc", "Pickup, Vehicle, Goods & Warehouses")
     },
     {
       num: 3,
-      title: t(lang, "comv.step3_name", "Route, Vessel & Customs"),
-      desc: t(lang, "comv.step3_desc", "Parties, Legs, Vessel & Clearance")
+      title: "1C: " + t(lang, "comv.step3_name", "Route & Delivery"),
+      desc: t(lang, "comv.step3_desc", "Dynamic Route, Dates & Ports")
     },
     {
       num: 4,
@@ -2368,7 +2682,12 @@ export function CustomerOrderManagementView() {
                     <div key={st.num} className={`flex items-center ${idx < stepsList.length - 1 ? "flex-1" : ""}`}>
                       <button
                         type="button"
-                        onClick={() => setCurrentStep(st.num as any)}
+                        onClick={() => {
+                          setCurrentStep(st.num as any);
+                          if (st.num === 1) setStep1SubStep("1A");
+                          else if (st.num === 2) setStep1SubStep("1B");
+                          else if (st.num === 3) setStep1SubStep("1C");
+                        }}
                         title={st.title}
                         className="group flex shrink-0 items-center gap-2"
                       >
@@ -2411,10 +2730,10 @@ export function CustomerOrderManagementView() {
 
           {/* Main 2-Column Content Grid: Left Inputs (5 cols - Compact) + Right Live Report (7 cols - Expanded) */}
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
-            {/* LEFT COLUMN: The 4-Step Form Cards */}
+            {/* LEFT COLUMN: The Form Cards */}
             <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5">
               <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                {currentStep === 1 && (
+                {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
                   <Step1BookingCustomer
                     lang={lang}
                     tt={tt}
@@ -2440,44 +2759,20 @@ export function CustomerOrderManagementView() {
                     handleReceivingCountryChange={handleReceivingCountryChange}
                     handleLoadingPortChange={handleLoadingPortChange}
                     handleDestinationPortChange={handleDestinationPortChange}
-                    onAdvanceToStep2={() => void handleSaveProgress(true)}
-                  />
-                )}
-
-                {currentStep === 2 && (
-                  <Step2PickupGoodsTruck
-                    lang={lang}
-                    tt={tt}
-                    formData={formData}
-                    setFormData={setFormData}
-                    handleGoodsSelect={handleGoodsSelect}
+                    trucksList={trucksList}
+                    warehousesList={warehousesList}
+                    goodsMasterList={goodsMasterList}
+                    onAdvanceToStep2={() => {
+                      setStep1SubStep("1B");
+                      setCurrentStep(2);
+                    }}
+                    onAdvanceToStep3={() => {
+                      setStep1SubStep("1C");
+                      setCurrentStep(3);
+                    }}
+                    onConfirmSave={() => void handleSaveProgress(true)}
+                    onSaveDraft={() => void handleSaveProgress(false)}
                     saving={saving}
-                  />
-                )}
-
-                {currentStep === 3 && (
-                  <Step3RouteVesselCustoms
-                    lang={lang}
-                    tt={tt}
-                    formData={formData}
-                    setFormData={setFormData}
-                    countries={countries}
-                    partySelections={partySelections}
-                    customers={customers}
-                    companies={companies}
-                    customerOptions={customerOptions}
-                    companyOptions={companyOptions}
-                    orders={orders}
-                    loading={loading}
-                    handlePartyChange={handlePartyChange}
-                    updateLeg={updateLeg}
-                    addLeg={addLeg}
-                    removeLeg={removeLeg}
-                    seedLegsForSeaWithPreCarriage={seedLegsForSeaWithPreCarriage}
-                    countryBranches={countryBranches}
-                    cityBranches={cityBranches}
-                    assignableUsers={assignableUsers}
-                    editingOrderId={editingOrderId}
                   />
                 )}
 
@@ -2500,25 +2795,21 @@ export function CustomerOrderManagementView() {
                       <button
                         type="button"
                         onClick={() => {
-                          setCurrentStep((s) => (s - 1) as any);
-                          if (currentStep === 2) setStep1SubStep("1C");
+                          if (currentStep === 4) {
+                            setCurrentStep(3);
+                            setStep1SubStep("1C");
+                          } else if (currentStep === 3) {
+                            setCurrentStep(2);
+                            setStep1SubStep("1B");
+                          } else if (currentStep === 2) {
+                            setCurrentStep(1);
+                            setStep1SubStep("1A");
+                          }
                         }}
                         className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         <span>{t(lang, "comv.back", "Previous")}</span>
-                      </button>
-                    ) : step1SubStep !== "1A" ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (step1SubStep === "1C") setStep1SubStep("1B");
-                          else if (step1SubStep === "1B") setStep1SubStep("1A");
-                        }}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        <span>{step1SubStep === "1C" ? t(lang, "comv.prev_substep_1b", "Back to Movement") : t(lang, "comv.prev_substep_1a", "Back to Parties")}</span>
                       </button>
                     ) : (
                       <button
@@ -2543,28 +2834,52 @@ export function CustomerOrderManagementView() {
                       <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
                     </button>
 
-                    {currentStep < 4 ? (
+                    {currentStep === 1 ? (
                       <button
                         type="button"
                         onClick={() => {
-                          if (currentStep === 1) {
-                            if (step1SubStep === "1A") { setStep1SubStep("1B"); return; }
-                            if (step1SubStep === "1B") { setStep1SubStep("1C"); return; }
-                          }
-                          void handleSaveProgress(true);
+                          setStep1SubStep("1B");
+                          setCurrentStep(2);
                         }}
                         disabled={saving}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        <span>
-                          {currentStep === 1 && step1SubStep === "1A"
-                            ? t(lang, "comv.next_substep_1b", "Continue to Transport")
-                            : currentStep === 1 && step1SubStep === "1B"
-                            ? t(lang, "comv.next_substep_1c", "Continue to Route")
-                            : t(lang, "comv.next_step", "Next Step")}
-                        </span>
+                        <span>Continue to Transport (1B)</span>
                         <ChevronRight className="h-4 w-4" />
                       </button>
+                    ) : currentStep === 2 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep1SubStep("1C");
+                          setCurrentStep(3);
+                        }}
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                      >
+                        <span>Continue to Route (1C)</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    ) : currentStep === 3 ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(4)}
+                          disabled={saving}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                        >
+                          <span>Review Summary</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveProgress(true)}
+                          disabled={saving}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                        >
+                          {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                          <span>Confirm & Save Customer Order</span>
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"
@@ -2573,7 +2888,7 @@ export function CustomerOrderManagementView() {
                         className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-6 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
                       >
                         {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                        <span>{t(lang, "comv.confirm_booking", "Confirm Booking")}</span>
+                        <span>Confirm & Save Customer Order</span>
                       </button>
                     )}
                   </div>
@@ -2604,6 +2919,45 @@ export function CustomerOrderManagementView() {
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     {tt("live", "Live")}
                   </span>
+                </div>
+
+                {/* Auto-Generated Serials & Timestamps Banner */}
+                <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <Hash className="h-3.5 w-3.5 text-blue-600" />
+                      Auto-Generated Order Serials & Timestamp
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">
+                      {formData.order_date || "—"} • {formData.order_time || "—"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Global Serial</span>
+                      <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-[11px] truncate block">
+                        {formData.global_serial || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Country Serial</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {formData.country_serial || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Branch Serial</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {formData.branch_serial || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Entry Serial</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px] truncate block">
+                        {formData.entry_serial || "—"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Prominent Customer Account Live Report Header Card */}
@@ -2703,277 +3057,413 @@ export function CustomerOrderManagementView() {
                   ) : null}
                 </div>
 
-                {/* Movement / Route Summary Card */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-3">
+                {/* Movement & Transport Modes Card */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
                       <Repeat2 className="h-4 w-4 text-blue-600" />
-                      <span>{tt("route_summary_title", "Movement / Route Summary")}</span>
+                      <span>Movement & Transport Mode</span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">
-                      {formData.shipment_type || "FCL"} • {formData.movement_type || "International"}
+                    <span className="text-[10px] font-bold text-slate-500">
+                      {formData.shipment_mode?.replace("by_", "By ").toUpperCase() || "BY ROAD"}
                     </span>
                   </div>
 
-                  {/* 4 Mini Badges */}
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-center">
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{tt("movement", "Movement Type")}</div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
-                        {formData.movement_type || "International"}
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">Movement Type</div>
+                      <div className="font-black text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
+                        {formData.movement_type || "Import"}
                       </div>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{tt("shipment", "Transport Type")}</div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] truncate">
-                        {formData.shipment_type || "FCL"}
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">Ship Type</div>
+                      <div className="font-black text-blue-600 dark:text-blue-400 capitalize text-[11px] truncate">
+                        {formData.shipment_mode?.replace("by_", "By ") || "By Road"}
                       </div>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{tt("transport", "Transport Mode")}</div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
-                        {formData.transport_mode?.replace("by_", "") || "Sea + Road"}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">{t(lang, "comv.load_type", "Load Type")}</div>
+                      <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400">Load Type</div>
                       <div className="font-bold text-slate-800 dark:text-slate-200 capitalize text-[11px] truncate">
                         {formData.load_type?.replace("_", " ") || "Full Truck"}
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Visual Route Journey Track */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="flex items-center justify-between text-xs">
-                      {/* Origin */}
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
-                          <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                          <span className="truncate max-w-[110px]">
-                            {formData.loading_source_name || formData.loading_country_name || "Dubai Warehouse"}
-                          </span>
-                        </div>
-                        <div className="text-[9.5px] text-slate-400">
-                          {formData.loading_country_name || "Dubai, UAE"}
-                        </div>
-                      </div>
+                {/* Vehicle & Driver Details Card */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Truck className="h-4 w-4 text-blue-600" />
+                      <span>Vehicle & Driver Assignment</span>
+                    </div>
+                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                      {formData.truck_mode === "permanent"
+                        ? "Company Truck"
+                        : formData.truck_mode === "later"
+                        ? "To Be Assigned Later"
+                        : "Hired Truck"}
+                    </span>
+                  </div>
 
-                      {/* Transit leg 1: Road */}
-                      <div className="flex flex-col items-center px-1">
-                        <Truck className="h-3.5 w-3.5 text-blue-500" />
-                        <div className="w-12 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-1" />
-                        <span className="text-[8px] font-semibold text-slate-400">Road</span>
-                      </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Truck No</span>
+                      <span className="font-black text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {formData.truck_mode === "later" ? "Pending Assignment" : (formData.truck_number || "—")}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Driver</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {formData.truck_mode === "later" ? "—" : (formData.truck_driver_name || "—")}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Driver Mobile</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {formData.truck_mode === "later" ? "—" : (formData.truck_driver_mobile || "—")}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Transporter</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {formData.truck_mode === "later" ? "—" : (formData.truck_transport_company || "—")}
+                      </span>
+                    </div>
+                  </div>
 
-                      {/* Transit Port */}
-                      <div className="space-y-0.5 text-center">
-                        <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
-                          <Anchor className="h-3.5 w-3.5 text-sky-600 shrink-0" />
-                          <span className="truncate max-w-[100px]">
-                            {formData.loading_port_name || "Jebel Ali Port"}
-                          </span>
-                        </div>
-                        <div className="text-[9.5px] text-slate-400">
-                          {formData.loading_country_name || "Dubai, UAE"}
-                        </div>
-                      </div>
-
-                      {/* Transit leg 2: Sea */}
-                      <div className="flex flex-col items-center px-1">
-                        <Ship className="h-3.5 w-3.5 text-blue-600" />
-                        <div className="w-12 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-1" />
-                        <span className="text-[8px] font-semibold text-slate-400">Sea</span>
-                      </div>
-
-                      {/* Destination */}
-                      <div className="space-y-0.5 text-right">
-                        <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
-                          <span className="truncate max-w-[110px]">
-                            {formData.destination_port_name || formData.receiving_country_name || "Karachi Port"}
-                          </span>
-                          <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                        </div>
-                        <div className="text-[9.5px] text-slate-400">
-                          {formData.receiving_country_name || "Karachi, Pakistan"}
-                        </div>
-                      </div>
+                  {/* Pickup & Dispatch Dates Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                    <div className="rounded-lg border border-slate-200 bg-white/70 p-1.5 dark:border-slate-700 dark:bg-slate-800/70">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Planned Pickup</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[10.5px]">
+                        {formData.planned_pickup_date || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white/70 p-1.5 dark:border-slate-700 dark:bg-slate-800/70">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Actual Pickup</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[10.5px]">
+                        {formData.actual_pickup_date || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white/70 p-1.5 dark:border-slate-700 dark:bg-slate-800/70">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Planned Dispatch</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[10.5px]">
+                        {formData.planned_dispatch_date || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white/70 p-1.5 dark:border-slate-700 dark:bg-slate-800/70">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Actual Dispatch</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[10.5px]">
+                        {formData.actual_dispatch_date || "—"}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Step 2 Dynamic Summary Cards (Screenshot 3) */}
-                {currentStep === 2 && (
-                  <div className="space-y-3 animate-in fade-in duration-150">
-                    {/* Goods Summary */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                        <Boxes className="h-4 w-4 text-emerald-600" />
-                        <span>{tt("goods_summary", "Goods Summary")}</span>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-800">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-900 dark:text-white text-xs">
-                            {formData.goods_name || "Rice - 5% Broken (RICE-001)"}
-                          </span>
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                            {formData.goods_quantity || "25"} {formData.goods_unit || "MT"}
-                          </span>
-                        </div>
-                        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px]">
-                          <div className="rounded bg-slate-50 p-1 dark:bg-slate-900">
-                            <span className="text-slate-400 block text-[8px] uppercase">{tt("bags", "Bags")}</span>
-                            <span className="font-black text-slate-800 dark:text-slate-200">{formData.goods_bags_cartons || "1,000"}</span>
-                          </div>
-                          <div className="rounded bg-slate-50 p-1 dark:bg-slate-900">
-                            <span className="text-slate-400 block text-[8px] uppercase">{tt("gross_wt", "Gross Wt")}</span>
-                            <span className="font-black text-slate-800 dark:text-slate-200">{formData.goods_gross_weight || "25,000"} kg</span>
-                          </div>
-                          <div className="rounded bg-slate-50 p-1 dark:bg-slate-900">
-                            <span className="text-slate-400 block text-[8px] uppercase">{tt("net_wt", "Net Wt")}</span>
-                            <span className="font-black text-slate-800 dark:text-slate-200">{formData.goods_net_weight || "24,500"} kg</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Truck & Transport Requirement */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                        <Truck className="h-4 w-4 text-blue-600" />
-                        <span>{tt("truck_transport_summary", "Truck & Transport")}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{t(lang, "com.truck_number", "Truck No")}</span>
-                          <span className="font-black text-slate-800 dark:text-slate-200">{formData.truck_number || "ABC-1234"}</span>
-                        </div>
-                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{t(lang, "plr.driver_name", "Driver")}</span>
-                          <span className="font-black text-slate-800 dark:text-slate-200">{formData.truck_driver_name || "Imran Khan"}</span>
-                        </div>
-                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{t(lang, "comv.load_type", "Load Type")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 capitalize">{formData.load_type?.replace("_", " ") || "Full Truck"}</span>
-                        </div>
-                        <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">{tt("transporter", "Transporter")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{formData.truck_transport_company || "ABC Transport Co."}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Order Progress 4-Step Tracker */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        <span>{tt("order_progress", "Order Progress")}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-center pt-1">
-                        <div className="flex flex-col items-center">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[9px] font-bold">1</span>
-                          <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 mt-1">Draft (Current)</span>
-                        </div>
-                        <div className="h-0.5 w-8 bg-slate-200 dark:bg-slate-700 -mt-3" />
-                        <div className="flex flex-col items-center">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 text-[9px] font-bold">2</span>
-                          <span className="text-[9px] text-slate-400 mt-1">Pickup Details</span>
-                        </div>
-                        <div className="h-0.5 w-8 bg-slate-200 dark:bg-slate-700 -mt-3" />
-                        <div className="flex flex-col items-center">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 text-[9px] font-bold">3</span>
-                          <span className="text-[9px] text-slate-400 mt-1">Route & Customs</span>
-                        </div>
-                        <div className="h-0.5 w-8 bg-slate-200 dark:bg-slate-700 -mt-3" />
-                        <div className="flex flex-col items-center">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 text-[9px] font-bold">4</span>
-                          <span className="text-[9px] text-slate-400 mt-1">Review & Confirm</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Blue Info Banner */}
-                    <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-2 text-xs font-semibold text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
-                      <BadgeInfo className="h-4 w-4 shrink-0 text-blue-600" />
-                      <span>{tt("step2_fill_hint", "Fill all required details and proceed to next step.")}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3 & 4 Dynamic 6-Metric Tiles (Screenshots 1 & 2) */}
-                {(currentStep === 3 || currentStep === 4) && (
-                  <div className="space-y-3 animate-in fade-in duration-150">
+                {/* Multi-Goods Breakdown Table & Grand Totals */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                      <Layers className="h-4 w-4 text-blue-600" />
-                      <span>{tt("kpi_order_summary", "Order Summary")}</span>
+                      <Boxes className="h-4 w-4 text-emerald-600" />
+                      <span>Goods & Cargo Breakdown ({formData.goods_items?.length || 0})</span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
-                        <div className="flex items-center justify-between text-blue-600">
-                          <FileText className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-bold uppercase">Lines</span>
-                        </div>
-                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">
-                          {formData.loadingAllocations.length || 1}
-                        </div>
-                        <div className="text-[8.5px] text-slate-400">Total Order Lines</div>
-                      </div>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                      {formData.goods_items?.reduce((acc, it) => acc + (Number(it.total_weight_kg) || 0), 0).toLocaleString()} kg Total
+                    </span>
+                  </div>
 
-                      <div className="rounded-lg border border-purple-100 bg-purple-50/40 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/20">
-                        <div className="flex items-center justify-between text-purple-600">
-                          <Route className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-bold uppercase">Movements</span>
-                        </div>
-                        <div className="mt-1 text-base font-black text-purple-600 dark:text-purple-400">
-                          {formData.legs.length || 2}
-                        </div>
-                        <div className="text-[8.5px] text-slate-400">Road: 1 • Sea: 1</div>
-                      </div>
+                  {/* Multi-Goods mini table */}
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 text-[9px]">
+                        <tr>
+                          <th className="px-2 py-1.5">#</th>
+                          <th className="px-2 py-1.5">Goods Item</th>
+                          <th className="px-2 py-1.5">Qty / Unit</th>
+                          <th className="px-2 py-1.5">KG/Qty</th>
+                          <th className="px-2 py-1.5 text-right">Total KG</th>
+                          <th className="px-2 py-1.5">Warehouse Source</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-[10.5px]">
+                        {(formData.goods_items || []).map((it, idx) => (
+                          <tr key={it.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-750">
+                            <td className="px-2 py-1.5 font-bold text-slate-400">{idx + 1}</td>
+                            <td className="px-2 py-1.5 font-bold text-slate-800 dark:text-slate-200">
+                              <div>{it.goods_name || "—"}</div>
+                              {it.packaging_type ? (
+                                <div className="text-[9px] text-slate-400 font-normal">{it.packaging_type} • {it.bags_cartons || 0} pkgs</div>
+                              ) : null}
+                            </td>
+                            <td className="px-2 py-1.5 font-mono">
+                              {it.quantity} {it.qty_unit}
+                            </td>
+                            <td className="px-2 py-1.5 font-mono text-slate-500">
+                              {it.kg_per_qty ? `${it.kg_per_qty} kg` : "—"}
+                            </td>
+                            <td className="px-2 py-1.5 font-mono font-bold text-right text-emerald-700 dark:text-emerald-400">
+                              {(Number(it.total_weight_kg) || 0).toLocaleString()} kg
+                            </td>
+                            <td className="px-2 py-1.5 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
+                              {it.warehouse_source === "company"
+                                ? `Company: ${it.warehouse_name || "—"}`
+                                : it.warehouse_source === "customer"
+                                ? `Customer Wh: ${it.warehouse_name || "—"}`
+                                : it.warehouse_source === "other"
+                                ? `Other: ${it.warehouse_name || "—"}`
+                                : `Same: ${formData.loading_source_name || "Main Warehouse"}`}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                      <div className="rounded-lg border border-sky-100 bg-sky-50/40 p-2.5 dark:border-sky-900/40 dark:bg-sky-950/20">
-                        <div className="flex items-center justify-between text-sky-600">
-                          <Anchor className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-bold uppercase">Ports</span>
+                  {/* Grand Total Summary Box */}
+                  {(() => {
+                    const totalItems = (formData.goods_items || []).length;
+                    const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.bags_cartons) || 0), 0);
+                    const totalKg = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.total_weight_kg) || 0), 0);
+                    const totalMt = (totalKg / 1000).toFixed(3);
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                        <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-2 dark:border-blue-900/30 dark:bg-blue-950/20">
+                          <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Total Items</span>
+                          <span className="text-sm font-black text-slate-900 dark:text-white">{totalItems}</span>
                         </div>
-                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">3</div>
-                        <div className="text-[8.5px] text-slate-400">Locations & Ports</div>
+                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-2 dark:border-emerald-900/30 dark:bg-emerald-950/20">
+                          <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Total Packaging</span>
+                          <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{totalPackages.toLocaleString()} pkgs</span>
+                        </div>
+                        <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2 dark:border-indigo-900/30 dark:bg-indigo-950/20">
+                          <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Total Gross Wt (KG)</span>
+                          <span className="text-sm font-black text-indigo-700 dark:text-indigo-400">{totalKg.toLocaleString()} kg</span>
+                        </div>
+                        <div className="rounded-lg border border-purple-100 bg-purple-50/40 p-2 dark:border-purple-900/30 dark:bg-purple-950/20">
+                          <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Total Gross Wt (MT)</span>
+                          <span className="text-sm font-black text-purple-700 dark:text-purple-400">{totalMt} MT</span>
+                        </div>
                       </div>
+                    );
+                  })()}
+                </div>
 
-                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                        <div className="flex items-center justify-between text-emerald-600">
-                          <Boxes className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-bold uppercase">Cartons</span>
-                        </div>
-                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">
-                          {formData.goods_bags_cartons ? `${formData.goods_bags_cartons} Bags` : "1,000 Bags"}
-                        </div>
-                        <div className="text-[8.5px] text-slate-400">Total Bags / Cartons</div>
-                      </div>
+                {/* Dynamic Route Journey Track (based on Ship Type) */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Route className="h-4 w-4 text-blue-600" />
+                      <span>Dynamic Route Journey</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                      {formData.shipment_mode === "by_road"
+                        ? "Road Cross-Border Transit"
+                        : formData.shipment_mode === "by_sea"
+                        ? "Ocean Vessel Voyage"
+                        : formData.shipment_mode === "by_air"
+                        ? "Air Cargo Freight"
+                        : "Rail Intermodal Transit"}
+                    </span>
+                  </div>
 
-                      <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/20">
-                        <div className="flex items-center justify-between text-indigo-600">
-                          <Scale className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-bold uppercase">Weight</span>
+                  {/* Route Journey Visual Track */}
+                  <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                    {formData.shipment_mode === "by_sea" ? (
+                      /* SEA ROUTE */
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate max-w-[100px]">{formData.route_origin_warehouse || formData.loading_source_name || "Origin Warehouse"}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400">Origin Warehouse</div>
                         </div>
-                        <div className="mt-1 text-base font-black text-indigo-600 dark:text-indigo-400">
-                          {formData.goods_net_weight ? `${formData.goods_net_weight} kg` : "25,000 kg"}
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-8 sm:w-12 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
                         </div>
-                        <div className="text-[8.5px] text-slate-400">Net Weight • 25 MT</div>
+                        <div className="space-y-0.5 text-center">
+                          <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <Anchor className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                            <span className="truncate max-w-[90px]">{formData.loading_port_name || "Loading Port"}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400">Loading Port</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Ship className="h-3.5 w-3.5 text-blue-600" />
+                          <div className="w-8 sm:w-12 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-center">
+                          <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <Anchor className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                            <span className="truncate max-w-[90px]">{formData.destination_port_name || "Destination Port"}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400">Destination Port</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-8 sm:w-12 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-right">
+                          <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <span className="truncate max-w-[100px]">{formData.route_final_delivery_location || "Final Delivery"}</span>
+                            <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                          </div>
+                          <div className="text-[9px] text-slate-400">Final Delivery Location</div>
+                        </div>
                       </div>
+                    ) : formData.shipment_mode === "by_road" ? (
+                      /* ROAD ROUTE */
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate max-w-[90px]">{formData.route_origin_warehouse || formData.loading_source_name || "Origin"}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400">Origin Warehouse</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-6 sm:w-10 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-center">
+                          <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[80px]">
+                            {formData.route_exit_border || "Exit Border"}
+                          </div>
+                          <div className="text-[9px] text-slate-400">{formData.route_planned_exit_date || "Exit Date"}</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-6 sm:w-10 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-center">
+                          <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[80px]">
+                            {formData.route_entry_border || "Entry Border"}
+                          </div>
+                          <div className="text-[9px] text-slate-400">{formData.route_entry_date || "Entry Date"}</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-6 sm:w-10 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-right">
+                          <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <span className="truncate max-w-[90px]">{formData.route_final_delivery_location || formData.route_dest_state_city || "Final Destination"}</span>
+                            <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                          </div>
+                          <div className="text-[9px] text-slate-400">{formData.receiving_country_name || "Destination"}</div>
+                        </div>
+                      </div>
+                    ) : formData.shipment_mode === "by_air" ? (
+                      /* AIR ROUTE */
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate max-w-[100px]">{formData.route_origin_warehouse || formData.loading_source_name || "Origin"}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400">Origin Location</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Plane className="h-3.5 w-3.5 text-sky-500" />
+                          <div className="w-10 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-center">
+                          <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[110px]">
+                            {formData.route_origin_airport || "Origin Airport"} → {formData.route_dest_airport || "Dest Airport"}
+                          </div>
+                          <div className="text-[9px] text-slate-400">Flight Journey</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-10 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-right">
+                          <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <span className="truncate max-w-[100px]">{formData.route_final_delivery_location || "Final Delivery"}</span>
+                            <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                          </div>
+                          <div className="text-[9px] text-slate-400">Delivery Address</div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* TRAIN ROUTE */
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate max-w-[100px]">{formData.route_origin_warehouse || formData.loading_source_name || "Origin Wh"}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400">Origin Warehouse</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Train className="h-3.5 w-3.5 text-amber-500" />
+                          <div className="w-10 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-center">
+                          <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[110px]">
+                            {formData.route_origin_station || "Origin Station"} → {formData.route_dest_station || "Dest Station"}
+                          </div>
+                          <div className="text-[9px] text-slate-400">Rail Corridor</div>
+                        </div>
+                        <div className="flex flex-col items-center px-1">
+                          <Truck className="h-3 w-3 text-blue-500" />
+                          <div className="w-10 sm:w-16 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
+                        </div>
+                        <div className="space-y-0.5 text-right">
+                          <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
+                            <span className="truncate max-w-[100px]">{formData.route_final_delivery_location || "Final Delivery"}</span>
+                            <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                          </div>
+                          <div className="text-[9px] text-slate-400">Final Delivery Location</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                      <div className="rounded-lg border border-amber-100 bg-amber-50/40 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/20">
-                        <div className="flex items-center justify-between text-amber-600">
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span className="text-[8px] font-bold uppercase">Monthly</span>
-                        </div>
-                        <div className="mt-1 text-base font-black text-slate-900 dark:text-white">
-                          {orders.length}
-                        </div>
-                        <div className="text-[8.5px] text-slate-400">Orders Logged</div>
-                      </div>
+                {/* Planned vs Actual Operational Dates Card */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Calendar className="h-4 w-4 text-purple-600" />
+                      <span>Operational Dates (Planned vs Actual)</span>
+                    </div>
+                    <span className="text-[9.5px] font-semibold text-slate-400">
+                      Preserves planned timeline
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Planned Departure</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]">
+                        {formData.planned_departure_date || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Actual Departure</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">
+                        {formData.actual_departure_date || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Planned Arrival</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]">
+                        {formData.planned_arrival_date || "—"}
+                      </span>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Actual Arrival</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">
+                        {formData.actual_arrival_date || "—"}
+                      </span>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
                 <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -3216,12 +3706,19 @@ function Step1BookingCustomer({
   companyOptions,
   orders,
   loading,
+  trucksList,
+  warehousesList,
+  goodsMasterList,
   handlePartyChange,
   handleLoadingCountryChange,
   handleReceivingCountryChange,
   handleLoadingPortChange,
   handleDestinationPortChange,
-  onAdvanceToStep2
+  onAdvanceToStep2,
+  onAdvanceToStep3,
+  onConfirmSave,
+  onSaveDraft,
+  saving
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
@@ -3242,87 +3739,143 @@ function Step1BookingCustomer({
   companyOptions: SearchSelectOption[];
   orders: ClearingCustomerOrderRow[];
   loading: boolean;
+  trucksList?: any[];
+  warehousesList?: any[];
+  goodsMasterList?: any[];
   handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
   handleLoadingCountryChange: (countryId: string) => void;
   handleReceivingCountryChange: (countryId: string) => void;
   handleLoadingPortChange: (portId: string) => void;
   handleDestinationPortChange: (portId: string) => void;
   onAdvanceToStep2: () => void;
+  onAdvanceToStep3?: () => void;
+  onConfirmSave?: () => void;
+  onSaveDraft?: () => void;
+  saving?: boolean;
 }) {
   const ctx = userContext.context;
-  const selectedCustomer = customers.find((c) => c.id === formData.customer_id);
-  const selectedAccount = accounts.find(
-    (a) =>
-      (formData.customer_id && a.customer_id === formData.customer_id) ||
-      a.id === formData.customer_id ||
-      (selectedCustomer && a.id === (selectedCustomer as any).account_id)
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id === formData.customer_id),
+    [customers, formData.customer_id]
   );
 
-  const selectedLoadingCountry = countries.find((c) => c.id === formData.loading_country_id);
-  const selectedReceivingCountry = countries.find((c) => c.id === formData.receiving_country_id);
-  const selectedLoadingCity = loadingCities.find((c) => c.id === formData.loading_city_id);
-  const selectedReceivingCity = receivingCities.find((c) => c.id === formData.receiving_city_id);
-  const selectedLoadingPort = ports.find((p) => p.id === formData.loading_port_id);
-  const selectedDestinationPort = ports.find((p) => p.id === formData.destination_port_id);
+  const selectedAccount = useMemo(
+    () =>
+      accounts.find(
+        (a) =>
+          (formData.customer_id && a.customer_id === formData.customer_id) ||
+          a.id === formData.customer_id ||
+          (selectedCustomer && a.id === (selectedCustomer as any).account_id)
+      ),
+    [accounts, formData.customer_id, selectedCustomer]
+  );
 
-  const isComplete1A = Boolean(formData.customer_id && formData.customer_name);
-  const isComplete1B = Boolean(formData.movement_type && formData.transport_mode);
-  const isComplete1C = Boolean(formData.loading_country_id && formData.receiving_country_id);
+  const handleCustomerSelection = (customerId: string) => {
+    const cust = customers.find((c) => c.id === customerId);
+    const acc = accounts.find((a) => (a.customer_id && a.customer_id === customerId) || a.id === customerId);
 
-  const handleCustomerSelection = (cid: string) => {
-    const cust = customers.find((c) => c.id === cid);
-    const acc = accounts.find((a) => a.id === cid || (cust && a.customer_id === cust.id));
-    const finalCustId = cust?.id || acc?.customer_id || cid;
-    const finalCustName = cust?.customer_name || acc?.name || "";
-    const finalCompName = cust?.company_name || "";
-    const finalAddr = cust?.address || "";
-
-    setFormData((prev) => ({
-      ...prev,
-      customer_id: finalCustId,
-      customer_name: finalCustName,
-      loading_country_id: prev.loading_country_id || cust?.country_id || acc?.country_id || ""
+    const effectiveCustName = cust?.customer_name || acc?.name || "";
+    setFormData((current) => ({
+      ...current,
+      customer_id: customerId,
+      customer_name: effectiveCustName
     }));
 
     handlePartyChange("supplier", {
-      ...partySelections.supplier,
-      customerId: finalCustId,
-      customerName: finalCustName,
-      companyName: partySelections.supplier.companyName || finalCompName,
-      addressText: partySelections.supplier.addressText || finalAddr,
-      addressSource: partySelections.supplier.addressSource || "ERP Account / Customer Master"
+      customerId,
+      customerName: effectiveCustName,
+      companyId: cust?.country_id || "",
+      companyName: cust?.company_name || "",
+      addressText: cust?.address || "",
+      addressSource: cust?.address ? "Customer master" : "Direct"
     });
   };
 
-  const copyCustomerToBuyer = () => {
-    if (!formData.customer_id) return;
-    const copied = {
-      customerId: formData.customer_id,
-      customerName: formData.customer_name,
-      companyName: partySelections.supplier.companyName || selectedCustomer?.company_name || "",
-      addressText: partySelections.supplier.addressText || selectedCustomer?.address || "",
-      addressSource: "Copied from Customer"
-    };
-    handlePartyChange("buyer", { ...partySelections.buyer, ...copied });
-    handlePartyChange("consignee", { ...partySelections.consignee, ...copied });
+  // Multi-goods helper functions
+  const updateGoodsItem = (idx: number, patch: Partial<CustomerOrderGoodsItem>) => {
+    setFormData((current) => {
+      const items = [...(current.goods_items || [defaultGoodsItem()])];
+      const existing = items[idx] || defaultGoodsItem();
+      const next = { ...existing, ...patch };
+
+      if ("quantity" in patch || "kgPerQty" in patch) {
+        const q = Number(next.quantity) || 0;
+        const k = Number(next.kgPerQty) || 0;
+        next.totalKg = String(q * k);
+      }
+
+      items[idx] = next;
+
+      // Sync first goods to order-level top fields for backward compatibility
+      const first = items[0];
+      const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
+      const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+
+      return {
+        ...current,
+        goods_items: items,
+        goods_id: first?.goodsId || current.goods_id,
+        goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", ") || current.goods_name,
+        goods_unit: first?.unit || current.goods_unit,
+        goods_quantity: String(totalQty),
+        goods_gross_weight: String(totalKg),
+        goods_net_weight: String(totalKg)
+      };
+    });
   };
 
-  return (
-    <div className="space-y-3.5 animate-in fade-in duration-150">
-      <SectionHeading
-        num={1}
-        icon={Boxes}
-        title={t(lang, "comv.step1_title", "Booking & Customer")}
-        subtitle={
-          step1SubStep === "1A"
-            ? t(lang, "comv.substep_1a_desc", "Customer, company, consignee/shipper and related party information")
-            : step1SubStep === "1B"
-            ? t(lang, "comv.substep_1b_desc", "Import/export/transit movement, transport mode and operational movement details")
-            : t(lang, "comv.substep_1c_desc", "Origin, destination, loading/unloading location, ports, borders and route information")
-        }
-      />
+  const addGoodsItem = () => {
+    setFormData((current) => ({
+      ...current,
+      goods_items: [...(current.goods_items || [defaultGoodsItem()]), defaultGoodsItem()]
+    }));
+  };
 
-      {/* Sub-step Progress Navigator (1A -> 1B -> 1C) */}
+  const removeGoodsItem = (idx: number) => {
+    setFormData((current) => {
+      const filtered = (current.goods_items || []).filter((_, i) => i !== idx);
+      const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
+      const first = items[0];
+      const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
+      const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+
+      return {
+        ...current,
+        goods_items: items,
+        goods_id: first?.goodsId || "",
+        goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
+        goods_unit: first?.unit || "Bags",
+        goods_quantity: String(totalQty),
+        goods_gross_weight: String(totalKg),
+        goods_net_weight: String(totalKg)
+      };
+    });
+  };
+
+  // Pre-fill 1B warehouse into 1C origin warehouse automatically
+  const effectiveOriginWarehouse = useMemo(() => {
+    const firstItem = formData.goods_items?.[0];
+    if (firstItem?.warehouseName) return firstItem.warehouseName;
+    if (formData.loading_source_name) return formData.loading_source_name;
+    return "";
+  }, [formData.goods_items, formData.loading_source_name]);
+
+  // Totals calculations
+  const totalGoodsQuantity = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.quantity) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsMt = useMemo(() => (totalGoodsKg / 1000).toFixed(2), [totalGoodsKg]);
+
+  return (
+    <div className="space-y-4 animate-in fade-in duration-150">
+      {/* Dynamic 1A / 1B / 1C Sub-step Navigator */}
       <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs">
         <button
           type="button"
@@ -3334,9 +3887,8 @@ function Step1BookingCustomer({
           }`}
         >
           <Users className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1A" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="hidden sm:inline truncate">{t(lang, "comv.substep_1a_title", "1A — Customer & Parties")}</span>
-          <span className="inline sm:hidden truncate">1A: Parties</span>
-          {isComplete1A ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+          <span className="truncate">1A — Customer & Basics</span>
+          {formData.customer_id ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
         </button>
 
         <button
@@ -3349,9 +3901,10 @@ function Step1BookingCustomer({
           }`}
         >
           <Truck className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1B" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="hidden sm:inline truncate">{t(lang, "comv.substep_1b_title", "1B — Mode & Movement")}</span>
-          <span className="inline sm:hidden truncate">1B: Movement</span>
-          {isComplete1B ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+          <span className="truncate">1B — Pickup & Goods</span>
+          {formData.truck_number || formData.truck_assignment_mode === "later" ? (
+            <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+          ) : null}
         </button>
 
         <button
@@ -3364,566 +3917,1213 @@ function Step1BookingCustomer({
           }`}
         >
           <Route className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="hidden sm:inline truncate">{t(lang, "comv.substep_1c_title", "1C — Route & Locations")}</span>
-          <span className="inline sm:hidden truncate">1C: Route</span>
-          {isComplete1C ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+          <span className="truncate">1C — Route & Delivery</span>
+          {formData.destination_port_name || formData.final_delivery_location ? (
+            <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+          ) : null}
         </button>
       </div>
 
       {/* ========================================================================= */}
-      {/* SUB-STEP 1A: CUSTOMER & PARTIES                                           */}
+      {/* 1A — CUSTOMER & ORDER BASICS                                              */}
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
-        <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Serial bar — role-gated visibility; Global Bill/Shipping No. always shown */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
-            {canSeeSerial("super", ctx) ? (
-              <div className="space-y-0.5">
-                <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_super_admin", "Super Admin")}</div>
-                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.super_admin_serial || "—"}</div>
+        <div className="space-y-4 animate-in fade-in duration-150">
+          {/* Automatically generated Serials Bar */}
+          <div className="rounded-xl border border-slate-200/90 bg-gradient-to-r from-slate-50 to-blue-50/40 p-3 dark:border-slate-800 dark:from-slate-850 dark:to-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-2 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-[10px]">
+                  1A
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Customer & Order Basics
+                </span>
               </div>
-            ) : null}
-            {canSeeSerial("country", ctx) ? (
-              <div className="space-y-0.5">
-                <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_country", "Country Serial")}</div>
-                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.country_serial || "—"}</div>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                <Calendar className="h-3.5 w-3.5 text-blue-600" />
+                <span>{formData.order_date || new Date().toISOString().split("T")[0]}</span>
+                <span>•</span>
+                <span>{formData.order_time || new Date().toTimeString().slice(0, 5)}</span>
               </div>
-            ) : null}
-            {canSeeSerial("branch", ctx) ? (
-              <div className="space-y-0.5">
-                <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_branch", "Branch Serial")}</div>
-                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{formData.branch_serial || "—"}</div>
+            </div>
+
+            <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
+                <div className="text-[9px] font-bold uppercase text-slate-400">Global Serial</div>
+                <div className="font-mono text-xs font-black text-blue-600 dark:text-blue-400 truncate">
+                  {formData.super_admin_serial || formData.order_no || "Auto"}
+                </div>
               </div>
-            ) : null}
-            <div className="space-y-0.5">
-              <div className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "comv.serial_global_bill", "Global Bill / Shipping No.")}</div>
-              <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || t(lang, "comv.serial_auto", "Auto on Save")}</div>
+              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
+                <div className="text-[9px] font-bold uppercase text-slate-400">Country Serial</div>
+                <div className="font-mono text-xs font-black text-slate-800 dark:text-slate-200 truncate">
+                  {formData.country_serial || "Auto"}
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
+                <div className="text-[9px] font-bold uppercase text-slate-400">Branch Serial</div>
+                <div className="font-mono text-xs font-black text-slate-800 dark:text-slate-200 truncate">
+                  {formData.branch_serial || "Auto"}
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-800">
+                <div className="text-[9px] font-bold uppercase text-slate-400">Entry Serial</div>
+                <div className="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">
+                  {formData.entry_serial || "Auto"}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* BL ENTRY STYLE: 1) PARTIES, BOOKING & MOVEMENT                             */}
-          {/* ========================================================================= */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-black text-[11px]">
-                  1
-                </span>
-                <span className="text-xs font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">
-                  SR#: 1 - Booking & Customer Details
-                </span>
-              </div>
-              <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-900/60">
-                <Wallet className="h-3 w-3" />
-                <span>{t(lang, "comv.erp_ledger_integrated", "ERP Ledger Integrated")}</span>
-              </span>
-            </div>
-
-            {/* 1. Customer Account No * */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                <span>{t(lang, "comv.customer_ledger_account_req", "Customer Account No *")}</span>
-                {formData.customer_name ? (
-                  <span className="text-[10px] font-bold text-emerald-600">✓ {formData.customer_name}</span>
-                ) : null}
+          {/* 1. Customer Account SearchSelect */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Users className="h-4 w-4 text-blue-600" />
+                <span>Customer Account *</span>
               </label>
-              <SearchSelect
-                label={t(lang, "comv.select_customer_account", "Select Customer Account")}
-                value={formData.customer_id}
-                options={customerOptions}
-                placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
-                onValueChange={handleCustomerSelection}
-                disabled={loading}
-                searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
-                emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
-              />
-
-              {/* Live Customer Account Details Banner */}
-              {(selectedCustomer || selectedAccount) ? (
-                <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-blue-600 text-white font-black text-[10px]">
-                      {selectedAccount?.code ? "ACC" : "CST"}
-                    </span>
-                    <div>
-                      <div className="font-black text-slate-900 dark:text-slate-100 text-xs">
-                        {selectedCustomer?.customer_name || selectedAccount?.name}
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-mono">
-                        {selectedAccount?.code || selectedCustomer?.person_code || "—"} • {selectedCustomer?.country_name || "—"} {selectedCustomer?.city_name ? `(${selectedCustomer.city_name})` : ""}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-[9.5px] font-semibold text-slate-500">Contact</div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
-                        {selectedCustomer?.mobile || selectedCustomer?.contact_person || "—"}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-2xs">
-                      <CreditCard className="h-3 w-3 text-emerald-600" />
-                      <span className="text-[9.5px] font-semibold text-slate-500">Bal:</span>
-                      <span className={`font-black font-mono text-[11px] ${
-                        selectedAccount?.current_balance != null && Number(selectedAccount.current_balance) < 0
-                          ? "text-rose-600 dark:text-rose-400"
-                          : "text-emerald-700 dark:text-emerald-400"
-                      }`}>
-                        {selectedAccount?.current_balance != null
-                          ? `${selectedAccount.currency || ""} ${Number(selectedAccount.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                          : "0.00"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {formData.customer_name ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  ✓ {formData.customer_name}
+                </span>
               ) : null}
             </div>
 
-            {/* 2. Transport & Movement in Grid (Like BL Entry) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label className="mb-1 block text-[10.5px] font-black uppercase text-slate-600 dark:text-slate-400">
-                  {tt("shipment_type", "Shipment / Movement Type *")}
-                </label>
-                <select
-                  value={formData.movement_type}
-                  onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
-                  className={selectClass}
-                >
-                  <option value="import">{tt("mv_import", "Import")}</option>
-                  <option value="export">{tt("mv_export", "Export")}</option>
-                  <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
-                  <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
-                  <option value="down_transit">{t(lang, "comv.mv_down_transit", "Down Transit")}</option>
-                  <option value="domestic">{t(lang, "comv.mv_local_domestic", "Local / Domestic")}</option>
-                </select>
-              </div>
+            <SearchSelect
+              label=""
+              value={formData.customer_id}
+              options={customerOptions}
+              placeholder="Select Customer Account..."
+              onValueChange={handleCustomerSelection}
+              disabled={loading}
+              searchPlaceholder="Search customer by name, code or mobile..."
+              emptyLabel="No matching customers found"
+            />
 
-              <div>
-                <label className="mb-1 block text-[10.5px] font-black uppercase text-slate-600 dark:text-slate-400">
-                  {tt("transport_mode", "Transport Type *")}
-                </label>
-                <select
-                  value={formData.transport_mode}
-                  onChange={(e) => setFormData((current) => ({ ...current, transport_mode: e.target.value as TransportMode }))}
-                  className={selectClass}
-                >
-                  <option value="by_sea">🚢 {tt("tm_by_sea", "By Sea")}</option>
-                  <option value="by_road">🚛 {tt("tm_by_road", "By Road")}</option>
-                  <option value="by_air">✈️ {tt("tm_by_air", "By Air")}</option>
-                  <option value="by_rail">🚆 {t(lang, "comv.tm_by_rail", "By Rail")}</option>
-                </select>
+            {/* Minimal tag summary underneath input (No large duplicate card!) */}
+            {selectedCustomer || selectedAccount ? (
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-300">
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {selectedCustomer?.customer_name || selectedAccount?.name}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-mono text-slate-500">
+                  Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-slate-500">
+                  {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
+                </span>
               </div>
-            </div>
+            ) : null}
+          </div>
 
-            {/* 3. Loading Details Card (Matching BL Entry's Cyan Section) */}
-            <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-3 space-y-2.5">
-              <div className="text-[10.5px] font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5">
-                <Warehouse className="h-3.5 w-3.5" />
-                <span>Loading Details</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                    {tt("expected_loading_date", "Loading Date *")}
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.expected_loading_date}
-                    onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                    Loading Source (Warehouse / Container / Port) *
-                  </label>
-                  <select
-                    value={formData.loading_source}
-                    onChange={(e) => setFormData((current) => ({ ...current, loading_source: e.target.value as LoadingSource }))}
-                    className={selectClass}
+          {/* 2. Ship Type & Movement Type Selectors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Ship Type */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Ship className="h-4 w-4 text-blue-600" />
+                <span>Ship Type *</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    { key: "by_sea", label: "By Sea", icon: Ship, emoji: "🚢" },
+                    { key: "by_road", label: "By Road", icon: Truck, emoji: "🚛" },
+                    { key: "by_air", label: "By Air", icon: Plane, emoji: "✈️" },
+                    { key: "by_rail", label: "By Train", icon: Route, emoji: "🚆" }
+                  ] as const
+                ).map(({ key, label, emoji }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFormData((curr) => ({ ...curr, transport_mode: key }))}
+                    className={`flex items-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all ${
+                      formData.transport_mode === key
+                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
+                        : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
                   >
-                    <option value="shipping_warehouse">Warehouse (Shipping / Central)</option>
-                    <option value="customer_warehouse">Customer Warehouse / Yard</option>
-                    <option value="container">Container (Direct / Haulage)</option>
-                    <option value="port_terminal">Port Terminal</option>
-                    <option value="border_yard">Border Yard / Land Port</option>
-                    <option value="other">Other / Custom Location</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Conditional Loading Warehouse or Container input */}
-              {(formData.loading_source === "shipping_warehouse" || formData.loading_source === "customer_warehouse") ? (
-                <div>
-                  <WarehousePicker
-                    label="Loading Warehouse Location"
-                    value={formData.loading_source_warehouse_id}
-                    onValueChange={(warehouseId) => {
-                      setFormData((current) => ({
-                        ...current,
-                        loading_source_warehouse_id: warehouseId
-                      }));
-                    }}
-                    onSelectRecord={(record) => {
-                      if (record?.warehouse_name) {
-                        setFormData((current) => ({
-                          ...current,
-                          loading_source_name: record.warehouse_name
-                        }));
-                      }
-                    }}
-                  />
-                </div>
-              ) : formData.loading_source === "container" ? (
-                <div>
-                  <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                    Container Number / Reference
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. MSKU-1234567 / 40ft High Cube"
-                    value={formData.loading_source_container_ref}
-                    onChange={(e) => setFormData((current) => ({ ...current, loading_source_container_ref: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            {/* 4. Shipment Specifications & Cargo */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                  {tt("shipment_type", "Shipment Type")}
-                </label>
-                <select
-                  value={formData.shipment_type}
-                  onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
-                  className={selectClass}
-                >
-                  <option value="FCL">{tt("ship_fcl", "FCL (Full Container)")}</option>
-                  <option value="LCL">{tt("ship_lcl", "LCL (Less Container)")}</option>
-                  <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
-                  <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                  Load Type
-                </label>
-                <select
-                  value={formData.load_type || ""}
-                  onChange={(e) => setFormData((current) => ({ ...current, load_type: e.target.value as LoadType }))}
-                  className={selectClass}
-                >
-                  <option value="">— Standard / Auto —</option>
-                  <option value="full_truck">Full Truck (FTL)</option>
-                  <option value="partial_load">Partial Load (LTL)</option>
-                  <option value="container_haulage">Container Haulage</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
-                  Cargo / Container Details
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 40ft HC / 22 MT Dry Cargo"
-                  value={formData.cargo_details}
-                  onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
-                  className={inputClass}
-                />
+                    <span className="text-base leading-none">{emoji}</span>
+                    <span>{label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Sub-step 1A Action */}
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData((current) => ({
-                    ...current,
-                    customer_id: "",
-                    customer_name: "",
-                    movement_type: "import",
-                    transport_mode: "by_sea",
-                    loading_source: "shipping_warehouse",
-                    loading_source_warehouse_id: "",
-                    loading_source_container_ref: "",
-                    cargo_details: ""
-                  }));
-                }}
-                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
-              >
-                Reset
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep1SubStep("1C")}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
-              >
-                <span>Continue to Route & Locations (1C)</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+            {/* Movement Type */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Repeat2 className="h-4 w-4 text-purple-600" />
+                <span>Movement Type *</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    { key: "import", label: "Import", icon: ArrowLeft },
+                    { key: "export", label: "Export", icon: ArrowRight },
+                    { key: "up_transit", label: "Up Transit", icon: Route },
+                    { key: "down_transit", label: "Down Transit", icon: Route }
+                  ] as const
+                ).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFormData((curr) => ({ ...curr, movement_type: key }))}
+                    className={`flex items-center justify-center rounded-xl border py-2.5 px-2 text-xs font-bold transition-all ${
+                      formData.movement_type === key
+                        ? "border-purple-600 bg-purple-50 text-purple-700 shadow-xs dark:border-purple-500 dark:bg-purple-950/60 dark:text-purple-300"
+                        : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* 1A Next Action */}
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setFormData((curr) => ({
+                  ...curr,
+                  customer_id: "",
+                  customer_name: "",
+                  movement_type: "import",
+                  transport_mode: "by_sea"
+                }));
+              }}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              Reset 1A
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStep1SubStep("1B");
+                onAdvanceToStep2();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+            >
+              <span>Continue to Pickup & Goods (1B)</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-STEP 1B: TRANSPORT MODE & MOVEMENT                                    */}
+      {/* 1B — PICKUP / VEHICLE / GOODS                                             */}
       {/* ========================================================================= */}
       {step1SubStep === "1B" && (
-        <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Movement Type & Shipment Type */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>{tt("movement_type", "Movement Type")} *</label>
-              <select
-                value={formData.movement_type}
-                onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
-                className={selectClass}
-              >
-                <option value="import">{tt("mv_import", "Import")}</option>
-                <option value="export">{tt("mv_export", "Export")}</option>
-                <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
-                <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
-                <option value="down_transit">{t(lang, "comv.mv_down_transit", "Down Transit")}</option>
-                <option value="domestic">{t(lang, "comv.mv_local_domestic", "Local / Domestic")}</option>
-              </select>
+        <div className="space-y-4 animate-in fade-in duration-150">
+          {/* Read-Only 1A Summary Badge Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/60 dark:bg-blue-950/30">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
+                1A Summary
+              </span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                Customer: <span className="text-blue-700 dark:text-blue-300">{formData.customer_name || "—"}</span>
+              </span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
+                Ship: {formData.transport_mode.replace("by_", "")}
+              </span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">
+                Movement: {formData.movement_type.replace("_", " ")}
+              </span>
             </div>
-            <div>
-              <label className={labelClass}>{tt("shipment_type", "Shipment Type")}</label>
-              <select
-                value={formData.shipment_type}
-                onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
-                className={selectClass}
-              >
-                <option value="FCL">{tt("ship_fcl", "FCL (Full Container Load)")}</option>
-                <option value="LCL">{tt("ship_lcl", "LCL (Less than Container)")}</option>
-                <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
-                <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Transport Mode Dropdown */}
-          <div>
-            <label className={labelClass}>{tt("transport_mode", "Transport Mode")} *</label>
-            <select
-              value={formData.transport_mode}
-              onChange={(e) => setFormData((current) => ({ ...current, transport_mode: e.target.value as TransportMode }))}
-              className={selectClass}
+            <button
+              type="button"
+              onClick={() => setStep1SubStep("1A")}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline"
             >
-              <option value="by_sea">🚢 {tt("tm_by_sea", "By Sea")}</option>
-              <option value="by_road">🚛 {tt("tm_by_road", "By Road")}</option>
-              <option value="by_air">✈️ {tt("tm_by_air", "By Air")}</option>
-              <option value="by_rail">🚆 {t(lang, "comv.tm_by_rail", "By Rail")}</option>
-            </select>
+              <Pencil className="h-3 w-3" />
+              <span>[Edit (1A)]</span>
+            </button>
           </div>
 
-          {/* Operational Movement & Load Type */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>Load Type (Full / Partial / Haulage)</label>
-              <select
-                value={formData.load_type || ""}
-                onChange={(e) => setFormData((current) => ({ ...current, load_type: e.target.value as LoadType }))}
-                className={selectClass}
-              >
-                <option value="">— Standard / Auto —</option>
-                <option value="full_truck">Full Truck (FTL)</option>
-                <option value="partial_load">Partial Load (LTL)</option>
-                <option value="container_haulage">Container Haulage</option>
-              </select>
+          {/* Truck / Pre-Carriage Section */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Truck className="h-4 w-4 text-blue-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Truck / Pre-Carriage Vehicle
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">Road / Transport</span>
             </div>
+
+            {/* 3 Truck Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData((c) => ({ ...c, truck_assignment_mode: "permanent" }))}
+                className={`rounded-xl border p-2.5 text-left text-xs font-bold transition-all ${
+                  formData.truck_assignment_mode === "permanent"
+                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
+                    : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <div className="text-[10px] uppercase text-slate-400">Option 1</div>
+                <div>Permanent Truck</div>
+                <div className="text-[9.5px] font-normal text-slate-500">From System Master</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormData((c) => ({ ...c, truck_assignment_mode: "hired" }))}
+                className={`rounded-xl border p-2.5 text-left text-xs font-bold transition-all ${
+                  formData.truck_assignment_mode === "hired"
+                    ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
+                    : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <div className="text-[10px] uppercase text-slate-400">Option 2</div>
+                <div>Hired / External Truck</div>
+                <div className="text-[9.5px] font-normal text-slate-500">Manual Entry & PO</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((c) => ({
+                    ...c,
+                    truck_assignment_mode: "later",
+                    truck_id: "",
+                    truck_number: "TO BE ASSIGNED"
+                  }))
+                }
+                className={`rounded-xl border p-2.5 text-left text-xs font-bold transition-all ${
+                  formData.truck_assignment_mode === "later"
+                    ? "border-amber-600 bg-amber-50 text-amber-700 shadow-xs dark:border-amber-500 dark:bg-amber-950/60 dark:text-amber-300"
+                    : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <div className="text-[10px] uppercase text-slate-400">Option 3</div>
+                <div>Assign Later</div>
+                <div className="text-[9.5px] font-normal text-slate-500">Unblocks Booking</div>
+              </button>
+            </div>
+
+            {/* Truck Form Fields based on Option */}
+            {formData.truck_assignment_mode === "permanent" && (
+              <div className="space-y-2 pt-1">
+                <SearchSelect
+                  label="Select Permanent Truck *"
+                  value={formData.truck_id}
+                  placeholder="Search truck by number, registration, driver or make..."
+                  options={(trucksList || []).map((t: any) => ({
+                    value: t.id,
+                    label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
+                    keywords: [t.truck_number, t.registration_number, t.driver_name, t.driver_mobile, t.make, t.model, t.transport_company].filter(Boolean).join(" ")
+                  }))}
+                  onValueChange={(truckId) => {
+                    const trk = (trucksList || []).find((t: any) => t.id === truckId);
+                    if (trk) {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_id: trk.id,
+                        truck_number: trk.truck_number || trk.registration_number || "",
+                        truck_driver_name: trk.driver_name || "",
+                        truck_driver_mobile: trk.driver_mobile || trk.driver_phone || "",
+                        truck_transport_company: trk.transport_company || trk.owner_name || "",
+                        truck_details: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
+                      }));
+                    }
+                  }}
+                  searchPlaceholder="Search truck..."
+                  emptyLabel="No matching trucks found"
+                />
+
+                {formData.truck_number ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
+                      <span className="text-slate-400 ml-2">Driver: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
+                    </div>
+                    {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {formData.truck_assignment_mode === "hired" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Truck / Registration No *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_number}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
+                    placeholder="e.g. TL-9988-KHI"
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Driver Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_driver_name}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
+                    placeholder="Driver full name"
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Driver Mobile
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_driver_mobile}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_mobile: e.target.value }))}
+                    placeholder="+92 300 1234567"
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    PO / Hire Reference
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_po_ref || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_po_ref: e.target.value }))}
+                    placeholder="e.g. PO-8874 / Hire Agmt"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.truck_assignment_mode === "later" && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="font-bold flex items-center gap-1.5">
+                  <BadgeInfo className="h-4 w-4 text-amber-600" />
+                  <span>Truck To Be Assigned Later</span>
+                </div>
+                <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
+                  This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Operational Dates: Planned vs Actual Pickup & Dispatch */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
+              <Calendar className="h-4 w-4 text-emerald-600" />
+              <span>Operational Dates — Planned vs. Actual</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Planned Pickup Date *
+                </label>
+                <input
+                  type="date"
+                  value={formData.planned_pickup_date || formData.expected_loading_date}
+                  onChange={(e) =>
+                    setFormData((c) => ({
+                      ...c,
+                      planned_pickup_date: e.target.value,
+                      expected_loading_date: e.target.value
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Actual Pickup Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.actual_pickup_date || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, actual_pickup_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Planned Dispatch Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.planned_dispatch_date || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, planned_dispatch_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Actual Dispatch Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.actual_dispatch_date || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, actual_dispatch_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Multiple Goods Section */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Boxes className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Goods / Items Breakdown ({formData.goods_items?.length || 1})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={addGoodsItem}
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>+ Add Goods</span>
+              </button>
+            </div>
+
+            {/* Goods Items Cards */}
+            <div className="space-y-3">
+              {(formData.goods_items || [defaultGoodsItem()]).map((item, gIdx) => (
+                <div
+                  key={gIdx}
+                  className="rounded-xl border border-slate-200/90 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-700/60">
+                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px] font-black">
+                        {gIdx + 1}
+                      </span>
+                      <span>Goods #{gIdx + 1}: {item.goodsName || "New Item"}</span>
+                    </span>
+                    {(formData.goods_items || []).length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeGoodsItem(gIdx)}
+                        className="text-rose-600 hover:text-rose-700 p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        title="Remove Goods Item"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {/* Goods Name from Master */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Goods Name (from Goods Master) *
+                    </label>
+                    <SearchSelect
+                      label=""
+                      value={item.goodsId}
+                      placeholder="Select or search goods from master..."
+                      options={(goodsMasterList || []).map((g: any) => ({
+                        value: g.id,
+                        label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
+                        keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
+                      }))}
+                      onValueChange={(goodsId) => {
+                        const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
+                        updateGoodsItem(gIdx, {
+                          goodsId,
+                          goodsName: found?.goods_name || found?.name || item.goodsName,
+                          goodsChsCode: found?.chs_code || ""
+                        });
+                      }}
+                      searchPlaceholder="Search goods..."
+                      emptyLabel="No goods found in master"
+                    />
+                  </div>
+
+                  {/* Quantity, Unit, KG Per Qty, Total KG */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Qty Unit</label>
+                      <select
+                        value={item.unit}
+                        onChange={(e) => updateGoodsItem(gIdx, { unit: e.target.value })}
+                        className={selectClass}
+                      >
+                        <option value="Bags">Bags</option>
+                        <option value="Cartons">Cartons</option>
+                        <option value="Pallets">Pallets</option>
+                        <option value="Packages">Packages</option>
+                        <option value="Boxes">Boxes</option>
+                        <option value="MT">MT</option>
+                        <option value="KG">KG</option>
+                        <option value="Loose">Loose</option>
+                        <option value="Containers">Containers</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Quantity *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.quantity}
+                        onChange={(e) => updateGoodsItem(gIdx, { quantity: e.target.value })}
+                        className={inputClass}
+                        placeholder="1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">KG Per Qty *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.kgPerQty}
+                        onChange={(e) => updateGoodsItem(gIdx, { kgPerQty: e.target.value })}
+                        className={inputClass}
+                        placeholder="50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 mb-1">
+                        Total KG (Auto)
+                      </label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={item.totalKg || "0"}
+                        className="w-full rounded-xl border border-emerald-300 bg-emerald-50/70 px-3 py-2 text-xs font-mono font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Warehouse Source for this goods item */}
+                  <div className="pt-1">
+                    <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Warehouse / Pickup Location
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
+                      {(
+                        [
+                          { key: "company_warehouse", label: "Company Warehouse" },
+                          { key: "same", label: "Same Warehouse" },
+                          { key: "customer_warehouse", label: "Customer Warehouse" },
+                          { key: "other", label: "Other Warehouse" }
+                        ] as const
+                      ).map(({ key, label }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            if (key === "customer_warehouse") {
+                              updateGoodsItem(gIdx, {
+                                warehouseSourceType: key,
+                                warehouseName: selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse",
+                                warehouseAddressText: selectedCustomer?.address || "Customer Address"
+                              });
+                            } else {
+                              updateGoodsItem(gIdx, { warehouseSourceType: key });
+                            }
+                          }}
+                          className={`rounded-lg border px-2 py-1.5 text-[11px] font-bold transition-all text-center ${
+                            item.warehouseSourceType === key
+                              ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-300"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Conditional warehouse selector */}
+                    {item.warehouseSourceType === "company_warehouse" && (
+                      <SearchSelect
+                        label=""
+                        value={item.warehouseId}
+                        placeholder="Select Company Warehouse..."
+                        options={(warehousesList || []).map((w: any) => ({
+                          value: w.id,
+                          label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
+                          keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
+                        }))}
+                        onValueChange={(warehouseId) => {
+                          const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
+                          const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
+                          updateGoodsItem(gIdx, {
+                            warehouseId,
+                            warehouseName: w?.warehouse_name || w?.name || "",
+                            warehouseAddressText: addr
+                          });
+                          if (gIdx === 0) {
+                            setFormData((c) => ({
+                              ...c,
+                              loading_source_warehouse_id: warehouseId,
+                              loading_source_name: w?.warehouse_name || w?.name || ""
+                            }));
+                          }
+                        }}
+                        searchPlaceholder="Search warehouses..."
+                        emptyLabel="No warehouses found"
+                      />
+                    )}
+
+                    {item.warehouseSourceType === "customer_warehouse" && (
+                      <div className="rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        <span className="font-bold">Address: </span>
+                        <span>{selectedCustomer?.address || "Customer address on record"}</span>
+                      </div>
+                    )}
+
+                    {item.warehouseSourceType === "other" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Warehouse / yard name"
+                          value={item.warehouseName}
+                          onChange={(e) => updateGoodsItem(gIdx, { warehouseName: e.target.value })}
+                          className={inputClass}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Full address / location details"
+                          value={item.warehouseAddressText}
+                          onChange={(e) => updateGoodsItem(gIdx, { warehouseAddressText: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Goods Weights Bar */}
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                Total Quantity: <span className="font-black font-mono">{totalGoodsQuantity}</span>
+              </span>
+              <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                Total Gross Weight: <span className="font-black font-mono">{totalGoodsKg.toLocaleString()} KG</span> ({totalGoodsMt} MT)
+              </span>
+            </div>
+          </div>
+
+          {/* 1B Navigation Actions */}
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              onClick={() => setStep1SubStep("1A")}
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back to 1A</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStep1SubStep("1C");
+                if (onAdvanceToStep3) onAdvanceToStep3();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+            >
+              <span>Continue to Route & Delivery (1C)</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 1C — ROUTE / BORDER / PORT / FINAL DELIVERY                               */}
+      {/* ========================================================================= */}
+      {step1SubStep === "1C" && (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          {/* Read-Only 1A & 1B Summary Badge Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
+                1A & 1B Summary
+              </span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
+              </span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                {totalGoodsKg.toLocaleString()} KG ({totalGoodsMt} MT)
+              </span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-bold text-slate-600 dark:text-slate-400">
+                Truck: {formData.truck_number || "Later"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStep1SubStep("1A")}
+                className="text-[11px] font-bold text-blue-600 underline"
+              >
+                [Edit 1A]
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep1SubStep("1B")}
+                className="text-[11px] font-bold text-blue-600 underline"
+              >
+                [Edit 1B]
+              </button>
+            </div>
+          </div>
+
+          {/* Dynamic Route Form adapted to Ship Type */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Route className="h-4 w-4 text-blue-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Route & Locations — Mode: {formData.transport_mode.replace("by_", "").toUpperCase()}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">
+                Dynamic Route Form
+              </span>
+            </div>
+
+            {/* DYNAMIC CASE 1: BY ROAD */}
+            {formData.transport_mode === "by_road" && (
+              <div className="space-y-3">
+                {/* Auto Origin from 1B */}
+                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/50 dark:bg-blue-950/20">
+                  <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Origin Warehouse (Auto-filled from 1B):</span>
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
+                    {effectiveOriginWarehouse || "Main Company Warehouse"}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Loading / Origin Country *
+                    </label>
+                    <select
+                      value={formData.loading_country_id}
+                      onChange={(e) => handleLoadingCountryChange(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">— Select Country —</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Origin City / State
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Quetta / Lahore"
+                      value={formData.loading_source_name}
+                      onChange={(e) => setFormData((c) => ({ ...c, loading_source_name: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Exit Border / Checkpoint
+                    </label>
+                    <select
+                      value={formData.exit_border_port_id}
+                      onChange={(e) => {
+                        const port = ports.find((p) => p.id === e.target.value);
+                        setFormData((c) => ({
+                          ...c,
+                          exit_border_port_id: e.target.value,
+                          exit_border_port_name: port?.port_name || ""
+                        }));
+                      }}
+                      className={selectClass}
+                    >
+                      <option value="">— Select Border Port —</option>
+                      {ports.map((p) => (
+                        <option key={p.id} value={p.id}>{p.port_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Planned Border Exit Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.planned_border_exit_date}
+                      onChange={(e) => setFormData((c) => ({ ...c, planned_border_exit_date: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Receiving / Destination Country *
+                    </label>
+                    <select
+                      value={formData.receiving_country_id}
+                      onChange={(e) => handleReceivingCountryChange(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">— Select Country —</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Destination State / City
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Kabul / Kandahar"
+                      value={formData.destination_city}
+                      onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Entry Border / Receiving Checkpoint
+                    </label>
+                    <select
+                      value={formData.entry_border_port_id}
+                      onChange={(e) => {
+                        const port = ports.find((p) => p.id === e.target.value);
+                        setFormData((c) => ({
+                          ...c,
+                          entry_border_port_id: e.target.value,
+                          entry_border_port_name: port?.port_name || ""
+                        }));
+                      }}
+                      className={selectClass}
+                    >
+                      <option value="">— Select Entry Border —</option>
+                      {ports.map((p) => (
+                        <option key={p.id} value={p.id}>{p.port_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Border Entry Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.border_entry_date}
+                      onChange={(e) => setFormData((c) => ({ ...c, border_entry_date: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Final Delivery Location / Warehouse *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Kabul Custom Yard / Customer Central Warehouse"
+                    value={formData.final_delivery_location}
+                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* DYNAMIC CASE 2: BY SEA */}
+            {formData.transport_mode === "by_sea" && (
+              <div className="space-y-3">
+                {/* Auto Origin from 1B */}
+                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/50 dark:bg-blue-950/20">
+                  <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Origin Warehouse / Yard (From 1B):</span>
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
+                    {effectiveOriginWarehouse || "Primary Shipping Warehouse"}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Loading Port (Sea Port) *
+                    </label>
+                    <select
+                      value={formData.loading_port_id}
+                      onChange={(e) => handleLoadingPortChange(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">— Select Loading Sea Port —</option>
+                      {ports.map((p) => (
+                        <option key={p.id} value={p.id}>{p.port_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Destination Port (Sea Port) *
+                    </label>
+                    <select
+                      value={formData.destination_port_id}
+                      onChange={(e) => handleDestinationPortChange(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">— Select Destination Sea Port —</option>
+                      {ports.map((p) => (
+                        <option key={p.id} value={p.id}>{p.port_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Final Delivery Location is separate from Destination Port! */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Final Delivery Location / Warehouse (Separate from Sea Port!) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Quetta Central Yard / Kabul City Warehouse (not the seaport)"
+                    value={formData.final_delivery_location}
+                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
+                    className={inputClass}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Cargo discharges at {formData.destination_port_name || "seaport"} and moves inland to this final delivery location.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* DYNAMIC CASE 3: BY AIR */}
+            {formData.transport_mode === "by_air" && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Origin Airport *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dubai Intl (DXB) / Islamabad (ISB)"
+                      value={formData.origin_airport_name}
+                      onChange={(e) => setFormData((c) => ({ ...c, origin_airport_name: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Destination Airport *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Kabul Intl (KBL) / London Heathrow (LHR)"
+                      value={formData.destination_airport_name}
+                      onChange={(e) => setFormData((c) => ({ ...c, destination_airport_name: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Final Delivery Location / Consignee Address *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Consignee warehouse or airport terminal release point"
+                    value={formData.final_delivery_location}
+                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* DYNAMIC CASE 4: BY TRAIN */}
+            {formData.transport_mode === "by_rail" && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Origin Rail Station / Dry Port *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Lahore Dry Port / Tashkent Rail Terminal"
+                      value={formData.origin_rail_station}
+                      onChange={(e) => setFormData((c) => ({ ...c, origin_rail_station: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Destination Rail Station *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Hairatan Border Station / Quetta Station"
+                      value={formData.destination_rail_station}
+                      onChange={(e) => setFormData((c) => ({ ...c, destination_rail_station: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Final Delivery Location / Warehouse *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Final destination warehouse or yard"
+                    value={formData.final_delivery_location}
+                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Route reference label */}
             <div>
-              <label className={labelClass}>{tt("expected_loading_date", "Expected Loading Date")}</label>
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                Route / Order Reference Label
+              </label>
               <input
-                type="date"
-                value={formData.expected_loading_date}
-                onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
+                type="text"
+                placeholder="e.g. Karachi Port to Kabul via Torkham Border"
+                value={formData.route_name}
+                onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
                 className={inputClass}
               />
             </div>
           </div>
 
-          <div>
-            <label className={labelClass}>{tt("cargo_container_details", "Cargo / Container Details")}</label>
-            <input
-              type="text"
-              placeholder={tt("cargo_ph", "e.g. 40ft High Cube Container / 22 MT Dry Cargo")}
-              value={formData.cargo_details}
-              onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Sub-step 1B Navigation */}
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={() => setStep1SubStep("1A")}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span>{t(lang, "comv.prev_substep_1a", "Back to Customer & Parties (1A)")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep1SubStep("1C")}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
-            >
-              <span>{t(lang, "comv.next_substep_1c", "Continue to Route & Locations (1C)")}</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-STEP 1C: ROUTE / PORT / LOCATION DETAILS                              */}
-      {/* ========================================================================= */}
-      {step1SubStep === "1C" && (
-        <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Loading / Receiving Country + Location */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-            <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Route className="h-3.5 w-3.5 text-blue-600" />
-              <span>{t(lang, "comv.route_countries_req", "Loading & Destination *")}</span>
+          {/* Operational Tracking Dates: Planned vs Actual Departure & Arrival */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <span>Operational Schedule — Departure & Arrival</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div className="space-y-2">
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                  {t(lang, "comv.loading_country_step", "Loading Country *")}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Planned Departure Date
                 </label>
-                <select value={formData.loading_country_id} onChange={(e) => handleLoadingCountryChange(e.target.value)} className={selectClass}>
-                  <option value="">{t(lang, "comv.select_loading_country_ph", "— Select Loading Country —")}</option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <select
-                  value={formData.loading_city_id}
-                  onChange={(e) => setFormData((current) => ({ ...current, loading_city_id: e.target.value }))}
-                  disabled={!formData.loading_country_id}
-                  className={selectClass}
-                >
-                  <option value="">{t(lang, "comv.select_loading_location_ph", "— Select Location / City —")}</option>
-                  {loadingCities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                <input
+                  type="date"
+                  value={formData.planned_departure_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, planned_departure_date: e.target.value }))}
+                  className={inputClass}
+                />
               </div>
-              <div className="space-y-2">
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                  {t(lang, "comv.receiving_country_step", "Final Destination Country *")}
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Actual Departure Date
                 </label>
-                <select value={formData.receiving_country_id} onChange={(e) => handleReceivingCountryChange(e.target.value)} className={selectClass}>
-                  <option value="">{t(lang, "comv.select_receiving_country_ph", "— Select Receiving Country —")}</option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <select
-                  value={formData.receiving_city_id}
-                  onChange={(e) => setFormData((current) => ({ ...current, receiving_city_id: e.target.value }))}
-                  disabled={!formData.receiving_country_id}
-                  className={selectClass}
-                >
-                  <option value="">{t(lang, "comv.select_receiving_location_ph", "— Select Location / City —")}</option>
-                  {receivingCities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                <input
+                  type="date"
+                  value={formData.actual_departure_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, actual_departure_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Planned Arrival Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.planned_arrival_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, planned_arrival_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Actual Arrival Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.actual_arrival_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, actual_arrival_date: e.target.value }))}
+                  className={inputClass}
+                />
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>{tt("loading_port", "Loading Port")}</label>
-              <select value={formData.loading_port_id} onChange={(e) => handleLoadingPortChange(e.target.value)} className={selectClass}>
-                <option value="">{tt("select_loading_port", "Select Loading Port")}</option>
-                {ports.map((port) => (
-                  <option key={port.id} value={port.id}>{port.port_name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>{tt("destination_port", "Destination Port")}</label>
-              <select value={formData.destination_port_id} onChange={(e) => handleDestinationPortChange(e.target.value)} className={selectClass}>
-                <option value="">{tt("select_destination_port", "Select Destination Port")}</option>
-                {ports.map((port) => (
-                  <option key={port.id} value={port.id}>{port.port_name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>{tt("route_reference", "Route / Reference")}</label>
-            <input
-              type="text"
-              placeholder={tt("route_ph", "e.g. Karachi to Kabul via Torkham")}
-              value={formData.route_name}
-              onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Route Summary & Journey Card */}
-          {(selectedLoadingCountry || selectedReceivingCountry || formData.route_name) ? (
-            <div className="rounded-xl border border-blue-200/70 bg-blue-50/40 p-3 dark:border-blue-900/50 dark:bg-blue-950/20 text-xs space-y-1.5">
-              <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                <Route className="h-3.5 w-3.5 text-blue-600" />
-                <span>Journey Preview</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                <span className="bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
-                  {selectedLoadingCountry?.name || "Origin Country"}{selectedLoadingCity ? ` (${selectedLoadingCity.name})` : ""}
-                </span>
-                <ArrowRight className="h-3 w-3 text-blue-500 shrink-0" />
-                <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded uppercase text-[10px] font-black">
-                  {formData.transport_mode.replace("by_", "")} • {formData.movement_type}
-                </span>
-                <ArrowRight className="h-3 w-3 text-blue-500 shrink-0" />
-                <span className="bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
-                  {selectedReceivingCountry?.name || "Destination Country"}{selectedReceivingCity ? ` (${selectedReceivingCity.name})` : ""}
-                </span>
-              </div>
-              {selectedLoadingPort || selectedDestinationPort ? (
-                <div className="text-[10.5px] text-slate-500">
-                  Ports: {selectedLoadingPort?.port_name || "—"} ➔ {selectedDestinationPort?.port_name || "—"}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {/* Sub-step 1C Navigation */}
-          <div className="flex items-center justify-between pt-2">
+          {/* 1C Bottom Actions: Direct Confirm & Save Customer Order! */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
             <button
               type="button"
               onClick={() => setStep1SubStep("1B")}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span>{t(lang, "comv.prev_substep_1b", "Back to Movement & Mode (1B)")}</span>
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back to 1B</span>
             </button>
-            <button
-              type="button"
-              onClick={onAdvanceToStep2}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
-            >
-              <span>{t(lang, "comv.proceed_step_2", "Proceed to Step 2 (Pickup, Goods & Truck)")}</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
+              >
+                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                <span>Save Draft</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onConfirmSave}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 transition"
+              >
+                {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                <span>Confirm & Save Customer Order</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
