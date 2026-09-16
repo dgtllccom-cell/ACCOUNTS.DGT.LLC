@@ -543,6 +543,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Email Accounts", href: "/dashboard/settings/email-accounts", icon: Mail },
       { label: "ERP Translations & Languages", href: "/dashboard/settings/translations", icon: Globe },
       { label: "Profile & Security", href: "/dashboard/settings/profile", icon: ShieldCheck },
+      { label: "Super Admin Security", href: "/dashboard/settings/super-admin-security", icon: ShieldCheck, roles: ["super_admin"] },
     ],
   },
   {
@@ -686,7 +687,8 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/ai-entry/voice-text": ["communication:read", "route:/dashboard/ai-entry/voice-text"],
   "/dashboard/messages/whatsapp": ["communication:read", "route:/dashboard/messages/whatsapp"],
   "/dashboard/messages/email": ["communication:read", "route:/dashboard/messages/email"],
-  "/dashboard/settings/email-accounts": ["route:/dashboard/settings/email-accounts"]
+  "/dashboard/settings/email-accounts": ["route:/dashboard/settings/email-accounts"],
+  "/dashboard/settings/super-admin-security": ["route:/dashboard/settings/super-admin-security"]
 };
 
 /** RBAC & Form Allotment Filter — keeps an entry when it declares no `roles`, the user is a super
