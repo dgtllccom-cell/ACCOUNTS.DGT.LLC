@@ -6181,11 +6181,11 @@ function Step4ReviewConfirm({
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>{t(lang, "comv.back_to_1c", "Back to 1C (Route & Delivery)")}</span>
+            <span>{tt("back_to_1c", "Back to 1C (Route & Delivery)")}</span>
           </button>
           <div className="h-4 w-px bg-slate-700 mx-1 hidden sm:block" />
           <span className="text-xs font-medium text-slate-300 hidden md:inline">
-            {t(lang, "comv.a4_instruction", "Step 4: Full A4 Document Review before confirmation")}
+            {tt("a4_instruction", "Step 4: Full A4 Document Review before confirmation")}
           </span>
         </div>
 
@@ -6196,7 +6196,7 @@ function Step4ReviewConfirm({
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-sm transition"
           >
             <Printer className="h-4 w-4" />
-            <span>{t(lang, "comv.print_a4", "Print A4 Sheet")}</span>
+            <span>{tt("print_a4", "Print A4 Sheet")}</span>
           </button>
           <button
             type="button"
@@ -6214,7 +6214,7 @@ function Step4ReviewConfirm({
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition"
           >
             {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            <span>{t(lang, "comv.confirm_save_order", "Confirm & Save Customer Order")}</span>
+            <span>{tt("confirm_save_order", "Confirm & Save Customer Order")}</span>
           </button>
         </div>
       </div>
@@ -6757,7 +6757,7 @@ function Step4ReviewConfirm({
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span>{t(lang, "comv.back_to_1c", "Back to 1C (Route & Delivery)")}</span>
+          <span>{tt("back_to_1c", "Back to 1C (Route & Delivery)")}</span>
         </button>
 
         <div className="flex items-center gap-2">
@@ -6767,7 +6767,7 @@ function Step4ReviewConfirm({
             className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300 transition"
           >
             <Printer className="h-4 w-4" />
-            <span>{t(lang, "comv.print_a4", "Print A4 Sheet")}</span>
+            <span>{tt("print_a4", "Print A4 Sheet")}</span>
           </button>
           <button
             type="button"
@@ -6785,7 +6785,7 @@ function Step4ReviewConfirm({
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition"
           >
             {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            <span>{t(lang, "comv.confirm_save_order", "Confirm & Save Customer Order")}</span>
+            <span>{tt("confirm_save_order", "Confirm & Save Customer Order")}</span>
           </button>
         </div>
       </div>
