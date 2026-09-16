@@ -12,9 +12,14 @@ const sendSchema = z.object({
   cc: z.string().email().optional().or(z.literal("")),
   bcc: z.string().email().optional().or(z.literal("")),
   subject: z.string().min(1),
-  body: z.string().min(1),
+  body: z.string().optional(),
+  text: z.string().optional(),
+  html: z.string().optional(),
   inReplyTo: z.string().optional(),
   references: z.array(z.string()).optional()
+}).refine(data => Boolean(data.body || data.text || data.html), {
+  message: "body_required",
+  path: ["body"]
 });
 
 /**
@@ -70,6 +75,7 @@ export async function POST(
 
     const domain = account.emailAddress.split("@")[1] || "dgt.llc";
     const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${domain}>`;
+    const emailBody = validation.data.body || validation.data.text || "";
 
     const mailOptions: any = {
       from: account.emailAddress,
@@ -77,7 +83,8 @@ export async function POST(
       cc: validation.data.cc || undefined,
       bcc: validation.data.bcc || undefined,
       subject: validation.data.subject,
-      text: validation.data.body,
+      text: emailBody,
+      html: validation.data.html || undefined,
       messageId,
       headers: {}
     };
@@ -114,7 +121,7 @@ ${validation.data.inReplyTo ? `In-Reply-To: ${validation.data.inReplyTo}` : ""}
 ${validation.data.references ? `References: ${validation.data.references.join(" ")}` : ""}
 Content-Type: text/plain; charset=utf-8
 
-${validation.data.body}`;
+${emailBody}`;
 
         // Append to Sent folder (Titan uses "Sent" not "[Gmail]/Sent Mail")
         await imapClient.append("Sent", sentRfc5322, ["\\Seen"]).catch(() =>
@@ -128,8 +135,7 @@ ${validation.data.body}`;
 
     return NextResponse.json({
       success: true,
-      messageId,
-      message: "Email sent successfully"
+      messageId
     });
 
   } catch (error) {

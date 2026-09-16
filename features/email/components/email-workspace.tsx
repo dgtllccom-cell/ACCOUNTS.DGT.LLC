@@ -220,6 +220,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   const [composeBody, setComposeBody] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [composeSuccess, setComposeSuccess] = useState(false);
+  const [composeError, setComposeError] = useState<string | null>(null);
 
   // Keep composeFrom in sync with selected mailbox
   useEffect(() => {
@@ -288,13 +289,13 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
     );
   };
 
-  // Send Compose Email
   // Send Compose Email via real API
   const handleSendCompose = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!composeTo || !composeSubject) return;
 
     setIsSending(true);
+    setComposeError(null);
     try {
       const response = await fetch(`/api/erp/email/${selectedMailboxId}/send`, {
         method: 'POST',
@@ -302,6 +303,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
         body: JSON.stringify({
           to: composeTo,
           subject: composeSubject,
+          body: composeBody,
           text: composeBody,
           html: `<div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">${composeBody.replace(/\n/g, '<br/>')}</div>`
         })
@@ -322,7 +324,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
         fetchRealEmails();
       }, 1000);
     } catch (err: any) {
-      alert(err.message || 'Error sending email. Please check configuration.');
+      setComposeError(err.message || 'Error sending email. Please check configuration.');
     } finally {
       setIsSending(false);
     }
@@ -339,6 +341,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
         body: JSON.stringify({
           to: activeEmail.senderEmail,
           subject: activeEmail.subject.startsWith('Re:') ? activeEmail.subject : `Re: ${activeEmail.subject}`,
+          body: replyText,
           text: replyText,
           html: `<div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">${replyText.replace(/\n/g, '<br/>')}</div>`
         })
@@ -995,7 +998,13 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
               {composeSuccess && (
                 <div className="p-3 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl flex items-center gap-2">
                   <CheckCheck className="w-4 h-4" />
-                  Email sent successfully via {composeFrom}!
+                  <span>{s.t('email_sent_success', 'Email sent successfully via')} {composeFrom}!</span>
+                </div>
+              )}
+              {composeError && (
+                <div className="p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+                  <X className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span>{composeError}</span>
                 </div>
               )}
 
