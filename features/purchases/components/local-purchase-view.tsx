@@ -29,6 +29,7 @@ import { PersonPicker } from "@/components/erp/person-picker";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { cn } from "@/lib/utils";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
+import { useSetActiveRecord } from "@/lib/support/active-record-context";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -280,6 +281,11 @@ export function LocalPurchaseView({
   // instead of POSTing a brand-new duplicate purchase record.
   const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(null);
   const [showCountryReport, setShowCountryReport] = useState(false);
+  const setActiveRecord = useSetActiveRecord();
+  useEffect(() => {
+    setActiveRecord(editingPurchaseId ? { table: "local_purchases", id: editingPurchaseId } : null);
+    return () => setActiveRecord(null);
+  }, [editingPurchaseId, setActiveRecord]);
   // Tabs for Local Purchase & Payment modules workflow
   const [activeTab, setActiveTab] = useState<"all" | "accepted" | "posted">("all");
   // Assign a saved bill (any status) to another user via the canonical Transfer

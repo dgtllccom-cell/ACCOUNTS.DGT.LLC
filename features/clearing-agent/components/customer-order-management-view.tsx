@@ -60,6 +60,7 @@ import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-br
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { listCities } from "@/features/locations/location-api";
+import { useSetActiveRecord } from "@/lib/support/active-record-context";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import {
   BranchScopeDropdown,
@@ -682,6 +683,20 @@ export function CustomerOrderManagementView() {
 
   const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
   const refreshLabel = t(lang, "common.refresh", "Refresh");
+
+  const setActiveRecord = useSetActiveRecord();
+  useEffect(() => {
+    setActiveRecord(
+      viewOrder?.id
+        ? {
+            table: "clearing_customer_orders",
+            id: viewOrder.id,
+            label: viewOrder.manual_bill_no || viewOrder.entry_serial || viewOrder.customer_name || undefined
+          }
+        : null
+    );
+    return () => setActiveRecord(null);
+  }, [viewOrder, setActiveRecord]);
 
   useEffect(() => {
     void fetchInitialData();
