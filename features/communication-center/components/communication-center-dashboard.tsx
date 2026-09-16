@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import Link from "next/link";
+import { EmailWorkspace } from "@/features/email/components/email-workspace";
 import {
   AlertTriangle,
   BarChart3,
@@ -11,9 +13,11 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  ExternalLink,
   Mail,
   Megaphone,
   MessageCircle,
+  MessageSquare,
   Send,
   Settings,
   Users
@@ -38,7 +42,8 @@ type Props = {
 };
 
 const tabs = [
-  { key: "activity", labelKey: "cc.tab_inbox", labelFallback: "Inbox & Activity", icon: Mail },
+  { key: "email", labelKey: "cc.tab_email", labelFallback: "Branch Email Workspace", icon: Mail },
+  { key: "activity", labelKey: "cc.tab_inbox", labelFallback: "Recent Cross-Channel Activity", icon: MessageSquare },
   { key: "crm", labelKey: "cc.tab_crm", labelFallback: "CRM Leads", icon: Users },
   { key: "followups", labelKey: "cc.tab_followups", labelFallback: "Follow-ups", icon: CalendarDays },
   { key: "campaigns", labelKey: "cc.tab_campaigns", labelFallback: "Campaigns", icon: Megaphone },
@@ -177,183 +182,236 @@ export function CommunicationCenterDashboard({ session }: Props) {
           <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800">{notice}</div>
         ) : null}
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${toneClass(card.tone)}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="text-2xl font-bold text-slate-950">{loading ? "-" : card.value.toLocaleString()}</div>
-                <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</div>
+        {/* Hub Clarification & Email Quick Access Banner */}
+        <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-sky-50 to-slate-50 p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                <Mail className="h-5 w-5" />
               </div>
-            );
-          })}
-        </section>
+              <div>
+                <h2 className="text-sm font-bold text-slate-950">
+                  {lang === "ur"
+                    ? "مرکزی کمیونیکیشن حب اور برانچ ای میل ورک اسپیس"
+                    : "Central Communication Hub & Branch Mailboxes"}
+                </h2>
+                <p className="mt-0.5 text-xs text-slate-600">
+                  {lang === "ur"
+                    ? "یہ صفحہ تمام کمیونیکیشن چینلز (ای میل، واٹس ایپ، سی آر ایم) کا مشترکہ جائزہ ہے۔ باضابطہ برانچ ای میلز (چمن، کوئٹہ، دبئی، قندھار، ہیڈ آفس) کے لیے نیچے دیے گئے بٹن پر کلک کریں یا سائیڈ بار میں Email منتخب کریں۔"
+                    : "This page provides an aggregated overview for all channels (Email, WhatsApp, CRM Leads). For the complete 3-column email workspace for branch mailboxes (Chaman, Quetta, Dubai, Kandahar, Head Office), click below or select Email in the sidebar."}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("email")}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition ${
+                  activeTab === "email"
+                    ? "bg-slate-900 text-white"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                <Mail className="h-3.5 w-3.5" />
+                {activeTab === "email" ? "Viewing Email Workspace" : "Open Branch Email System"}
+              </button>
+              <Link
+                href="/dashboard/messages/email"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
+                Full Email App
+              </Link>
+            </div>
+          </div>
+        </div>
 
-        <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex flex-wrap gap-2 border-b border-slate-200 p-3">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const active = tab.key === activeTab;
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = tab.key === activeTab;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+                    active ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tt(tab.labelKey, tab.labelFallback)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {activeTab === "email" ? (
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden p-2">
+            <EmailWorkspace session={session} />
+          </div>
+        ) : (
+          <>
+            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+              {cards.map((card) => {
+                const Icon = card.icon;
                 return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                      active ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tt(tab.labelKey, tab.labelFallback)}
-                  </button>
+                  <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${toneClass(card.tone)}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="text-2xl font-bold text-slate-950">{loading ? "-" : card.value.toLocaleString()}</div>
+                    <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</div>
+                  </div>
                 );
               })}
-            </div>
+            </section>
 
-            {activeTab === "activity" ? (
-              <div className="p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-bold text-slate-950">{tt("cc.recent_comms", "Recent Communications")}</h2>
-                  <button type="button" onClick={loadOverview} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                    {tt("crm.refresh", "Refresh")}
-                  </button>
-                </div>
-                <div className="overflow-hidden rounded-xl border border-slate-200">
-                  <table className="w-full min-w-[760px] text-left text-sm">
-                    <thead className="bg-slate-900 text-xs uppercase tracking-wide text-white">
-                      <tr>
-                        <Th className="px-4 py-3">Channel</Th>
-                        <Th className="px-4 py-3">Recipient</Th>
-                        <Th className="px-4 py-3">Subject</Th>
-                        <Th className="px-4 py-3">Module</Th>
-                        <Th className="px-4 py-3">Status</Th>
-                        <Th className="px-4 py-3">Date</Th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {(data.recentMessages ?? []).map((row) => (
-                        <tr key={row.id} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-semibold capitalize">{row.channel}</td>
-                          <td className="px-4 py-3">{row.recipient_to || "-"}</td>
-                          <td className="px-4 py-3">{row.subject || "-"}</td>
-                          <td className="px-4 py-3">{row.linked_module || "-"}</td>
-                          <td className="px-4 py-3">
-                            <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">{row.delivery_status}</span>
-                          </td>
-                          <td className="px-4 py-3 text-slate-500">{row.created_at ? new Date(row.created_at).toLocaleString() : "-"}</td>
-                        </tr>
-                      ))}
-                      {!loading && !(data.recentMessages ?? []).length ? (
-                        <tr>
-                          <td className="px-4 py-8 text-center text-slate-500" colSpan={6}>
-                            {tt("cc.no_comms", "No communication records yet.")}
-                          </td>
-                        </tr>
-                      ) : null}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : null}
-
-            {activeTab !== "activity" ? (
-              <div className="grid gap-4 p-5 md:grid-cols-2">
-                {[
-                  [tt("cc.plan_crm", "CRM Pipeline"), tt("cc.plan_crm_desc", "Lead management, customer history, supplier follow-ups and task tracking.")],
-                  [tt("cc.plan_calendar", "Calendar & Appointments"), tt("cc.plan_calendar_desc", "Meeting schedules, reminders, due follow-ups and customer appointments.")],
-                  [tt("cc.plan_campaigns", "Marketing Campaigns"), tt("cc.plan_campaigns_desc", "Email and WhatsApp campaigns with branch and country segmentation.")],
-                  [tt("cc.plan_reports", "Communication Reports"), tt("cc.plan_reports_desc", "Sent messages, failed messages, delivery, read status, campaign and branch reports.")]
-                ].map(([title, description]) => (
-                  <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-950">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      {title}
+            <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                {activeTab === "activity" ? (
+                  <div className="p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-base font-bold text-slate-950">{tt("cc.recent_comms", "Recent Communications")}</h2>
+                      <button type="button" onClick={loadOverview} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                        {tt("crm.refresh", "Refresh")}
+                      </button>
                     </div>
-                    <p className="text-sm leading-6 text-slate-600">{description}</p>
+                    <div className="overflow-hidden rounded-xl border border-slate-200">
+                      <table className="w-full min-w-[760px] text-left text-sm">
+                        <thead className="bg-slate-900 text-xs uppercase tracking-wide text-white">
+                          <tr>
+                            <Th className="px-4 py-3">Channel</Th>
+                            <Th className="px-4 py-3">Recipient</Th>
+                            <Th className="px-4 py-3">Subject</Th>
+                            <Th className="px-4 py-3">Module</Th>
+                            <Th className="px-4 py-3">Status</Th>
+                            <Th className="px-4 py-3">Date</Th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {(data.recentMessages ?? []).map((row) => (
+                            <tr key={row.id} className="hover:bg-slate-50">
+                              <td className="px-4 py-3 font-semibold capitalize">{row.channel}</td>
+                              <td className="px-4 py-3">{row.recipient_to || "-"}</td>
+                              <td className="px-4 py-3">{row.subject || "-"}</td>
+                              <td className="px-4 py-3">{row.linked_module || "-"}</td>
+                              <td className="px-4 py-3">
+                                <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">{row.delivery_status}</span>
+                              </td>
+                              <td className="px-4 py-3 text-slate-500">{row.created_at ? new Date(row.created_at).toLocaleString() : "-"}</td>
+                            </tr>
+                          ))}
+                          {!loading && !(data.recentMessages ?? []).length ? (
+                            <tr>
+                              <td className="px-4 py-8 text-center text-slate-500" colSpan={6}>
+                                {tt("cc.no_comms", "No communication records yet.")}
+                              </td>
+                            </tr>
+                          ) : null}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="grid gap-4 p-5 md:grid-cols-2">
+                    {[
+                      [tt("cc.plan_crm", "CRM Pipeline"), tt("cc.plan_crm_desc", "Lead management, customer history, supplier follow-ups and task tracking.")],
+                      [tt("cc.plan_calendar", "Calendar & Appointments"), tt("cc.plan_calendar_desc", "Meeting schedules, reminders, due follow-ups and customer appointments.")],
+                      [tt("cc.plan_campaigns", "Marketing Campaigns"), tt("cc.plan_campaigns_desc", "Email and WhatsApp campaigns with branch and country segmentation.")],
+                      [tt("cc.plan_reports", "Communication Reports"), tt("cc.plan_reports_desc", "Sent messages, failed messages, delivery, read status, campaign and branch reports.")]
+                    ].map(([title, description]) => (
+                      <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-950">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          {title}
+                        </div>
+                        <p className="text-sm leading-6 text-slate-600">{description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : null}
-          </div>
 
-          <aside className="grid gap-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4 flex items-center gap-2">
-                <Send className="h-5 w-5 text-blue-600" />
-                <h2 className="text-base font-bold text-slate-950">{tt("cc.compose_title", "Compose / Log Communication")}</h2>
-              </div>
-              <div className="grid gap-3">
-                <select
-                  value={messageForm.channel}
-                  onChange={(event) => setMessageForm((prev) => ({ ...prev, channel: event.target.value }))}
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                >
-                  <option value="email">{tt("cc.opt_email", "Email")}</option>
-                  <option value="whatsapp">{tt("cc.opt_whatsapp", "WhatsApp")}</option>
-                  <option value="internal">{tt("cc.opt_internal", "Internal Note")}</option>
-                </select>
-                <input
-                  value={messageForm.to}
-                  onChange={(event) => setMessageForm((prev) => ({ ...prev, to: event.target.value }))}
-                  placeholder={tt("cc.ph_to", "To / WhatsApp number")}
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                />
-                <input
-                  value={messageForm.subject}
-                  onChange={(event) => setMessageForm((prev) => ({ ...prev, subject: event.target.value }))}
-                  placeholder={tt("cc.ph_subject", "Subject")}
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                />
-                <textarea
-                  value={messageForm.body}
-                  onChange={(event) => setMessageForm((prev) => ({ ...prev, body: event.target.value }))}
-                  placeholder={tt("cc.ph_body", "Message body")}
-                  rows={5}
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                />
-                <button type="button" onClick={submitMessage} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700">
-                  {tt("cc.save_comm", "Save Communication")}
-                </button>
-              </div>
-            </div>
+              <aside className="grid gap-5">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Send className="h-5 w-5 text-blue-600" />
+                    <h2 className="text-base font-bold text-slate-950">{tt("cc.compose_title", "Compose / Log Communication")}</h2>
+                  </div>
+                  <div className="grid gap-3">
+                    <select
+                      value={messageForm.channel}
+                      onChange={(event) => setMessageForm((prev) => ({ ...prev, channel: event.target.value }))}
+                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    >
+                      <option value="email">{tt("cc.opt_email", "Email")}</option>
+                      <option value="whatsapp">{tt("cc.opt_whatsapp", "WhatsApp")}</option>
+                      <option value="internal">{tt("cc.opt_internal", "Internal Note")}</option>
+                    </select>
+                    <input
+                      value={messageForm.to}
+                      onChange={(event) => setMessageForm((prev) => ({ ...prev, to: event.target.value }))}
+                      placeholder={tt("cc.ph_to", "To / WhatsApp number")}
+                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    />
+                    <input
+                      value={messageForm.subject}
+                      onChange={(event) => setMessageForm((prev) => ({ ...prev, subject: event.target.value }))}
+                      placeholder={tt("cc.ph_subject", "Subject")}
+                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    />
+                    <textarea
+                      value={messageForm.body}
+                      onChange={(event) => setMessageForm((prev) => ({ ...prev, body: event.target.value }))}
+                      placeholder={tt("cc.ph_body", "Message body")}
+                      rows={5}
+                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    />
+                    <button type="button" onClick={submitMessage} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700">
+                      {tt("cc.save_comm", "Save Communication")}
+                    </button>
+                  </div>
+                </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5 text-violet-600" />
-                <h2 className="text-base font-bold text-slate-950">{tt("cc.quick_crm", "Quick CRM Lead")}</h2>
-              </div>
-              <div className="grid gap-3">
-                <input value={leadForm.leadName} onChange={(event) => setLeadForm((prev) => ({ ...prev, leadName: event.target.value }))} placeholder={tt("cc.ph_lead_name", "Lead name")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <input value={leadForm.companyName} onChange={(event) => setLeadForm((prev) => ({ ...prev, companyName: event.target.value }))} placeholder={tt("cc.ph_company", "Company name")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <input value={leadForm.email} onChange={(event) => setLeadForm((prev) => ({ ...prev, email: event.target.value }))} placeholder={tt("cc.opt_email", "Email")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <input value={leadForm.whatsapp} onChange={(event) => setLeadForm((prev) => ({ ...prev, whatsapp: event.target.value }))} placeholder={tt("cc.opt_whatsapp", "WhatsApp")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <textarea value={leadForm.notes} onChange={(event) => setLeadForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder={tt("cc.ph_lead_notes", "Lead notes")} rows={3} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <button type="button" onClick={submitLead} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-violet-700">
-                  {tt("cc.save_lead", "Save Lead")}
-                </button>
-              </div>
-            </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-violet-600" />
+                    <h2 className="text-base font-bold text-slate-950">{tt("cc.quick_crm", "Quick CRM Lead")}</h2>
+                  </div>
+                  <div className="grid gap-3">
+                    <input value={leadForm.leadName} onChange={(event) => setLeadForm((prev) => ({ ...prev, leadName: event.target.value }))} placeholder={tt("cc.ph_lead_name", "Lead name")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                    <input value={leadForm.companyName} onChange={(event) => setLeadForm((prev) => ({ ...prev, companyName: event.target.value }))} placeholder={tt("cc.ph_company", "Company name")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                    <input value={leadForm.email} onChange={(event) => setLeadForm((prev) => ({ ...prev, email: event.target.value }))} placeholder={tt("cc.opt_email", "Email")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                    <input value={leadForm.whatsapp} onChange={(event) => setLeadForm((prev) => ({ ...prev, whatsapp: event.target.value }))} placeholder={tt("cc.opt_whatsapp", "WhatsApp")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                    <textarea value={leadForm.notes} onChange={(event) => setLeadForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder={tt("cc.ph_lead_notes", "Lead notes")} rows={3} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                    <button type="button" onClick={submitLead} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-violet-700">
+                      {tt("cc.save_lead", "Save Lead")}
+                    </button>
+                  </div>
+                </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-slate-600" />
-                <h2 className="text-base font-bold text-slate-950">{tt("cc.sender_rules", "Sender Rules")}</h2>
-              </div>
-              <p className="text-sm leading-6 text-slate-600">
-                {tt("cc.sender_rules_desc", "Future ERP documents can call the Communication Service to auto-select the official country and branch sender without duplicating logic.")}
-              </p>
-              <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
-                User: <span className="font-semibold text-slate-950">{session?.fullName ?? session?.email ?? "Current user"}</span>
-                <br />
-                Branch: <span className="font-semibold text-slate-950">{sender.displayBranchName ?? "Scope not selected"}</span>
-              </div>
-            </div>
-          </aside>
-        </section>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-slate-600" />
+                    <h2 className="text-base font-bold text-slate-950">{tt("cc.sender_rules", "Sender Rules")}</h2>
+                  </div>
+                  <p className="text-sm leading-6 text-slate-600">
+                    {tt("cc.sender_rules_desc", "Future ERP documents can call the Communication Service to auto-select the official country and branch sender without duplicating logic.")}
+                  </p>
+                  <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+                    User: <span className="font-semibold text-slate-950">{session?.fullName ?? session?.email ?? "Current user"}</span>
+                    <br />
+                    Branch: <span className="font-semibold text-slate-950">{sender.displayBranchName ?? "Scope not selected"}</span>
+                  </div>
+                </div>
+              </aside>
+            </section>
+          </>
+        )}
       </div>
     </div>
   );

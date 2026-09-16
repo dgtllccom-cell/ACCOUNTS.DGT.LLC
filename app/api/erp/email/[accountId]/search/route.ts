@@ -4,7 +4,6 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
-import { simpleParser } from "mailparser";
 
 export const dynamic = "force-dynamic";
 
@@ -113,17 +112,25 @@ export async function GET(
       const results = [];
       for (const uid of uids) {
         try {
-          const message = await client.fetchOne(uid, { source: true });
-          if (message?.source) {
-            const parsed = await simpleParser(message.source as any);
+          const message = await client.fetchOne(uid, { source: true, envelope: true });
+          if (message && typeof message === "object" && "source" in message && message.source) {
+            const raw = message.source.toString();
+            const bodyIndex = raw.indexOf("\r\n\r\n") !== -1 ? raw.indexOf("\r\n\r\n") + 4 : raw.indexOf("\n\n") !== -1 ? raw.indexOf("\n\n") + 2 : -1;
+            const bodyText = bodyIndex !== -1 ? raw.slice(bodyIndex) : "";
+            const headerLines = raw.slice(0, Math.max(0, bodyIndex)).split(/\r?\n/);
+            const subject = message.envelope?.subject || headerLines.find((l) => l.startsWith("Subject:"))?.replace("Subject:", "").trim() || "(no subject)";
+            const from = message.envelope?.from?.[0]?.address || headerLines.find((l) => l.startsWith("From:"))?.replace("From:", "").trim() || "";
+            const to = message.envelope?.to?.[0]?.address || headerLines.find((l) => l.startsWith("To:"))?.replace("To:", "").trim() || "";
+            const date = message.envelope?.date ? new Date(message.envelope.date).toISOString() : new Date().toISOString();
+
             results.push({
               id: `${accountId}-${uid}`,
               uid,
-              from: parsed.from?.text || "",
-              to: parsed.to?.text || "",
-              subject: parsed.subject || "(no subject)",
-              date: parsed.date?.toISOString() || new Date().toISOString(),
-              preview: (parsed.text || "").substring(0, 100)
+              from,
+              to,
+              subject,
+              date,
+              preview: bodyText.slice(0, 100).replace(/\s+/g, " ")
             });
           }
         } catch (err) {

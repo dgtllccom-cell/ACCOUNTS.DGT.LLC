@@ -1,23 +1,20 @@
 # i18n gap matrix — UI dictionary (`lib/i18n/ui.ts`)
 
-_Generated 2026-09-16T19:54:07.000Z by `scripts/i18n-autofill.mts`._
+_Generated 2026-09-16T20:10:12.023Z by `scripts/i18n-autofill.mts`._
 
 Keys per language block: **15810**
 
 | Language | Gaps before | Auto-filled | Gaps remaining |
 |---|--:|--:|--:|
-| UR | 9 | 7 | 2 |
-| AR | 9 | 7 | 2 |
-| FA | 9 | 7 | 2 |
-| PS | 9 | 7 | 2 |
+| UR | 2 | 0 | 2 |
+| AR | 2 | 0 | 2 |
+| FA | 2 | 0 | 2 |
+| PS | 2 | 0 | 2 |
 
 ### Engine breakdown (this run)
 
 | Tier | Count |
 |---|--:|
-| local-phrase | 20 |
-| glossary | 4 |
-| memory | 4 |
 
 ### Unresolved — left in English, a human owes a translation (8)
 

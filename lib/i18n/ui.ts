@@ -45928,6 +45928,8 @@ const ur: Dict = {
   "email_workspace.forward": "فورورد",
   "email_workspace.archive": "رچیوی",
   "email_workspace.delete": "دیلیتی",
+  "email_workspace.draft_saved": "ڈرافٹ کامیابی سے محفوظ ہو گیا",
+  "email_workspace.draft_fetch_failed": "ڈرافٹ لانے میں ناکامی",
 };
 
 const ar: Dict = {
@@ -64663,6 +64665,8 @@ const ar: Dict = {
   "email_workspace.forward": "فورورد",
   "email_workspace.archive": "رتشیوی",
   "email_workspace.delete": "دیلیتی",
+  "email_workspace.draft_saved": "تم حفظ المسودة بنجاح",
+  "email_workspace.draft_fetch_failed": "فشل جلب المسودات",
 };
 
 const fa: Dict = {
@@ -83397,6 +83401,8 @@ const fa: Dict = {
   "email_workspace.forward": "فورورد",
   "email_workspace.archive": "رچیوی",
   "email_workspace.delete": "دیلیتی",
+  "email_workspace.draft_saved": "پیش‌نویس با موفقیت ذخیره شد",
+  "email_workspace.draft_fetch_failed": "خطا در دریافت پیش‌نویس‌ها",
 };
 
 const ps: Dict = {
@@ -102137,6 +102143,8 @@ const ps: Dict = {
   "email_workspace.forward": "فورورد",
   "email_workspace.archive": "رچیوی",
   "email_workspace.delete": "دیلیتی",
+  "email_workspace.draft_saved": "مسوده په بریالیتوب سره خوندي شوه",
+  "email_workspace.draft_fetch_failed": "د مسودو په راوستلو کې تېروتنه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

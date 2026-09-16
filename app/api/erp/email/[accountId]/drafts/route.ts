@@ -4,7 +4,6 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
-import { simpleParser } from "mailparser";
 
 export const dynamic = "force-dynamic";
 
@@ -210,17 +209,25 @@ export async function GET(
       const drafts = [];
       for (const uid of uids) {
         try {
-          const message = await client.fetchOne(uid, { source: true });
-          if (message?.source) {
-            const parsed = await simpleParser(message.source as any);
+          const message = await client.fetchOne(uid, { source: true, envelope: true });
+          if (message && typeof message === "object" && "source" in message && message.source) {
+            const raw = message.source.toString();
+            const bodyIndex = raw.indexOf("\r\n\r\n") !== -1 ? raw.indexOf("\r\n\r\n") + 4 : raw.indexOf("\n\n") !== -1 ? raw.indexOf("\n\n") + 2 : -1;
+            const body = bodyIndex !== -1 ? raw.slice(bodyIndex) : "";
+            const headerLines = raw.slice(0, Math.max(0, bodyIndex)).split(/\r?\n/);
+            const subject = message.envelope?.subject || headerLines.find((l) => l.startsWith("Subject:"))?.replace("Subject:", "").trim() || "(no subject)";
+            const to = message.envelope?.to?.[0]?.address || headerLines.find((l) => l.startsWith("To:"))?.replace("To:", "").trim() || "";
+            const cc = message.envelope?.cc?.[0]?.address || headerLines.find((l) => l.startsWith("Cc:"))?.replace("Cc:", "").trim() || "";
+            const date = message.envelope?.date ? new Date(message.envelope.date).toISOString() : new Date().toISOString();
+
             drafts.push({
               id: `${accountId}-${uid}`,
               uid,
-              subject: parsed.subject || "(no subject)",
-              to: parsed.to?.text || "",
-              cc: parsed.cc?.text || "",
-              body: parsed.text || "",
-              date: parsed.date?.toISOString() || new Date().toISOString()
+              subject,
+              to,
+              cc,
+              body,
+              date
             });
           }
         } catch (err) {

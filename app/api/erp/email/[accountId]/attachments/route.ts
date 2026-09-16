@@ -96,7 +96,7 @@ export async function GET(
         return NextResponse.json({ error: "Message not found" }, { status: 404 });
       }
 
-      const attachments = [];
+      const attachments: Array<{ filename: string; size: number; mimeType: string }> = [];
 
       // Parse MIME structure for attachments
       const parseStructure = (struct: any): void => {
