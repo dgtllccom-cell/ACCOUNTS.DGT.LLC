@@ -8365,6 +8365,7 @@ export type UiKey =
   | "email_messages.col_from"
   | "email_messages.col_subject"
   | "email_messages.col_date"
+  | "email_workspace.title" | "email_workspace.compose" | "email_workspace.inbox" | "email_workspace.sent" | "email_workspace.drafts" | "email_workspace.archived" | "email_workspace.trash" | "email_workspace.starred" | "email_workspace.loading" | "email_workspace.no_messages" | "email_workspace.compose_new" | "email_workspace.recipient" | "email_workspace.subject" | "email_workspace.message_body" | "email_workspace.cancel" | "email_workspace.send"
   | "cbill.title"
   | "cbill.subtitle"
   | "cbill.customer_bill_generated"
@@ -27096,6 +27097,22 @@ const en: Dict = {
   "email_messages.col_from": "From",
   "email_messages.col_subject": "Subject",
   "email_messages.col_date": "Date",
+  "email_workspace.title": "Email",
+  "email_workspace.compose": "Compose",
+  "email_workspace.inbox": "Inbox",
+  "email_workspace.sent": "Sent",
+  "email_workspace.drafts": "Drafts",
+  "email_workspace.archived": "Archived",
+  "email_workspace.trash": "Trash",
+  "email_workspace.starred": "Starred",
+  "email_workspace.loading": "Loading messages...",
+  "email_workspace.no_messages": "No messages in this folder",
+  "email_workspace.compose_new": "Compose New Email",
+  "email_workspace.recipient": "Recipient email",
+  "email_workspace.subject": "Email subject",
+  "email_workspace.message_body": "Message body",
+  "email_workspace.cancel": "Cancel",
+  "email_workspace.send": "Send",
   "cbill.title": "Customer Bill",
   "cbill.subtitle": "Create, review and post shipping customer bills linked directly to customer orders and accounting ledgers.",
   "cbill.customer_bill_generated": "Customer Bill Generated",
