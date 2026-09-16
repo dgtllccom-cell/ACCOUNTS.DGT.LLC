@@ -79,9 +79,9 @@ export async function POST(
 
       // Compose RFC 5322 draft message
       const draftDate = new Date().toUTCString();
-      const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${account.email_address.split('@')[1]}>`;
+      const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${account.emailAddress.split('@')[1]}>`;
 
-      const draftRfc5322 = `From: ${account.email_address}
+      const draftRfc5322 = `From: ${account.emailAddress}
 To: ${validation.data.to}
 ${validation.data.cc ? `Cc: ${validation.data.cc}` : ''}
 ${validation.data.bcc ? `Bcc: ${validation.data.bcc}` : ''}
@@ -103,8 +103,7 @@ ${validation.data.body}`;
 
       return NextResponse.json({
         success: true,
-        messageId,
-        message: "Draft saved to IMAP Drafts folder"
+        messageId
       });
 
     } catch (imapError) {
@@ -238,7 +237,7 @@ export async function GET(
   } catch (error) {
     console.error("Draft fetch error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to fetch drafts" },
+      { error: error instanceof Error ? error.message : "server_error" },
       { status: 500 }
     );
   }

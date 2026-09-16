@@ -104,14 +104,6 @@ export async function PATCH(
 
       await client.logout();
 
-      // Store read status in database (optional local cache)
-      await admin.from("erp_email_read_status").insert({
-        account_id: accountId,
-        message_id: messageId,
-        is_read: validation.data.isRead,
-        updated_at: new Date().toISOString()
-      }).upsert();
-
       return NextResponse.json({
         success: true,
         messageId,

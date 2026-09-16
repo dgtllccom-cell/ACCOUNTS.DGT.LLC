@@ -91,15 +91,14 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
       return ALL_MAILBOXES;
     }
     if (isCountryAdmin) {
-      // Filter by session country or demo Pakistan / UAE
-      return ALL_MAILBOXES.filter(m => m.id !== 'all' && (m.country === 'Pakistan' || m.id === 'dgtllc'));
+      return ALL_MAILBOXES.filter(m => m.country === 'Pakistan' || m.id === 'dgtllc');
     }
     // Branch user: strict single branch
     return ALL_MAILBOXES.filter(m => m.id === 'chaman');
   }, [isSuperAdmin, isCountryAdmin]);
 
-  // Selected Mailbox state
-  const [selectedMailboxId, setSelectedMailboxId] = useState<string>('chaman');
+  // Selected Mailbox state - default to Dubai
+  const [selectedMailboxId, setSelectedMailboxId] = useState<string>('dubai');
 
   // Active folder tab
   const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent' | 'drafts' | 'starred' | 'archive' | 'important' | 'trash'>('inbox');
@@ -107,119 +106,126 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   // Search query
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected email messages
-  const [emails, setEmails] = useState<EmailItem[]>(INITIAL_EMAILS);
-  const [selectedEmailId, setSelectedEmailId] = useState<string>('msg-1');
+  // Selected email messages (Real IMAP data only)
+  const [emails, setEmails] = useState<EmailItem[]>([]);
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [selectedEmailIds, setSelectedEmailIds] = useState<string[]>([]);
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
   // Load real emails from IMAP when mailbox or folder changes
-  useEffect(() => {
-    if (!selectedMailboxId || selectedMailboxId === 'all') {
-      setEmails(INITIAL_EMAILS);
+  const fetchRealEmails = useCallback(async () => {
+    if (!selectedMailboxId) {
+      setEmails([]);
+      setSelectedEmailId(null);
       return;
     }
 
-    const fetchRealEmails = async () => {
-      try {
-        setLoadingEmails(true);
-        setEmailError(null);
+    try {
+      setLoadingEmails(true);
+      setEmailError(null);
 
-        // Get account ID from mailbox name
-        const mailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
-        if (!mailbox) {
-          setEmails([]);
-          return;
-        }
-
-        // Query the IMAP fetch endpoint
-        const response = await fetch(
-          `/api/erp/email/${selectedMailboxId}/fetch?folder=${activeFolder}`,
-          { credentials: 'include' }
-        );
-
-        if (!response.ok) {
-          if (response.status === 403) {
-            setEmailError('Access denied to this mailbox');
-          } else if (response.status === 400) {
-            setEmailError('IMAP password not configured');
-            setEmails(INITIAL_EMAILS);
-            return;
-          } else {
-            setEmailError(`Error: ${response.statusText}`);
-          }
-          setEmails(INITIAL_EMAILS);
-          return;
-        }
-
-        const data = await response.json();
-
-        if (!data.messages || !Array.isArray(data.messages)) {
-          setEmails(INITIAL_EMAILS);
-          return;
-        }
-
-        // Transform API response to EmailItem[]
-        const transformed: EmailItem[] = data.messages.map((msg: any, idx: number) => {
-          const fromEmail = msg.from || 'unknown@example.com';
-          const fromName = fromEmail.split('@')[0] || 'Unknown';
-          const initials = fromName.substring(0, 2).toUpperCase();
-
-          const bgColors = [
-            'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300',
-            'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-950 dark:text-pink-300',
-            'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300',
-            'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300',
-            'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300',
-            'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300'
-          ];
-
-          return {
-            id: msg.id,
-            senderName: fromName.charAt(0).toUpperCase() + fromName.slice(1),
-            senderEmail: fromEmail,
-            recipientEmail: msg.to || mailbox.email,
-            subject: msg.subject || '(no subject)',
-            preview: msg.preview || msg.body?.substring(0, 100) || '...',
-            date: new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            fullDate: new Date(msg.date).toLocaleString(),
-            isRead: msg.isRead !== false,
-            isStarred: msg.isStarred || false,
-            hasAttachment: msg.attachments?.length > 0,
-            folder: activeFolder,
-            avatarInitials: initials,
-            avatarBg: bgColors[idx % bgColors.length],
-            body: msg.body || msg.preview || '(no content)',
-            attachments: msg.attachments?.map((att: any) => ({
-              name: att.name,
-              size: att.size ? `${(att.size / 1024).toFixed(1)} KB` : 'unknown',
-              type: att.type || 'file'
-            }))
-          };
-        });
-
-        setEmails(transformed);
-      } catch (err) {
-        console.error('Failed to load emails:', err);
-        setEmailError(err instanceof Error ? err.message : 'Failed to load emails');
-        setEmails(INITIAL_EMAILS);
-      } finally {
-        setLoadingEmails(false);
+      const mailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
+      if (!mailbox) {
+        setEmails([]);
+        setSelectedEmailId(null);
+        return;
       }
-    };
 
-    fetchRealEmails();
+      const response = await fetch(
+        `/api/erp/email/${selectedMailboxId}/fetch?folder=${activeFolder}`,
+        { credentials: 'include' }
+      );
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          setEmailError('Access denied to this mailbox');
+        } else if (response.status === 400) {
+          setEmailError('IMAP credentials not configured');
+        } else {
+          setEmailError(`Server error (${response.status})`);
+        }
+        setEmails([]);
+        setSelectedEmailId(null);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!data.messages || !Array.isArray(data.messages)) {
+        setEmails([]);
+        setSelectedEmailId(null);
+        return;
+      }
+
+      const transformed: EmailItem[] = data.messages.map((msg: any, idx: number) => {
+        const fromEmail = msg.from || 'unknown@dgt.llc';
+        const fromName = msg.fromName || fromEmail.split('@')[0] || 'Sender';
+        const initials = (fromName.substring(0, 2) || 'EM').toUpperCase();
+
+        const bgColors = [
+          'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300',
+          'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-950 dark:text-pink-300',
+          'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300',
+          'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300',
+          'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300',
+          'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300'
+        ];
+
+        return {
+          id: String(msg.id),
+          senderName: fromName.charAt(0).toUpperCase() + fromName.slice(1),
+          senderEmail: fromEmail,
+          recipientEmail: msg.to || mailbox.email,
+          subject: msg.subject || '(No Subject)',
+          preview: msg.preview || (msg.body ? msg.body.substring(0, 100) : '') || '...',
+          date: msg.date ? new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent',
+          fullDate: msg.date ? new Date(msg.date).toLocaleString() : 'Recent',
+          isRead: msg.isRead !== false,
+          isStarred: msg.isStarred || false,
+          hasAttachment: Boolean(msg.attachments && msg.attachments.length > 0),
+          folder: activeFolder,
+          avatarInitials: initials,
+          avatarBg: bgColors[idx % bgColors.length],
+          body: msg.body || msg.preview || '(Empty message body)',
+          attachments: msg.attachments?.map((att: any) => ({
+            name: att.name || 'attachment',
+            size: att.size ? `${(att.size / 1024).toFixed(1)} KB` : '',
+            type: att.type || 'file'
+          }))
+        };
+      });
+
+      setEmails(transformed);
+      setSelectedEmailId(transformed[0]?.id || null);
+    } catch (err) {
+      console.error('Failed to load emails:', err);
+      setEmailError(err instanceof Error ? err.message : 'Failed to connect to mailbox');
+      setEmails([]);
+      setSelectedEmailId(null);
+    } finally {
+      setLoadingEmails(false);
+    }
   }, [selectedMailboxId, activeFolder]);
+
+  useEffect(() => {
+    fetchRealEmails();
+  }, [fetchRealEmails]);
 
   // Compose Modal State
   const [showCompose, setShowCompose] = useState(false);
-  const [composeFrom, setComposeFrom] = useState('chaman@dgt.llc');
+  const [composeFrom, setComposeFrom] = useState('dubai@dgt.llc');
   const [composeTo, setComposeTo] = useState('');
   const [composeSubject, setComposeSubject] = useState('');
   const [composeBody, setComposeBody] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [composeSuccess, setComposeSuccess] = useState(false);
+
+  // Keep composeFrom in sync with selected mailbox
+  useEffect(() => {
+    const mb = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
+    if (mb) setComposeFrom(mb.email);
+  }, [selectedMailboxId]);
 
   // Inline Quick Reply state
   const [replyText, setReplyText] = useState('');
@@ -229,48 +235,33 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   // Sync selected mailbox with available list
   useEffect(() => {
     if (!availableMailboxes.some(m => m.id === selectedMailboxId)) {
-      setSelectedMailboxId(availableMailboxes[0]?.id || 'chaman');
+      setSelectedMailboxId(availableMailboxes[0]?.id || 'dubai');
     }
   }, [availableMailboxes, selectedMailboxId]);
 
-  // Filtered emails based on Mailbox, Folder & Search
+  // Filtered emails based on search query
   const filteredEmails = useMemo(() => {
-    return emails.filter(email => {
-      // Mailbox filter (if not 'all')
-      if (selectedMailboxId !== 'all') {
-        const mb = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
-        if (mb && email.recipientEmail !== mb.email && !email.senderEmail.includes(mb.id)) {
-          // Allow message if recipient or sender matches mailbox
-          if (email.recipientEmail !== mb.email) return false;
-        }
-      }
+    if (!searchQuery.trim()) return emails;
+    const q = searchQuery.toLowerCase();
+    return emails.filter(email =>
+      email.senderName.toLowerCase().includes(q) ||
+      email.subject.toLowerCase().includes(q) ||
+      email.preview.toLowerCase().includes(q) ||
+      email.body.toLowerCase().includes(q)
+    );
+  }, [emails, searchQuery]);
 
-      // Folder filter
-      if (activeFolder === 'starred') {
-        if (!email.isStarred) return false;
-      } else if (email.folder !== activeFolder && activeFolder !== 'inbox') {
-        return false;
-      }
-
-      // Search filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const match =
-          email.senderName.toLowerCase().includes(q) ||
-          email.subject.toLowerCase().includes(q) ||
-          email.preview.toLowerCase().includes(q) ||
-          email.body.toLowerCase().includes(q);
-        if (!match) return false;
-      }
-
-      return true;
-    });
-  }, [emails, selectedMailboxId, activeFolder, searchQuery]);
+  // Dynamic counts for header and folder badges
+  const unreadCount = useMemo(() => emails.filter(e => !e.isRead).length, [emails]);
+  const starredCount = useMemo(() => emails.filter(e => e.isStarred).length, [emails]);
+  const attachmentCount = useMemo(() => emails.filter(e => e.hasAttachment).length, [emails]);
 
   // Active email object
   const activeEmail = useMemo(() => {
+    if (!emails.length) return null;
     return emails.find(e => e.id === selectedEmailId) || filteredEmails[0] || null;
   }, [emails, selectedEmailId, filteredEmails]);
+
 
   // Toggle Star handler
   const handleToggleStar = (id: string, e: React.MouseEvent) => {
@@ -298,34 +289,29 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   };
 
   // Send Compose Email
+  // Send Compose Email via real API
   const handleSendCompose = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!composeTo || !composeSubject) return;
 
     setIsSending(true);
     try {
-      // Simulate real send + append to state
-      await new Promise(r => setTimeout(r, 600));
+      const response = await fetch(`/api/erp/email/${selectedMailboxId}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: composeTo,
+          subject: composeSubject,
+          text: composeBody,
+          html: `<div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">${composeBody.replace(/\n/g, '<br/>')}</div>`
+        })
+      });
 
-      const newEmail: EmailItem = {
-        id: `msg-${Date.now()}`,
-        senderName: session?.fullName || 'Asmatullah (Super Admin)',
-        senderEmail: composeFrom,
-        recipientEmail: composeTo,
-        subject: composeSubject,
-        preview: composeBody.slice(0, 80) + '...',
-        date: 'Just now',
-        fullDate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString(),
-        isRead: true,
-        isStarred: false,
-        hasAttachment: false,
-        folder: 'sent',
-        avatarInitials: 'AA',
-        avatarBg: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300',
-        body: composeBody
-      };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to send email');
+      }
 
-      setEmails(prev => [newEmail, ...prev]);
       setComposeSuccess(true);
       setTimeout(() => {
         setComposeSuccess(false);
@@ -333,58 +319,55 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
         setComposeTo('');
         setComposeSubject('');
         setComposeBody('');
+        fetchRealEmails();
       }, 1000);
-    } catch {
-      // Handle error
+    } catch (err: any) {
+      alert(err.message || 'Error sending email. Please check configuration.');
     } finally {
       setIsSending(false);
     }
   };
 
-  // Send Inline Quick Reply
+  // Send Inline Quick Reply via real API
   const handleSendReply = async () => {
     if (!replyText.trim() || !activeEmail) return;
     setIsReplying(true);
-    await new Promise(r => setTimeout(r, 500));
+    try {
+      await fetch(`/api/erp/email/${selectedMailboxId}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: activeEmail.senderEmail,
+          subject: activeEmail.subject.startsWith('Re:') ? activeEmail.subject : `Re: ${activeEmail.subject}`,
+          text: replyText,
+          html: `<div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">${replyText.replace(/\n/g, '<br/>')}</div>`
+        })
+      });
 
-    const replyEmail: EmailItem = {
-      id: `msg-${Date.now()}`,
-      senderName: session?.fullName || 'Asmatullah (Super Admin)',
-      senderEmail: activeEmail.recipientEmail,
-      recipientEmail: activeEmail.senderEmail,
-      subject: `Re: ${activeEmail.subject.replace(/^Re:\s*/i, '')}`,
-      preview: replyText.slice(0, 80) + '...',
-      date: 'Just now',
-      fullDate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString(),
-      isRead: true,
-      isStarred: false,
-      hasAttachment: false,
-      folder: 'sent',
-      avatarInitials: 'AA',
-      avatarBg: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300',
-      body: replyText
-    };
-
-    setEmails(prev => [replyEmail, ...prev]);
-    setReplyText('');
-    setReplyExpanded(false);
-    setIsReplying(false);
+      setReplyText('');
+      setReplyExpanded(false);
+      fetchRealEmails();
+    } catch (err) {
+      console.error('Quick reply error:', err);
+    } finally {
+      setIsReplying(false);
+    }
   };
 
-  const currentMailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId) || ALL_MAILBOXES[1];
+  const currentMailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId) || ALL_MAILBOXES[0];
 
   return (
-    <div dir={s.dir} className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-6 flex flex-col gap-5">
+    <div dir={s.dir} className="bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-5 flex flex-col gap-4">
       {/* ========================================================================= */}
-      {/* 1. TOP HEADER SECTION & METRICS BAR                                        */}
+      {/* 1. TOP HEADER SECTION & DYNAMIC METRICS BAR                               */}
       {/* ========================================================================= */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
         {/* Left Title & Branch Select */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                {s.t('email_title', 'Email')}
+              <h1 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                {s.t('email_title', 'Email Workspace')}
               </h1>
               {isSuperAdmin && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800">
@@ -405,31 +388,22 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 </span>
               )}
             </div>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {s.t('email_subtitle', 'Manage your business emails across all branches')}
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {s.t('email_subtitle', 'Live multi-branch business email accounts (Titan IMAP/SMTP)')}
             </p>
           </div>
 
-          {/* Select Mailbox / Branch Dropdown with Red Pointer Badge */}
-          <div className="relative">
-            {/* Red Tooltip / Pointer Badge */}
-            <div className="absolute -top-3.5 left-6 z-10 flex flex-col items-center pointer-events-none">
-              <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm tracking-wide animate-pulse">
-                Select Branch Email
-              </span>
-              <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-red-600"></div>
-            </div>
-
-            <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-              Select Mailbox / Branch
+          {/* Select Mailbox / Branch Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              Mailbox:
             </label>
-
             <div className="relative">
               <select
                 value={selectedMailboxId}
                 onChange={e => setSelectedMailboxId(e.target.value)}
                 disabled={isBranchUser}
-                className="w-72 md:w-80 pl-9 pr-8 py-2 text-xs md:text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-800/80 text-slate-900 dark:text-white shadow-sm hover:border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 appearance-none cursor-pointer transition-all"
+                className="w-64 sm:w-72 pl-9 pr-8 py-2 text-xs md:text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs hover:border-slate-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 appearance-none cursor-pointer transition-all"
               >
                 {availableMailboxes.map(mb => (
                   <option key={mb.id} value={mb.id}>
@@ -443,42 +417,30 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
           </div>
         </div>
 
-        {/* Metric Cards Row */}
+        {/* Dynamic Metric Cards Row */}
         <div className="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0">
           {/* Total */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-sm">
-            <div className="text-lg font-bold text-slate-900 dark:text-white">125</div>
+          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-xs">
+            <div className="text-lg font-bold text-slate-900 dark:text-white">{emails.length}</div>
             <div className="text-[11px] font-medium text-slate-500">Total</div>
           </div>
 
           {/* Unread */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-sm flex flex-col items-center">
+          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-xs flex flex-col items-center">
             <Mail className="w-4 h-4 text-red-500 mb-0.5" />
-            <div className="text-xs font-bold text-red-600">Unread (18)</div>
-          </div>
-
-          {/* Sent */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-sm">
-            <div className="text-lg font-bold text-emerald-600">92</div>
-            <div className="text-[11px] font-medium text-slate-500">Sent</div>
+            <div className="text-xs font-bold text-red-600">Unread ({unreadCount})</div>
           </div>
 
           {/* Starred */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-sm">
-            <div className="text-lg font-bold text-teal-600">74</div>
+          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-xs">
+            <div className="text-lg font-bold text-teal-600">{starredCount}</div>
             <div className="text-[11px] font-medium text-slate-500">Starred</div>
           </div>
 
-          {/* Replied */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3 py-2 text-center min-w-[70px] shadow-sm flex flex-col items-center">
-            <CornerUpLeft className="w-4 h-4 text-blue-500 mb-0.5" />
-            <div className="text-[11px] font-medium text-slate-500">Replied</div>
-          </div>
-
-          {/* Pending */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3 py-2 text-center min-w-[70px] shadow-sm flex flex-col items-center">
-            <Clock className="w-4 h-4 text-amber-500 mb-0.5" />
-            <div className="text-[11px] font-medium text-slate-500">Pending</div>
+          {/* Files / Attachments */}
+          <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-center min-w-[70px] shadow-xs">
+            <div className="text-lg font-bold text-blue-600">{attachmentCount}</div>
+            <div className="text-[11px] font-medium text-slate-500">Files</div>
           </div>
         </div>
       </div>
@@ -486,7 +448,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
       {/* ========================================================================= */}
       {/* 2. MAIN 3-COLUMN EMAIL WORKSPACE                                          */}
       {/* ========================================================================= */}
-      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row min-h-[700px]">
+      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden flex flex-col md:flex-row min-h-[700px]">
         {/* ----------------------------------------------------------------------- */}
         {/* COLUMN 1: NAVIGATION & MAILBOXES LIST (WIDTH: 260px)                    */}
         {/* ----------------------------------------------------------------------- */}
@@ -515,9 +477,11 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <Inbox className="w-4 h-4" />
                 <span>{s.t('inbox', 'Inbox')}</span>
               </div>
-              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                18
-              </span>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
             </button>
 
             {/* Sent */}
@@ -533,7 +497,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <Send className="w-4 h-4" />
                 <span>{s.t('sent', 'Sent')}</span>
               </div>
-              <span className="text-slate-400 text-xs">92</span>
             </button>
 
             {/* Drafts */}
@@ -549,7 +512,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <FileText className="w-4 h-4" />
                 <span>{s.t('drafts', 'Drafts')}</span>
               </div>
-              <span className="text-slate-400 text-xs">5</span>
             </button>
 
             {/* Starred */}
@@ -565,7 +527,9 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <Star className="w-4 h-4 text-amber-500" />
                 <span>{s.t('starred', 'Starred')}</span>
               </div>
-              <span className="text-slate-400 text-xs">12</span>
+              {starredCount > 0 && (
+                <span className="text-amber-500 text-xs font-bold">{starredCount}</span>
+              )}
             </button>
 
             {/* Archive */}
@@ -581,7 +545,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <Archive className="w-4 h-4" />
                 <span>{s.t('archive', 'Archive')}</span>
               </div>
-              <span className="text-slate-400 text-xs">38</span>
             </button>
 
             {/* Important */}
@@ -597,7 +560,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <Mail className="w-4 h-4 text-indigo-500" />
                 <span>{s.t('important', 'Important')}</span>
               </div>
-              <span className="text-slate-400 text-xs">7</span>
             </button>
 
             {/* Trash */}
@@ -613,7 +575,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <Trash2 className="w-4 h-4" />
                 <span>{s.t('trash', 'Trash')}</span>
               </div>
-              <span className="text-slate-400 text-xs">3</span>
             </button>
           </div>
 
@@ -628,7 +589,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
 
             <div className="space-y-1">
               {availableMailboxes
-                .filter(m => m.id !== 'all')
                 .map(mb => {
                   const isSelected = selectedMailboxId === mb.id;
                   return (
@@ -637,7 +597,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                       onClick={() => setSelectedMailboxId(mb.id)}
                       className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all ${
                         isSelected
-                          ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-semibold border border-red-200 dark:border-red-900/50 shadow-sm'
+                          ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-semibold border border-red-200 dark:border-red-900/50 shadow-xs'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
@@ -645,9 +605,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                         <Mail className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-red-600' : 'text-slate-400'}`} />
                         <span className="truncate">{mb.email}</span>
                       </div>
-                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-red-500 text-white' : 'text-slate-400'}`}>
-                        {mb.count}
-                      </span>
+                      <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-red-500 ring-2 ring-red-200' : 'bg-slate-300 dark:bg-slate-700'}`} />
                     </button>
                   );
                 })}
@@ -665,7 +623,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
               <button
                 onClick={handleSelectAll}
                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
-                title="Select All"
+                title={s.t('select_all', 'Select All')}
               >
                 {selectedEmailIds.length > 0 && selectedEmailIds.length === filteredEmails.length ? (
                   <CheckSquare className="w-4 h-4 text-red-600" />
@@ -674,15 +632,15 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 )}
               </button>
               <button
-                onClick={() => {}}
+                onClick={() => fetchRealEmails()}
                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
-                title="Refresh"
+                title={s.t('refresh', 'Refresh')}
               >
-                <RotateCw className="w-4 h-4" />
+                <RotateCw className={`w-4 h-4 ${loadingEmails ? 'animate-spin text-red-600' : ''}`} />
               </button>
               <div className="relative">
                 <button className="flex items-center gap-1 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
-                  <span>More</span>
+                  <span>{s.t('more', 'More')}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </button>
               </div>
@@ -703,10 +661,40 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
 
           {/* Scrollable Email List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-            {filteredEmails.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 text-xs">
-                <Mail className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p>{s.t('no_emails_found', 'No emails in this mailbox folder')}</p>
+            {loadingEmails ? (
+              <div className="p-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center">
+                <RotateCw className="w-6 h-6 mx-auto mb-2 text-red-600 animate-spin" />
+                <p className="font-semibold text-slate-600 dark:text-slate-300">{s.t('connecting_mail', 'Connecting to mail server...')}</p>
+                <p className="text-[11px] text-slate-400 mt-1">Fetching live emails for {currentMailbox.email}</p>
+              </div>
+            ) : emailError ? (
+              <div className="p-8 text-center text-xs flex flex-col items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/50 flex items-center justify-center text-red-600 mb-2">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <p className="font-bold text-red-600 dark:text-red-400">{emailError}</p>
+                <p className="text-[11px] text-slate-400 mt-1 max-w-[220px]">
+                  Unable to load emails for {currentMailbox.email}.
+                </p>
+                <button
+                  onClick={() => fetchRealEmails()}
+                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  <span>{s.t('retry', 'Retry')}</span>
+                </button>
+              </div>
+            ) : filteredEmails.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
+                  <Inbox className="w-5 h-5" />
+                </div>
+                <p className="font-semibold text-slate-700 dark:text-slate-300">
+                  {searchQuery.trim() ? 'No matching emails found' : 'No emails in this mailbox folder'}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Folder is empty for {currentMailbox.email}
+                </p>
               </div>
             ) : (
               filteredEmails.map(item => {
@@ -799,32 +787,32 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Reply className="w-3.5 h-3.5" />
-                    <span>Reply</span>
+                    <span>{s.t('reply', 'Reply')}</span>
                   </button>
                   <button
                     onClick={() => setReplyExpanded(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <ReplyAll className="w-3.5 h-3.5" />
-                    <span>Reply All</span>
+                    <span>{s.t('reply_all', 'Reply All')}</span>
                   </button>
                   <button
                     onClick={() => setShowCompose(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Forward className="w-3.5 h-3.5" />
-                    <span>Forward</span>
+                    <span>{s.t('forward', 'Forward')}</span>
                   </button>
                 </div>
 
                 <div className="flex items-center gap-1">
                   <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <Archive className="w-3.5 h-3.5" />
-                    <span>Archive</span>
+                    <span>{s.t('archive', 'Archive')}</span>
                   </button>
                   <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
                     <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                    <span>Delete</span>
+                    <span>{s.t('delete', 'Delete')}</span>
                   </button>
                   <button className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
                     <MoreHorizontal className="w-4 h-4" />
@@ -890,7 +878,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                     </span>
                     <button className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700">
                       <Download className="w-3.5 h-3.5" />
-                      <span>Download All</span>
+                      <span>{s.t('download_all', 'Download All')}</span>
                     </button>
                   </div>
 
@@ -934,7 +922,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                         onClick={() => setReplyExpanded(true)}
                         className="w-full p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-400 cursor-pointer hover:border-slate-300 transition-colors"
                       >
-                        Click to reply or forward...
+                        {s.t('click_to_reply', 'Click to reply or forward...')}
                       </div>
                     ) : (
                       <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-800/50 space-y-3">
@@ -945,7 +933,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                           rows={4}
                           value={replyText}
                           onChange={e => setReplyText(e.target.value)}
-                          placeholder="Type your response here..."
+                          placeholder={s.t('type_response', 'Type your response here...')}
                           className="w-full p-2.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-red-500/20"
                         />
                         <div className="flex items-center justify-between pt-1">
@@ -953,7 +941,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                             onClick={() => setReplyExpanded(false)}
                             className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 font-medium"
                           >
-                            Cancel
+                            {s.t('cancel', 'Cancel')}
                           </button>
                           <button
                             onClick={handleSendReply}
@@ -961,7 +949,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                             className="flex items-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
                           >
                             <SendHorizontal className="w-3.5 h-3.5" />
-                            <span>{isReplying ? 'Sending...' : 'Send Reply'}</span>
+                            <span>{isReplying ? s.t('sending', 'Sending...') : s.t('send_reply', 'Send Reply')}</span>
                           </button>
                         </div>
                       </div>
@@ -979,18 +967,6 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 3. BOTTOM RED BANNER (EXACTLY AS IN MOCKUP)                              */}
-      {/* ========================================================================= */}
-      <div className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white py-3 px-6 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-center text-xs md:text-sm font-bold tracking-wide">
-        <span>Modern ERP Email System for All Branches</span>
-        <span className="hidden sm:inline opacity-60">|</span>
-        <span>Multi-Language</span>
-        <span className="hidden sm:inline opacity-60">|</span>
-        <span>Role-Based Access</span>
-        <span className="hidden sm:inline opacity-60">|</span>
-        <span>Professional Design</span>
-      </div>
 
       {/* ========================================================================= */}
       {/* 4. COMPOSE NEW EMAIL MODAL                                                */}
@@ -1057,11 +1033,11 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
 
               {/* Subject */}
               <div className="flex items-center gap-3">
-                <label className="text-xs font-bold text-slate-500 w-12 text-right">Subject:</label>
+                <label className="text-xs font-bold text-slate-500 w-12 text-right">{s.t('subject', 'Subject')}:</label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter email subject..."
+                  placeholder={s.t('enter_subject', 'Enter email subject...')}
                   value={composeSubject}
                   onChange={e => setComposeSubject(e.target.value)}
                   className="flex-1 px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 font-medium focus:ring-2 focus:ring-red-500/20"
@@ -1073,7 +1049,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <textarea
                   rows={8}
                   required
-                  placeholder="Write your email message here..."
+                  placeholder={s.t('write_message', 'Write your email message here...')}
                   value={composeBody}
                   onChange={e => setComposeBody(e.target.value)}
                   className="w-full p-3 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 font-normal focus:ring-2 focus:ring-red-500/20"
@@ -1085,7 +1061,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <button
                   type="button"
                   className="p-2 text-slate-400 hover:text-slate-600 rounded-xl border border-slate-200 dark:border-slate-700"
-                  title="Attach File"
+                  title={s.t('attach_file', 'Attach File')}
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
@@ -1096,7 +1072,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                     onClick={() => setShowCompose(false)}
                     className="px-4 py-2 text-xs text-slate-600 font-semibold hover:bg-slate-100 rounded-xl"
                   >
-                    Discard
+                    {s.t('discard', 'Discard')}
                   </button>
                   <button
                     type="submit"
@@ -1104,7 +1080,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                     className="flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{isSending ? 'Sending...' : 'Send Message'}</span>
+                    <span>{isSending ? s.t('sending', 'Sending...') : s.t('send_message', 'Send Message')}</span>
                   </button>
                 </div>
               </div>

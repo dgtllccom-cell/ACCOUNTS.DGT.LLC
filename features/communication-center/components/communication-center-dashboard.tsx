@@ -68,7 +68,7 @@ export function CommunicationCenterDashboard({ session }: Props) {
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
-  const [activeTab, setActiveTab] = useState("activity");
+  const [activeTab, setActiveTab] = useState("email");
   const [data, setData] = useState<DashboardData>({});
   const [loading, setLoading] = useState(true);
   const [messageForm, setMessageForm] = useState({
@@ -219,7 +219,7 @@ export function CommunicationCenterDashboard({ session }: Props) {
                 </div>
               </div>
             </header>
-          <>
+
             <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               {cards.map((card) => {
                 const Icon = card.icon;
