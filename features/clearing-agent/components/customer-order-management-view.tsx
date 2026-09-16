@@ -1628,6 +1628,15 @@ export function CustomerOrderManagementView() {
     return customers.find((c) => c.id === formData.customer_id);
   }, [customers, formData.customer_id]);
 
+  const selectedAccountInfo = useMemo(() => {
+    return accounts.find(
+      (a) =>
+        (formData.customer_id && a.customer_id === formData.customer_id) ||
+        a.id === formData.customer_id ||
+        (selectedCustomerInfo && a.id === (selectedCustomerInfo as any).account_id)
+    );
+  }, [accounts, formData.customer_id, selectedCustomerInfo]);
+
   const selectedSupplierInfo = useMemo(() => {
     const sId = partySelections.supplier?.customerId || partySelections.exporter?.customerId;
     return customers.find((c) => c.id === sId);
@@ -2400,11 +2409,11 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
-          {/* Main 2-Column Content Grid: Left Inputs (7 cols) + Right Live Report (5 cols) */}
+          {/* Main 2-Column Content Grid: Left Inputs (5 cols - Compact) + Right Live Report (7 cols - Expanded) */}
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
             {/* LEFT COLUMN: The 4-Step Form Cards */}
-            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-7">
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 {currentStep === 1 && (
                   <Step1BookingCustomer
                     lang={lang}
@@ -2572,8 +2581,8 @@ export function CustomerOrderManagementView() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: The Live Customer Order Report Panel (Screenshots 1, 2, 3) */}
-            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5 xl:sticky xl:top-4 h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
+            {/* RIGHT COLUMN: The Live Customer Order Report Panel (Enlarged 7-cols) */}
+            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
               {/* Live Report Card Container */}
               <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 {/* Header with Title and Live Badge */}
@@ -2597,67 +2606,101 @@ export function CustomerOrderManagementView() {
                   </span>
                 </div>
 
-                {/* Top 3 Party Cards (Customer, Shipper/Supplier, Buyer) */}
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  {/* Card 1: Customer */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/40 space-y-1">
-                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{tt("customer", "Customer")}</span>
+                {/* Prominent Customer Account Live Report Header Card */}
+                <div className="rounded-xl border border-blue-200/80 bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-white p-3.5 dark:border-blue-900/60 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900 space-y-3 shadow-2xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-100 pb-2.5 dark:border-blue-900/40">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-xs shadow-xs">
+                        <Users className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                            {tt("customer", "Customer Account Live Report")}
+                          </span>
+                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                            {selectedAccountInfo?.code ? "ACC" : "CST"}
+                          </span>
+                        </div>
+                        <div className="text-sm font-black text-slate-900 dark:text-white">
+                          {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || "— Select Customer Account —"}
+                        </div>
+                      </div>
                     </div>
-                    <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                      {formData.customer_name || "Abdul Mateen Khan"}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono">
-                      {selectedCustomerInfo?.person_code || "PR-0000106"}
-                    </div>
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400 truncate">
-                      {selectedCustomerInfo?.mobile || "+92 300 123 4567"}
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 truncate">
-                      {selectedCustomerInfo?.email || "abdul.mateen@traders.com"}
+
+                    {/* Live Ledger Balance */}
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                      <CreditCard className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-slate-400 leading-none">Live Ledger Balance</div>
+                        <div className={`font-black font-mono text-sm leading-tight ${
+                          selectedAccountInfo?.current_balance != null && Number(selectedAccountInfo.current_balance) < 0
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-emerald-700 dark:text-emerald-400"
+                        }`}>
+                          {selectedAccountInfo?.current_balance != null
+                            ? `${selectedAccountInfo.currency || ""} ${Number(selectedAccountInfo.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "0.00"}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Card 2: Shipper / Supplier / Order Party */}
-                  <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/20 space-y-1">
-                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                      <Building2 className="h-3.5 w-3.5" />
-                      <span className="truncate">{tt("party_shipper_supplier", "Shipper / Supplier")}</span>
+                  {/* Customer Meta Badges in 4 Columns */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Account Code</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
+                        {selectedAccountInfo?.code || selectedCustomerInfo?.person_code || "—"}
+                      </span>
                     </div>
-                    <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                      {formData.exporter_name || partySelections.supplier?.companyName || "Golden Grains Trading LLC"}
+
+                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Contact Phone</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
+                        {selectedCustomerInfo?.mobile || selectedCustomerInfo?.contact_person || "—"}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-500 font-mono">
-                      {selectedSupplierInfo?.person_code || "SUP-0000243"}
+
+                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Email Address</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
+                        {selectedCustomerInfo?.email || "—"}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400 truncate">
-                      {selectedSupplierInfo?.mobile || "+971 4 345 6789"}
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 truncate">
-                      {selectedSupplierInfo?.email || "sales@goldengrains.ae"}
+
+                    <div className="rounded-lg border border-slate-200/80 bg-white/90 p-2 dark:border-slate-800 dark:bg-slate-850">
+                      <span className="text-[9px] font-bold uppercase text-slate-400 block">Country & City</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
+                        {selectedCustomerInfo?.country_name || "—"} {selectedCustomerInfo?.city_name ? `(${selectedCustomerInfo.city_name})` : ""}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Card 3: Buyer */}
-                  <div className="rounded-xl border border-sky-100 bg-sky-50/30 p-2.5 dark:border-sky-900/40 dark:bg-sky-950/20 space-y-1">
-                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{tt("party_buyer", "Buyer")}</span>
+                  {/* Secondary Related Parties if set */}
+                  {(partySelections.supplier?.companyName || partySelections.buyer?.companyName) ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-blue-100/60 dark:border-blue-900/30 text-xs">
+                      {partySelections.supplier?.companyName ? (
+                        <div className="flex items-center gap-2 rounded-lg bg-white/70 p-1.5 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-800">
+                          <Building2 className="h-3 w-3 text-purple-600 shrink-0" />
+                          <div className="truncate">
+                            <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Shipper / Supplier</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.supplier.companyName}</span>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {partySelections.buyer?.companyName ? (
+                        <div className="flex items-center gap-2 rounded-lg bg-white/70 p-1.5 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-800">
+                          <Users className="h-3 w-3 text-sky-600 shrink-0" />
+                          <div className="truncate">
+                            <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Buyer</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.buyer.companyName}</span>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
-                    <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                      {formData.buyer_name || formData.importer_name || partySelections.buyer?.companyName || "Fresh Foods Importers"}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono">
-                      {selectedBuyerInfo?.person_code || "BUY-0000233"}
-                    </div>
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400 truncate">
-                      {selectedBuyerInfo?.mobile || "+92 21 987 6543"}
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 truncate">
-                      {selectedBuyerInfo?.email || "procurement@freshfoods.com"}
-                    </div>
-                  </div>
+                  ) : null}
                 </div>
 
                 {/* Movement / Route Summary Card */}
@@ -3361,7 +3404,7 @@ function Step1BookingCustomer({
           {/* ========================================================================= */}
           {/* BL ENTRY STYLE: 1) PARTIES, BOOKING & MOVEMENT                             */}
           {/* ========================================================================= */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-black text-[11px]">
