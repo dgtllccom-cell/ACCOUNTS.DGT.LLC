@@ -101,8 +101,10 @@ Content-Type: text/plain; charset=utf-8
 
 ${validation.data.body}`;
 
-      // Append to Drafts folder with \Draft flag
-      await client.append("[Gmail]/Drafts", draftRfc5322, ["\\Draft"]);
+      // Append to Drafts folder with \Draft flag (Titan uses "Drafts" not "[Gmail]/Drafts")
+      await client.append("Drafts", draftRfc5322, ["\\Draft"]).catch(() =>
+        client.append("[Gmail]/Drafts", draftRfc5322, ["\\Draft"]) // Gmail fallback
+      );
 
       await client.logout();
 
@@ -195,11 +197,11 @@ export async function GET(
     try {
       await client.connect();
 
-      // Open Drafts folder (try Gmail first, fallback to standard)
+      // Open Drafts folder (Titan uses "Drafts", Gmail uses "[Gmail]/Drafts")
       try {
-        await client.mailboxOpen("[Gmail]/Drafts");
-      } catch {
         await client.mailboxOpen("Drafts");
+      } catch {
+        await client.mailboxOpen("[Gmail]/Drafts");
       }
 
       // Search for all messages

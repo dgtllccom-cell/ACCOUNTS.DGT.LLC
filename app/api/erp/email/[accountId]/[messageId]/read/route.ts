@@ -80,14 +80,14 @@ export async function PATCH(
     try {
       await client.connect();
 
-      // Map folder name to IMAP mailbox
+      // Map folder name to IMAP mailbox (Titan uses simple folder names)
       const folderMap: Record<string, string> = {
         inbox: "INBOX",
-        sent: "[Gmail]/Sent Mail",
-        drafts: "[Gmail]/Drafts",
-        trash: "[Gmail]/Trash",
-        archived: "[Gmail]/All Mail",
-        starred: "[Gmail]/Starred"
+        sent: "Sent",
+        drafts: "Drafts",
+        trash: "Trash",
+        archived: "Archive",
+        spam: "Spam"
       };
 
       const mailboxName = folderMap[validation.data.folder] || "INBOX";

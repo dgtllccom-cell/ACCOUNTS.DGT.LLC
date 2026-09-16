@@ -84,11 +84,11 @@ export async function GET(
 
       const folderMap: Record<string, string> = {
         inbox: "INBOX",
-        sent: "[Gmail]/Sent Mail",
-        drafts: "[Gmail]/Drafts",
-        trash: "[Gmail]/Trash",
-        archived: "[Gmail]/All Mail",
-        starred: "[Gmail]/Starred"
+        sent: "Sent",
+        drafts: "Drafts",
+        trash: "Trash",
+        archived: "Archive",
+        spam: "Spam"
       };
 
       const mailboxName = folderMap[folder] || "INBOX";

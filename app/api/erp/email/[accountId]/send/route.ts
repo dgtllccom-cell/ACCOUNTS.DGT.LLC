@@ -133,7 +133,10 @@ Content-Type: text/plain; charset=utf-8
 
 ${validation.data.body}`;
 
-        await imapClient.append("[Gmail]/Sent Mail", sentRfc5322, ["\Seen"]);
+        // Append to Sent folder (Titan uses "Sent" not "[Gmail]/Sent Mail")
+        await imapClient.append("Sent", sentRfc5322, ["\\Seen"]).catch(() =>
+          imapClient.append("[Gmail]/Sent Mail", sentRfc5322, ["\\Seen"])
+        );
         await imapClient.logout();
       } catch (imapErr) {
         console.error("Failed to append to sent folder:", imapErr);

@@ -82,20 +82,20 @@ export async function PATCH(
 
       const folderMap: Record<string, string> = {
         inbox: "INBOX",
-        sent: "[Gmail]/Sent Mail",
-        drafts: "[Gmail]/Drafts",
-        trash: "[Gmail]/Trash",
-        archived: "[Gmail]/All Mail",
-        starred: "[Gmail]/Starred"
+        sent: "Sent",
+        drafts: "Drafts",
+        trash: "Trash",
+        archived: "Archive",
+        spam: "Spam"
       };
 
       const fromMailbox = folderMap[validation.data.fromFolder] || validation.data.fromFolder;
       let toMailbox = "";
 
       if (validation.data.action === "archive") {
-        toMailbox = "[Gmail]/All Mail";
+        toMailbox = "Archive";
       } else if (validation.data.action === "trash") {
-        toMailbox = "[Gmail]/Trash";
+        toMailbox = "Trash";
       } else if (validation.data.action === "restore") {
         toMailbox = "INBOX";
       }
