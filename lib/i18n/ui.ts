@@ -8365,7 +8365,7 @@ export type UiKey =
   | "email_messages.col_from"
   | "email_messages.col_subject"
   | "email_messages.col_date"
-  | "email_workspace.title" | "email_workspace.compose" | "email_workspace.inbox" | "email_workspace.sent" | "email_workspace.drafts" | "email_workspace.archived" | "email_workspace.trash" | "email_workspace.starred" | "email_workspace.loading" | "email_workspace.no_messages" | "email_workspace.compose_new" | "email_workspace.recipient" | "email_workspace.subject" | "email_workspace.message_body" | "email_workspace.cancel" | "email_workspace.send"
+  | "email_workspace.title" | "email_workspace.compose" | "email_workspace.inbox" | "email_workspace.sent" | "email_workspace.drafts" | "email_workspace.archived" | "email_workspace.trash" | "email_workspace.starred" | "email_workspace.loading" | "email_workspace.no_messages" | "email_workspace.compose_new" | "email_workspace.recipient" | "email_workspace.subject" | "email_workspace.message_body" | "email_workspace.cancel" | "email_workspace.send" | "email_workspace.cc" | "email_workspace.bcc" | "email_workspace.sending" | "email_workspace.send_failed" | "email_workspace.send_error"
   | "cbill.title"
   | "cbill.subtitle"
   | "cbill.customer_bill_generated"
@@ -27113,6 +27113,11 @@ const en: Dict = {
   "email_workspace.message_body": "Message body",
   "email_workspace.cancel": "Cancel",
   "email_workspace.send": "Send",
+  "email_workspace.cc": "CC email (optional)",
+  "email_workspace.bcc": "BCC email (optional)",
+  "email_workspace.sending": "Sending...",
+  "email_workspace.send_failed": "Failed to send email",
+  "email_workspace.send_error": "Network error",
   "cbill.title": "Customer Bill",
   "cbill.subtitle": "Create, review and post shipping customer bills linked directly to customer orders and accounting ledgers.",
   "cbill.customer_bill_generated": "Customer Bill Generated",

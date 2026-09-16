@@ -30,6 +30,13 @@ export function EmailWorkspace() {
   const [activeTab, setActiveTab] = useState<'inbox' | 'sent' | 'drafts' | 'trash' | 'archived' | 'starred'>('inbox');
   const [loading, setLoading] = useState(true);
   const [showCompose, setShowCompose] = useState(false);
+  const [composeTo, setComposeTo] = useState('');
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeBody, setComposeBody] = useState('');
+  const [composeSending, setComposeSending] = useState(false);
+  const [composeError, setComposeError] = useState<string | null>(null);
+  const [composeCc, setComposeCc] = useState('');
+  const [composeBcc, setComposeBcc] = useState('');
 
   // Load email accounts
   useEffect(() => {
@@ -63,10 +70,12 @@ export function EmailWorkspace() {
 
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/erp/messages?mailboxId=${selectedAccountId}&folder=${activeTab}`);
+        const res = await fetch(`/api/erp/email/${selectedAccountId}/fetch?folder=${activeTab}`);
         if (res.ok) {
           const data = await res.json();
           setMessages(data.messages || []);
+        } else if (res.status === 403) {
+          console.error('Access denied to this mailbox');
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -77,6 +86,46 @@ export function EmailWorkspace() {
   }, [selectedAccountId, activeTab]);
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAccountId || !composeTo) return;
+
+    setComposeSending(true);
+    setComposeError(null);
+
+    try {
+      const res = await fetch(`/api/erp/email/${selectedAccountId}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: composeTo,
+          subject: composeSubject,
+          body: composeBody,
+          cc: composeCc || undefined,
+          bcc: composeBcc || undefined
+        })
+      });
+
+      if (res.ok) {
+        setComposeTo('');
+        setComposeSubject('');
+        setComposeBody('');
+        setComposeCc('');
+        setComposeBcc('');
+        setShowCompose(false);
+        // Refresh sent folder
+        setActiveTab('sent');
+      } else {
+        const data = await res.json();
+        setComposeError(data.error || s.t('send_failed', 'Failed to send email'));
+      }
+    } catch (error) {
+      setComposeError(s.t('send_error', 'Network error'));
+    } finally {
+      setComposeSending(false);
+    }
+  };
 
   const tabs = [
     { id: 'inbox', label: s.t('inbox', 'Inbox'), icon: Inbox },
@@ -180,9 +229,14 @@ export function EmailWorkspace() {
       {/* Compose Modal */}
       {showCompose && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">{s.t('compose_new', 'Compose New Email')}</h2>
-            <div className="space-y-4">
+            {composeError && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded">
+                {composeError}
+              </div>
+            )}
+            <form onSubmit={handleSendEmail} className="space-y-4">
               <div>
                 <label className="text-sm font-medium">From:</label>
                 <div className="mt-1 p-2 bg-slate-100 dark:bg-slate-800 rounded text-sm">
@@ -191,25 +245,80 @@ export function EmailWorkspace() {
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">To:</label>
-                <input type="email" placeholder={s.t('recipient', 'Recipient email')} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800" />
+                <input
+                  type="email"
+                  value={composeTo}
+                  onChange={(e) => setComposeTo(e.target.value)}
+                  placeholder={s.t('recipient', 'Recipient email')}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800"
+                  required
+                  disabled={composeSending}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">CC:</label>
+                <input
+                  type="email"
+                  value={composeCc}
+                  onChange={(e) => setComposeCc(e.target.value)}
+                  placeholder={s.t('cc', 'CC email (optional)')}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800"
+                  disabled={composeSending}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">BCC:</label>
+                <input
+                  type="email"
+                  value={composeBcc}
+                  onChange={(e) => setComposeBcc(e.target.value)}
+                  placeholder={s.t('bcc', 'BCC email (optional)')}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800"
+                  disabled={composeSending}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">Subject:</label>
-                <input type="text" placeholder={s.t('subject', 'Email subject')} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800" />
+                <input
+                  type="text"
+                  value={composeSubject}
+                  onChange={(e) => setComposeSubject(e.target.value)}
+                  placeholder={s.t('subject', 'Email subject')}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800"
+                  required
+                  disabled={composeSending}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">Message:</label>
-                <textarea placeholder={s.t('message_body', 'Message body')} rows={6} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800" />
+                <textarea
+                  value={composeBody}
+                  onChange={(e) => setComposeBody(e.target.value)}
+                  placeholder={s.t('message_body', 'Message body')}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800"
+                  required
+                  disabled={composeSending}
+                />
               </div>
               <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowCompose(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowCompose(false)}
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-800"
+                  disabled={composeSending}
+                >
                   {s.t('cancel', 'Cancel')}
                 </button>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-                  {s.t('send', 'Send')}
+                <button
+                  type="submit"
+                  disabled={composeSending || !composeTo}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:bg-slate-400"
+                >
+                  {composeSending ? s.t('sending', 'Sending...') : s.t('send', 'Send')}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
