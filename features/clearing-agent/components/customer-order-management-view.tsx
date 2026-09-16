@@ -3358,170 +3358,277 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Customer / ERP Ledger Account Search & Select */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-1.5">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
-                <span>{t(lang, "comv.customer_ledger_account_req", "Customer / Ledger Account *")}</span>
-              </label>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900/60">
-                  <Wallet className="h-3 w-3" />
-                  <span>{t(lang, "comv.erp_ledger_integrated", "ERP Ledger & Customer Integrated")}</span>
+          {/* ========================================================================= */}
+          {/* BL ENTRY STYLE: 1) PARTIES, BOOKING & MOVEMENT                             */}
+          {/* ========================================================================= */}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-black text-[11px]">
+                  1
                 </span>
-                {formData.customer_name ? (
-                  <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                    ✓ {formData.customer_name}
-                  </span>
-                ) : null}
+                <span className="text-xs font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                  SR#: 1 - Booking & Customer Details
+                </span>
               </div>
+              <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-900/60">
+                <Wallet className="h-3 w-3" />
+                <span>{t(lang, "comv.erp_ledger_integrated", "ERP Ledger Integrated")}</span>
+              </span>
             </div>
 
-            <SearchSelect
-              label={t(lang, "comv.select_customer_account", "Select Customer Account")}
-              value={formData.customer_id}
-              options={customerOptions}
-              placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
-              onValueChange={handleCustomerSelection}
-              disabled={loading}
-              searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
-              emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
-            />
+            {/* 1. Customer Account No * */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>{t(lang, "comv.customer_ledger_account_req", "Customer Account No *")}</span>
+                {formData.customer_name ? (
+                  <span className="text-[10px] font-bold text-emerald-600">✓ {formData.customer_name}</span>
+                ) : null}
+              </label>
+              <SearchSelect
+                label={t(lang, "comv.select_customer_account", "Select Customer Account")}
+                value={formData.customer_id}
+                options={customerOptions}
+                placeholder={t(lang, "comv.search_customer_full_ph", "Search customer by name, code or mobile...")}
+                onValueChange={handleCustomerSelection}
+                disabled={loading}
+                searchPlaceholder={t(lang, "comv.search_customer_ph", "Search customer name or code...")}
+                emptyLabel={t(lang, "comv.no_customers_found", "No customers found")}
+              />
 
-            {/* Live ERP Account & Ledger Details Card */}
-            {(selectedCustomer || selectedAccount) ? (
-              <div className="rounded-xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-blue-50/40 p-3 text-xs dark:border-slate-800 dark:from-slate-850 dark:to-slate-900 space-y-2.5">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-2 dark:border-slate-800">
+              {/* Live Customer Account Details Banner */}
+              {(selectedCustomer || selectedAccount) ? (
+                <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-black text-[10px]">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-blue-600 text-white font-black text-[10px]">
                       {selectedAccount?.code ? "ACC" : "CST"}
                     </span>
                     <div>
                       <div className="font-black text-slate-900 dark:text-slate-100 text-xs">
                         {selectedCustomer?.customer_name || selectedAccount?.name}
                       </div>
-                      <div className="text-[10.5px] font-semibold text-slate-500">
-                        {t(lang, "comv.acc_code", "Account Code")}: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{selectedAccount?.code || selectedCustomer?.person_code || "—"}</span>
+                      <div className="text-[10px] text-slate-500 font-mono">
+                        {selectedAccount?.code || selectedCustomer?.person_code || "—"} • {selectedCustomer?.country_name || "—"} {selectedCustomer?.city_name ? `(${selectedCustomer.city_name})` : ""}
                       </div>
                     </div>
                   </div>
-
-                  {/* Current Balance Badge */}
-                  <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-                    <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
-                    <span className="text-[10px] font-semibold text-slate-500">{t(lang, "comv.acc_balance", "Ledger Balance")}:</span>
-                    <span className={`font-black font-mono text-[11px] ${
-                      selectedAccount?.current_balance != null && Number(selectedAccount.current_balance) < 0
-                        ? "text-rose-600 dark:text-rose-400"
-                        : "text-emerald-700 dark:text-emerald-400"
-                    }`}>
-                      {selectedAccount?.current_balance != null
-                        ? `${selectedAccount.currency || ""} ${Number(selectedAccount.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                        : "0.00"}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-[9.5px] font-semibold text-slate-500">Contact</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
+                        {selectedCustomer?.mobile || selectedCustomer?.contact_person || "—"}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-2xs">
+                      <CreditCard className="h-3 w-3 text-emerald-600" />
+                      <span className="text-[9.5px] font-semibold text-slate-500">Bal:</span>
+                      <span className={`font-black font-mono text-[11px] ${
+                        selectedAccount?.current_balance != null && Number(selectedAccount.current_balance) < 0
+                          ? "text-rose-600 dark:text-rose-400"
+                          : "text-emerald-700 dark:text-emerald-400"
+                      }`}>
+                        {selectedAccount?.current_balance != null
+                          ? `${selectedAccount.currency || ""} ${Number(selectedAccount.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : "0.00"}
+                      </span>
+                    </div>
                   </div>
                 </div>
+              ) : null}
+            </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
-                  <div>
-                    <span className="text-slate-500 font-medium">{t(lang, "comv.acc_company", "Company:")}</span>{" "}
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomer?.company_name || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">{t(lang, "comv.acc_contact", "Contact:")}</span>{" "}
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomer?.mobile || selectedCustomer?.contact_person || "—"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">{t(lang, "comv.acc_country", "Country / Branch:")}</span>{" "}
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomer?.country_name || "—"} {selectedCustomer?.city_name ? `(${selectedCustomer.city_name})` : ""}</span>
-                  </div>
+            {/* 2. Transport & Movement in Grid (Like BL Entry) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="mb-1 block text-[10.5px] font-black uppercase text-slate-600 dark:text-slate-400">
+                  {tt("shipment_type", "Shipment / Movement Type *")}
+                </label>
+                <select
+                  value={formData.movement_type}
+                  onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
+                  className={selectClass}
+                >
+                  <option value="import">{tt("mv_import", "Import")}</option>
+                  <option value="export">{tt("mv_export", "Export")}</option>
+                  <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+                  <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
+                  <option value="down_transit">{t(lang, "comv.mv_down_transit", "Down Transit")}</option>
+                  <option value="domestic">{t(lang, "comv.mv_local_domestic", "Local / Domestic")}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10.5px] font-black uppercase text-slate-600 dark:text-slate-400">
+                  {tt("transport_mode", "Transport Type *")}
+                </label>
+                <select
+                  value={formData.transport_mode}
+                  onChange={(e) => setFormData((current) => ({ ...current, transport_mode: e.target.value as TransportMode }))}
+                  className={selectClass}
+                >
+                  <option value="by_sea">🚢 {tt("tm_by_sea", "By Sea")}</option>
+                  <option value="by_road">🚛 {tt("tm_by_road", "By Road")}</option>
+                  <option value="by_air">✈️ {tt("tm_by_air", "By Air")}</option>
+                  <option value="by_rail">🚆 {t(lang, "comv.tm_by_rail", "By Rail")}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 3. Loading Details Card (Matching BL Entry's Cyan Section) */}
+            <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-3 space-y-2.5">
+              <div className="text-[10.5px] font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5">
+                <Warehouse className="h-3.5 w-3.5" />
+                <span>Loading Details</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                    {tt("expected_loading_date", "Loading Date *")}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.expected_loading_date}
+                    onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
+                    className={inputClass}
+                  />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-800/80">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (formData.customer_id) {
-                        handlePartyChange("supplier", {
-                          ...partySelections.supplier,
-                          customerId: formData.customer_id,
-                          customerName: formData.customer_name,
-                          companyName: selectedCustomer?.company_name || partySelections.supplier.companyName || "",
-                          addressText: selectedCustomer?.address || partySelections.supplier.addressText || "",
-                          addressSource: "ERP Master Synced"
-                        });
-                      }
-                    }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50/80 px-2 py-1 text-[10.5px] font-bold text-blue-700 hover:bg-blue-100 transition"
+                <div>
+                  <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                    Loading Source (Warehouse / Container / Port) *
+                  </label>
+                  <select
+                    value={formData.loading_source}
+                    onChange={(e) => setFormData((current) => ({ ...current, loading_source: e.target.value as LoadingSource }))}
+                    className={selectClass}
                   >
-                    ✓ {t(lang, "comv.autofill_supplier", "Use Customer as Supplier / Order Party")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={copyCustomerToBuyer}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    + Copy to Buyer / Consignee
-                  </button>
+                    <option value="shipping_warehouse">Warehouse (Shipping / Central)</option>
+                    <option value="customer_warehouse">Customer Warehouse / Yard</option>
+                    <option value="container">Container (Direct / Haulage)</option>
+                    <option value="port_terminal">Port Terminal</option>
+                    <option value="border_yard">Border Yard / Land Port</option>
+                    <option value="other">Other / Custom Location</option>
+                  </select>
                 </div>
               </div>
-            ) : null}
-          </div>
 
-          <PartyRolePanel
-            roleKey="supplier"
-            label={tt("role_supplier", "Supplier / Order Party")}
-            required
-            selection={partySelections.supplier}
-            customers={customers}
-            companies={companies}
-            customerOptions={customerOptions}
-            companyOptions={companyOptions}
-            orders={orders}
-            disabled={loading}
-            lang={lang}
-            onChange={(next) => handlePartyChange("supplier", next)}
-          />
+              {/* Conditional Loading Warehouse or Container input */}
+              {(formData.loading_source === "shipping_warehouse" || formData.loading_source === "customer_warehouse") ? (
+                <div>
+                  <WarehousePicker
+                    label="Loading Warehouse Location"
+                    value={formData.loading_source_warehouse_id}
+                    onValueChange={(warehouseId) => {
+                      setFormData((current) => ({
+                        ...current,
+                        loading_source_warehouse_id: warehouseId
+                      }));
+                    }}
+                    onSelectRecord={(record) => {
+                      if (record?.warehouse_name) {
+                        setFormData((current) => ({
+                          ...current,
+                          loading_source_name: record.warehouse_name
+                        }));
+                      }
+                    }}
+                  />
+                </div>
+              ) : formData.loading_source === "container" ? (
+                <div>
+                  <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                    Container Number / Reference
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. MSKU-1234567 / 40ft High Cube"
+                    value={formData.loading_source_container_ref}
+                    onChange={(e) => setFormData((current) => ({ ...current, loading_source_container_ref: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              ) : null}
+            </div>
 
-          <PartyRolePanel
-            roleKey="buyer"
-            label={tt("role_buyer", "Buyer")}
-            selection={partySelections.buyer}
-            customers={customers}
-            companies={companies}
-            customerOptions={customerOptions}
-            companyOptions={companyOptions}
-            orders={orders}
-            disabled={loading}
-            lang={lang}
-            onChange={(next) => handlePartyChange("buyer", next)}
-          />
+            {/* 4. Shipment Specifications & Cargo */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                  {tt("shipment_type", "Shipment Type")}
+                </label>
+                <select
+                  value={formData.shipment_type}
+                  onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
+                  className={selectClass}
+                >
+                  <option value="FCL">{tt("ship_fcl", "FCL (Full Container)")}</option>
+                  <option value="LCL">{tt("ship_lcl", "LCL (Less Container)")}</option>
+                  <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
+                  <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
+                </select>
+              </div>
 
-          <PartyRolePanel
-            roleKey="consignee"
-            label={tt("role_consignee", "Consignee")}
-            selection={partySelections.consignee}
-            customers={customers}
-            companies={companies}
-            customerOptions={customerOptions}
-            companyOptions={companyOptions}
-            orders={orders}
-            disabled={loading}
-            lang={lang}
-            onChange={(next) => handlePartyChange("consignee", next)}
-          />
+              <div>
+                <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                  Load Type
+                </label>
+                <select
+                  value={formData.load_type || ""}
+                  onChange={(e) => setFormData((current) => ({ ...current, load_type: e.target.value as LoadType }))}
+                  className={selectClass}
+                >
+                  <option value="">— Standard / Auto —</option>
+                  <option value="full_truck">Full Truck (FTL)</option>
+                  <option value="partial_load">Partial Load (LTL)</option>
+                  <option value="container_haulage">Container Haulage</option>
+                </select>
+              </div>
 
-          {/* Sub-step 1A Action */}
-          <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={() => setStep1SubStep("1B")}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
-            >
-              <span>{t(lang, "comv.next_substep_1b", "Continue to Transport Mode & Movement (1B)")}</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
+              <div>
+                <label className="mb-1 block text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                  Cargo / Container Details
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 40ft HC / 22 MT Dry Cargo"
+                  value={formData.cargo_details}
+                  onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {/* Sub-step 1A Action */}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData((current) => ({
+                    ...current,
+                    customer_id: "",
+                    customer_name: "",
+                    movement_type: "import",
+                    transport_mode: "by_sea",
+                    loading_source: "shipping_warehouse",
+                    loading_source_warehouse_id: "",
+                    loading_source_container_ref: "",
+                    cargo_details: ""
+                  }));
+                }}
+                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+              >
+                Reset
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep1SubStep("1C")}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
+              >
+                <span>Continue to Route & Locations (1C)</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -3563,31 +3670,19 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Transport Mode Cards */}
+          {/* Transport Mode Dropdown */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {[
-                { key: "by_sea", label: tt("tm_by_sea", "By Sea"), icon: Anchor },
-                { key: "by_road", label: tt("tm_by_road", "By Road"), icon: Truck },
-                { key: "by_air", label: tt("tm_by_air", "By Air"), icon: Plane },
-                { key: "by_rail", label: t(lang, "comv.tm_by_rail", "By Rail"), icon: Route }
-              ].map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setFormData((current) => ({ ...current, transport_mode: key as TransportMode }))}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all ${
-                    formData.transport_mode === key
-                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300 ring-2 ring-blue-500/20"
-                      : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
+            <label className={labelClass}>{tt("transport_mode", "Transport Mode")} *</label>
+            <select
+              value={formData.transport_mode}
+              onChange={(e) => setFormData((current) => ({ ...current, transport_mode: e.target.value as TransportMode }))}
+              className={selectClass}
+            >
+              <option value="by_sea">🚢 {tt("tm_by_sea", "By Sea")}</option>
+              <option value="by_road">🚛 {tt("tm_by_road", "By Road")}</option>
+              <option value="by_air">✈️ {tt("tm_by_air", "By Air")}</option>
+              <option value="by_rail">🚆 {t(lang, "comv.tm_by_rail", "By Rail")}</option>
+            </select>
           </div>
 
           {/* Operational Movement & Load Type */}
