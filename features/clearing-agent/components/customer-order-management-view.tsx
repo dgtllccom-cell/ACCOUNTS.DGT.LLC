@@ -2728,71 +2728,87 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
-          {/* Main 2-Column Content Grid: Left Inputs (5 cols - Compact) + Right Live Report (7 cols - Expanded) */}
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
-            {/* LEFT COLUMN: The Form Cards */}
-            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5">
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
-                  <Step1BookingCustomer
-                    lang={lang}
-                    tt={tt}
-                    userContext={userContext}
-                    formData={formData}
-                    setFormData={setFormData}
-                    step1SubStep={step1SubStep}
-                    setStep1SubStep={setStep1SubStep}
-                    accounts={accounts}
-                    customers={customers}
-                    customerOptions={customerOptions}
-                    countries={countries}
-                    ports={ports}
-                    loadingCities={loadingCities}
-                    receivingCities={receivingCities}
-                    partySelections={partySelections}
-                    companies={companies}
-                    companyOptions={companyOptions}
-                    orders={orders}
-                    loading={loading}
-                    handlePartyChange={handlePartyChange}
-                    handleLoadingCountryChange={handleLoadingCountryChange}
-                    handleReceivingCountryChange={handleReceivingCountryChange}
-                    handleLoadingPortChange={handleLoadingPortChange}
-                    handleDestinationPortChange={handleDestinationPortChange}
-                    trucksList={trucksList}
-                    warehousesList={warehousesList}
-                    goodsMasterList={goodsMasterList}
-                    onSelectSubStep={(sub) => {
-                      setStep1SubStep(sub);
-                      if (sub === "1A") setCurrentStep(1);
-                      else if (sub === "1B") setCurrentStep(2);
-                      else if (sub === "1C") setCurrentStep(3);
-                    }}
-                    onAdvanceToStep2={() => {
-                      setStep1SubStep("1B");
-                      setCurrentStep(2);
-                    }}
-                    onAdvanceToStep3={() => {
-                      setStep1SubStep("1C");
-                      setCurrentStep(3);
-                    }}
-                    onConfirmSave={() => void handleSaveProgress(true)}
-                    onSaveDraft={() => void handleSaveProgress(false)}
-                    saving={saving}
-                  />
-                )}
-
-                {currentStep === 4 && (
-                  <Step4ReviewConfirm
-                    lang={lang}
-                    tt={tt}
-                    formData={formData}
-                    partySelections={partySelections}
-                    clearingAgents={clearingAgents}
-                    shippingLines={shippingLines}
-                    userContext={userContext}
-                  />
-                )}
+          {/* Main Content Area: If Step 4, render full-width A4 Review & Confirm Sheet; Else 2-Column Grid */}
+          {currentStep === 4 ? (
+            <div dir={isRtl ? "rtl" : "ltr"} className="w-full">
+              <Step4ReviewConfirm
+                lang={lang}
+                tt={tt}
+                formData={formData}
+                partySelections={partySelections}
+                selectedCustomerInfo={selectedCustomerInfo}
+                selectedAccountInfo={selectedAccountInfo}
+                clearingAgents={clearingAgents}
+                shippingLines={shippingLines}
+                userContext={userContext}
+                onBack={() => {
+                  setCurrentStep(3);
+                  setStep1SubStep("1C");
+                }}
+                onGoToSubStep={(sub) => {
+                  setStep1SubStep(sub);
+                  if (sub === "1A") setCurrentStep(1);
+                  else if (sub === "1B") setCurrentStep(2);
+                  else if (sub === "1C") setCurrentStep(3);
+                }}
+                onSaveDraft={() => void handleSaveProgress(false)}
+                onConfirmSave={() => void handleSaveProgress(true)}
+                saving={saving}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
+              {/* LEFT COLUMN: The Form Cards */}
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5">
+                <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
+                    <Step1BookingCustomer
+                      lang={lang}
+                      tt={tt}
+                      userContext={userContext}
+                      formData={formData}
+                      setFormData={setFormData}
+                      step1SubStep={step1SubStep}
+                      setStep1SubStep={setStep1SubStep}
+                      accounts={accounts}
+                      customers={customers}
+                      customerOptions={customerOptions}
+                      countries={countries}
+                      ports={ports}
+                      loadingCities={loadingCities}
+                      receivingCities={receivingCities}
+                      partySelections={partySelections}
+                      companies={companies}
+                      companyOptions={companyOptions}
+                      orders={orders}
+                      loading={loading}
+                      handlePartyChange={handlePartyChange}
+                      handleLoadingCountryChange={handleLoadingCountryChange}
+                      handleReceivingCountryChange={handleReceivingCountryChange}
+                      handleLoadingPortChange={handleLoadingPortChange}
+                      handleDestinationPortChange={handleDestinationPortChange}
+                      trucksList={trucksList}
+                      warehousesList={warehousesList}
+                      goodsMasterList={goodsMasterList}
+                      onSelectSubStep={(sub) => {
+                        setStep1SubStep(sub);
+                        if (sub === "1A") setCurrentStep(1);
+                        else if (sub === "1B") setCurrentStep(2);
+                        else if (sub === "1C") setCurrentStep(3);
+                      }}
+                      onAdvanceToStep2={() => {
+                        setStep1SubStep("1B");
+                        setCurrentStep(2);
+                      }}
+                      onAdvanceToStep3={() => {
+                        setStep1SubStep("1C");
+                        setCurrentStep(3);
+                      }}
+                      onConfirmSave={() => void handleSaveProgress(true)}
+                      onSaveDraft={() => void handleSaveProgress(false)}
+                      saving={saving}
+                    />
+                  )}
 
                 {/* Stepper Footer Controls */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-4 mt-6 border-t border-slate-100 dark:border-slate-800">
@@ -2801,10 +2817,7 @@ export function CustomerOrderManagementView() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (currentStep === 4) {
-                            setCurrentStep(3);
-                            setStep1SubStep("1C");
-                          } else if (currentStep === 3) {
+                          if (currentStep === 3) {
                             setCurrentStep(2);
                             setStep1SubStep("1B");
                           } else if (currentStep === 2) {
@@ -3630,7 +3643,8 @@ export function CustomerOrderManagementView() {
               </div>
             </div>
           </div>
-        </div>
+        )}
+      </div>
       )}
 
       {/* View Order Modal */}
@@ -6073,84 +6087,707 @@ function Step4ReviewConfirm({
   tt,
   formData,
   partySelections,
+  selectedCustomerInfo,
+  selectedAccountInfo,
   clearingAgents,
   shippingLines,
-  userContext
+  userContext,
+  onBack,
+  onGoToSubStep,
+  onSaveDraft,
+  onConfirmSave,
+  saving
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
   formData: FormDataState;
   partySelections: Record<PartyRoleKey, PartySelection>;
+  selectedCustomerInfo?: CustomerRow | null;
+  selectedAccountInfo?: AccountRow | null;
   clearingAgents: ClearingAgentRow[];
   shippingLines: ShippingLineRow[];
   userContext: { context: BranchUserContext | null; loading: boolean; error: string | null };
+  onBack: () => void;
+  onGoToSubStep: (subStep: "1A" | "1B" | "1C") => void;
+  onSaveDraft: () => void;
+  onConfirmSave: () => void;
+  saving: boolean;
 }) {
   const ctx = userContext.context;
   const agentName = (id: string) => clearingAgents.find((a) => a.id === id)?.name || summaryValue(id);
   const lineName = (id: string) => shippingLines.find((l) => l.id === id)?.name || summaryValue(id);
 
-  const row = (label: string, value?: string | null) => (
-    <div className="flex justify-between gap-3 py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
-      <span className="text-slate-500 font-semibold">{label}</span>
-      <span className="font-bold text-slate-900 dark:text-slate-100 text-right">{summaryValue(value)}</span>
-    </div>
-  );
+  // Normalize multi-goods items
+  const goodsList = useMemo(() => {
+    if (Array.isArray(formData.goods_items) && formData.goods_items.length > 0) {
+      return formData.goods_items;
+    }
+    if (formData.goods_name || formData.goods_quantity) {
+      return [
+        {
+          goodsId: formData.goods_id || "",
+          goodsName: formData.goods_name || "General Cargo",
+          goodsChsCode: formData.goods_chs_code || "",
+          goodsVariationId: formData.goods_variation_id || "",
+          goodsVariationLabel: formData.goods_variation_label || "",
+          unit: formData.goods_unit || "Bags",
+          quantity: formData.goods_quantity || "0",
+          kgPerQty:
+            formData.goods_gross_weight && formData.goods_quantity
+              ? String(Number(formData.goods_gross_weight) / Number(formData.goods_quantity))
+              : "0",
+          totalKg: formData.goods_gross_weight || "0",
+          warehouseSourceType: "company_warehouse",
+          warehouseName: formData.loading_source_name || formData.loading_source || ""
+        }
+      ];
+    }
+    return [];
+  }, [formData]);
+
+  const cargoTotals = useMemo(() => {
+    let qty = 0;
+    let kg = 0;
+    goodsList.forEach((g) => {
+      const q = parseFloat(String(g.quantity || 0)) || 0;
+      const k = parseFloat(String(g.totalKg || 0)) || 0;
+      qty += q;
+      kg += k;
+    });
+    const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
+    return { count: goodsList.length, qty, kg, mt };
+  }, [goodsList]);
+
+  const custName =
+    selectedCustomerInfo?.customer_name || partySelections.supplier.customerName || formData.customer_name || "-";
+  const custCompany = selectedCustomerInfo?.company_name || partySelections.supplier.companyName || "-";
+  const custPhone = selectedCustomerInfo?.mobile || selectedCustomerInfo?.whatsapp || "-";
+  const custEmail = selectedCustomerInfo?.email || "-";
+  const custAddress = selectedCustomerInfo?.address || partySelections.supplier.addressText || "-";
+  const consigneeName =
+    partySelections.buyer.customerName ||
+    partySelections.consignee.customerName ||
+    formData.consignee_name ||
+    custName;
 
   return (
-    <div className="space-y-3.5 animate-in fade-in duration-150">
-      <SectionHeading num={4} icon={CheckCircle2} title={t(lang, "comv.step4_title", "Review & Confirm")} />
+    <div className="w-full max-w-5xl mx-auto space-y-5 animate-in fade-in duration-200 pb-16">
+      {/* Top Floating / Action Bar (hidden on print) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-900 text-white rounded-2xl shadow-md print:hidden">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span>{t(lang, "comv.back_to_1c", "Back to 1C (Route & Delivery)")}</span>
+          </button>
+          <div className="h-4 w-px bg-slate-700 mx-1 hidden sm:block" />
+          <span className="text-xs font-medium text-slate-300 hidden md:inline">
+            {t(lang, "comv.a4_instruction", "Step 4: Full A4 Document Review before confirmation")}
+          </span>
+        </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_references", "References")}</div>
-        {canSeeSerial("super", ctx) ? row(t(lang, "comv.serial_super_admin", "Super Admin"), formData.super_admin_serial) : null}
-        {canSeeSerial("country", ctx) ? row(t(lang, "comv.serial_country", "Country Serial"), formData.country_serial) : null}
-        {canSeeSerial("branch", ctx) ? row(t(lang, "comv.serial_branch", "Branch Serial"), formData.branch_serial) : null}
-        {row(t(lang, "comv.serial_entry", "Entry Number"), formData.entry_serial)}
-        {row(t(lang, "comv.serial_global_bill", "Global Bill / Shipping No."), formData.order_no)}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-sm transition"
+          >
+            <Printer className="h-4 w-4" />
+            <span>{t(lang, "comv.print_a4", "Print A4 Sheet")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition"
+          >
+            {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmSave}
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition"
+          >
+            {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            <span>{t(lang, "comv.confirm_save_order", "Confirm & Save Customer Order")}</span>
+          </button>
+        </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_booking", "Booking & Customer")}</div>
-        {row(tt("role_supplier", "Supplier / Order Party"), partySelections.supplier.customerName || formData.customer_name)}
-        {row(tt("role_buyer", "Buyer"), partySelections.buyer.customerName)}
-        {row(tt("movement_type", "Movement Type"), formData.movement_type)}
-        {row(tt("transport_mode", "Transport Mode"), formData.transport_mode)}
-        {row(t(lang, "comv.loading_country_step", "Loading Country"), formData.loading_country_name)}
-        {row(t(lang, "comv.receiving_country_step", "Final Destination Country"), formData.receiving_country_name)}
-        {row(tt("loading_port", "Loading Port"), formData.loading_port_name)}
-        {row(tt("destination_port", "Destination Port"), formData.destination_port_name)}
-        {row(tt("route_reference", "Route / Reference"), formData.route_name)}
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-1">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{t(lang, "comv.review_pickup_goods_truck", "Pickup, Goods & Truck")}</div>
-        {row(tt("loading_source", "Pickup Source"), formData.loading_source_name || formData.loading_source)}
-        {row(tt("goods_master", "Goods"), formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? " • " + formData.goods_chs_code : ""}` : null)}
-        {row(t(lang, "comv.goods_quantity", "Quantity"), formData.goods_quantity ? `${formData.goods_quantity} ${formData.goods_unit}` : null)}
-        {row(t(lang, "comv.goods_bags_cartons", "Bags / Cartons"), formData.goods_bags_cartons)}
-        {row(t(lang, "comv.goods_gross_weight", "Gross Weight"), formData.goods_gross_weight)}
-        {row(t(lang, "comv.load_type", "Load Type"), formData.load_type)}
-        {row(t(lang, "comv.truck_requirement", "Truck"), formData.truck_number)}
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-2">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "comv.review_route_legs", "Route Legs")}</div>
-        {formData.legs.length === 0 ? (
-          <p className="text-slate-400">{t(lang, "comv.no_legs_yet", "No route legs added yet. Add a leg for each country/mode crossing.")}</p>
-        ) : (
-          formData.legs.map((leg, idx) => (
-            <div key={idx} className="rounded-lg border border-slate-100 bg-slate-50/60 p-2 dark:border-slate-800 dark:bg-slate-800/40 space-y-0.5">
-              <div className="font-black text-blue-700 dark:text-blue-400">
-                {t(lang, "comv.leg_no", "Leg")} #{leg.legNo}: {summaryValue(leg.fromCountryName || leg.fromLocationText)} → {summaryValue(leg.toCountryName || leg.toLocationText)} ({leg.transportMode || "-"})
-              </div>
-              {row(t(lang, "comv.responsible_agent", "Responsible Clearing Agent"), leg.responsibleClearingAgentId ? agentName(leg.responsibleClearingAgentId) : null)}
-              {leg.transportMode === "by_sea" ? row(t(lang, "comv.shipping_line", "Shipping Line"), leg.shippingLineId ? lineName(leg.shippingLineId) : null) : null}
-              {row(t(lang, "comv.clearance_type", "Clearance Type"), leg.clearanceType)}
-              {row(t(lang, "comv.duty_treatment", "Duty Treatment"), leg.dutyTreatment)}
-              {row(t(lang, "comv.leg_status", "Leg Status"), leg.status)}
+      {/* Main A4 Document Preview Sheet */}
+      <div
+        id="customer-order-a4-sheet"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-6 sm:p-10 space-y-6 text-slate-800 dark:text-slate-200 font-sans print:border-0 print:shadow-none print:p-0 print:m-0"
+      >
+        {/* Document Header */}
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-slate-900 dark:border-slate-100 pb-5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-[11px] font-black uppercase tracking-wider text-white">
+                ACCOUNTS.DGT.LLC
+              </span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Freight Forwarding & Customs Clearing
+              </span>
             </div>
-          ))
-        )}
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              Customer Order Specification & Review
+            </h1>
+            <p className="text-xs text-slate-500">
+              Official shipment order manifest • Movement:{" "}
+              <strong className="uppercase text-slate-800 dark:text-slate-200">
+                {formData.movement_type || "IMPORT"}
+              </strong>{" "}
+              • Mode:{" "}
+              <strong className="uppercase text-slate-800 dark:text-slate-200">
+                {formData.transport_mode?.replace("_", " ") || "BY ROAD"}
+              </strong>{" "}
+              • Type:{" "}
+              <strong className="uppercase text-slate-800 dark:text-slate-200">
+                {formData.shipment_type || "FCL"}
+              </strong>
+            </p>
+          </div>
+
+          <div className="text-right space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
+              <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              {formData.status ? formData.status.toUpperCase() : "PENDING CONFIRMATION"}
+            </div>
+            <div className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100">
+              {formData.order_no || formData.global_serial || "AUTO-GENERATED"}
+            </div>
+            <div className="text-[10px] text-slate-400">
+              {formData.order_date || new Date().toISOString().split("T")[0]} {formData.order_time || ""}
+            </div>
+          </div>
+        </div>
+
+        {/* References & Serials Strip */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            {t(lang, "comv.review_references", "System Serials & Timestamps")}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 text-xs">
+            <div>
+              <span className="text-[10px] font-semibold text-slate-500 block">Entry Serial</span>
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
+                {formData.entry_serial || "-"}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-slate-500 block">Global Serial / Bill</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">
+                {formData.global_serial || formData.order_no || "-"}
+              </span>
+            </div>
+            {canSeeSerial("country", ctx) && (
+              <div>
+                <span className="text-[10px] font-semibold text-slate-500 block">Country Serial</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
+                  {formData.country_serial || "-"}
+                </span>
+              </div>
+            )}
+            {canSeeSerial("branch", ctx) && (
+              <div>
+                <span className="text-[10px] font-semibold text-slate-500 block">Branch Serial</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
+                  {formData.branch_serial || "-"}
+                </span>
+              </div>
+            )}
+            {canSeeSerial("super", ctx) && (
+              <div>
+                <span className="text-[10px] font-semibold text-slate-500 block">Super Admin Serial</span>
+                <span className="font-mono font-bold text-purple-700 dark:text-purple-400 text-sm">
+                  {formData.super_admin_serial || "-"}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Section 1: Customer Profile vs Consignee / Delivery (2 Columns) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Customer & Billing Box */}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                  <Building2 className="h-3.5 w-3.5" />
+                  <span>1A. Customer & Billing Profile</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onGoToSubStep("1A")}
+                  className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+                >
+                  Edit 1A
+                </button>
+              </div>
+              <div className="text-sm font-black text-slate-900 dark:text-white">{custName}</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Company</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{custCompany}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Account Ref</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {selectedAccountInfo?.name
+                      ? `${selectedAccountInfo.name} (${selectedAccountInfo.code || ""})`
+                      : "-"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Phone / Mobile</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{custPhone}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Email</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">{custEmail}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-[10px] text-slate-400 block">Registered Address</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{custAddress}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Consignee & Destination Box */}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Consignee & Shipping Destination</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onGoToSubStep("1C")}
+                  className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline print:hidden"
+                >
+                  Edit 1C
+                </button>
+              </div>
+              <div className="text-sm font-black text-slate-900 dark:text-white">{consigneeName}</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Movement Type</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                    {formData.movement_type || "Import"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Transport Mode</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                    {formData.transport_mode?.replace("_", " ") || "By Road"}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-[10px] text-slate-400 block">Final Delivery Destination</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {formData.final_delivery_location ||
+                      formData.destination_city ||
+                      formData.receiving_country_name ||
+                      "-"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Buyer Name</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {partySelections.buyer.customerName || "-"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Notify Party</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {partySelections.notify_party.customerName || "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Logistics Route, Ports & Operational Dates */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              <Route className="h-3.5 w-3.5 text-blue-600" />
+              <span>1C. Dynamic Route & Operational Schedule</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onGoToSubStep("1C")}
+              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+            >
+              Edit 1C
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block">Pickup Source</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                {formData.loading_source_name || formData.loading_source || "-"}
+              </span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block">Origin Loading</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                {formData.loading_country_name || "-"}{" "}
+                {formData.loading_port_name ? `(${formData.loading_port_name})` : ""}
+              </span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+                Destination Port / Border
+              </span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                {formData.destination_port_name ||
+                  formData.entry_border_port_name ||
+                  formData.destination_airport_name ||
+                  "-"}
+              </span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+                Final Destination Country
+              </span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                {formData.receiving_country_name || "-"}
+              </span>
+            </div>
+          </div>
+
+          {/* Operational Milestones (Planned vs Actual) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1 text-xs">
+            <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
+              <span className="text-[9.5px] text-slate-400 block uppercase">Planned Pickup</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formData.planned_pickup_date || "-"}
+              </span>
+            </div>
+            <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
+              <span className="text-[9.5px] text-slate-400 block uppercase">Actual Pickup</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formData.actual_pickup_date || "-"}
+              </span>
+            </div>
+            <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
+              <span className="text-[9.5px] text-slate-400 block uppercase">Planned Dispatch</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formData.planned_dispatch_date || "-"}
+              </span>
+            </div>
+            <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
+              <span className="text-[9.5px] text-slate-400 block uppercase">Actual Dispatch</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formData.actual_dispatch_date || "-"}
+              </span>
+            </div>
+            <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
+              <span className="text-[9.5px] text-slate-400 block uppercase">Planned Arrival</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formData.planned_arrival_date || "-"}
+              </span>
+            </div>
+            <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
+              <span className="text-[9.5px] text-slate-400 block uppercase">Actual Arrival</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formData.actual_arrival_date || "-"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Vehicle & Driver Assignment */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              <Truck className="h-3.5 w-3.5 text-blue-600" />
+              <span>1B. Assigned Vehicle & Driver Details</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onGoToSubStep("1B")}
+              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+            >
+              Edit 1B
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase">Assignment Mode</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {formData.truck_assignment_mode === "permanent"
+                  ? "Permanent Fleet"
+                  : formData.truck_assignment_mode === "hired"
+                  ? "Hired / External Truck"
+                  : "Assign Later"}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase">Truck / Vehicle Plate</span>
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
+                {formData.truck_number || "Not Assigned"}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase">Driver Name</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {formData.truck_driver_name || "-"}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase">Driver Mobile</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {formData.truck_driver_mobile || "-"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Comprehensive Goods & Cargo Manifest Table */}
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden dark:border-slate-800 dark:bg-slate-900/80 shadow-xs">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+              <Boxes className="h-3.5 w-3.5 text-blue-600" />
+              <span>Goods & Cargo Manifest Breakdown ({cargoTotals.count})</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onGoToSubStep("1B")}
+              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+            >
+              Edit Goods (1B)
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
+                  <th className="py-2.5 px-3">#</th>
+                  <th className="py-2.5 px-3">Goods Description</th>
+                  <th className="py-2.5 px-3">CHS Code</th>
+                  <th className="py-2.5 px-3">Packaging / Unit</th>
+                  <th className="py-2.5 px-3 text-right">Quantity</th>
+                  <th className="py-2.5 px-3 text-right">KG / Unit</th>
+                  <th className="py-2.5 px-3 text-right">Total KG</th>
+                  <th className="py-2.5 px-3 text-right">Total MT</th>
+                  <th className="py-2.5 px-3">Warehouse Source</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {goodsList.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-4 text-center text-slate-400">
+                      No cargo items added.
+                    </td>
+                  </tr>
+                ) : (
+                  goodsList.map((item, idx) => {
+                    const q = parseFloat(String(item.quantity || 0)) || 0;
+                    const kg = parseFloat(String(item.totalKg || 0)) || 0;
+                    const kgPer =
+                      parseFloat(String(item.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
+                    const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
+
+                    return (
+                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3">
+                          <span className="font-bold text-slate-900 dark:text-white block">
+                            {item.goodsName || "General Cargo"}
+                          </span>
+                          {item.goodsVariationLabel ? (
+                            <span className="text-[10px] text-slate-400 block">{item.goodsVariationLabel}</span>
+                          ) : null}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
+                          {item.goodsChsCode || "-"}
+                        </td>
+                        <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
+                          {item.unit || "Bags"}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
+                          {q.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-3 text-right text-slate-600 dark:text-slate-400">
+                          {kgPer.toFixed(1)} kg
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-blue-700 dark:text-blue-400">
+                          {kg.toLocaleString()} kg
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
+                          {mt} MT
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                          {item.warehouseName || formData.loading_source_name || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              <tfoot className="border-t-2 border-slate-900 bg-slate-100/70 font-bold dark:border-slate-700 dark:bg-slate-800/80">
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="py-3 px-3 uppercase text-[11px] tracking-wider text-slate-700 dark:text-slate-300"
+                  >
+                    Grand Manifest Totals ({cargoTotals.count} items)
+                  </td>
+                  <td className="py-3 px-3 text-right text-sm text-slate-900 dark:text-white">
+                    {cargoTotals.qty.toLocaleString()}
+                  </td>
+                  <td className="py-3 px-3 text-right text-slate-400 text-xs">-</td>
+                  <td className="py-3 px-3 text-right text-sm text-blue-700 dark:text-blue-400">
+                    {cargoTotals.kg.toLocaleString()} kg
+                  </td>
+                  <td className="py-3 px-3 text-right text-sm text-emerald-700 dark:text-emerald-400">
+                    {cargoTotals.mt} MT
+                  </td>
+                  <td className="py-3 px-3 text-xs text-slate-400">-</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        {/* Section 5: Route Legs (if any) */}
+        {formData.legs && formData.legs.length > 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                Multi-Leg Transit Route ({formData.legs.length})
+              </div>
+              <button
+                type="button"
+                onClick={() => onGoToSubStep("1C")}
+                className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+              >
+                Edit Legs (1C)
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {formData.legs.map((leg, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-lg border border-slate-100 bg-slate-50/60 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-800/40 space-y-1"
+                >
+                  <div className="font-black text-blue-700 dark:text-blue-400">
+                    Leg #{leg.legNo}: {summaryValue(leg.fromCountryName || leg.fromLocationText)} →{" "}
+                    {summaryValue(leg.toCountryName || leg.toLocationText)}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Mode: <strong className="uppercase">{leg.transportMode || "-"}</strong> • Agent:{" "}
+                    <strong>
+                      {leg.responsibleClearingAgentId ? agentName(leg.responsibleClearingAgentId) : "-"}
+                    </strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Section 6: Special Remarks & Instructions */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs space-y-1">
+          <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+            Special Instructions & Logistics Remarks
+          </div>
+          <p className="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">
+            {formData.remarks ||
+              "No special instructions noted. All standard customs clearing, tariff verification, and road transit safety protocols apply."}
+          </p>
+        </div>
+
+        {/* Section 7: Official Signatures & Verification (Formatted for A4 Print) */}
+        <div className="pt-6 border-t-2 border-slate-900 dark:border-slate-100">
+          <div className="grid grid-cols-3 gap-6 text-center text-xs">
+            <div className="space-y-8">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Prepared By (Operator / Agent)
+              </span>
+              <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
+                Signature & Date
+              </span>
+            </div>
+
+            <div className="space-y-8">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Fleet / Driver Acceptance
+              </span>
+              <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
+                Driver Signature & Vehicle Stamp
+              </span>
+            </div>
+
+            <div className="space-y-8">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Customer / Authorized Consignee
+              </span>
+              <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
+                Official Seal & Acceptance
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Actions Bar (hidden on print) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg print:hidden">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span>{t(lang, "comv.back_to_1c", "Back to 1C (Route & Delivery)")}</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300 transition"
+          >
+            <Printer className="h-4 w-4" />
+            <span>{t(lang, "comv.print_a4", "Print A4 Sheet")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
+          >
+            {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmSave}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition"
+          >
+            {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            <span>{t(lang, "comv.confirm_save_order", "Confirm & Save Customer Order")}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
