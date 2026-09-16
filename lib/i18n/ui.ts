@@ -1,4 +1,4 @@
-﻿import type { SupportedLanguage } from "@/lib/i18n/languages";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
   | "invtpl.center_template_tab"
@@ -8357,6 +8357,74 @@ export type UiKey =
   | "email_settings.not_found"
   | "email_settings.imap_missing_config"
   | "email_settings.imap_verified"
+  | "cbill.title"
+  | "cbill.subtitle"
+  | "cbill.customer_bill_generated"
+  | "cbill.customer_bill_report"
+  | "cbill.bill_no"
+  | "cbill.bill_date"
+  | "cbill.due_date"
+  | "cbill.bill_status"
+  | "cbill.order_reference"
+  | "cbill.customer_account"
+  | "cbill.customer_name"
+  | "cbill.account_number"
+  | "cbill.shipment_details"
+  | "cbill.transport_mode"
+  | "cbill.movement_type"
+  | "cbill.route_path"
+  | "cbill.truck_driver"
+  | "cbill.charge_entry"
+  | "cbill.charge_type"
+  | "cbill.charge_name"
+  | "cbill.quantity"
+  | "cbill.unit"
+  | "cbill.rate"
+  | "cbill.tax_pct"
+  | "cbill.tax_amount"
+  | "cbill.amount"
+  | "cbill.total_amount"
+  | "cbill.add_charge"
+  | "cbill.save_charges"
+  | "cbill.subtotal"
+  | "cbill.tax_total"
+  | "cbill.other_charges"
+  | "cbill.discount"
+  | "cbill.grand_total"
+  | "cbill.paid_amount"
+  | "cbill.balance_due"
+  | "cbill.save_draft"
+  | "cbill.submit_approval"
+  | "cbill.approve_bill"
+  | "cbill.post_to_ledger"
+  | "cbill.posted_to_ledger"
+  | "cbill.view_customer_order"
+  | "cbill.view_customer_bill"
+  | "cbill.customer_ledger"
+  | "cbill.print_bill"
+  | "cbill.share_whatsapp"
+  | "cbill.share_email"
+  | "cbill.status_draft"
+  | "cbill.status_submitted"
+  | "cbill.status_approved"
+  | "cbill.status_posted"
+  | "cbill.status_paid"
+  | "cbill.status_cancelled"
+  | "cbill.no_items"
+  | "cbill.confirm_post"
+  | "cbill.confirm_post_desc"
+  | "cbill.charge_freight"
+  | "cbill.charge_customs"
+  | "cbill.charge_port"
+  | "cbill.charge_clearing"
+  | "cbill.charge_loading"
+  | "cbill.charge_unloading"
+  | "cbill.charge_warehouse"
+  | "cbill.charge_documentation"
+  | "cbill.charge_delivery"
+  | "cbill.charge_demurrage"
+  | "cbill.charge_other"
+
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -26997,6 +27065,73 @@ const en: Dict = {
   "email_settings.not_found": "Email account not found.",
   "email_settings.imap_missing_config": "IMAP parameters missing. Host, Username, and Password are required.",
   "email_settings.imap_verified": "IMAP connection verified successfully!",
+  "cbill.title": "Customer Bill",
+  "cbill.subtitle": "Create, review and post shipping customer bills linked directly to customer orders and accounting ledgers.",
+  "cbill.customer_bill_generated": "Customer Bill Generated",
+  "cbill.customer_bill_report": "Customer Bill Live Statement",
+  "cbill.bill_no": "Bill No",
+  "cbill.bill_date": "Bill Date",
+  "cbill.due_date": "Due Date",
+  "cbill.bill_status": "Bill Status",
+  "cbill.order_reference": "Order Reference",
+  "cbill.customer_account": "Customer Account",
+  "cbill.customer_name": "Customer Name",
+  "cbill.account_number": "Account Number",
+  "cbill.shipment_details": "Shipment & Logistics",
+  "cbill.transport_mode": "Transport Mode",
+  "cbill.movement_type": "Movement Type",
+  "cbill.route_path": "Route / Ports",
+  "cbill.truck_driver": "Assigned Vehicle / Driver",
+  "cbill.charge_entry": "Customer Charges & Expenses Entry",
+  "cbill.charge_type": "Charge Category",
+  "cbill.charge_name": "Charge Name / Description",
+  "cbill.quantity": "Quantity",
+  "cbill.unit": "Unit",
+  "cbill.rate": "Rate / Price",
+  "cbill.tax_pct": "Tax %",
+  "cbill.tax_amount": "Tax Amount",
+  "cbill.amount": "Amount",
+  "cbill.total_amount": "Total Amount",
+  "cbill.add_charge": "+ Add Charge Line",
+  "cbill.save_charges": "Save Bill Charges",
+  "cbill.subtotal": "Subtotal",
+  "cbill.tax_total": "Total Tax",
+  "cbill.other_charges": "Other Surcharges",
+  "cbill.discount": "Discount",
+  "cbill.grand_total": "Grand Total",
+  "cbill.paid_amount": "Paid Amount",
+  "cbill.balance_due": "Balance Due",
+  "cbill.save_draft": "Save Draft",
+  "cbill.submit_approval": "Submit for Review",
+  "cbill.approve_bill": "Approve Bill",
+  "cbill.post_to_ledger": "Post to General Ledger",
+  "cbill.posted_to_ledger": "Posted to Ledger",
+  "cbill.view_customer_order": "View Customer Order",
+  "cbill.view_customer_bill": "View Customer Bill",
+  "cbill.customer_ledger": "Customer Ledger Statement",
+  "cbill.print_bill": "Print Bill",
+  "cbill.share_whatsapp": "Share WhatsApp",
+  "cbill.share_email": "Send Email",
+  "cbill.status_draft": "Draft",
+  "cbill.status_submitted": "Submitted",
+  "cbill.status_approved": "Approved",
+  "cbill.status_posted": "Posted to Ledger",
+  "cbill.status_paid": "Paid",
+  "cbill.status_cancelled": "Cancelled",
+  "cbill.no_items": "No charges added yet. Click + Add Charge Line to enter customer billing items.",
+  "cbill.confirm_post": "Post Bill to General Ledger?",
+  "cbill.confirm_post_desc": "This will debit Customer Shipping AR and credit Shipping Revenue. This action cannot be reversed.",
+  "cbill.charge_freight": "Freight Charges",
+  "cbill.charge_customs": "Customs Duty & Clearance",
+  "cbill.charge_port": "Port & Terminal Handling",
+  "cbill.charge_clearing": "Clearing Agent Agency Fee",
+  "cbill.charge_loading": "Loading & Labor Charges",
+  "cbill.charge_unloading": "Unloading Charges",
+  "cbill.charge_warehouse": "Warehouse & Storage",
+  "cbill.charge_documentation": "Documentation & Border Fees",
+  "cbill.charge_delivery": "Local Delivery & Haulage",
+  "cbill.charge_demurrage": "Demurrage & Detention",
+  "cbill.charge_other": "Other Miscellaneous Charges",
 };
 
 const ur: Dict = {
@@ -45611,6 +45746,73 @@ const ur: Dict = {
   "email_settings.not_found": "ای میل اکاؤنٹ نہیں ملا۔",
   "email_settings.imap_missing_config": "IMAP پیرامیٹرز غائب ہیں۔ میزبان، صارف نام، اور پاس ورڈ کی ضرورت ہے۔",
   "email_settings.imap_verified": "IMAP کنکشن کامیابی سے تصدیق شدہ!",
+  "cbill.title": "کسٹمر بل",
+  "cbill.subtitle": "کسٹمر آرڈرز اور اکاؤنٹنگ لیجرز سے منسلک شپنگ کسٹمر بل بنائیں، جائزہ لیں اور پوسٹ کریں۔",
+  "cbill.customer_bill_generated": "کسٹمر بل تیار ہو گیا",
+  "cbill.customer_bill_report": "کسٹمر بل لائیو اسٹیٹمنٹ",
+  "cbill.bill_no": "بل نمبر",
+  "cbill.bill_date": "بل کی تاریخ",
+  "cbill.due_date": "واجب الادا تاریخ",
+  "cbill.bill_status": "بل کی حیثیت",
+  "cbill.order_reference": "آرڈر حوالہ",
+  "cbill.customer_account": "کسٹمر اکاؤنٹ",
+  "cbill.customer_name": "کسٹمر کا نام",
+  "cbill.account_number": "اکاؤنٹ نمبر",
+  "cbill.shipment_details": "شپمنٹ اور لاجسٹکس",
+  "cbill.transport_mode": "نقل و حمل کا طریقہ",
+  "cbill.movement_type": "نقل و حرکت کی قسم",
+  "cbill.route_path": "روٹ / بندرگاہیں",
+  "cbill.truck_driver": "مختص شدہ گاڑی / ڈرائیور",
+  "cbill.charge_entry": "کسٹمر اخراجات اور چارجز کا اندراج",
+  "cbill.charge_type": "چارج کی قسم",
+  "cbill.charge_name": "چارج کا نام / تفصیل",
+  "cbill.quantity": "مقدار",
+  "cbill.unit": "یونٹ",
+  "cbill.rate": "شرح / قیمت",
+  "cbill.tax_pct": "ٹیکس %",
+  "cbill.tax_amount": "ٹیکس کی رقم",
+  "cbill.amount": "رقم",
+  "cbill.total_amount": "کل رقم",
+  "cbill.add_charge": "+ نیا چارج شامل کریں",
+  "cbill.save_charges": "بل چارجز محفوظ کریں",
+  "cbill.subtotal": "ذیلی کل",
+  "cbill.tax_total": "کل ٹیکس",
+  "cbill.other_charges": "دیگر اضافی چارجز",
+  "cbill.discount": "رعایت / چھوٹ",
+  "cbill.grand_total": "کل میزان",
+  "cbill.paid_amount": "ادا شدہ رقم",
+  "cbill.balance_due": "باقی واجب الادا رقم",
+  "cbill.save_draft": "ڈرافٹ محفوظ کریں",
+  "cbill.submit_approval": "جائزہ کے لیے پیش کریں",
+  "cbill.approve_bill": "بل منظور کریں",
+  "cbill.post_to_ledger": "جنرل لیجر میں پوسٹ کریں",
+  "cbill.posted_to_ledger": "لیجر میں پوسٹ شدہ",
+  "cbill.view_customer_order": "کسٹمر آرڈر دیکھیں",
+  "cbill.view_customer_bill": "کسٹمر بل دیکھیں",
+  "cbill.customer_ledger": "کسٹمر لیجر اسٹیٹمنٹ",
+  "cbill.print_bill": "بل پرنٹ کریں",
+  "cbill.share_whatsapp": "واٹس ایپ پر شیئر کریں",
+  "cbill.share_email": "ای میل بھیجیں",
+  "cbill.status_draft": "ڈرافٹ",
+  "cbill.status_submitted": "جمع شدہ",
+  "cbill.status_approved": "منظور شدہ",
+  "cbill.status_posted": "پوسٹ شدہ",
+  "cbill.status_paid": "ادا شدہ",
+  "cbill.status_cancelled": "منسوخ شدہ",
+  "cbill.no_items": "ابھی تک کوئی چارج شامل نہیں کیا گیا۔ چارجز شامل کرنے کے لیے بٹن دبائیں۔",
+  "cbill.confirm_post": "کیا آپ یہ بل جنرل لیجر میں پوسٹ کرنا چاہتے ہیں؟",
+  "cbill.confirm_post_desc": "اس عمل سے کسٹمر شپنگ اے آر ڈیبٹ اور شپنگ ریونیو کریڈٹ ہو جائے گا۔ اس عمل کو واپس نہیں کیا جا سکتا۔",
+  "cbill.charge_freight": "کرایہ / فریٹ چارجز",
+  "cbill.charge_customs": "کسٹمز ڈیوٹی اور کلیئرنس",
+  "cbill.charge_port": "پورٹ اور ٹرمینل ہینڈلنگ",
+  "cbill.charge_clearing": "کلیئرنگ ایجنٹ ایجنسی فیس",
+  "cbill.charge_loading": "لوڈنگ اور مزدوری چارجز",
+  "cbill.charge_unloading": "ان لوڈنگ چارجز",
+  "cbill.charge_warehouse": "گودام اور اسٹوریج چارجز",
+  "cbill.charge_documentation": "دستاویزات اور سرحدی فیس",
+  "cbill.charge_delivery": "مقامی ڈلیوری اور ٹرانسپورٹ",
+  "cbill.charge_demurrage": "ڈیمریج اور تاخیری جرمانہ",
+  "cbill.charge_other": "دیگر متفرق اخراجات",
 };
 
 const ar: Dict = {
@@ -64227,6 +64429,73 @@ const ar: Dict = {
   "email_settings.not_found": "حساب البريد الإلكتروني غير موجود.",
   "email_settings.imap_missing_config": "معاملات IMAP مفقودة. المضيف واسم المستخدم وكلمة المرور مطلوبة.",
   "email_settings.imap_verified": "تم التحقق من اتصال IMAP بنجاح!",
+  "cbill.title": "فاتورة العميل",
+  "cbill.subtitle": "إنشاء ومراجعة وترحيل فواتير عملاء الشحن المرتبطة مباشرة بطلبات العملاء ودفاتر الحسابات.",
+  "cbill.customer_bill_generated": "تم إنشاء فاتورة العميل",
+  "cbill.customer_bill_report": "كشف حساب فاتورة العميل المباشر",
+  "cbill.bill_no": "رقم الفاتورة",
+  "cbill.bill_date": "تاريخ الفاتورة",
+  "cbill.due_date": "تاريخ الاستحقاق",
+  "cbill.bill_status": "حالة الفاتورة",
+  "cbill.order_reference": "مرجع الطلب",
+  "cbill.customer_account": "حساب العميل",
+  "cbill.customer_name": "اسم العميل",
+  "cbill.account_number": "رقم الحساب",
+  "cbill.shipment_details": "الشحن والخدمات اللوجستية",
+  "cbill.transport_mode": "طريقة النقل",
+  "cbill.movement_type": "نوع الحركة",
+  "cbill.route_path": "المسار / الموانئ",
+  "cbill.truck_driver": "المركبة / السائق المعين",
+  "cbill.charge_entry": "إدخال رسوم ومصاريف العميل",
+  "cbill.charge_type": "فئة الرسوم",
+  "cbill.charge_name": "اسم الرسم / الوصف",
+  "cbill.quantity": "الكمية",
+  "cbill.unit": "الوحدة",
+  "cbill.rate": "السعر / الفئة",
+  "cbill.tax_pct": "نسبة الضريبة %",
+  "cbill.tax_amount": "مبلغ الضريبة",
+  "cbill.amount": "المبلغ",
+  "cbill.total_amount": "المبلغ الإجمالي",
+  "cbill.add_charge": "+ إضافة بند رسوم",
+  "cbill.save_charges": "حفظ رسوم الفاتورة",
+  "cbill.subtotal": "المجموع الفرعي",
+  "cbill.tax_total": "إجمالي الضريبة",
+  "cbill.other_charges": "رسوم إضافية أخرى",
+  "cbill.discount": "الخصم",
+  "cbill.grand_total": "المجموع الكلي",
+  "cbill.paid_amount": "المبلغ المدفوع",
+  "cbill.balance_due": "الرصيد المستحق",
+  "cbill.save_draft": "حفظ كمسودة",
+  "cbill.submit_approval": "إرسال للمراجعة",
+  "cbill.approve_bill": "اعتماد الفاتورة",
+  "cbill.post_to_ledger": "ترحيل إلى دفتر الأستاذ",
+  "cbill.posted_to_ledger": "مرحل إلى دفتر الأستاذ",
+  "cbill.view_customer_order": "عرض طلب العميل",
+  "cbill.view_customer_bill": "عرض فاتورة العميل",
+  "cbill.customer_ledger": "كشف حساب العميل",
+  "cbill.print_bill": "طباعة الفاتورة",
+  "cbill.share_whatsapp": "مشاركة عبر واتساب",
+  "cbill.share_email": "إرسال بريد إلكتروني",
+  "cbill.status_draft": "مسودة",
+  "cbill.status_submitted": "تم التقديم",
+  "cbill.status_approved": "معتمد",
+  "cbill.status_posted": "مرحل",
+  "cbill.status_paid": "مدفوع",
+  "cbill.status_cancelled": "ملغي",
+  "cbill.no_items": "لم تتم إضافة أي رسوم بعد. انقر على إضافة بند رسوم لإدخال بنود الفاتورة.",
+  "cbill.confirm_post": "هل تريد ترحيل هذه الفاتورة إلى دفتر الأستاذ العام؟",
+  "cbill.confirm_post_desc": "سيؤدي هذا إلى مدين حساب ذمم العميل ودائن إيرادات الشحن. لا يمكن التراجع عن هذا الإجراء.",
+  "cbill.charge_freight": "أجور الشحن",
+  "cbill.charge_customs": "الرسوم الجمركية والتخليص",
+  "cbill.charge_port": "رسوم الميناء والمناولة",
+  "cbill.charge_clearing": "أتعاب وكيل التخليص",
+  "cbill.charge_loading": "رسوم التحميل والعمالة",
+  "cbill.charge_unloading": "رسوم التفريغ",
+  "cbill.charge_warehouse": "رسوم التخزين والمستودع",
+  "cbill.charge_documentation": "رسوم الوثائق والرسوم الحدودية",
+  "cbill.charge_delivery": "التوصيل والنقل الداخلي",
+  "cbill.charge_demurrage": "غرامات التأخير والأرضيات",
+  "cbill.charge_other": "رسوم ومصاريف متفرقة أخرى",
 };
 
 const fa: Dict = {
@@ -82842,6 +83111,73 @@ const fa: Dict = {
   "email_settings.not_found": "حساب ایمیل یافت نشد.",
   "email_settings.imap_missing_config": "پارامترهای IMAP گمشده است. میزبان، نام کاربری و رمز عبور مورد نیاز است.",
   "email_settings.imap_verified": "اتصال IMAP با موفقیت تأیید شد!",
+  "cbill.title": "صورتحساب مشتری",
+  "cbill.subtitle": "ایجاد، بررسی و ثبت صورت‌حساب‌های مشتریان حمل‌ونقل متصل مستقیم به سفارشات مشتری و دفاتر حسابداری.",
+  "cbill.customer_bill_generated": "صورتحساب مشتری ایجاد شد",
+  "cbill.customer_bill_report": "صورت وضعیت زنده صورتحساب مشتری",
+  "cbill.bill_no": "شماره صورتحساب",
+  "cbill.bill_date": "تاریخ صورتحساب",
+  "cbill.due_date": "تاریخ سررسید",
+  "cbill.bill_status": "وضعیت صورتحساب",
+  "cbill.order_reference": "مرجع سفارش",
+  "cbill.customer_account": "حساب مشتری",
+  "cbill.customer_name": "نام مشتری",
+  "cbill.account_number": "شماره حساب",
+  "cbill.shipment_details": "حمل‌ونقل و لجستیک",
+  "cbill.transport_mode": "روش حمل و نقل",
+  "cbill.movement_type": "نوع جابجایی",
+  "cbill.route_path": "مسیر / بنادر",
+  "cbill.truck_driver": "وسیله نقلیه / راننده اختصاص یافته",
+  "cbill.charge_entry": "ثبت هزینه‌ها و مبالغ مشتری",
+  "cbill.charge_type": "دسته‌بندی هزینه",
+  "cbill.charge_name": "نام هزینه / شرح",
+  "cbill.quantity": "تعداد",
+  "cbill.unit": "واحد",
+  "cbill.rate": "نرخ / قیمت",
+  "cbill.tax_pct": "درصد مالیات %",
+  "cbill.tax_amount": "مبلغ مالیات",
+  "cbill.amount": "مبلغ",
+  "cbill.total_amount": "مبلغ کل",
+  "cbill.add_charge": "+ افزودن ردیف هزینه",
+  "cbill.save_charges": "ذخیره هزینه‌های صورتحساب",
+  "cbill.subtotal": "جمع جزء",
+  "cbill.tax_total": "مجموع مالیات",
+  "cbill.other_charges": "سایر هزینه‌های جانبی",
+  "cbill.discount": "تخفیف",
+  "cbill.grand_total": "مبلغ کل نهایی",
+  "cbill.paid_amount": "مبلغ پرداخت شده",
+  "cbill.balance_due": "مانده قابل پرداخت",
+  "cbill.save_draft": "ذخیره پیش‌نویس",
+  "cbill.submit_approval": "ارسال جهت بررسی",
+  "cbill.approve_bill": "تایید صورتحساب",
+  "cbill.post_to_ledger": "ثبت در دفتر کل",
+  "cbill.posted_to_ledger": "ثبت شده در دفتر کل",
+  "cbill.view_customer_order": "مشاهده سفارش مشتری",
+  "cbill.view_customer_bill": "مشاهده صورتحساب مشتری",
+  "cbill.customer_ledger": "صورت‌حساب دفتر مشتری",
+  "cbill.print_bill": "چاپ صورتحساب",
+  "cbill.share_whatsapp": "اشتراک‌گذاری در واتساپ",
+  "cbill.share_email": "ارسال ایمیل",
+  "cbill.status_draft": "پیش‌نویس",
+  "cbill.status_submitted": "ارسال شده",
+  "cbill.status_approved": "تایید شده",
+  "cbill.status_posted": "ثبت نهایی",
+  "cbill.status_paid": "پرداخت شده",
+  "cbill.status_cancelled": "لغو شده",
+  "cbill.no_items": "هنوز هزینه‌ای اضافه نشده است. برای ثبت موارد صورتحساب روی افزودن هزینه کلیک کنید.",
+  "cbill.confirm_post": "آیا می‌خواهید این صورتحساب را در دفتر کل ثبت کنید؟",
+  "cbill.confirm_post_desc": "این عمل حساب دریافتنی مشتری را بدهکار و درآمد حمل‌ونقل را بستانکار می‌کند. این عملیات قابل بازگشت نیست.",
+  "cbill.charge_freight": "هزینه حمل و نقل",
+  "cbill.charge_customs": "حقوق و عوارض گمرکی",
+  "cbill.charge_port": "هزینه‌های بندر و پایانه",
+  "cbill.charge_clearing": "کارمزد ترخیص‌کار",
+  "cbill.charge_loading": "هزینه بارگیری و کارگری",
+  "cbill.charge_unloading": "هزینه تخلیه بار",
+  "cbill.charge_warehouse": "هزینه انبارداری",
+  "cbill.charge_documentation": "هزینه‌های اسناد و مرزی",
+  "cbill.charge_delivery": "تحویل محلی و حمل داخلی",
+  "cbill.charge_demurrage": "هزینه توقف و جریمه تاخیر",
+  "cbill.charge_other": "سایر هزینه‌های متفرقه",
 };
 
 const ps: Dict = {
@@ -101463,6 +101799,73 @@ const ps: Dict = {
   "email_settings.not_found": "د ای میل حساب پیدا نشو.",
   "email_settings.imap_missing_config": "IMAP پیرامیترونه ورک شوي. میزبان، کاروونکی نوم، او رمز مطلوب دي.",
   "email_settings.imap_verified": "IMAP اتصال کامیابې سره تصدیق شو!",
+  "cbill.title": "د پیرودونکي بل",
+  "cbill.subtitle": "د بار وړلو پیرودونکي بلونه جوړ، بیاکتنه او ثبت کړئ چې مستقیم د پیرودونکي امرونو او محاسبې لیجرونو سره تړل شوي.",
+  "cbill.customer_bill_generated": "د پیرودونکي بل جوړ شو",
+  "cbill.customer_bill_report": "د پیرودونکي بل ژوندی بیان",
+  "cbill.bill_no": "د بل شمیره",
+  "cbill.bill_date": "د بل نیټه",
+  "cbill.due_date": "د ادا کولو نیټه",
+  "cbill.bill_status": "د بل حالت",
+  "cbill.order_reference": "د امر مرجع",
+  "cbill.customer_account": "د پیرودونکي حساب",
+  "cbill.customer_name": "د پیرودونکي نوم",
+  "cbill.account_number": "د حساب شمیره",
+  "cbill.shipment_details": "بار وړل او لوژستیک",
+  "cbill.transport_mode": "د ترانسپورت طریقه",
+  "cbill.movement_type": "د حرکت ډول",
+  "cbill.route_path": "لار / بندرونه",
+  "cbill.truck_driver": "ټاکل شوی موټر / موټر چلوونکی",
+  "cbill.charge_entry": "د پیرودونکي لګښتونو او چارجونو داخلول",
+  "cbill.charge_type": "د چارج کټګوري",
+  "cbill.charge_name": "د چارج نوم / تفصیل",
+  "cbill.quantity": "مقدار",
+  "cbill.unit": "واحد",
+  "cbill.rate": "نرخ / بیه",
+  "cbill.tax_pct": "د مالیې سلنه %",
+  "cbill.tax_amount": "د مالیې اندازه",
+  "cbill.amount": "اندازه",
+  "cbill.total_amount": "ټوله اندازه",
+  "cbill.add_charge": "+ د چارج کرښه اضافه کړئ",
+  "cbill.save_charges": "د بل لګښتونه خوندي کړئ",
+  "cbill.subtotal": "فرعي مجموعه",
+  "cbill.tax_total": "ټوله مالیه",
+  "cbill.other_charges": "نور اضافي لګښتونه",
+  "cbill.discount": "تخفیف",
+  "cbill.grand_total": "ټوله نهایی مجموعه",
+  "cbill.paid_amount": "تادیه شوې پیسې",
+  "cbill.balance_due": "پاتې واجب الادا",
+  "cbill.save_draft": "مسوده خوندي کړئ",
+  "cbill.submit_approval": "د بیاکتنې لپاره واستوئ",
+  "cbill.approve_bill": "بل تصویب کړئ",
+  "cbill.post_to_ledger": "عمومي لیجر ته پوسټ کړئ",
+  "cbill.posted_to_ledger": "لیجر ته پوسټ شوی",
+  "cbill.view_customer_order": "د پیرودونکي امر وګورئ",
+  "cbill.view_customer_bill": "د پیرودونکي بل وګورئ",
+  "cbill.customer_ledger": "د پیرودونکي لیجر بیان",
+  "cbill.print_bill": "بل چاپ کړئ",
+  "cbill.share_whatsapp": "په واټس اپ شریک کړئ",
+  "cbill.share_email": "بریښنالیک واستوئ",
+  "cbill.status_draft": "مسوده",
+  "cbill.status_submitted": "سپارل شوی",
+  "cbill.status_approved": "تایید شوی",
+  "cbill.status_posted": "پوسټ شوی",
+  "cbill.status_paid": "تادیه شوی",
+  "cbill.status_cancelled": "لغوه شوی",
+  "cbill.no_items": "تراوسه هیڅ لګښت نه دی اضافه شوی. د پیرودونکي بیل لګښتونو داخلولو لپاره تڼۍ کیکاږئ.",
+  "cbill.confirm_post": "ایا تاسو غواړئ دا بل عمومي لیجر ته پوسټ کړئ؟",
+  "cbill.confirm_post_desc": "دا به د پیرودونکي ترلاسه کولو حساب ډیبټ کړي او د بار وړلو عاید کریډیټ کړي. دا عمل بیرته نشي اخیستل کیدی.",
+  "cbill.charge_freight": "د بار وړلو لګښت",
+  "cbill.charge_customs": "د ګمرک محصول او تصفیه",
+  "cbill.charge_port": "د بندر او ترمینل لګښتونه",
+  "cbill.charge_clearing": "د تصفیې استازي فیس",
+  "cbill.charge_loading": "د بارولو او مزدورۍ لګښتونه",
+  "cbill.charge_unloading": "د کښته کولو لګښتونه",
+  "cbill.charge_warehouse": "د ګودام او ذخیره کولو لګښتونه",
+  "cbill.charge_documentation": "د اسنادو او سرحدي فیسونه",
+  "cbill.charge_delivery": "ځایی تحویلي او لیږد",
+  "cbill.charge_demurrage": "د ځنډ جریمه او ډیمریج",
+  "cbill.charge_other": "نور متفرقه لګښتونه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

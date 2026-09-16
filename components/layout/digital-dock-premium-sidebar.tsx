@@ -347,6 +347,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Ship,
     children: [
       { label: "New Customer Order", href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
+      { label: "Customer Bills", href: "/dashboard/clearing-agent/customer-bill", icon: Receipt },
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
       { label: "Inter-Country Shipping Claims", href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
@@ -525,6 +526,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Customer Inquiries & Calls", href: "/dashboard/customer-inquiries", icon: PhoneCall },
       { label: "Inquiry Follow-ups", href: "/dashboard/customer-inquiries/follow-ups", icon: Clock },
       { label: "SMS & Customer Responses", href: "/dashboard/return-sms-reply", icon: FileText },
+      { label: "Email Settings", href: "/dashboard/admin/email-settings", icon: Mail, roles: ["super_admin"] },
     ],
   },
   {
@@ -656,6 +658,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/expenses/bill-expenses": ["expenses:read", "route:/dashboard/expenses/bill-expenses"],
   "/dashboard/inventory": ["products:read", "route:/dashboard/inventory"],
   "/dashboard/clearing-agent/customer-order": ["shipping_records:read", "route:/dashboard/clearing-agent/customer-order"],
+  "/dashboard/clearing-agent/customer-bill": ["shipping_records:read", "route:/dashboard/clearing-agent/customer-bill"],
   "/dashboard/shipping-line": ["shipping_records:read", "route:/dashboard/shipping-line"],
   "/dashboard/shipping-line/bl-entry": ["shipping_records:read", "route:/dashboard/shipping-line/bl-entry"],
   "/dashboard/clearing-agent": ["clearing_agents:read", "route:/dashboard/clearing-agent"],
@@ -680,7 +683,8 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/audit-monitoring": ["audit_logs:read", "route:/dashboard/audit-monitoring"],
   "/dashboard/documents": ["documents:read", "route:/dashboard/documents"],
   "/dashboard/ai-entry/messages": ["communication:read", "route:/dashboard/ai-entry/messages"],
-  "/dashboard/ai-entry/voice-text": ["communication:read", "route:/dashboard/ai-entry/voice-text"]
+  "/dashboard/ai-entry/voice-text": ["communication:read", "route:/dashboard/ai-entry/voice-text"],
+  "/dashboard/admin/email-settings": ["route:/dashboard/admin/email-settings"]
 };
 
 /** RBAC & Form Allotment Filter — keeps an entry when it declares no `roles`, the user is a super
