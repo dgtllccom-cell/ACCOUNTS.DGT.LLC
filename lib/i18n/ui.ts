@@ -8357,6 +8357,12 @@ export type UiKey =
   | "email_settings.not_found"
   | "email_settings.imap_missing_config"
   | "email_settings.imap_verified"
+  | "email_messages.title"
+  | "email_messages.loading"
+  | "email_messages.empty"
+  | "email_messages.col_from"
+  | "email_messages.col_subject"
+  | "email_messages.col_date"
   | "cbill.title"
   | "cbill.subtitle"
   | "cbill.customer_bill_generated"
@@ -27065,6 +27071,12 @@ const en: Dict = {
   "email_settings.not_found": "Email account not found.",
   "email_settings.imap_missing_config": "IMAP parameters missing. Host, Username, and Password are required.",
   "email_settings.imap_verified": "IMAP connection verified successfully!",
+  "email_messages.title": "Email Messages",
+  "email_messages.loading": "Loading messages...",
+  "email_messages.empty": "No messages found",
+  "email_messages.col_from": "From",
+  "email_messages.col_subject": "Subject",
+  "email_messages.col_date": "Date",
   "cbill.title": "Customer Bill",
   "cbill.subtitle": "Create, review and post shipping customer bills linked directly to customer orders and accounting ledgers.",
   "cbill.customer_bill_generated": "Customer Bill Generated",
@@ -45748,6 +45760,12 @@ const ur: Dict = {
   "email_settings.not_found": "ای میل اکاؤنٹ نہیں ملا۔",
   "email_settings.imap_missing_config": "IMAP پیرامیٹرز غائب ہیں۔ میزبان، صارف نام، اور پاس ورڈ کی ضرورت ہے۔",
   "email_settings.imap_verified": "IMAP کنکشن کامیابی سے تصدیق شدہ!",
+  "email_messages.title": "ای میل پیغام",
+  "email_messages.loading": "پیغامات لوڈ ہو رہے ہیں...",
+  "email_messages.empty": "کوئی پیغام نہیں ملے",
+  "email_messages.col_from": "سے",
+  "email_messages.col_subject": "موضوع",
+  "email_messages.col_date": "تاریخ",
   "cbill.title": "کسٹمر بل",
   "cbill.subtitle": "کسٹمر آرڈرز اور اکاؤنٹنگ لیجرز سے منسلک شپنگ کسٹمر بل بنائیں، جائزہ لیں اور پوسٹ کریں۔",
   "cbill.customer_bill_generated": "کسٹمر بل تیار ہو گیا",
@@ -64432,6 +64450,12 @@ const ar: Dict = {
   "email_settings.not_found": "حساب البريد الإلكتروني غير موجود.",
   "email_settings.imap_missing_config": "معاملات IMAP مفقودة. المضيف واسم المستخدم وكلمة المرور مطلوبة.",
   "email_settings.imap_verified": "تم التحقق من اتصال IMAP بنجاح!",
+  "email_messages.title": "رسائل البريد الإلكتروني",
+  "email_messages.loading": "جاري تحميل الرسائل...",
+  "email_messages.empty": "لم يتم العثور على رسائل",
+  "email_messages.col_from": "من",
+  "email_messages.col_subject": "الموضوع",
+  "email_messages.col_date": "التاريخ",
   "cbill.title": "فاتورة العميل",
   "cbill.subtitle": "إنشاء ومراجعة وترحيل فواتير عملاء الشحن المرتبطة مباشرة بطلبات العملاء ودفاتر الحسابات.",
   "cbill.customer_bill_generated": "تم إنشاء فاتورة العميل",
@@ -83115,6 +83139,12 @@ const fa: Dict = {
   "email_settings.not_found": "حساب ایمیل یافت نشد.",
   "email_settings.imap_missing_config": "پارامترهای IMAP گمشده است. میزبان، نام کاربری و رمز عبور مورد نیاز است.",
   "email_settings.imap_verified": "اتصال IMAP با موفقیت تأیید شد!",
+  "email_messages.title": "پیام های ایمیل",
+  "email_messages.loading": "در حال بارگذاری پیام ها...",
+  "email_messages.empty": "پیامی یافت نشد",
+  "email_messages.col_from": "از",
+  "email_messages.col_subject": "موضوع",
+  "email_messages.col_date": "تاریخ",
   "cbill.title": "صورتحساب مشتری",
   "cbill.subtitle": "ایجاد، بررسی و ثبت صورت‌حساب‌های مشتریان حمل‌ونقل متصل مستقیم به سفارشات مشتری و دفاتر حسابداری.",
   "cbill.customer_bill_generated": "صورتحساب مشتری ایجاد شد",
@@ -101804,6 +101834,12 @@ const ps: Dict = {
   "email_settings.not_found": "د ای میل حساب پیدا نشو.",
   "email_settings.imap_missing_config": "IMAP پیرامیترونه ورک شوي. میزبان، کاروونکی نوم، او رمز مطلوب دي.",
   "email_settings.imap_verified": "IMAP اتصال کامیابې سره تصدیق شو!",
+  "email_messages.title": "د بریښنالیک پیغامونه",
+  "email_messages.loading": "پیغامونه لوډ کیږي...",
+  "email_messages.empty": "پیغام پیدا نشو",
+  "email_messages.col_from": "له",
+  "email_messages.col_subject": "موضوع",
+  "email_messages.col_date": "نیټه",
   "cbill.title": "د پیرودونکي بل",
   "cbill.subtitle": "د بار وړلو پیرودونکي بلونه جوړ، بیاکتنه او ثبت کړئ چې مستقیم د پیرودونکي امرونو او محاسبې لیجرونو سره تړل شوي.",
   "cbill.customer_bill_generated": "د پیرودونکي بل جوړ شو",
