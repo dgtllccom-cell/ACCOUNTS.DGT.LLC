@@ -517,16 +517,16 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    key: "messages-comms",
-    label: "Messages & WhatsApp",
+    key: "all-messages",
+    label: "All Messages",
     icon: MessageSquare,
     children: [
-      { label: "WhatsApp Center", href: "/dashboard/messages/whatsapp", icon: MessageCircle },
-      { label: "Communication Center", href: "/dashboard/communication-center", icon: MessageSquare },
+      { label: "All Messages / Communication Center", href: "/dashboard/communication-center", icon: MessageSquare },
+      { label: "WhatsApp", href: "/dashboard/messages/whatsapp", icon: MessageCircle },
+      { label: "Email", href: "/dashboard/messages/email", icon: Mail },
       { label: "Customer Inquiries & Calls", href: "/dashboard/customer-inquiries", icon: PhoneCall },
       { label: "Inquiry Follow-ups", href: "/dashboard/customer-inquiries/follow-ups", icon: Clock },
       { label: "SMS & Customer Responses", href: "/dashboard/return-sms-reply", icon: FileText },
-      { label: "Email Settings", href: "/dashboard/admin/email-settings", icon: Mail, roles: ["super_admin"] },
     ],
   },
   {
@@ -684,7 +684,9 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/documents": ["documents:read", "route:/dashboard/documents"],
   "/dashboard/ai-entry/messages": ["communication:read", "route:/dashboard/ai-entry/messages"],
   "/dashboard/ai-entry/voice-text": ["communication:read", "route:/dashboard/ai-entry/voice-text"],
-  "/dashboard/admin/email-settings": ["route:/dashboard/admin/email-settings"]
+  "/dashboard/messages/whatsapp": ["communication:read", "route:/dashboard/messages/whatsapp"],
+  "/dashboard/messages/email": ["communication:read", "route:/dashboard/messages/email"],
+  "/dashboard/settings/email-accounts": ["route:/dashboard/settings/email-accounts"]
 };
 
 /** RBAC & Form Allotment Filter — keeps an entry when it declares no `roles`, the user is a super
