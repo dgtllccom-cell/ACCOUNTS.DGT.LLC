@@ -309,6 +309,106 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   const [emails, setEmails] = useState<EmailItem[]>(INITIAL_EMAILS);
   const [selectedEmailId, setSelectedEmailId] = useState<string>('msg-1');
   const [selectedEmailIds, setSelectedEmailIds] = useState<string[]>([]);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Load real emails from IMAP when mailbox or folder changes
+  useEffect(() => {
+    if (!selectedMailboxId || selectedMailboxId === 'all') {
+      setEmails(INITIAL_EMAILS);
+      return;
+    }
+
+    const fetchRealEmails = async () => {
+      try {
+        setLoadingEmails(true);
+        setEmailError(null);
+
+        // Get account ID from mailbox name
+        const mailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
+        if (!mailbox) {
+          setEmails([]);
+          return;
+        }
+
+        // Query the IMAP fetch endpoint
+        const response = await fetch(
+          `/api/erp/email/${selectedMailboxId}/fetch?folder=${activeFolder}`,
+          { credentials: 'include' }
+        );
+
+        if (!response.ok) {
+          if (response.status === 403) {
+            setEmailError('Access denied to this mailbox');
+          } else if (response.status === 400) {
+            setEmailError('IMAP password not configured');
+            setEmails(INITIAL_EMAILS);
+            return;
+          } else {
+            setEmailError(`Error: ${response.statusText}`);
+          }
+          setEmails(INITIAL_EMAILS);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.messages || !Array.isArray(data.messages)) {
+          setEmails(INITIAL_EMAILS);
+          return;
+        }
+
+        // Transform API response to EmailItem[]
+        const transformed: EmailItem[] = data.messages.map((msg: any, idx: number) => {
+          const fromEmail = msg.from || 'unknown@example.com';
+          const fromName = fromEmail.split('@')[0] || 'Unknown';
+          const initials = fromName.substring(0, 2).toUpperCase();
+
+          const bgColors = [
+            'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300',
+            'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-950 dark:text-pink-300',
+            'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300',
+            'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300',
+            'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300',
+            'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300'
+          ];
+
+          return {
+            id: msg.id,
+            senderName: fromName.charAt(0).toUpperCase() + fromName.slice(1),
+            senderEmail: fromEmail,
+            recipientEmail: msg.to || mailbox.email,
+            subject: msg.subject || '(no subject)',
+            preview: msg.preview || msg.body?.substring(0, 100) || '...',
+            date: new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            fullDate: new Date(msg.date).toLocaleString(),
+            isRead: msg.isRead !== false,
+            isStarred: msg.isStarred || false,
+            hasAttachment: msg.attachments?.length > 0,
+            folder: activeFolder,
+            avatarInitials: initials,
+            avatarBg: bgColors[idx % bgColors.length],
+            body: msg.body || msg.preview || '(no content)',
+            attachments: msg.attachments?.map((att: any) => ({
+              name: att.name,
+              size: att.size ? `${(att.size / 1024).toFixed(1)} KB` : 'unknown',
+              type: att.type || 'file'
+            }))
+          };
+        });
+
+        setEmails(transformed);
+      } catch (err) {
+        console.error('Failed to load emails:', err);
+        setEmailError(err instanceof Error ? err.message : 'Failed to load emails');
+        setEmails(INITIAL_EMAILS);
+      } finally {
+        setLoadingEmails(false);
+      }
+    };
+
+    fetchRealEmails();
+  }, [selectedMailboxId, activeFolder]);
 
   // Compose Modal State
   const [showCompose, setShowCompose] = useState(false);
