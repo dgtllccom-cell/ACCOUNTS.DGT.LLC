@@ -139,7 +139,12 @@ export function DgtMailManagementView() {
       )}
 
       {showForm && (
-        <div className="border rounded-lg p-6 bg-slate-50">
+        <div className="border-4 border-red-500 rounded-lg p-6 bg-red-50 dark:bg-red-950/20">
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/40 border-l-4 border-red-600 rounded">
+            <p className="text-red-700 dark:text-red-300 font-bold text-sm">
+              🔴 ENTER MAILBOX PASSWORD HERE
+            </p>
+          </div>
           <h2 className="text-lg font-bold mb-4">
             {editingId ? s.t('edit_mailbox', 'Edit Mailbox Credentials') : s.t('add_mailbox', 'Add Mailbox')}
           </h2>
@@ -175,10 +180,9 @@ export function DgtMailManagementView() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  <Lock className="w-3 h-3 inline mr-1" />
-                  {s.t('imap_password', 'IMAP Password')}
+              <div className="p-3 border-2 border-red-400 rounded-lg bg-red-50 dark:bg-red-950/20">
+                <label className="block text-sm font-bold mb-2 text-red-700 dark:text-red-300">
+                  🔒 {s.t('imap_password', 'IMAP Password')}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -186,7 +190,7 @@ export function DgtMailManagementView() {
                     required
                     value={formData.imapPassword}
                     onChange={(e) => setFormData({ ...formData, imapPassword: e.target.value })}
-                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border-2 border-red-400 rounded-lg focus:ring-2 focus:ring-red-600 bg-white dark:bg-slate-900"
                   />
                   <button
                     type="button"
@@ -198,10 +202,9 @@ export function DgtMailManagementView() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  <Lock className="w-3 h-3 inline mr-1" />
-                  {s.t('smtp_password', 'SMTP Password')}
+              <div className="p-3 border-2 border-red-400 rounded-lg bg-red-50 dark:bg-red-950/20">
+                <label className="block text-sm font-bold mb-2 text-red-700 dark:text-red-300">
+                  🔒 {s.t('smtp_password', 'SMTP Password')}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -209,7 +212,7 @@ export function DgtMailManagementView() {
                     required
                     value={formData.smtpPassword}
                     onChange={(e) => setFormData({ ...formData, smtpPassword: e.target.value })}
-                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border-2 border-red-400 rounded-lg focus:ring-2 focus:ring-red-600 bg-white dark:bg-slate-900"
                   />
                   <button
                     type="button"
@@ -255,9 +258,9 @@ export function DgtMailManagementView() {
               <button
                 type="submit"
                 disabled={testingConnection}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 font-bold border-2 border-red-700"
               >
-                {testingConnection ? 'Testing...' : (editingId ? 'Update & Test Connection' : 'Save & Test Connection')}
+                {testingConnection ? 'Testing...' : (editingId ? '✓ Update & Test Connection' : '✓ Save & Test Connection')}
               </button>
               <button
                 type="button"
