@@ -631,6 +631,16 @@ export async function requireErpSession() {
   return session;
 }
 
+/** API-safe session getter - does NOT redirect, only returns null or session.
+ *  Use this in API routes, server actions, and anywhere you can't use redirect(). */
+export async function getErpSessionForApi(): Promise<ErpSession | null> {
+  try {
+    return await getCurrentErpSession();
+  } catch {
+    return null;
+  }
+}
+
 // Compatibility Aliases
 export const requireSession = requireErpSession;
 export const getSession = getCurrentErpSession;

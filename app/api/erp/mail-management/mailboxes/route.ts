@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentErpSession } from "@/lib/auth/session";
+import { getErpSessionForApi } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
@@ -13,14 +13,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
-    let session: any = null;
-    try {
-      session = await getCurrentErpSession();
-    } catch (e: any) {
-      console.error("[mail-management] getCurrentErpSession threw:", e?.message);
-      return NextResponse.json({ error: "Session check failed: " + e?.message }, { status: 500 });
-    }
-
+    const session = await getErpSessionForApi();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -62,14 +55,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    let session: any = null;
-    try {
-      session = await getCurrentErpSession();
-    } catch (e: any) {
-      console.error("[mail-management] getCurrentErpSession threw:", e?.message);
-      return NextResponse.json({ error: "Session check failed: " + e?.message }, { status: 500 });
-    }
-
+    const session = await getErpSessionForApi();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -131,7 +117,6 @@ export async function POST(request: NextRequest) {
           provider_id: provider.id,
           email_address: emailAddress.toLowerCase(),
           display_name: displayName || emailAddress,
-          scope: "super_admin",
           is_active: true,
           imap_password_encrypted: imapEncrypted,
           smtp_password_encrypted: smtpEncrypted,
