@@ -53,6 +53,7 @@ export type SidebarNode = {
   permission?: PermissionRequirement;
   menuSettingKey?: string;
   children?: SidebarNode[];
+  metadata?: Record<string, any>;
 };
 
 type PermissionRequirement = {

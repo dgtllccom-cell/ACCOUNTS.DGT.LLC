@@ -75,9 +75,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     const isSuperAdmin = Boolean(
       session.isSuperAdmin ||
-      session.scopes?.isSuperAdmin ||
+      (session as any).scopes?.isSuperAdmin ||
       session.roles?.includes("super_admin") ||
-      session.role === "super_admin"
+      (session as any).role === "super_admin"
     );
 
     const existing = await withLocalPg(async (sql) => {

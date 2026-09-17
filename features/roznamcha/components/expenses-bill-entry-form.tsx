@@ -298,6 +298,7 @@ export function ExpensesBillEntryForm({
   const [billDate, setBillDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [billTitle, setBillTitle] = useState(initialBillCategory || "office_home");
   const [referenceNo, setReferenceNo] = useState("");
+  const [billMode, setBillMode] = useState<string>("standard");
 
   useEffect(() => {
     if (initialBillCategory) {

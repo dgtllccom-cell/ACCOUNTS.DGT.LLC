@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useErpScreen } from '@/lib/i18n/use-erp-screen';
 import type { ErpSession } from '@/lib/auth/session';
+import { MailNavTabs } from '@/components/mail-management/mail-nav-tabs';
 
 export interface EmailWorkspaceProps {
   session?: ErpSession | null;
@@ -382,6 +383,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
 
   return (
     <div dir={s.dir} className="bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-5 flex flex-col gap-4">
+      <MailNavTabs className="mb-1" />
       {/* ========================================================================= */}
       {/* 1. TOP HEADER SECTION & DYNAMIC METRICS BAR                               */}
       {/* ========================================================================= */}

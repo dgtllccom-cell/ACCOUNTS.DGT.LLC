@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { data: mailboxes, error } = await admin
       .from("erp_email_accounts")
       .select(`
-        id, email_address, display_name, scope, is_active,
+        id, email_address, display_name, is_active,
         storage_quota_mb, storage_used_mb, plan_type,
         assigned_user_id, assigned_branch_id, suspended_at, suspended_reason,
         last_connection_test, last_connection_status, last_connection_error,

@@ -358,6 +358,7 @@ export function LocalPurchaseView({
   // Draft Bill Items List & Action Menu State
   const [draftItems, setDraftItems] = useState<any[]>([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
+  const [activeStatusDropdownId, setActiveStatusDropdownId] = useState<string | null>(null);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
   const [statusMenuAnchor, setStatusMenuAnchor] = useState<{ id: string; top: number; bottom: number; left: number } | null>(null);
   const [isTopActionsOpen, setIsTopActionsOpen] = useState(false);
@@ -528,7 +529,6 @@ export function LocalPurchaseView({
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
-  const [activeStatusDropdownId, setActiveStatusDropdownId] = useState<string | null>(null);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState<boolean>(false);
   const [showColumnPicker, setShowColumnPicker] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
@@ -2123,7 +2123,7 @@ export function LocalPurchaseView({
               <div className="flex justify-between items-center gap-2">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.country", "Country")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
-                  {activeCountry?.name || activeBranch?.countryName || "All"}
+                  {activeBranch?.countryName || "All"}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2">

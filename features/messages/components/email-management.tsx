@@ -43,6 +43,7 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { ReportActionsMenu } from "@/components/reports/report-actions-menu";
 import { ReportFilterMenu } from "@/components/reports/report-filter-menu";
 import { ReportPageHeader } from "@/components/reports/report-page-header";
+import { MailNavTabs } from "@/components/mail-management/mail-nav-tabs";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
@@ -666,6 +667,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
 
   return (
     <div id="email-workspace-print" className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
+      <MailNavTabs className="mb-2" />
       <ReportPageHeader
         title={channelLabels[channel].title}
         subtitle={channelLabels[channel].subtitle}
