@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { hash } from "bcrypt";
+import { hashPassword } from "@/lib/public-mail/crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
-    const passwordHash = await hash(password, 10);
+    const passwordHash = hashPassword(password);
 
     // Create account
     const { data: user, error: createError } = await admin

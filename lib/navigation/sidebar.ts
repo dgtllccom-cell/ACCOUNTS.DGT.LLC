@@ -1511,6 +1511,7 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin"],
     metadata: { highlight: "red" }
   },
+  {
     key: "settings",
     labelKey: "nav.settings",
     iconKey: "settings",
