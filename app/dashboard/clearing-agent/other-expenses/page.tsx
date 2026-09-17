@@ -2,14 +2,14 @@ import { ExpensesBillEntryForm } from "@/features/roznamcha/components/expenses-
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 
-export const metadata = { title: "Clearing Agent — Customer Bills" };
+export const metadata = { title: "Clearing Agent — Other Expenses Bill" };
 
-export default async function CustomerBillsPage() {
+export default async function OtherExpensesBillPage() {
   const lang = await getRequestLanguage();
 
   return (
     <EntryMethodSelector targetModule="expenses" domain="business" lang={lang}>
-      <ExpensesBillEntryForm lang={lang} initialBillCategory="customer_expenses" />
+      <ExpensesBillEntryForm lang={lang} initialBillCategory="other_expenses" />
     </EntryMethodSelector>
   );
 }

@@ -352,6 +352,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: "New Customer Order", href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
       { label: "Customer Bills", href: "/dashboard/clearing-agent/customer-bill", icon: Receipt },
+      { label: "Truck Expenses Bill", href: "/dashboard/clearing-agent/truck-expenses", icon: Truck },
+      { label: "Customs Expenses Bill", href: "/dashboard/clearing-agent/customs-expenses", icon: Landmark },
+      { label: "Other Expenses Bill", href: "/dashboard/clearing-agent/other-expenses", icon: Receipt },
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
       { label: "Container & Vessel Tracking", href: "/dashboard/shipping-line/tracking", icon: Compass },

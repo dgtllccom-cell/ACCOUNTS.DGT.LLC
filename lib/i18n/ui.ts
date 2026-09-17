@@ -7109,6 +7109,9 @@ export type UiKey =
   | "exp.day_label" | "exp.main_branch" | "exp.city_branch" | "exp.base_currency"
   | "exp.session_time" | "exp.bill_info" | "exp.office_home_bill" | "exp.daily_ops_bill"
   | "exp.general_purchase_bill" | "exp.attached_purchase" | "exp.attached_sale"
+  | "exp.customer_bill_title" | "exp.customs_bill_title" | "exp.truck_bill_title" | "exp.other_bill_title"
+  | "exp.customer_expenses_bill" | "exp.customs_expenses_bill" | "exp.truck_expenses_bill" | "exp.other_expenses_bill"
+  | "exp.attached_customer_order"
   | "exp.search_bill_no" | "exp.bill_type_hint" | "exp.bill_number" | "exp.super_admin_sr"
   | "exp.country_sr" | "exp.debit_account" | "exp.search_debit_ledger" | "exp.select_account"
   | "exp.debit_account_hint" | "exp.credit_account" | "exp.search_credit_ledger"
@@ -7129,6 +7132,9 @@ export type UiKey =
   | "exp.transferred_on" | "exp.action_by_user" | "exp.confirm_transfer" | "exp.transferring"
   | "exp.id_label" | "exp.account_no" | "exp.currency_label" | "exp.select_placeholder"
   | "exp.updated_bill" | "exp.saved_bill"
+  | "exp.customer_bill_title" | "exp.customs_bill_title" | "exp.truck_bill_title" | "exp.other_bill_title"
+  | "exp.customer_expenses_bill" | "exp.customs_expenses_bill" | "exp.truck_expenses_bill" | "exp.other_expenses_bill"
+  | "exp.attached_customer_order"
   // Contract Management (contract.*)
   | "contract.advance" | "contract.branch" | "contract.contract_date"
   | "contract.contract_no" | "contract.country" | "contract.created_by" | "contract.exchange_rate"
@@ -15772,6 +15778,15 @@ const en: Dict = {
   "exp.select_placeholder": "Select...",
   "exp.updated_bill": "Expenses Bill updated successfully!",
   "exp.saved_bill": "Expenses Bill saved successfully!",
+  "exp.customer_bill_title": "کسٹمر اخراجات بل",
+  "exp.customs_bill_title": "کسٹمز اخراجات بل",
+  "exp.truck_bill_title": "ٹرک اخراجات بل",
+  "exp.other_bill_title": "دیگر اخراجات بل",
+  "exp.customer_expenses_bill": "کسٹمر اخراجات بل",
+  "exp.customs_expenses_bill": "کسٹمز اخراجات بل",
+  "exp.truck_expenses_bill": "ٹرک اخراجات بل",
+  "exp.other_expenses_bill": "دیگر اخراجات بل",
+  "exp.attached_customer_order": "منسلک (کسٹمر آرڈر)",
   // Contract Management (contract.*)
   "contract.advance": "Advance",
   "contract.branch": "Branch",
@@ -34592,6 +34607,15 @@ const ur: Dict = {
   "exp.select_placeholder": "منتخب کریں...",
   "exp.updated_bill": "اخراجات رسید کامیابی سے اپ ڈیٹ ہو گئی!",
   "exp.saved_bill": "اخراجات رسید کامیابی سے محفوظ ہو گئی!",
+  "exp.customer_bill_title": "فاتورة مصاريف العميل",
+  "exp.customs_bill_title": "فاتورة مصاريف الجمارك",
+  "exp.truck_bill_title": "فاتورة مصاريف الشاحنة",
+  "exp.other_bill_title": "فاتورة مصاريف أخرى",
+  "exp.customer_expenses_bill": "فاتورة مصاريف العميل",
+  "exp.customs_expenses_bill": "فاتورة مصاريف الجمارك",
+  "exp.truck_expenses_bill": "فاتورة مصاريف الشاحنة",
+  "exp.other_expenses_bill": "فاتورة مصاريف أخرى",
+  "exp.attached_customer_order": "مرفق (طلب العميل)",
   // Contract Management (contract.*)
   "contract.advance": "ایڈوانس",
   "contract.branch": "برانچ",
@@ -53318,6 +53342,15 @@ const ar: Dict = {
   "exp.select_placeholder": "اختر...",
   "exp.updated_bill": "تم تحديث فاتورة المصاريف بنجاح!",
   "exp.saved_bill": "تم حفظ فاتورة المصاريف بنجاح!",
+  "exp.customer_bill_title": "فاکتور هزینه‌های مشتری",
+  "exp.customs_bill_title": "فاکتور هزینه‌های گمرک",
+  "exp.truck_bill_title": "فاکتور هزینه‌های کامیون",
+  "exp.other_bill_title": "فاکتور هزینه‌های سایر",
+  "exp.customer_expenses_bill": "فاکتور هزینه‌های مشتری",
+  "exp.customs_expenses_bill": "فاکتور هزینه‌های گمرک",
+  "exp.truck_expenses_bill": "فاکتور هزینه‌های کامیون",
+  "exp.other_expenses_bill": "فاکتور هزینه‌های سایر",
+  "exp.attached_customer_order": "پیوست (سفارش مشتری)",
   // Contract Management (contract.*)
   "contract.advance": "مقدما",
   "contract.branch": "الفرع",
@@ -72082,6 +72115,15 @@ const fa: Dict = {
   "exp.select_placeholder": "انتخاب کنید...",
   "exp.updated_bill": "فاکتور هزینه‌ها با موفقیت به‌روزرسانی شد!",
   "exp.saved_bill": "فاکتور هزینه‌ها با موفقیت ذخیره شد!",
+  "exp.customer_bill_title": "د پیرودونکي لګښتونو بل",
+  "exp.customs_bill_title": "د ګمرکو لګښتونو بل",
+  "exp.truck_bill_title": "د ټرک لګښتونو بل",
+  "exp.other_bill_title": "د نورو لګښتونو بل",
+  "exp.customer_expenses_bill": "د پیرودونکي لګښتونو بل",
+  "exp.customs_expenses_bill": "د ګمرکو لګښتونو بل",
+  "exp.truck_expenses_bill": "د ټرک لګښتونو بل",
+  "exp.other_expenses_bill": "د نورو لګښتونو بل",
+  "exp.attached_customer_order": "ضمیمه (د پیرودونکي آرډر)",
   // Contract Management (contract.*)
   "contract.advance": "پیشکی",
   "contract.branch": "شاخه",
@@ -102315,6 +102357,15 @@ const ps: Dict = {
   "email_workspace.delete": "دیلیتی",
   "email_workspace.draft_saved": "مسوده په بریالیتوب سره خوندي شوه",
   "email_workspace.draft_fetch_failed": "د مسودو په راوستلو کې تېروتنه",
+  "exp.customer_bill_title": "د پیرودونکي لګښتونو بل",
+  "exp.customs_bill_title": "د ګمرکو لګښتونو بل",
+  "exp.truck_bill_title": "د ټرک لګښتونو بل",
+  "exp.other_bill_title": "د نورو لګښتونو بل",
+  "exp.customer_expenses_bill": "د پیرودونکي لګښتونو بل",
+  "exp.customs_expenses_bill": "د ګمرکو لګښتونو بل",
+  "exp.truck_expenses_bill": "د ټرک لګښتونو بل",
+  "exp.other_expenses_bill": "د نورو لګښتونو بل",
+  "exp.attached_customer_order": "ضمیمه (د پیرودونکي آرډر)",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

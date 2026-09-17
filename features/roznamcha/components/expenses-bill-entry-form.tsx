@@ -210,7 +210,14 @@ export function ExpensesBillEntryForm({
   initialBillCategory = "office_home"
 }: {
   lang: SupportedLanguage;
-  initialBillCategory?: "office_home" | "daily_expenses";
+  initialBillCategory?:
+    | "office_home"
+    | "daily_expenses"
+    | "customer_expenses"
+    | "customs_expenses"
+    | "truck_expenses"
+    | "other_expenses"
+    | string;
 }) {
   const activeLang = useActiveLanguage();
   const lang = activeLang !== "en" ? activeLang : langProp;
@@ -289,9 +296,14 @@ export function ExpensesBillEntryForm({
   const [headerLocked, setHeaderLocked] = useState(false);
   const [billSerial, setBillSerial] = useState("");
   const [billDate, setBillDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [billMode, setBillMode] = useState("new"); // "new" | "attached"
-  const [billTitle, setBillTitle] = useState(initialBillCategory === "daily_expenses" ? "daily_expenses" : "office_home");
+  const [billTitle, setBillTitle] = useState(initialBillCategory || "office_home");
   const [referenceNo, setReferenceNo] = useState("");
+
+  useEffect(() => {
+    if (initialBillCategory) {
+      setBillTitle(initialBillCategory);
+    }
+  }, [initialBillCategory]);
 
   const detailsRef = useRef<HTMLInputElement>(null);
 
@@ -482,7 +494,10 @@ export function ExpensesBillEntryForm({
   const fetchRecentBills = async () => {
     try {
       setLoadingBills(true);
-      const res = await apiGet<any>("/api/erp/expenses");
+      const url = initialBillCategory
+        ? `/api/erp/expenses?category=${encodeURIComponent(initialBillCategory)}`
+        : "/api/erp/expenses";
+      const res = await apiGet<any>(url);
       if (res && res.bills) {
         setRecentBills(res.bills);
       }
@@ -908,7 +923,17 @@ export function ExpensesBillEntryForm({
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 mr-2">
             <FileText className="h-4 w-4 text-primary" />
-            {initialBillCategory === "daily_expenses" ? tt("exp.daily_bill_title", "Daily Operational Expenses Bill") : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
+            {initialBillCategory === "daily_expenses"
+              ? tt("exp.daily_bill_title", "Daily Operational Expenses Bill")
+              : initialBillCategory === "customer_expenses"
+              ? tt("exp.customer_bill_title", "Customer Expenses Bill")
+              : initialBillCategory === "customs_expenses"
+              ? tt("exp.customs_bill_title", "Customs Expenses Bill")
+              : initialBillCategory === "truck_expenses"
+              ? tt("exp.truck_bill_title", "Truck Expenses Bill")
+              : initialBillCategory === "other_expenses"
+              ? tt("exp.other_bill_title", "Other Expenses Bill")
+              : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
             <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
           </h1>
           {viewMode === "list" ? (
@@ -1076,11 +1101,16 @@ export function ExpensesBillEntryForm({
                     }}
                     disabled={headerLocked}
                   >
+                    <option value="new-customer_expenses">{tt("exp.customer_expenses_bill", "Customer Expenses Bill")}</option>
+                    <option value="new-customs_expenses">{tt("exp.customs_expenses_bill", "Customs Expenses Bill")}</option>
+                    <option value="new-truck_expenses">{tt("exp.truck_expenses_bill", "Truck Expenses Bill")}</option>
+                    <option value="new-other_expenses">{tt("exp.other_expenses_bill", "Other Expenses Bill")}</option>
                     <option value="new-office_home">{tt("exp.office_home_bill", "Office / Home Bill")}</option>
                     <option value="new-daily_expenses">{tt("exp.daily_ops_bill", "Daily Operational Bill")}</option>
                     <option value="new-purchase">{tt("exp.general_purchase_bill", "General Purchase Bill")}</option>
                     <option value="attached-purchase">{tt("exp.attached_purchase", "Attached (Purchase)")}</option>
                     <option value="attached-sale">{tt("exp.attached_sale", "Attached (Sale)")}</option>
+                    <option value="attached-customer_order">{tt("exp.attached_customer_order", "Attached (Customer Order)")}</option>
                   </select>
                   <Input placeholder={tt("exp.search_bill_no", "Search Bill No...")} className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
                 </div>

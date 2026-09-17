@@ -179,6 +179,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 50);
+    const category = searchParams.get("category");
 
     // Try direct PostgreSQL first for resilience and performance
     const viaPg = await withLocalPg(async (sql) => {
@@ -200,6 +201,7 @@ export async function GET(req: Request) {
         left join public.city_branches cb on cb.id = b.branch_id
         left join public.countries c on c.id = cb.country_id
         where b.deleted_at is null
+          and (${category}::text is null or b.bill_title = ${category})
         order by b.created_at desc
         limit ${limit}
       `;
@@ -212,12 +214,18 @@ export async function GET(req: Request) {
 
     const supabase = createSupabaseAdminClient() as any;
 
-    const { data: bills, error: billsError } = await supabase
+    let query = supabase
       .from("expenses_bills")
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(limit);
+
+    if (category) {
+      query = query.eq("bill_title", category);
+    }
+
+    const { data: bills, error: billsError } = await query;
 
     if (billsError) throw new Error(billsError.message);
 
