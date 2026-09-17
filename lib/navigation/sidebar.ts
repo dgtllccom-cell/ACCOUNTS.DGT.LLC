@@ -1497,6 +1497,13 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "dgt-mail-management",
+    labelKey: "nav.dgt_mail_management",
+    iconKey: "lock",
+    href: "/dashboard/dgt-mail-management" as Route,
+    roles: ["super_admin"]
+  },
+  {
     key: "settings",
     labelKey: "nav.settings",
     iconKey: "settings",
