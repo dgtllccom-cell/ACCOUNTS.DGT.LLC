@@ -56,6 +56,7 @@ import {
   Receipt,
   RefreshCw,
   ScanLine,
+  Scale,
   Settings,
   ShieldAlert,
   ShieldCheck,
@@ -541,6 +542,36 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Mail Overview & Dashboard", href: "/dashboard/mail-management", icon: BarChart3 },
       { label: "Mail Users & Storage Quotas", href: "/dashboard/mail-management/users", icon: Users },
       { label: "Server Health & DNS Deliverability", href: "/dashboard/mail-management/monitoring", icon: ShieldCheck },
+    ],
+  },
+  {
+    key: "invoice-system",
+    label: "Invoice & Templates",
+    icon: FileText,
+    tone: "red",
+    children: [
+      { label: "Business Edit Invoice", href: "/dashboard/business-edit-invoice", icon: FileText },
+      { label: "Invoice Templates", href: "/dashboard/roznamcha/reports/invoice", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    key: "journal-reporting",
+    label: "Journal & Reporting",
+    icon: BarChart3,
+    tone: "red",
+    children: [
+      { label: "Journal / Roznamcha", href: "/dashboard/journal", icon: BookOpen },
+      { label: "Reports & Analysis", href: "/dashboard/reports/journal", icon: BarChart3 },
+    ],
+  },
+  {
+    key: "customs-tax-system",
+    label: "Customs & Tax Documents",
+    icon: Scale,
+    tone: "red",
+    children: [
+      { label: "Tax Management", href: "/dashboard/tax", icon: Scale },
+      { label: "E-Invoicing & Tax", href: "/dashboard/tax-einvoicing", icon: FileText },
     ],
   },
   {
