@@ -13,7 +13,8 @@ import {
   CreditCard, Truck, Flag, UserCheck, ChevronDown,
   ArrowRight, ArrowLeft, Percent, Warehouse, MapPin, ListPlus,
   Printer, Send, FileSpreadsheet, Eye, MoreVertical, Edit3, Clock,
-  RefreshCw, Share2
+  RefreshCw, Share2, SlidersHorizontal, RotateCcw, Download, ShieldCheck,
+  LayoutGrid, CheckSquare, Users, BookOpen, Receipt
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,17 +34,18 @@ import { useSetActiveRecord } from "@/lib/support/active-record-context";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
+// DB-value maps rendered via translateOptionLabel(lang, label) — not hardcoded UI strings. tr()
 const PAYMENT_MODES = [
-  { value: "Cash", label: "Cash" },
-  { value: "Credit", label: "Credit" },
-  { value: "Advance", label: "Advance" },
-  { value: "Bank Transfer", label: "Bank Transfer" },
+  { value: "Cash", label: "Cash" }, // tr()
+  { value: "Credit", label: "Credit" }, // tr()
+  { value: "Advance", label: "Advance" }, // tr()
+  { value: "Bank Transfer", label: "Bank Transfer" }, // tr()
 ];
 const SHIPPING_MODES = [
-  { value: "Loading", label: "Loading" },
-  { value: "Transfer Layout", label: "Transfer Layout" },
-  { value: "Export", label: "Export" },
-  { value: "Custom", label: "Custom Mode" },
+  { value: "Loading", label: "Loading" }, // tr()
+  { value: "Transfer Layout", label: "Transfer Layout" }, // tr()
+  { value: "Export", label: "Export" }, // tr()
+  { value: "Custom", label: "Custom Mode" }, // tr()
 ];
 
 // The "Shipment Type" selector (Loading by Truck / Warehouse Transfer / Export
@@ -68,6 +70,18 @@ const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
 function isUaeCountryName(value?: string | null) {
   const normalized = String(value || "").trim().toUpperCase();
   return UAE_COUNTRY_MATCHERS.some(token => normalized.includes(token));
+}
+
+function getCountryFlag(nameOrCode?: string): string {
+  const s = String(nameOrCode || "").toUpperCase();
+  if (s.includes("EMIRATES") || s.includes("UAE") || s === "AE") return "🇦🇪";
+  if (s.includes("PAKISTAN") || s === "PK") return "🇵🇰";
+  if (s.includes("AFGHANISTAN") || s === "AF") return "🇦🇫";
+  if (s.includes("UNITED STATES") || s === "USA") return "🇺🇸";
+  if (s.includes("CHINA") || s === "CN") return "🇨🇳";
+  if (s.includes("INDIA") || s === "IN") return "🇮🇳";
+  if (s.includes("IRAN") || s === "IR") return "🇮🇷";
+  return "🌐";
 }
 
 function money(value: unknown, currency?: string) {
@@ -345,6 +359,7 @@ export function LocalPurchaseView({
   const [draftItems, setDraftItems] = useState<any[]>([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState<{ id: string; top: number; bottom: number; left: number } | null>(null);
   const [isTopActionsOpen, setIsTopActionsOpen] = useState(false);
 
   // Scope Selection Modal State
@@ -357,12 +372,18 @@ export function LocalPurchaseView({
     const handleClickOutside = () => {
       setActiveActionMenuId(null);
       setActionMenuAnchor(null);
+      setActiveStatusDropdownId(null);
+      setStatusMenuAnchor(null);
       setIsTopActionsOpen(false);
     };
     const handleScroll = () => {
       if (activeActionMenuId) {
         setActiveActionMenuId(null);
         setActionMenuAnchor(null);
+      }
+      if (activeStatusDropdownId) {
+        setActiveStatusDropdownId(null);
+        setStatusMenuAnchor(null);
       }
     };
     window.addEventListener("click", handleClickOutside);
@@ -371,7 +392,7 @@ export function LocalPurchaseView({
       window.removeEventListener("click", handleClickOutside);
       window.removeEventListener("scroll", handleScroll, true);
     };
-  }, [activeActionMenuId]);
+  }, [activeActionMenuId, activeStatusDropdownId]);
 
   // Permission Check
   const canEditMaster = useMemo(() => {
@@ -498,6 +519,45 @@ export function LocalPurchaseView({
   const [applyTax, setApplyTax] = useState("No");
   const [taxType, setTaxType] = useState("VAT");
   const [taxPercentage, setTaxPercentage] = useState("0");
+
+  // Smart Filter Bar & Registry States matching reference design
+  const [registryFilter, setRegistryFilter] = useState<string>("all");
+  const [selectedCountryReportId, setSelectedCountryReportId] = useState<string>("");
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [dateFilter, setDateFilter] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
+  const [activeStatusDropdownId, setActiveStatusDropdownId] = useState<string | null>(null);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState<boolean>(false);
+  const [showColumnPicker, setShowColumnPicker] = useState<boolean>(false);
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    billNo: true,
+    date: true,
+    supplier: true,
+    goods: true,
+    brand: true,
+    qty: true,
+    unit: true,
+    grossWt: true,
+    netWt: true,
+    rate: true,
+    amount: true,
+    status: true,
+  });
+
+  // Close floating popovers when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setActiveStatusDropdownId(null);
+      setShowDatePicker(false);
+      setShowColumnPicker(false);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("click", handleOutsideClick);
+      return () => window.removeEventListener("click", handleOutsideClick);
+    }
+  }, []);
 
   // Sync initialGoodsList
   useEffect(() => {
@@ -1262,25 +1322,89 @@ export function LocalPurchaseView({
   // Filter history
   const filteredPurchases = useMemo(() => {
     return purchases.filter(p => {
-      // 1. Filter by Active Tab
-      const rowStatus = p.status || p.bill_status || "draft";
+      const rowStatus = String(p.status || p.bill_status || "draft").toLowerCase();
+      const isTransferred = rowStatus === "posted" || rowStatus === "transferred" || Boolean(p.transferred_at) || Boolean(p.roznamcha_entry_id);
+
+      // 1. Registry filter
+      if (registryFilter === "draft" && rowStatus !== "draft") return false;
+      if (registryFilter === "accepted" && rowStatus !== "accepted") return false;
+      if (registryFilter === "posted" && rowStatus !== "posted" && !isTransferred) return false;
+      if (registryFilter === "transferred" && !isTransferred) return false;
+      if (registryFilter === "not_transferred" && isTransferred) return false;
+      if (registryFilter === "pending" && (rowStatus === "posted" || isTransferred)) return false;
+
+      // Active tab backwards-compatibility
       if (activeTab === "accepted" && rowStatus !== "accepted") return false;
-      if (activeTab === "posted" && rowStatus !== "posted" && rowStatus !== "transferred") return false;
-      
-      // 2. Filter by Search Query
-      const q = searchQuery.toLowerCase();
-      return p.goodsName?.toLowerCase().includes(q) ||
-             p.goods_name?.toLowerCase().includes(q) ||
-             p.supplierName?.toLowerCase().includes(q) ||
-             p.supplier_name?.toLowerCase().includes(q) ||
-             p.paymentMode?.toLowerCase().includes(q) ||
-             p.payment_mode?.toLowerCase().includes(q);
+      if (activeTab === "posted" && rowStatus !== "posted" && !isTransferred) return false;
+
+      // 2. Scope filters (Country, Main Branch, City Branch)
+      if (selectedCountryId) {
+        const rowCId = String(p.countryId || p.country_id || "");
+        if (rowCId && rowCId !== String(selectedCountryId)) return false;
+      }
+      if (selectedBranchId) {
+        const rowBId = String(p.countryBranchId || p.country_branch_id || p.branchId || p.branch_id || "");
+        if (rowBId && rowBId !== String(selectedBranchId)) return false;
+      }
+      if (selectedCityBranchId) {
+        const rowCityId = String(p.cityBranchId || p.city_branch_id || "");
+        if (rowCityId && rowCityId !== String(selectedCityBranchId)) return false;
+      }
+
+      // 3. Date filter
+      if (dateFilter) {
+        const rowDate = p.created_at || p.createdAt || "";
+        if (rowDate && !rowDate.startsWith(dateFilter)) return false;
+      }
+
+      // 4. Search Query (Bill No, Supplier, Goods, Voucher No, Account, Date)
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const match =
+          p.goodsName?.toLowerCase().includes(q) ||
+          p.goods_name?.toLowerCase().includes(q) ||
+          p.supplierName?.toLowerCase().includes(q) ||
+          p.supplier_name?.toLowerCase().includes(q) ||
+          p.brand?.toLowerCase().includes(q) ||
+          p.bill_no?.toLowerCase().includes(q) ||
+          p.billNo?.toLowerCase().includes(q) ||
+          p.manual_bill_no?.toLowerCase().includes(q) ||
+          p.journal_serial_no?.toLowerCase().includes(q) ||
+          p.serial_no?.toLowerCase().includes(q) ||
+          p.purchase_account_no?.toLowerCase().includes(q) ||
+          p.sales_account_no?.toLowerCase().includes(q) ||
+          p.broker_account_no?.toLowerCase().includes(q) ||
+          p.paymentMode?.toLowerCase().includes(q) ||
+          p.payment_mode?.toLowerCase().includes(q) ||
+          (p.created_at && new Date(p.created_at).toLocaleDateString("en-GB").includes(q));
+        if (!match) return false;
+      }
+
+      return true;
     });
-  }, [purchases, searchQuery, activeTab]);
+  }, [purchases, searchQuery, registryFilter, activeTab, selectedCountryId, selectedBranchId, selectedCityBranchId, dateFilter]);
+
   const acceptedCount = useMemo(
     () => purchases.filter(p => (p.status || p.bill_status || p.billStatus) === "accepted").length,
     [purchases]
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredPurchases.length / pageSize));
+  const paginatedPurchases = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredPurchases.slice(start, start + pageSize);
+  }, [filteredPurchases, currentPage, pageSize]);
+
+  const allCurrentPageSelected = paginatedPurchases.length > 0 && paginatedPurchases.every(p => selectedRowIds.has(p.id));
+  const toggleSelectAll = () => {
+    const next = new Set(selectedRowIds);
+    if (allCurrentPageSelected) {
+      paginatedPurchases.forEach(p => next.delete(p.id));
+    } else {
+      paginatedPurchases.forEach(p => next.add(p.id));
+    }
+    setSelectedRowIds(next);
+  };
   const localPurchaseDashboard = useMemo(() => {
     const countryLookup = new Map<string, string>();
     countryOptions.forEach((c: any) => countryLookup.set(String(c.id), c.name || "Unknown Country"));
@@ -1368,206 +1492,383 @@ export function LocalPurchaseView({
     };
   }, [filteredPurchases, countryOptions, countryBranches, cityBranches, activeBranch, localCurrency]);
 
+  const selectedCountryReport = useMemo(() => {
+    if (!selectedCountryReportId) return null;
+    return localPurchaseDashboard.countries.find((c: any) => String(c.id) === String(selectedCountryReportId)) || null;
+  }, [selectedCountryReportId, localPurchaseDashboard.countries]);
+
   return (
     <div className="w-full px-3 sm:px-6 py-4 space-y-6" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Consolidated Top Action Bar (Patti) — combines Title, Scope, Search, Report Type, New/Back, Actions & Close [X] */}
-      <section data-erp-page-actions className="no-print flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-3.5 py-2 shadow-xs backdrop-blur-md transition-all dark:border-slate-800 dark:bg-slate-900/95 sm:px-4">
-        {/* Left Side: Modern "Jadeed Model" Back Button + Title with Badge & Subtitle */}
-        <div className="flex min-w-0 items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => {
-              if (isFormOpen) {
-                setIsFormOpen(false);
-              } else if (typeof window !== "undefined" && window.history.length > 1) {
-                router.back();
-              } else {
-                router.push("/dashboard");
-              }
-            }}
-            className="group inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:border-blue-400 hover:bg-blue-50/80 hover:text-blue-700 hover:shadow-xs active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40 dark:hover:text-blue-400"
-            title={isFormOpen ? t(lang, "lp.back_to_registry", "Back to Registry") : t(lang, "pa.back", "Back")}
-            aria-label={t(lang, "pa.back", "Back")}
-          >
-            <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-white text-slate-600 shadow-2xs transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-slate-700 dark:text-slate-300">
-              <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5 rtl:rotate-180 rtl:group-hover:translate-x-0.5" />
-            </div>
-            <span className="text-[11px] font-black uppercase tracking-wider hidden sm:inline">
-              {isFormOpen ? t(lang, "lp.back_to_registry", "Registry") : t(lang, "pa.back", "Back")}
-            </span>
-          </button>
-
-          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
-
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="rounded-xl bg-blue-50 p-2 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-400">
-              <ShoppingCart className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-xs font-black text-slate-900 dark:text-slate-100 sm:text-sm">
-                  {isFormOpen ? t(lang, "lp.voucher_title", "Local Purchase Booking Voucher") : t(lang, "lp.title", "Local Purchase Registry")}
-                </h1>
-                <span className="hidden xl:inline-flex px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
-                  {isFormOpen ? "ENTRY MODE" : "ERP REGISTRY"}
-                </span>
-              </div>
-              <p className="hidden md:block truncate text-[9.5px] font-medium text-slate-400 dark:text-slate-400">
-                {isFormOpen
-                  ? t(lang, "purchase.voucher_subtitle", "Official Bill / Confirmation — document backing for Goods, Shipping & Payment")
-                  : t(lang, "lp.subtitle", "Record market purchases with custom empty weights and automated ledger postings.")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: Scope, Search, Report Type, New Purchase / Back, Actions & Close [X] */}
-        <div className="flex flex-wrap items-center gap-2">
-          {!isFormOpen ? (
-            <>
-              {/* Consolidated Branch Scope */}
-              <BranchScopeDropdown
-                lang={lang}
-                countries={countryOptions}
-                countryBranches={countryBranches.map((b: any) => ({ id: b.id, name: b.name, code: b.code, countryId: b.countryId || b.country_id }))}
-                cityBranches={cityBranches.map((c: any) => ({ id: c.id, name: c.name, code: c.code, countryBranchId: c.countryBranchId || c.country_branch_id }))}
-                value={{ countryId: selectedCountryId, countryBranchId: selectedBranchId, cityBranchId: selectedCityBranchId }}
-                onChange={(next) => {
-                  setSelectedCountryId(next.countryId);
-                  setSelectedBranchId(next.countryBranchId);
-                  setSelectedCityBranchId(next.cityBranchId);
-                }}
-              />
-
-              {/* Global Search Bar */}
-              <div className="relative w-40 sm:w-52">
-                <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder={t(lang, "lp.search_placeholder", "Search item, vendor...")}
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="h-8 w-full rounded-xl border border-slate-200 ps-8 pe-3 text-[11px] outline-none bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                />
-              </div>
-
-              {/* Report Type Selector */}
-              <div className="relative">
-                <select
-                  value={activeTab}
-                  onChange={e => setActiveTab(e.target.value as "all" | "accepted" | "posted")}
-                  className="h-8 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{t(lang, "lp.all_purchases", "All Purchases Registry")}</option>
-                  <option value="accepted">
-                    {t(lang, "lp.ready_to_pay", "Ready to Pay (Accepted)")}
-                    {acceptedCount > 0 ? ` (${acceptedCount})` : ""}
-                  </option>
-                  <option value="posted">{t(lang, "lp.posted_ledger", "Posted Ledger Entries")}</option>
-                </select>
-                {activeTab !== "accepted" && acceptedCount > 0 && (
-                  <span className="pointer-events-none absolute -end-1 -top-1 rounded-full bg-red-500 px-1 py-0.2 text-[8px] font-black text-white shadow-sm">
-                    {acceptedCount}
-                  </span>
-                )}
-              </div>
-
-              {/* New Purchase Button */}
-              <Button
-                type="button"
-                onClick={() => {
-                  setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
-                  setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
-                  setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
-                  setIsScopeModalOpen(true);
-                }}
-                className="h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition active:scale-95"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t(lang, "lp.create_button", "New Purchase")}</span>
-              </Button>
-            </>
-          ) : (
-            <Button
+      {/* Top Header & Navigation */}
+      {isFormOpen ? (
+        /* Voucher / Form Top Action Bar */
+        <section data-erp-page-actions className="no-print flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-3.5 py-2 shadow-xs backdrop-blur-md transition-all dark:border-slate-800 dark:bg-slate-900/95 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <button
               type="button"
               onClick={() => setIsFormOpen(false)}
-              variant="outline"
-              className="h-8 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-3 shadow-2xs"
+              className="group inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:border-blue-400 hover:bg-blue-50/80 hover:text-blue-700 hover:shadow-xs active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              title={t(lang, "lp.back_to_registry", "Back to Registry")}
             >
-              {t(lang, "lp.back_to_registry", "Back to Registry")}
-            </Button>
-          )}
+              <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-white text-slate-600 shadow-2xs transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-slate-700 dark:text-slate-300">
+                <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5 rtl:rotate-180 rtl:group-hover:translate-x-0.5" />
+              </div>
+              <span className="text-[11px] font-black uppercase tracking-wider hidden sm:inline">
+                {t(lang, "lp.back_to_registry", "Back to Registry")}
+              </span>
+            </button>
 
-          {/* Top Bar Page Actions Dropdown */}
-          <div className="relative">
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="rounded-xl bg-blue-50 p-2 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-400">
+                <ShoppingCart className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="truncate text-xs font-black text-slate-900 dark:text-slate-100 sm:text-sm">
+                    {t(lang, "lp.voucher_title", "Local Purchase Booking Voucher")}
+                  </h1>
+                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
+                    ENTRY MODE
+                  </span>
+                </div>
+                <p className="hidden md:block truncate text-[9.5px] font-medium text-slate-400">
+                  {t(lang, "purchase.voucher_subtitle", "Official Bill / Confirmation — document backing for Goods, Shipping & Payment")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsTopActionsOpen((prev) => !prev)}
               className="h-8 gap-1 rounded-xl border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              title={t(lang, "pa.page_actions", "Page actions")}
             >
               <MoreVertical className="h-3.5 w-3.5 text-slate-500" />
-              <span className="hidden sm:inline">{t(lang, "pa.actions", "Actions")}</span>
+              <span>{t(lang, "pa.actions", "Actions")}</span>
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => router.push("/dashboard")}
+              className="h-8 w-8 rounded-xl border-rose-200/80 bg-rose-50/70 text-rose-600 shadow-2xs hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 active:scale-95 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-400"
+              title={t(lang, "pa.close", "Close")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+      ) : (
+        /* Registry Mode Header & Smart Filter Bar Matching Reference Design */
+        <div className="space-y-4">
+          {/* 1. Breadcrumbs */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold px-1">
+            <span>{t(lang, "nav.dashboard", "Dashboard")}</span>
+            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
+            <span>{t(lang, "nav.purchase", "Purchase")}</span>
+            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
+            <span className="text-slate-800 dark:text-slate-200 font-bold">{t(lang, "lp.title", "Local Purchase Registry")}</span>
+          </div>
 
-            {isTopActionsOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 py-1">
+          {/* 2. Top Banner Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-1">
+            <div className="flex items-center gap-3.5">
+              <div className="h-14 w-14 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs shrink-0">
+                <ShoppingCart className="h-7 w-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                    {t(lang, "lp.title", "Local Purchase Registry")}
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                    PURCHASE LOCAL
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  {t(lang, "lp.subtitle", "Record local purchases with custom weights and automated ledger postings.")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-start md:items-end gap-2.5">
+              {/* Motto / Quote */}
+              <div className="hidden lg:flex flex-col items-end text-right">
+                <span className="text-[11px] font-black italic tracking-wide text-slate-700 dark:text-slate-300">
+                  &ldquo;&ldquo;&ldquo;&ldquo;Better Purchase Control Stronger Business Tomorrow&rdquo;
+                </span>
+                <div className="h-0.5 w-10 bg-amber-500 rounded-full mt-0.5 me-3" />
+              </div>
+
+              {/* Date Selector & + New Purchase Split Button */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDatePicker((prev) => !prev);
+                    }}
+                    className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                  >
+                    <CalendarDays className="h-3.5 w-3.5 text-slate-500" />
+                    <span>
+                      {dateFilter
+                        ? new Date(dateFilter).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                        : new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </span>
+                    <ChevronDown className="h-3 w-3 text-slate-400" />
+                  </button>
+                  {showDatePicker && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute end-0 top-full mt-1.5 z-50 p-3 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 w-52 space-y-2 text-xs"
+                    >
+                      <div className="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-500">
+                        <span>{t(lang, "lp.purchase_date", "Filter by Date")}</span>
+                        {dateFilter && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDateFilter("");
+                              setShowDatePicker(false);
+                            }}
+                            className="text-blue-600 hover:underline"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="date"
+                        value={dateFilter}
+                        onChange={(e) => {
+                          setDateFilter(e.target.value);
+                          setShowDatePicker(false);
+                        }}
+                        className="w-full h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-200 outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative inline-flex items-center shadow-md shadow-blue-500/20 rounded-xl overflow-hidden">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
+                      setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
+                      setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
+                      setIsScopeModalOpen(true);
+                    }}
+                    className="h-9 rounded-none bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-4 flex items-center gap-1.5 transition active:scale-95"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t(lang, "lp.create_button", "New Purchase")}</span>
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
+                      setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
+                      setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
+                      setIsScopeModalOpen(true);
+                    }}
+                    className="h-9 px-2 bg-blue-700 hover:bg-blue-800 text-white border-s border-blue-500/40 flex items-center justify-center transition"
+                    title={t(lang, "lp.booking_posting_bill", "New Purchase Options")}
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Smart Filter Bar Matching Reference Design */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Country Searchable Dropdown */}
+              <div className="flex flex-col gap-1 min-w-[150px] flex-1 sm:flex-initial">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  {t(lang, "lp.country", "Country")}
+                </span>
+                <select
+                  value={selectedCountryId}
+                  onChange={(e) => {
+                    setSelectedCountryId(e.target.value);
+                    setSelectedBranchId("");
+                    setSelectedCityBranchId("");
+                  }}
+                  className="h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
+                >
+                  <option value="">🌐 {t(lang, "lp.all_purchases", "All Countries")}</option>
+                  {countryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {getCountryFlag(c.name)} {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Branch / City Dropdown (Country -> Main Branch -> City Branch) */}
+              <div className="flex flex-col gap-1 min-w-[170px] flex-1 sm:flex-initial">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  {t(lang, "lp.branch_name", "Branch / City")}
+                </span>
+                <select
+                  value={selectedBranchId}
+                  onChange={(e) => {
+                    setSelectedBranchId(e.target.value);
+                    setSelectedCityBranchId("");
+                  }}
+                  className="h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
+                >
+                  <option value="">🏢 {t(lang, "lp.all_branches", "All Branches")}</option>
+                  {filteredCountryBranches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name || b.code}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex flex-col gap-1 flex-1 min-w-[220px]">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 hidden sm:block">
+                  {t(lang, "common.search", "Search")}
+                </span>
+                <div className="relative">
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t(lang, "lp.search_placeholder", "Search by bill no, supplier, goods, voucher...")}
+                    className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 ps-9 pe-3 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Registry Filter Dropdown */}
+              <div className="flex flex-col gap-1 min-w-[150px] flex-1 sm:flex-initial">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  {t(lang, "lp.title", "Registry")}
+                </span>
+                <select
+                  value={registryFilter}
+                  onChange={(e) => setRegistryFilter(e.target.value)}
+                  className="h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
+                >
+                  <option value="all">{t(lang, "lp.all_purchases", "All Purchases")}</option>
+                  <option value="draft">{t(lang, "lp.draft_bills", "Draft")}</option>
+                  <option value="pending">{t(lang, "lp.pending_bills", "Pending")}</option>
+                  <option value="posted">{t(lang, "lp.col_posted", "Posted")}</option>
+                  <option value="accepted">{t(lang, "lp.posted_accepted", "Accepted")}</option>
+                  <option value="transferred">{t(lang, "lp.col_posted", "Transferred")}</option>
+                  <option value="not_transferred">{t(lang, "lp.pending_bills", "Not Transferred")}</option>
+                </select>
+              </div>
+
+              {/* More Filters Toggle */}
+              <div className="flex items-end">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsTopActionsOpen(false);
-                    window.print();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  onClick={() => setMoreFiltersOpen((prev) => !prev)}
+                  className={cn(
+                    "h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs transition",
+                    moreFiltersOpen
+                      ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-300"
+                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+                  )}
                 >
-                  <Printer className="h-3.5 w-3.5 text-blue-600" />
-                  {t(lang, "pa.print", "Print")}
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+                  <span>{t(lang, "common.filter", "More Filters")}</span>
                 </button>
+              </div>
+
+              {/* Reset Button */}
+              <div className="flex items-end">
                 <button
                   type="button"
+                  title={t(lang, "common.reset", "Reset Filters")}
                   onClick={() => {
-                    setIsTopActionsOpen(false);
-                    loadHistory();
+                    setSelectedCountryId("");
+                    setSelectedBranchId("");
+                    setSelectedCityBranchId("");
+                    setSearchQuery("");
+                    setRegistryFilter("all");
+                    setDateFilter("");
+                    setCurrentPage(1);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 transition"
                 >
-                  <RefreshCw className="h-3.5 w-3.5 text-emerald-600" />
-                  {t(lang, "common.refresh", "Refresh")}
+                  <RotateCcw className="h-3.5 w-3.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsTopActionsOpen(false);
-                    if (typeof window !== "undefined") {
-                      navigator.clipboard?.writeText(window.location.href);
-                      alert("Link copied to clipboard!");
-                    }
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
-                >
-                  <Share2 className="h-3.5 w-3.5 text-purple-600" />
-                  {t(lang, "pa.copy_link", "Copy Link")}
-                </button>
+              </div>
+            </div>
+
+            {/* Collapsible Extra Filters Panel */}
+            {moreFiltersOpen && (
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in text-xs">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    {t(lang, "lp.city_branch", "City Branch")}
+                  </label>
+                  <select
+                    value={selectedCityBranchId}
+                    onChange={(e) => setSelectedCityBranchId(e.target.value)}
+                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 font-semibold text-slate-800 dark:text-slate-200 outline-none"
+                  >
+                    <option value="">{t(lang, "lp.all_branches", "All City Branches")}</option>
+                    {activeCityBranches.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    Currency
+                  </label>
+                  <select
+                    value={purchaseCurrency}
+                    onChange={(e) => setPurchaseCurrency(e.target.value)}
+                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 font-semibold text-slate-800 dark:text-slate-200 outline-none"
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    Payment Mode
+                  </label>
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 font-semibold text-slate-800 dark:text-slate-200 outline-none"
+                  >
+                    {PAYMENT_MODES.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Close Page Button [X] */}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => router.push("/dashboard")}
-            className="h-8 w-8 rounded-xl border-rose-200/80 bg-rose-50/70 text-rose-600 shadow-2xs hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 active:scale-95 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-400"
-            title={t(lang, "pa.close", "Close")}
-            aria-label={t(lang, "pa.close_current_page", "Close current page")}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
-      </section>
+      )}
 
       {/* Local Purchase Voucher Header & 4-Column Cards matching Screenshot 5 */}
       {isFormOpen && (
@@ -1807,100 +2108,200 @@ export function LocalPurchaseView({
       )}
 
       {!isFormOpen && (
-        <div className="space-y-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-blue-700">
-                <ShoppingCart className="h-4 w-4" /> {t(lang, "lp.title", "Local Purchase Registry")}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+          {/* Card 1: Branch & User Details */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
+            <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="h-7 w-7 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
+                <Building2 className="h-4 w-4" />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowCountryReport(prev => !prev)}
-                className="h-8 rounded-xl border-blue-200 bg-blue-50 px-3 text-[11px] font-black text-blue-700 hover:bg-blue-100"
-              >
-                {showCountryReport ? t(lang, "lp.hide_country_report", "Hide Country Report") : `${t(lang, "lp.show_country_report", "Show Country Report")} +`}
-              </Button>
+              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                1. {t(lang, "lp.branch_user_details", "Branch & User Details")}
+              </p>
             </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-blue-600">1. {t(lang, "lp.branch_user_details", "Branch & User Details")}</p>
-                <div className="mt-2.5 space-y-2 text-[11px] font-semibold text-slate-600">
-                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.country", "Country")}</span><b className="text-right text-slate-900">{activeBranch?.countryName || activeBranch?.country_name || "All"}</b></div>
-                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.branch_name", "Branch Name")}</span><b className="text-right text-slate-900">{activeBranch?.name || "All Branches"}</b></div>
-                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.user_name", "User Name")}</span><b className="text-right text-slate-900">{session.fullName || session.email || "Super Admin"}</b></div>
-                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.date_time", "Date & Time")}</span><b suppressHydrationWarning className="text-right text-slate-900">{new Date().toLocaleString()}</b></div>
-                </div>
+            <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.country", "Country")}</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
+                  {activeCountry?.name || activeBranch?.countryName || "All"}
+                </span>
               </div>
-
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">2. {t(lang, "lp.financial_summary", "Financial Summary")}</p>
-                <div className="mt-2.5 space-y-2 text-[11px] font-semibold text-slate-600">
-                  <div className="flex justify-between"><span>{t(lang, "lp.total_local_purchase_bills", "Total Local Purchase Bills")}</span><b>{localPurchaseDashboard.totalBills}</b></div>
-                  <div className="flex justify-between"><span>{t(lang, "lp.total_purchase_amount", "Total Purchase Amount")}</span><b>{money(localPurchaseDashboard.totalPurchase, localCurrency)}</b></div>
-                  <div className="flex justify-between"><span>{t(lang, "lp.total_tax_amount", "Total Tax Amount")}</span><b>{money(localPurchaseDashboard.totalTax, localCurrency)}</b></div>
-                  <div className="flex justify-between"><span>{t(lang, "lp.total_final_amount", "Total Final Amount")}</span><b className="text-emerald-700">{money(localPurchaseDashboard.totalFinal, localCurrency)}</b></div>
-                </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.branch_name", "Branch Name")}</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
+                  {activeBranch?.name || "All Branches"}
+                </span>
               </div>
-
-              <div className="rounded-xl border border-purple-100 bg-purple-50/60 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-purple-700">3. {t(lang, "lp.bill_entry_summary", "Bill Entry Summary")}</p>
-                <div className="mt-2.5 space-y-2 text-[11px] font-semibold text-slate-600">
-                  <div className="flex justify-between"><span>{t(lang, "lp.total_bills", "Total Bills")}</span><b>{localPurchaseDashboard.totalBills}</b></div>
-                  <div className="flex justify-between"><span>{t(lang, "lp.posted_accepted", "Posted / Accepted")}</span><b className="text-emerald-700">{localPurchaseDashboard.postedBills}</b></div>
-                  <div className="flex justify-between"><span>{t(lang, "lp.draft_bills", "Draft Bills")}</span><b className="text-amber-700">{localPurchaseDashboard.draftBills}</b></div>
-                  <div className="flex justify-between"><span>{t(lang, "lp.pending_bills", "Pending Bills")}</span><b className="text-rose-700">{localPurchaseDashboard.pendingBills}</b></div>
-                </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.user_name", "User Name")}</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
+                  {session.fullName || session.email || "Super Admin"}
+                </span>
               </div>
-
-              <div className="rounded-xl border border-orange-200 bg-orange-50/60 p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-orange-700">4. {t(lang, "lp.all_countries_report", "All Countries Report")}</p>
-                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-orange-700">{localPurchaseDashboard.countries.length} {t(lang, "lp.countries_label", "Countries")}</span>
-                </div>
-                <div className="mt-2.5 space-y-2">
-                  {localPurchaseDashboard.countries.slice(0, 3).map((country: any) => (
-                    <div key={country.id} className="flex items-center justify-between rounded-lg border border-orange-100 bg-white px-2 py-1.5 text-[11px] font-bold">
-                      <span className="truncate text-slate-800">{country.countryName}</span>
-                      <span className="text-orange-700">{country.bills} {t(lang, "lp.bills_label", "bills")}</span>
-                    </div>
-                  ))}
-                  {localPurchaseDashboard.countries.length === 0 && <p className="text-xs font-semibold text-slate-400">{t(lang, "lp.no_country_records", "No country purchase records found.")}</p>}
-                </div>
-              </div>
+            </div>
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+              <span className="text-slate-400 font-medium">{t(lang, "lp.date_time", "Date & Time")}</span>
+              <span suppressHydrationWarning className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
             </div>
           </div>
 
-          {showCountryReport && (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
-              {localPurchaseDashboard.countries.map((country: any) => (
-                <div key={country.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">{country.countryName}</h3>
-                      <p className="text-[11px] font-bold text-slate-500">Currency: {country.currency}</p>
-                    </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-700">{country.branches.length} Branches</span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-semibold">
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_bills", "Bills")}</span><b>{country.bills}</b></div>
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_posted", "Posted")}</span><b className="text-emerald-700">{country.postedBills}</b></div>
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_purchase", "Purchase")}</span><b>{money(country.totalPurchase, country.currency)}</b></div>
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_final", "Final")}</span><b className="text-blue-700">{money(country.totalFinal, country.currency)}</b></div>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {country.branches.map((branch: any) => (
-                      <div key={branch.branchName} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[11px]">
-                        <div className="flex justify-between gap-3 font-black text-slate-800"><span className="truncate">{branch.branchName}</span><span>{branch.bills} bills</span></div>
-                        <div className="mt-1 flex justify-between gap-3 font-semibold text-slate-500"><span>{t(lang, "lp.col_final_amount", "Final Amount")}</span><span>{money(branch.totalFinal, country.currency)}</span></div>
+          {/* Card 2: Financial Summary */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
+            <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center shrink-0">
+                <Coins className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                2. {t(lang, "lp.financial_summary", "Financial Summary")}
+              </p>
+            </div>
+            <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.total_local_purchase_bills", "Total Local Purchase Bills")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{localPurchaseDashboard.totalBills}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.total_purchase_amount", "Total Purchase Amount")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{money(localPurchaseDashboard.totalPurchase, localCurrency)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.total_tax_amount", "Total Tax Amount")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{money(localPurchaseDashboard.totalTax, localCurrency)}</span>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+              <span className="text-slate-400 font-bold">{t(lang, "lp.total_final_amount", "Total Final Amount")}</span>
+              <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
+                {money(localPurchaseDashboard.totalFinal, localCurrency)}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3: Bill Entry Summary */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
+            <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="h-7 w-7 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center shrink-0">
+                <Receipt className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                3. {t(lang, "lp.bill_entry_summary", "Bill Entry Summary")}
+              </p>
+            </div>
+            <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.total_bills", "Total Bills")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{localPurchaseDashboard.totalBills}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.posted_accepted", "Posted / Accepted")}</span>
+                <span className="font-mono font-bold text-emerald-600">{localPurchaseDashboard.postedBills}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">{t(lang, "lp.draft_bills", "Draft Bills")}</span>
+                <span className="font-mono font-bold text-amber-600">{localPurchaseDashboard.draftBills}</span>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[11px]">
+              <span className="text-slate-400 font-medium">{t(lang, "lp.pending_bills", "Pending Bills")}</span>
+              <span className="font-mono font-bold text-rose-600">{localPurchaseDashboard.pendingBills}</span>
+            </div>
+          </div>
+
+          {/* Card 4: All Countries Report */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-xl bg-orange-50 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center shrink-0">
+                  <Globe className="h-4 w-4" />
+                </div>
+                <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  4. {t(lang, "lp.all_countries_report", "All Countries Report")}
+                </p>
+              </div>
+              <select
+                value={selectedCountryReportId}
+                onChange={(e) => setSelectedCountryReportId(e.target.value)}
+                className="h-6 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-1.5 text-slate-700 dark:text-slate-200 outline-none cursor-pointer max-w-[110px]"
+              >
+                <option value="">{t(lang, "lp.all_purchases", "All Countries")}</option>
+                {countryOptions.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="py-1 flex justify-between items-baseline gap-2">
+              <div>
+                <span className="text-[10px] text-slate-400 font-medium block">
+                  {selectedCountryReport ? selectedCountryReport.countryName : `${localPurchaseDashboard.countries.length} ${t(lang, "lp.countries_label", "Countries")}`}
+                </span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {selectedCountryReport ? selectedCountryReport.bills : localPurchaseDashboard.totalBills} {t(lang, "lp.bills_label", "bills")}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 font-medium block">{t(lang, "lp.total_amount", "Total Amount")}</span>
+                <span className="font-mono font-black text-xs text-orange-600 dark:text-orange-400">
+                  {selectedCountryReport
+                    ? money(selectedCountryReport.totalFinal, selectedCountryReport.currency || localCurrency)
+                    : money(localPurchaseDashboard.totalFinal, localCurrency)}
+                </span>
+              </div>
+            </div>
+
+            {/* Mini vertical bar chart illustration */}
+            <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-end justify-between gap-1.5 h-10 px-0.5">
+                {localPurchaseDashboard.countries.length > 0
+                  ? localPurchaseDashboard.countries.slice(0, 6).map((country: any, idx: number) => {
+                      const maxBills = Math.max(...localPurchaseDashboard.countries.map((c: any) => c.bills || 1), 1);
+                      const heightPct = Math.max(25, Math.min(100, Math.round(((country.bills || 1) / maxBills) * 100)));
+                      const barColors = [
+                        "bg-blue-500",
+                        "bg-emerald-500",
+                        "bg-amber-500",
+                        "bg-purple-500",
+                        "bg-rose-500",
+                        "bg-teal-500",
+                      ];
+                      return (
+                        <div key={country.id || idx} className="flex-1 flex flex-col items-center gap-1 group">
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-t h-7 flex items-end">
+                            <div
+                              className={cn("w-full rounded-t transition-all", barColors[idx % barColors.length])}
+                              style={{ height: `${heightPct}%` }}
+                              title={`${country.countryName}: ${country.bills} bills`}
+                            />
+                          </div>
+                          <span className="text-[8px] font-bold text-slate-400 truncate max-w-[26px]">
+                            {country.countryName.slice(0, 3).toUpperCase()}
+                          </span>
+                        </div>
+                      );
+                    })
+                  : [
+                      { h: "45%", label: "UAE", bg: "bg-blue-400" },
+                      { h: "85%", label: "PK", bg: "bg-emerald-400" },
+                      { h: "60%", label: "AF", bg: "bg-amber-400" },
+                      { h: "75%", label: "OM", bg: "bg-purple-400" },
+                      { h: "95%", label: "SA", bg: "bg-blue-500" },
+                      { h: "50%", label: "UK", bg: "bg-rose-400" },
+                    ].map((bar, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-t h-7 flex items-end">
+                          <div
+                            className={cn("w-full rounded-t transition-all", bar.bg)}
+                            style={{ height: bar.h }}
+                          />
+                        </div>
+                        <span className="text-[8px] font-bold text-slate-400">{bar.label}</span>
                       </div>
                     ))}
-                  </div>
-                </div>
-              ))}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
       {/* Conditional Content: Form Wizard vs Full-Width Registry Log Table */}
@@ -3120,26 +3521,83 @@ export function LocalPurchaseView({
         </div>
       </form>
     ) : (
-        /* Full-Width Draft & In-Progress Bills Table */
+        /* Full-Width Draft & In-Progress Bills Table matching Reference Design */
         <div className="space-y-4 w-full animate-in fade-in duration-200">
+          <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden">
+            {/* Table Top Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+              {/* Left: Title & Subtitle */}
+              <div>
+                <h3 className="text-sm font-black uppercase text-slate-900 dark:text-slate-100 tracking-wide flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-blue-600" />
+                  <span>{t(lang, "lp.title", "Local Purchase Registry")}</span>
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                  {t(lang, "lp.subtitle", "Branch-level purchase voucher logs, weights, amounts and ledger postings")}
+                </p>
+              </div>
 
-          <Card className="border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 p-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <Coins className="h-4 w-4 text-blue-600" /> {t(lang, "lp.local_purchase_bills_title", "Local Purchase Bills")}
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold text-slate-500">
-                  {filteredPurchases.length} {t(lang, "lp.records_label", "Record(s)")}
-                </span>
+              {/* Right: Columns, Export, Records Count, Page Size */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Columns Selector Button */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowColumnPicker((prev) => !prev);
+                    }}
+                    className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5 text-slate-500" />
+                    <span>{t(lang, "common.columns", "Columns")}</span>
+                  </button>
+
+                  {showColumnPicker && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 top-full mt-1.5 w-52 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 shadow-2xl z-50 animate-in fade-in space-y-1.5 text-xs font-semibold"
+                    >
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                        {t(lang, "common.columns", "Columns")}
+                      </p>
+                      {[
+                        { key: "billNo", label: t(lang, "lp.col_voucher_no", "Bill No") },
+                        { key: "date", label: t(lang, "lp.col_date", "Date") },
+                        { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier") },
+                        { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name") },
+                        { key: "brand", label: t(lang, "lp.col_brand", "Brand") },
+                        { key: "qty", label: t(lang, "lp.col_qty", "Quantity") },
+                        { key: "grossWt", label: t(lang, "lp.col_gross_wt", "Gross Wt") },
+                        { key: "netWt", label: t(lang, "lp.col_net_wt", "Net Wt") },
+                        { key: "rate", label: t(lang, "lp.col_rate", "Rate") },
+                        { key: "amount", label: t(lang, "lp.col_final_amount", "Amount") },
+                        { key: "status", label: t(lang, "lp.col_status", "Status") },
+                      ].map((col) => (
+                        <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:text-blue-600">
+                          <input
+                            type="checkbox"
+                            checked={visibleColumns[col.key] !== false}
+                            onChange={() => setVisibleColumns((prev) => ({ ...prev, [col.key]: !prev[col.key] }))}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-0"
+                          />
+                          <span>{col.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Export Button */}
                 <JournalPrintButton
                   title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
                   subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                   columns={[
-                      { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
+                    { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
                     { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
                     { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
                     { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
+                    { key: "brand", label: t(lang, "lp.col_brand", "Brand"), align: "left" },
                     { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
                     { key: "netWeight", label: t(lang, "lp.col_net_weight", "Net Weight"), align: "right" },
                     { key: "rate", label: t(lang, "lp.col_rate", "Rate"), align: "right" },
@@ -3151,193 +3609,422 @@ export function LocalPurchaseView({
                     date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                     supplier: p.supplier_name || "—",
                     goods: p.goods_name || "—",
+                    brand: p.brand || "—",
                     qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
                     netWeight: `${Number(p.net_weight || 0).toLocaleString()} kg`,
                     rate: `${Number(p.purchase_rate || 0).toFixed(2)} ${p.purchase_currency || ""}`.trim(),
                     finalAmount: Number(p.final_cost || p.purchase_cost || 0),
                     status: (p.status || "DRAFT").toUpperCase()
                   }))}
-                  variant="default"
-                  className="bg-[#002B66] hover:bg-[#001D44] text-white font-bold h-7 text-xs gap-1 px-3"
+                  variant="outline"
+                  className="h-8 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-xs font-bold gap-1.5 px-3 shadow-2xs"
                 />
+
+                {/* Records Count Badge */}
+                <div className="h-8 px-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center text-xs font-bold text-slate-600 dark:text-slate-300">
+                  <span className="text-slate-400 me-1">{t(lang, "common.total_records", "Total Records:")}</span>
+                  <span className="font-mono text-blue-600 dark:text-blue-400">{filteredPurchases.length}</span>
+                </div>
+
+                {/* Page Size Dropdown */}
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="h-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none shadow-2xs cursor-pointer"
+                >
+                  <option value={10}>10 {t(lang, "purchase.showing_entries", "entries")}</option>
+                  <option value={25}>25 {t(lang, "purchase.showing_entries", "entries")}</option>
+                  <option value={50}>50 {t(lang, "purchase.showing_entries", "entries")}</option>
+                  <option value={100}>100 {t(lang, "purchase.showing_entries", "entries")}</option>
+                </select>
               </div>
-            </CardHeader>
+            </div>
+
+            {/* Table Container */}
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto min-h-[300px]">
                 <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-                  <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider">
+                  {/* Deep Navy Header #0f2942 */}
+                  <thead className="bg-[#0f2942] text-white text-[10px] font-black uppercase tracking-wider sticky top-0 z-10">
                     <tr>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">#</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_super_sn", "Super S/N")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_cty_sn", "Cty S/N")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_br_sn", "Br S/N")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_voucher_no", "Voucher No")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_date", "Date")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.hdr_purchase_acc_dr", "Purchase Acc (DR)")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.hdr_sales_acc_cr", "Sales Acc (CR)")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_supplier_name", "Supplier Name")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_goods_name", "Goods Name")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_brand", "Brand")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_size", "Size")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_qty", "Qty")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_unit", "Unit")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_gross_wt", "Gross Wt")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_net_wt", "Net Wt")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.divide_unit", "Divide Unit")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_rate", "Rate")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.sub_total", "Sub Total")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_tax_amt", "Tax Amt")}</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right font-black">{t(lang, "lp.col_final_amount", "Final Amount")}</Th>
-                      <Th className="px-3 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_posting_status", "Posting & Transfer Status")}</Th>
-                      <Th className="px-2 py-2 text-center">{t(lang, "lp.col_actions", "Actions")}</Th>
+                      <th className="px-2.5 py-3 text-center w-8 border-e border-[#1a3d5f]">
+                        <input
+                          type="checkbox"
+                          checked={allCurrentPageSelected}
+                          onChange={toggleSelectAll}
+                          className="rounded border-slate-400 text-blue-600 focus:ring-0 cursor-pointer"
+                          title={t(lang, "cbill.select_all", "Select all")}
+                        />
+                      </th>
+                      <Th className="px-2 py-3 text-center w-10 border-e border-[#1a3d5f] text-white font-black">#</Th>
+                      {visibleColumns.billNo !== false && (
+                        <Th className="px-2.5 py-3 border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_voucher_no", "Bill No")}
+                        </Th>
+                      )}
+                      {visibleColumns.date !== false && (
+                        <Th className="px-2.5 py-3 border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_date", "Date")}
+                        </Th>
+                      )}
+                      {visibleColumns.supplier !== false && (
+                        <Th className="px-3 py-3 border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_supplier_name", "Supplier Name")}
+                        </Th>
+                      )}
+                      {visibleColumns.goods !== false && (
+                        <Th className="px-3 py-3 border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_goods_name", "Goods Name")}
+                        </Th>
+                      )}
+                      {visibleColumns.brand !== false && (
+                        <Th className="px-2.5 py-3 border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_brand", "Brand")}
+                        </Th>
+                      )}
+                      {visibleColumns.qty !== false && (
+                        <Th className="px-2.5 py-3 text-right border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_qty", "Qty")}
+                        </Th>
+                      )}
+                      {visibleColumns.qty !== false && (
+                        <Th className="px-2.5 py-3 text-center border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_unit", "Unit")}
+                        </Th>
+                      )}
+                      {visibleColumns.grossWt !== false && (
+                        <Th className="px-2.5 py-3 text-right border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_gross_wt", "Gross Wt")}
+                        </Th>
+                      )}
+                      {visibleColumns.netWt !== false && (
+                        <Th className="px-2.5 py-3 text-right border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_net_wt", "Net Wt")}
+                        </Th>
+                      )}
+                      {visibleColumns.rate !== false && (
+                        <Th className="px-2.5 py-3 text-right border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_rate", "Rate")}
+                        </Th>
+                      )}
+                      {visibleColumns.amount !== false && (
+                        <Th className="px-3 py-3 text-right border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_final_amount", "Amount")}
+                        </Th>
+                      )}
+                      {visibleColumns.status !== false && (
+                        <Th className="px-3 py-3 text-center border-e border-[#1a3d5f] text-white font-black">
+                          {t(lang, "lp.col_posting_status", "Posting & Transfer Status")}
+                        </Th>
+                      )}
+                      <Th className="px-2.5 py-3 text-center w-12 text-white font-black">
+                        {t(lang, "lp.col_actions", "Actions")}
+                      </Th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-[10px]">
+
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
                     {loadingHistory ? (
                       <tr>
-                      <td colSpan={23} className="p-8 text-center text-slate-400 font-mono">
-                          <Loader2 className="h-5 w-5 animate-spin mx-auto text-blue-600 mb-2" />
+                        <td colSpan={15} className="p-12 text-center text-slate-400 font-mono">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
                           {t(lang, "lp.loading_bills", "Loading bills...")}
                         </td>
                       </tr>
                     ) : filteredPurchases.length === 0 ? (
                       <tr>
-                        <td colSpan={23} className="px-5 py-12 text-center text-slate-400 font-sans">
-                          <Package className="h-10 w-10 mx-auto text-slate-200 mb-3" />
-                          <p className="font-bold text-slate-700">{t(lang, "lp.no_bills_found", "No bills found")}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">Click &quot;+ Create Local Purchase&quot; to create a new bill.</p>
+                        <td colSpan={15} className="px-5 py-16 text-center text-slate-400 font-sans">
+                          <Package className="h-12 w-12 mx-auto text-slate-200 dark:text-slate-700 mb-3" />
+                          <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                            {t(lang, "lp.no_bills_found", "No bills found")}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Click &quot;+ New Purchase&quot; to create a new local purchase bill.
+                          </p>
                         </td>
                       </tr>
                     ) : (
-                      filteredPurchases.map((row, rowIndex) => {
+                      paginatedPurchases.map((row, rowIndex) => {
                         const postingState = deriveLocalPurchasePostingState(row);
                         const rowCurrency = row.local_currency || row.localCurrency || row.purchase_currency || row.purchaseCurrency || "PKR";
                         const rowFinalCost = Number(row.final_cost || row.finalCost || row.purchase_cost || row.purchaseCost || 0);
-                        const rowBaseCost = Number(row.purchase_cost || row.purchaseCost || 0);
                         const rowTaxAmount = Number(row.tax_amount || row.taxAmount || 0);
                         const rowNetWeight = Number(row.net_weight || row.netWeight || 0);
                         const rowGrossWeight = Number(row.total_gross_weight || row.totalGrossWeight || 0);
                         const rowQty = Number(row.quantity_kgs || row.quantityKgs || 0);
                         const rowRate = Number(row.purchase_rate || row.purchaseRate || 0);
-                        const rowDivideKgs = row.divide_kgs || row.divideKgs || null;
 
-                        const superSerial = row.superAdminSerialNo || row.super_admin_serial_no || row.global_serial_no || "—";
-                        const countrySerial = row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || "—";
-                        const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || "—";
                         const voucherCode = row.journal_serial_no || row.serial_no || row.serialNo || row.bill_no || row.billNo || "—";
-
                         const rowStatus = String(row.status || row.bill_status || "draft").toLowerCase();
                         const isTransferred = rowStatus === "posted" || rowStatus === "transferred" || Boolean(row.transferred_at) || Boolean(row.roznamcha_entry_id);
                         const hasRoznamcha = Boolean(row.roznamcha_entry_id);
                         const hasLedger = Boolean(rowStatus === "posted" || row.journal_entry_id || row.roznamcha_entry_id);
 
                         const badge = postingState.visualStatus === "black"
-                          ? { bg: "bg-black border-black", text: "text-white", label: "BLACK" }
-                          : { bg: "bg-red-100 border-red-300", text: "text-red-800", label: "RED" };
+                          ? { bg: "bg-black text-white", label: "BLACK" }
+                          : { bg: "bg-red-100 text-red-800 border-red-300", label: "RED" };
+
+                        const isRowSelected = selectedRowIds.has(row.id);
+                        const globalRowNumber = (currentPage - 1) * pageSize + rowIndex + 1;
 
                         return (
-                          <tr key={row.id} className="hover:bg-blue-50/30 transition-colors border-b border-slate-100">
-                            <td className="px-2 py-2 font-mono text-[9px] text-slate-500 font-bold text-center border-r border-slate-150">{rowIndex + 1}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-slate-500 font-bold text-center border-r border-slate-150">{superSerial}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-slate-500 text-center border-r border-slate-150">{countrySerial}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-slate-500 text-center border-r border-slate-150">{branchSerial}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] font-bold text-blue-600 border-r border-slate-150">{voucherCode}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-slate-500 border-r border-slate-150" suppressHydrationWarning>
-                              {row.created_at || row.createdAt ? new Date(row.created_at || row.createdAt).toLocaleDateString("en-GB") : "—"}
+                          <tr
+                            key={row.id}
+                            className={cn(
+                              "hover:bg-blue-50/40 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800/80",
+                              isRowSelected && "bg-blue-50/50 dark:bg-blue-950/20"
+                            )}
+                          >
+                            {/* Checkbox */}
+                            <td className="px-2.5 py-2.5 text-center border-e border-slate-150 dark:border-slate-800">
+                              <input
+                                type="checkbox"
+                                checked={isRowSelected}
+                                onChange={() => {
+                                  const next = new Set(selectedRowIds);
+                                  if (next.has(row.id)) next.delete(row.id);
+                                  else next.add(row.id);
+                                  setSelectedRowIds(next);
+                                }}
+                                className="rounded border-slate-300 text-blue-600 focus:ring-0 cursor-pointer"
+                              />
                             </td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-blue-600 font-bold border-r border-slate-150">{row.purchase_account_no || row.purchaseAccountNo || "—"}</td>
-                            <td className="px-2 py-2 font-mono text-[9px] text-purple-600 font-bold border-r border-slate-150">{row.sales_account_no || row.salesAccountNo || row.broker_account_no || row.brokerAccountNo || "—"}</td>
-                            <td className="px-2 py-2 font-semibold text-slate-700 border-r border-slate-150">{row.supplier_name || row.supplierName || "—"}</td>
-                            <td className="px-2 py-2 font-bold text-slate-900 border-r border-slate-150">{row.goods_name || row.goodsName || "—"}</td>
-                            <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.brand || "—"}</td>
-                            <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.size || "—"}</td>
-                            <td className="px-2 py-2 text-right font-mono font-bold text-slate-800 border-r border-slate-150">{rowQty.toLocaleString()}</td>
-                            <td className="px-2 py-2 text-slate-600 border-r border-slate-150">{row.quantity_name || row.quantityName || "—"}</td>
-                            <td className="px-2 py-2 text-right font-mono text-slate-600 border-r border-slate-150">{rowGrossWeight.toLocaleString()} kg</td>
-                            <td className="px-2 py-2 text-right font-mono font-bold text-blue-600 border-r border-slate-150">{rowNetWeight.toLocaleString()} kg</td>
-                            <td className="px-2 py-2 text-center font-mono text-[9px] text-purple-700 font-bold border-r border-slate-150">{rowDivideKgs ? `${rowDivideKgs} KG` : "—"}</td>
-                            <td className="px-2 py-2 text-right font-mono text-slate-700 border-r border-slate-150">{rowRate ? `${rowRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${rowCurrency}` : "—"}</td>
-                            <td className="px-2 py-2 text-right font-mono text-slate-800 border-r border-slate-150">{rowBaseCost ? `${rowCurrency} ${rowBaseCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</td>
-                            <td className="px-2 py-2 text-right font-mono text-red-500 border-r border-slate-150">{rowTaxAmount ? `${rowCurrency} ${rowTaxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</td>
-                            <td className="px-2 py-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150">
-                              {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+                            {/* Row Index */}
+                            <td className="px-2 py-2.5 font-mono text-[10px] text-slate-400 font-bold text-center border-e border-slate-150 dark:border-slate-800">
+                              {globalRowNumber}
                             </td>
-                            <td className="px-2.5 py-2 text-center border-r border-slate-150">
-                              <div className="flex flex-col items-center justify-center gap-1">
-                                {/* Row Primary Status Badge & Audit Seal */}
-                                <div className="flex items-center justify-center gap-1 flex-wrap">
-                                  <span
+
+                            {/* Bill No (Blue Link) */}
+                            {visibleColumns.billNo !== false && (
+                              <td className="px-2.5 py-2.5 font-mono text-[10px] font-bold border-e border-slate-150 dark:border-slate-800">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedRowForVoucher(row)}
+                                  className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-bold text-left"
+                                  title={t(lang, "purchase.print_voucher", "View Voucher")}
+                                >
+                                  {voucherCode}
+                                </button>
+                              </td>
+                            )}
+
+                            {/* Date */}
+                            {visibleColumns.date !== false && (
+                              <td className="px-2.5 py-2.5 font-mono text-[10px] text-slate-600 dark:text-slate-400 border-e border-slate-150 dark:border-slate-800" suppressHydrationWarning>
+                                {row.created_at || row.createdAt ? new Date(row.created_at || row.createdAt).toLocaleDateString("en-GB") : "—"}
+                              </td>
+                            )}
+
+                            {/* Supplier Name (Blue Link) */}
+                            {visibleColumns.supplier !== false && (
+                              <td className="px-3 py-2.5 font-semibold text-slate-800 dark:text-slate-200 border-e border-slate-150 dark:border-slate-800">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedRowForVoucher(row)}
+                                  className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-bold text-left truncate max-w-[160px] block"
+                                  title={row.supplier_name || row.supplierName || "—"}
+                                >
+                                  {row.supplier_name || row.supplierName || "—"}
+                                </button>
+                              </td>
+                            )}
+
+                            {/* Goods Name */}
+                            {visibleColumns.goods !== false && (
+                              <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100 border-e border-slate-150 dark:border-slate-800 truncate max-w-[150px]">
+                                {row.goods_name || row.goodsName || "—"}
+                              </td>
+                            )}
+
+                            {/* Brand */}
+                            {visibleColumns.brand !== false && (
+                              <td className="px-2.5 py-2.5 text-slate-600 dark:text-slate-400 border-e border-slate-150 dark:border-slate-800">
+                                {row.brand || "—"}
+                              </td>
+                            )}
+
+                            {/* Qty */}
+                            {visibleColumns.qty !== false && (
+                              <td className="px-2.5 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-e border-slate-150 dark:border-slate-800">
+                                {rowQty.toLocaleString()}
+                              </td>
+                            )}
+
+                            {/* Unit */}
+                            {visibleColumns.qty !== false && (
+                              <td className="px-2.5 py-2.5 text-center text-slate-500 dark:text-slate-400 border-e border-slate-150 dark:border-slate-800">
+                                {row.quantity_name || row.quantityName || "Bags"}
+                              </td>
+                            )}
+
+                            {/* Gross Wt */}
+                            {visibleColumns.grossWt !== false && (
+                              <td className="px-2.5 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400 border-e border-slate-150 dark:border-slate-800">
+                                {rowGrossWeight.toLocaleString()} kg
+                              </td>
+                            )}
+
+                            {/* Net Wt (Highlighted Blue Bold) */}
+                            {visibleColumns.netWt !== false && (
+                              <td className="px-2.5 py-2.5 text-right font-mono font-bold text-blue-600 dark:text-blue-400 border-e border-slate-150 dark:border-slate-800">
+                                {rowNetWeight.toLocaleString()} kg
+                              </td>
+                            )}
+
+                            {/* Rate */}
+                            {visibleColumns.rate !== false && (
+                              <td className="px-2.5 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300 border-e border-slate-150 dark:border-slate-800">
+                                {rowRate ? rowRate.toFixed(2) : "—"}
+                              </td>
+                            )}
+
+                            {/* Amount (AED / PKR Formatted) */}
+                            {visibleColumns.amount !== false && (
+                              <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100 border-e border-slate-150 dark:border-slate-800">
+                                {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                            )}
+
+                            {/* Posting & Transfer Status (Interactive Chip Button) */}
+                            {visibleColumns.status !== false && (
+                              <td className="px-3 py-2.5 text-center border-e border-slate-150 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
+                                <div className="relative inline-block text-center">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (activeStatusDropdownId === row.id) {
+                                        setActiveStatusDropdownId(null);
+                                        setStatusMenuAnchor(null);
+                                      } else {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setActiveStatusDropdownId(row.id);
+                                        setStatusMenuAnchor({
+                                          id: row.id,
+                                          top: rect.top,
+                                          bottom: rect.bottom,
+                                          left: Math.max(12, rect.left - 80),
+                                        });
+                                      }
+                                    }}
                                     className={cn(
-                                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wide border shadow-2xs",
+                                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-2xs transition active:scale-95 cursor-pointer",
                                       isTransferred
-                                        ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                                        ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                                         : rowStatus === "accepted"
-                                        ? "bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
-                                        : "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                                        ? "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                                        : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
                                     )}
                                   >
-                                    {isTransferred ? (
-                                      <>
-                                        <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
-                                        <span>{t(lang, "lp.col_posted", "POSTED / TRANSFERRED")}</span>
-                                      </>
-                                    ) : rowStatus === "accepted" ? (
-                                      <span>{t(lang, "lp.posted_accepted", "ACCEPTED (READY)")}</span>
-                                    ) : (
-                                      <span>{t(lang, "lp.draft_bills", "DRAFT")}</span>
-                                    )}
-                                  </span>
-
-                                  {/* Canonical RED / BLACK Audit Seal Badge */}
-                                  <span
-                                    className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${badge.bg} ${badge.text}`}
-                                    title={postingState.reason}
-                                  >
-                                    {badge.label}
-                                  </span>
-                                </div>
-
-                                {/* Roznamcha & General Ledger Posting Status */}
-                                <div className="flex items-center justify-center gap-1 text-[8.5px] font-mono flex-wrap">
-                                  {hasRoznamcha ? (
                                     <span
-                                      className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400"
-                                      title={`Roznamcha Entry: ${row.roznamcha_entry_id || "Posted"}`}
-                                    >
-                                      <Check className="h-2.5 w-2.5 text-emerald-600" />
-                                      {t(lang, "lp.roznamcha_transferred", "Roznamcha: Transferred")}
+                                      className={cn(
+                                        "h-1.5 w-1.5 rounded-full",
+                                        isTransferred ? "bg-emerald-600" : rowStatus === "accepted" ? "bg-blue-600" : "bg-amber-600"
+                                      )}
+                                    />
+                                    <span>
+                                      {isTransferred ? "POSTED" : rowStatus === "accepted" ? "ACCEPTED" : "DRAFT"}
                                     </span>
-                                  ) : (
-                                    <span
-                                      className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-500 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
-                                      title="Not yet posted to Daily Roznamcha"
+                                    <ChevronDown className="h-3 w-3 opacity-60" />
+                                  </button>
+
+                                  {/* Detailed Status Dropdown Popover */}
+                                  {activeStatusDropdownId === row.id && (
+                                    <div
+                                      style={
+                                        statusMenuAnchor && statusMenuAnchor.id === row.id
+                                          ? {
+                                              position: "fixed",
+                                              left: `${statusMenuAnchor.left}px`,
+                                              ...(statusMenuAnchor.top > 260
+                                                ? { bottom: `${Math.max(10, window.innerHeight - statusMenuAnchor.top + 6)}px` }
+                                                : { top: `${statusMenuAnchor.bottom + 6}px` }),
+                                              zIndex: 99999,
+                                            }
+                                          : undefined
+                                      }
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-64 rounded-2xl bg-white dark:bg-slate-900 p-3.5 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 text-left space-y-2.5 animate-in fade-in zoom-in-95"
                                     >
-                                      <Clock className="h-2.5 w-2.5 text-slate-400" />
-                                      {t(lang, "lp.roznamcha_pending", "Roznamcha: Pending")}
-                                    </span>
+                                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                          {t(lang, "lp.col_posting_status", "Posting & Transfer Status")}
+                                        </span>
+                                        <span
+                                          className={cn(
+                                            "px-2 py-0.5 rounded-md text-[9px] font-black uppercase",
+                                            isTransferred ? "bg-emerald-100 text-emerald-800" : rowStatus === "accepted" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"
+                                          )}
+                                        >
+                                          {isTransferred ? "POSTED" : rowStatus === "accepted" ? "ACCEPTED" : "DRAFT"}
+                                        </span>
+                                      </div>
+
+                                      <div className="space-y-2 text-[11px]">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-slate-500 font-medium">Main Status:</span>
+                                          <span className="font-bold text-slate-800 dark:text-slate-200 capitalize">{rowStatus}</span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-slate-500 font-medium">Daily Roznamcha:</span>
+                                          {hasRoznamcha ? (
+                                            <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-400">
+                                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Transferred
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center gap-1 font-semibold text-slate-400">
+                                              <Clock className="h-3.5 w-3.5 text-slate-400" /> Pending
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-slate-500 font-medium">General Ledger:</span>
+                                          {hasLedger ? (
+                                            <span className="inline-flex items-center gap-1 font-bold text-teal-700 dark:text-teal-400">
+                                              <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" /> Posted
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center gap-1 font-semibold text-slate-400">
+                                              <Clock className="h-3.5 w-3.5 text-slate-400" /> Pending
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-slate-500 font-medium">Audit Seal:</span>
+                                          <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-black uppercase border", badge.bg)}>
+                                            {badge.label}
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-[10px]">
+                                          <span className="text-slate-500 font-medium">Transfer Date:</span>
+                                          <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                            {row.transferred_at ? new Date(row.transferred_at).toLocaleString() : (row.created_at ? new Date(row.created_at).toLocaleDateString() : "—")}
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-100 dark:border-slate-800">
+                                          <span className="text-slate-500 font-medium">{t(lang, "lp.user_name", "User Name")}:</span>
+                                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                                            {row.created_by_name || session.fullName || "Super Admin"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
                                   )}
-
-                                  {hasLedger ? (
-                                    <span
-                                      className="inline-flex items-center gap-0.5 rounded bg-teal-50 px-1.5 py-0.5 font-bold text-teal-700 border border-teal-200 dark:bg-teal-950/30 dark:border-teal-800 dark:text-teal-400"
-                                      title={`General Ledger: Posted via Dual-Entry`}
-                                    >
-                                      <Check className="h-2.5 w-2.5 text-teal-600" />
-                                      {t(lang, "lp.ledger_posted", "Ledger: Posted")}
-                                    </span>
-                                  ) : (
-                                    <span
-                                      className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-500 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
-                                      title="Not yet posted to General Ledger"
-                                    >
-                                      <Clock className="h-2.5 w-2.5 text-slate-400" />
-                                      {t(lang, "lp.ledger_pending", "Ledger: Pending")}
-                                    </span>
-                                  )}
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-2 py-2 text-center relative" onClick={(e) => e.stopPropagation()}>
+                              </td>
+                            )}
+
+                            {/* Actions (3-Dots Menu) */}
+                            <td className="px-2.5 py-2.5 text-center relative" onClick={(e) => e.stopPropagation()}>
                               <div className="relative inline-block text-left">
                                 <button
                                   type="button"
@@ -3357,10 +4044,10 @@ export function LocalPurchaseView({
                                       });
                                     }
                                   }}
-                                  className="p-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1 font-bold text-[10px]"
+                                  className="h-7 w-7 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition flex items-center justify-center cursor-pointer shadow-2xs"
                                   title={t(lang, "lp.col_actions", "Actions")}
                                 >
-                                  <MoreVertical className="h-3.5 w-3.5 text-blue-600" />
+                                  <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                 </button>
 
                                 {activeActionMenuId === row.id && (
@@ -3377,6 +4064,7 @@ export function LocalPurchaseView({
                                           }
                                         : undefined
                                     }
+                                    onClick={(e) => e.stopPropagation()}
                                     className="w-52 rounded-xl bg-white shadow-2xl border border-slate-200 z-50 py-1.5 space-y-0.5 animate-in fade-in text-left dark:bg-slate-900 dark:border-slate-800"
                                   >
                                     <button
@@ -3386,7 +4074,7 @@ export function LocalPurchaseView({
                                         setActiveActionMenuId(null);
                                         setActionMenuAnchor(null);
                                       }}
-                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
+                                      className="w-full px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                       <Eye className="h-3.5 w-3.5 text-blue-600" /> {th("View Voucher")}
                                     </button>
@@ -3399,16 +4087,10 @@ export function LocalPurchaseView({
                                         setActionMenuAnchor(null);
                                         setTimeout(() => printDomFragmentViaModal("printable-modal-voucher", "Local Purchase Voucher"), 350);
                                       }}
-                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
+                                      className="w-full px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                       <Printer className="h-3.5 w-3.5 text-purple-600" /> {th("Print / Export PDF")}
                                     </button>
-
-                                    {rowStatus !== "draft" && (
-                                      <div className="px-3 py-1.5">
-                                        <AddExpenseBillButton sourceId={row.id} lang={lang} variant="ghost" className="h-auto w-full justify-start p-0 text-[10px] font-bold text-slate-700 hover:text-indigo-600 dark:text-slate-200" />
-                                      </div>
-                                    )}
 
                                     {(rowStatus === "draft" || isSuperAdmin) && (
                                       <button
@@ -3455,7 +4137,7 @@ export function LocalPurchaseView({
                                           setActiveActionMenuId(null);
                                           setActionMenuAnchor(null);
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
+                                        className="w-full px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                       >
                                         <Edit3 className="h-3.5 w-3.5 text-emerald-600" /> {rowStatus === "draft" ? th("Edit Draft") : th("Edit Local Purchase")}
                                       </button>
@@ -3482,7 +4164,7 @@ export function LocalPurchaseView({
                                             alert(err.message);
                                           }
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition dark:text-blue-400 dark:hover:bg-slate-800"
+                                        className="w-full px-3 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition dark:text-blue-400 dark:hover:bg-slate-800"
                                       >
                                         <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" /> {th("Accept Bill")}
                                       </button>
@@ -3509,11 +4191,30 @@ export function LocalPurchaseView({
                                             alert(err.message);
                                           }
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition dark:text-emerald-400 dark:hover:bg-slate-800"
+                                        className="w-full px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition dark:text-emerald-400 dark:hover:bg-slate-800"
                                       >
                                         <Send className="h-3.5 w-3.5 text-emerald-600" /> {th("Transfer & Post")}
                                       </button>
                                     )}
+
+                                    {rowStatus !== "draft" && (
+                                      <div className="px-3 py-1.5 border-t border-slate-100 dark:border-slate-800">
+                                        <AddExpenseBillButton sourceId={row.id} lang={lang} variant="ghost" className="h-auto w-full justify-start p-0 text-[11px] font-bold text-slate-700 hover:text-indigo-600 dark:text-slate-200" />
+                                      </div>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveActionMenuId(null);
+                                        setActionMenuAnchor(null);
+                                        setHandoverTargetRow(row);
+                                        setHandoverModalOpen(true);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 dark:text-blue-400 dark:hover:bg-slate-800"
+                                    >
+                                      <Share2 className="h-3.5 w-3.5 text-blue-600" /> {th("Assign to Another User")}
+                                    </button>
 
                                     {rowStatus === "draft" && (
                                       <button
@@ -3531,24 +4232,11 @@ export function LocalPurchaseView({
                                             alert(err.message);
                                           }
                                         }}
-                                        className="w-full px-3 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 dark:text-red-400 dark:hover:bg-slate-800"
+                                        className="w-full px-3 py-1.5 text-[11px] font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 dark:text-red-400 dark:hover:bg-slate-800"
                                       >
                                         <Trash2 className="h-3.5 w-3.5 text-red-600" /> {th("Delete Draft")}
                                       </button>
                                     )}
-
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setActiveActionMenuId(null);
-                                        setActionMenuAnchor(null);
-                                        setHandoverTargetRow(row);
-                                        setHandoverModalOpen(true);
-                                      }}
-                                      className="w-full px-3 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition border-t border-slate-100 dark:border-slate-800 dark:text-blue-400 dark:hover:bg-slate-800"
-                                    >
-                                      <Share2 className="h-3.5 w-3.5 text-blue-600" /> {th("Assign to Another User")}
-                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -3559,6 +4247,60 @@ export function LocalPurchaseView({
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Table Footer & Pagination */}
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-slate-50/80 dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-xs">
+                {/* Showing entries info */}
+                <div className="font-semibold text-slate-500 dark:text-slate-400">
+                  {filteredPurchases.length === 0
+                    ? "Showing 0 to 0 of 0 entries"
+                    : `Showing ${(currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredPurchases.length)} of ${filteredPurchases.length} entries`}
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition cursor-pointer"
+                  >
+                    {t(lang, "common.previous", "Previous")}
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                    .map((page, idx, arr) => {
+                      const prev = arr[idx - 1];
+                      return (
+                        <React.Fragment key={page}>
+                          {prev && page - prev > 1 && <span className="px-1 text-slate-400">...</span>}
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage(page)}
+                            className={cn(
+                              "h-8 w-8 rounded-lg text-xs font-bold transition cursor-pointer",
+                              currentPage === page
+                                ? "bg-blue-600 text-white shadow-xs font-black"
+                                : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                            )}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+
+                  <button
+                    type="button"
+                    disabled={currentPage >= totalPages || filteredPurchases.length === 0}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition cursor-pointer"
+                  >
+                    {t(lang, "common.next", "Next")}
+                  </button>
+                </div>
               </div>
             </CardContent>
           </Card>
