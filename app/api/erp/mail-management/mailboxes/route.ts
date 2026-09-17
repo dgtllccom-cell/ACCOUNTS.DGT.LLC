@@ -15,8 +15,10 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getErpSessionForApi();
     if (!session) {
+      console.log("[mailbox-api] No session found - returning 401");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    console.log("[mailbox-api] Session found:", !!session, "SuperAdmin:", session.isSuperAdmin);
     if (!session.isSuperAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
