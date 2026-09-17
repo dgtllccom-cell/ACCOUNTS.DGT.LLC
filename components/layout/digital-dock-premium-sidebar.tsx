@@ -550,7 +550,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: FileText,
     tone: "red",
     children: [
-      { label: "Business Edit Invoice", href: "/dashboard/business-edit-invoice", icon: FileText },
       { label: "Invoice Templates", href: "/dashboard/roznamcha/reports/invoice", icon: FileSpreadsheet },
     ],
   },
@@ -561,7 +560,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     tone: "red",
     children: [
       { label: "Journal / Roznamcha", href: "/dashboard/journal", icon: BookOpen },
-      { label: "Reports & Analysis", href: "/dashboard/reports/journal", icon: BarChart3 },
     ],
   },
   {
