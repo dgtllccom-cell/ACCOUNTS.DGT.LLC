@@ -6991,6 +6991,8 @@ export type UiKey =
   | "trk.registered_truck_title" | "trk.new_truck_registration" | "trk.module_subtitle"
   | "trk.section_owner" | "trk.section_truck_details" | "trk.section_company"
   | "trk.section_transporter" | "trk.section_driver" | "trk.section_additional"
+  | "trk.reg_type_permanent" | "trk.reg_type_temporary" | "trk.btn_next_step"
+  | "trk.btn_prev_step" | "trk.btn_quick_save" | "trk.badge_temporary"
   | "trk.truck_owner_name_label" | "trk.search_owner_ph" | "trk.new_truck_owner" | "trk.view_owner_details"
   | "trk.truck_name_label" | "trk.company_name_label" | "trk.search_company_ph" | "trk.new_company"
   | "trk.view_company_details" | "trk.transporter_name_label" | "trk.search_transporter_ph"

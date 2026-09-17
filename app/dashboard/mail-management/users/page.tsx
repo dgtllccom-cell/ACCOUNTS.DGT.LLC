@@ -23,7 +23,6 @@ import {
   UserX,
   X,
 } from "lucide-react";
-import { DashboardFrame } from "@/components/layout/dashboard-frame";
 
 interface MailUser {
   id: string;
@@ -152,7 +151,7 @@ export default function DgtMailUsersDirectoryPage() {
   };
 
   return (
-    <DashboardFrame>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -495,6 +494,6 @@ export default function DgtMailUsersDirectoryPage() {
           </div>
         )}
       </div>
-    </DashboardFrame>
+    </div>
   );
 }

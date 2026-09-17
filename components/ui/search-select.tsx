@@ -87,7 +87,7 @@ export function SearchSelect({
   createLabel?: string;
   onCreateNew?: () => void | Promise<void>;
   onCreateWithSearch?: (query: string) => void | Promise<void>;
-  createButtonPlacement?: "modal" | "trigger" | "both" | "below";
+  createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
   triggerClassName?: string;
   className?: string;
   searchPlaceholder?: string;

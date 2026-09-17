@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       LIMIT 200
     `;
 
-    let filtered = rows;
+    let filtered: Array<Record<string, any>> = [...rows];
     if (status !== "all") {
       filtered = filtered.filter((r) => r.status === status);
     }

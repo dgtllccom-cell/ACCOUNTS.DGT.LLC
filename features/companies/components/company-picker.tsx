@@ -76,7 +76,7 @@ export function CompanyPicker({
   onValueChange: (companyId: string) => void;
   disabled?: boolean;
   placeholder?: string;
-  createButtonPlacement?: "modal" | "trigger" | "both" | "below";
+  createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);

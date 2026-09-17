@@ -105,7 +105,8 @@ export function PersonPicker({
   disabled,
   placeholder,
   lang: langProp,
-  createLabel: createLabelProp
+  createLabel: createLabelProp,
+  createButtonPlacement = "inside",
 }: {
   label: string;
   value: string;
@@ -121,6 +122,7 @@ export function PersonPicker({
    *  one (e.g. "+ New Driver", "+ New Truck Owner") while reusing the exact same embedded
    *  Customer/Person Management create flow. */
   createLabel?: string;
+  createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
 }) {
   const activeLang = useActiveLanguage();
   const lang = (langProp && langProp !== "en") ? langProp : activeLang;
@@ -391,7 +393,7 @@ export function PersonPicker({
         onEditOption={(personId) => setEditPersonId(personId)}
         onPrintOption={handlePrintPerson}
         createLabel={createLabelProp ?? t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
-        createButtonPlacement="both"
+        createButtonPlacement={createButtonPlacement}
         onCreateWithSearch={handleQuickCreatePerson}
         onCreateNew={async () => {
           setOpenCreate(true);
