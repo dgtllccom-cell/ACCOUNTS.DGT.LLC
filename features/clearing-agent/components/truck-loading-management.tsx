@@ -141,6 +141,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
   const [rows, setRows] = useState<Loading[]>([]);
   const [trucks, setTrucks] = useState<TruckOpt[]>([]);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
+  const [selectedLoadingOrderIds, setSelectedLoadingOrderIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -341,54 +342,47 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         </div>
       </div>
 
-      {/* Pending Customer Orders Ribbon */}
+      {/* Pending Customer Orders Dropdown Selection */}
       {pendingOrders.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase text-amber-500 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              {t(lang, "tl.pending_orders_ready")} ({pendingOrders.length})
-            </span>
-            <span className="text-[11px] text-amber-400">{t(lang, "tl.autofill_hint")}</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {pendingOrders.map((ord) => (
-              <button
-                key={ord.id}
-                onClick={() => {
-                  setForm({
-                    ...EMPTY,
-                    customerAccountNo: ord.customer_name,
-                    importer: ord.customer_name,
-                    shippingType: ord.transport_mode === "by_sea" ? "By Sea" : ord.transport_mode === "by_air" ? "By Air" : "By Road",
-                    shipmentType: ord.movement_type === "import" ? "Import" : ord.movement_type === "transit" ? "Transit" : "Export",
-                    loadCountry: ord.loading_country_name || "",
-                    loadPlace: ord.loading_port_name || "",
-                    receiveCountry: ord.receiving_country_name || "",
-                    receivePlace: ord.destination_port_name || "",
-                    routeCountry: ord.route_name || "",
-                    remarks: ord.cargo_details ? `Cargo: ${ord.cargo_details}` : "",
-                  });
-                  setActiveTab("parties");
-                  setEditing(true);
-                }}
-                className="text-left p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/20 hover:border-amber-500/50 transition-all text-xs space-y-1 shadow-sm"
-              >
-                <div className="flex items-center justify-between font-bold">
-                  <span className="text-indigo-400 font-mono">{ord.order_no}</span>
-                  <span className="capitalize text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">
-                    {ord.transport_mode?.replace("_", " ")}
-                  </span>
-                </div>
-                <div className="text-slate-900 dark:text-white font-medium truncate">{ord.customer_name}</div>
-                <div className="text-[11px] text-slate-400 truncate">
-                  {ord.route_name
-                    || ([ord.loading_country_name, ord.receiving_country_name].filter(Boolean).join(" → "))
-                    || t(lang, "tl.route_unavailable", "Route not available")}
-                </div>
-              </button>
-            ))}
-          </div>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs">
+          <CustomerOrderMultiSelect
+            orders={pendingOrders.map((ord: any) => ({
+              id: ord.id,
+              order_no: ord.order_no || `ORD-${ord.id.slice(0, 6)}`,
+              customer_name: ord.customer_name,
+              transport_mode: ord.transport_mode,
+              movement_type: ord.movement_type,
+              loading_port_name: ord.loading_port_name,
+              destination_port_name: ord.destination_port_name,
+              cargo_details: ord.cargo_details,
+              truck_number: ord.truck_number
+            }))}
+            selectedOrderIds={selectedLoadingOrderIds}
+            onChange={(selectedIds, selOrders) => {
+              setSelectedLoadingOrderIds(selectedIds);
+              if (selOrders.length > 0) {
+                const ord = selOrders[0];
+                const matchedPending = pendingOrders.find((p) => p.id === ord.id) || ord;
+                setForm({
+                  ...EMPTY,
+                  customerAccountNo: matchedPending.customer_name,
+                  importer: matchedPending.customer_name,
+                  shippingType: matchedPending.transport_mode === "by_sea" ? "By Sea" : matchedPending.transport_mode === "by_air" ? "By Air" : "By Road",
+                  shipmentType: matchedPending.movement_type === "import" ? "Import" : matchedPending.movement_type === "transit" ? "Transit" : "Export",
+                  loadCountry: matchedPending.loading_country_name || "",
+                  loadPlace: matchedPending.loading_port_name || "",
+                  receiveCountry: matchedPending.receiving_country_name || "",
+                  receivePlace: matchedPending.destination_port_name || "",
+                  routeCountry: matchedPending.route_name || "",
+                  remarks: matchedPending.cargo_details ? `Cargo: ${matchedPending.cargo_details}` : "",
+                });
+                setActiveTab("parties");
+                setEditing(true);
+              }
+            }}
+            lang={lang}
+            required={false}
+          />
         </div>
       )}
 
