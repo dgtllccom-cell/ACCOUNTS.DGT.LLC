@@ -799,9 +799,30 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       .filter(Boolean) as T[];
   }
 
+  // -----------------------------------------------------------------------
+  // BUSINESS-ONLY domain: A pure Business Admin (operational_domain='business')
+  // must NOT see Shipping & Clearing menus. Operations Admins (domain='both')
+  // and Super Admins pass through and see everything.
+  // -----------------------------------------------------------------------
+  const isBusinessOnly =
+    !isSuper &&
+    !isShippingOnly &&
+    shippingContext?.operationalDomains != null &&
+    shippingContext.operationalDomains.length > 0 &&
+    shippingContext.operationalDomains.includes("business") &&
+    !shippingContext.operationalDomains.includes("shipping") &&
+    !shippingContext.operationalDomains.includes("both");
+
+  const HIDDEN_FOR_BUSINESS_ONLY = new Set([
+    "shipping-cleaning",
+  ]);
+
   const hasExplicitRouteRules = Array.from(userPermissions).some((p) => p.startsWith("route:"));
 
   const isPermitted = (it: T): boolean => {
+    // Business-only domain: hide shipping-cleaning accordion entirely
+    if (isBusinessOnly && it.key && HIDDEN_FOR_BUSINESS_ONLY.has(it.key)) return false;
+
     // 1. Role check
     const r = it.roles;
     const roleOk = !r || r.length === 0 || isSuper || r.some((x) => userRoles.has(x));

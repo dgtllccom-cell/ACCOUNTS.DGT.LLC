@@ -23,9 +23,17 @@ export async function requirePageDomain(needed: OperationalDomain): Promise<void
   const domains = session.operationalDomains ?? ["business"];
   if (domains.includes("both") || domains.includes(needed)) return;
 
-  // The only enforced case for now: shipping-only → business page.
+  // Shipping-only user trying to access a business page → deny
   const shippingOnly = domains.length === 1 && domains[0] === "shipping";
   if (needed === "business" && shippingOnly) {
     redirect("/dashboard?denied=domain");
   }
+
+  // Business-only user trying to access a shipping page → deny
+  // (Operations Admins with domain='both' are allowed through above)
+  const businessOnly = domains.length === 1 && domains[0] === "business";
+  if (needed === "shipping" && businessOnly) {
+    redirect("/dashboard?denied=domain");
+  }
 }
+

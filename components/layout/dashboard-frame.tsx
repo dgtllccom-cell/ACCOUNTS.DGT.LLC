@@ -125,6 +125,36 @@ export function DashboardFrame({
       }
     }
 
+    // Defense-in-depth: Business-only users (operational_domain='business') must NOT
+    // access shipping/clearing routes via direct URL.
+    // Operations Admins (domain='both') and super admins are not affected.
+    const isBusinessOnly =
+      !roles?.includes("super_admin") &&
+      !permissions?.includes("*:*") &&
+      operationalDomains != null &&
+      operationalDomains.length > 0 &&
+      operationalDomains.includes("business") &&
+      !operationalDomains.includes("shipping") &&
+      !operationalDomains.includes("both");
+
+    if (isBusinessOnly) {
+      const cleanPath = pathname.split("?")[0];
+      const BLOCKED_FOR_BUSINESS = [
+        "/dashboard/shipping-clearing",
+        "/dashboard/shipping",
+        "/dashboard/clearing",
+        "/dashboard/bl-entry",
+        "/dashboard/manifest",
+        "/dashboard/customs-clearance",
+        "/dashboard/shipping-lines",
+        "/dashboard/logistics"
+      ];
+      if (BLOCKED_FOR_BUSINESS.some(prefix => cleanPath.startsWith(prefix))) {
+        return true;
+      }
+    }
+
+
     if (!permissions || permissions.length === 0) return false;
 
     const hasExplicitRouteRules = permissions.some((p) => p.startsWith("route:"));
