@@ -635,8 +635,11 @@ export async function requireErpSession() {
  *  Use this in API routes, server actions, and anywhere you can't use redirect(). */
 export async function getErpSessionForApi(): Promise<ErpSession | null> {
   try {
-    return await getCurrentErpSession();
-  } catch {
+    const session = await getCurrentErpSession();
+    console.log("[session-api] getCurrentErpSession returned:", !!session, session?.email);
+    return session;
+  } catch (e) {
+    console.error("[session-api] getCurrentErpSession threw:", (e as any)?.message);
     return null;
   }
 }
