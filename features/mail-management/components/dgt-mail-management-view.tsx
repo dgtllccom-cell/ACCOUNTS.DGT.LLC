@@ -25,6 +25,7 @@ export function DgtMailManagementView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<{ [key: string]: boolean }>({});
   const [formData, setFormData] = useState({
     emailAddress: '',
@@ -56,6 +57,32 @@ export function DgtMailManagementView() {
     }
   }
 
+  function handleEditMailbox(mailbox: Mailbox) {
+    setEditingId(mailbox.id);
+    setFormData({
+      emailAddress: mailbox.email_address,
+      displayName: mailbox.display_name,
+      imapPassword: '',
+      smtpPassword: '',
+      storageQuotaMb: mailbox.storage_quota_mb,
+      planType: mailbox.plan_type,
+    });
+    setShowForm(true);
+  }
+
+  function handleCloseForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({
+      emailAddress: '',
+      displayName: '',
+      imapPassword: '',
+      smtpPassword: '',
+      storageQuotaMb: 5000,
+      planType: 'free',
+    });
+  }
+
   async function handleSaveMailbox(e: React.FormEvent) {
     e.preventDefault();
     setTestingConnection(true);
@@ -73,15 +100,7 @@ export function DgtMailManagementView() {
       if (!res.ok) throw new Error(data.error || 'Failed to save mailbox');
 
       setTestResult(data.data?.connectionStatus);
-      setFormData({
-        emailAddress: '',
-        displayName: '',
-        imapPassword: '',
-        smtpPassword: '',
-        storageQuotaMb: 5000,
-        planType: 'free',
-      });
-      setShowForm(false);
+      handleCloseForm();
       await fetchMailboxes();
     } catch (err: any) {
       setError(err.message);
@@ -121,6 +140,9 @@ export function DgtMailManagementView() {
 
       {showForm && (
         <div className="border rounded-lg p-6 bg-slate-50">
+          <h2 className="text-lg font-bold mb-4">
+            {editingId ? s.t('edit_mailbox', 'Edit Mailbox Credentials') : s.t('add_mailbox', 'Add Mailbox')}
+          </h2>
           <form onSubmit={handleSaveMailbox} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -130,10 +152,11 @@ export function DgtMailManagementView() {
                 <input
                   type="email"
                   required
+                  disabled={!!editingId}
                   value={formData.emailAddress}
                   onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
                   placeholder="user@dgt.llc"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-200 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -234,11 +257,11 @@ export function DgtMailManagementView() {
                 disabled={testingConnection}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                {testingConnection ? 'Testing...' : 'Save & Test Connection'}
+                {testingConnection ? 'Testing...' : (editingId ? 'Update & Test Connection' : 'Save & Test Connection')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={handleCloseForm}
                 className="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400"
               >
                 {s.t('cancel', 'Cancel')}
@@ -274,10 +297,22 @@ export function DgtMailManagementView() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                  <button
+                    onClick={() => handleEditMailbox(mb)}
+                    title={s.t('edit_credentials', 'Edit credentials')}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
+                  >
                     <RotateCcw className="w-4 h-4" />
                   </button>
-                  <button className="p-2 text-red-600 hover:bg-red-50 rounded">
+                  <button
+                    onClick={() => {
+                      if (confirm(`Delete ${mb.email_address}?`)) {
+                        // TODO: Add delete handler
+                      }
+                    }}
+                    title={s.t('delete', 'Delete')}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
