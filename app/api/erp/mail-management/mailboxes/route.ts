@@ -13,7 +13,14 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getCurrentErpSession();
+    let session: any = null;
+    try {
+      session = await getCurrentErpSession();
+    } catch (e: any) {
+      console.error("[mail-management] getCurrentErpSession threw:", e?.message);
+      return NextResponse.json({ error: "Session check failed: " + e?.message }, { status: 500 });
+    }
+
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -55,7 +62,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getCurrentErpSession();
+    let session: any = null;
+    try {
+      session = await getCurrentErpSession();
+    } catch (e: any) {
+      console.error("[mail-management] getCurrentErpSession threw:", e?.message);
+      return NextResponse.json({ error: "Session check failed: " + e?.message }, { status: 500 });
+    }
+
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
