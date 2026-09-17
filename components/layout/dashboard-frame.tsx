@@ -62,6 +62,9 @@ export function DashboardFrame({
   lang: langProp,
   roles,
   permissions,
+  isShippingScoped,
+  operationalDomains,
+  ledgerVisibility,
   userEmail,
   userName
 }: {
@@ -70,6 +73,9 @@ export function DashboardFrame({
   lang: SupportedLanguage;
   roles: EnterpriseRole[] | null;
   permissions?: string[] | null;
+  isShippingScoped?: boolean;
+  operationalDomains?: ("business" | "shipping" | "both")[];
+  ledgerVisibility?: "scoped" | "shipping_only" | "full";
   userEmail: string;
   userName?: string | null;
 }) {
@@ -93,8 +99,33 @@ export function DashboardFrame({
   }, [pathname]);
 
   const isRouteBlocked = useMemo(() => {
+    if (roles?.includes("super_admin") || permissions?.includes("*:*")) return false;
+
+    // Defense-in-depth: Shipping-only users must never access business/purchase/new-account routes
+    const isShippingOnly =
+      isShippingScoped ||
+      (operationalDomains?.includes("shipping") && !operationalDomains?.includes("business") && !operationalDomains?.includes("both")) ||
+      roles?.includes("agent_user");
+
+    if (isShippingOnly) {
+      const cleanPath = pathname.split("?")[0];
+      const BLOCKED_FOR_SHIPPING = [
+        "/dashboard/purchase",
+        "/dashboard/sales",
+        "/dashboard/new-entry/accounts",
+        "/dashboard/new-entry/users",
+        "/dashboard/new-entry/branch-entry",
+        "/dashboard/new-entry/branches",
+        "/dashboard/accounts",
+        "/dashboard/business-edit-invoice",
+        "/dashboard/super-admin"
+      ];
+      if (BLOCKED_FOR_SHIPPING.some(prefix => cleanPath.startsWith(prefix))) {
+        return true;
+      }
+    }
+
     if (!permissions || permissions.length === 0) return false;
-    if (roles?.includes("super_admin") || permissions.includes("*:*")) return false;
 
     const hasExplicitRouteRules = permissions.some((p) => p.startsWith("route:"));
     if (!hasExplicitRouteRules) return false;
@@ -472,6 +503,9 @@ export function DashboardFrame({
           <DigitalDockPremiumSidebar
             roles={roles ?? null}
             permissions={permissions ?? null}
+            isShippingScoped={isShippingScoped}
+            operationalDomains={operationalDomains}
+            ledgerVisibility={ledgerVisibility}
             brandTitle={brandCompany || "Damaan Business Group"}
             onToggleCollapse={() => setSidebarCollapsed(true)}
           />
@@ -502,6 +536,9 @@ export function DashboardFrame({
             <DigitalDockPremiumSidebar
               roles={roles ?? null}
               permissions={permissions ?? null}
+              isShippingScoped={isShippingScoped}
+              operationalDomains={operationalDomains}
+              ledgerVisibility={ledgerVisibility}
               brandTitle={brandCompany || "Damaan Business Group"}
               onNavigate={() => {
                 setDrawerOpen(false);

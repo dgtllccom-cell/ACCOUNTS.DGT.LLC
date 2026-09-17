@@ -13,6 +13,9 @@ export function DashboardShell({
   currentUserId,
   roles,
   permissions,
+  isShippingScoped,
+  operationalDomains,
+  ledgerVisibility,
   lang
 }: {
   children: React.ReactNode;
@@ -21,6 +24,9 @@ export function DashboardShell({
   currentUserId?: string | null;
   roles: EnterpriseRole[] | null;
   permissions?: string[] | null;
+  isShippingScoped?: boolean;
+  operationalDomains?: ("business" | "shipping" | "both")[];
+  ledgerVisibility?: "scoped" | "shipping_only" | "full";
   lang: SupportedLanguage;
 }) {
   const isDemoMode = userEmail === "Demo mode" || userEmail === "Template preview";
@@ -28,7 +34,17 @@ export function DashboardShell({
   return (
     <div className="flex flex-col min-h-screen">
       <InstallAppBanner />
-      <DashboardFrame nodes={sidebarTree} roles={roles} permissions={permissions ?? null} lang={lang} userEmail={userEmail} userName={userName}>
+      <DashboardFrame
+        nodes={sidebarTree}
+        roles={roles}
+        permissions={permissions ?? null}
+        isShippingScoped={isShippingScoped}
+        operationalDomains={operationalDomains}
+        ledgerVisibility={ledgerVisibility}
+        lang={lang}
+        userEmail={userEmail}
+        userName={userName}
+      >
         {isDemoMode ? (
           <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             Supabase is not configured (or you are in preview), so this is a local UI preview.

@@ -195,7 +195,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
           id: String(msg.id),
           senderName: fromName.charAt(0).toUpperCase() + fromName.slice(1),
           senderEmail: fromEmail,
-          recipientEmail: msg.to || mailbox.email,
+          recipientEmail: msg.to || mailbox.emailAddress,
           subject: msg.subject || '(No Subject)',
           preview: msg.preview || (msg.body ? msg.body.substring(0, 100) : '') || '...',
           date: msg.date ? new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent',

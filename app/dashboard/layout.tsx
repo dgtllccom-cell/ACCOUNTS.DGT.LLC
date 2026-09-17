@@ -50,6 +50,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       currentUserId={session.userId}
       roles={session.roles}
       permissions={session.permissions}
+      isShippingScoped={session.isShippingScoped}
+      operationalDomains={session.operationalDomains}
+      ledgerVisibility={session.ledgerVisibility}
       lang={cookieLang ?? session.preferredLanguage ?? "en"}
     >
       {children}

@@ -248,9 +248,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: "Purchase Booking",
         icon: ClipboardList,
         children: [
+          { label: "Purchase Booking Dashboard & Register", href: "/dashboard/purchase/purchase-booking-journal-report", icon: FileBarChart },
           { label: "New Purchase Booking Order", href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
           { label: "Booking Purchase Confirmation", href: "/dashboard/purchase/purchase-confirm", icon: CheckSquare },
-          { label: "Purchase Booking Journal Report", href: "/dashboard/purchase/purchase-booking-journal-report", icon: FileBarChart },
           { label: "Purchase Order & Payment", href: "/dashboard/purchase/purchase-order", icon: CreditCard },
           { label: "Purchase Order Tracking", href: "/dashboard/purchase/purchase-order-tracking", icon: Clock },
           { label: "Completed Purchase Bills", href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
@@ -606,6 +606,12 @@ export interface DigitalDockPremiumSidebarProps {
   /** Active user permissions and allotted routes. When set, only explicitly allotted
    *  forms and permitted routes appear in the user's sidebar. */
   permissions?: string[] | null;
+  /** True when the session is locked to a specific clearing agent with shipping_only ledger */
+  isShippingScoped?: boolean;
+  /** Operational domains: 'shipping', 'business', or 'both' */
+  operationalDomains?: ("business" | "shipping" | "both")[] | null;
+  /** 'scoped' | 'shipping_only' | 'full' */
+  ledgerVisibility?: "scoped" | "shipping_only" | "full" | null;
 }
 
 export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
@@ -704,17 +710,37 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/mail-management/monitoring": ["dashboard:read", "route:/dashboard/mail-management/monitoring"]
 };
 
+type ShippingContext = {
+  isShippingScoped?: boolean;
+  operationalDomains?: ("business" | "shipping" | "both")[] | null;
+  ledgerVisibility?: "scoped" | "shipping_only" | "full" | null;
+};
+
 /** RBAC & Form Allotment Filter — keeps an entry when it declares no `roles`, the user is a super
  *  admin, or the user holds one of the declared roles AND has been allotted permission for that form. */
-function filterByRolesAndPermissions<T extends { roles?: string[]; href?: string; children?: any[] }>(
+function filterByRolesAndPermissions<T extends { key?: string; roles?: string[]; href?: string; children?: any[] }>(
   items: T[],
   userRoles: Set<string>,
-  userPermissions: Set<string>
+  userPermissions: Set<string>,
+  shippingContext?: ShippingContext
 ): T[] {
   const isSuper = userRoles.has("super_admin") || userPermissions.has("*:*");
-  const isShippingAgentOnly =
-    (userRoles.has("agent_user") || userRoles.has("shipping_user")) &&
+
+  // Determine if this user is exclusively a Shipping Line / Clearing Agent user:
+  // 1. Bound to clearing agent with shipping_only ledger (isShippingScoped = true)
+  // 2. OR ledger_visibility === "shipping_only"
+  // 3. OR operationalDomains contains "shipping" but neither "business" nor "both"
+  // 4. OR role is agent_user / shipping_user
+  // AND not holding higher broad administrative roles (country_admin, main_branch_admin, super_admin, accountant)
+  const isShippingOnly =
     !isSuper &&
+    (Boolean(shippingContext?.isShippingScoped) ||
+      shippingContext?.ledgerVisibility === "shipping_only" ||
+      (shippingContext?.operationalDomains?.includes("shipping") &&
+        !shippingContext?.operationalDomains?.includes("business") &&
+        !shippingContext?.operationalDomains?.includes("both")) ||
+      userRoles.has("agent_user") ||
+      userRoles.has("shipping_user")) &&
     !userRoles.has("country_admin") &&
     !userRoles.has("country_user") &&
     !userRoles.has("main_branch_admin") &&
@@ -722,13 +748,55 @@ function filterByRolesAndPermissions<T extends { roles?: string[]; href?: string
     !userRoles.has("accountant") &&
     !userRoles.has("cashier");
 
-  if (isShippingAgentOnly) {
+  if (isShippingOnly) {
+    // A shipping line / clearing agent user sees ONLY their shipping ecosystem:
+    // 1. Dashboard (Logistics Tracking / Agent dashboard)
+    // 2. Shipping & Clearing (All 10 modules)
+    // 3. Ledgers (Detailed Statement & General Report — already restricted by backend to their clearing agent)
+    // 4. Transfer & Handover Center
+    // 5. Daily Cash Entry (Roznamcha) if they have roznamcha permissions
+    const ALLOWED_SHIPPING_KEYS = new Set([
+      "dashboard",
+      "shipping-cleaning",
+      "ledgers",
+      "transfer-handover-center",
+      "daily-payment"
+    ]);
+
     return items
-      .filter((it: any) => it.key === "shipping-cleaning")
-      .map((it) => ({
-        ...it,
-        defaultOpen: true,
-      }));
+      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key))
+      .map((it: any) => {
+        if (it.key === "dashboard") {
+          return { ...it, href: "/dashboard/logistics" };
+        }
+        if (it.key === "shipping-cleaning") {
+          return { ...it, defaultOpen: true };
+        }
+        if (it.key === "ledgers") {
+          // Shipping users must see their scoped ledgers (Detailed statement & General report)
+          const allowedLedgerHrefs = new Set([
+            "/dashboard/ledger/detailed",
+            "/dashboard/ledger/general-report"
+          ]);
+          const kids = (it.children || []).filter((c: any) => allowedLedgerHrefs.has(c.href));
+          return {
+            ...it,
+            defaultOpen: false,
+            children: kids
+          };
+        }
+        if (it.key === "daily-payment") {
+          // Keep only cash entry if the user has roznamcha:read, remove all purchase/sales payments
+          const hasRoznamcha = userPermissions.has("roznamcha:read") || userPermissions.has("roznamcha:*");
+          if (!hasRoznamcha) return null;
+          return {
+            ...it,
+            children: (it.children || []).filter((c: any) => c.href === "/dashboard/roznamcha/cash-entry")
+          };
+        }
+        return it;
+      })
+      .filter(Boolean) as T[];
   }
 
   const hasExplicitRouteRules = Array.from(userPermissions).some((p) => p.startsWith("route:"));
@@ -764,8 +832,8 @@ function filterByRolesAndPermissions<T extends { roles?: string[]; href?: string
         const [resource] = p.split(":");
         if (userPermissions.has(`${resource}:*`)) return true;
       }
-      // If route rules were explicitly set and this mapped route wasn't granted, hide it
-      if (hasExplicitRouteRules) {
+      // If permissions are configured and this mapped route wasn't granted, hide it
+      if (userPermissions.size > 0) {
         return false;
       }
     }
@@ -781,7 +849,7 @@ function filterByRolesAndPermissions<T extends { roles?: string[]; href?: string
     .filter(isPermitted)
     .map((it) => {
       if (!it.children) return it;
-      const kids = filterByRolesAndPermissions(it.children as any[], userRoles, userPermissions);
+      const kids = filterByRolesAndPermissions(it.children as any[], userRoles, userPermissions, shippingContext);
       return { ...it, children: kids };
     })
     .filter((it) => it.children === undefined || (it as any).href || (it.children as any[]).length > 0) as T[];
@@ -793,6 +861,9 @@ export function DigitalDockPremiumSidebar({
   brandTitle,
   roles,
   permissions,
+  isShippingScoped,
+  operationalDomains,
+  ledgerVisibility,
 }: DigitalDockPremiumSidebarProps = {}) {
   const pathname = usePathname() ?? "";
   const lang = useActiveLanguage();
@@ -800,10 +871,15 @@ export function DigitalDockPremiumSidebar({
 
   const userRolesSet = useMemo(() => new Set((roles ?? []).map(String)), [roles]);
   const userPermsSet = useMemo(() => new Set((permissions ?? []).map(String)), [permissions]);
+  const shippingCtx = useMemo(() => ({
+    isShippingScoped,
+    operationalDomains,
+    ledgerVisibility,
+  }), [isShippingScoped, operationalDomains, ledgerVisibility]);
 
   const menuItems = useMemo(() => {
-    return filterByRolesAndPermissions(DAMAN_SIDEBAR_ITEMS, userRolesSet, userPermsSet);
-  }, [userRolesSet, userPermsSet]);
+    return filterByRolesAndPermissions(DAMAN_SIDEBAR_ITEMS, userRolesSet, userPermsSet, shippingCtx);
+  }, [userRolesSet, userPermsSet, shippingCtx]);
 
   const [companyName, setCompanyName] = useState<string>("Daman Business Group");
 
