@@ -1434,23 +1434,6 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "message-square",
     children: [
       {
-        key: "msg-email",
-        labelKey: "nav.messages_email",
-        iconKey: "mail",
-        children: [
-          {
-            key: "msg-email-inbox",
-            labelKey: "nav.email_inbox_sent",
-            href: "/dashboard/messages/email" as Route
-          },
-          {
-            key: "msg-email-setup",
-            labelKey: "nav.branch_email_setup",
-            href: "/dashboard/settings/email-accounts" as Route
-          }
-        ]
-      },
-      {
         key: "msg-whatsapp",
         labelKey: "nav.messages_whatsapp",
         iconKey: "message-square",

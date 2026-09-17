@@ -31,6 +31,7 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
       .from("erp_email_accounts")
       .select("*, erp_email_providers(host, port, imap_host, imap_port)")
       .eq("id", accountId)
+      .is("deleted_at", null)
       .maybeSingle();
     account = data;
   }
@@ -42,32 +43,38 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
       .from("erp_email_accounts")
       .select("*, erp_email_providers(host, port, imap_host, imap_port)")
       .ilike("email_address", targetEmail)
+      .is("deleted_at", null)
       .maybeSingle();
     account = data;
   }
 
-  // 3. Resolve credentials from account settings or environment variables
-  const emailAddress = account?.email_address || (accountId.includes("@") ? accountId.toLowerCase() : `${accountId.toLowerCase()}@dgt.llc`);
+  if (!account) {
+    return null;
+  }
+
+  // 3. Resolve credentials from encrypted columns (migration 20261117)
+  const emailAddress = account.email_address || (accountId.includes("@") ? accountId.toLowerCase() : `${accountId.toLowerCase()}@dgt.llc`);
   const slug = emailAddress.split("@")[0].toUpperCase();
   const envKey = `MAILBOX_${slug}_PASSWORD`;
   const envPass = process.env[envKey] || (slug === "DGTLLC" ? process.env.MAILBOX_DGTLLC_PASSWORD : null) || null;
 
-  const settings = account?.settings || {};
   let smtpPass: string | null = null;
   let imapPass: string | null = null;
 
+  // Read from encrypted columns (primary source)
   try {
-    if (settings.smtp_password) smtpPass = decrypt(settings.smtp_password);
-  } catch {
-    smtpPass = settings.smtp_password || null;
+    if (account.smtp_password_encrypted) smtpPass = decrypt(account.smtp_password_encrypted);
+  } catch (e) {
+    console.error("Failed to decrypt SMTP password:", e);
   }
 
   try {
-    if (settings.imap_password) imapPass = decrypt(settings.imap_password);
-  } catch {
-    imapPass = settings.imap_password || null;
+    if (account.imap_password_encrypted) imapPass = decrypt(account.imap_password_encrypted);
+  } catch (e) {
+    console.error("Failed to decrypt IMAP password:", e);
   }
 
+  // Fallback to environment variables or settings
   smtpPass = smtpPass || envPass;
   imapPass = imapPass || smtpPass || envPass;
 
@@ -75,27 +82,27 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     return null;
   }
 
-  const imapHost = account?.erp_email_providers?.imap_host || "imap.titan.email";
-  const imapPort = account?.erp_email_providers?.imap_port || 993;
-  const smtpHost = account?.erp_email_providers?.host || "smtp.titan.email";
-  const smtpPort = account?.erp_email_providers?.port || 587;
+  const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
+  const imapPort = account.erp_email_providers?.imap_port || 993;
+  const smtpHost = account.erp_email_providers?.host || "smtp.titan.email";
+  const smtpPort = account.erp_email_providers?.port || 587;
 
   return {
-    id: account?.id || accountId,
+    id: account.id,
     emailAddress,
-    displayName: account?.display_name || `${slug} Branch`,
+    displayName: account.display_name || `${slug} Branch`,
     smtpHost,
     smtpPort,
-    smtpUser: settings.smtp_user || emailAddress,
+    smtpUser: account.email_address,
     smtpPass: smtpPass || "",
     smtpSecure: false,
     imapHost,
     imapPort,
-    imapUser: settings.imap_user || emailAddress,
+    imapUser: account.email_address,
     imapPass: imapPass || "",
-    countryId: account?.country_id,
-    countryBranchId: account?.country_branch_id,
-    cityBranchId: account?.city_branch_id,
-    scope: account?.scope || "city_branch"
+    countryId: account.country_id,
+    countryBranchId: account.country_branch_id,
+    cityBranchId: account.city_branch_id,
+    scope: account.scope || "city_branch"
   };
 }
