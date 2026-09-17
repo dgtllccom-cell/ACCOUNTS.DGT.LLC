@@ -8469,6 +8469,9 @@ export type UiKey =
   | "cbill.bill_transfer_types"
   | "lp.status_pending_transfer"
   | "common.select_all"
+  | "mail_management.create_email"
+  | "mail_management.show_passwords"
+  | "mail_management.email_will_be_tested"
 
   | (string & {});
 
@@ -27267,6 +27270,9 @@ const en: Dict = {
   "cbill.bill_transfer_types": "Select Bill Transfer Types",
   "lp.status_pending_transfer": "Pending Transfer",
   "common.select_all": "Select All",
+  "mail_management.create_email": "Create DGT Email Account",
+  "mail_management.show_passwords": "Show passwords",
+  "mail_management.email_will_be_tested": "Email will be tested for IMAP & SMTP before saving",
   "comv.goods_items": "line items",
 };
 
@@ -46040,6 +46046,9 @@ const ur: Dict = {
   "email_workspace.delete": "دیلیتی",
   "email_workspace.draft_saved": "ڈرافٹ کامیابی سے محفوظ ہو گیا",
   "email_workspace.draft_fetch_failed": "ڈرافٹ لانے میں ناکامی",
+  "mail_management.create_email": "DGT ای میل اکاؤنٹ بنائیں",
+  "mail_management.show_passwords": "پاس ورڈ دکھائیں",
+  "mail_management.email_will_be_tested": "ای میل IMAP اور SMTP کے لیے محفوظ ہونے سے پہلے ٹیسٹ کی جائے گی",
 };
 
 const ar: Dict = {
@@ -64814,6 +64823,9 @@ const ar: Dict = {
   "email_workspace.delete": "دیلیتی",
   "email_workspace.draft_saved": "تم حفظ المسودة بنجاح",
   "email_workspace.draft_fetch_failed": "فشل جلب المسودات",
+  "mail_management.create_email": "إنشاء حساب بريد إلكتروني DGT",
+  "mail_management.show_passwords": "إظهار كلمات المرور",
+  "mail_management.email_will_be_tested": "سيتم اختبار البريد الإلكتروني لـ IMAP و SMTP قبل الحفظ",
 };
 
 const fa: Dict = {
@@ -83587,6 +83599,9 @@ const fa: Dict = {
   "email_workspace.delete": "دیلیتی",
   "email_workspace.draft_saved": "پیش‌نویس با موفقیت ذخیره شد",
   "email_workspace.draft_fetch_failed": "خطا در دریافت پیش‌نویس‌ها",
+  "mail_management.create_email": "ایجاد حساب ایمیل DGT",
+  "mail_management.show_passwords": "نمایش رمزهای عبور",
+  "mail_management.email_will_be_tested": "ایمیل قبل از ذخیره برای IMAP و SMTP آزمایش می‌شود",
 };
 
 const ps: Dict = {
@@ -102366,6 +102381,9 @@ const ps: Dict = {
   "exp.truck_expenses_bill": "د ټرک لګښتونو بل",
   "exp.other_expenses_bill": "د نورو لګښتونو بل",
   "exp.attached_customer_order": "ضمیمه (د پیرودونکي آرډر)",
+  "mail_management.create_email": "د DGT ای میل اکاؤنٹ جوړول",
+  "mail_management.show_passwords": "پاس ورډ ښودل",
+  "mail_management.email_will_be_tested": "ای میل د ذخیره کولو مخکې د IMAP او SMTP لپاره ازمایل شي",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
