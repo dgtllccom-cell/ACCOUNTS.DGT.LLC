@@ -521,6 +521,73 @@ export async function PATCH(request: NextRequest) {
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
+    // Auto-sync with canonical shipment tracking
+    const orderId = updated.order_id;
+    if (orderId) {
+      try {
+        const { data: legs } = await supabase
+          .from("clearing_customer_order_legs")
+          .select("id")
+          .eq("order_id", orderId)
+          .is("deleted_at", null)
+          .order("leg_no", { ascending: false })
+          .limit(1);
+
+        const targetLegId = legs?.[0]?.id || updated.leg_id;
+        if (targetLegId) {
+          await supabase
+            .from("clearing_customer_order_legs")
+            .update({
+              vessel_name: payload.vessel_name,
+              voyage_number: payload.voyage_number,
+              container_number: payload.container_number,
+              eta: payload.eta,
+              etd: payload.etd,
+              port_of_loading: payload.loading_port,
+              port_of_discharge: payload.discharge_port,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", targetLegId);
+        }
+
+        if (before.shipment_status !== payload.shipment_status || before.eta !== payload.eta || before.vessel_name !== payload.vessel_name) {
+          let eventCode = "vessel_voyage_change";
+          let eventName = "Vessel/Voyage or Schedule Update";
+          if (payload.shipment_status === "in_transit") {
+            eventCode = "vessel_departed";
+            eventName = "Vessel Departed";
+          } else if (payload.shipment_status === "arrived") {
+            eventCode = "arrived";
+            eventName = "Arrived at Port";
+          } else if (payload.shipment_status === "delivered") {
+            eventCode = "closed";
+            eventName = "Delivered & Closed";
+          }
+
+          await supabase
+            .from("shipment_tracking_events")
+            .insert({
+              order_id: orderId,
+              leg_id: targetLegId,
+              event_code: eventCode,
+              event_name: eventName,
+              location_name: payload.discharge_port || payload.loading_port || null,
+              event_time: new Date().toISOString(),
+              status: "completed",
+              provider_name: payload.shipping_line_name || null,
+              vessel_name: payload.vessel_name || null,
+              voyage_number: payload.voyage_number || null,
+              container_number: payload.container_number || null,
+              eta: payload.eta || null,
+              remarks: remarks || `Status updated to ${payload.shipment_status}`,
+              created_by: session.userId
+            });
+        }
+      } catch (syncErr) {
+        console.error("Non-fatal tracking auto-sync error:", syncErr);
+      }
+    }
+
     return apiOk({ record: updated });
   } catch (error) {
     return handleApiError(error);
