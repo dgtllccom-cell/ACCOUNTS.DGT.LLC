@@ -530,6 +530,16 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
+    key: "dgt-mail-management",
+    label: "DGT Mail Management",
+    icon: Mail,
+    children: [
+      { label: "Mail Overview & Dashboard", href: "/dashboard/mail-management", icon: BarChart3 },
+      { label: "Mail Users & Storage Quotas", href: "/dashboard/mail-management/users", icon: Users },
+      { label: "Server Health & DNS Deliverability", href: "/dashboard/mail-management/monitoring", icon: ShieldCheck },
+    ],
+  },
+  {
     key: "settings-menu",
     label: "Settings",
     icon: Settings,
@@ -688,7 +698,10 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/messages/whatsapp": ["communication:read", "route:/dashboard/messages/whatsapp"],
   "/dashboard/messages/email": ["communication:read", "route:/dashboard/messages/email"],
   "/dashboard/settings/email-accounts": ["route:/dashboard/settings/email-accounts"],
-  "/dashboard/settings/super-admin-security": ["route:/dashboard/settings/super-admin-security"]
+  "/dashboard/settings/super-admin-security": ["route:/dashboard/settings/super-admin-security"],
+  "/dashboard/mail-management": ["communication:read", "route:/dashboard/mail-management"],
+  "/dashboard/mail-management/users": ["users:read", "route:/dashboard/mail-management/users"],
+  "/dashboard/mail-management/monitoring": ["dashboard:read", "route:/dashboard/mail-management/monitoring"]
 };
 
 /** RBAC & Form Allotment Filter — keeps an entry when it declares no `roles`, the user is a super

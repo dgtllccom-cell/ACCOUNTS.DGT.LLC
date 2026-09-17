@@ -1,0 +1,65 @@
+# ==============================================================================
+# Stalwart Mail Server Configuration for DGT.LLC
+# Hostname: mail.dgt.llc
+# Domain: dgt.llc
+# VPS: 72.60.209.121
+# ==============================================================================
+
+[server]
+hostname = "mail.dgt.llc"
+
+[server.listener.smtp]
+bind = ["[::]:25", "0.0.0.0:25"]
+protocol = "smtp"
+
+[server.listener.submission]
+bind = ["[::]:587", "0.0.0.0:587"]
+protocol = "smtp"
+tls.implicit = false
+
+[server.listener.submissions]
+bind = ["[::]:465", "0.0.0.0:465"]
+protocol = "smtp"
+tls.implicit = true
+
+[server.listener.imaps]
+bind = ["[::]:993", "0.0.0.0:993"]
+protocol = "imap"
+tls.implicit = true
+
+[server.listener.http]
+bind = ["127.0.0.1:8080"]
+protocol = "http"
+
+[store.default]
+type = "rocksdb"
+path = "/var/lib/stalwart-mail/data"
+
+[store.blob]
+type = "fs"
+path = "/var/lib/stalwart-mail/blobs"
+
+[directory.internal]
+type = "internal"
+store = "default"
+
+[auth.internal]
+type = "internal"
+store = "default"
+
+[signature."dgt.llc"]
+default = true
+algorithm = "rsa-sha256"
+selector = "default"
+headers = ["From", "To", "Subject", "Date", "Message-ID"]
+
+[spam.filter]
+spf = true
+dkim = true
+dmarc = true
+dnsbl = ["zen.spamhaus.org", "bl.spamcop.net"]
+
+[quota]
+default = 1073741824 # 1 GB
+strategy = "reject"
+warning-threshold = 80

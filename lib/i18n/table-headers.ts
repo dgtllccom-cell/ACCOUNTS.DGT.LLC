@@ -4,6 +4,11 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  // ── DGT Mail Management (2026-09-17) ──
+  "DGT MAIL MANAGEMENT": { ur: "ڈی جی ٹی میل مینجمنٹ", ar: "إدارة بريد دي جي تي", fa: "مدیریت ایمیل دی‌جی‌تی", ps: "د ډي جي ټي برېښنالیک مدیریت" },
+  "MAIL OVERVIEW & DASHBOARD": { ur: "میل جائزہ اور ڈیش بورڈ", ar: "نظرة عامة على البريد ولوحة التحكم", fa: "نمای کلی ایمیل و داشبورد", ps: "د بریښنالیک عمومي کتنه او ډشبورډ" },
+  "MAIL USERS & STORAGE QUOTAS": { ur: "میل صارفین اور اسٹوریج کوٹہ", ar: "مستخدمو البريد والحصص التخزينية", fa: "کاربران ایمیل و سهمیه ذخیره‌سازی", ps: "د بریښنالیک کاروونکي او د ذخیرې کوټه" },
+  "SERVER HEALTH & DNS DELIVERABILITY": { ur: "سرور کی صحت اور ڈی این ایس ترسیل", ar: "صحة الخادم وقابلية تسليم DNS", fa: "سلامت سرور و تحویل‌پذیری DNS", ps: "د سرور روغتیا او د DNS سپارل" },
   // ── Journal Reporting nav entry (2026-09-16) ──
   "Journal Reporting": { ur: "جرنل رپورٹنگ", ar: "تقارير اليومية", fa: "گزارش‌دهی روزنامه", ps: "د جرنل راپورونه" },
   // ── Audit menu relocation (2026-09-11) — split out of "KYC Reports" ──

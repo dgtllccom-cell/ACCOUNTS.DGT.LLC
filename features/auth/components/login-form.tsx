@@ -618,6 +618,18 @@ export function LoginForm({
         </Button>
       </form>
 
+      {/* Public DGT Webmail Access */}
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
+        <Link
+          href="/mail"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-800 shadow-xs"
+        >
+          <Mail className="h-4 w-4 text-blue-600" />
+          <span>DGT Public Webmail (username@dgt.llc)</span>
+          <ArrowRight className="h-3 w-3 ml-0.5 text-blue-500" />
+        </Link>
+      </div>
+
       {/* Security footer note */}
       <div className="mt-4 hidden items-center justify-center gap-2 border-t border-slate-100 pt-4 text-[10.5px] font-bold text-slate-400 dark:border-slate-800">
         <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
