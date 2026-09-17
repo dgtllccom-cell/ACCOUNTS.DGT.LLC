@@ -1504,6 +1504,13 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin"]
   },
   {
+    key: "public-dgt-mail",
+    labelKey: "nav.public_dgt_mail",
+    iconKey: "globe",
+    href: "/dashboard/public-dgt-mail" as Route,
+    roles: ["super_admin"],
+    metadata: { highlight: "red" }
+  },
     key: "settings",
     labelKey: "nav.settings",
     iconKey: "settings",

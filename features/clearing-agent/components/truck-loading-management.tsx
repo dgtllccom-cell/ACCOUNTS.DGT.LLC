@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
+import { CustomerOrderMultiSelect } from "@/features/clearing-agent/components/customer-order-multi-select";
 
 type Loading = {
   id: string;
