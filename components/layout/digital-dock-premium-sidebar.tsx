@@ -621,27 +621,27 @@ export interface DigitalDockPremiumSidebarProps {
 export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard": ["dashboard:read", "route:/dashboard"],
   "/dashboard/smart-operations": ["dashboard:read", "route:/dashboard/smart-operations"],
-  "/dashboard/super-admin": ["dashboard:read", "route:/dashboard/super-admin"],
-  "/dashboard/country": ["dashboard:read", "route:/dashboard/country"],
-  "/dashboard/city": ["dashboard:read", "route:/dashboard/city"],
+  "/dashboard/super-admin": ["dashboard:read", "super_admin", "route:/dashboard/super-admin"],
+  "/dashboard/country": ["dashboard:read", "country_admin", "country_user", "route:/dashboard/country"],
+  "/dashboard/city": ["dashboard:read", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "route:/dashboard/city"],
   "/dashboard/logistics": ["shipping_records:read", "route:/dashboard/logistics"],
-  "/dashboard/new-entry/users/registration": ["users:read", "route:/dashboard/new-entry/users/registration"],
+  "/dashboard/new-entry/users/registration": ["users:create", "users:read", "route:/dashboard/new-entry/users/registration"],
   "/dashboard/new-entry/users/all": ["users:read", "route:/dashboard/new-entry/users/all"],
-  "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
-  "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
-  "/dashboard/new-entry/branches/super-admin": ["country_branches:read", "route:/dashboard/new-entry/branches/super-admin"],
-  "/dashboard/branch-management/general-report": ["country_branches:read", "route:/dashboard/branch-management/general-report"],
-  "/dashboard/accounts/setup": ["accounts:read", "route:/dashboard/accounts/setup"],
-  "/dashboard/ledger/new": ["ledgers:read", "route:/dashboard/ledger/new"],
-  "/dashboard/new-entry/accounts/general-report": ["accounts:read", "route:/dashboard/new-entry/accounts/general-report"],
-  "/dashboard/new-entry": ["dashboard:read", "route:/dashboard/new-entry"],
+  "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:create", "country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
+  "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:create", "city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
+  "/dashboard/new-entry/branches/super-admin": ["country_branches:create", "super_admin", "route:/dashboard/new-entry/branches/super-admin"],
+  "/dashboard/branch-management/general-report": ["country_branches:read", "city_branches:read", "route:/dashboard/branch-management/general-report"],
+  "/dashboard/accounts/setup": ["accounts:read", "accounts:create", "accounts:update", "accounts.setup", "accounts.new_entry", "route:/dashboard/accounts/setup"],
+  "/dashboard/ledger/new": ["ledgers:read", "ledgers:create", "ledgers.new", "route:/dashboard/ledger/new"],
+  "/dashboard/new-entry/accounts/general-report": ["accounts:read", "accounts.reports", "reports:read", "route:/dashboard/new-entry/accounts/general-report"],
+  "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "route:/dashboard/new-entry"],
   "/dashboard/business-edit-invoice": ["transactions:update", "purchases:update", "route:/dashboard/business-edit-invoice"],
-  "/dashboard/super-admin/edit-history": ["transactions:read", "route:/dashboard/super-admin/edit-history"],
-  "/dashboard/super-admin/deleted-records": ["transactions:read", "route:/dashboard/super-admin/deleted-records"],
+  "/dashboard/super-admin/edit-history": ["transactions:read", "audit_logs:read", "super_admin", "route:/dashboard/super-admin/edit-history"],
+  "/dashboard/super-admin/deleted-records": ["transactions:read", "audit_logs:read", "super_admin", "country_admin", "route:/dashboard/super-admin/deleted-records"],
   "/dashboard/ledger/detailed": ["ledgers:read", "route:/dashboard/ledger/detailed"],
-  "/dashboard/ledger/general-report": ["ledgers:read", "route:/dashboard/ledger/general-report"],
-  "/dashboard/ledger/outstanding": ["ledgers:read", "route:/dashboard/ledger/outstanding"],
-  "/dashboard/roznamcha/cash-entry": ["roznamcha:read", "route:/dashboard/roznamcha/cash-entry"],
+  "/dashboard/ledger/general-report": ["ledgers:read", "reports:read", "route:/dashboard/ledger/general-report"],
+  "/dashboard/ledger/outstanding": ["ledgers:read", "reports:read", "route:/dashboard/ledger/outstanding"],
+  "/dashboard/roznamcha/cash-entry": ["roznamcha:read", "roznamcha:create", "route:/dashboard/roznamcha/cash-entry"],
   "/dashboard/journal/purchase-order-payment/advance": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/advance"],
   "/dashboard/journal/purchase-order-payment/charges": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/charges"],
   "/dashboard/journal/purchase-order-payment/remaining": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/remaining"],
@@ -650,56 +650,56 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/journal/sales-order-payment/charges": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/charges"],
   "/dashboard/journal/sales-order-payment/remaining": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/remaining"],
   "/dashboard/journal/sales-order-payment/history": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/history"],
-  "/dashboard/roznamcha/daily-expenses-bill": ["expenses:read", "route:/dashboard/roznamcha/daily-expenses-bill"],
-  "/dashboard/roznamcha/expenses-bill": ["expenses:read", "route:/dashboard/roznamcha/expenses-bill"],
-  "/dashboard/purchase/new-purchase-booking-order": ["purchases:read", "route:/dashboard/purchase/new-purchase-booking-order"],
-  "/dashboard/purchase/purchase-confirm": ["purchases:read", "route:/dashboard/purchase/purchase-confirm"],
-  "/dashboard/purchase/purchase-booking-journal-report": ["purchases:read", "route:/dashboard/purchase/purchase-booking-journal-report"],
-  "/dashboard/purchase/purchase-order": ["purchases:read", "route:/dashboard/purchase/purchase-order"],
+  "/dashboard/roznamcha/daily-expenses-bill": ["expenses:read", "expenses:create", "route:/dashboard/roznamcha/daily-expenses-bill"],
+  "/dashboard/roznamcha/expenses-bill": ["expenses:read", "expenses:create", "route:/dashboard/roznamcha/expenses-bill"],
+  "/dashboard/purchase/new-purchase-booking-order": ["purchases:read", "purchases:create", "route:/dashboard/purchase/new-purchase-booking-order"],
+  "/dashboard/purchase/purchase-confirm": ["purchases:read", "purchases:update", "route:/dashboard/purchase/purchase-confirm"],
+  "/dashboard/purchase/purchase-booking-journal-report": ["purchases:read", "reports:read", "route:/dashboard/purchase/purchase-booking-journal-report"],
+  "/dashboard/purchase/purchase-order": ["purchases:read", "purchases:create", "route:/dashboard/purchase/purchase-order"],
   "/dashboard/purchase/purchase-order-tracking": ["purchases:read", "route:/dashboard/purchase/purchase-order-tracking"],
   "/dashboard/purchase/completed-purchase-bills": ["purchases:read", "route:/dashboard/purchase/completed-purchase-bills"],
-  "/dashboard/purchase/purchase-loading-records": ["purchases:read", "route:/dashboard/purchase/purchase-loading-records"],
-  "/dashboard/purchase/local-purchase": ["purchases:read", "route:/dashboard/purchase/local-purchase"],
-  "/dashboard/purchase/local-goods-received": ["purchases:read", "route:/dashboard/purchase/local-goods-received"],
-  "/dashboard/purchase/local-purchase-transfer-payment": ["purchases:read", "route:/dashboard/purchase/local-purchase-transfer-payment"],
-  "/dashboard/purchase/local-purchase-warehouse-transfer": ["purchases:read", "route:/dashboard/purchase/local-purchase-warehouse-transfer"],
+  "/dashboard/purchase/purchase-loading-records": ["purchases:read", "purchases:update", "route:/dashboard/purchase/purchase-loading-records"],
+  "/dashboard/purchase/local-purchase": ["purchases:read", "purchases:create", "route:/dashboard/purchase/local-purchase"],
+  "/dashboard/purchase/local-goods-received": ["purchases:read", "inventory:read", "route:/dashboard/purchase/local-goods-received"],
+  "/dashboard/purchase/local-purchase-transfer-payment": ["purchases:read", "transactions:read", "route:/dashboard/purchase/local-purchase-transfer-payment"],
+  "/dashboard/purchase/local-purchase-warehouse-transfer": ["purchases:read", "warehouses:read", "route:/dashboard/purchase/local-purchase-warehouse-transfer"],
   "/dashboard/purchase/local-purchase-loading": ["purchases:read", "route:/dashboard/purchase/local-purchase-loading"],
-  "/dashboard/purchase/local-purchase-export": ["purchases:read", "route:/dashboard/purchase/local-purchase-export"],
-  "/dashboard/purchase/local-purchase-journal-report": ["purchases:read", "route:/dashboard/purchase/local-purchase-journal-report"],
-  "/dashboard/consignment": ["purchases:read", "route:/dashboard/consignment"],
-  "/dashboard/sales/new-sales-booking-order": ["sales:read", "route:/dashboard/sales/new-sales-booking-order"],
-  "/dashboard/sales/sales-confirm": ["sales:read", "route:/dashboard/sales/sales-confirm"],
-  "/dashboard/sales/sales-booking-journal-report": ["sales:read", "route:/dashboard/sales/sales-booking-journal-report"],
-  "/dashboard/sales/local-sales": ["sales:read", "route:/dashboard/sales/local-sales"],
-  "/dashboard/sales/sales-order": ["sales:read", "route:/dashboard/sales/sales-order"],
-  "/dashboard/purchase/country-transfer": ["purchases:read", "route:/dashboard/purchase/country-transfer"],
-  "/dashboard/inter-country-transfers": ["purchases:read", "shipping_records:read", "route:/dashboard/inter-country-transfers"],
-  "/dashboard/purchase/country-purchase-reports": ["purchases:read", "route:/dashboard/purchase/country-purchase-reports"],
+  "/dashboard/purchase/local-purchase-export": ["purchases:read", "shipping_records:read", "route:/dashboard/purchase/local-purchase-export"],
+  "/dashboard/purchase/local-purchase-journal-report": ["purchases:read", "reports:read", "route:/dashboard/purchase/local-purchase-journal-report"],
+  "/dashboard/consignment": ["purchases:read", "inventory:read", "route:/dashboard/consignment"],
+  "/dashboard/sales/new-sales-booking-order": ["sales:read", "sales:create", "route:/dashboard/sales/new-sales-booking-order"],
+  "/dashboard/sales/sales-confirm": ["sales:read", "sales:update", "route:/dashboard/sales/sales-confirm"],
+  "/dashboard/sales/sales-booking-journal-report": ["sales:read", "reports:read", "route:/dashboard/sales/sales-booking-journal-report"],
+  "/dashboard/sales/local-sales": ["sales:read", "sales:create", "route:/dashboard/sales/local-sales"],
+  "/dashboard/sales/sales-order": ["sales:read", "sales:create", "route:/dashboard/sales/sales-order"],
+  "/dashboard/purchase/country-transfer": ["purchases:read", "shipping_transfers:read", "route:/dashboard/purchase/country-transfer"],
+  "/dashboard/inter-country-transfers": ["purchases:read", "shipping_records:read", "shipping_transfers:read", "route:/dashboard/inter-country-transfers"],
+  "/dashboard/purchase/country-purchase-reports": ["purchases:read", "reports:read", "route:/dashboard/purchase/country-purchase-reports"],
   "/dashboard/bill-cost-profit": ["purchases:read", "expenses:read", "route:/dashboard/bill-cost-profit"],
-  "/dashboard/expenses/bill-expenses": ["expenses:read", "route:/dashboard/expenses/bill-expenses"],
-  "/dashboard/inventory": ["products:read", "route:/dashboard/inventory"],
-  "/dashboard/clearing-agent/customer-order": ["shipping_records:read", "route:/dashboard/clearing-agent/customer-order"],
-  "/dashboard/clearing-agent/customer-bill": ["shipping_records:read", "route:/dashboard/clearing-agent/customer-bill"],
+  "/dashboard/expenses/bill-expenses": ["expenses:read", "expenses:create", "route:/dashboard/expenses/bill-expenses"],
+  "/dashboard/inventory": ["products:read", "inventory:read", "route:/dashboard/inventory"],
+  "/dashboard/clearing-agent/customer-order": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/customer-order"],
+  "/dashboard/clearing-agent/customer-bill": ["shipping_records:read", "clearing_bill_customer_charges:read", "route:/dashboard/clearing-agent/customer-bill"],
   "/dashboard/shipping-line": ["shipping_records:read", "route:/dashboard/shipping-line"],
   "/dashboard/shipping-line/bl-entry": ["shipping_records:read", "route:/dashboard/shipping-line/bl-entry"],
   "/dashboard/shipping-line/tracking": ["shipping_records:read", "route:/dashboard/shipping-line/tracking"],
   "/dashboard/purchase/shipment-tracking": ["purchases:read", "route:/dashboard/purchase/shipment-tracking"],
-  "/dashboard/tracking": ["dashboard:read", "route:/dashboard/tracking"],
+  "/dashboard/tracking": ["dashboard:read", "shipping_records:read", "route:/dashboard/tracking"],
   "/dashboard/clearing-agent": ["clearing_agents:read", "route:/dashboard/clearing-agent"],
-  "/dashboard/clearing-agent/truck-registration": ["shipping_records:read", "route:/dashboard/clearing-agent/truck-registration"],
-  "/dashboard/shipping-line/handover-inbox": ["shipping_records:read", "route:/dashboard/shipping-line/handover-inbox"],
+  "/dashboard/clearing-agent/truck-registration": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/truck-registration"],
+  "/dashboard/shipping-line/handover-inbox": ["shipping_records:read", "shipping_transfers:read", "route:/dashboard/shipping-line/handover-inbox"],
   "/dashboard/settings/bank": ["banks:read", "route:/dashboard/settings/bank"],
   "/dashboard/roznamcha/reports/bank": ["banks:read", "roznamcha:read", "route:/dashboard/roznamcha/reports/bank"],
   "/dashboard/roznamcha/money-exchange": ["exchange_rates:read", "route:/dashboard/roznamcha/money-exchange"],
   "/dashboard/reports/exchange-rate": ["exchange_rates:read", "route:/dashboard/reports/exchange-rate"],
-  "/dashboard/super-admin/investments": ["transactions:read", "route:/dashboard/super-admin/investments"],
+  "/dashboard/super-admin/investments": ["transactions:read", "super_admin", "route:/dashboard/super-admin/investments"],
   "/dashboard/settings/customers": ["customers:read", "route:/dashboard/settings/customers"],
-  "/dashboard/general-office/employees": ["users:read", "route:/dashboard/general-office/employees"],
-  "/dashboard/general-office/employee-kyc": ["users:read", "route:/dashboard/general-office/employee-kyc"],
-  "/dashboard/general-office/leave-attendance": ["users:read", "route:/dashboard/general-office/leave-attendance"],
-  "/dashboard/general-office/payroll": ["users:read", "route:/dashboard/general-office/payroll"],
+  "/dashboard/general-office/employees": ["users:read", "employees:read", "route:/dashboard/general-office/employees"],
+  "/dashboard/general-office/employee-kyc": ["users:read", "employees:read", "route:/dashboard/general-office/employee-kyc"],
+  "/dashboard/general-office/leave-attendance": ["users:read", "employees:read", "route:/dashboard/general-office/leave-attendance"],
+  "/dashboard/general-office/payroll": ["users:read", "payroll:read", "route:/dashboard/general-office/payroll"],
   "/dashboard/general-office/departments": ["users:read", "route:/dashboard/general-office/departments"],
-  "/dashboard/general-office/gratuity": ["users:read", "route:/dashboard/general-office/gratuity"],
+  "/dashboard/general-office/gratuity": ["users:read", "payroll:read", "route:/dashboard/general-office/gratuity"],
   "/dashboard/settlement": ["transactions:read", "route:/dashboard/settlement"],
   "/dashboard/settlement/daily": ["transactions:read", "route:/dashboard/settlement/daily"],
   "/dashboard/settlement/payment": ["transactions:read", "route:/dashboard/settlement/payment"],
@@ -708,13 +708,71 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/documents": ["documents:read", "route:/dashboard/documents"],
   "/dashboard/ai-entry/messages": ["communication:read", "route:/dashboard/ai-entry/messages"],
   "/dashboard/ai-entry/voice-text": ["communication:read", "route:/dashboard/ai-entry/voice-text"],
-  "/dashboard/messages/whatsapp": ["communication:read", "route:/dashboard/messages/whatsapp"],
+  "/dashboard/messages/whatsapp": ["communication:read", "whatsapp:read", "route:/dashboard/messages/whatsapp"],
   "/dashboard/messages/email": ["communication:read", "route:/dashboard/messages/email"],
-  "/dashboard/settings/email-accounts": ["route:/dashboard/settings/email-accounts"],
-  "/dashboard/settings/super-admin-security": ["route:/dashboard/settings/super-admin-security"],
+  "/dashboard/settings/email-accounts": ["communication:read", "settings:read", "route:/dashboard/settings/email-accounts"],
+  "/dashboard/settings/super-admin-security": ["super_admin", "route:/dashboard/settings/super-admin-security"],
   "/dashboard/mail-management": ["communication:read", "route:/dashboard/mail-management"],
-  "/dashboard/mail-management/users": ["users:read", "route:/dashboard/mail-management/users"],
-  "/dashboard/mail-management/monitoring": ["dashboard:read", "route:/dashboard/mail-management/monitoring"]
+  "/dashboard/mail-management/users": ["users:read", "communication:read", "route:/dashboard/mail-management/users"],
+  "/dashboard/mail-management/monitoring": ["audit_logs:read", "route:/dashboard/mail-management/monitoring"],
+  "/dashboard/permissions/control-center": ["super_admin", "permissions:read", "route:/dashboard/permissions/control-center"],
+  "/dashboard/reports/journal": ["reports:read", "ledgers:read", "route:/dashboard/reports/journal"],
+  "/dashboard/bill-cost-profit/purchase": ["purchases:read", "expenses:read", "route:/dashboard/bill-cost-profit/purchase"],
+  "/dashboard/bill-cost-profit/sales": ["sales:read", "expenses:read", "route:/dashboard/bill-cost-profit/sales"],
+  "/dashboard/bill-cost-profit/expenses": ["expenses:read", "route:/dashboard/bill-cost-profit/expenses"],
+  "/dashboard/bill-cost-profit/reports": ["reports:read", "expenses:read", "route:/dashboard/bill-cost-profit/reports"],
+  "/dashboard/inventory/stock-reports/branch": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/branch"],
+  "/dashboard/inventory/stock-reports/country": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/country"],
+  "/dashboard/inventory/stock-reports/salesman": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/salesman"],
+  "/dashboard/purchase/stock/warehouse": ["inventory:read", "purchases:read", "warehouses:read", "route:/dashboard/purchase/stock/warehouse"],
+  "/dashboard/purchase/stock/booking": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/booking"],
+  "/dashboard/purchase/stock/confirmed": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/confirmed"],
+  "/dashboard/purchase/stock/import": ["purchases:read", "shipping_records:read", "route:/dashboard/purchase/stock/import"],
+  "/dashboard/purchase/stock/in-transit": ["purchases:read", "shipping_records:read", "route:/dashboard/purchase/stock/in-transit"],
+  "/dashboard/inventory/journal-report/branch": ["inventory:read", "reports:read", "route:/dashboard/inventory/journal-report/branch"],
+  "/dashboard/clearing-agent/clearing-workspace": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/clearing-workspace"],
+  "/dashboard/transfer-center": ["shipping_transfers:read", "shipping_records:read", "route:/dashboard/transfer-center"],
+  "/dashboard/user-tasks": ["tasks:read", "dashboard:read", "route:/dashboard/user-tasks"],
+  "/dashboard/reports/super-admin": ["super_admin", "reports:read", "route:/dashboard/reports/super-admin"],
+  "/dashboard/reports/country": ["country_admin", "reports:read", "route:/dashboard/reports/country"],
+  "/dashboard/reports/branch": ["reports:read", "route:/dashboard/reports/branch"],
+  "/dashboard/reports/payments": ["reports:read", "transactions:read", "route:/dashboard/reports/payments"],
+  "/dashboard/reports/shipping": ["reports:read", "shipping_records:read", "route:/dashboard/reports/shipping"],
+  "/dashboard/reports/financial-statements": ["reports:read", "ledgers:read", "route:/dashboard/reports/financial-statements"],
+  "/dashboard/reports/handover": ["reports:read", "shipping_transfers:read", "route:/dashboard/reports/handover"],
+  "/dashboard/reports/system-forms-directory": ["reports:read", "dashboard:read", "route:/dashboard/reports/system-forms-directory"],
+  "/dashboard/ai-entry/approvals": ["approvals:read", "approvals:approve", "route:/dashboard/ai-entry/approvals"],
+  "/dashboard/customer-inquiries/calls": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries/calls"],
+  "/dashboard/document-intelligence": ["documents:read", "route:/dashboard/document-intelligence"],
+  "/dashboard/crm": ["customers:read", "crm:read", "route:/dashboard/crm"],
+  "/dashboard/smart-due": ["smart_due:read", "dashboard:read", "route:/dashboard/smart-due"],
+  "/dashboard/crm/customers/new": ["customers:create", "customers:read", "route:/dashboard/crm/customers/new"],
+  "/dashboard/crm/reports": ["reports:read", "customers:read", "route:/dashboard/crm/reports"],
+  "/dashboard/tax-einvoicing/uae/dashboard": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/dashboard"],
+  "/dashboard/tax-einvoicing/uae/vat-return": ["uae_tax:read", "uae_tax_filing:read", "route:/dashboard/tax-einvoicing/uae/vat-return"],
+  "/dashboard/tax-einvoicing/uae/e-invoices": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/e-invoices"],
+  "/dashboard/tax-einvoicing/uae/asp-fta-status": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/asp-fta-status"],
+  "/dashboard/tax-einvoicing/uae/vat-control": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/vat-control"],
+  "/dashboard/tax-einvoicing/uae/tax-reports": ["uae_tax:read", "reports:read", "route:/dashboard/tax-einvoicing/uae/tax-reports"],
+  "/dashboard/settings/goods-master": ["products:read", "inventory:read", "goods:read", "route:/dashboard/settings/goods-master"],
+  "/dashboard/settings/product-categories": ["product_categories:read", "products:read", "route:/dashboard/settings/product-categories"],
+  "/dashboard/settings/warehouse": ["warehouses:read", "route:/dashboard/settings/warehouse"],
+  "/dashboard/communication-center": ["communication:read", "messages:read", "route:/dashboard/communication-center"],
+  "/dashboard/customer-inquiries": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries"],
+  "/dashboard/customer-inquiries/follow-ups": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries/follow-ups"],
+  "/dashboard/return-sms-reply": ["communication:read", "messages:read", "route:/dashboard/return-sms-reply"],
+  "/dashboard/settings": ["settings:read", "route:/dashboard/settings"],
+  "/dashboard/settings/dashboard-settings": ["settings:read", "route:/dashboard/settings/dashboard-settings"],
+  "/dashboard/settings/company-setup": ["companies:update", "companies:read", "route:/dashboard/settings/company-setup"],
+  "/dashboard/settings/account-type": ["accounts:read", "settings:read", "route:/dashboard/settings/account-type"],
+  "/dashboard/settings/locations": ["countries:read", "settings:read", "route:/dashboard/settings/locations"],
+  "/dashboard/settings/tax": ["uae_tax:read", "settings:read", "route:/dashboard/settings/tax"],
+  "/dashboard/settings/translations": ["translations:read", "settings:read", "route:/dashboard/settings/translations"],
+  "/dashboard/settings/profile": ["profile:read", "users:read", "route:/dashboard/settings/profile"],
+  "/dashboard/temp-bills/purchase": ["purchases:read", "route:/dashboard/temp-bills/purchase"],
+  "/dashboard/temp-bills/sales": ["sales:read", "route:/dashboard/temp-bills/sales"],
+  "/dashboard/temp-bills": ["purchases:read", "sales:read", "route:/dashboard/temp-bills"],
+  "/dashboard/temp-bills/reports": ["purchases:read", "sales:read", "reports:read", "route:/dashboard/temp-bills/reports"]
 };
 
 type ShippingContext = {
@@ -824,8 +882,6 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     "shipping-cleaning",
   ]);
 
-  const hasExplicitRouteRules = Array.from(userPermissions).some((p) => p.startsWith("route:"));
-
   const isPermitted = (it: T): boolean => {
     // Business-only domain: hide shipping-cleaning accordion entirely
     if (isBusinessOnly && it.key && HIDDEN_FOR_BUSINESS_ONLY.has(it.key)) return false;
@@ -841,36 +897,32 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     // If item has no href (it's a group accordion), its visibility depends on its children
     if (!it.href) return true;
 
-    // If no custom permissions are configured for the user, rely on standard role access
-    if (userPermissions.size === 0) return true;
-
     const rawHref = it.href;
     const cleanHref = rawHref.split("?")[0];
-
-    // Check direct route permission: route:/dashboard/...
-    if (userPermissions.has(`route:${cleanHref}`) || userPermissions.has(`route:${rawHref}`)) {
-      return true;
-    }
-
-    // Check mapped permissions: e.g. purchases:read, roznamcha:read
-    const reqPerms = ROUTE_PERMISSION_MAP[cleanHref];
-    if (reqPerms) {
-      for (const p of reqPerms) {
-        if (userPermissions.has(p)) return true;
-        const [resource] = p.split(":");
-        if (userPermissions.has(`${resource}:*`)) return true;
-      }
-      // If permissions are configured and this mapped route wasn't granted, hide it
-      if (userPermissions.size > 0) {
-        return false;
-      }
-    }
 
     // Default home dashboard is always visible
     if (cleanHref === "/dashboard") return true;
 
-    // If explicit route rules exist and this route wasn't matched, restrict it
-    return !hasExplicitRouteRules;
+    // Direct route permission: route:/dashboard/...
+    if (userPermissions.has(`route:${cleanHref}`) || userPermissions.has(`route:${rawHref}`)) {
+      return true;
+    }
+
+    // Mapped permissions: e.g. accounts:read, purchases:read, roznamcha:read
+    const reqPerms = ROUTE_PERMISSION_MAP[cleanHref];
+    if (reqPerms && reqPerms.length > 0) {
+      for (const p of reqPerms) {
+        if (userPermissions.has(p)) return true;
+        if (p.includes(":")) {
+          const [resource] = p.split(":");
+          if (userPermissions.has(`${resource}:*`)) return true;
+        }
+      }
+    }
+
+    // STRICT DENY BY DEFAULT FOR FORM-SCOPED USERS:
+    // Any route not explicitly granted must NOT appear in the user's menu.
+    return false;
   };
 
   return items

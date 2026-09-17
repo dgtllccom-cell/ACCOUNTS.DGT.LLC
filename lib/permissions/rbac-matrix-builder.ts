@@ -40,11 +40,11 @@ export const ERP_MODULE_DEFINITIONS: ErpModuleDef[] = [
   // 1. Finance & Accounting
   {
     key: "chart_of_accounts",
-    name: "Chart of Accounts & Multi-Linking",
+    name: "New Account Setup (Chart of Accounts)",
     category: "Finance & Accounting",
-    viewPerms: ["accounts:read", "ledgers:read"],
-    createPerms: ["accounts:create"],
-    editPerms: ["accounts:update"],
+    viewPerms: ["accounts:read", "route:/dashboard/accounts/setup"],
+    createPerms: ["accounts:create", "route:/dashboard/accounts/setup"],
+    editPerms: ["accounts:update", "route:/dashboard/accounts/setup"],
     deletePerms: ["accounts:delete"],
     approvePerms: ["accounts:post"],
     exportPerms: ["reports:export"]
