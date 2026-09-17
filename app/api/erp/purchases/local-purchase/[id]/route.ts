@@ -73,9 +73,17 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const { id } = await context.params;
     const payload = localPurchaseUpdateSchema.parse(await request.json());
 
+    const isSuperAdmin = Boolean(
+      session.isSuperAdmin ||
+      session.scopes?.isSuperAdmin ||
+      session.roles?.includes("super_admin") ||
+      session.role === "super_admin"
+    );
+
     const existing = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, country_id, country_branch_id, city_branch_id, status
+        select id, country_id, country_branch_id, city_branch_id, status,
+               roznamcha_entry_id, journal_entry_id, journal_serial_no
         from public.local_purchases
         where id = ${id}::uuid and deleted_at is null
         limit 1
@@ -84,10 +92,12 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     });
     if (!existing) throw new ApiClientError("Local purchase record not found", { status: 404, code: "NOT_FOUND" });
 
-    // Only a draft can be edited through this form — once accepted/transferred
-    // the record has already moved into the accounting/payment pipeline.
-    if (String((existing as any).status || "").toLowerCase() !== "draft") {
-      throw new ApiClientError("Only a draft purchase can be edited. Accepted/transferred records are read-only here.", { status: 409, code: "NOT_DRAFT" });
+    const isDraft = String((existing as any).status || "").toLowerCase() === "draft";
+    if (!isDraft && !isSuperAdmin) {
+      throw new ApiClientError(
+        "Only a draft purchase can be edited. Accepted or transferred records require Super Admin privileges.",
+        { status: 403, code: "SUPER_ADMIN_REQUIRED" }
+      );
     }
 
     const countryBranchId = payload.countryBranchId ?? (existing as any).country_branch_id;
@@ -103,6 +113,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     await assertBusinessCityBranch(cityBranchId ?? null);
 
     const updatedViaPg = await withLocalPg(async (sql) => {
+      const statusFilter = isSuperAdmin ? sql`` : sql`and status = 'draft'`;
       const rows = await sql`
         update public.local_purchases set
           country_branch_id = ${countryBranchId}, city_branch_id = ${cityBranchId || null},
@@ -127,7 +138,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           apply_tax = ${payload.applyTax || "No"}, tax_type = ${payload.taxType || "VAT"},
           tax_percentage = ${payload.taxPercentage || 0}, tax_amount = ${payload.taxAmount || 0},
           final_cost = ${payload.finalCost}, updated_at = now()
-        where id = ${id}::uuid and deleted_at is null and status = 'draft'
+        where id = ${id}::uuid and deleted_at is null ${statusFilter}
         returning *
       `;
       return rows[0] ?? null;
@@ -136,7 +147,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     let updated = updatedViaPg;
     if (!updated) {
       const supabase = createSupabaseAdminClient();
-      const { data, error } = await (supabase as any).from("local_purchases").update({
+      let query = (supabase as any).from("local_purchases").update({
         country_branch_id: countryBranchId, city_branch_id: cityBranchId || null,
         goods_id: payload.goodsId || null, purchase_account_no: payload.purchaseAccountNo || null,
         sales_account_no: payload.salesAccountNo || null, broker_account_no: payload.brokerAccountNo || null,
@@ -158,12 +169,84 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         apply_tax: payload.applyTax || "No", tax_type: payload.taxType || "VAT",
         tax_percentage: payload.taxPercentage || 0, tax_amount: payload.taxAmount || 0,
         final_cost: payload.finalCost, updated_at: new Date().toISOString(),
-      }).eq("id", id).is("deleted_at", null).eq("status", "draft").select().single();
+      }).eq("id", id).is("deleted_at", null);
+
+      if (!isSuperAdmin) {
+        query = query.eq("status", "draft");
+      }
+
+      const { data, error } = await query.select().single();
       if (error) throw error;
       updated = data;
     }
 
-    if (!updated) throw new ApiClientError("Local purchase record not found or no longer a draft", { status: 404, code: "NOT_FOUND" });
+    if (!updated) throw new ApiClientError("Local purchase record not found or update not permitted", { status: 404, code: "NOT_FOUND" });
+
+    // Cascade updates to downstream Roznamcha and Journal records if this purchase was already transferred/posted
+    const rozEntryId = (existing as any).roznamcha_entry_id || (updated as any).roznamcha_entry_id;
+    if (rozEntryId) {
+      try {
+        const finalCost = Number(payload.finalCost || 0);
+        const exchangeRate = Number(payload.exchangeRate || 1);
+        const baseAmount = finalCost * exchangeRate;
+        const rozDesc = `Local Purchase: ${payload.goodsName} - ${payload.supplierName || "Local Vendor"} | ${payload.localCurrency} ${finalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })} [${payload.paymentMode || "Cash"}]`;
+
+        await withLocalPg(async (sql) => {
+          await sql`
+            update public.roznamcha_entries
+            set base_currency_amount = ${baseAmount},
+                narration = ${rozDesc},
+                updated_at = now()
+            where id = ${rozEntryId}::uuid
+          `;
+          await sql`
+            update public.roznamcha_lines
+            set debit = ${finalCost},
+                description = ${`DR: Local Purchase - ${payload.goodsName}`}
+            where roznamcha_entry_id = ${rozEntryId}::uuid and debit > 0
+          `;
+          await sql`
+            update public.roznamcha_lines
+            set credit = ${finalCost},
+                description = ${`CR: Payable - ${payload.supplierName || "Local Vendor"}`}
+            where roznamcha_entry_id = ${rozEntryId}::uuid and credit > 0
+          `;
+        });
+      } catch (rozSyncErr) {
+        console.warn("[LocalPurchase PATCH] Roznamcha cascade sync warning:", rozSyncErr);
+      }
+    }
+
+    const jEntryId = (existing as any).journal_entry_id || (updated as any).journal_entry_id;
+    if (jEntryId) {
+      try {
+        const finalCost = Number(payload.finalCost || 0);
+        const jMemo = `Local Purchase - ${payload.supplierName || "Local Vendor"} (${payload.goodsName}) [${payload.paymentMode || "Cash"}]`;
+
+        await withLocalPg(async (sql) => {
+          await sql`
+            update public.journal_entries
+            set memo = ${jMemo},
+                updated_at = now()
+            where id = ${jEntryId}::uuid
+          `;
+          await sql`
+            update public.journal_lines
+            set debit = ${finalCost},
+                description = ${`DR: Local Purchase - ${payload.goodsName}`}
+            where journal_entry_id = ${jEntryId}::uuid and debit > 0
+          `;
+          await sql`
+            update public.journal_lines
+            set credit = ${finalCost},
+                description = ${`CR: Payable - ${payload.supplierName || "Local Vendor"} [${payload.paymentMode || "Cash"}]`}
+            where journal_entry_id = ${jEntryId}::uuid and credit > 0
+          `;
+        });
+      } catch (jSyncErr) {
+        console.warn("[LocalPurchase PATCH] Journal cascade sync warning:", jSyncErr);
+      }
+    }
 
     try {
       const { syncRecordTranslations } = await import("@/lib/i18n/record-translation-sync");
@@ -172,7 +255,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       console.warn("Multilingual sync notice:", i18nErr);
     }
 
-    return NextResponse.json({ ok: true, data: { purchase: updated } });
+    return NextResponse.json({ ok: true, data: { purchase: updated, cascaded: Boolean(rozEntryId || jEntryId) } });
   } catch (err: any) {
     return handleApiError(err);
   }

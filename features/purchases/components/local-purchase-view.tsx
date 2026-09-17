@@ -267,6 +267,13 @@ export function LocalPurchaseView({
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const isGlobalUser = Boolean(session?.isSuperAdmin || session?.isSuperAdmin === true || session?.roles?.includes?.("super_admin"));
+  const isSuperAdmin = Boolean(
+    session?.isSuperAdmin ||
+    session?.isSuperAdmin === true ||
+    session?.scopes?.isSuperAdmin ||
+    session?.roles?.includes?.("super_admin") ||
+    session?.role === "super_admin"
+  );
   const th = (x: string) => translateHeader(lang, x);
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
@@ -1162,23 +1169,35 @@ export function LocalPurchaseView({
 
       const newPurchase = data.data?.purchase || data.purchase;
 
-      // Automatically accept the bill as per workflow (Draft -> Accepted transition)
+      // Automatically accept the bill as per workflow (Draft -> Accepted transition) only if draft or newly created
       let acceptedRecord = newPurchase;
-      try {
-        const acceptRes = await fetch("/api/erp/purchases/local-purchase/accept", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ purchaseId: newPurchase.id })
-        });
-        const acceptData = await acceptRes.json();
-        if (acceptRes.ok && acceptData.ok) {
-          acceptedRecord = acceptData.data?.purchase || acceptedRecord;
+      const isAlreadyProcessed = isEditingDraft && String(newPurchase?.status || "").toLowerCase() !== "draft";
+
+      if (!isAlreadyProcessed) {
+        try {
+          const acceptRes = await fetch("/api/erp/purchases/local-purchase/accept", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ purchaseId: newPurchase.id })
+          });
+          const acceptData = await acceptRes.json();
+          if (acceptRes.ok && acceptData.ok) {
+            acceptedRecord = acceptData.data?.purchase || acceptedRecord;
+          }
+        } catch (acceptErr) {
+          console.error("Auto accept failed:", acceptErr);
         }
-      } catch (acceptErr) {
-        console.error("Auto accept failed:", acceptErr);
       }
 
-      alert("Local Purchase Bill recorded and transitioned to Payment Module successfully!");
+      if (isAlreadyProcessed) {
+        alert(
+          data?.data?.cascaded
+            ? "Local Purchase updated successfully! All transferred and linked records (Roznamcha, Journal, General Ledger) have been synchronized."
+            : "Local Purchase updated successfully!"
+        );
+      } else {
+        alert("Local Purchase Bill recorded and transitioned to Payment Module successfully!");
+      }
 
       // Reset form
       setIsFormOpen(false);
@@ -1225,8 +1244,14 @@ export function LocalPurchaseView({
       
       // Reload logs and automatically redirect/open the newly accepted voucher in Payment Module
       await loadHistory();
-      setActiveTab("accepted"); // Go to Local Purchase Payment view tab
-      setSelectedRowForVoucher(acceptedRecord); // Open the verification view
+      if (isAlreadyProcessed) {
+        const targetTab = String(newPurchase?.status || "").toLowerCase() === "posted" ? "posted" : "accepted";
+        setActiveTab(targetTab as any);
+        setSelectedRowForVoucher(newPurchase);
+      } else {
+        setActiveTab("accepted"); // Go to Local Purchase Payment view tab
+        setSelectedRowForVoucher(acceptedRecord); // Open the verification view
+      }
     } catch (err: any) {
       alert(err.message || "An error occurred while saving.");
     } finally {
@@ -3385,7 +3410,7 @@ export function LocalPurchaseView({
                                       </div>
                                     )}
 
-                                    {rowStatus === "draft" && (
+                                    {(rowStatus === "draft" || isSuperAdmin) && (
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -3432,7 +3457,7 @@ export function LocalPurchaseView({
                                         }}
                                         className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition dark:text-slate-200 dark:hover:bg-slate-800"
                                       >
-                                        <Edit3 className="h-3.5 w-3.5 text-emerald-600" /> {th("Edit Draft")}
+                                        <Edit3 className="h-3.5 w-3.5 text-emerald-600" /> {rowStatus === "draft" ? th("Edit Draft") : th("Edit Local Purchase")}
                                       </button>
                                     )}
 
@@ -3888,6 +3913,56 @@ export function LocalPurchaseView({
                     className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 shadow-sm"
                   >
                     <Send className="h-3.5 w-3.5" /> {th("Transfer & Post to GL")}
+                  </Button>
+                )}
+                {(selectedRowForVoucher.status === "draft" || isSuperAdmin) && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const row = selectedRowForVoucher;
+                      setSelectedRowForVoucher(null);
+                      setIsFormOpen(true);
+                      setCurrentStep(1);
+                      setEditingPurchaseId(row.id || null);
+                      setGoodsId(row.goods_id || row.goodsId || "");
+                      setCustomGoodsName(row.goods_name || row.goodsName || "");
+                      setSupplierName(row.supplier_name || row.supplierName || "");
+                      setSupplierPersonId(row.supplier_person_id || row.supplierPersonId || "");
+                      setPurchaseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
+                      setSalesAccountNo(row.sales_account_no || row.salesAccountNo || "");
+                      setBrokerAccountNo(row.broker_account_no || row.brokerAccountNo || "");
+                      setChassisCode(row.chassis_code || row.chassisCode || "");
+                      setLotNo(row.lot_no || row.lotNo || "");
+                      setPaymentMode(row.payment_mode || row.paymentMode || "Cash");
+                      setShippingMode(row.shipping_mode || row.shippingMode || "Loading");
+                      setShipmentType(SHIPPING_MODE_TO_SHIPMENT_TYPE[row.shipping_mode || row.shippingMode || "Loading"] || "Loading by Truck");
+                      setOriginCountryId(row.origin_country_id || row.originCountryId || "");
+                      setAdvancePercentage(String(row.advance_percentage ?? row.advancePercentage ?? "20"));
+                      setWarehouseName(row.warehouse_name || row.warehouseName || "");
+                      setSelectedWarehouseId(row.warehouse_id || row.warehouseId || "");
+                      setWarehouseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
+                      setWarehousePlotNo(row.warehouse_plot_no || row.warehousePlotNo || "");
+                      setTransferDate(row.transfer_date || row.transferDate || new Date().toISOString().slice(0, 10));
+                      setLoadingDate(row.loading_date || row.loadingDate || new Date().toISOString().slice(0, 10));
+                      setTruckNo(row.truck_no || row.truckNo || "");
+                      setDriverName(row.driver_name || row.driverName || "");
+                      setRemarks(row.remarks || "");
+                      setQuantityName(row.quantity_name || row.quantityName || "Bags");
+                      setQuantityCount(String(row.quantity_kgs ?? row.quantityKgs ?? ""));
+                      setEmptyKgs(String(row.empty_kgs ?? row.emptyKgs ?? ""));
+                      setDivideKgs(String(row.divide_kgs ?? row.divideKgs ?? "50"));
+                      setRateType(row.rate_type || row.rateType || "per_kg");
+                      setPurchaseRate(String(row.purchase_rate ?? row.purchaseRate ?? ""));
+                      setPurchaseCurrency(row.purchase_currency || row.purchaseCurrency || "USD");
+                      setApplyTax(row.apply_tax || row.applyTax || "No");
+                      setTaxType(row.tax_type || row.taxType || "VAT");
+                      setTaxPercentage(String(row.tax_percentage ?? row.taxPercentage ?? "0"));
+                      if (row.country_branch_id || row.countryBranchId) setSelectedBranchId(row.country_branch_id || row.countryBranchId);
+                      if (row.city_branch_id || row.cityBranchId) setSelectedCityBranchId(row.city_branch_id || row.cityBranchId);
+                    }}
+                    className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" /> {th("Edit")}
                   </Button>
                 )}
                 <Button

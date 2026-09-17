@@ -51,7 +51,12 @@ import {
   Clock,
   Send,
   Repeat2,
-  CheckCheck
+  CheckCheck,
+  FilePlus2,
+  ScanLine,
+  FileClock,
+  Mic,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -658,11 +663,50 @@ export function PurchaseOrderWizard({ session }) {
   // but keyed off form.destCountryId/destCountryBranchId instead of the source scope.
   const [destMainBranches, setDestMainBranches] = useState([]);
   const [destCityBranches, setDestCityBranches] = useState([]);
-  const [scopeConfirmed, setScopeConfirmed] = useState(true);
+  const [scopeConfirmed, setScopeConfirmed] = useState(!isSuperAdmin);
   const [showScopeModal, setShowScopeModal] = useState(false);
+  const [entryMethodModalOpen, setEntryMethodModalOpen] = useState(false);
+  const [savedDraftsList, setSavedDraftsList] = useState([]);
+  const [loadingSavedDrafts, setLoadingSavedDrafts] = useState(false);
+  const [showSavedDraftsPicker, setShowSavedDraftsPicker] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
   const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
   const [customQtyNames, setCustomQtyNames] = useState([]);
+
+  const applyDraft = useCallback((d) => {
+    const p = d.draft_payload || d.payload || {};
+    setForm((prev) => ({
+      ...prev,
+      countryId: p.countryId || p.country_id || prev.countryId,
+      countryBranchId: p.countryBranchId || p.country_branch_id || prev.countryBranchId,
+      cityBranchId: p.cityBranchId || p.city_branch_id || prev.cityBranchId,
+      purchaseAccountNo: p.purchaseAccountNo || p.purchase_account_no || prev.purchaseAccountNo,
+      purchaseAccountName: p.purchaseAccountName || p.purchase_account_name || prev.purchaseAccountName,
+      purchaseDate: p.purchaseDate || p.purchase_date || prev.purchaseDate,
+      purchaseCurrency: p.purchaseCurrency || p.currency || prev.purchaseCurrency,
+      exchangeRate: Number(p.exchangeRate || p.exchange_rate || prev.exchangeRate || 1),
+      purchaseContractNo: p.purchaseContractNo || p.contract_no || prev.purchaseContractNo,
+      remarks: p.remarks || prev.remarks,
+    }));
+    const lines = d.line_items || d.goodsEntries || [];
+    if (Array.isArray(lines) && lines.length) {
+      setGoodsEntries(lines.map((g, i) => ({
+        allotName: g.allotName || `ALT-${i + 1}`,
+        goodsName: g.goodsName || g.description || "",
+        brand: g.brand || "",
+        hsCode: g.hsCode || "",
+        qtyName: g.qtyName || g.unit || "BAGS",
+        qtyNo: Number(g.qtyNo ?? g.quantity ?? 0),
+        netWeight: Number(g.netWeight ?? 0),
+        grossWeight: Number(g.grossWeight ?? 0),
+        coursePrice: Number(g.coursePrice ?? g.unitPrice ?? 0),
+      })));
+    }
+    setDraftPrefillRef(d.draft_no || d.draftNo || "");
+    setDraftPrefillId(d.id || d.draftId || "");
+    setEntryMethodModalOpen(false);
+    setShowSavedDraftsPicker(false);
+  }, []);
 
   // Fetch all main branches on mount to determine which countries have configured branches
   useEffect(() => {
@@ -695,14 +739,20 @@ export function PurchaseOrderWizard({ session }) {
         setCountries(list);
         setAllCountries(list);
         if (list.length > 0 && !form.countryId) {
-          const first = list[0];
-          setForm((p) => ({
-            ...p,
-            countryId: first.id,
-            purchaseCurrency: first.currency_code || first.currencyCode || "USD",
-            secondaryCurrency: first.currency_code || first.currencyCode || "USD",
-            paymentCurrency: first.currency_code || first.currencyCode || "USD"
-          }));
+          if (isSuperAdmin) {
+            // Super Admin should be prompted to select Country -> Main Branch -> City Branch
+            setShowScopeModal(true);
+            setScopeConfirmed(false);
+          } else {
+            const first = list[0];
+            setForm((p) => ({
+              ...p,
+              countryId: first.id,
+              purchaseCurrency: first.currency_code || first.currencyCode || "USD",
+              secondaryCurrency: first.currency_code || first.currencyCode || "USD",
+              paymentCurrency: first.currency_code || first.currencyCode || "USD"
+            }));
+          }
         }
       })
       .catch(() => {});
@@ -3387,7 +3437,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         </Button>
         <Button
           type="button"
-          onClick={handleReset}
+          onClick={() => setEntryMethodModalOpen(true)}
           className="flex items-center gap-1 h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px] rounded-lg"
         >
           {t(lang, "purchase.new_short", "+ New")}
@@ -3425,7 +3475,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
-                handleReset();
+                setEntryMethodModalOpen(true);
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
             >
@@ -3759,6 +3809,227 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           </div>
         </div>
       )}
+      {entryMethodModalOpen && (
+        <SimpleModal
+          isOpen={true}
+          onClose={() => {
+            setEntryMethodModalOpen(false);
+            setShowSavedDraftsPicker(false);
+          }}
+          title={t(lang, "dintake.em_title", "Select Entry Method")}
+          width="lg"
+        >
+          {showSavedDraftsPicker ? (
+            <div className="space-y-4 p-2">
+              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setShowSavedDraftsPicker(false)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  ← {t(lang, "common.back", "Back")}
+                </button>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  {t(lang, "dintake.em_draft", "Saved Drafts")}
+                </span>
+              </div>
+              {loadingSavedDrafts ? (
+                <div className="py-8 text-center">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-indigo-500" />
+                  <p className="mt-2 text-xs text-muted-foreground">{t(lang, "common.loading", "Loading drafts...")}</p>
+                </div>
+              ) : (savedDraftsList || []).length === 0 ? (
+                <div className="py-8 text-center border-2 border-dashed border-border rounded-xl">
+                  <FileClock className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-xs font-bold text-muted-foreground">{t(lang, "dintake.em_no_drafts", "No saved drafts for this screen.")}</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">{t(lang, "dintake.em_scan_desc", "Upload a document to extract fields.")}</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {savedDraftsList.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => applyDraft(d)}
+                      className="w-full text-left p-3 rounded-xl border border-border/70 hover:border-indigo-500/60 bg-muted/20 hover:bg-muted/50 transition flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-xs font-black text-foreground">{d.draft_no || d.draftNo}</div>
+                        <div className="text-[10px] text-muted-foreground">{[d.country_name, d.original_filename].filter(Boolean).join(" · ")}</div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4 p-2">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-border/60">
+                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-emerald-600 dark:text-emerald-400 block leading-tight">
+                    {t(lang, "dintake.nav_center", "Document Intake Center")}
+                  </span>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {t(lang, "dintake.em_subtitle", "Choose how you want to start. Both paths end in the same form, validation and approval.")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {/* 1. Manual Entry */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryMethodModalOpen(false);
+                    handleReset();
+                    if (isSuperAdmin) {
+                      setShowScopeModal(true);
+                      setScopeConfirmed(false);
+                    }
+                  }}
+                  className="group flex flex-col justify-between p-4 rounded-xl border border-border/80 hover:border-emerald-500/70 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 text-left transition-all shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-9 w-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                        <FilePlus2 className="h-5 w-5" />
+                      </div>
+                      <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded">
+                        Standard
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-black text-foreground group-hover:text-emerald-600 transition-colors">
+                      {t(lang, "dintake.em_manual", "Manual Entry")}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                      {t(lang, "dintake.em_manual_desc", "Fill the form yourself. Always available.")}
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] font-bold text-emerald-600">
+                    <span>{t(lang, "common.create", "Create")}</span>
+                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+
+                {/* 2. Scan / Upload Document */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryMethodModalOpen(false);
+                    router.push("/dashboard/smart-operations/intake?target=purchase_orders");
+                  }}
+                  className="group flex flex-col justify-between p-4 rounded-xl border border-border/80 hover:border-blue-500/70 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 text-left transition-all shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                        <ScanLine className="h-5 w-5" />
+                      </div>
+                      <span className="text-[9.5px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded">
+                        {t(lang, "dintake.st_ocr", "OCR")}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-black text-foreground group-hover:text-blue-600 transition-colors">
+                      {t(lang, "dintake.em_scan", "Scan / Upload Document")}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                      {t(lang, "dintake.em_scan_desc", "Upload a PDF or photo — local OCR extracts the fields for your review.")}
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] font-bold text-blue-600">
+                    <span>{t(lang, "common.view", "View")}</span>
+                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+
+                {/* 3. AI Voice Assistant */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryMethodModalOpen(false);
+                    handleReset();
+                    if (isSuperAdmin) {
+                      setShowScopeModal(true);
+                      setScopeConfirmed(false);
+                    }
+                    setTimeout(() => {
+                      const voiceBtn = document.querySelector('[data-voice-trigger="true"]') || document.querySelector('button[aria-label*="voice" i]');
+                      if (voiceBtn) voiceBtn.click();
+                    }, 300);
+                  }}
+                  className="group flex flex-col justify-between p-4 rounded-xl border border-border/80 hover:border-purple-500/70 hover:bg-purple-50/40 dark:hover:bg-purple-950/20 text-left transition-all shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-9 w-9 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-sm">
+                        <Mic className="h-5 w-5" />
+                      </div>
+                      <span className="text-[9.5px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded">
+                        AI
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-black text-foreground group-hover:text-purple-600 transition-colors">
+                      {t(lang, "ait.type_voice", "Voice")}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                      Speak vendor names, quantities, rates, and terms to auto-populate the form.
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] font-bold text-purple-600">
+                    <span>{t(lang, "ait.type_voice", "Voice")}</span>
+                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+
+                {/* 4. Continue Saved Draft */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setShowSavedDraftsPicker(true);
+                    setLoadingSavedDrafts(true);
+                    try {
+                      const r = await fetch("/api/erp/document-intelligence/drafts?targetModule=purchase_orders&status=prepared");
+                      const json = await r.json();
+                      setSavedDraftsList(json?.rows || []);
+                    } catch (e) {
+                      setSavedDraftsList([]);
+                    } finally {
+                      setLoadingSavedDrafts(false);
+                    }
+                  }}
+                  className="group flex flex-col justify-between p-4 rounded-xl border border-border/80 hover:border-amber-500/70 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 text-left transition-all shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-9 w-9 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                        <FileClock className="h-5 w-5" />
+                      </div>
+                      <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/60 dark:text-amber-300 px-2 py-0.5 rounded">
+                        {t(lang, "dintake.st_draft_ready", "Draft Ready")}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-black text-foreground group-hover:text-amber-600 transition-colors">
+                      {t(lang, "dintake.em_draft", "Continue Saved Draft")}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                      {t(lang, "dintake.em_draft_desc", "A reviewed draft prepared by the Document Intake Center pre-fills this form.")}
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] font-bold text-amber-600">
+                    <span>{t(lang, "common.view", "View")}</span>
+                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+        </SimpleModal>
+      )}
+
       {isSuperAdmin && showScopeModal && (
         <SimpleModal
           isOpen={true}
