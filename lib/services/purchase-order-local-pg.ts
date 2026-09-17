@@ -17,9 +17,10 @@ async function saveTranslations(tx: any, input: {
 }) {
   for (const field of input.fields.filter((item) => typeof item.value === "string" && String(item.value).trim())) {
     const originalText = String(field.value).trim();
+    const origLang = input.originalLanguage || "en";
     const verified = await buildVerifiedTranslationSet({
       value: originalText,
-      originalLanguage: input.originalLanguage,
+      originalLanguage: origLang,
       mode: field.mode,
       supplied: field.translations as any
     });
@@ -30,16 +31,16 @@ async function saveTranslations(tx: any, input: {
         ${input.recordId}::uuid,
         ${field.fieldName},
         ${originalText},
-        ${input.originalLanguage},
+        ${origLang},
         ${verified.translations.en ?? null},
         ${verified.translations.ur ?? null},
         ${verified.translations.ar ?? null},
         ${verified.translations.fa ?? null},
         ${verified.translations.ps ?? null},
-        ${tx.json(verified.translations)},
+        ${tx.json(verified.translations || {})},
         ${input.source ?? "auto"},
-        ${verified.status},
-        ${verified.engine},
+        ${verified.status ?? "pending"},
+        ${verified.engine ?? "local_dictionary"},
         ${input.source === "manual" ? input.actorId ?? null : null}
       )
     `;
@@ -189,6 +190,26 @@ export async function createPurchaseOrderViaLocalPg(input: {
       if (!inserted?.id) throw new Error("Purchase order insert failed.");
 
       if (Array.isArray(body.items) && body.items.length > 0) {
+        const candidateProductIds = body.items
+          .map((it: any) => it.productId)
+          .filter((id: any) => id && typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+        
+        let validProductIds = new Set<string>();
+        if (candidateProductIds.length > 0) {
+          const validProductRows = await tx`select id from products where id in ${tx(candidateProductIds)}`;
+          validProductIds = new Set(validProductRows.map((r: any) => String(r.id)));
+        }
+
+        const candidateTaxCodeIds = body.items
+          .map((it: any) => it.taxCodeId)
+          .filter((id: any) => id && typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+        
+        let validTaxCodeIds = new Set<string>();
+        if (candidateTaxCodeIds.length > 0) {
+          const validTaxRows = await tx`select id from tax_codes where id in ${tx(candidateTaxCodeIds)}`;
+          validTaxCodeIds = new Set(validTaxRows.map((r: any) => String(r.id)));
+        }
+
         const itemsPayload = body.items.map((it: any) => {
           const totalLocal = Number(it.totalLocal || 0);
           // Line-level VAT (taxable by default — UAE standard-rated goods). Non-UAE
@@ -199,9 +220,11 @@ export async function createPurchaseOrderViaLocalPg(input: {
           const vatRate = Number(it.vatRate ?? 5) || 0;
           const taxableAmount = isTaxable ? totalLocal : 0;
           const vatAmount = isTaxable ? Math.round(taxableAmount * (vatRate / 100) * 100) / 100 : 0;
+          const resolvedProductId = it.productId && validProductIds.has(String(it.productId)) ? it.productId : null;
+          const resolvedTaxCodeId = it.taxCodeId && validTaxCodeIds.has(String(it.taxCodeId)) ? it.taxCodeId : null;
           return {
             purchase_order_id: inserted.id,
-            product_id: it.productId || null,
+            product_id: resolvedProductId,
             goods_name: it.goodsName || "Unknown",
             hs_code: it.hsCode || null,
             size: it.size || null,
@@ -219,7 +242,7 @@ export async function createPurchaseOrderViaLocalPg(input: {
             total_local: totalLocal,
             total_usd: it.totalUsd || 0,
             is_taxable: isTaxable,
-            tax_code_id: it.taxCodeId || null,
+            tax_code_id: resolvedTaxCodeId,
             vat_rate: vatRate,
             taxable_amount: taxableAmount,
             vat_amount: vatAmount,
@@ -250,7 +273,7 @@ export async function createPurchaseOrderViaLocalPg(input: {
       }));
       await saveTranslations(tx, {
         recordId: inserted.id,
-        originalLanguage: body.originalLanguage,
+        originalLanguage: body.originalLanguage || session.preferredLanguage || "en",
         fields: translationFields,
         actorId: session.userId,
         source: "auto"

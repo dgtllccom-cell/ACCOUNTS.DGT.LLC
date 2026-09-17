@@ -656,6 +656,32 @@ export async function POST(request: NextRequest) {
 
     let insertedItems: Array<{ id: string; goods_name?: string; brand?: string; unit_name?: string }> = [];
     if (body.items && body.items.length > 0) {
+      const candidateProductIds = body.items
+        .map((it: any) => it.productId)
+        .filter((id: any) => id && typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+      
+      let validProductIds = new Set<string>();
+      if (candidateProductIds.length > 0) {
+        const { data: validProductRows } = await adminSupabase
+          .from("products")
+          .select("id")
+          .in("id", candidateProductIds);
+        validProductIds = new Set((validProductRows || []).map((r: any) => String(r.id)));
+      }
+
+      const candidateTaxCodeIds = body.items
+        .map((it: any) => it.taxCodeId)
+        .filter((id: any) => id && typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+      
+      let validTaxCodeIds = new Set<string>();
+      if (candidateTaxCodeIds.length > 0) {
+        const { data: validTaxRows } = await adminSupabase
+          .from("tax_codes")
+          .select("id")
+          .in("id", candidateTaxCodeIds);
+        validTaxCodeIds = new Set((validTaxRows || []).map((r: any) => String(r.id)));
+      }
+
       const itemsPayload = body.items.map((it: any) => {
         const totalLocal = Number(it.totalLocal || 0);
         // Line-level VAT: taxable by default (UAE standard-rated goods). Non-UAE
@@ -666,9 +692,11 @@ export async function POST(request: NextRequest) {
         const vatRate = Number(it.vatRate ?? 5) || 0;
         const taxableAmount = isTaxable ? totalLocal : 0;
         const vatAmount = isTaxable ? Math.round(taxableAmount * (vatRate / 100) * 100) / 100 : 0;
+        const resolvedProductId = it.productId && validProductIds.has(String(it.productId)) ? it.productId : null;
+        const resolvedTaxCodeId = it.taxCodeId && validTaxCodeIds.has(String(it.taxCodeId)) ? it.taxCodeId : null;
         return {
           purchase_order_id: orderId,
-          product_id: it.productId || null,
+          product_id: resolvedProductId,
           goods_name: it.goodsName || "Unknown",
           hs_code: it.hsCode || null,
           size: it.size || null,
@@ -686,7 +714,7 @@ export async function POST(request: NextRequest) {
           total_local: totalLocal,
           total_usd: it.totalUsd || 0,
           is_taxable: isTaxable,
-          tax_code_id: it.taxCodeId || null,
+          tax_code_id: resolvedTaxCodeId,
           vat_rate: vatRate,
           taxable_amount: taxableAmount,
           vat_amount: vatAmount,

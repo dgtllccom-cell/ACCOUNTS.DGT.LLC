@@ -2394,7 +2394,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         const totOrig = Number(g.totalAmount || 0);
         const totLoc = Number(g.finalAmount || totOrig * usdRate);
         return {
-          productId: g.goodsId || g.productId || null,
+          productId: g.productId || null,
           goodsName: g.goodsName,
           hsCode: g.hsCode,
           size: g.size,
