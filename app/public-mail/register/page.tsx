@@ -69,6 +69,15 @@ export default function PublicMailRegisterPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
+      // Auto-login after registration
+      const token = `public_token_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('public_mail_token', token);
+      localStorage.setItem('public_mail_user', JSON.stringify({
+        username,
+        email: `${username}@dgt.llc`,
+        displayName
+      }));
+
       setSuccess(true);
     } catch (err: any) {
       setError(err.message);
@@ -150,7 +159,7 @@ export default function PublicMailRegisterPage() {
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your Name"
+              placeholder="Display Name"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>

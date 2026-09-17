@@ -27,8 +27,10 @@ export default function PublicMailLoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Save session token
-      localStorage.setItem('public_mail_token', data.token);
+      // Save session data
+      const token = `public_token_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('public_mail_token', token);
+      localStorage.setItem('public_mail_user', JSON.stringify(data.user));
       router.push('/public-mail/inbox');
     } catch (err: any) {
       setError(err.message);
