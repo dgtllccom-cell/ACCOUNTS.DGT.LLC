@@ -40,10 +40,14 @@ export interface EmailWorkspaceProps {
 
 interface MailboxAccount {
   id: string;
-  email: string;
-  branchName: string;
-  country: string;
-  scope: 'super_admin' | 'country_admin' | 'city_branch';
+  emailAddress: string;
+  displayName: string;
+  countryName: string | null;
+  cityBranchName: string | null;
+  scope: string;
+  isActive: boolean;
+  emailStatus: string;
+  smtpStatus: string;
 }
 
 interface EmailItem {
@@ -65,14 +69,6 @@ interface EmailItem {
   attachments?: { name: string; size: string; type: 'pdf' | 'excel' | 'doc' }[];
 }
 
-const ALL_MAILBOXES: MailboxAccount[] = [
-  { id: 'dubai', email: 'dubai@dgt.llc', branchName: 'Dubai Branch', country: 'United Arab Emirates', scope: 'city_branch' },
-  { id: 'chaman', email: 'chaman@dgt.llc', branchName: 'Chaman Branch', country: 'Pakistan', scope: 'city_branch' },
-  { id: 'quetta', email: 'quetta@dgt.llc', branchName: 'Quetta Branch', country: 'Pakistan', scope: 'city_branch' },
-  { id: 'kandahar', email: 'kandahar@dgt.llc', branchName: 'Kandahar Branch', country: 'Afghanistan', scope: 'city_branch' },
-  { id: 'dgtllc', email: 'dgtllc@dgt.llc', branchName: 'DGT Head Office', country: 'Global', scope: 'super_admin' }
-];
-
 
 export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   const s = useErpScreen('email_system');
@@ -85,20 +81,43 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
   const isCountryAdmin = !isSuperAdmin && (session?.roles?.some(r => r.includes('country')) ?? false);
   const isBranchUser = !isSuperAdmin && !isCountryAdmin;
 
+  // Load accounts from API
+  const [allMailboxes, setAllMailboxes] = useState<MailboxAccount[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch('/api/erp/email/accounts', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          const accounts = data.data?.accounts || [];
+          setAllMailboxes(accounts);
+        }
+      } catch (err) {
+        console.error('Failed to load email accounts:', err);
+      } finally {
+        setLoadingAccounts(false);
+      }
+    };
+    fetchAccounts();
+  }, []);
+
   // Filter allowed mailboxes based on role
   const availableMailboxes = useMemo(() => {
+    if (allMailboxes.length === 0) return [];
     if (isSuperAdmin) {
-      return ALL_MAILBOXES;
+      return allMailboxes.filter(m => m.isActive);
     }
     if (isCountryAdmin) {
-      return ALL_MAILBOXES.filter(m => m.country === 'Pakistan' || m.id === 'dgtllc');
+      return allMailboxes.filter(m => m.isActive && (m.countryName === 'Pakistan' || m.scope === 'super_admin'));
     }
-    // Branch user: strict single branch
-    return ALL_MAILBOXES.filter(m => m.id === 'chaman');
-  }, [isSuperAdmin, isCountryAdmin]);
+    // Branch user: strict single branch - filter by assigned city branch
+    return allMailboxes.filter(m => m.isActive && m.scope === 'city_branch');
+  }, [allMailboxes, isSuperAdmin, isCountryAdmin]);
 
-  // Selected Mailbox state - default to Dubai
-  const [selectedMailboxId, setSelectedMailboxId] = useState<string>('dubai');
+  // Selected Mailbox state - default to first available
+  const [selectedMailboxId, setSelectedMailboxId] = useState<string>('');
 
   // Active folder tab
   const [activeFolder, setActiveFolder] = useState<'inbox' | 'sent' | 'drafts' | 'starred' | 'archive' | 'important' | 'trash'>('inbox');
@@ -125,7 +144,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
       setLoadingEmails(true);
       setEmailError(null);
 
-      const mailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
+      const mailbox = availableMailboxes.find(m => m.id === selectedMailboxId);
       if (!mailbox) {
         setEmails([]);
         setSelectedEmailId(null);
@@ -214,7 +233,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
 
   // Compose Modal State
   const [showCompose, setShowCompose] = useState(false);
-  const [composeFrom, setComposeFrom] = useState('dubai@dgt.llc');
+  const [composeFrom, setComposeFrom] = useState('');
   const [composeTo, setComposeTo] = useState('');
   const [composeSubject, setComposeSubject] = useState('');
   const [composeBody, setComposeBody] = useState('');
@@ -224,21 +243,23 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
 
   // Keep composeFrom in sync with selected mailbox
   useEffect(() => {
-    const mb = ALL_MAILBOXES.find(m => m.id === selectedMailboxId);
-    if (mb) setComposeFrom(mb.email);
-  }, [selectedMailboxId]);
+    const mb = availableMailboxes.find(m => m.id === selectedMailboxId);
+    if (mb) setComposeFrom(mb.emailAddress);
+  }, [selectedMailboxId, availableMailboxes]);
 
   // Inline Quick Reply state
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [replyExpanded, setReplyExpanded] = useState(false);
 
-  // Sync selected mailbox with available list
+  // Sync selected mailbox with available list and set default on load
   useEffect(() => {
-    if (!availableMailboxes.some(m => m.id === selectedMailboxId)) {
-      setSelectedMailboxId(availableMailboxes[0]?.id || 'dubai');
+    if (availableMailboxes.length > 0 && !selectedMailboxId) {
+      setSelectedMailboxId(availableMailboxes[0]?.id || '');
+    } else if (availableMailboxes.length > 0 && !availableMailboxes.some(m => m.id === selectedMailboxId)) {
+      setSelectedMailboxId(availableMailboxes[0]?.id || '');
     }
-  }, [availableMailboxes, selectedMailboxId]);
+  }, [availableMailboxes]);
 
   // Filtered emails based on search query
   const filteredEmails = useMemo(() => {
@@ -357,7 +378,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
     }
   };
 
-  const currentMailbox = ALL_MAILBOXES.find(m => m.id === selectedMailboxId) || ALL_MAILBOXES[0];
+  const currentMailbox = availableMailboxes.find(m => m.id === selectedMailboxId) || availableMailboxes[0];
 
   return (
     <div dir={s.dir} className="bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-5 flex flex-col gap-4">
@@ -410,7 +431,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
               >
                 {availableMailboxes.map(mb => (
                   <option key={mb.id} value={mb.id}>
-                    {mb.branchName} ({mb.email})
+                    {mb.displayName} ({mb.emailAddress})
                   </option>
                 ))}
               </select>
@@ -606,7 +627,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Mail className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-red-600' : 'text-slate-400'}`} />
-                        <span className="truncate">{mb.email}</span>
+                        <span className="truncate">{mb.emailAddress}</span>
                       </div>
                       <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-red-500 ring-2 ring-red-200' : 'bg-slate-300 dark:bg-slate-700'}`} />
                     </button>
@@ -668,7 +689,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
               <div className="p-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center">
                 <RotateCw className="w-6 h-6 mx-auto mb-2 text-red-600 animate-spin" />
                 <p className="font-semibold text-slate-600 dark:text-slate-300">{s.t('connecting_mail', 'Connecting to mail server...')}</p>
-                <p className="text-[11px] text-slate-400 mt-1">Fetching live emails for {currentMailbox.email}</p>
+                <p className="text-[11px] text-slate-400 mt-1">Fetching live emails for {currentMailbox?.emailAddress}</p>
               </div>
             ) : emailError ? (
               <div className="p-8 text-center text-xs flex flex-col items-center justify-center">
@@ -677,7 +698,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 </div>
                 <p className="font-bold text-red-600 dark:text-red-400">{emailError}</p>
                 <p className="text-[11px] text-slate-400 mt-1 max-w-[220px]">
-                  Unable to load emails for {currentMailbox.email}.
+                  Unable to load emails for {currentMailbox?.emailAddress}.
                 </p>
                 <button
                   onClick={() => fetchRealEmails()}
@@ -696,7 +717,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                   {searchQuery.trim() ? 'No matching emails found' : 'No emails in this mailbox folder'}
                 </p>
                 <p className="text-[11px] text-slate-400 mt-1">
-                  Folder is empty for {currentMailbox.email}
+                  Folder is empty for {currentMailbox?.emailAddress}
                 </p>
               </div>
             ) : (
@@ -982,7 +1003,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-red-600" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  New Message — {currentMailbox.branchName}
+                  New Message — {currentMailbox?.displayName || 'No Mailbox'}
                 </h3>
               </div>
               <button
@@ -1017,11 +1038,9 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                   disabled={isBranchUser}
                   className="flex-1 px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 font-semibold"
                 >
-                  {availableMailboxes
-                    .filter(m => m.id !== 'all')
-                    .map(mb => (
-                      <option key={mb.id} value={mb.email}>
-                        {mb.branchName} &lt;{mb.email}&gt;
+                  {availableMailboxes.map(mb => (
+                      <option key={mb.id} value={mb.emailAddress}>
+                        {mb.displayName} &lt;{mb.emailAddress}&gt;
                       </option>
                     ))}
                 </select>
