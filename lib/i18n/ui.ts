@@ -8461,6 +8461,8 @@ export type UiKey =
   | "cbill.total_due"
   | "cbill.active_badge"
   | "cbill.bill_transfer_types"
+  | "lp.status_pending_transfer"
+  | "common.select_all"
 
   | (string & {});
 
@@ -27248,6 +27250,8 @@ const en: Dict = {
   "cbill.total_due": "Total Due",
   "cbill.active_badge": "Active",
   "cbill.bill_transfer_types": "Select Bill Transfer Types",
+  "lp.status_pending_transfer": "Pending Transfer",
+  "common.select_all": "Select All",
   "comv.goods_items": "line items",
 };
 
@@ -46001,6 +46005,8 @@ const ur: Dict = {
   "cbill.total_due": "کل واجب الادا",
   "cbill.active_badge": "فعال",
   "cbill.bill_transfer_types": "بل ٹرانسفر کی اقسام منتخب کریں",
+  "lp.status_pending_transfer": "منتقلی کے زیر التوا",
+  "common.select_all": "سب منتخب کریں",
   "email_workspace.select_all": "سیلیکت الل",
   "email_workspace.refresh": "ریفریش کریں",
   "email_workspace.reply": "ریپلی",
@@ -64764,6 +64770,8 @@ const ar: Dict = {
   "cbill.total_due": "إجمالي المستحق",
   "cbill.active_badge": "نشط",
   "cbill.bill_transfer_types": "تحديد أنواع تحويل الفاتورة",
+  "lp.status_pending_transfer": "قيد النقل",
+  "common.select_all": "تحديد الكل",
   "email_workspace.select_all": "سیلیکت الل",
   "email_workspace.refresh": "تحديث",
   "email_workspace.reply": "ریبلی",
@@ -83526,6 +83534,8 @@ const fa: Dict = {
   "cbill.total_due": "مبلغ کل قابل پرداخت",
   "cbill.active_badge": "فعال",
   "cbill.bill_transfer_types": "انتخاب انواع انتقال صورت‌حساب",
+  "lp.status_pending_transfer": "در حال انتقال",
+  "common.select_all": "انتخاب همه",
   "email_workspace.select_all": "سیلیکت الل",
   "email_workspace.refresh": "بازخوانی",
   "email_workspace.reply": "ریپلی",
@@ -102294,6 +102304,8 @@ const ps: Dict = {
   "cbill.total_due": "ټوله پاتې شوې پیسې",
   "cbill.active_badge": "فعال",
   "cbill.bill_transfer_types": "د بل لیږد ډولونه وټاکئ",
+  "lp.status_pending_transfer": "د انتقال په انتظار",
+  "common.select_all": "ټول وټاکئ",
   "email_workspace.select_all": "سیلیکت الل",
   "email_workspace.refresh": "تازه کول",
   "email_workspace.reply": "ریپلی",
