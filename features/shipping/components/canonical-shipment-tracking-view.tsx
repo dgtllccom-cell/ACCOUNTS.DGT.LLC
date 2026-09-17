@@ -41,7 +41,7 @@ import {
   TRACKING_EVENT_LABELS,
   type TrackingEventCode,
   type CanonicalTrackingPayload
-} from "@/lib/services/shipment-tracking-service";
+} from "@/lib/types/shipment-tracking";
 
 interface CanonicalShipmentTrackingViewProps {
   domain: "business" | "shipping" | "both";
