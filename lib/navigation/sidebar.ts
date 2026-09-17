@@ -41,7 +41,8 @@ export type SidebarIconKey =
   | "phone"
   | "credit-card"
   | "warehouse"
-  | "flag";
+  | "flag"
+  | "lock";
 
 export type SidebarNode = {
   key: string;
