@@ -4694,6 +4694,8 @@ export type UiKey =
   | "lpdest.confirm_warehouse"
   | "lpdest.confirm_loading"
   | "lpdest.confirm_export"
+  | "so.not_found"
+  | "so.already_transferred_readonly"
   | "branch.wizard_step1_title"
   | "branch.wizard_step1_desc"
   | "branch.wizard_step2_title"
@@ -13747,6 +13749,8 @@ const en: Dict = {
   "lpdest.confirm_warehouse": "Confirm this bill's stock has been physically transferred to the warehouse?",
   "lpdest.confirm_loading": "Confirm this bill has been loaded onto the truck?",
   "lpdest.confirm_export": "Confirm this bill has been handed over to the Export/Shipping module?",
+  "so.not_found": "Sales order not found",
+  "so.already_transferred_readonly": "This Sales Order has already been transferred and is read-only.",
   // Tax System
   "nav.tax": "Tax Setup & Rates",
   "nav.tax_settings": "Country Tax Settings",
@@ -32562,6 +32566,8 @@ const ur: Dict = {
   "lpdest.confirm_warehouse": "کیا آپ تصدیق کرتے ہیں کہ اس بل کا مال گودام میں منتقل ہو چکا ہے؟",
   "lpdest.confirm_loading": "کیا آپ تصدیق کرتے ہیں کہ اس بل کا مال ٹرک پر لوڈ ہو چکا ہے؟",
   "lpdest.confirm_export": "کیا آپ تصدیق کرتے ہیں کہ یہ بل برآمد/شپنگ ماڈیول کے حوالے کر دیا گیا ہے؟",
+  "so.not_found": "سیلز آرڈر نہیں ملا",
+  "so.already_transferred_readonly": "یہ سیلز آرڈر پہلے ہی منتقل ہو چکا ہے اور صرف پڑھنے کے لیے ہے۔",
   // Tax System Urdu
   "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
   "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
@@ -51289,6 +51295,8 @@ const ar: Dict = {
   "lpdest.confirm_warehouse": "هل تؤكد أن بضاعة هذه الفاتورة قد نُقلت فعليًا إلى المستودع؟",
   "lpdest.confirm_loading": "هل تؤكد أن هذه الفاتورة قد حُمّلت على الشاحنة؟",
   "lpdest.confirm_export": "هل تؤكد تسليم هذه الفاتورة إلى وحدة التصدير/الشحن؟",
+  "so.not_found": "أمر البيع غير موجود",
+  "so.already_transferred_readonly": "تم بالفعل ترحيل أمر البيع هذا وهو للقراءة فقط.",
   // Tax System Arabic
   "nav.tax": "إعدادات الضرائب والنسب",
   "nav.tax_settings": "إعدادات ضرائب الدولة",
@@ -70030,6 +70038,8 @@ const fa: Dict = {
   "lpdest.confirm_warehouse": "آیا تأیید می‌کنید که کالای این صورتحساب عملاً به انبار منتقل شده است؟",
   "lpdest.confirm_loading": "آیا تأیید می‌کنید که این صورتحساب روی کامیون بارگیری شده است؟",
   "lpdest.confirm_export": "آیا تأیید می‌کنید که این صورتحساب به واحد صادرات/حمل‌ونقل تحویل داده شده است؟",
+  "so.not_found": "سفارش فروش یافت نشد",
+  "so.already_transferred_readonly": "این سفارش فروش قبلاً انتقال یافته و فقط قابل خواندن است.",
   "nav.account_setup_report": "گزارش تنظیم حساب",
   "nav.account_type": "نوع حساب",
   "nav.afghanistan": "افغانستان",
@@ -88802,6 +88812,8 @@ const ps: Dict = {
   "lpdest.confirm_warehouse": "ایا تاسو تایید کوئ چې د دې بېل توکي په واقعیت کې ګدام ته لېږدول شوي؟",
   "lpdest.confirm_loading": "ایا تاسو تایید کوئ چې دا بېل په ټرک باندې بار شوی؟",
   "lpdest.confirm_export": "ایا تاسو تایید کوئ چې دا بېل د صادراتو/بار وړلو برخې ته سپارل شوی؟",
+  "so.not_found": "د خرڅلاو امر ونه موندل شو",
+  "so.already_transferred_readonly": "دا د خرڅلاو امر مخکې لېږدول شوی او یوازې د لوستلو وړ دی.",
   "nav.account_setup_report": "د حساب تنظیم راپور",
   "nav.account_type": "د حساب ډول",
   "nav.afghanistan": "افغانستان",

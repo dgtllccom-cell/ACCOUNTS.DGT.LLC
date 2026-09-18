@@ -1529,6 +1529,14 @@ export function SalesOrderWizard({ session }) {
       currencyCode: form.salesCurrency || "USD",
       exchangeRate: usdRate,
       orderTotal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0,
+      // Mirrors purchase-order-wizard.jsx: orderTotal above is already converted to the
+      // local/base currency; these three fields separately record the true
+      // original-currency total (and its local-currency counterpart) so the transfer
+      // route always has an unambiguous source for the amount to hand to the posting
+      // engine, instead of re-deriving it from an already-converted figure.
+      totalGoodsOriginal: reportTotals.grandPrimaryFinal || 0,
+      totalGoodsLocal: reportTotals.grandFinal || 0,
+      totalGoodsUsd: reportTotals.grandPrimaryFinal || 0,
       paidAmount: isTransferred ? (reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0) : 0,
       remainingAmount: isTransferred ? 0 : (reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0),
       salesStatus: salesStatus.toLowerCase(),

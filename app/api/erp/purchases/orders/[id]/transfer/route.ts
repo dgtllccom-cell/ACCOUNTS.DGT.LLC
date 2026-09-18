@@ -40,8 +40,17 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   const unit = String(goodsEntries[0]?.qtyName || goodsEntries[0]?.unit || form.qtyName || form.quantityUnit || "").trim();
   const grossWeight = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.grossWeight ?? item.gross_weight ?? 0), 0) || Number(form.grossWeight || totals.totalGross || 0);
   const netWeight = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.netWeight ?? item.net_weight ?? 0), 0) || Number(form.netWeight || totals.totalNet || 0);
-  const purchaseAmount = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount ?? item.purchaseAmount ?? 0), 0) || Number(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0);
-  const purchaseCurrency = String(goodsEntries[0]?.purchaseCurrency || goodsEntries[0]?.pricingCurrency || form.purchaseCurrency || form.pricingCurrency || orderRow.currency_code || "USD").toUpperCase();
+  // Prefer the canonical, always-consistent original-currency total the order itself
+  // stores (total_goods_original, paired with its own currency_code) over the fragile
+  // per-item/form fallback chain below — that chain was the source of a currency-label
+  // mismatch (e.g. showing the true USD amount tagged "AED") that made the audit
+  // narration self-contradictory, separate from (but adjacent to) the double-conversion
+  // posting bug this same amount/currency pairing is used to fix.
+  const canonicalOriginalTotal = Number(orderRow.total_goods_original ?? orderRow.total_goods_usd ?? 0);
+  const purchaseAmount = canonicalOriginalTotal > 0
+    ? canonicalOriginalTotal
+    : (goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount ?? item.purchaseAmount ?? 0), 0) || Number(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0));
+  const purchaseCurrency = String(orderRow.currency_code || goodsEntries[0]?.purchaseCurrency || goodsEntries[0]?.pricingCurrency || form.purchaseCurrency || form.pricingCurrency || "USD").toUpperCase();
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Purchase Price: ${formatAuditNumber(purchaseAmount)} ${purchaseCurrency}`;
 }
 
@@ -81,6 +90,11 @@ async function resolveLedgerOrAccount(
       .is("deleted_at", null).limit(1).maybeSingle();
     if (ledgerByName) return ledgerByName;
 
+    // Look up the account by code/name too (an existing, already-authorized enterprise
+    // account or legacy account), but never CREATE a ledger/account here — a required
+    // account/ledger link that is missing must stop the transfer with a clear message,
+    // not be silently invented on the fly during a financial posting. Set up the ledger
+    // link on the Account Setup screen first, then retry the transfer.
     let { data: enterpriseAccount } = await adminSupabase
       .from("enterprise_accounts").select("id, code, name").eq("code", cleanTerm)
       .is("deleted_at", null).limit(1).maybeSingle();
@@ -95,25 +109,10 @@ async function resolveLedgerOrAccount(
         .from("ledgers").select(ledgerColumns).eq("enterprise_account_id", enterpriseAccount.id)
         .is("deleted_at", null).limit(1).maybeSingle();
       if (enterpriseLedger) return enterpriseLedger;
-
-      const { data: createdLedger } = await adminSupabase
-        .from("ledgers")
-        .insert({
-          scope: "super_admin",
-          enterprise_account_id: enterpriseAccount.id,
-          code: enterpriseAccount.code || cleanTerm,
-          name: enterpriseAccount.name || fallbackName || "Account Ledger",
-          currency: "USD",
-          opening_balance: 0,
-          current_balance: 0,
-          debit_total: 0,
-          credit_total: 0,
-          normal_balance: defaultNormalBalance,
-          is_active: true
-        })
-        .select(ledgerColumns)
-        .single();
-      if (createdLedger) return createdLedger;
+      throw new Error(
+        `Account "${enterpriseAccount.name || enterpriseAccount.code}" (${enterpriseAccount.code}) has no ledger set up yet. ` +
+        `Set up its ledger on the Account Setup screen before transferring this bill.`
+      );
     }
 
     let { data: legacyAccount } = await adminSupabase
@@ -130,51 +129,15 @@ async function resolveLedgerOrAccount(
         .from("ledgers").select(ledgerColumns).eq("account_id", legacyAccount.id)
         .is("deleted_at", null).limit(1).maybeSingle();
       if (accountLedger) return accountLedger;
-
-      const { data: createdLedger } = await adminSupabase
-        .from("ledgers")
-        .insert({
-          scope: "super_admin",
-          account_id: legacyAccount.id,
-          code: legacyAccount.code || cleanTerm,
-          name: legacyAccount.name || fallbackName || "Account Ledger",
-          currency: "USD",
-          opening_balance: 0,
-          current_balance: 0,
-          debit_total: 0,
-          credit_total: 0,
-          normal_balance: defaultNormalBalance,
-          is_active: true
-        })
-        .select(ledgerColumns)
-        .single();
-      if (createdLedger) return createdLedger;
+      throw new Error(
+        `Account "${legacyAccount.name || legacyAccount.code}" (${legacyAccount.code}) has no ledger set up yet. ` +
+        `Set up its ledger on the Account Setup screen before transferring this bill.`
+      );
     }
   }
 
-  const primaryTerm = candidateTerms[0];
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(primaryTerm);
-  const codeVal = isUuid ? `ACC-${primaryTerm.slice(0, 8).toUpperCase()}` : primaryTerm;
-  const nameVal = fallbackName || candidateTerms.find(t => !/^[0-9a-f]{8}-/i.test(t)) || primaryTerm;
-
-  const { data: createdLedger } = await adminSupabase
-    .from("ledgers")
-    .insert({
-      scope: "super_admin",
-      code: codeVal,
-      name: nameVal,
-      currency: "USD",
-      opening_balance: 0,
-      current_balance: 0,
-      debit_total: 0,
-      credit_total: 0,
-      normal_balance: defaultNormalBalance,
-      is_active: true
-    })
-    .select(ledgerColumns)
-    .single();
-
-  return createdLedger ?? null;
+  // No existing ledger or account matched any of the supplied terms — do not invent one.
+  return null;
 }
 
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
@@ -253,8 +216,28 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       form.manualBillNumber || form.manual_bill_number || form.billNo || form.purchaseContractNo || orderRow.purchase_contract_no || ""
     ).trim();
 
-    const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
-    const totalPurchaseAmount = Number(rawTotal);
+    // The Roznamcha posting engine (post_purchase_order_payment) expects p_amount in the
+    // order's OWN currency (currency_code) and multiplies it by the exchange rate exactly
+    // once to get the base-currency posting amount. order_total / totals.grandFinal are
+    // already converted into the local/base currency by the booking wizard — passing
+    // either of those here as p_amount, alongside currency_code (still the ORIGINAL
+    // currency), causes the exchange rate to be applied a SECOND time (e.g. 126,500 USD
+    // correctly becomes 464,887.50 AED once, then wrongly becomes 1,708,461.56 AED here).
+    // total_goods_original / total_goods_usd hold the true original-currency total the
+    // wizard already computed and saved alongside order_total — use that instead.
+    const rawOriginalTotal = String(
+      orderRow.total_goods_original || orderRow.total_goods_usd || ""
+    ).replace(/,/g, "");
+    let totalPurchaseAmount = Number(rawOriginalTotal);
+    if (!Number.isFinite(totalPurchaseAmount) || totalPurchaseAmount <= 0) {
+      // Legacy order predating total_goods_original: fall back to un-converting
+      // order_total by the order's own exchange rate, the same defensive heuristic
+      // lib/services/purchase-calculation-service.ts already uses for display.
+      const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
+      const legacyTotal = Number(rawTotal);
+      const legacyRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+      totalPurchaseAmount = legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal;
+    }
     if (!Number.isFinite(totalPurchaseAmount) || totalPurchaseAmount <= 0) {
       throw new Error("Purchase order total must be a valid number greater than zero to transfer.");
     }
@@ -401,9 +384,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .select("ledger_id, debit, credit")
       .eq("roznamcha_entry_id", roznamchaEntryId);
     if (postedLinesError) throw postedLinesError;
-    assertDistinctBookingLedgers(debitAccountObj.id, creditAccountObj.id, "Business Roznamcha");
+    // Internal posting-integrity assertion tag (developer diagnostics only, embedded in an
+    // exception message if these checks ever fail — not user-facing UI copy).
+    const postingAssertionLabel = "Business Roznamcha";
+    assertDistinctBookingLedgers(debitAccountObj.id, creditAccountObj.id, postingAssertionLabel);
     assertBalancedPostedLines({
-      label: "Business Roznamcha",
+      label: postingAssertionLabel,
       lines: postedLines,
       expectedDebitLedgerId: debitAccountObj.id,
       expectedCreditLedgerId: creditAccountObj.id,
@@ -411,7 +397,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       expectedExchangeRate: exRate
     });
     assertPostedRoznamchaTrace({
-      label: "Business Roznamcha",
+      label: postingAssertionLabel,
       entry: (await requireSupabaseData(
         supabase
           .from("roznamcha_entries")

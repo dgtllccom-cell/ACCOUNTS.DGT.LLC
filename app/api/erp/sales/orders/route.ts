@@ -96,6 +96,9 @@ const salesOrderSchema = z.object({
   currencyCode: z.string().trim().min(2).max(10).default("USD"),
   exchangeRate: z.coerce.number().finite().positive().default(1),
   orderTotal: z.coerce.number().finite().min(0).default(0),
+  totalGoodsOriginal: z.coerce.number().finite().min(0).default(0),
+  totalGoodsLocal: z.coerce.number().finite().min(0).default(0),
+  totalGoodsUsd: z.coerce.number().finite().min(0).default(0),
   paidAmount: z.coerce.number().finite().min(0).default(0),
   remainingAmount: z.coerce.number().finite().min(0).default(0),
   salesStatus: z.string().trim().max(80).default("draft"),
@@ -373,7 +376,13 @@ export async function POST(request: NextRequest) {
         )
       : null;
     const generatedSalesOrderNo = body.salesOrderNo?.trim() || await nextTransactionSerial(admin, "module_sales", "global", "SO");
-    const baseCurrencyAmount = Number(body.orderTotal || 0) * Number(body.exchangeRate || 1);
+    // orderTotal is already converted to the local/base currency by the booking wizard
+    // (see the currency double-conversion fix in app/api/erp/purchases/orders/[id]/transfer
+    // and app/api/erp/sales/orders/[id]/transfer) — multiplying it by exchangeRate again
+    // here inflated base_currency_amount by the same factor. totalGoodsLocal is the same
+    // already-converted figure under its unambiguous name; fall back to orderTotal as-is
+    // (no further multiplication) for any caller that hasn't been updated to send it yet.
+    const baseCurrencyAmount = Number(body.totalGoodsLocal || body.orderTotal || 0);
 
     const payload = {
       country_id: effective.countryId,
@@ -405,6 +414,9 @@ export async function POST(request: NextRequest) {
       currency_name: recordCurrencyCode,
       base_currency_amount: baseCurrencyAmount,
       order_total: body.orderTotal,
+      total_goods_original: body.totalGoodsOriginal ?? 0,
+      total_goods_local: body.totalGoodsLocal ?? 0,
+      total_goods_usd: body.totalGoodsUsd ?? 0,
       paid_amount: body.paidAmount,
       remaining_amount: body.remainingAmount,
       sales_status: body.salesStatus,

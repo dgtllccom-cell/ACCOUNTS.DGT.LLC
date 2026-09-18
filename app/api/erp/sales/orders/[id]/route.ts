@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
+import { t } from "@/lib/i18n/ui";
 import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -38,6 +39,9 @@ const salesOrderUpdateSchema = z.object({
   currencyCode: z.string().optional(),
   exchangeRate: z.number().optional(),
   orderTotal: z.number().optional(),
+  totalGoodsOriginal: z.number().optional(),
+  totalGoodsLocal: z.number().optional(),
+  totalGoodsUsd: z.number().optional(),
   paidAmount: z.number().optional(),
   remainingAmount: z.number().optional(),
   salesStatus: z.string().optional(),
@@ -65,7 +69,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     );
 
     if (!row) {
-      return NextResponse.json({ ok: false, error: { message: "Sales order not found" } }, { status: 404 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.not_found", "Sales order not found") } }, { status: 404 });
     }
 
     // Dual-scope: a Country Sale is visible to its source (selling) branch OR its
@@ -125,13 +129,13 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     )) as any;
 
     if (!before) {
-      return NextResponse.json({ ok: false, error: { message: "Sales order not found" } }, { status: 404 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.not_found", "Sales order not found") } }, { status: 404 });
     }
 
     // Sales Order becomes read-only after transfer
     const currentStatus = String((before as any).sales_status || "").toLowerCase();
     if (currentStatus === "transferred" || currentStatus === "finalized" || currentStatus === "completed") {
-      return NextResponse.json({ ok: false, error: { message: "This Sales Order has already been transferred and is read-only." } }, { status: 400 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order has already been transferred and is read-only.") } }, { status: 400 });
     }
 
     authorizeApiScope(session, {
@@ -168,6 +172,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (body.currencyCode !== undefined) patch.currency_code = body.currencyCode;
     if (body.exchangeRate !== undefined) patch.exchange_rate = body.exchangeRate;
     if (body.orderTotal !== undefined) patch.order_total = body.orderTotal;
+    if (body.totalGoodsOriginal !== undefined) patch.total_goods_original = body.totalGoodsOriginal;
+    if (body.totalGoodsLocal !== undefined) patch.total_goods_local = body.totalGoodsLocal;
+    if (body.totalGoodsUsd !== undefined) patch.total_goods_usd = body.totalGoodsUsd;
     if (body.paidAmount !== undefined) patch.paid_amount = body.paidAmount;
     if (body.remainingAmount !== undefined) patch.remaining_amount = body.remainingAmount;
     
@@ -194,74 +201,16 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           patch.transfer_serial_number = `TR-${Math.floor(100000 + Math.random() * 900000)}`;
         }
 
-        // Automatic Accounting Posting: JV, Roznamcha, Cash Roznamcha, General Ledger
-        const finalCost = Number(body.orderTotal ?? before.order_total ?? 0) * Number(body.exchangeRate ?? before.exchange_rate ?? 1);
-        const raw = body.formData || before.form_data || {};
-        const f = raw.form || {};
-        
-        const purchaseAccountCode = f.purchaseAccountNo;
-        const salesAccountCode = f.salesAccountNo;
-        
-        if (purchaseAccountCode && salesAccountCode && finalCost > 0) {
-          try {
-            const entryNo = `JV-SO-${Math.floor(100000 + Math.random() * 900000)}`;
-            const memo = `Sales Order Transfer - ${body.customerName || before.customer_name || "Customer"} (${body.productSummary || before.product_summary || "Goods"})`;
-            const admin = createSupabaseAdminClient() as any;
-
-            const { data: foundAccounts } = await admin
-              .from("accounts")
-              .select("id, code")
-              .in("code", [purchaseAccountCode, salesAccountCode]);
-
-            const debitAccObj = foundAccounts?.find((a: any) => a.code === purchaseAccountCode);
-            const creditAccObj = foundAccounts?.find((a: any) => a.code === salesAccountCode);
-
-            if (debitAccObj && creditAccObj) {
-              const { data: journalEntry } = await admin
-                .from("journal_entries")
-                .insert({
-                  company_id: (before as any).company_id,
-                  entry_no: entryNo,
-                  entry_date: new Date().toISOString().slice(0, 10),
-                  status: "posted",
-                  memo: memo,
-                  source_type: "sales_order",
-                  source_id: (before as any).id,
-                  posted_at: new Date().toISOString(),
-                  posted_by: session.userId,
-                })
-                .select()
-                .single();
-
-              if (journalEntry) {
-                // Save generated JV Serial inside Sales Order workflow state / trace
-                patch.workflow_state = {
-                  ...(before.workflow_state || {}),
-                  journal_serial_number: entryNo
-                };
-                
-                await admin.from("journal_lines").insert([
-                  {
-                    journal_entry_id: journalEntry.id,
-                    account_id: debitAccObj.id,
-                    description: `Debit: Customer Ledger - ${body.customerName || before.customer_name || "Customer"}`,
-                    debit: finalCost,
-                    credit: 0
-                  },
-                  {
-                    journal_entry_id: journalEntry.id,
-                    account_id: creditAccObj.id,
-                    description: `Credit: Sales Ledger - ${body.productSummary || before.product_summary || "Goods"}`,
-                    debit: 0,
-                    credit: finalCost
-                  }
-                ]);
-              }
-            }
-          } catch (journalErr) {
-            console.error("Non-fatal: Sales journal entry auto-posting error:", journalErr);
-          }
-        }
+        // NOTE: this handler used to also silently auto-post a legacy journal_entries/
+        // journal_lines pair here (on the ALREADY-double-converted orderTotal*exchangeRate,
+        // via the legacy `accounts` table, with no idempotency guard — so a repeated PATCH
+        // with salesStatus:"transferred" could post it more than once). That duplicated the
+        // single authoritative posting the dedicated POST /api/erp/sales/orders/[id]/transfer
+        // route already makes to roznamcha_entries/roznamcha_lines (confirmed unreachable
+        // from the current Sales Order wizard, which always calls the dedicated /transfer
+        // route instead of PATCHing salesStatus directly) — removed rather than fixed in
+        // place, per "do not create duplicate accounting flows". This block now only updates
+        // the order's own status fields; it posts nothing.
       }
     }
     
@@ -352,7 +301,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     );
 
     if (!before) {
-      return NextResponse.json({ ok: false, error: { message: "Sales order not found" } }, { status: 404 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.not_found", "Sales order not found") } }, { status: 404 });
     }
 
     authorizeApiScope(session, {

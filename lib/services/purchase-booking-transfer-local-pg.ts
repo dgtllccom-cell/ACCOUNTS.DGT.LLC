@@ -31,8 +31,11 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   const unit = String(form.qtyName || form.quantityUnit || "").trim();
   const grossWeight = money(form.grossWeight || totals.totalGross || 0);
   const netWeight = money(form.netWeight || totals.totalNet || 0);
-  const purchaseAmount = money(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0);
-  const purchaseCurrency = String(form.purchaseCurrency || orderRow.currency_code || "USD").toUpperCase();
+  const canonicalOriginalTotal = money(orderRow.total_goods_original || orderRow.total_goods_usd || 0);
+  const purchaseAmount = canonicalOriginalTotal > 0
+    ? canonicalOriginalTotal
+    : money(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0);
+  const purchaseCurrency = String(orderRow.currency_code || form.purchaseCurrency || "USD").toUpperCase();
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${totalQty}${unit ? ` ${unit}` : ""} | Gross WT: ${grossWeight} KG | Net WT: ${netWeight} KG | Purchase Price: ${purchaseAmount} ${purchaseCurrency}`;
 }
 
@@ -62,53 +65,34 @@ async function resolveLedgerOrAccount(
     const byName = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where name ilike ${clean} and deleted_at is null limit 1`;
     if (byName[0]) return byName[0];
 
+    // Look up the account by code/name/reference too (an existing, already-authorized
+    // enterprise account or legacy account), but never CREATE a ledger/account here — a
+    // required account/ledger link that is missing must stop the transfer with a clear
+    // message, not be silently invented on the fly during a financial posting. Set up
+    // the ledger link on the Account Setup screen first, then retry the transfer.
     const enterpriseAccount = await tx`select id, code, name, country_id from enterprise_accounts where (code = ${clean} or manual_reference_number = ${clean} or account_number = ${clean} or name ilike ${clean}) and deleted_at is null limit 1`;
     if (enterpriseAccount[0]?.id) {
       const byEnterprise = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where enterprise_account_id = ${enterpriseAccount[0].id}::uuid and deleted_at is null limit 1`;
       if (byEnterprise[0]) return byEnterprise[0];
-
-      const newLedger = await tx`
-        insert into ledgers (
-          scope, enterprise_account_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
-        ) values (
-          'super_admin', ${enterpriseAccount[0].id}::uuid, ${enterpriseAccount[0].code || clean}, ${enterpriseAccount[0].name || fallbackName || 'Account Ledger'}, 'USD', 0, 0, 0, 0, ${defaultNormalBalance}, true
-        )
-        returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
-      `;
-      if (newLedger[0]) return newLedger[0];
+      throw new Error(
+        `Account "${enterpriseAccount[0].name || enterpriseAccount[0].code}" (${enterpriseAccount[0].code}) has no ledger set up yet. ` +
+        `Set up its ledger on the Account Setup screen before transferring this bill.`
+      );
     }
 
     const legacyAccount = await tx`select id, code, name from accounts where (code = ${clean} or name ilike ${clean}) and deleted_at is null limit 1`;
     if (legacyAccount[0]?.id) {
       const byAccount = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where account_id = ${legacyAccount[0].id}::uuid and deleted_at is null limit 1`;
       if (byAccount[0]) return byAccount[0];
-
-      const newLedger = await tx`
-        insert into ledgers (
-          scope, account_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
-        ) values (
-          'super_admin', ${legacyAccount[0].id}::uuid, ${legacyAccount[0].code || clean}, ${legacyAccount[0].name || fallbackName || 'Account Ledger'}, 'USD', 0, 0, 0, 0, ${defaultNormalBalance}, true
-        )
-        returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
-      `;
-      if (newLedger[0]) return newLedger[0];
+      throw new Error(
+        `Account "${legacyAccount[0].name || legacyAccount[0].code}" (${legacyAccount[0].code}) has no ledger set up yet. ` +
+        `Set up its ledger on the Account Setup screen before transferring this bill.`
+      );
     }
   }
 
-  const primaryTerm = candidateTerms[0];
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(primaryTerm);
-  const codeVal = isUuid ? `ACC-${primaryTerm.slice(0, 8).toUpperCase()}` : primaryTerm;
-  const nameVal = fallbackName || candidateTerms.find(t => !/^[0-9a-f]{8}-/i.test(t)) || primaryTerm;
-
-  const createdLedger = await tx`
-    insert into ledgers (
-      scope, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
-    ) values (
-      'super_admin', ${codeVal}, ${nameVal}, 'USD', 0, 0, 0, 0, ${defaultNormalBalance}, true
-    )
-    returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
-  `;
-  return createdLedger[0] ?? null;
+  // No existing ledger or account matched any of the supplied terms — do not invent one.
+  return null;
 }
 
 export async function transferPurchaseBookingViaLocalPg(input: {
@@ -143,8 +127,25 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       const workflow = formData.workflow || {};
       const systemBillNumber = String(orderRow.purchase_order_no || form.purchaseOrderNo || "").trim();
       const manualBillNumber = String(form.manualBillNumber || form.manual_bill_number || form.billNo || form.purchaseContractNo || orderRow.purchase_contract_no || "").trim();
-      const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
-      const totalPurchaseAmount = Number(rawTotal);
+      // post_purchase_booking_transfer / post_purchase_order_payment expects p_amount in
+      // the order's OWN currency (currency_code) and applies the exchange rate exactly
+      // once. order_total / totals.grandFinal are already converted to the local/base
+      // currency by the booking wizard — passing either of those as p_amount here,
+      // alongside currency_code (still the ORIGINAL currency), doubles the conversion
+      // (e.g. 126,500 USD correctly becomes 464,887.50 AED once via the wizard, then
+      // wrongly becomes 1,708,461.56 AED again here). total_goods_original/total_goods_usd
+      // hold the true original-currency total the wizard already computed and saved.
+      const rawOriginalTotal = String(orderRow.total_goods_original || orderRow.total_goods_usd || "").replace(/,/g, "");
+      let totalPurchaseAmount = Number(rawOriginalTotal);
+      if (!Number.isFinite(totalPurchaseAmount) || totalPurchaseAmount <= 0) {
+        // Legacy order predating total_goods_original: un-convert order_total by the
+        // order's own exchange rate (same defensive heuristic already used for display
+        // in lib/services/purchase-calculation-service.ts).
+        const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
+        const legacyTotal = Number(rawTotal);
+        const legacyRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+        totalPurchaseAmount = legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal;
+      }
       if (!Number.isFinite(totalPurchaseAmount) || totalPurchaseAmount <= 0) {
         throw new Error("Purchase order total must be a valid number greater than zero to transfer.");
       }
@@ -182,17 +183,11 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       }
 
       if (debitAccountObj.id === creditAccountObj.id) {
-        const distinctCreditLedger = await tx`
-          insert into ledgers (
-            scope, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
-          ) values (
-            'super_admin', ${`CR-${creditAccountObj.code || 'PAYABLE'}`}, ${`${creditAccountObj.name || 'Payable'} (Vendor)`}, 'USD', 0, 0, 0, 0, 'credit', true
-          )
-          returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
-        `;
-        if (distinctCreditLedger[0]) {
-          creditAccountObj = distinctCreditLedger[0];
-        }
+        // The Purchase (DR) and Sales/Payable (CR) selections resolved to the SAME
+        // ledger — a genuine configuration error the user must fix by picking two
+        // different existing accounts, not something this transfer should silently
+        // work around by fabricating a stand-in "(Vendor)" ledger.
+        throw new Error("Purchase (DR) and Sales/Payable (CR) must be different, existing ledgers. Please select two distinct accounts before transferring this bill.");
       }
 
       const effectiveCountryId = orderRow.country_id || debitAccountObj?.country_id || creditAccountObj?.country_id || null;

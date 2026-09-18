@@ -39,8 +39,11 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
   const unit = String(goodsEntries[0]?.qtyName || goodsEntries[0]?.unit || form.qtyName || form.quantityUnit || "").trim();
   const grossWeight = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.grossWeight ?? item.gross_weight ?? 0), 0) || Number(form.grossWeight || totals.totalGross || 0);
   const netWeight = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.netWeight ?? item.net_weight ?? 0), 0) || Number(form.netWeight || totals.totalNet || 0);
-  const salesAmount = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount ?? item.salesAmount ?? 0), 0) || Number(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0);
-  const salesCurrency = String(goodsEntries[0]?.salesCurrency || goodsEntries[0]?.pricingCurrency || form.salesCurrency || form.pricingCurrency || orderRow.currency_code || "USD").toUpperCase();
+  const canonicalOriginalTotal = Number(orderRow.total_goods_original || orderRow.total_goods_usd || 0);
+  const salesAmount = canonicalOriginalTotal > 0
+    ? canonicalOriginalTotal
+    : (goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount ?? item.salesAmount ?? 0), 0) || Number(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0));
+  const salesCurrency = String(orderRow.currency_code || goodsEntries[0]?.salesCurrency || goodsEntries[0]?.pricingCurrency || form.salesCurrency || form.pricingCurrency || "USD").toUpperCase();
   return `Sales Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Sales Price: ${formatAuditNumber(salesAmount)} ${salesCurrency}`;
 }
 
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Supabase-client read below silently returns null even for orders that exist. Try a
     // direct-Postgres read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client
     // path only when DATABASE_URL isn't configured.
-    const orderColumns = "id, country_id, country_branch_id, city_branch_id, order_total, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer";
+    const orderColumns = "id, country_id, country_branch_id, city_branch_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer";
     const viaPgOrder = await withLocalPg(async (sql) => {
       const rows = await sql`select ${sql.unsafe(orderColumns)} from sales_orders where id = ${params.id} and deleted_at is null limit 1`;
       return rows[0] ?? null;
@@ -121,8 +124,23 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return handleApiError(new Error("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again."));
     }
 
-    const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
-    const totalSalesAmount = Number(rawTotal);
+    // post_sales_order_payment expects p_amount in the order's OWN currency
+    // (currency_code) and converts to the base currency exactly once. order_total /
+    // totals.grandFinal are already converted to the local/base currency by the booking
+    // wizard — passing either as p_amount here, alongside currency_code (still the
+    // ORIGINAL currency), would double the conversion (the same bug already fixed on
+    // the Purchase Order side). total_goods_original/total_goods_usd hold the true
+    // original-currency total the wizard saves alongside order_total.
+    const rawOriginalTotal = String(orderRow.total_goods_original || orderRow.total_goods_usd || "").replace(/,/g, "");
+    let totalSalesAmount = Number(rawOriginalTotal);
+    if (!Number.isFinite(totalSalesAmount) || totalSalesAmount <= 0) {
+      // Legacy order predating total_goods_original: un-convert order_total by the
+      // order's own exchange rate.
+      const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
+      const legacyTotal = Number(rawTotal);
+      const legacyRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+      totalSalesAmount = legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal;
+    }
     if (!Number.isFinite(totalSalesAmount) || totalSalesAmount <= 0) {
       throw new Error("Sales order total must be a valid number greater than zero to transfer.");
     }
@@ -277,9 +295,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     )) as any[];
 
     const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
-    assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, "Sales booking");
+    // Internal posting-integrity assertion tag (developer diagnostics only, embedded in an
+    // exception message if these checks ever fail — not user-facing UI copy).
+    const postingAssertionLabel = "Sales booking";
+    assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, postingAssertionLabel);
     assertBalancedPostedLines({
-      label: "Sales booking",
+      label: postingAssertionLabel,
       lines: postedLines,
       expectedDebitLedgerId: debitLedgerId,
       expectedCreditLedgerId: creditLedgerId,
@@ -301,7 +322,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     )) as any;
 
     assertPostedRoznamchaTrace({
-      label: "Sales booking",
+      label: postingAssertionLabel,
       entry: journalRecord
     });
 

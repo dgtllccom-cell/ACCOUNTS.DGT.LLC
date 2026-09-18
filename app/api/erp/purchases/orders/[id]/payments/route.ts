@@ -270,7 +270,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const toPurchaseCcy = (amt: number, ccy: string, rate: number) =>
       ccy === orderCcy ? amt : (amt * rate) / (orderRate || 1);
 
-    const orderTotalPur = Number(orderRow.order_total || 0);
+    // order_total is stored in the LOCAL/base currency by the booking wizard (see the
+    // Roznamcha double-conversion fix in the transfer route/local-pg service) — it is
+    // NOT in the purchase currency despite this function's own long-standing comment
+    // above. total_goods_original/total_goods_usd hold the true purchase-currency total.
+    const orderTotalPur = Number(orderRow.total_goods_original || orderRow.total_goods_usd || 0) ||
+      (orderRate > 1 ? Number(orderRow.order_total || 0) / orderRate : Number(orderRow.order_total || 0));
     const advancePaidPur = Number(orderRow.advance_paid || 0);
     const remainingPaidPur = Number(orderRow.remaining_paid || 0);
     const creditAmountPur = Number(orderRow.credit_amount || 0);
@@ -416,9 +421,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return { paymentId, paymentRecord, journalRecord, journalLines };
     }) as any;
 
-    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Purchase payment");
+    // Internal posting-integrity assertion tag (developer diagnostics only, embedded in an
+    // exception message if these checks ever fail — not user-facing UI copy).
+    const postingAssertionLabel = "Purchase payment";
+    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, postingAssertionLabel);
     assertBalancedPostedLines({
-      label: "Purchase payment",
+      label: postingAssertionLabel,
       lines: journalLines,
       expectedDebitLedgerId: resolvedDebitLedgerId,
       expectedCreditLedgerId: resolvedCreditLedgerId,
@@ -428,7 +436,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       expectedBaseAmount: Number(paymentRecord.base_currency_amount ?? Number(body.amount) * bodyRate)
     });
     assertPostedRoznamchaTrace({
-      label: "Purchase payment",
+      label: postingAssertionLabel,
       entry: journalRecord
     });
 
