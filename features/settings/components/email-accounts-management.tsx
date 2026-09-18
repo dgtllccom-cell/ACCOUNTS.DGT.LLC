@@ -123,11 +123,8 @@ export function EmailAccountsManagement() {
   const [formCountryId, setFormCountryId] = useState("");
   const [formCityBranchId, setFormCityBranchId] = useState("");
   const [formScope, setFormScope] = useState("city_branch");
-  const [formSmtpHost, setFormSmtpHost] = useState("");
-  const [formSmtpPort, setFormSmtpPort] = useState("465");
-  const [formSmtpUser, setFormSmtpUser] = useState("");
-  const [formSmtpPass, setFormSmtpPass] = useState("");
-  const [formSmtpSecure, setFormSmtpSecure] = useState(true);
+  const [formProvider, setFormProvider] = useState("titan");
+  const [formPassword, setFormPassword] = useState("");
   const [formIsActive, setFormIsActive] = useState(true);
   const [formShowPass, setFormShowPass] = useState(false);
 
@@ -170,11 +167,8 @@ export function EmailAccountsManagement() {
     setFormCountryId(data?.countries?.[0]?.id || "");
     setFormCityBranchId("");
     setFormScope("city_branch");
-    setFormSmtpHost("");
-    setFormSmtpPort("465");
-    setFormSmtpUser("");
-    setFormSmtpPass("");
-    setFormSmtpSecure(true);
+    setFormProvider("titan");
+    setFormPassword("");
     setFormIsActive(true);
     setFormShowPass(false);
     setModalOpen(true);
@@ -187,11 +181,8 @@ export function EmailAccountsManagement() {
     setFormCountryId(acc.countryId || "");
     setFormCityBranchId(acc.cityBranchId || "");
     setFormScope(acc.scope || "city_branch");
-    setFormSmtpHost(acc.smtpHost);
-    setFormSmtpPort(String(acc.smtpPort || "465"));
-    setFormSmtpUser(acc.smtpUser);
-    setFormSmtpPass("");
-    setFormSmtpSecure(acc.smtpSecure);
+    setFormProvider("titan");
+    setFormPassword("");
     setFormIsActive(acc.isActive);
     setFormShowPass(false);
     setModalOpen(true);
@@ -200,37 +191,16 @@ export function EmailAccountsManagement() {
   async function handleSave() {
     try {
       setSaving(true);
-      if (editingAccount) {
-        const payload: any = {
-          id: editingAccount.id,
-          emailAddress: formEmail,
-          displayName: formDisplayName,
-          countryId: formCountryId || undefined,
-          cityBranchId: formCityBranchId || null,
-          scope: formScope,
-          smtpHost: formSmtpHost,
-          smtpPort: Number(formSmtpPort),
-          smtpUser: formSmtpUser,
-          smtpSecure: formSmtpSecure,
-          isActive: formIsActive
-        };
-        if (formSmtpPass) payload.smtpPass = formSmtpPass;
-        await apiPut("/api/erp/email/accounts", payload);
-      } else {
-        await apiPost("/api/erp/email/accounts", {
-          emailAddress: formEmail,
-          displayName: formDisplayName,
-          countryId: formCountryId,
-          cityBranchId: formCityBranchId || null,
-          scope: formScope,
-          smtpHost: formSmtpHost,
-          smtpPort: Number(formSmtpPort),
-          smtpUser: formSmtpUser,
-          smtpPass: formSmtpPass,
-          smtpSecure: formSmtpSecure,
-          isActive: formIsActive
-        });
-      }
+      // Send to unified mail-management API with simplified payload
+      await apiPost("/api/erp/mail-management/mailboxes", {
+        emailAddress: formEmail,
+        displayName: formDisplayName || formEmail,
+        provider: formProvider,
+        imapPassword: formPassword,
+        smtpPassword: formPassword,
+        assignedBranchId: formCityBranchId || null,
+        skipConnectionTest: false // Validate connection before saving
+      });
       setModalOpen(false);
       refresh();
     } catch (err: any) {
@@ -575,34 +545,26 @@ export function EmailAccountsManagement() {
               </select>
             </div>
 
-            <div className="rounded-lg border bg-muted/10 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                <Server className="h-3.5 w-3.5 text-primary" />
-                {tt("ema.smtp_config", "SMTP Configuration")}
+            <div className="rounded-lg border-2 border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-black text-blue-900 dark:text-blue-200 uppercase tracking-wide">
+                  {tt("email.credentials", "Email Credentials")}
+                </span>
               </div>
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                {tt("email.server_auto", "Enter your mailbox email and password. All server settings are automatic.")}
+              </p>
+
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{tt("ema.smtp_host", "SMTP Host")} *</Label>
-                  <Input value={formSmtpHost} onChange={(e) => setFormSmtpHost(e.target.value)} placeholder="mail.dgt.llc" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{tt("ema.smtp_port", "SMTP Port")} *</Label>
-                  <Input value={formSmtpPort} onChange={(e) => setFormSmtpPort(e.target.value)} placeholder="465" type="number" />
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{tt("ema.username_label", "Username")} *</Label>
-                  <Input value={formSmtpUser} onChange={(e) => setFormSmtpUser(e.target.value)} placeholder="dgtllc@dgt.llc" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{editingAccount ? tt("ema.new_password_optional", "New Password (leave blank to keep)") : tt("ema.password_required", "Password *")}</Label>
+                  <Label className="text-xs font-bold text-blue-950 dark:text-blue-100">{tt("email.password_label", "Password")} *</Label>
                   <div className="relative">
                     <Input
                       type={formShowPass ? "text" : "password"}
-                      value={formSmtpPass}
-                      onChange={(e) => setFormSmtpPass(e.target.value)}
-                      placeholder={editingAccount ? "••••••••" : "App Password or SMTP Password"}
+                      value={formPassword}
+                      onChange={(e) => setFormPassword(e.target.value)}
+                      placeholder={tt("email.password_ph", "Enter password...")}
                       className="pr-10"
                     />
                     <button
@@ -614,18 +576,22 @@ export function EmailAccountsManagement() {
                     </button>
                   </div>
                 </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{tt("email.provider", "Email Provider")}</Label>
+                  <select
+                    value={formProvider}
+                    onChange={(e) => setFormProvider(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30 cursor-pointer"
+                  >
+                    <option value="titan">{tt("email.titan_auto", "Titan / Hostinger (Auto-configured)")}</option>
+                    <option value="custom">{tt("email.custom_server", "Custom Mail Server")}</option>
+                  </select>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formSmtpSecure}
-                    onChange={(e) => setFormSmtpSecure(e.target.checked)}
-                    className="rounded border-input"
-                  />
-                  {tt("ema.ssl_tls", "SSL/TLS Secure Connection")}
-                </label>
-                <label className="flex items-center gap-2 text-xs cursor-pointer">
+
+              <div className="flex items-center gap-2 text-xs cursor-pointer">
+                <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={formIsActive}
@@ -638,7 +604,7 @@ export function EmailAccountsManagement() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button onClick={handleSave} disabled={saving || !formEmail || !formSmtpHost} className="flex-1">
+              <Button onClick={handleSave} disabled={saving || !formEmail || !formPassword} className="flex-1">
                 {saving ? (
                   <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> {tt("email_acct.saving", "Saving...")}</>
                 ) : editingAccount ? (
