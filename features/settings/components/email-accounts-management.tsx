@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -11,6 +11,7 @@ import {
   Key,
   Mail,
   MailPlus,
+  MoreVertical,
   Pencil,
   Plus,
   Power,
@@ -24,7 +25,8 @@ import {
   Wifi,
   WifiOff,
   X,
-  Zap
+  Zap,
+  ExternalLink
 } from "lucide-react";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -116,6 +118,8 @@ export function EmailAccountsManagement() {
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [openActionsMenuId, setOpenActionsMenuId] = useState<string | null>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [formEmail, setFormEmail] = useState("");
@@ -400,62 +404,108 @@ export function EmailAccountsManagement() {
                           {acc.providerName}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-medium">{acc.smtpStatus}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-medium">{acc.emailStatus}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <StatusBadge status={acc.smtpStatus} />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <StatusBadge status={acc.emailStatus} />
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(acc.lastTestedAt)}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(acc.lastSentAt)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="relative flex items-center justify-center">
                           <button
-                            title={tt("common.edit", "Edit")}
-                            onClick={() => openEdit(acc)}
+                            onClick={() => setOpenActionsMenuId(openActionsMenuId === acc.id ? null : acc.id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            title={tt("common.actions", "Actions")}
                           >
-                            <Pencil className="h-3.5 w-3.5" />
+                            <MoreVertical className="h-4 w-4" />
                           </button>
-                          <button
-                            title={tt("email_acct.test_smtp", "Test SMTP")}
-                            onClick={() => handleTest(acc.id)}
-                            disabled={testingId === acc.id}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/30 transition-colors disabled:opacity-50"
-                          >
-                            {testingId === acc.id ? (
-                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Activity className="h-3.5 w-3.5" />
-                            )}
-                          </button>
-                          <button
-                            title={tt("email_acct.change_password", "Change Password")}
-                            onClick={() => {
-                              setPasswordAccountId(acc.id);
-                              setNewPassword("");
-                              setShowPassword(false);
-                              setPasswordModalOpen(true);
-                            }}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/30 transition-colors"
-                          >
-                            <Key className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            title={acc.isActive ? tt("ema.deactivate", "Deactivate") : tt("ema.activate", "Activate")}
-                            onClick={() => handleToggleActive(acc)}
-                            className={cn(
-                              "inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-                              acc.isActive
-                                ? "text-green-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
-                                : "text-muted-foreground hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950/30"
-                            )}
-                          >
-                            {acc.isActive ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
-                          </button>
-                          <button
-                            title={tt("common.delete", "Delete")}
-                            onClick={() => setDeleteConfirmId(acc.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+
+                          {openActionsMenuId === acc.id && (
+                            <div
+                              ref={actionsMenuRef}
+                              className="absolute right-0 top-8 z-50 min-w-[180px] rounded-lg border bg-card shadow-lg"
+                            >
+                              <div className="p-1">
+                                <button
+                                  onClick={() => {
+                                    openEdit(acc);
+                                    setOpenActionsMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted rounded-md transition-colors"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                  {tt("common.edit", "Edit Account")}
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    handleTest(acc.id);
+                                    setOpenActionsMenuId(null);
+                                  }}
+                                  disabled={testingId === acc.id}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted rounded-md transition-colors disabled:opacity-50"
+                                >
+                                  {testingId === acc.id ? (
+                                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Activity className="h-3.5 w-3.5" />
+                                  )}
+                                  {tt("email_acct.test_connection", "Test Connection")}
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    setPasswordAccountId(acc.id);
+                                    setNewPassword("");
+                                    setShowPassword(false);
+                                    setPasswordModalOpen(true);
+                                    setOpenActionsMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted rounded-md transition-colors"
+                                >
+                                  <Key className="h-3.5 w-3.5" />
+                                  {tt("email_acct.change_password", "Change Password")}
+                                </button>
+
+                                <div className="h-px bg-border my-1" />
+
+                                <button
+                                  onClick={() => {
+                                    handleToggleActive(acc);
+                                    setOpenActionsMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted rounded-md transition-colors"
+                                >
+                                  {acc.isActive ? (
+                                    <>
+                                      <PowerOff className="h-3.5 w-3.5" />
+                                      {tt("email_acct.deactivate", "Deactivate")}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Power className="h-3.5 w-3.5" />
+                                      {tt("email_acct.activate", "Activate")}
+                                    </>
+                                  )}
+                                </button>
+
+                                <div className="h-px bg-border my-1" />
+
+                                <button
+                                  onClick={() => {
+                                    setDeleteConfirmId(acc.id);
+                                    setOpenActionsMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 rounded-md transition-colors"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  {tt("common.delete", "Delete")}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -684,6 +734,35 @@ export function EmailAccountsManagement() {
         </SimpleModal>
       )}
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const normalizedStatus = status?.toLowerCase() || "";
+
+  let bgColor = "bg-slate-100 dark:bg-slate-900";
+  let textColor = "text-slate-600 dark:text-slate-400";
+  let icon = null;
+
+  if (normalizedStatus.includes("connected") || normalizedStatus.includes("ok") || normalizedStatus.includes("success")) {
+    bgColor = "bg-emerald-100 dark:bg-emerald-950/30";
+    textColor = "text-emerald-700 dark:text-emerald-300";
+    icon = <CheckCircle2 className="h-3.5 w-3.5" />;
+  } else if (normalizedStatus.includes("failed") || normalizedStatus.includes("error")) {
+    bgColor = "bg-red-100 dark:bg-red-950/30";
+    textColor = "text-red-700 dark:text-red-300";
+    icon = <AlertTriangle className="h-3.5 w-3.5" />;
+  } else if (normalizedStatus.includes("incomplete") || normalizedStatus.includes("needs")) {
+    bgColor = "bg-amber-100 dark:bg-amber-950/30";
+    textColor = "text-amber-700 dark:text-amber-300";
+    icon = <Activity className="h-3.5 w-3.5" />;
+  }
+
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium", bgColor, textColor)}>
+      {icon}
+      {status || "Not Tested"}
+    </span>
   );
 }
 

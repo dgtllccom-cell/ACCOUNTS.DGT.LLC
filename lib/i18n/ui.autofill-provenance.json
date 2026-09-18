@@ -3294,5 +3294,69 @@
     "engine": "memory",
     "confidence": 0.8,
     "at": "2026-09-16T19:54:07.000Z"
+  },
+  {
+    "key": "email_acct.activate",
+    "lang": "ur",
+    "value": "اکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.activate",
+    "lang": "ar",
+    "value": "اکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.activate",
+    "lang": "fa",
+    "value": "اکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.activate",
+    "lang": "ps",
+    "value": "اکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.deactivate",
+    "lang": "ur",
+    "value": "دیکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.deactivate",
+    "lang": "ar",
+    "value": "دیکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.deactivate",
+    "lang": "fa",
+    "value": "دیکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "email_acct.deactivate",
+    "lang": "ps",
+    "value": "دیکتیواتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-18T12:49:13.794Z"
   }
 ]

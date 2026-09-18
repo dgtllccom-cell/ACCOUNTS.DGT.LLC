@@ -6910,8 +6910,8 @@ export type UiKey =
   | "email_acct.email_status" | "email_acct.last_sent" | "email_acct.last_tested"
   | "email_acct.scope" | "email_acct.super_admin_global" | "email_acct.security_notice"
   | "email_acct.new_password" | "email_acct.change_password" | "email_acct.reset_password"
-  | "email_acct.test_smtp" | "email_acct.scope_city_branch" | "email_acct.scope_country_branch" | "email_acct.scope_country" | "email_acct.scope_super_admin" | "email_acct.new_password_ph"
-  | "email_acct.total_accounts" | "email_acct.connected" | "email_acct.failed_incomplete"
+  | "email_acct.test_smtp" | "email_acct.test_connection" | "email_acct.scope_city_branch" | "email_acct.scope_country_branch" | "email_acct.scope_country" | "email_acct.scope_super_admin" | "email_acct.new_password_ph"
+  | "email_acct.total_accounts" | "email_acct.connected" | "email_acct.failed_incomplete" | "email_acct.activate" | "email_acct.deactivate"
   | "email_mgmt.channel_email_title" | "email_mgmt.channel_email_subtitle"
   | "email_mgmt.channel_whatsapp_title" | "email_mgmt.channel_whatsapp_subtitle"
   | "email_mgmt.channel_internal_title" | "email_mgmt.channel_internal_subtitle"
@@ -15108,12 +15108,15 @@ const en: Dict = {
   "email_acct.new_password": "New Password / App Password",
   "email_acct.change_password": "Change Password",
   "email_acct.test_smtp": "Test SMTP",
+  "email_acct.test_connection": "Test Connection",
   "email_acct.scope_city_branch": "City Branch",
   "email_acct.scope_country_branch": "Country Branch",
   "email_acct.scope_country": "Country",
   "email_acct.scope_super_admin": "Super Admin (Global)",
   "email_acct.new_password_ph": "Enter new password",
   "email_acct.reset_password": "Reset Password",
+  "email_acct.activate": "Activate",
+  "email_acct.deactivate": "Deactivate",
   "email_mgmt.channel_email_title": "Email Management",
   "email_mgmt.channel_email_subtitle": "Global ERP email dashboard with company, country, and branch communication.",
   "email_mgmt.channel_whatsapp_title": "WhatsApp Management",
@@ -33959,6 +33962,9 @@ const ur: Dict = {
   "email_acct.scope_super_admin": "سپر ایڈمن (عالمی)",
   "email_acct.new_password_ph": "نیا پاس ورڈ درج کریں",
   "email_acct.reset_password": "پاس ورڈ ری سیٹ کریں",
+  "email_acct.test_connection": "کنکشن ٹیسٹ کریں",
+  "email_acct.activate": "فعال کریں",
+  "email_acct.deactivate": "غیر فعال کریں",
   "email_mgmt.channel_email_title": "ای میل مینجمنٹ",
   "email_mgmt.channel_email_subtitle": "کمپنی، ملک اور برانچ مواصلات کے ساتھ عالمی ERP ای میل ڈیش بورڈ۔",
   "email_mgmt.channel_whatsapp_title": "واٹس ایپ مینجمنٹ",
@@ -52708,8 +52714,10 @@ const ar: Dict = {
   "email_acct.scope_country": "الدولة",
   "email_acct.scope_super_admin": "مشرف عام (عالمي)",
   "email_acct.new_password_ph": "أدخل كلمة مرور جديدة",
-  "email_acct.ا": "خ",
   "email_acct.reset_password": "إعادة تعيين كلمة المرور",
+  "email_acct.test_connection": "اختبار الاتصال",
+  "email_acct.activate": "تفعيل",
+  "email_acct.deactivate": "تعطيل",
   "email_mgmt.channel_email_title": "إدارة البريد الإلكتروني",
   "email_mgmt.channel_email_subtitle": "لوحة تحكم ERP العالمية للبريد الإلكتروني مع اتصالات الشركة والدولة والفرع.",
   "email_mgmt.channel_whatsapp_title": "إدارة واتساب",
@@ -71497,8 +71505,10 @@ const fa: Dict = {
   "email_acct.scope_country": "کشور",
   "email_acct.scope_super_admin": "مدیر ارشد (سراسری)",
   "email_acct.new_password_ph": "رمز عبور جدید را وارد کنید",
-  "email_acct.آ": "ز",
   "email_acct.reset_password": "بازنشانی رمز عبور",
+  "email_acct.test_connection": "آزمایش اتصال",
+  "email_acct.activate": "فعال کردن",
+  "email_acct.deactivate": "غیرفعال کردن",
   "email_mgmt.channel_email_title": "مدیریت ایمیل",
   "email_mgmt.channel_email_subtitle": "داشبورد ایمیل ERP جهانی با ارتباطات شرکت، کشور و شعبه.",
   "email_mgmt.channel_whatsapp_title": "مدیریت واتساپ",
@@ -90294,6 +90304,9 @@ const ps: Dict = {
   "email_acct.scope_super_admin": "سوپر اډمین (نړیوال)",
   "email_acct.new_password_ph": "نوی پاس ورډ دننه کړئ",
   "email_acct.reset_password": "پاس ورډ بیا تنظیم کړئ",
+  "email_acct.test_connection": "د اتصال ازموینه",
+  "email_acct.activate": "فعال کول",
+  "email_acct.deactivate": "غیر فعال کول",
   "email_mgmt.channel_email_title": "د ای میل مدیریت",
   "email_mgmt.channel_email_subtitle": "د کمپنۍ، هیواد او څانګې اړیکو سره نړیوال ERP ای میل ډیش بورډ۔",
   "email_mgmt.channel_whatsapp_title": "د واټس اپ مدیریت",
