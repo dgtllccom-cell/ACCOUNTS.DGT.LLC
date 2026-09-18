@@ -8472,6 +8472,13 @@ export type UiKey =
   | "mail_management.create_email"
   | "mail_management.show_passwords"
   | "mail_management.email_will_be_tested"
+  | "email.credentials"
+  | "email.server_auto"
+  | "email.password_label"
+  | "email.password_ph"
+  | "email.provider"
+  | "email.titan_auto"
+  | "email.custom_server"
 
   | (string & {});
 
@@ -27273,6 +27280,13 @@ const en: Dict = {
   "mail_management.create_email": "Create DGT Email Account",
   "mail_management.show_passwords": "Show passwords",
   "mail_management.email_will_be_tested": "Email will be tested for IMAP & SMTP before saving",
+  "email.credentials": "Email Credentials",
+  "email.server_auto": "Enter your mailbox email and password. All server settings are automatic.",
+  "email.password_label": "Password",
+  "email.password_ph": "Enter password...",
+  "email.provider": "Email Provider",
+  "email.titan_auto": "Titan / Hostinger (Auto-configured)",
+  "email.custom_server": "Custom Mail Server",
   "comv.goods_items": "line items",
 };
 
