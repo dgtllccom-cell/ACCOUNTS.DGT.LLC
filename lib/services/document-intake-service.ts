@@ -243,7 +243,20 @@ export class DocumentIntakeService {
       ? { code: "other_document", name: "Other / Unclassified", confidence: 0, domain: "both" as const, category: "other", targetModule: null, requiresQvc: true, scores: [] }
       : await provider.classify(ingest.fullText, registry, job.operational_domain);
 
-    const docTypeDef = registry.find((d) => d.code === cls.code) ?? registry.find((d) => d.code === "other_document")!;
+    let docTypeDef = registry.find((d) => d.code === cls.code);
+    if (job.source_module_hint) {
+      const hintedDoc = registry.find((d) => d.target_module === job.source_module_hint || d.code === job.source_module_hint);
+      if (hintedDoc) {
+        docTypeDef = hintedDoc;
+        cls.code = hintedDoc.code;
+        cls.name = hintedDoc.name;
+        cls.targetModule = hintedDoc.target_module;
+        cls.category = hintedDoc.category;
+      }
+    }
+    if (!docTypeDef) {
+      docTypeDef = registry.find((d) => d.code === "other_document")!;
+    }
     const extraction = unreadable ? { fields: [], lineItems: [], summary: {} } : await provider.extract({ text: ingest.fullText, pages: ingest.pages, docType: docTypeDef });
 
     // scope-constrained master matching (no contract-number-alone)
@@ -446,6 +459,18 @@ export class DocumentIntakeService {
       countryId?: string | null;
       countryBranchId?: string | null;
       cityBranchId?: string | null;
+      purchaseAccountId?: string | null;
+      payableAccountId?: string | null;
+      salesAccountId?: string | null;
+      receivableAccountId?: string | null;
+      debitAccountId?: string | null;
+      creditAccountId?: string | null;
+      bankAccountId?: string | null;
+      supplierName?: string | null;
+      customerName?: string | null;
+      currency?: string | null;
+      totalAmount?: number | string | null;
+      payloadOverrides?: Record<string, any>;
     },
     actorId: string,
     actorName: string | null,
@@ -520,6 +545,20 @@ export class DocumentIntakeService {
       }
       if ((effectiveCountryBranchId || effectiveCityBranchId) && !prepared.payload.branchId) {
         prepared.payload.branchId = effectiveCountryBranchId || effectiveCityBranchId;
+      }
+      if (opts.purchaseAccountId) seedRef("purchaseAccountId", opts.purchaseAccountId);
+      if (opts.payableAccountId) seedRef("payableAccountId", opts.payableAccountId);
+      if (opts.salesAccountId) seedRef("salesAccountId", opts.salesAccountId);
+      if (opts.receivableAccountId) seedRef("receivableAccountId", opts.receivableAccountId);
+      if (opts.debitAccountId) seedRef("debitAccountId", opts.debitAccountId);
+      if (opts.creditAccountId) seedRef("creditAccountId", opts.creditAccountId);
+      if (opts.bankAccountId) seedRef("bankAccountId", opts.bankAccountId);
+      if (opts.supplierName) seedRef("supplierName", opts.supplierName);
+      if (opts.customerName) seedRef("customerName", opts.customerName);
+      if (opts.currency) seedRef("purchaseCurrency", opts.currency);
+      if (opts.totalAmount) seedRef("grandTotal", String(opts.totalAmount));
+      if (opts.payloadOverrides) {
+        Object.assign(prepared.payload, opts.payloadOverrides);
       }
 
       // supersede any earlier live draft for this job
