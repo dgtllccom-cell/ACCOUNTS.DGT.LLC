@@ -253,10 +253,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "New Purchase Booking Order", href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
           { label: "Purchase Booking Details & Register", href: "/dashboard/purchase/purchase-booking-journal-report", icon: FileBarChart },
-          { label: "Purchase Booking Country Transfer", href: "/dashboard/purchase/country-transfer", icon: Globe },
           { label: "Purchase Orders Payment", href: "/dashboard/purchase/purchase-order", icon: CreditCard },
-          { label: "Purchase Order Transfer", href: "/dashboard/purchase/local-purchase-transfer-payment", icon: Receipt },
-          { label: "Sales Sheet Country Transfer", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
           { label: "Country Bill Payment", href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
           { label: "Purchase Loading Records", href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
         ],
@@ -268,7 +265,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "Local Purchase Order", href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
           { label: "Local Goods Received", href: "/dashboard/purchase/local-goods-received", icon: Package },
-          { label: "Local Purchase Payment / Transfer", href: "/dashboard/purchase/local-purchase-transfer-payment", icon: Receipt },
           { label: "Warehouse Transfer Queue", href: "/dashboard/purchase/local-purchase-warehouse-transfer", icon: Warehouse },
           { label: "Local Purchase Loading Queue", href: "/dashboard/purchase/local-purchase-loading", icon: Truck },
           { label: "Export Handover Queue", href: "/dashboard/purchase/local-purchase-export", icon: Flag },
