@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       imapHost = "imap.titan.email";
       imapPort = 993;
       smtpHost = "smtp.titan.email";
-      smtpPort = 587;  // 587 STARTTLS (not 465 SSL)
+      smtpPort = 465;  // 465 SSL (not 587 STARTTLS)
     } else if (providerName === "custom") {
       if (!customImapHost || !customSmtpHost) {
         return NextResponse.json(
