@@ -82,7 +82,6 @@ protocol imap {
 
 # POP3
 protocol pop3 {
-  pop3_uidl_format = %08Xu%d
 }
 EOF
 
