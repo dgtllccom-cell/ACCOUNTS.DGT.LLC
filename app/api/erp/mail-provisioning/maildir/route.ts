@@ -24,12 +24,11 @@ export async function POST(request: NextRequest) {
     const maildir = `/var/mail/dgt/${emailAddress}`;
 
     try {
-      // Create Maildir structure (only on VPS via server-side execution)
+      // Create Maildir structure using bash explicitly for brace expansion
       // This is wrapped in try-catch since it may not run on local dev
-      await execAsync(`mkdir -p "${maildir}"/{cur,new,tmp}`, { timeout: 5000 });
+      await execAsync(`bash -c 'mkdir -p "${maildir}"/{cur,new,tmp}'`, { timeout: 5000 });
       await execAsync(`chown -R dgtmail:dgtmail "${maildir}"`, { timeout: 5000 });
-      await execAsync(`chmod 700 "${maildir}"`, { timeout: 5000 });
-      await execAsync(`chmod 700 "${maildir}"/{cur,new,tmp}`, { timeout: 5000 });
+      await execAsync(`chmod -R 700 "${maildir}"`, { timeout: 5000 });
     } catch (execErr: any) {
       // If exec fails (dev environment), still return success
       // Production will have actual filesystem creation
