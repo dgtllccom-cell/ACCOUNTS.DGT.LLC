@@ -133,6 +133,7 @@ export function UserEditPage({ userId }: Props) {
   const [loginNotifications, setLoginNotifications] = useState(true);
   const [allowPasswordChange, setAllowPasswordChange] = useState(true);
   const [accountLockout, setAccountLockout] = useState(false);
+  const [createDgtEmail, setCreateDgtEmail] = useState(false);
 
   // Form fields - Role & Permissions
   const [role, setRole] = useState<EnterpriseRole>("city_branch_admin");
@@ -157,6 +158,7 @@ export function UserEditPage({ userId }: Props) {
     { label: tt("user.sec_allow_pwd_label", "Allow Password Change"), sub: tt("user.sec_allow_pwd_sub", "User can change their own password"), value: allowPasswordChange, set: setAllowPasswordChange },
     { label: tt("user.sec_login_notify_label", "Login Notifications"), sub: tt("user.sec_login_notify_sub", "Send email on new login"), value: loginNotifications, set: setLoginNotifications },
     { label: tt("user.sec_lockout_label", "Account Lockout"), sub: tt("user.sec_lockout_sub", "Lock after failed attempts"), value: accountLockout, set: setAccountLockout },
+    { label: tt("user.email_create_label", "Create DGT Email"), sub: tt("user.email_create_sub", "Create a firstname.lastname@dgt.llc mailbox for this user"), value: createDgtEmail, set: setCreateDgtEmail },
   ];
 
   const notifToggles = [
@@ -337,6 +339,24 @@ export function UserEditPage({ userId }: Props) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message || json?.error || tt("user.err_save_failed", "Failed to save changes."));
+
+      // Provision auto-email if requested
+      if (createDgtEmail) {
+        try {
+          await fetch("/api/erp/entities/auto-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entityType: "user",
+              entityId: userId,
+              entityData: { first_name: fullName.split(/\s+/)[0], last_name: fullName.split(/\s+/).slice(1).join(" ") },
+              shouldCreate: true
+            })
+          });
+        } catch (emailErr) {
+          console.warn("Email provisioning failed:", emailErr);
+        }
+      }
 
       localStorage.setItem("user_journal_dirty", new Date().toISOString());
       setBanner({ tone: "ok", text: tt("user.ok_user_updated", "User updated successfully! Returning to report...") });

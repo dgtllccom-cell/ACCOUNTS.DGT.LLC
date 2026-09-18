@@ -7061,6 +7061,7 @@ export type UiKey =
   | "user.sec_2fa_label" | "user.sec_2fa_sub" | "user.sec_allow_pwd_label" | "user.sec_allow_pwd_sub"
   | "user.sec_login_notify_label" | "user.sec_login_notify_sub"
   | "user.sec_lockout_label" | "user.sec_lockout_sub"
+  | "user.email_create_label" | "user.email_create_sub"
   | "user.label_last_activity" | "user.label_role" | "user.select_country"
   | "user.main_branch" | "user.city_branch" | "user.select_main_branch" | "user.select_city_branch"
   | "user.label_currency" | "user.superadmin_note" | "user.label_country_name" | "user.label_iso_code"
@@ -15589,6 +15590,8 @@ const en: Dict = {
   "user.sec_login_notify_sub": "Send email on new login",
   "user.sec_lockout_label": "Account Lockout",
   "user.sec_lockout_sub": "Lock after failed attempts",
+  "user.email_create_label": "Create DGT Email",
+  "user.email_create_sub": "Create a firstname.lastname@dgt.llc mailbox for this user",
   "user.label_last_activity": "Last Activity",
   "user.label_role": "Role",
   "user.select_country": "Select Country",
@@ -34437,6 +34440,8 @@ const ur: Dict = {
   "user.sec_login_notify_sub": "نئے لاگ ان پر ای میل بھیجیں",
   "user.sec_lockout_label": "اکاؤنٹ لاک",
   "user.sec_lockout_sub": "ناکام کوششوں کے بعد بند کریں",
+  "user.email_create_label": "DGT ای میل بنائیں",
+  "user.email_create_sub": "اس صارف کے لیے ای میل بنائیں",
   "user.label_last_activity": "آخری سرگرمی",
   "user.label_role": "کردار",
   "user.select_country": "ملک منتخب کریں",
@@ -53190,6 +53195,8 @@ const ar: Dict = {
   "user.sec_login_notify_sub": "إرسال بريد إلكتروني عند تسجيل دخول جديد",
   "user.sec_lockout_label": "قفل الحساب",
   "user.sec_lockout_sub": "قفل بعد المحاولات الفاشلة",
+  "user.email_create_label": "إنشاء بريد DGT",
+  "user.email_create_sub": "إنشاء حساب بريد إلكتروني لهذا المستخدم",
   "user.label_last_activity": "آخر نشاط",
   "user.label_role": "الدور",
   "user.select_country": "اختر الدولة",
@@ -71981,6 +71988,8 @@ const fa: Dict = {
   "user.sec_login_notify_sub": "ارسال ایمیل در ورود جدید",
   "user.sec_lockout_label": "قفل حساب",
   "user.sec_lockout_sub": "قفل پس از تلاش‌های ناموفق",
+  "user.email_create_label": "ایجاد ایمیل DGT",
+  "user.email_create_sub": "ایجاد حساب پستی برای این کاربر",
   "user.label_last_activity": "آخرین فعالیت",
   "user.label_role": "نقش",
   "user.select_country": "کشور را انتخاب کنید",
@@ -90779,6 +90788,8 @@ const ps: Dict = {
   "user.sec_login_notify_sub": "نوي ننوتلو کې بریښنالیک واستوئ",
   "user.sec_lockout_label": "د حساب قفل",
   "user.sec_lockout_sub": "د ناکامو هڅو وروسته بند کړئ",
+  "user.email_create_label": "DGT ای میل جوړ کړئ",
+  "user.email_create_sub": "د دې کاروونکي لپاره ای میل حساب جوړ کړئ",
   "user.label_last_activity": "وروستی فعالیت",
   "user.label_role": "رول",
   "user.select_country": "هېواد وټاکئ",
