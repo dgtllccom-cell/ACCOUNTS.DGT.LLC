@@ -333,7 +333,22 @@ export async function getUserMessages(userId: string, folder = "inbox", search =
       `;
     }
 
-    const messages = await query;
+    const rawMessages = await query;
+    const messages = rawMessages.map((m) => {
+      let atts = m.attachments_json;
+      if (typeof atts === "string") {
+        try {
+          atts = JSON.parse(atts);
+        } catch {
+          atts = [];
+        }
+      }
+      return {
+        ...m,
+        attachments_json: Array.isArray(atts) ? atts : [],
+      };
+    });
+
     if (search.trim()) {
       const q = search.toLowerCase();
       return messages.filter(

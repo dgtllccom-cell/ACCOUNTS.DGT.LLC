@@ -253,50 +253,63 @@ export function MailView({
       </div>
 
       {/* Attachments Section */}
-      {message.has_attachments && message.attachments_json && message.attachments_json.length > 0 && (
-        <div className="m-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-700 dark:text-slate-300">
-            <Paperclip className="h-4 w-4 text-blue-500" />
-            <span>Attachments ({message.attachments_json.length})</span>
-          </div>
+      {(() => {
+        let atts = message.attachments_json;
+        if (typeof atts === "string") {
+          try {
+            atts = JSON.parse(atts);
+          } catch {
+            atts = [];
+          }
+        }
+        const attachmentsList = Array.isArray(atts) ? atts : [];
+        if (!message.has_attachments || attachmentsList.length === 0) return null;
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {message.attachments_json.map((att, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shadow-sm hover:border-blue-300 transition-colors"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="p-2 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shrink-0">
-                    <Paperclip className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
-                      {att.name}
-                    </p>
-                    <p className="text-[10px] text-slate-400">{(att.size / 1024).toFixed(1)} KB</p>
-                  </div>
-                </div>
+        return (
+          <div className="m-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <Paperclip className="h-4 w-4 text-blue-500" />
+              <span>Attachments ({attachmentsList.length})</span>
+            </div>
 
-                <a
-                  href={att.url || "#"}
-                  download={att.name}
-                  onClick={(e) => {
-                    if (!att.url) {
-                      e.preventDefault();
-                      alert(`Attachment "${att.name}" is stored in mail storage.`);
-                    }
-                  }}
-                  className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                  title="Download attachment"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {attachmentsList.map((att, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shadow-sm hover:border-blue-300 transition-colors"
                 >
-                  <Download className="h-4 w-4" />
-                </a>
-              </div>
-            ))}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-2 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shrink-0">
+                      <Paperclip className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
+                        {att.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400">{(att.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={att.url || "#"}
+                    download={att.name}
+                    onClick={(e) => {
+                      if (!att.url) {
+                        e.preventDefault();
+                        alert(`Attachment "${att.name}" is stored in mail storage.`);
+                      }
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    title="Download attachment"
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
