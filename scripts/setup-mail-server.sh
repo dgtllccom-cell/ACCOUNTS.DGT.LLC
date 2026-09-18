@@ -33,7 +33,7 @@ postconf -e "virtual_mailbox_base = $MAIL_HOME"
 postconf -e "virtual_mailbox_maps = regexp:/etc/postfix/virtual_mailboxes"
 postconf -e "virtual_uid_maps = static:$(id -u $MAIL_USER)"
 postconf -e "virtual_gid_maps = static:$(id -g $MAIL_USER)"
-postconf -e "mailbox_transport = lmtp:unix:private/dovecot-lmtp"
+postconf -e "virtual_transport = virtual"
 postconf -e "smtpd_tls_security_level = may"
 
 echo "[3] Setting up virtual mailbox maps"
@@ -47,18 +47,10 @@ mkdir -p /etc/dovecot/conf.d
 # Configure core settings
 cat > /etc/dovecot/conf.d/99-dgt-custom.conf << EOF
 # DGT Custom Configuration
-protocols = imap pop3 lmtp
+protocols = imap
 mail_location = maildir:$MAILDIR_PATH/%u
 disable_plaintext_auth = no
 auth_mechanisms = plain
-
-# LMTP for Postfix
-service lmtp {
-  unix_listener /var/spool/postfix/private/dovecot-lmtp {
-    group = postfix
-    mode = 0660
-  }
-}
 
 # Authentication
 userdb {
@@ -78,10 +70,6 @@ ssl_key = </etc/ssl/private/ssl-cert-snakeoil.key
 # IMAP
 protocol imap {
   mail_max_userip_connections = 10
-}
-
-# POP3
-protocol pop3 {
 }
 EOF
 
