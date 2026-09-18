@@ -69,12 +69,13 @@ export async function POST(request: NextRequest) {
     const {
       emailAddress,
       displayName,
-      imapHost = "imap.titan.email",
-      imapPort = 993,
+      provider: providerName = "titan",
+      imapHost: customImapHost,
+      imapPort: customImapPort,
       imapUsername,
       imapPassword,
-      smtpHost = "smtp.titan.email",
-      smtpPort = 465,
+      smtpHost: customSmtpHost,
+      smtpPort: customSmtpPort,
       smtpUsername,
       smtpPassword,
       storageQuotaMb,
@@ -83,31 +84,55 @@ export async function POST(request: NextRequest) {
       assignedBranchId,
     } = body;
 
-    if (!emailAddress || !imapPassword || !smtpPassword || !imapHost || !smtpHost) {
+    if (!emailAddress || !imapPassword || !smtpPassword) {
       return NextResponse.json(
-        { error: "emailAddress, imapHost, imapPassword, smtpHost, smtpPassword required" },
+        { error: "emailAddress, imapPassword, smtpPassword required" },
         { status: 400 }
       );
     }
 
+    // Auto-fill server settings from provider
+    let imapHost = customImapHost || "imap.titan.email";
+    let imapPort = customImapPort || 993;
+    let smtpHost = customSmtpHost || "smtp.titan.email";
+    let smtpPort = customSmtpPort || 465;
+
+    if (providerName === "titan") {
+      imapHost = "imap.titan.email";
+      imapPort = 993;
+      smtpHost = "smtp.titan.email";
+      smtpPort = 465;
+    } else if (providerName === "custom") {
+      if (!customImapHost || !customSmtpHost) {
+        return NextResponse.json(
+          { error: "Custom provider requires imapHost and smtpHost" },
+          { status: 400 }
+        );
+      }
+    }
+
     const admin = createSupabaseAdminClient() as any;
 
-    // Test credentials before saving
-    const testResult = await testConnection(
-      imapHost,
-      imapPort,
-      imapUsername || emailAddress,
-      imapPassword,
-      smtpHost,
-      smtpPort,
-      smtpUsername || emailAddress,
-      smtpPassword
-    );
-    if (!testResult.success) {
-      return NextResponse.json(
-        { error: `Connection test failed: ${testResult.error}` },
-        { status: 400 }
+    // Test credentials before saving (optional: skip with skipConnectionTest flag)
+    let testResult: any = { success: true, imap: true, smtp: true };
+
+    if (body.skipConnectionTest !== true) {
+      testResult = await testConnection(
+        imapHost,
+        imapPort,
+        imapUsername || emailAddress,
+        imapPassword,
+        smtpHost,
+        smtpPort,
+        smtpUsername || emailAddress,
+        smtpPassword
       );
+      if (!testResult.success) {
+        return NextResponse.json(
+          { error: `Connection test failed: ${testResult.error}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Encrypt passwords
@@ -126,13 +151,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email provider not found" }, { status: 404 });
     }
 
-    // Upsert mailbox (never store passwords in settings - use encrypted columns)
-    const { data: mailbox, error: upsertError } = await admin
+    // Try to find existing mailbox, then update or insert
+    const normalizedEmail = emailAddress.toLowerCase();
+    const { data: existing } = await admin
       .from("erp_email_accounts")
-      .upsert(
-        {
+      .select("id")
+      .eq("email_address", normalizedEmail)
+      .limit(1)
+      .single();
+
+    let mailbox;
+    let upsertError;
+
+    if (existing) {
+      // Update existing
+      const { data: updated, error: updateError } = await admin
+        .from("erp_email_accounts")
+        .update({
           provider_id: provider.id,
-          email_address: emailAddress.toLowerCase(),
           display_name: displayName || emailAddress,
           is_active: true,
           imap_password_encrypted: imapEncrypted,
@@ -143,11 +179,35 @@ export async function POST(request: NextRequest) {
           assigned_branch_id: assignedBranchId,
           last_connection_test: new Date(),
           last_connection_status: "success",
-        },
-        { onConflict: "email_address" }
-      )
-      .select("id, email_address")
-      .single();
+        })
+        .eq("id", existing.id)
+        .select("id, email_address")
+        .single();
+      mailbox = updated;
+      upsertError = updateError;
+    } else {
+      // Insert new
+      const { data: inserted, error: insertError } = await admin
+        .from("erp_email_accounts")
+        .insert({
+          provider_id: provider.id,
+          email_address: normalizedEmail,
+          display_name: displayName || emailAddress,
+          is_active: true,
+          imap_password_encrypted: imapEncrypted,
+          smtp_password_encrypted: smtpEncrypted,
+          storage_quota_mb: storageQuotaMb || 5000,
+          plan_type: planType || "free",
+          assigned_user_id: assignedUserId,
+          assigned_branch_id: assignedBranchId,
+          last_connection_test: new Date(),
+          last_connection_status: "success",
+        })
+        .select("id, email_address")
+        .single();
+      mailbox = inserted;
+      upsertError = insertError;
+    }
 
     if (upsertError) throw new Error(upsertError.message);
 
