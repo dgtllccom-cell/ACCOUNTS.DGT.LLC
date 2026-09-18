@@ -20,6 +20,11 @@ export interface ResolvedMailboxAccount {
   scope?: string;
 }
 
+/**
+ * Resolves a mailbox account by UUID or email slug (e.g. "dubai" → "dubai@dgt.llc")
+ * Priority for host/port: mailbox-level overrides > provider-level defaults > hardcoded Titan
+ * Priority for credentials: encrypted DB columns > env vars (MAILBOX_XXX_PASSWORD)
+ */
 export async function resolveMailboxAccount(accountId: string): Promise<ResolvedMailboxAccount | null> {
   const admin = createSupabaseAdminClient() as any;
   let account: any = null;
@@ -29,19 +34,19 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
   if (isUuid) {
     const { data } = await admin
       .from("erp_email_accounts")
-      .select("*, erp_email_providers(host, port, imap_host, imap_port)")
+      .select("*, erp_email_providers(smtp_host, smtp_port, imap_host, imap_port)")
       .eq("id", accountId)
       .is("deleted_at", null)
       .maybeSingle();
     account = data;
   }
 
-  // 2. Try resolving by email or slug (e.g. "chaman" -> "chaman@dgt.llc")
+  // 2. Try resolving by email or slug (e.g. "chaman" → "chaman@dgt.llc")
   if (!account) {
     const targetEmail = accountId.includes("@") ? accountId.toLowerCase() : `${accountId.toLowerCase()}@dgt.llc`;
     const { data } = await admin
       .from("erp_email_accounts")
-      .select("*, erp_email_providers(host, port, imap_host, imap_port)")
+      .select("*, erp_email_providers(smtp_host, smtp_port, imap_host, imap_port)")
       .ilike("email_address", targetEmail)
       .is("deleted_at", null)
       .maybeSingle();
@@ -52,16 +57,16 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     return null;
   }
 
-  // 3. Resolve credentials from encrypted columns (migration 20261117)
+  // 3. Resolve credentials from encrypted columns (primary source)
   const emailAddress = account.email_address || (accountId.includes("@") ? accountId.toLowerCase() : `${accountId.toLowerCase()}@dgt.llc`);
   const slug = emailAddress.split("@")[0].toUpperCase();
   const envKey = `MAILBOX_${slug}_PASSWORD`;
-  const envPass = process.env[envKey] || (slug === "DGTLLC" ? process.env.MAILBOX_DGTLLC_PASSWORD : null) || null;
+  const envPass = process.env[envKey] || null;
 
   let smtpPass: string | null = null;
   let imapPass: string | null = null;
 
-  // Read from encrypted columns (primary source)
+  // Read from encrypted columns (primary source, added by migration 20261117)
   try {
     if (account.smtp_password_encrypted) smtpPass = decrypt(account.smtp_password_encrypted);
   } catch (e) {
@@ -74,18 +79,50 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     console.error("Failed to decrypt IMAP password:", e);
   }
 
-  // Fallback to environment variables or settings
+  // Also check settings.smtpPass (legacy: written by old email accounts API)
+  if (!smtpPass && account.settings?.smtpPass) {
+    try {
+      smtpPass = decrypt(account.settings.smtpPass);
+    } catch {
+      smtpPass = account.settings.smtpPass; // might be plain text from old path
+    }
+  }
+
+  // Fallback to environment variables
   smtpPass = smtpPass || envPass;
   imapPass = imapPass || smtpPass || envPass;
 
   if (!imapPass && !smtpPass) {
+    // Account exists but credentials not yet configured — return partial with empty pass
+    // so callers can show "credentials not configured" rather than null
+    console.warn(`[resolveMailboxAccount] No credentials found for ${emailAddress}. Returning null.`);
     return null;
   }
 
-  const imapHost = account.erp_email_providers?.imap_host || "imap.titan.email";
-  const imapPort = account.erp_email_providers?.imap_port || 993;
-  const smtpHost = account.erp_email_providers?.host || "smtp.titan.email";
-  const smtpPort = account.erp_email_providers?.port || 587;
+  // 4. Resolve host/port: mailbox-level overrides → provider → hardcoded Titan defaults
+  const imapHost =
+    account.imap_host ||                              // per-mailbox override (migration 20260918)
+    account.erp_email_providers?.imap_host ||         // provider-level
+    "imap.titan.email";                               // Titan fallback
+
+  const imapPort =
+    account.imap_port ||
+    account.erp_email_providers?.imap_port ||
+    993;
+
+  const smtpHost =
+    account.smtp_host ||                              // per-mailbox override
+    account.erp_email_providers?.smtp_host ||         // provider-level
+    "smtp.titan.email";                               // Titan fallback
+
+  // Titan uses port 587 + STARTTLS (NOT 465/SSL) for SMTP
+  const smtpPort =
+    account.smtp_port ||
+    account.erp_email_providers?.smtp_port ||
+    587;
+
+  // STARTTLS: secure=false for port 587 (STARTTLS upgrades the connection internally)
+  const smtpSecure = smtpPort === 465;
 
   return {
     id: account.id,
@@ -93,12 +130,12 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     displayName: account.display_name || `${slug} Branch`,
     smtpHost,
     smtpPort,
-    smtpUser: account.email_address,
+    smtpUser: emailAddress,
     smtpPass: smtpPass || "",
-    smtpSecure: false,
+    smtpSecure,
     imapHost,
     imapPort,
-    imapUser: account.email_address,
+    imapUser: emailAddress,
     imapPass: imapPass || "",
     countryId: account.country_id,
     countryBranchId: account.country_branch_id,

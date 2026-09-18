@@ -8,9 +8,9 @@ import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 export const dynamic = "force-dynamic";
 
 const sendSchema = z.object({
-  to: z.string().email(),
-  cc: z.string().email().optional().or(z.literal("")),
-  bcc: z.string().email().optional().or(z.literal("")),
+  to: z.string().min(1), // allow comma-separated for multi-recipient
+  cc: z.string().optional().or(z.literal("")),
+  bcc: z.string().optional().or(z.literal("")),
   subject: z.string().min(1),
   body: z.string().optional(),
   text: z.string().optional(),
@@ -24,7 +24,8 @@ const sendSchema = z.object({
 
 /**
  * POST /api/erp/email/[accountId]/send
- * Send email via SMTP and append to Sent folder (sent sync)
+ * Send email via SMTP (Titan/port 587 STARTTLS) and append to Sent folder (sent sync)
+ * Supports reply via inReplyTo + references headers
  */
 export async function POST(
   request: NextRequest,
@@ -46,7 +47,7 @@ export async function POST(
     const account = await resolveMailboxAccount(accountId);
 
     if (!account) {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+      return NextResponse.json({ error: "Account not found or credentials not configured" }, { status: 404 });
     }
 
     const canAccess =
@@ -61,24 +62,28 @@ export async function POST(
 
     if (!account.smtpPass) {
       return NextResponse.json(
-        { error: "SMTP password not configured" },
+        { error: "SMTP password not configured. Please set credentials in Mailbox Management." },
         { status: 400 }
       );
     }
 
+    // SMTP transporter — Titan uses port 587 STARTTLS (secure: false)
     const transporter = nodemailer.createTransport({
       host: account.smtpHost,
       port: account.smtpPort,
-      secure: false,
-      auth: { user: account.smtpUser, pass: account.smtpPass }
+      secure: account.smtpSecure,   // false for 587 STARTTLS, true for 465 SSL
+      auth: { user: account.smtpUser, pass: account.smtpPass },
+      tls: {
+        rejectUnauthorized: false    // tolerate self-signed on some providers
+      }
     });
 
     const domain = account.emailAddress.split("@")[1] || "dgt.llc";
     const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${domain}>`;
     const emailBody = validation.data.body || validation.data.text || "";
 
-    const mailOptions: any = {
-      from: account.emailAddress,
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: `${account.displayName} <${account.emailAddress}>`,
       to: validation.data.to,
       cc: validation.data.cc || undefined,
       bcc: validation.data.bcc || undefined,
@@ -86,56 +91,75 @@ export async function POST(
       text: emailBody,
       html: validation.data.html || undefined,
       messageId,
-      headers: {}
+      headers: {} as Record<string, string>
     };
 
+    // Thread reply headers
     if (validation.data.inReplyTo) {
-      mailOptions.headers["In-Reply-To"] = validation.data.inReplyTo;
+      (mailOptions.headers as Record<string, string>)["In-Reply-To"] = validation.data.inReplyTo;
     }
-
     if (validation.data.references && validation.data.references.length > 0) {
-      mailOptions.headers["References"] = validation.data.references.join(" ");
+      (mailOptions.headers as Record<string, string>)["References"] = validation.data.references.join(" ");
     }
 
     await transporter.sendMail(mailOptions);
 
+    // ── Sent Sync: append to Sent folder via IMAP ──────────────
     if (account.imapPass) {
       const imapClient = new ImapFlow({
         host: account.imapHost,
         port: account.imapPort,
-        secure: true,
-        auth: { user: account.imapUser, pass: account.imapPass }
+        secure: true,   // IMAP always uses 993/SSL
+        auth: { user: account.imapUser, pass: account.imapPass },
+        logger: false,
+        tls: { rejectUnauthorized: false }
       });
 
       try {
         await imapClient.connect();
 
         const sentDate = new Date().toUTCString();
-        const sentRfc5322 = `From: ${account.emailAddress}
-To: ${validation.data.to}
-${validation.data.cc ? `Cc: ${validation.data.cc}` : ""}
-Subject: ${validation.data.subject}
-Date: ${sentDate}
-Message-ID: ${messageId}
-${validation.data.inReplyTo ? `In-Reply-To: ${validation.data.inReplyTo}` : ""}
-${validation.data.references ? `References: ${validation.data.references.join(" ")}` : ""}
-Content-Type: text/plain; charset=utf-8
+        const sentRfc5322 = [
+          `From: ${account.displayName} <${account.emailAddress}>`,
+          `To: ${validation.data.to}`,
+          validation.data.cc ? `Cc: ${validation.data.cc}` : "",
+          `Subject: ${validation.data.subject}`,
+          `Date: ${sentDate}`,
+          `Message-ID: ${messageId}`,
+          validation.data.inReplyTo ? `In-Reply-To: ${validation.data.inReplyTo}` : "",
+          validation.data.references?.length ? `References: ${validation.data.references.join(" ")}` : "",
+          "Content-Type: text/plain; charset=utf-8",
+          "",
+          emailBody
+        ].filter(line => line !== "").join("\r\n");
 
-${emailBody}`;
+        // Try Titan "Sent" folder first, then common variants
+        const sentFolderCandidates = ["Sent", "Sent Items", "INBOX.Sent", "[Gmail]/Sent Mail"];
+        let appended = false;
+        for (const folder of sentFolderCandidates) {
+          try {
+            await imapClient.append(folder, sentRfc5322, ["\\Seen"]);
+            appended = true;
+            break;
+          } catch {
+            // try next folder
+          }
+        }
+        if (!appended) {
+          console.warn("[send-route] Failed to append to any Sent folder for:", account.emailAddress);
+        }
 
-        // Append to Sent folder (Titan uses "Sent" not "[Gmail]/Sent Mail")
-        await imapClient.append("Sent", sentRfc5322, ["\\Seen"]).catch(() =>
-          imapClient.append("[Gmail]/Sent Mail", sentRfc5322, ["\\Seen"])
-        );
         await imapClient.logout();
       } catch (imapErr) {
+        // Non-fatal: email was sent, just couldn't sync to Sent folder
         console.error("Failed to append to sent folder:", imapErr);
       }
     }
 
     return NextResponse.json({
       success: true,
-      messageId
+      messageId,
+      sentFrom: account.emailAddress
     });
 
   } catch (error) {

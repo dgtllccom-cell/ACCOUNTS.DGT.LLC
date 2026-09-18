@@ -60,11 +60,17 @@ export function DgtMailManagementView() {
     emailAddress: '',
     displayName: '',
     provider: 'titan',
+    imapHost: 'imap.titan.email',
+    imapPort: 993,
     imapPassword: '',
+    smtpHost: 'smtp.titan.email',
+    smtpPort: 587,   // Titan uses 587 STARTTLS
     smtpPassword: '',
     countryId: '',
     branchId: '',
     cityBranchId: '',
+    storageQuotaMb: 1024,
+    planType: 'business',
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -107,7 +113,7 @@ export function DgtMailManagementView() {
       imapPort: 993,
       imapPassword: '',
       smtpHost: 'smtp.titan.email',
-      smtpPort: 465,
+      smtpPort: 587,
       smtpPassword: '',
       countryId: '',
       branchId: '',
@@ -132,7 +138,7 @@ export function DgtMailManagementView() {
       imapPort: 993,
       imapPassword: '',
       smtpHost: 'smtp.titan.email',
-      smtpPort: 465,
+      smtpPort: 587,
       smtpPassword: '',
       countryId: '',
       branchId: '',
@@ -183,13 +189,52 @@ export function DgtMailManagementView() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save mailbox');
 
-      setTestResult(data.data?.connectionStatus || '✅ Connection test successful (IMAP/SMTP OK)');
+      setTestResult(`✅ Mailbox ${formData.emailAddress} saved! IMAP/SMTP connection verified.`);
       handleCloseForm();
       await fetchMailboxes();
     } catch (err: any) {
       setError(err.message);
     } finally {
       setTestingConnection(false);
+    }
+  }
+
+  async function handleToggleSuspend(mailbox: Mailbox) {
+    setOpenMenuId(null);
+    try {
+      const res = await fetch(`/api/erp/mail-management/mailboxes?id=${mailbox.id}&action=toggle_suspend`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !mailbox.is_active }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error || 'Failed to update mailbox status');
+      } else {
+        await fetchMailboxes();
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function handleDeleteMailbox(mailbox: Mailbox) {
+    setOpenMenuId(null);
+    if (!confirm(`Permanently delete mailbox ${mailbox.email_address}? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/erp/mail-management/mailboxes?id=${mailbox.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error || 'Failed to delete mailbox');
+      } else {
+        await fetchMailboxes();
+      }
+    } catch (err: any) {
+      setError(err.message);
     }
   }
 

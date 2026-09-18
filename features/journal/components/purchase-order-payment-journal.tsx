@@ -2243,7 +2243,6 @@ function DashboardSummaryHeader({
 
       const key = `${bCode}::${cCode}::${fCur}`;
       if (!map[key]) {
-  const currentLanguage = useActiveLanguage() as LanguageCode;
         map[key] = {
           branchCode: bCode,
           countryCode: cCode,

@@ -95,13 +95,13 @@ export async function POST(request: NextRequest) {
     let imapHost = customImapHost || "imap.titan.email";
     let imapPort = customImapPort || 993;
     let smtpHost = customSmtpHost || "smtp.titan.email";
-    let smtpPort = customSmtpPort || 465;
+    let smtpPort = customSmtpPort || 587;  // Titan STARTTLS
 
     if (providerName === "titan") {
       imapHost = "imap.titan.email";
       imapPort = 993;
       smtpHost = "smtp.titan.email";
-      smtpPort = 465;
+      smtpPort = 587;  // 587 STARTTLS (not 465 SSL)
     } else if (providerName === "custom") {
       if (!customImapHost || !customSmtpHost) {
         return NextResponse.json(
@@ -239,6 +239,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * Test IMAP and SMTP connection with configurable servers
+ * Titan: IMAP=993/SSL, SMTP=587/STARTTLS
  */
 async function testConnection(
   imapHost: string,
@@ -251,23 +252,27 @@ async function testConnection(
   smtpPass: string
 ): Promise<{ success: boolean; error?: string; imap?: boolean; smtp?: boolean }> {
   try {
-    // Test IMAP
+    // Test IMAP (always SSL on 993)
     const imap = new ImapFlow({
       host: imapHost,
       port: imapPort,
       secure: true,
       auth: { user: imapUser, pass: imapPass },
+      logger: false,
+      tls: { rejectUnauthorized: false }
     });
 
     await imap.connect();
     await imap.logout();
 
-    // Test SMTP
+    // Test SMTP — STARTTLS for 587, SSL for 465
+    const smtpSecure = smtpPort === 465;
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      secure: true,
+      secure: smtpSecure,
       auth: { user: smtpUser, pass: smtpPass },
+      tls: { rejectUnauthorized: false }
     });
 
     await transporter.verify();

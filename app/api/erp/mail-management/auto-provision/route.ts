@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireErpSession } from "@/lib/auth/session";
+import { getErpSessionForApi } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { encrypt } from "@/lib/crypto";
 import { ImapFlow } from "imapflow";
@@ -14,8 +14,8 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession();
-    if (!session.isSuperAdmin) {
+    const session = await getErpSessionForApi();
+    if (!session || !session.isSuperAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -25,14 +25,15 @@ export async function POST(request: NextRequest) {
       displayName,
       imapPassword,
       smtpPassword,
-      imapHost = "mail.dgt.llc",
+      imapHost = "imap.titan.email",
       imapPort = 993,
-      smtpHost = "mail.dgt.llc",
-      smtpPort = 465,
+      smtpHost = "smtp.titan.email",
+      smtpPort = 587,        // Titan uses 587 STARTTLS
       branchId,
       userId,
       storageQuotaMb = 5000,
       planType = "free",
+      skipConnectionTest = false,
     } = body;
 
     if (!emailAddress || !imapPassword || !smtpPassword) {
@@ -42,41 +43,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Test IMAP connection
-    let imapStatus = "failed";
+    // Test IMAP connection (993/SSL)
+    let imapStatus = "skipped";
     let imapError: string | null = null;
-    try {
-      const imap = new ImapFlow({
-        host: imapHost,
-        port: imapPort,
-        secure: true,
-        auth: { user: emailAddress, pass: imapPassword },
-        logger: false,
-      });
+    if (!skipConnectionTest) {
+      try {
+        const imap = new ImapFlow({
+          host: imapHost,
+          port: imapPort,
+          secure: true,
+          auth: { user: emailAddress, pass: imapPassword },
+          logger: false,
+          tls: { rejectUnauthorized: false }
+        });
 
-      await imap.connect();
-      imapStatus = "success";
-      await imap.logout();
-    } catch (err: any) {
-      imapError = err.message || "IMAP connection failed";
+        await imap.connect();
+        imapStatus = "success";
+        await imap.logout();
+      } catch (err: any) {
+        imapError = err.message || "IMAP connection failed";
+        imapStatus = "failed";
+      }
     }
 
-    // Test SMTP connection
-    let smtpStatus = "failed";
+    // Test SMTP connection (587/STARTTLS or 465/SSL)
+    let smtpStatus = "skipped";
     let smtpError: string | null = null;
-    try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: true,
-        auth: { user: emailAddress, pass: smtpPassword },
-        logger: false,
-      });
+    if (!skipConnectionTest) {
+      try {
+        const smtpSecure = smtpPort === 465;
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpSecure,
+          auth: { user: emailAddress, pass: smtpPassword || imapPassword },
+          logger: false,
+          tls: { rejectUnauthorized: false }
+        });
 
-      await transporter.verify();
-      smtpStatus = "success";
-    } catch (err: any) {
-      smtpError = err.message || "SMTP connection failed";
+        await transporter.verify();
+        smtpStatus = "success";
+      } catch (err: any) {
+        smtpError = err.message || "SMTP connection failed";
+        smtpStatus = "failed";
+      }
     }
 
     // Save mailbox to database

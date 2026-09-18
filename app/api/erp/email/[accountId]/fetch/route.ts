@@ -47,7 +47,7 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Connect to IMAP
+    // Connect to IMAP (Titan: 993/SSL)
     const client = new ImapFlow({
       host: account.imapHost,
       port: account.imapPort,
@@ -55,33 +55,39 @@ export async function GET(
       auth: {
         user: account.imapUser,
         pass: account.imapPass
-      }
+      },
+      logger: false,
+      tls: { rejectUnauthorized: false }
     });
 
     await client.connect();
 
-    // Map folder names for Titan and standard IMAP
-    const folderMap: Record<string, string> = {
-      inbox: "INBOX",
-      sent: "Sent",
-      drafts: "Drafts",
-      trash: "Trash",
-      archived: "Archive",
-      archive: "Archive",
-      spam: "Spam",
-      starred: "INBOX"
+    // Map folder names — try Titan-specific names first
+    const folderMap: Record<string, string[]> = {
+      inbox:    ["INBOX"],
+      sent:     ["Sent", "Sent Items", "[Gmail]/Sent Mail", "INBOX.Sent"],
+      drafts:   ["Drafts", "Draft", "INBOX.Drafts"],
+      trash:    ["Trash", "Deleted Items", "Deleted Messages", "INBOX.Trash"],
+      archive:  ["Archive", "Archived", "INBOX.Archive"],
+      archived: ["Archive", "Archived", "INBOX.Archive"],
+      spam:     ["Spam", "Junk", "Junk Email", "INBOX.Spam"],
+      starred:  ["INBOX"]
     };
 
-    const targetMailbox = folderMap[folder] || "INBOX";
+    const candidates = folderMap[folder] || ["INBOX"];
 
-    try {
-      await client.mailboxOpen(targetMailbox);
-    } catch {
+    let opened = false;
+    for (const candidate of candidates) {
       try {
-        await client.mailboxOpen(targetMailbox.toUpperCase());
+        await client.mailboxOpen(candidate);
+        opened = true;
+        break;
       } catch {
-        await client.mailboxOpen("INBOX");
+        // try next candidate
       }
+    }
+    if (!opened) {
+      await client.mailboxOpen("INBOX");
     }
 
     // Fetch recent messages
