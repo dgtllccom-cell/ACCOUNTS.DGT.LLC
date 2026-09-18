@@ -69,7 +69,13 @@ export async function POST(request: NextRequest) {
     const {
       emailAddress,
       displayName,
+      imapHost = "imap.titan.email",
+      imapPort = 993,
+      imapUsername,
       imapPassword,
+      smtpHost = "smtp.titan.email",
+      smtpPort = 465,
+      smtpUsername,
       smtpPassword,
       storageQuotaMb,
       planType,
@@ -77,9 +83,9 @@ export async function POST(request: NextRequest) {
       assignedBranchId,
     } = body;
 
-    if (!emailAddress || !imapPassword || !smtpPassword) {
+    if (!emailAddress || !imapPassword || !smtpPassword || !imapHost || !smtpHost) {
       return NextResponse.json(
-        { error: "emailAddress, imapPassword, smtpPassword required" },
+        { error: "emailAddress, imapHost, imapPassword, smtpHost, smtpPassword required" },
         { status: 400 }
       );
     }
@@ -87,7 +93,16 @@ export async function POST(request: NextRequest) {
     const admin = createSupabaseAdminClient() as any;
 
     // Test credentials before saving
-    const testResult = await testConnection(emailAddress, imapPassword, smtpPassword);
+    const testResult = await testConnection(
+      imapHost,
+      imapPort,
+      imapUsername || emailAddress,
+      imapPassword,
+      smtpHost,
+      smtpPort,
+      smtpUsername || emailAddress,
+      smtpPassword
+    );
     if (!testResult.success) {
       return NextResponse.json(
         { error: `Connection test failed: ${testResult.error}` },
@@ -163,20 +178,25 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Test IMAP and SMTP connection
+ * Test IMAP and SMTP connection with configurable servers
  */
 async function testConnection(
-  email: string,
+  imapHost: string,
+  imapPort: number,
+  imapUser: string,
   imapPass: string,
+  smtpHost: string,
+  smtpPort: number,
+  smtpUser: string,
   smtpPass: string
 ): Promise<{ success: boolean; error?: string; imap?: boolean; smtp?: boolean }> {
   try {
     // Test IMAP
     const imap = new ImapFlow({
-      host: "imap.titan.email",
-      port: 993,
+      host: imapHost,
+      port: imapPort,
       secure: true,
-      auth: { user: email, pass: imapPass },
+      auth: { user: imapUser, pass: imapPass },
     });
 
     await imap.connect();
@@ -184,10 +204,10 @@ async function testConnection(
 
     // Test SMTP
     const transporter = nodemailer.createTransport({
-      host: "smtp.titan.email",
-      port: 465,
+      host: smtpHost,
+      port: smtpPort,
       secure: true,
-      auth: { user: email, pass: smtpPass },
+      auth: { user: smtpUser, pass: smtpPass },
     });
 
     await transporter.verify();

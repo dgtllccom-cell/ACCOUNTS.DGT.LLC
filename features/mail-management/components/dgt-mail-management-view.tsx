@@ -59,11 +59,22 @@ export function DgtMailManagementView() {
   const [formData, setFormData] = useState({
     emailAddress: '',
     displayName: '',
+    provider: 'titan',
+    imapHost: 'imap.titan.email',
+    imapPort: 993,
     imapPassword: '',
+    smtpHost: 'smtp.titan.email',
+    smtpPort: 465,
     smtpPassword: '',
+    countryId: '',
+    branchId: '',
+    cityBranchId: '',
     storageQuotaMb: 5000,
     planType: 'free',
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
@@ -92,11 +103,21 @@ export function DgtMailManagementView() {
 
   function handleEditMailbox(mailbox: Mailbox) {
     setEditingId(mailbox.id);
+    setFormErrors({});
+    setShowAdvanced(false);
     setFormData({
       emailAddress: mailbox.email_address,
       displayName: mailbox.display_name,
+      provider: 'titan',
+      imapHost: 'imap.titan.email',
+      imapPort: 993,
       imapPassword: '',
+      smtpHost: 'smtp.titan.email',
+      smtpPort: 465,
       smtpPassword: '',
+      countryId: '',
+      branchId: '',
+      cityBranchId: '',
       storageQuotaMb: mailbox.storage_quota_mb,
       planType: mailbox.plan_type,
     });
@@ -107,11 +128,21 @@ export function DgtMailManagementView() {
   function handleCloseForm() {
     setShowForm(false);
     setEditingId(null);
+    setFormErrors({});
+    setShowAdvanced(false);
     setFormData({
       emailAddress: '',
       displayName: '',
+      provider: 'titan',
+      imapHost: 'imap.titan.email',
+      imapPort: 993,
       imapPassword: '',
+      smtpHost: 'smtp.titan.email',
+      smtpPort: 465,
       smtpPassword: '',
+      countryId: '',
+      branchId: '',
+      cityBranchId: '',
       storageQuotaMb: 5000,
       planType: 'free',
     });
@@ -119,21 +150,46 @@ export function DgtMailManagementView() {
 
   async function handleSaveMailbox(e: React.FormEvent) {
     e.preventDefault();
+
+    // Clear previous errors
+    const newErrors: Record<string, string> = {};
+
+    // Validate only Email and Password are required
+    if (!formData.emailAddress) {
+      newErrors.emailAddress = 'Email address is required';
+    }
+    if (!formData.imapPassword) {
+      newErrors.imapPassword = 'Password is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      return;
+    }
+
+    setFormErrors({});
     setTestingConnection(true);
     setError(null);
 
     try {
+      // Auto-generate displayName from email if not provided
+      const payload = {
+        ...formData,
+        displayName: formData.displayName || formData.emailAddress.split('@')[0],
+        smtpPassword: formData.imapPassword, // Use same password for SMTP
+      };
+
       const res = await fetch('/api/erp/mail-management/mailboxes', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save mailbox');
 
-      setTestResult(data.data?.connectionStatus || 'Connection test successful (IMAP/SMTP)');
+      setTestResult(data.data?.connectionStatus || '✅ Connection test successful (IMAP/SMTP OK)');
       handleCloseForm();
       await fetchMailboxes();
     } catch (err: any) {
@@ -235,106 +291,214 @@ export function DgtMailManagementView() {
           </div>
 
           <form onSubmit={handleSaveMailbox} className="space-y-5">
-            {/* General Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {s.t('email_address', 'Email Address')}
-                </label>
-                <input
-                  type="email"
-                  required
-                  disabled={!!editingId}
-                  value={formData.emailAddress}
-                  onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
-                  placeholder="user@dgt.llc"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono disabled:opacity-60 disabled:bg-slate-100 dark:disabled:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-600/30"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {s.t('display_name', 'Display Name')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.displayName}
-                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  placeholder={s.t('display_name_ph', 'User Full Name')}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-600/30"
-                />
+            {/* Scope Selection */}
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-4 space-y-3">
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                📍 Scope Assignment
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Country</label>
+                  <select
+                    value={formData.countryId}
+                    onChange={(e) => setFormData({ ...formData, countryId: e.target.value, branchId: '', cityBranchId: '' })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30 cursor-pointer"
+                  >
+                    <option value="">Select Country...</option>
+                    <option value="ae">United Arab Emirates</option>
+                    <option value="pk">Pakistan</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Branch</label>
+                  <select
+                    disabled={!formData.countryId}
+                    value={formData.branchId}
+                    onChange={(e) => setFormData({ ...formData, branchId: e.target.value, cityBranchId: '' })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30 cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="">Select Branch...</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">City Branch</label>
+                  <select
+                    disabled={!formData.branchId}
+                    value={formData.cityBranchId}
+                    onChange={(e) => setFormData({ ...formData, cityBranchId: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30 cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="">Select City Branch...</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* MANDATORY RED HIGHLIGHTED CREDENTIALS SECTION */}
-            <div className="rounded-2xl border-2 border-red-500 bg-red-100/60 dark:bg-red-950/40 p-5 shadow-xs space-y-4">
+            {/* Email & Password - Simple & Bold */}
+            <div className="rounded-2xl border-2 border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
-                  <Lock className="w-4 h-4 text-red-600" />
-                  <span className="text-xs font-black uppercase tracking-wider">
-                    MAILBOX CONNECTION CREDENTIALS
+                <div className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-black text-blue-900 dark:text-blue-200 uppercase tracking-wide">
+                    Email Credentials
                   </span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white shadow-xs">
-                  CRITICAL AUTH
-                </span>
               </div>
 
-              <p className="text-[11px] text-red-700 dark:text-red-300 leading-relaxed">
-                Enter or update the IMAP & SMTP daemon secret passwords. The system tests live connection immediately on save.
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                Enter your mailbox email and password. All server settings are automatic.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* IMAP Password */}
                 <div>
-                  <label className="block text-xs font-bold text-red-950 dark:text-red-100 mb-1.5">
-                    IMAP Password
+                  <label className="block text-xs font-bold text-blue-950 dark:text-blue-100 mb-1.5">
+                    Email Address <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    disabled={!!editingId}
+                    value={formData.emailAddress}
+                    onChange={(e) => {
+                      setFormData({ ...formData, emailAddress: e.target.value });
+                      if (formErrors.emailAddress) {
+                        const newErrors = { ...formErrors };
+                        delete newErrors.emailAddress;
+                        setFormErrors(newErrors);
+                      }
+                    }}
+                    placeholder="user@dgt.llc"
+                    className={`w-full px-3.5 py-2.5 rounded-lg bg-white dark:bg-slate-900 border text-xs font-mono disabled:opacity-60 outline-none focus:ring-2 ${
+                      formErrors.emailAddress
+                        ? 'border-red-400 focus:ring-red-600'
+                        : 'border-blue-300 dark:border-blue-700 focus:ring-blue-600'
+                    }`}
+                  />
+                  {formErrors.emailAddress && (
+                    <p className="text-[10px] text-red-600 mt-1">✗ {formErrors.emailAddress}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-blue-950 dark:text-blue-100 mb-1.5">
+                    Password <span className="text-red-600">*</span>
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword['imap'] ? 'text' : 'password'}
-                      required
                       value={formData.imapPassword}
-                      onChange={(e) => setFormData({ ...formData, imapPassword: e.target.value })}
-                      placeholder="Enter IMAP secret..."
-                      className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-red-400 text-xs font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-red-600"
+                      onChange={(e) => {
+                        setFormData({ ...formData, imapPassword: e.target.value });
+                        if (formErrors.imapPassword) {
+                          const newErrors = { ...formErrors };
+                          delete newErrors.imapPassword;
+                          setFormErrors(newErrors);
+                        }
+                      }}
+                      placeholder="Enter password..."
+                      className={`w-full pl-3.5 pr-10 py-2.5 rounded-lg bg-white dark:bg-slate-900 border text-xs font-mono outline-none focus:ring-2 ${
+                        formErrors.imapPassword
+                          ? 'border-red-400 focus:ring-red-600'
+                          : 'border-blue-300 dark:border-blue-700 focus:ring-blue-600'
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword({ ...showPassword, imap: !showPassword['imap'] })}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
-                      {showPassword['imap'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showPassword['imap'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                </div>
-
-                {/* SMTP Password */}
-                <div>
-                  <label className="block text-xs font-bold text-red-950 dark:text-red-100 mb-1.5">
-                    SMTP Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword['smtp'] ? 'text' : 'password'}
-                      required
-                      value={formData.smtpPassword}
-                      onChange={(e) => setFormData({ ...formData, smtpPassword: e.target.value })}
-                      placeholder="Enter SMTP secret..."
-                      className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-red-400 text-xs font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-red-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword({ ...showPassword, smtp: !showPassword['smtp'] })}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                    >
-                      {showPassword['smtp'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
+                  {formErrors.imapPassword && (
+                    <p className="text-[10px] text-red-600 mt-1">✗ {formErrors.imapPassword}</p>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* Provider Selection */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                Email Provider
+              </label>
+              <select
+                value={formData.provider}
+                onChange={(e) => {
+                  const provider = e.target.value as 'titan' | 'custom';
+                  if (provider === 'titan') {
+                    setFormData({
+                      ...formData,
+                      provider,
+                      imapHost: 'imap.titan.email',
+                      imapPort: 993,
+                      smtpHost: 'smtp.titan.email',
+                      smtpPort: 465,
+                    });
+                  }
+                  setShowAdvanced(provider === 'custom');
+                }}
+                className="w-full px-3.5 py-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30 cursor-pointer"
+              >
+                <option value="titan">Titan / Hostinger (Auto-configured)</option>
+                <option value="custom">Custom Mail Server</option>
+              </select>
+            </div>
+
+            {/* Advanced Settings - Hidden unless Custom */}
+            {formData.provider === 'custom' && (
+              <div className="rounded-xl border border-slate-300 dark:border-slate-700 p-4 space-y-4 bg-slate-50/50 dark:bg-slate-800/30">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                >
+                  {showAdvanced ? '▼' : '▶'} Advanced Settings
+                </button>
+
+                {showAdvanced && (
+                  <div className="space-y-4 border-t border-slate-300 dark:border-slate-700 pt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">IMAP Host</label>
+                        <input
+                          type="text"
+                          value={formData.imapHost}
+                          onChange={(e) => setFormData({ ...formData, imapHost: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">IMAP Port</label>
+                        <input
+                          type="number"
+                          value={formData.imapPort}
+                          onChange={(e) => setFormData({ ...formData, imapPort: parseInt(e.target.value) || 993 })}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">SMTP Host</label>
+                        <input
+                          type="text"
+                          value={formData.smtpHost}
+                          onChange={(e) => setFormData({ ...formData, smtpHost: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">SMTP Port</label>
+                        <input
+                          type="number"
+                          value={formData.smtpPort}
+                          onChange={(e) => setFormData({ ...formData, smtpPort: parseInt(e.target.value) || 465 })}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-blue-600/30"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Storage Quota & Plan */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -369,26 +533,30 @@ export function DgtMailManagementView() {
             </div>
 
             {/* Submit & Cancel Buttons */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="submit"
-                disabled={testingConnection}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                disabled={testingConnection || !formData.emailAddress || !formData.imapPassword}
+                className={`px-5 py-2.5 text-white rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 cursor-pointer ${
+                  testingConnection || !formData.emailAddress || !formData.imapPassword
+                    ? 'bg-slate-400 dark:bg-slate-600 opacity-50 cursor-not-allowed'
+                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                }`}
               >
                 <Zap className="h-3.5 w-3.5" />
                 <span>
                   {testingConnection
                     ? 'Testing Connection...'
-                    : 'Update & Test Connection'}
+                    : '✓ Update & Test Connection'}
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={handleCloseForm}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                {s.t('cancel', 'Cancel')}
+                Cancel
               </button>
             </div>
           </form>
@@ -472,15 +640,35 @@ export function DgtMailManagementView() {
                         UAE / Dubai HQ
                       </td>
 
-                      {/* IMAP / SMTP Status */}
+                      {/* IMAP / SMTP Status - REAL FROM DATABASE */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
-                            IMAP: OK
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
-                            SMTP: OK
-                          </span>
+                          {!mb.last_connection_status ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md">
+                              {s.t("mail_imap_status_untested", "IMAP: Not Tested")}
+                            </span>
+                          ) : mb.last_connection_status === 'success' ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                              {s.t("mail_imap_status_ok", "IMAP: OK")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md">
+                              {s.t("mail_imap_status_failed", "IMAP: Failed")}
+                            </span>
+                          )}
+                          {!mb.last_connection_status ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md">
+                              {s.t("mail_smtp_status_untested", "SMTP: Not Tested")}
+                            </span>
+                          ) : mb.last_connection_status === 'success' ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                              {s.t("mail_smtp_status_ok", "SMTP: OK")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md">
+                              {s.t("mail_smtp_status_failed", "SMTP: Failed")}
+                            </span>
+                          )}
                         </div>
                       </td>
 
