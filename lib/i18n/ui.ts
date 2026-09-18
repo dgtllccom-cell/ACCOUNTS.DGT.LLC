@@ -23111,6 +23111,12 @@ const en: Dict = {
 
 
   "purchase.booking_register_title": "Purchase Booking Register",
+  "purchase.proceed_to_payment_records": "Proceed to Payment Records →",
+  "purchase.lbl_transfer_date": "Transfer Date",
+  "purchase.lbl_roznamcha_serial": "Roznamcha Serial (Business)",
+  "purchase.lbl_paydid_serial": "Pay-Did / Credit Serial",
+  "purchase.lbl_ledger_status": "Ledgers Posting",
+  "purchase.lbl_ledger_ok": "OK / Posted",
   "setmenu.system_settings": "System Settings",
 
 
@@ -41651,6 +41657,12 @@ const ur: Dict = {
 
 
   "purchase.booking_register_title": "پرچیز بکنگ رجسٹر",
+  "purchase.proceed_to_payment_records": "ادائیگی کی ریکارڈز پر جائیں →",
+  "purchase.lbl_transfer_date": "ٹرانسفر کی تاریخ",
+  "purchase.lbl_roznamcha_serial": "رزنامچہ سیریل (کاروباری)",
+  "purchase.lbl_paydid_serial": "پے-ڈڈ / کریڈٹ سیریل",
+  "purchase.lbl_ledger_status": "لیجرز پوسٹنگ",
+  "purchase.lbl_ledger_ok": "ٹھیک ہے / پوسٹ شدہ",
   "setmenu.system_settings": "سسٹم کی ترتیبات",
 
 
@@ -46063,6 +46075,13 @@ const ur: Dict = {
   "mail_management.create_email": "DGT ای میل اکاؤنٹ بنائیں",
   "mail_management.show_passwords": "پاس ورڈ دکھائیں",
   "mail_management.email_will_be_tested": "ای میل IMAP اور SMTP کے لیے محفوظ ہونے سے پہلے ٹیسٹ کی جائے گی",
+  "email.credentials": "ای میل کی معلومات",
+  "email.server_auto": "اپنا میل باکس ای میل اور پاس ورڈ درج کریں۔ تمام سرور کی ترتیبات خودکار ہیں۔",
+  "email.password_label": "پاس ورڈ",
+  "email.password_ph": "پاس ورڈ درج کریں...",
+  "email.provider": "ای میل فراہم کنندہ",
+  "email.titan_auto": "Titan / Hostinger (خود کار طریقے سے ترتیب شدہ)",
+  "email.custom_server": "اپنا میل سرور",
 };
 
 const ar: Dict = {
@@ -60377,6 +60396,12 @@ const ar: Dict = {
 
 
   "purchase.booking_register_title": "سجل حجز الشراء",
+  "purchase.proceed_to_payment_records": "الذهاب إلى سجلات الدفع →",
+  "purchase.lbl_transfer_date": "تاريخ التحويل",
+  "purchase.lbl_roznamcha_serial": "سلسلة روزنامچه (تجاري)",
+  "purchase.lbl_paydid_serial": "سلسلة الدفع / الائتمان",
+  "purchase.lbl_ledger_status": "نشر الدفاتر",
+  "purchase.lbl_ledger_ok": "موافق / منشور",
   "setmenu.system_settings": "إعدادات النظام",
 
 
@@ -64840,6 +64865,13 @@ const ar: Dict = {
   "mail_management.create_email": "إنشاء حساب بريد إلكتروني DGT",
   "mail_management.show_passwords": "إظهار كلمات المرور",
   "mail_management.email_will_be_tested": "سيتم اختبار البريد الإلكتروني لـ IMAP و SMTP قبل الحفظ",
+  "email.credentials": "بيانات اعتماد البريد الإلكتروني",
+  "email.server_auto": "أدخل بريدك الإلكتروني وكلمة المرور. جميع إعدادات الخادم تلقائية.",
+  "email.password_label": "كلمة المرور",
+  "email.password_ph": "أدخل كلمة المرور...",
+  "email.provider": "مزود البريد الإلكتروني",
+  "email.titan_auto": "Titan / Hostinger (مُكوّن تلقائياً)",
+  "email.custom_server": "خادم بريد مخصص",
 };
 
 const fa: Dict = {
@@ -79153,6 +79185,12 @@ const fa: Dict = {
 
 
   "purchase.booking_register_title": "دفتر رزرو خرید",
+  "purchase.proceed_to_payment_records": "رفتن به سوابق پرداخت →",
+  "purchase.lbl_transfer_date": "تاریخ انتقال",
+  "purchase.lbl_roznamcha_serial": "شماره سریال روزنامچه (تجاری)",
+  "purchase.lbl_paydid_serial": "شماره سریال پرداخت / اعتبار",
+  "purchase.lbl_ledger_status": "ارسال دفاتر",
+  "purchase.lbl_ledger_ok": "تایید / ارسال شده",
   "setmenu.system_settings": "تنظیمات سیستم",
 
 
@@ -83616,6 +83654,13 @@ const fa: Dict = {
   "mail_management.create_email": "ایجاد حساب ایمیل DGT",
   "mail_management.show_passwords": "نمایش رمزهای عبور",
   "mail_management.email_will_be_tested": "ایمیل قبل از ذخیره برای IMAP و SMTP آزمایش می‌شود",
+  "email.credentials": "اعتبارات ایمیل",
+  "email.server_auto": "ایمیل صندوق و رمز عبور خود را وارد کنید. تمام تنظیمات سرور خودکار است.",
+  "email.password_label": "رمز عبور",
+  "email.password_ph": "رمز عبور را وارد کنید...",
+  "email.provider": "فراهم کننده ایمیل",
+  "email.titan_auto": "Titan / Hostinger (به طور خودکار پیکربندی شده)",
+  "email.custom_server": "سرور پست سفارشی",
 };
 
 const ps: Dict = {
@@ -97926,6 +97971,12 @@ const ps: Dict = {
 
 
   "purchase.booking_register_title": "د پیرود بکینګ راجستر",
+  "purchase.proceed_to_payment_records": "د ادا کولو ریکارډونو لپاره لاړ شئ →",
+  "purchase.lbl_transfer_date": "د منتقلولو تاریخ",
+  "purchase.lbl_roznamcha_serial": "روزنامچو سریل (تجارتي)",
+  "purchase.lbl_paydid_serial": "ادا کول / کریډیټ سریل",
+  "purchase.lbl_ledger_status": "د لیجرونو سپارلو",
+  "purchase.lbl_ledger_ok": "ٹھیک / سپاره شوي",
   "setmenu.system_settings": "د سیسټم تنظیمات",
 
 
@@ -102398,6 +102449,13 @@ const ps: Dict = {
   "mail_management.create_email": "د DGT ای میل اکاؤنٹ جوړول",
   "mail_management.show_passwords": "پاس ورډ ښودل",
   "mail_management.email_will_be_tested": "ای میل د ذخیره کولو مخکې د IMAP او SMTP لپاره ازمایل شي",
+  "email.credentials": "د ای میل اعتبارات",
+  "email.server_auto": "خپل میل بکس ای میل او پاس ورد داخل کړئ. ټول سرور ترتیبات خودکار دي.",
+  "email.password_label": "پاس ورد",
+  "email.password_ph": "پاس ورد داخل کړئ...",
+  "email.provider": "ای میل فراهم کونکی",
+  "email.titan_auto": "Titan / Hostinger (خودکاری ترتیب شوي)",
+  "email.custom_server": "دوه غوره میل سرور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

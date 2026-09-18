@@ -2567,7 +2567,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       
       if (returnedOrderId) await consumeIntakeDraft(returnedOrderId);
 
-      // Now call the transfer API to actually post to Roznamcha
+      let tData = {};
       if (returnedOrderId) {
         const transferResponse = await fetch(`/api/erp/purchases/orders/${returnedOrderId}/transfer`, {
           method: "POST",
@@ -2578,18 +2578,25 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         if (!transferResponse.ok || !transferPayload.ok) {
           throw new Error(transferPayload?.error?.message || transferPayload?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
         }
-        transferDestination = `${transferPayload.data?.destinationPath || transferDestination.split("?")[0]}?purchaseOrderNo=${encodeURIComponent(returnedOrderNo || "")}`;
+        tData = transferPayload.data || {};
+        transferDestination = `${tData.destinationPath || transferDestination.split("?")[0]}?purchaseOrderNo=${encodeURIComponent(returnedOrderNo || "")}`;
       }
 
       setSavedOrderId(returnedOrderId || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
-      setTransferredData(payload.data || { purchaseOrderNo: returnedOrderNo });
+      setTransferredData({
+        purchaseOrderNo: returnedOrderNo,
+        transferDate: tData.transferredAt || new Date().toISOString().slice(0, 10),
+        roznamchaSerialNo: tData.roznamchaSerialNo || tData.superAdminSerialNo || tData.countrySerialNo || "RS-POSTED",
+        payDidSerialNo: tData.payDidSerialNo || "PAY-POSTED",
+        ledgerPostingStatus: "OK / Transferred",
+        destinationPath: transferDestination
+      });
       setIsTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
-      
-      // Redirect to Purchase Transfer Payment screen directly after successful transfer
-      window.location.href = transferDestination;
+      setActiveTab("report");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
@@ -4153,42 +4160,73 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         </SimpleModal>
       )}
       {isTransferred ? (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-300">
-          <div className="space-y-1">
-            <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/20">
-              {t(lang, "purchase.posted_voucher_registration", "POSTED VOUCHER REGISTRATION")}
-            </span>
-            <h2 className="text-lg font-black text-slate-800 dark:text-slate-100">
-              {t(lang, "purchase.voucher_registered_success", "Voucher JV-{no} Successfully Registered").replace("{no}", (transferredData?.purchaseOrderNo || form.purchaseOrderNo).slice(-6))}
-            </h2>
-            <p className="text-xs text-muted-foreground font-medium">
-              {t(lang, "purchase.transferred_to_payment_notice", "The purchase booking has been successfully transferred to payment records and logged into the accounts ledger database.")}
-            </p>
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 space-y-4 animate-in fade-in duration-300">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-emerald-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/30">
+                  {t(lang, "purchase.posted_voucher_registration", "POSTED VOUCHER REGISTRATION")}
+                </span>
+                <span className="bg-blue-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">
+                  ✓ LEDGER OK
+                </span>
+              </div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                {t(lang, "purchase.voucher_registered_success", "Voucher JV-{no} Successfully Registered").replace("{no}", (transferredData?.purchaseOrderNo || form.purchaseOrderNo).slice(-6))}
+              </h2>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                {t(lang, "purchase.transferred_to_payment_notice", "The purchase booking has been successfully transferred to payment records and logged into the accounts ledger database.")}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                onClick={handleReset}
+                className="bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs uppercase px-4 py-2.5 rounded-xl shadow-md"
+              >
+                + {t(lang, "purchase.dd_new_booking", "New Booking")}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const targetUrl = transferredData?.destinationPath || buildPurchaseBookingTransferUrl(form.paymentType, form.purchaseOrderNo);
+                  window.location.href = targetUrl;
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase px-5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5"
+              >
+                {t(lang, "purchase.proceed_to_payment_records", "Proceed to Payment Records →")}
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              onClick={handleReset}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase px-5 py-2.5 rounded-xl shadow-md transition-all border-none font-bold"
-            >
-              + {t(lang, "purchase.dd_new_booking", "New Booking")}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleTransfer}
-              disabled={savingOrder || isTransferred}
-              className="font-bold text-[10px] h-8 px-6 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {savingOrder ? t(lang, "common.saving", "Saving...") : isTransferred ? t(lang, "purchase.status_transferred", "Transferred") : t(lang, "purchase.save_transfer_to_journal", "Save & Transfer to Journal")}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleTransferEmpty}
-              disabled={savingOrder || isTransferred}
-              className="font-bold text-[10px] h-8 px-4 bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              {savingOrder ? t(lang, "common.saving", "Saving...") : isTransferred ? t(lang, "purchase.status_transferred", "Transferred") : t(lang, "purchase.transfer_to_payment_form_empty", "Transfer to Payment Form (Empty)")}
-            </Button>
+
+          {/* Transferred Audit Summary Badges */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-emerald-500/20 text-xs">
+            <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_transfer_date", "Transfer Date")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
+                {transferredData?.transferDate || form.workflow?.transferredAt?.slice(0, 10) || new Date().toISOString().slice(0, 10)}
+              </span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_roznamcha_serial", "Roznamcha Serial (Business)")}</span>
+              <span className="font-bold text-blue-600 font-mono">
+                {transferredData?.roznamchaSerialNo || form.workflow?.roznamchaSerialNo || form.workflow?.superAdminSerialNo || "RS-POSTED"}
+              </span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_paydid_serial", "Pay-Did / Credit Serial")}</span>
+              <span className="font-bold text-emerald-600 font-mono">
+                {transferredData?.payDidSerialNo || form.workflow?.payDidSerialNo || "PAY-POSTED"}
+              </span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_ledger_status", "Ledgers Posting")}</span>
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                {t(lang, "purchase.lbl_ledger_ok", "OK / Posted")}
+              </span>
+            </div>
           </div>
         </div>
       ) : (

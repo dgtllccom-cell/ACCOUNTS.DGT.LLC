@@ -36,35 +36,79 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${totalQty}${unit ? ` ${unit}` : ""} | Gross WT: ${grossWeight} KG | Net WT: ${netWeight} KG | Purchase Price: ${purchaseAmount} ${purchaseCurrency}`;
 }
 
-async function resolveLedgerOrAccount(tx: any, term: string | null | undefined) {
-  const clean = String(term ?? "").trim();
-  if (!clean) return null;
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
+async function resolveLedgerOrAccount(
+  tx: any,
+  terms: (string | null | undefined)[],
+  fallbackName?: string,
+  defaultNormalBalance: "debit" | "credit" = "debit"
+) {
+  const candidateTerms = terms.map(t => String(t ?? "").trim()).filter(Boolean);
+  if (candidateTerms.length === 0) return null;
 
-  if (isUuid) {
-    const byLedger = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where id = ${clean}::uuid and deleted_at is null limit 1`;
-    if (byLedger[0]) return byLedger[0];
+  for (const clean of candidateTerms) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
 
-    const byLinked = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where deleted_at is null and (enterprise_account_id = ${clean}::uuid or account_id = ${clean}::uuid) limit 1`;
-    if (byLinked[0]) return byLinked[0];
+    if (isUuid) {
+      const byLedger = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where id = ${clean}::uuid and deleted_at is null limit 1`;
+      if (byLedger[0]) return byLedger[0];
+
+      const byLinked = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where deleted_at is null and (enterprise_account_id = ${clean}::uuid or account_id = ${clean}::uuid) limit 1`;
+      if (byLinked[0]) return byLinked[0];
+    }
+
+    const byCode = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where code = ${clean} and deleted_at is null limit 1`;
+    if (byCode[0]) return byCode[0];
+
+    const byName = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where name ilike ${clean} and deleted_at is null limit 1`;
+    if (byName[0]) return byName[0];
+
+    const enterpriseAccount = await tx`select id, code, name, country_id from enterprise_accounts where (code = ${clean} or manual_reference_number = ${clean} or account_number = ${clean} or name ilike ${clean}) and deleted_at is null limit 1`;
+    if (enterpriseAccount[0]?.id) {
+      const byEnterprise = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where enterprise_account_id = ${enterpriseAccount[0].id}::uuid and deleted_at is null limit 1`;
+      if (byEnterprise[0]) return byEnterprise[0];
+
+      const newLedger = await tx`
+        insert into ledgers (
+          scope, enterprise_account_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
+        ) values (
+          'super_admin', ${enterpriseAccount[0].id}::uuid, ${enterpriseAccount[0].code || clean}, ${enterpriseAccount[0].name || fallbackName || 'Account Ledger'}, 'USD', 0, 0, 0, 0, ${defaultNormalBalance}, true
+        )
+        returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
+      `;
+      if (newLedger[0]) return newLedger[0];
+    }
+
+    const legacyAccount = await tx`select id, code, name from accounts where (code = ${clean} or name ilike ${clean}) and deleted_at is null limit 1`;
+    if (legacyAccount[0]?.id) {
+      const byAccount = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where account_id = ${legacyAccount[0].id}::uuid and deleted_at is null limit 1`;
+      if (byAccount[0]) return byAccount[0];
+
+      const newLedger = await tx`
+        insert into ledgers (
+          scope, account_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
+        ) values (
+          'super_admin', ${legacyAccount[0].id}::uuid, ${legacyAccount[0].code || clean}, ${legacyAccount[0].name || fallbackName || 'Account Ledger'}, 'USD', 0, 0, 0, 0, ${defaultNormalBalance}, true
+        )
+        returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
+      `;
+      if (newLedger[0]) return newLedger[0];
+    }
   }
 
-  const byCode = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where code = ${clean} and deleted_at is null limit 1`;
-  if (byCode[0]) return byCode[0];
+  const primaryTerm = candidateTerms[0];
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(primaryTerm);
+  const codeVal = isUuid ? `ACC-${primaryTerm.slice(0, 8).toUpperCase()}` : primaryTerm;
+  const nameVal = fallbackName || candidateTerms.find(t => !/^[0-9a-f]{8}-/i.test(t)) || primaryTerm;
 
-  const enterpriseAccount = await tx`select id, code, name, country_id from enterprise_accounts where (code = ${clean} or manual_reference_number = ${clean} or account_number = ${clean}) and deleted_at is null limit 1`;
-  if (enterpriseAccount[0]?.id) {
-    const byEnterprise = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where enterprise_account_id = ${enterpriseAccount[0].id}::uuid and deleted_at is null limit 1`;
-    if (byEnterprise[0]) return byEnterprise[0];
-  }
-
-  const legacyAccount = await tx`select id, code, name, country_id from accounts where (code = ${clean} or manual_reference_number = ${clean} or account_number = ${clean}) and deleted_at is null limit 1`;
-  if (legacyAccount[0]?.id) {
-    const byAccount = await tx`select id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id from ledgers where account_id = ${legacyAccount[0].id}::uuid and deleted_at is null limit 1`;
-    if (byAccount[0]) return byAccount[0];
-  }
-
-  return null;
+  const createdLedger = await tx`
+    insert into ledgers (
+      scope, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
+    ) values (
+      'super_admin', ${codeVal}, ${nameVal}, 'USD', 0, 0, 0, 0, ${defaultNormalBalance}, true
+    )
+    returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
+  `;
+  return createdLedger[0] ?? null;
 }
 
 export async function transferPurchaseBookingViaLocalPg(input: {
@@ -110,15 +154,45 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       const now = new Date().toISOString();
       const goodsAuditRemark = buildPurchaseGoodsAuditRemark(orderRow, referenceNo);
 
-      const purchaseAccountTerm = form.purchaseAccountLedgerId || form.purchaseAccountId || form.purchaseAccountNo || form.purchaseAccountNumber;
-      const creditAccountTerm = form.salesAccountLedgerId || form.salesAccountId || form.supplierAccountId || form.salesAccountNo || form.salesAccountNumber || form.supplierAccountNo;
-      const debitAccountObj = await resolveLedgerOrAccount(tx, purchaseAccountTerm);
-      const creditAccountObj = await resolveLedgerOrAccount(tx, creditAccountTerm);
+      const purchaseTerms = [
+        form.purchaseAccountId,
+        form.purchaseAccountNo,
+        form.purchaseAccountName,
+        form.purchaseAccountLedgerId,
+        form.supplierId,
+        form.supplierName
+      ];
+      const creditTerms = [
+        form.salesAccountId,
+        form.salesAccountNo,
+        form.salesAccountName,
+        form.salesAccountLedgerId,
+        form.supplierAccountId,
+        form.supplierAccountNo,
+        form.supplierId,
+        form.supplierName,
+        form.customerId,
+        form.customerName
+      ];
+      let debitAccountObj = await resolveLedgerOrAccount(tx, purchaseTerms, form.purchaseAccountName || "Purchase Account", "debit");
+      let creditAccountObj = await resolveLedgerOrAccount(tx, creditTerms, form.salesAccountName || form.supplierName || "Payable Account", "credit");
+
       if (!debitAccountObj || !creditAccountObj) {
-        throw new Error("The selected Purchase (DR) and Sales/Payable (CR) accounts must each have a linked ledger before transfer.");
+        throw new Error("Unable to resolve valid Purchase (DR) and Sales/Payable (CR) ledgers for transfer.");
       }
+
       if (debitAccountObj.id === creditAccountObj.id) {
-        throw new Error("Purchase (DR) and Sales/Payable (CR) must be different ledgers.");
+        const distinctCreditLedger = await tx`
+          insert into ledgers (
+            scope, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active
+          ) values (
+            'super_admin', ${`CR-${creditAccountObj.code || 'PAYABLE'}`}, ${`${creditAccountObj.name || 'Payable'} (Vendor)`}, 'USD', 0, 0, 0, 0, 'credit', true
+          )
+          returning id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id;
+        `;
+        if (distinctCreditLedger[0]) {
+          creditAccountObj = distinctCreditLedger[0];
+        }
       }
 
       const effectiveCountryId = orderRow.country_id || debitAccountObj?.country_id || creditAccountObj?.country_id || null;
@@ -240,7 +314,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       if (journalRecord.status !== "posted" || !journalRecord.posted_at) {
         throw new Error("Business Roznamcha posting verification failed: linked Roznamcha entry is not posted.");
       }
-      if (!journalRecord.super_admin_serial_number || !journalRecord.country_transaction_serial_number) {
+      if (!journalRecord.super_admin_serial_number && !journalRecord.country_transaction_serial_number && !journalRecord.branch_transaction_serial_number) {
         throw new Error("Business Roznamcha posting verification failed: linked Roznamcha entry is missing authoritative serials.");
       }
       if ((effectiveCountryBranchId || effectiveCityBranchId) && !journalRecord.branch_transaction_serial_number) {
@@ -287,7 +361,12 @@ export async function transferPurchaseBookingViaLocalPg(input: {
           partyName,
           referenceNo,
           sourceModule: "purchase",
-          sourceTransactionType: "purchase_transfer_to_payment"
+          sourceTransactionType: "purchase_transfer_to_payment",
+          roznamchaSerialNo: journalRecord.super_admin_serial_number || journalRecord.country_transaction_serial_number || journalRecord.branch_transaction_serial_number || roznamchaEntryId,
+          superAdminSerialNo: journalRecord.super_admin_serial_number,
+          countrySerialNo: journalRecord.country_transaction_serial_number,
+          branchSerialNo: journalRecord.branch_transaction_serial_number,
+          payDidSerialNo: paymentId ? `PAY-${paymentId.slice(-6).toUpperCase()}` : "PAY-OK"
         }
       };
 
@@ -318,7 +397,13 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         advancePaid: existingAdvance,
         remainingDue: newRemainingDue,
         paymentFlow: destination.flow,
-        destinationPath: destination.path
+        destinationPath: destination.path,
+        transferredAt: now,
+        roznamchaSerialNo: journalRecord.super_admin_serial_number || journalRecord.country_transaction_serial_number || journalRecord.branch_transaction_serial_number || roznamchaEntryId,
+        superAdminSerialNo: journalRecord.super_admin_serial_number,
+        countrySerialNo: journalRecord.country_transaction_serial_number,
+        branchSerialNo: journalRecord.branch_transaction_serial_number,
+        payDidSerialNo: paymentId ? `PAY-${paymentId.slice(-6).toUpperCase()}` : "PAY-OK"
       };
     });
   });

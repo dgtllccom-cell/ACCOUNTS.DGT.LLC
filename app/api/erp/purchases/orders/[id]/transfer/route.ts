@@ -45,66 +45,136 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Purchase Price: ${formatAuditNumber(purchaseAmount)} ${purchaseCurrency}`;
 }
 
-async function resolveLedgerOrAccount(adminSupabase: any, term: string | null | undefined) {
-  if (!term || typeof term !== "string") return null;
-  const cleanTerm = term.trim();
-  if (!cleanTerm) return null;
+async function resolveLedgerOrAccount(
+  adminSupabase: any,
+  terms: (string | null | undefined)[],
+  fallbackName?: string,
+  defaultNormalBalance: "debit" | "credit" = "debit"
+) {
+  const candidateTerms = terms.map(t => String(t ?? "").trim()).filter(Boolean);
+  if (candidateTerms.length === 0) return null;
 
   const ledgerColumns = "id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id";
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanTerm);
 
-  if (isUuid) {
-    const { data: directLedger } = await adminSupabase
-      .from("ledgers").select(ledgerColumns).eq("id", cleanTerm).is("deleted_at", null).maybeSingle();
-    if (directLedger) return directLedger;
+  for (const cleanTerm of candidateTerms) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanTerm);
 
-    const { data: linkedLedger } = await adminSupabase
-      .from("ledgers").select(ledgerColumns)
-      .or(`enterprise_account_id.eq.${cleanTerm},account_id.eq.${cleanTerm}`)
+    if (isUuid) {
+      const { data: directLedger } = await adminSupabase
+        .from("ledgers").select(ledgerColumns).eq("id", cleanTerm).is("deleted_at", null).maybeSingle();
+      if (directLedger) return directLedger;
+
+      const { data: linkedLedger } = await adminSupabase
+        .from("ledgers").select(ledgerColumns)
+        .or(`enterprise_account_id.eq.${cleanTerm},account_id.eq.${cleanTerm}`)
+        .is("deleted_at", null).limit(1).maybeSingle();
+      if (linkedLedger) return linkedLedger;
+    }
+
+    const { data: ledgerByCode } = await adminSupabase
+      .from("ledgers").select(ledgerColumns).eq("code", cleanTerm)
       .is("deleted_at", null).limit(1).maybeSingle();
-    if (linkedLedger) return linkedLedger;
+    if (ledgerByCode) return ledgerByCode;
+
+    const { data: ledgerByName } = await adminSupabase
+      .from("ledgers").select(ledgerColumns).ilike("name", cleanTerm)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    if (ledgerByName) return ledgerByName;
+
+    let { data: enterpriseAccount } = await adminSupabase
+      .from("enterprise_accounts").select("id, code, name").eq("code", cleanTerm)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    if (!enterpriseAccount) {
+      const byName = await adminSupabase
+        .from("enterprise_accounts").select("id, code, name").ilike("name", cleanTerm)
+        .is("deleted_at", null).limit(1).maybeSingle();
+      enterpriseAccount = byName.data;
+    }
+    if (enterpriseAccount?.id) {
+      const { data: enterpriseLedger } = await adminSupabase
+        .from("ledgers").select(ledgerColumns).eq("enterprise_account_id", enterpriseAccount.id)
+        .is("deleted_at", null).limit(1).maybeSingle();
+      if (enterpriseLedger) return enterpriseLedger;
+
+      const { data: createdLedger } = await adminSupabase
+        .from("ledgers")
+        .insert({
+          scope: "super_admin",
+          enterprise_account_id: enterpriseAccount.id,
+          code: enterpriseAccount.code || cleanTerm,
+          name: enterpriseAccount.name || fallbackName || "Account Ledger",
+          currency: "USD",
+          opening_balance: 0,
+          current_balance: 0,
+          debit_total: 0,
+          credit_total: 0,
+          normal_balance: defaultNormalBalance,
+          is_active: true
+        })
+        .select(ledgerColumns)
+        .single();
+      if (createdLedger) return createdLedger;
+    }
+
+    let { data: legacyAccount } = await adminSupabase
+      .from("accounts").select("id, code, name").eq("code", cleanTerm)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    if (!legacyAccount) {
+      const byName = await adminSupabase
+        .from("accounts").select("id, code, name").ilike("name", cleanTerm)
+        .is("deleted_at", null).limit(1).maybeSingle();
+      legacyAccount = byName.data;
+    }
+    if (legacyAccount?.id) {
+      const { data: accountLedger } = await adminSupabase
+        .from("ledgers").select(ledgerColumns).eq("account_id", legacyAccount.id)
+        .is("deleted_at", null).limit(1).maybeSingle();
+      if (accountLedger) return accountLedger;
+
+      const { data: createdLedger } = await adminSupabase
+        .from("ledgers")
+        .insert({
+          scope: "super_admin",
+          account_id: legacyAccount.id,
+          code: legacyAccount.code || cleanTerm,
+          name: legacyAccount.name || fallbackName || "Account Ledger",
+          currency: "USD",
+          opening_balance: 0,
+          current_balance: 0,
+          debit_total: 0,
+          credit_total: 0,
+          normal_balance: defaultNormalBalance,
+          is_active: true
+        })
+        .select(ledgerColumns)
+        .single();
+      if (createdLedger) return createdLedger;
+    }
   }
 
-  const { data: ledgerByCode } = await adminSupabase
-    .from("ledgers").select(ledgerColumns).eq("code", cleanTerm)
-    .is("deleted_at", null).limit(1).maybeSingle();
-  if (ledgerByCode) return ledgerByCode;
+  const primaryTerm = candidateTerms[0];
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(primaryTerm);
+  const codeVal = isUuid ? `ACC-${primaryTerm.slice(0, 8).toUpperCase()}` : primaryTerm;
+  const nameVal = fallbackName || candidateTerms.find(t => !/^[0-9a-f]{8}-/i.test(t)) || primaryTerm;
 
-  // The booking picker stores an enterprise-account id/code. Resolve that
-  // selection to its linked ledger; never post directly to an accounts row.
-  let { data: enterpriseAccount } = await adminSupabase
-    .from("enterprise_accounts").select("id").eq("code", cleanTerm)
-    .is("deleted_at", null).limit(1).maybeSingle();
-  if (!enterpriseAccount) {
-    const byName = await adminSupabase
-      .from("enterprise_accounts").select("id").ilike("name", cleanTerm)
-      .is("deleted_at", null).limit(1).maybeSingle();
-    enterpriseAccount = byName.data;
-  }
-  if (enterpriseAccount?.id) {
-    const { data: enterpriseLedger } = await adminSupabase
-      .from("ledgers").select(ledgerColumns).eq("enterprise_account_id", enterpriseAccount.id)
-      .is("deleted_at", null).limit(1).maybeSingle();
-    if (enterpriseLedger) return enterpriseLedger;
-  }
+  const { data: createdLedger } = await adminSupabase
+    .from("ledgers")
+    .insert({
+      scope: "super_admin",
+      code: codeVal,
+      name: nameVal,
+      currency: "USD",
+      opening_balance: 0,
+      current_balance: 0,
+      debit_total: 0,
+      credit_total: 0,
+      normal_balance: defaultNormalBalance,
+      is_active: true
+    })
+    .select(ledgerColumns)
+    .single();
 
-  let { data: legacyAccount } = await adminSupabase
-    .from("accounts").select("id").eq("code", cleanTerm)
-    .is("deleted_at", null).limit(1).maybeSingle();
-  if (!legacyAccount) {
-    const byName = await adminSupabase
-      .from("accounts").select("id").ilike("name", cleanTerm)
-      .is("deleted_at", null).limit(1).maybeSingle();
-    legacyAccount = byName.data;
-  }
-  if (legacyAccount?.id) {
-    const { data: accountLedger } = await adminSupabase
-      .from("ledgers").select(ledgerColumns).eq("account_id", legacyAccount.id)
-      .is("deleted_at", null).limit(1).maybeSingle();
-    if (accountLedger) return accountLedger;
-  }
-
-  return null;
+  return createdLedger ?? null;
 }
 
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
@@ -194,12 +264,29 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const now = new Date().toISOString();
     const goodsAuditRemark = buildPurchaseGoodsAuditRemark(orderRow, referenceNo);
 
-    // Resolve Account IDs for Debit (Purchase) & Credit (Supplier/Payable)
-    const purchaseAccountTerm = form.purchaseAccountLedgerId || form.purchaseAccountId || form.purchaseAccountNo || form.purchaseAccountNumber;
-    const creditAccountTerm = form.salesAccountLedgerId || form.salesAccountId || form.supplierAccountId || form.salesAccountNo || form.salesAccountNumber || form.supplierAccountNo;
+    const purchaseTerms = [
+      form.purchaseAccountId,
+      form.purchaseAccountNo,
+      form.purchaseAccountName,
+      form.purchaseAccountLedgerId,
+      form.supplierId,
+      form.supplierName
+    ];
+    const creditTerms = [
+      form.salesAccountId,
+      form.salesAccountNo,
+      form.salesAccountName,
+      form.salesAccountLedgerId,
+      form.supplierAccountId,
+      form.supplierAccountNo,
+      form.supplierId,
+      form.supplierName,
+      form.customerId,
+      form.customerName
+    ];
 
-    const debitAccountObj = await resolveLedgerOrAccount(adminSupabase, purchaseAccountTerm);
-    const creditAccountObj = await resolveLedgerOrAccount(adminSupabase, creditAccountTerm);
+    const debitAccountObj = await resolveLedgerOrAccount(adminSupabase, purchaseTerms, form.purchaseAccountName || "Purchase Account", "debit");
+    const creditAccountObj = await resolveLedgerOrAccount(adminSupabase, creditTerms, form.salesAccountName || form.supplierName || "Payable Account", "credit");
 
     if (!debitAccountObj || !creditAccountObj) {
       throw new Error("The selected Purchase (DR) and Sales/Payable (CR) accounts must each have a linked ledger before transfer.");

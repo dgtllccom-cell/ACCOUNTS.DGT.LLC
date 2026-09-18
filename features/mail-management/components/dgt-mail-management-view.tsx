@@ -60,17 +60,11 @@ export function DgtMailManagementView() {
     emailAddress: '',
     displayName: '',
     provider: 'titan',
-    imapHost: 'imap.titan.email',
-    imapPort: 993,
     imapPassword: '',
-    smtpHost: 'smtp.titan.email',
-    smtpPort: 465,
     smtpPassword: '',
     countryId: '',
     branchId: '',
     cityBranchId: '',
-    storageQuotaMb: 5000,
-    planType: 'free',
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
