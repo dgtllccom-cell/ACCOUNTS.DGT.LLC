@@ -55,10 +55,8 @@ export async function POST(request: NextRequest) {
       };
 
       try {
-        // Check password env var
-        const pass = process.env[`MAILBOX_${mailbox.envSuffix}_PASSWORD`];
-        if (!pass) {
-          errors.push(`Missing MAILBOX_${mailbox.envSuffix}_PASSWORD`);
+        // DEPRECATED: Use database credentials only, not .env variables
+        errors.push(`Mailbox testing removed - use Email Accounts API with database credentials`);
           report[mailbox.email] = result;
           continue;
         }

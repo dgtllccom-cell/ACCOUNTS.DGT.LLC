@@ -57,16 +57,14 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     return null;
   }
 
-  // 3. Resolve credentials from encrypted columns (primary source)
+  // 3. Resolve credentials from encrypted database columns ONLY (no .env fallback)
   const emailAddress = account.email_address || (accountId.includes("@") ? accountId.toLowerCase() : `${accountId.toLowerCase()}@dgt.llc`);
   const slug = emailAddress.split("@")[0].toUpperCase();
-  const envKey = `MAILBOX_${slug}_PASSWORD`;
-  const envPass = process.env[envKey] || null;
 
   let smtpPass: string | null = null;
   let imapPass: string | null = null;
 
-  // Read from encrypted columns (primary source, added by migration 20261117)
+  // Read from encrypted columns (primary and only source, added by migration 20261117)
   try {
     if (account.smtp_password_encrypted) smtpPass = decrypt(account.smtp_password_encrypted);
   } catch (e) {
@@ -88,9 +86,8 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     }
   }
 
-  // Fallback to environment variables
-  smtpPass = smtpPass || envPass;
-  imapPass = imapPass || smtpPass || envPass;
+  // NO FALLBACK TO ENVIRONMENT VARIABLES
+  // Credentials MUST come from encrypted database storage only
 
   if (!imapPass && !smtpPass) {
     // Account exists but credentials not yet configured — return partial with empty pass
@@ -115,13 +112,13 @@ export async function resolveMailboxAccount(accountId: string): Promise<Resolved
     account.erp_email_providers?.smtp_host ||         // provider-level
     "smtp.titan.email";                               // Titan fallback
 
-  // Titan uses port 587 + STARTTLS (NOT 465/SSL) for SMTP
+  // Titan uses port 465 + SSL (NOT 587/STARTTLS)
   const smtpPort =
     account.smtp_port ||
     account.erp_email_providers?.smtp_port ||
-    587;
+    465;
 
-  // STARTTLS: secure=false for port 587 (STARTTLS upgrades the connection internally)
+  // SSL: secure=true for port 465
   const smtpSecure = smtpPort === 465;
 
   return {
