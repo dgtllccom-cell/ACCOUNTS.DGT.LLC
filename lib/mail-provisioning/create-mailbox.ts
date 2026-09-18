@@ -7,7 +7,7 @@ export interface MailboxCreationRequest {
   displayName: string;
   purpose: "public_registration" | "entity_email";
   linkedEntityId?: string;
-  linkedEntityType?: "country" | "branch" | "user" | "agent";
+  linkedEntityType?: "country" | "main_branch" | "city_branch" | "branch" | "user" | "agent";
 }
 
 export interface MailboxCreationResult {
@@ -47,14 +47,29 @@ export async function createMailbox(
     const encryptedPassword = encrypt(password);
 
     // Get provider
-    const { data: provider } = await admin
+    let { data: provider } = await admin
       .from("erp_email_providers")
       .select("id")
       .eq("domain", "dgt.llc")
-      .single();
+      .maybeSingle();
 
     if (!provider) {
-      return { success: false, error: "Mail provider not configured" };
+      const { data: newProv } = await admin
+        .from("erp_email_providers")
+        .insert({
+          name: "DGT Mail",
+          domain: "dgt.llc",
+          imap_host: "mail.dgt.llc",
+          imap_port: 993,
+          imap_secure: true,
+          smtp_host: "mail.dgt.llc",
+          smtp_port: 587,
+          smtp_secure: true,
+          is_active: true
+        })
+        .select("id")
+        .single();
+      provider = newProv;
     }
 
     // Create database record
@@ -82,6 +97,8 @@ export async function createMailbox(
     if (req.linkedEntityId && req.linkedEntityType) {
       const tableMap: Record<string, string> = {
         country: "countries",
+        main_branch: "country_branches",
+        city_branch: "city_branches",
         branch: "city_branches",
         user: "profiles",
         agent: "agents"
@@ -94,6 +111,34 @@ export async function createMailbox(
           .update({ email_account_id: mailbox.id })
           .eq("id", req.linkedEntityId);
       }
+    }
+
+    // Sync with public_mail_users for Webmail access
+    try {
+      const username = normalizedEmail.replace(/@dgt\.llc$/, "");
+      const { hashPassword } = await import("@/lib/public-mail/crypto");
+      const passwordHash = hashPassword(password);
+      
+      const { data: existingUser } = await admin
+        .from("public_mail_users")
+        .select("id")
+        .eq("username", username)
+        .single();
+
+      if (!existingUser) {
+        await admin.from("public_mail_users").insert({
+          username,
+          domain: "dgt.llc",
+          password_hash: passwordHash,
+          display_name: req.displayName,
+          plan_id: "pro_10gb",
+          quota_bytes: 5368709120, // 5GB default
+          used_bytes: 0,
+          status: "active",
+        });
+      }
+    } catch (syncErr) {
+      console.warn("Sync to public_mail_users skipped/failed:", syncErr);
     }
 
     // Provision on mail server (webhook call)

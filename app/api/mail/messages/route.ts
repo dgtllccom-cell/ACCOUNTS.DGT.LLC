@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserMessages, sendWebmailMessage } from "@/lib/public-mail/webmail-service";
+import { getUserMessages, sendWebmailMessage, saveDraft } from "@/lib/public-mail/webmail-service";
 
 export async function GET(req: NextRequest) {
   const userId = req.cookies.get("dgt_mail_user_id")?.value;
@@ -28,8 +28,25 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { to, subject, body: emailBody, attachments } = body;
+    const { action, to, subject, body: emailBody, attachments, draftId } = body;
 
+    // Handle Save Draft
+    if (action === "draft") {
+      const draftResult = await saveDraft({
+        userId,
+        draftId,
+        to: to || "",
+        subject: subject || "",
+        body: emailBody || "",
+        attachments: attachments || [],
+      });
+      if (!draftResult.success) {
+        return NextResponse.json({ error: draftResult.error || "Failed to save draft" }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, draftId: draftResult.draftId });
+    }
+
+    // Normal Send
     if (!to || !subject || !emailBody) {
       return NextResponse.json({ error: "Recipient, subject, and message body are required" }, { status: 400 });
     }
@@ -40,6 +57,7 @@ export async function POST(req: NextRequest) {
       subject,
       body: emailBody,
       attachments,
+      draftId,
     });
 
     if (!result.success) {

@@ -1,9 +1,10 @@
 import postgres from "postgres";
 import { hashPassword, verifyPassword } from "./crypto";
+import { encrypt } from "../crypto";
 import { createStalwartAccount, updateStalwartQuota, setStalwartAccountStatus } from "./stalwart-client";
 
 const RESERVED_USERNAMES = new Set([
-  "admin",
+"admin",
   "administrator",
   "root",
   "support",
@@ -352,29 +353,35 @@ export async function getUserMessages(userId: string, folder = "inbox", search =
  * Send an email from webmail client
  */
 export async function sendWebmailMessage(params: {
-  userId: string;
+  userId?: string;
+  senderUserId?: string;
   to: string;
   subject: string;
   body: string;
   attachments?: Array<{ name: string; size: number; type: string }>;
+  draftId?: string;
 }): Promise<{ success: boolean; error?: string; messageId?: string }> {
   const sql = getDb();
   try {
+    const senderId = params.userId || params.senderUserId;
+    if (!senderId) return { success: false, error: "Sender user ID is required" };
+
     const [user] = await sql<PublicMailUser[]>`
-      SELECT * FROM public.public_mail_users WHERE id = ${params.userId} LIMIT 1
+      SELECT * FROM public.public_mail_users WHERE id = ${senderId} LIMIT 1
     `;
     if (!user) return { success: false, error: "Sender account not found" };
     if (user.status !== "active") return { success: false, error: "Account is not active" };
 
     const messageSize = Buffer.byteLength(params.body, "utf8") + (params.attachments || []).reduce((a, b) => a + b.size, 0);
 
-    // Check storage quota
+    // 1. Quota Check on Sender
     if (Number(user.used_bytes) + messageSize > Number(user.quota_bytes)) {
       return { success: false, error: "Storage quota exceeded. Please delete old emails or upgrade your storage plan." };
     }
 
     const snippet = params.body.slice(0, 120).replace(/\n/g, " ");
 
+    // 2. Insert into sender's 'sent' folder
     const [msg] = await sql<MailMessage[]>`
       INSERT INTO public.public_mail_messages (
         user_id,
@@ -399,7 +406,7 @@ export async function sendWebmailMessage(params: {
         ${params.to},
         ${params.subject},
         ${params.body},
-        ${`<p>${params.body.replace(/\n/g, "<br/>")}</p>`},
+        ${'<p>' + params.body.replace(/\n/g, '<br/>') + '</p>'},
         ${snippet},
         TRUE,
         ${(params.attachments || []).length > 0},
@@ -410,7 +417,15 @@ export async function sendWebmailMessage(params: {
       RETURNING *
     `;
 
-    // Recalculate storage used and warning level
+    // 3. If draftId was provided, remove the draft
+    if (params.draftId) {
+      await sql`
+        DELETE FROM public.public_mail_messages
+        WHERE id = ${params.draftId} AND user_id = ${user.id} AND folder = 'drafts'
+      `;
+    }
+
+    // 4. Update sender used_bytes and warning level
     const newUsed = Number(user.used_bytes) + messageSize;
     const quota = Number(user.quota_bytes);
     let warningLevel = 0;
@@ -423,7 +438,107 @@ export async function sendWebmailMessage(params: {
       WHERE id = ${user.id}
     `;
 
+    // 5. DGT-to-DGT Real Delivery: If recipient is also on @dgt.llc, deliver to their inbox!
+    const cleanRecipient = params.to.trim().toLowerCase();
+    if (cleanRecipient.endsWith("@dgt.llc")) {
+      const ingestResult = await ingestIncomingMessage({
+        recipientEmail: cleanRecipient,
+        senderEmail: user.email_address,
+        senderName: user.display_name,
+        subject: params.subject,
+        bodyText: params.body,
+        attachments: params.attachments,
+      });
+      if (!ingestResult.success) {
+        return { success: false, error: ingestResult.error || "Recipient mailbox delivery failed (quota exceeded)" };
+      }
+    }
+
     return { success: true, messageId: msg.id };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Save or update an email draft
+ */
+export async function saveDraft(params: {
+  userId: string;
+  draftId?: string;
+  to?: string;
+  subject?: string;
+  body?: string;
+  attachments?: Array<{ name: string; size: number; type: string }>;
+}): Promise<{ success: boolean; draftId?: string; error?: string }> {
+  const sql = getDb();
+  try {
+    const [user] = await sql<PublicMailUser[]>`
+      SELECT * FROM public.public_mail_users WHERE id = ${params.userId} LIMIT 1
+    `;
+    if (!user) return { success: false, error: "User not found" };
+
+    const bodyText = params.body || "";
+    const subjectText = params.subject || "";
+    const toText = params.to || "";
+    const attachments = params.attachments || [];
+    const messageSize = Buffer.byteLength(bodyText, "utf8") + attachments.reduce((a, b) => a + b.size, 0);
+
+    if (params.draftId) {
+      const [updated] = await sql<MailMessage[]>`
+        UPDATE public.public_mail_messages
+        SET
+          recipient_email = ${toText},
+          subject = ${subjectText},
+          body_text = ${bodyText},
+          body_html = ${'<p>' + bodyText.replace(/\n/g, '<br/>') + '</p>'},
+          snippet = ${bodyText.slice(0, 120)},
+          attachments_json = ${JSON.stringify(attachments)}::jsonb,
+          size_bytes = ${messageSize}
+        WHERE id = ${params.draftId} AND user_id = ${params.userId} AND folder = 'drafts'
+        RETURNING id
+      `;
+      if (updated) return { success: true, draftId: updated.id };
+    }
+
+    const [inserted] = await sql<MailMessage[]>`
+      INSERT INTO public.public_mail_messages (
+        user_id,
+        folder,
+        sender_email,
+        sender_name,
+        recipient_email,
+        subject,
+        body_text,
+        body_html,
+        snippet,
+        is_read,
+        has_attachments,
+        attachments_json,
+        size_bytes,
+        sender_verified
+      ) VALUES (
+        ${user.id},
+        'drafts',
+        ${user.email_address},
+        ${user.display_name},
+        ${toText},
+        ${subjectText},
+        ${bodyText},
+        ${'<p>' + bodyText.replace(/\n/g, '<br/>') + '</p>'},
+        ${bodyText.slice(0, 120)},
+        TRUE,
+        ${attachments.length > 0},
+        ${JSON.stringify(attachments)}::jsonb,
+        ${messageSize},
+        TRUE
+      )
+      RETURNING id
+    `;
+    return { success: true, draftId: inserted.id };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
@@ -443,7 +558,7 @@ export async function ingestIncomingMessage(params: {
   bodyText: string;
   bodyHtml?: string;
   attachments?: Array<{ name: string; size: number; type: string }>;
-}): Promise<{ success: boolean; messageId?: string }> {
+}): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const sql = getDb();
   try {
     const [user] = await sql<PublicMailUser[]>`
@@ -451,10 +566,16 @@ export async function ingestIncomingMessage(params: {
       WHERE email_address = ${params.recipientEmail.toLowerCase()}
       LIMIT 1
     `;
-    if (!user) return { success: false };
+    if (!user) return { success: false, error: "Recipient not found" };
+
+    const messageSize = Buffer.byteLength(params.bodyText, "utf8") + (params.attachments || []).reduce((a, b) => a + b.size, 0);
+
+    // Quota Enforcement on Recipient
+    if (Number(user.used_bytes) + messageSize > Number(user.quota_bytes)) {
+      return { success: false, error: "Recipient storage quota exceeded" };
+    }
 
     const { isOtp, code } = extractVerificationCode(params.subject, params.bodyText);
-    const messageSize = Buffer.byteLength(params.bodyText, "utf8") + (params.attachments || []).reduce((a, b) => a + b.size, 0);
 
     const [msg] = await sql<MailMessage[]>`
       INSERT INTO public.public_mail_messages (
@@ -482,7 +603,7 @@ export async function ingestIncomingMessage(params: {
         ${user.email_address},
         ${params.subject},
         ${params.bodyText},
-        ${params.bodyHtml || `<p>${params.bodyText.replace(/\n/g, "<br/>")}</p>`},
+        ${params.bodyHtml || '<p>' + params.bodyText.replace(/\n/g, '<br/>') + '</p>'},
         ${params.bodyText.slice(0, 120)},
         FALSE,
         ${(params.attachments || []).length > 0},
@@ -509,6 +630,343 @@ export async function ingestIncomingMessage(params: {
     `;
 
     return { success: true, messageId: msg.id };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Reset User Password
+ */
+export async function resetUserPassword(params: {
+  usernameOrEmail?: string;
+  email?: string;
+  username?: string;
+  newPassword: string;
+}): Promise<{ success: boolean; error?: string }> {
+  if (!params.newPassword || params.newPassword.length < 8) {
+    return { success: false, error: "Password must be at least 8 characters long" };
+  }
+  const target = params.usernameOrEmail || params.email || params.username || "";
+  if (!target.trim()) {
+    return { success: false, error: "Username or email is required" };
+  }
+  const cleanId = target.trim().toLowerCase().replace(/@dgt\.llc$/, "");
+  const newHash = hashPassword(params.newPassword);
+  const sql = getDb();
+  try {
+    const [user] = await sql<PublicMailUser[]>`
+      SELECT id, username FROM public.public_mail_users
+      WHERE username = ${cleanId}
+      LIMIT 1
+    `;
+    if (!user) return { success: false, error: "Account not found" };
+
+    await sql`
+      UPDATE public.public_mail_users
+      SET password_hash = ${newHash}, updated_at = NOW()
+      WHERE id = ${user.id}
+    `;
+
+    await sql`
+      INSERT INTO public.public_mail_audit_logs (
+        user_id,
+        action,
+        performed_by,
+        details
+      ) VALUES (
+        ${user.id},
+        'password_reset',
+        'self_service',
+        ${JSON.stringify({ username: user.username, timestamp: new Date().toISOString() })}::jsonb
+      )
+    `;
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Admin: List Public Mail Users
+ */
+export async function adminListPublicMailUsers(options?: {
+  search?: string;
+  status?: string;
+  plan?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ users: PublicMailUser[]; total: number }> {
+  const sql = getDb();
+  try {
+    const search = options?.search ? `%${options.search.toLowerCase()}%` : null;
+    const status = options?.status && options.status !== "all" ? options.status : null;
+    const plan = options?.plan && options.plan !== "all" ? options.plan : null;
+    const limit = options?.limit || 50;
+    const offset = options?.offset || 0;
+
+    const rows = await sql<PublicMailUser[]>`
+      SELECT id, username, domain, email_address, display_name, recovery_email, phone_number,
+             plan_id, quota_bytes, used_bytes, status, storage_warning_level, created_at, last_login_at
+      FROM public.public_mail_users
+      WHERE (${search}::text IS NULL OR username ILIKE ${search} OR email_address ILIKE ${search} OR display_name ILIKE ${search})
+        AND (${status}::text IS NULL OR status = ${status})
+        AND (${plan}::text IS NULL OR plan_id = ${plan})
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const [countRow] = await sql`
+      SELECT count(*)::int as count
+      FROM public.public_mail_users
+      WHERE (${search}::text IS NULL OR username ILIKE ${search} OR email_address ILIKE ${search} OR display_name ILIKE ${search})
+        AND (${status}::text IS NULL OR status = ${status})
+        AND (${plan}::text IS NULL OR plan_id = ${plan})
+    `;
+
+    return { users: rows, total: countRow ? Number(countRow.count) : rows.length };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Admin: Update Mailbox Status (active / suspended)
+ */
+export async function adminUpdatePublicMailUserStatus(
+  userId: string,
+  status: "active" | "suspended",
+  performedBy = "admin"
+): Promise<{ success: boolean; error?: string }> {
+  const sql = getDb();
+  try {
+    const [user] = await sql<PublicMailUser[]>`
+      UPDATE public.public_mail_users
+      SET status = ${status}, updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING id, username, status
+    `;
+    if (!user) return { success: false, error: "User not found" };
+
+    await sql`
+      INSERT INTO public.public_mail_audit_logs (user_id, action, performed_by, details)
+      VALUES (
+        ${userId},
+        ${status === "active" ? "account_activated" : "account_suspended"},
+        ${performedBy},
+        ${JSON.stringify({ status, timestamp: new Date().toISOString() })}::jsonb
+      )
+    `;
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Admin: Update Storage Quota
+ */
+export async function adminUpdatePublicMailUserQuota(
+  userId: string,
+  quotaBytes: number,
+  planId?: string,
+  performedBy = "admin"
+): Promise<{ success: boolean; error?: string }> {
+  const sql = getDb();
+  try {
+    const [user] = await sql<PublicMailUser[]>`
+      UPDATE public.public_mail_users
+      SET quota_bytes = ${quotaBytes},
+          plan_id = COALESCE(${planId || null}, plan_id),
+          updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING id, username, quota_bytes, plan_id
+    `;
+    if (!user) return { success: false, error: "User not found" };
+
+    await sql`
+      INSERT INTO public.public_mail_audit_logs (user_id, action, performed_by, details)
+      VALUES (
+        ${userId},
+        'quota_adjusted',
+        ${performedBy},
+        ${JSON.stringify({ quotaBytes, planId, timestamp: new Date().toISOString() })}::jsonb
+      )
+    `;
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Admin: Reset User Password
+ */
+export async function adminResetPublicMailUserPassword(
+  userId: string,
+  newPassword: string,
+  performedBy = "admin"
+): Promise<{ success: boolean; error?: string }> {
+  if (!newPassword || newPassword.length < 8) {
+    return { success: false, error: "Password must be at least 8 characters" };
+  }
+  const sql = getDb();
+  try {
+    const newHash = hashPassword(newPassword);
+    const [user] = await sql<PublicMailUser[]>`
+      UPDATE public.public_mail_users
+      SET password_hash = ${newHash}, updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING id, username
+    `;
+    if (!user) return { success: false, error: "User not found" };
+
+    await sql`
+      INSERT INTO public.public_mail_audit_logs (user_id, action, performed_by, details)
+      VALUES (
+        ${userId},
+        'admin_password_reset',
+        ${performedBy},
+        ${JSON.stringify({ username: user.username, timestamp: new Date().toISOString() })}::jsonb
+      )
+    `;
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Admin: Get Audit Logs
+ */
+export async function adminGetPublicMailAuditLogs(userId?: string): Promise<any[]> {
+  const sql = getDb();
+  try {
+    if (userId) {
+      return await sql`
+        SELECT a.*, u.username, u.email_address
+        FROM public.public_mail_audit_logs a
+        LEFT JOIN public.public_mail_users u ON u.id = a.user_id
+        WHERE a.user_id = ${userId}
+        ORDER BY a.created_at DESC
+        LIMIT 50
+      `;
+    }
+    return await sql`
+      SELECT a.*, u.username, u.email_address
+      FROM public.public_mail_audit_logs a
+      LEFT JOIN public.public_mail_users u ON u.id = a.user_id
+      ORDER BY a.created_at DESC
+      LIMIT 100
+    `;
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Entity Auto-Provisioning:
+ * Provisions a DGT Mail mailbox for Country, Main Branch, City Branch, User, or Agent
+ */
+export async function autoProvisionEntityMailbox(params: {
+  entityType: "country" | "main_branch" | "city_branch" | "user" | "agent";
+  entityId: string;
+  code: string;
+  displayName: string;
+  customEmail?: string;
+  customPassword?: string;
+}): Promise<{ success: boolean; email: string; password?: string; error?: string }> {
+  const cleanCode = params.code.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  let emailPrefix = cleanCode;
+
+  if (params.entityType === "main_branch") {
+    emailPrefix = `${cleanCode}.branch`;
+  } else if (params.entityType === "agent") {
+    emailPrefix = `${cleanCode}.agent`;
+  }
+
+  const email = params.customEmail ? params.customEmail.toLowerCase() : `${emailPrefix}@dgt.llc`;
+  const username = email.replace(/@dgt\.llc$/, "");
+  const password = params.customPassword || `Dgt@${Math.floor(100000 + Math.random() * 900000)}`;
+
+  // 1. Register or update in public_mail_users
+  const sql = getDb();
+  try {
+    const passwordHash = hashPassword(password);
+    const quotaBytes = 5368709120; // 5 GB default for corporate entities
+
+    const [existing] = await sql<PublicMailUser[]>`
+      SELECT id FROM public.public_mail_users WHERE username = ${username} LIMIT 1
+    `;
+
+    if (existing) {
+      await sql`
+        UPDATE public.public_mail_users
+        SET display_name = ${params.displayName},
+            password_hash = ${passwordHash},
+            status = 'active',
+            updated_at = NOW()
+        WHERE id = ${existing.id}
+      `;
+    } else {
+      await sql`
+        INSERT INTO public.public_mail_users (
+          username, domain, password_hash, display_name, plan_id, quota_bytes, used_bytes, status
+        ) VALUES (
+          ${username}, 'dgt.llc', ${passwordHash}, ${params.displayName}, 'pro_10gb', ${quotaBytes}, 0, 'active'
+        )
+      `;
+    }
+
+    // 2. Also register in erp_email_accounts if applicable
+    try {
+      const encPass = encrypt(password);
+      const [prov] = await sql`SELECT id FROM public.erp_email_providers WHERE domain = 'dgt.llc' LIMIT 1`;
+      const providerId = prov ? prov.id : null;
+
+      await sql`
+        INSERT INTO public.erp_email_accounts (
+          email_address, display_name, is_active, provider_id,
+          imap_password_encrypted, smtp_password_encrypted,
+          country_id, country_branch_id, city_branch_id, scope
+        ) VALUES (
+          ${email}, ${params.displayName}, true, ${providerId},
+          ${encPass}, ${encPass},
+          ${params.entityType === 'country' ? params.entityId : null},
+          ${params.entityType === 'main_branch' ? params.entityId : null},
+          ${params.entityType === 'city_branch' ? params.entityId : null},
+          ${params.entityType}
+        )
+        ON CONFLICT (email_address) DO UPDATE SET
+          display_name = EXCLUDED.display_name,
+          is_active = true,
+          imap_password_encrypted = EXCLUDED.imap_password_encrypted,
+          smtp_password_encrypted = EXCLUDED.smtp_password_encrypted
+      `;
+    } catch {
+      // erp_email_accounts sync optional
+    }
+
+    return { success: true, email, password };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, email, error: msg };
   } finally {
     await sql.end();
   }

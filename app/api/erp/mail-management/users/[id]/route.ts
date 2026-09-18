@@ -32,8 +32,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     // Password reset
-    if (typeof body.new_password === "string" && body.new_password.length >= 6) {
-      updates.password_hash = hashPassword(body.new_password);
+    const newPwd = body.new_password || body.password;
+    if (typeof newPwd === "string" && newPwd.length >= 6) {
+      updates.password_hash = hashPassword(newPwd);
     }
 
     const [updated] = await sql`

@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import crypto from "crypto";
 
 /**
  * Hash a password using Node native scrypt with a random salt.

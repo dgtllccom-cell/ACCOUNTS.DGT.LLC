@@ -7,7 +7,7 @@ import { MailNavbar } from "./mail-navbar";
 import { MailSidebar } from "./mail-sidebar";
 import { MailList } from "./mail-list";
 import { MailView } from "./mail-view";
-import { ComposeModal } from "./compose-modal";
+import { ComposeModal, type ComposeInitialData } from "./compose-modal";
 import { StorageUpgradeModal } from "./storage-upgrade-modal";
 import type { PublicMailUser, MailMessage } from "@/lib/public-mail/webmail-service";
 
@@ -25,7 +25,7 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
   const [loading, setLoading] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [prefilledReply, setPrefilledReply] = useState<MailMessage | null>(null);
+  const [prefilledData, setPrefilledData] = useState<ComposeInitialData | null>(null);
 
   // Fetch messages
   const loadMessages = useCallback(async () => {
@@ -76,12 +76,42 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
 
   const handleSelectMessage = (id: string) => {
     setSelectedMessageId(id);
+    const msg = messages.find((m) => m.id === id);
+    if (msg && folder === "drafts") {
+      // If clicking a draft, open directly in ComposeModal to continue editing
+      setPrefilledData({
+        to: msg.to_address || "",
+        subject: msg.subject || "",
+        body: msg.body_text || "",
+        attachments: msg.attachments || [],
+        draftId: msg.id,
+        mode: "new",
+      });
+      setComposeOpen(true);
+      return;
+    }
+
     // Mark as read in local state
     setMessages((prev) =>
       prev.map((m) => (m.id === id ? { ...m, is_read: true } : m))
     );
     // Trigger read update
-    fetch(`/api/mail/messages/${id}`, { method: "PATCH", body: JSON.stringify({ is_read: true }) });
+    fetch(`/api/mail/messages/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_read: true }),
+    });
+  };
+
+  const handleToggleRead = async (id: string, isRead: boolean) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, is_read: isRead } : m))
+    );
+    await fetch(`/api/mail/messages/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_read: isRead }),
+    });
   };
 
   const handleToggleStar = async (id: string, isStarred: boolean) => {
@@ -105,8 +135,74 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
     refreshUser();
   };
 
+  const handleRestore = async (id: string) => {
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+    if (selectedMessageId === id) {
+      const remaining = messages.filter((m) => m.id !== id);
+      setSelectedMessageId(remaining.length > 0 ? remaining[0].id : null);
+    }
+    await fetch(`/api/mail/messages/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folder: "inbox" }),
+    });
+    refreshUser();
+  };
+
+  const handlePermanentDelete = async (id: string) => {
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+    if (selectedMessageId === id) {
+      const remaining = messages.filter((m) => m.id !== id);
+      setSelectedMessageId(remaining.length > 0 ? remaining[0].id : null);
+    }
+    await fetch(`/api/mail/messages/${id}`, { method: "DELETE" });
+    refreshUser();
+  };
+
   const handleReply = (message: MailMessage) => {
-    setPrefilledReply(message);
+    const cleanSubj = (message.subject || "").replace(/^Re:\s*/i, "");
+    setPrefilledData({
+      to: message.sender_email,
+      subject: `Re: ${cleanSubj}`,
+      body: `\n\n--- On ${new Date(message.created_at).toLocaleString()}, ${message.sender_name || message.sender_email} wrote: ---\n${message.body_text || ""}`,
+      mode: "reply",
+    });
+    setComposeOpen(true);
+  };
+
+  const handleReplyAll = (message: MailMessage) => {
+    const recipients = new Set<string>();
+    if (message.sender_email && message.sender_email !== user.email_address) {
+      recipients.add(message.sender_email.trim());
+    }
+    if (message.to_address) {
+      message.to_address.split(",").forEach((addr) => {
+        const trimmed = addr.trim();
+        if (trimmed && trimmed.toLowerCase() !== user.email_address.toLowerCase()) {
+          recipients.add(trimmed);
+        }
+      });
+    }
+
+    const cleanSubj = (message.subject || "").replace(/^Re:\s*/i, "");
+    setPrefilledData({
+      to: Array.from(recipients).join(", "),
+      subject: `Re: ${cleanSubj}`,
+      body: `\n\n--- On ${new Date(message.created_at).toLocaleString()}, ${message.sender_name || message.sender_email} wrote: ---\n${message.body_text || ""}`,
+      mode: "replyAll",
+    });
+    setComposeOpen(true);
+  };
+
+  const handleForward = (message: MailMessage) => {
+    const cleanSubj = (message.subject || "").replace(/^Fwd:\s*/i, "");
+    setPrefilledData({
+      to: "",
+      subject: `Fwd: ${cleanSubj}`,
+      body: `\n\n---------- Forwarded message ---------\nFrom: ${message.sender_name ? `${message.sender_name} <${message.sender_email}>` : message.sender_email}\nDate: ${new Date(message.created_at).toLocaleString()}\nSubject: ${message.subject}\nTo: ${message.to_address}\n\n${message.body_text || ""}`,
+      attachments: message.attachments || [],
+      mode: "forward",
+    });
     setComposeOpen(true);
   };
 
@@ -167,7 +263,7 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
             setSelectedMessageId(null);
           }}
           onOpenCompose={() => {
-            setPrefilledReply(null);
+            setPrefilledData(null);
             setComposeOpen(true);
           }}
           onOpenUpgrade={() => setUpgradeOpen(true)}
@@ -211,7 +307,12 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
               onBack={() => setSelectedMessageId(null)}
               onDelete={handleDeleteMessage}
               onToggleStar={handleToggleStar}
+              onToggleRead={handleToggleRead}
               onReply={handleReply}
+              onReplyAll={handleReplyAll}
+              onForward={handleForward}
+              onRestore={handleRestore}
+              onPermanentDelete={handlePermanentDelete}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center">
@@ -232,13 +333,18 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
       {/* Compose Dialog */}
       <ComposeModal
         isOpen={composeOpen}
-        onClose={() => setComposeOpen(false)}
+        onClose={() => {
+          setComposeOpen(false);
+          setPrefilledData(null);
+        }}
         onSent={() => {
           loadMessages();
           refreshUser();
+          setPrefilledData(null);
         }}
         senderEmail={user.email_address}
         availableStorageBytes={availableBytes}
+        initialData={prefilledData}
       />
 
       {/* Storage Upgrade Dialog */}

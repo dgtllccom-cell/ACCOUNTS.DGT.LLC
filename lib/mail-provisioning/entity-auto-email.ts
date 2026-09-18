@@ -1,6 +1,6 @@
 import { createMailbox, suggestEmail } from "./create-mailbox";
 
-export type EntityType = "country" | "branch" | "user" | "agent";
+export type EntityType = "country" | "main_branch" | "city_branch" | "branch" | "user" | "agent";
 
 /**
  * Generate email address for entity based on naming rules
@@ -17,8 +17,15 @@ export async function generateEntityEmail(
       baseName = entityData.name || entityData.country_name || "country";
       break;
 
+    case "main_branch":
+      // Use main branch name, e.g. "Dubai Main" → "dubai.branch@dgt.llc"
+      const mbName = entityData.name || entityData.branch_name || "main";
+      baseName = `${mbName}.branch`;
+      break;
+
+    case "city_branch":
     case "branch":
-      // Use branch name, e.g. "Karachi Main" → "karachi-main@dgt.llc"
+      // Use city branch name, e.g. "Karachi Main" → "karachi@dgt.llc"
       baseName = entityData.name || entityData.branch_name || "branch";
       break;
 
@@ -26,20 +33,22 @@ export async function generateEntityEmail(
       // Use first.last format, e.g. "Ahmed Khan" → "ahmed.khan@dgt.llc"
       const first = entityData.first_name || entityData.firstName || "";
       const last = entityData.last_name || entityData.lastName || "";
-      baseName = `${first}.${last}`.replace(/\s+/g, "");
+      baseName = first && last ? `${first}.${last}`.replace(/\s+/g, "") : (entityData.username || "user");
       break;
 
     case "agent":
-      // Use agent code/name, e.g. "AG001" → "ag001@dgt.llc"
-      baseName = entityData.code || entityData.agent_code || entityData.name || "agent";
+      // Use agent code/name, e.g. "AG001" → "ag001.agent@dgt.llc"
+      const agCode = entityData.code || entityData.agent_code || entityData.name || "agent";
+      baseName = `${agCode}.agent`;
       break;
 
     default:
       baseName = "entity";
   }
 
-  // Get unique suggestion
-  return await suggestEmail(baseName);
+  // Clean basename
+  const cleanBase = baseName.toLowerCase().replace(/[^a-z0-9.]/g, "-");
+  return await suggestEmail(cleanBase);
 }
 
 /**
@@ -67,13 +76,17 @@ export async function provisionEntityEmail(
     let displayName = "";
     switch (entityType) {
       case "country":
-        displayName = entityData.name || "Country";
+        displayName = entityData.name || "Country Office";
         break;
+      case "main_branch":
+        displayName = `${entityData.name || "Main Branch"} (HQ)`;
+        break;
+      case "city_branch":
       case "branch":
-        displayName = `${entityData.name || "Branch"} Office`;
+        displayName = `${entityData.name || "City Branch"} Office`;
         break;
       case "user":
-        displayName = `${entityData.first_name || ""} ${entityData.last_name || ""}`.trim() || "User";
+        displayName = `${entityData.first_name || ""} ${entityData.last_name || ""}`.trim() || entityData.name || "User";
         break;
       case "agent":
         displayName = entityData.name || `Agent ${entityData.code || ""}`;
@@ -86,7 +99,7 @@ export async function provisionEntityEmail(
       displayName,
       purpose: "entity_email",
       linkedEntityId: entityId,
-      linkedEntityType: entityType
+      linkedEntityType: entityType as any
     });
 
     if (!result.success) {
