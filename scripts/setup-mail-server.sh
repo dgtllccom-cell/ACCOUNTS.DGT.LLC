@@ -28,56 +28,29 @@ fi
 
 # 2. Configure Postfix main.cf
 echo "[2] Configuring Postfix"
-cat >> /etc/postfix/main.cf << EOF
-
-# DGT Mail Server Configuration
-myhostname = $MAIL_DOMAIN
-mydomain = $MAIL_DOMAIN
-myorigin = \$mydomain
-inet_interfaces = all
-inet_protocols = all
-
-# Local mail
-mydestination = \$myhostname, localhost.\$mydomain, localhost
-local_recipient_maps = unix:passwd.byname \$alias_maps
-alias_maps = hash:/etc/aliases
-alias_database = hash:/etc/aliases
-
-# Mailbox format - Maildir
-home_mailbox = Maildir/
-mailbox_transport = lmtp:unix:private/dovecot-lmtp
-virtual_mailbox_domains = $MAIL_DOMAIN
-virtual_mailbox_base = $MAIL_HOME
-virtual_mailbox_maps = regexp:/etc/postfix/virtual_mailboxes
-virtual_uid_maps = static:$(id -u $MAIL_USER)
-virtual_gid_maps = static:$(id -g $MAIL_USER)
-
-# TLS
-smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
-smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
-smtpd_use_tls = yes
-smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
-smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
-smtpd_tls_security_level = may
-
-# Rate limiting
-default_process_limit = 100
-smtpd_recipient_limit = 1000
-EOF
+postconf -e "virtual_mailbox_domains = $MAIL_DOMAIN"
+postconf -e "virtual_mailbox_base = $MAIL_HOME"
+postconf -e "virtual_mailbox_maps = regexp:/etc/postfix/virtual_mailboxes"
+postconf -e "virtual_uid_maps = static:$(id -u $MAIL_USER)"
+postconf -e "virtual_gid_maps = static:$(id -g $MAIL_USER)"
+postconf -e "mailbox_transport = lmtp:unix:private/dovecot-lmtp"
+postconf -e "smtpd_tls_security_level = may"
 
 echo "[3] Setting up virtual mailbox maps"
-echo "$MAIL_DOMAIN/$MAIL_DOMAIN/" > /etc/postfix/virtual_mailboxes
-postmap /etc/postfix/virtual_mailboxes
+printf "^.*@%s$ %s\n" "$MAIL_DOMAIN" "$MAILDIR_PATH/%u" > /etc/postfix/virtual_mailboxes
+postmap /etc/postfix/virtual_mailboxes 2>/dev/null || true
 
 # 4. Configure Dovecot
 echo "[4] Configuring Dovecot"
+mkdir -p /etc/dovecot/conf.d
+
+# Configure core settings
 cat > /etc/dovecot/conf.d/99-dgt-custom.conf << EOF
 # DGT Custom Configuration
-
 protocols = imap pop3 lmtp
-
-# Mail storage
 mail_location = maildir:$MAILDIR_PATH/%u
+disable_plaintext_auth = no
+auth_mechanisms = plain
 
 # LMTP for Postfix
 service lmtp {
@@ -98,7 +71,7 @@ passdb {
 }
 
 # TLS
-ssl = required
+ssl = yes
 ssl_cert = </etc/ssl/certs/ssl-cert-snakeoil.pem
 ssl_key = </etc/ssl/private/ssl-cert-snakeoil.key
 
@@ -121,8 +94,8 @@ chmod 700 "$MAILDIR_PATH"
 
 # 6. Restart services
 echo "[6] Restarting mail services"
-systemctl restart postfix
-systemctl restart dovecot
+systemctl restart postfix || { echo "Postfix restart failed"; systemctl status postfix; }
+systemctl restart dovecot || { echo "Dovecot restart failed"; systemctl status dovecot; }
 
 # 7. Verify
 echo "[7] Verification"
