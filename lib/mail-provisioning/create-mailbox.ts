@@ -64,6 +64,7 @@ export async function createMailbox(
         provider_id: provider.id,
         email_address: normalizedEmail,
         display_name: req.displayName,
+        scope: "global", // Public mailboxes are global
         is_active: true,
         imap_password_encrypted: encryptedPassword,
         smtp_password_encrypted: encryptedPassword,
