@@ -2603,18 +2603,6 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     return Array.from(set).map((s) => ({ label: s, value: s }));
   }, [orders]);
 
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (countryFilter || saCountryId) count++;
-    if (branchFilter || saBranchId) count++;
-    if (cityFilter) count++;
-    if (draftFilter) count++;
-    if (startDateFilter || endDateFilter) count++;
-    if (query) count++;
-    if (partyFilter) count++;
-    return count;
-  }, [countryFilter, saCountryId, branchFilter, saBranchId, cityFilter, draftFilter, startDateFilter, endDateFilter, query, partyFilter]);
-
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -2627,6 +2615,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
   const [saBranchId, setSaBranchId] = useState<string>("");
   const [saCountries, setSaCountries] = useState<any[]>([]);
   const [saBranches, setSaBranches] = useState<any[]>([]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (countryFilter || saCountryId) count++;
+    if (branchFilter || saBranchId) count++;
+    if (cityFilter) count++;
+    if (draftFilter) count++;
+    if (startDateFilter || endDateFilter) count++;
+    if (query) count++;
+    if (partyFilter) count++;
+    return count;
+  }, [countryFilter, saCountryId, branchFilter, saBranchId, cityFilter, draftFilter, startDateFilter, endDateFilter, query, partyFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3848,6 +3848,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const rowKey = (row as any).__rowKey || row.id;
     const isSelected = selected?.id === row.id;
     const isExpanded = Boolean(expandedIds[rowKey]);
+    const isPosted = row.ledger_posting_status === "Posted"
+      || row.ledger_posting_status === "posted"
+      || row.ledger_posting_status === "Transferred"
+      || row.ledger_posting_status === "transferred";
 
     const billNo = row.sales_order_no ? `S#${row.sales_order_no}` : (form.billNo || form.contractNo || `S#${index + 1}`);
     const type = form.orderType || form.type || "B";
@@ -4264,7 +4268,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
             )}
           </div>
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            Showing {displayRows.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, displayRows.length)} of {displayRows.length} entries
+            Showing {pageRows.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, pageRows.length)} of {pageRows.length} entries
           </span>
         </div>
 

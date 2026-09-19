@@ -2655,6 +2655,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     fa: "Ø¨Ø±ÙØ²Ø±Ø³Ø§ÙÛ",
     ps: "ØªØ§Ø²Ù Ú©ÙÙ"
   };
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (countryFilter) count++;
+    if (branchFilter) count++;
+    if (cityFilter) count++;
+    if (draftFilter) count++;
+    if (startDateFilter || endDateFilter) count++;
+    if (query) count++;
+    if (partyFilter) count++;
+    if (currencyFilter) count++;
+    return count;
+  }, [countryFilter, branchFilter, cityFilter, draftFilter, startDateFilter, endDateFilter, query, partyFilter, currencyFilter]);
+
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
