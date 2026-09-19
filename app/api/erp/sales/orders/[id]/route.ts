@@ -10,7 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -119,14 +119,22 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const body = salesOrderUpdateSchema.parse(await request.json());
 
     const supabase = (await createApiSupabaseClient()) as any;
-    const before = (await requireSupabaseData(
-      supabase
-        .from("sales_orders")
-        .select("*")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    )) as any;
+    const viaPgBefore = getDbUrl()
+      ? await withReadPg(async (sql) => {
+          const rows = await sql`select * from public.sales_orders where id = ${params.id} and deleted_at is null limit 1`;
+          return rows?.[0] ?? null;
+        })
+      : null;
+    const before = (viaPgBefore
+      ? viaPgBefore
+      : await requireSupabaseData(
+          supabase
+            .from("sales_orders")
+            .select("*")
+            .eq("id", params.id)
+            .is("deleted_at", null)
+            .maybeSingle()
+        )) as any;
 
     if (!before) {
       return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.not_found", "Sales order not found") } }, { status: 404 });
@@ -231,15 +239,29 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       };
     }
 
-    const { data: updated, error } = await supabase
-      .from("sales_orders")
-      .update(patch)
-      .eq("id", params.id)
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
+    // Direct-pg fast path first (same technique already used for Purchase's
+    // equivalent save endpoint — measured 56-60s through the Supabase client
+    // in this environment vs a few seconds direct; RETURNING * preserves the
+    // exact same "full updated row" shape the Supabase .select().single() call
+    // below produced, since `updated` is both returned to the client and used
+    // in the audit log's `after` field). Falls back to the Supabase client
+    // when DATABASE_URL/local pg isn't available — no behavior change.
+    let updated: any;
+    const viaPgUpdate = await withLocalPg(async (sql) => {
+      const rows = await sql`UPDATE public.sales_orders SET ${sql(patch as any)} WHERE id = ${params.id} RETURNING *`;
+      return rows[0] ?? null;
+    });
+    if (viaPgUpdate) {
+      updated = viaPgUpdate;
+    } else {
+      const { data, error } = await supabase
+        .from("sales_orders")
+        .update(patch)
+        .eq("id", params.id)
+        .select()
+        .single();
+      if (error) throw error;
+      updated = data;
     }
 
     if (body.formData !== undefined || body.customerName !== undefined || body.productSummary !== undefined) {

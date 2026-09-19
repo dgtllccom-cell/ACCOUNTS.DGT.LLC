@@ -17,7 +17,7 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
 import { revalidatePath } from "next/cache";
 import { canEditTransferredPurchaseBooking } from "@/lib/services/purchase-booking-transfer-routing";
-import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
+import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -157,16 +157,30 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const body = purchaseOrderUpdateSchema.parse(await request.json());
 
     const supabase = (await createApiSupabaseClient()) as any;
-    const before = await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .select(
-          "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, currency_code, exchange_rate, order_total, form_data, created_at, ledger_posting_status"
-        )
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    const viaPgBefore = getDbUrl()
+      ? await withReadPg(async (sql) => {
+          const rows = await sql`
+            select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
+                   supplier_company_id, currency_code, exchange_rate, order_total, form_data, created_at, ledger_posting_status
+            from public.purchase_orders
+            where id = ${params.id} and deleted_at is null
+            limit 1
+          `;
+          return rows?.[0] ?? null;
+        })
+      : null;
+    const before = viaPgBefore
+      ? viaPgBefore
+      : await requireSupabaseData(
+          supabase
+            .from("purchase_orders")
+            .select(
+              "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, currency_code, exchange_rate, order_total, form_data, created_at, ledger_posting_status"
+            )
+            .eq("id", params.id)
+            .is("deleted_at", null)
+            .maybeSingle()
+        );
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -339,13 +353,28 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     // message merely contained "column"/"currency"/etc — every purchase_orders
     // column it (re)creates already exists, so that retry only added 50+s of
     // catalog-lock overhead per save while masking the real error underneath.
+    //
+    // Separately, going through the Supabase JS client (PostgREST) for this
+    // specific update was itself slow in this environment (measured 56-60s on
+    // a real save, independent of the DDL above) — same direct-pg fast path
+    // already used for creating a purchase order (see POST above), same
+    // fallback-to-Supabase-client if DATABASE_URL/local pg isn't available.
+    // No change to what gets written or which columns are touched.
     let updated;
-    try {
-      updated = await requireSupabaseData(
-        supabase.from("purchase_orders").update(patch).eq("id", params.id).select("id").single()
-      );
-    } catch (e: any) {
-      return apiError("UPDATE_FAILED", e.message || String(e), 400);
+    const viaPgUpdate = await withLocalPg(async (sql) => {
+      const rows = await sql`UPDATE public.purchase_orders SET ${sql(patch as any)} WHERE id = ${params.id} RETURNING id`;
+      return rows[0] ?? null;
+    });
+    if (viaPgUpdate) {
+      updated = viaPgUpdate;
+    } else {
+      try {
+        updated = await requireSupabaseData(
+          supabase.from("purchase_orders").update(patch).eq("id", params.id).select("id").single()
+        );
+      } catch (e: any) {
+        return apiError("UPDATE_FAILED", e.message || String(e), 400);
+      }
     }
 
     // CASCADE BILL NUMBER TO PAYMENTS

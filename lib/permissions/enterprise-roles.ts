@@ -473,6 +473,12 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "record_transfers:read",
     "inter_branch_transfers:create",
     "inter_branch_transfers:read",
+    // Accountant already has create+read on this resource (can send and view
+    // handovers) but was missing approve, so any handover sent TO an
+    // accountant could never be accepted — confirmed live during a real
+    // handover E2E test (User A -> accountant User B, PATCH .../accept
+    // returned 403 "Missing permission: inter_branch_transfers:approve").
+    "inter_branch_transfers:approve",
     "currency_rates:create",
     "currency_rates:read",
     "currency_rates:update",

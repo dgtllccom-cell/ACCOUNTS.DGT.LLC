@@ -1402,7 +1402,8 @@ export function SalesOrderWizard({ session }) {
     const p = intake.payload || {};
     setForm((prev) => {
       const next = { ...prev };
-      if (p.salesContractNo) next.salesContractNo = String(p.salesContractNo);
+      const contractRef = p.salesContractNo ?? p.invoiceNo ?? p.salesOrderNo;
+      if (contractRef) next.salesContractNo = String(contractRef);
       if (p.orderDate) next.salesDate = String(p.orderDate);
       if (p.currencyCode) {
         const cur = String(p.currencyCode).toUpperCase().slice(0, 3);
@@ -1413,10 +1414,31 @@ export function SalesOrderWizard({ session }) {
         const rate = Number(p.exchangeRate);
         if (!Number.isNaN(rate)) next.exchangeRate = rate;
       }
-      if (p.customerName) next.customerName = String(p.customerName);
+      if (p.customerName) {
+        next.customerName = String(p.customerName);
+        // The visible "Customer Account (DR)" search field reads
+        // customerAccountName, not customerName — the field above only feeds
+        // the save payload's customer_name text column. Without this, the
+        // extracted customer never actually appeared on screen (confirmed
+        // live: AI Document Intake -> Sales draft handoff showed "N/A").
+        // Name-only, matching this effect's own "best-effort, human still
+        // reviews and selects the real linked account" comment above — it is
+        // not a customerAccountId/customerAccountLedgerId link.
+        next.customerAccountName = String(p.customerName);
+      }
       if (p.paymentDueDate) next.paymentDate = String(p.paymentDueDate);
       if (p.deliveryTerms) next.deliveryTerm = String(p.deliveryTerms);
-      if (p.paymentTerms) next.paymentDaysAndMethodDetails = String(p.paymentTerms);
+      if (p.paymentTerms) {
+        next.paymentDaysAndMethodDetails = String(p.paymentTerms);
+        // The visible "Invoice / Payment Select" dropdown reads form.paymentType
+        // (options: Advance Payment/Invoice/Final Payment/Credit) — same class of
+        // bug as customerAccountName above. Only apply when the extracted value is
+        // one of the real option strings; otherwise leave the field for the human
+        // to choose rather than silently setting an invalid/blank selection.
+        const validPaymentTypes = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+        const matchedType = validPaymentTypes.find((v) => v.toLowerCase() === String(p.paymentTerms).trim().toLowerCase());
+        if (matchedType) next.paymentType = matchedType;
+      }
       return next;
     });
   }, [intake.draft]);

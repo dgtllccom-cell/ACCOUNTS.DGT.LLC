@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { getDocumentAiProvider } from "@/lib/document-intelligence/providers";
 import type { RegistryDocType } from "@/lib/document-intelligence/types";
 import {
@@ -40,7 +40,7 @@ export type CreateJobInput = {
 };
 
 async function loadRegistry(countryId?: string | null): Promise<RegistryDocType[]> {
-  const rows = await withLocalPg(async (sql) =>
+  const rows = await withReadPg(async (sql) =>
     sql`SELECT code, name, operational_domain, category, target_module, classifier_keywords,
                min_confidence::float AS min_confidence, requires_qvc, expected_fields
         FROM public.document_type_registry
@@ -60,7 +60,7 @@ export class DocumentIntakeService {
   // ── queue / detail ─────────────────────────────────────────────────────
   async list(scope: IntakeScope, filters: { status?: string; domain?: string; docType?: string; search?: string; limit?: number } = {}) {
     try {
-      const rows = await withLocalPg(async (sql) => {
+      const rows = await withReadPg(async (sql) => {
         const where: any[] = [jobScopeWhere(sql, scope)];
         if (filters.status) where.push(sql`j.status = ${filters.status}`);
         if (filters.domain) where.push(sql`j.operational_domain = ${filters.domain}`);
@@ -83,7 +83,7 @@ export class DocumentIntakeService {
 
   async kpis(scope: IntakeScope) {
     try {
-      const r = await withLocalPg(async (sql) => {
+      const r = await withReadPg(async (sql) => {
         const w = jobScopeWhere(sql, scope);
         return sql`SELECT
           count(*)::int AS total,
@@ -104,7 +104,7 @@ export class DocumentIntakeService {
 
   async get(jobId: string, scope: IntakeScope) {
     try {
-      return await withLocalPg(async (sql) => {
+      return await withReadPg(async (sql) => {
         const job = (await sql`SELECT * FROM public.document_intake_queue_v WHERE id = ${jobId}`)?.[0];
         if (!job) return null;
         assertRowInScope(scope, job);
@@ -121,7 +121,7 @@ export class DocumentIntakeService {
   }
 
   async fileBuffer(jobId: string, scope: IntakeScope): Promise<{ buffer: Buffer; mime: string; filename: string } | null> {
-    const meta = await withLocalPg(async (sql) => {
+    const meta = await withReadPg(async (sql) => {
       const j = (await sql`SELECT storage_key, mime_type, original_filename, country_id, city_branch_id, clearing_agent_id, operational_domain
         FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0];
       return j ?? null;

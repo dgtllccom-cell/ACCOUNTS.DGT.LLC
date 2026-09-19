@@ -1,5 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withReadPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
@@ -113,7 +113,9 @@ async function loadTranslations(input: {
   // catch-and-fall-back-to-English below quietly absorbed as "no translation available"
   // instead of "the read was blocked". Try direct Postgres first (bypasses RLS), and
   // only fall back to the Supabase client when DATABASE_URL isn't configured.
-  const viaPg = await withLocalPg(async (sql) => {
+  // Pure read, so the shared pooled connection (withReadPg) applies instead of
+  // paying a fresh-connection cost on every call.
+  const viaPg = await withReadPg(async (sql) => {
     const rows: any[] = [];
     for (let i = 0; i < validTargets.length; i += CHUNK_SIZE) {
       const chunk = validTargets.slice(i, i + CHUNK_SIZE);
@@ -229,7 +231,11 @@ export class LedgerReportService {
   // via withLocalPg — same proven bypass as goods-repository.ts/banks-repository.ts)
   // when available, falling back to the Supabase client otherwise.
   async listLedgers(input: ListLedgersInput): Promise<LedgerLookupRow[]> {
-    const viaPg = await withLocalPg((sql) => this.listLedgersViaPg(sql, input));
+    // Pure read (query builder only, no writes/transactions) — use the shared
+    // pooled connection instead of paying withLocalPg's fresh-connection setup
+    // cost on every account search/lookup call (measured 7-12s per call before
+    // this change, dominated by connection overhead against the remote pooler).
+    const viaPg = await withReadPg((sql) => this.listLedgersViaPg(sql, input));
     if (viaPg) return viaPg;
     return this.listLedgersViaSupabase(input);
   }

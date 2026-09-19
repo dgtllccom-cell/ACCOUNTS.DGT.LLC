@@ -1,5 +1,5 @@
 // Server-side only in practice (uses withLocalPg, which no-ops without DATABASE_URL).
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { translateViaMachineTranslation } from "@/lib/i18n/machine-translation-client";
@@ -120,7 +120,7 @@ type TmRow = {
 };
 
 async function tmLookup(sourceLang: SupportedLanguage, norm: string): Promise<TmRow | null> {
-  const rows = await withLocalPg(async (sql) => {
+  const rows = await withReadPg(async (sql) => {
     return (await sql`
       select id, source_lang, source_norm, source_text, en, ur, ar, fa, ps, status, engine, domain
       from public.erp_translation_memory
