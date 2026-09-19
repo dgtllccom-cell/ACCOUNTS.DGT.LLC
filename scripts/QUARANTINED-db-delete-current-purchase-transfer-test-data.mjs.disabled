@@ -1,5 +1,25 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import postgres from "postgres";
+
+// QUARANTINED 2026-09-19: this script's unconditional `DELETE FROM purchase_orders`
+// (and purchase_order_payments / purchase_loading_records / purchase-tagged
+// roznamcha & journal entries) has no environment check at all. It reads
+// DATABASE_URL from plain .env, which on at least one deployment target IS the
+// Production connection string — so running this script there wipes real
+// Production purchase/sales accounting data with zero filtering for "test"
+// records. This caused a real incident; see project memory / incident notes.
+// Do NOT remove this guard or re-enable this script without a genuine,
+// per-row test-data filter and an explicit non-Production fingerprint check.
+const PRODUCTION_FINGERPRINTS = new Set([
+  "7f70f5fbb71c" // ACCOUNTS.DGT.LLC Production (inmayhrxucimxqhgseqi) — see scripts/db-production-cleanup.mjs
+]);
+
+throw new Error(
+  "QUARANTINED: scripts/db-delete-current-purchase-transfer-test-data.mjs is disabled. " +
+  "It performed unconditional deletes with no environment safety check and caused a Production data-loss incident. " +
+  "Do not re-enable without a real per-row test-data filter and the fingerprint guard below."
+);
 
 const confirmFlag = "--confirm-delete-purchase-transfer-test-data";
 const applyChanges = process.argv.includes(confirmFlag);
@@ -24,6 +44,23 @@ loadEnv(".env.local");
 loadEnv(".env");
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL missing");
+
+function assertNotProduction(databaseUrl) {
+  const parsed = new URL(databaseUrl);
+  const fingerprint = crypto
+    .createHash("sha256")
+    .update(`${parsed.hostname}/${parsed.pathname}`)
+    .digest("hex")
+    .slice(0, 12);
+  if (PRODUCTION_FINGERPRINTS.has(fingerprint)) {
+    throw new Error(
+      `Refusing to run: DATABASE_URL fingerprint (${fingerprint}) matches a known Production database. ` +
+      "This script must never run against Production."
+    );
+  }
+}
+
+assertNotProduction(process.env.DATABASE_URL);
 
 const sql = postgres(process.env.DATABASE_URL, { ssl: "require", max: 1, idle_timeout: 5 });
 
