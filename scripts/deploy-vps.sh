@@ -20,6 +20,12 @@
 #      exec_mode:'cluster', instances:2 (OWNER/DevOps approval — changes the
 #      runtime model) and this same `reload` becomes a rolling restart.
 #
+# The actual build/swap/reload work now lives in scripts/safe-build-deploy.sh,
+# shared with deploy-server.sh and deploy-prod-vps.mjs, after confirming three
+# independent deploy scripts racing on the same .next directory (two of them
+# doing `rm -rf .next` + `pm2 delete`+`pm2 start`) caused a real production
+# crash-loop (6,588 repeated ENOENT prerender-manifest.json errors, 2026-09-19).
+#
 # Usage (run ON the VPS, from the repo root):
 #   bash scripts/deploy-vps.sh
 set -euo pipefail
@@ -40,21 +46,13 @@ if [ -z "${DEPLOY_VPS_REEXECED:-}" ]; then
   exec bash "$0" "$@"
 fi
 
-echo "==> Clear compiler cache only (keep served .next output live during build)"
-rm -rf .next/cache
-
-echo "==> Build (old server still serving the previous build)"
-# Node's default old-space heap (~2GB) is no longer enough for this codebase's
-# production build (14,931 i18n keys x 5 languages, ~450 API routes) and can OOM
-# mid-build on the VPS, leaving .next in a half-written state while set -e aborts
-# before pm2 reload (safe, but the next deploy attempt must retry the build).
-# Match the dev script's --max-old-space-size=4096 (already used by `npm run dev`).
-NODE_OPTIONS="--max-old-space-size=4096" npm run build
-
-test -f .next/BUILD_ID || { echo "!! build produced no BUILD_ID — aborting, server untouched"; exit 1; }
-
-echo "==> Graceful reload (new process must bind before the old one is killed)"
-pm2 reload dgt-nextjs --update-env
+echo "==> Build + atomic swap + reload (delegated to safe-build-deploy.sh)"
+# Was: rm -rf .next/cache + npm run build in place + pm2 reload, directly in
+# this file. Moved to the shared script so every deploy path (this one,
+# deploy-server.sh, deploy-prod-vps.mjs) uses the SAME lock + isolated-build +
+# atomic-swap logic instead of three independently-written build sequences —
+# see scripts/safe-build-deploy.sh for the full incident writeup.
+bash scripts/safe-build-deploy.sh
 
 sleep 4
 code=$(curl -s -o /dev/null -w '%{http_code}' https://api.dgt.llc/login || echo 000)

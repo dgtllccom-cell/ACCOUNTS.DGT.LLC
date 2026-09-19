@@ -45,19 +45,25 @@ node scripts/verify-production-env.mjs
 cp -f /var/www/dgt-nextjs/.env.local /var/www/dgt-nextjs/.env
 chmod 600 /var/www/dgt-nextjs/.env.local /var/www/dgt-nextjs/.env
 
-echo "[5/6] Stopping old PM2 process & purging stale .next build cache..."
-pm2 stop dgt-nextjs || true
-rm -rf .next
-
-echo "[5.1/6] Installing dependencies and building fresh production bundle..."
+echo "[5/6] Installing dependencies..."
 npm install
-NODE_OPTIONS='--max-old-space-size=4096' npm run build
+
+# Was: `pm2 stop` + `rm -rf .next` + build + `pm2 start`/`restart` directly in
+# this file. Confirmed root cause of a real production crash-loop (6,588
+# repeated ENOENT prerender-manifest.json errors, 2026-09-19): this exact
+# rm-then-rebuild sequence, run independently of the other deploy scripts
+# touching the same directory, left .next incomplete on the live server.
+# Moved to the shared lock+isolated-build+atomic-swap script — see
+# scripts/safe-build-deploy.sh for the full writeup. This never stops PM2
+# up front and never deletes .next; the old build keeps serving until the
+# new one is verified complete and swapped in atomically.
+echo "[5.1/6] Building via safe-build-deploy.sh (locked, isolated, atomic swap)..."
+bash scripts/safe-build-deploy.sh
 
 echo "[5.2/6] Setting 755 permissions on build assets..."
 chmod -R 755 .next
 
-echo "[6/6] Starting PM2 and reloading Nginx..."
-pm2 start ecosystem.config.cjs --update-env || pm2 restart dgt-nextjs --update-env
+echo "[6/6] Saving PM2 process list..."
 pm2 save
 
 sudo nginx -t

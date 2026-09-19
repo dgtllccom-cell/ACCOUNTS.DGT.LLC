@@ -111,13 +111,18 @@ npm install --include=dev
 # echo "[VPS 3.5/5] Running Database Migration & Multilingual Ports Seeder..."
 # node scripts/populate-ports-multilingual.mjs || true
 
-echo "[VPS 4/5] Building Next.js application..."
-rm -rf .next
-NODE_OPTIONS='--max-old-space-size=4096' npm run build
+echo "[VPS 4/5] Building Next.js application (locked, isolated, atomic swap)..."
+# Was: rm -rf .next + build in place + pm2 delete/start directly here.
+# Confirmed root cause of a real production crash-loop (6,588 repeated ENOENT
+# prerender-manifest.json errors, 2026-09-19): this script's rm-then-rebuild,
+# combined with pm2 delete+start (which wipes PM2's restart history and
+# briefly drops the upstream, unlike reload), racing against the other deploy
+# scripts touching the same directory with no coordination. Moved to the
+# shared lock+isolated-build+atomic-swap script — see
+# scripts/safe-build-deploy.sh for the full writeup.
+bash scripts/safe-build-deploy.sh
 
-echo "[VPS 5/5] Restarting PM2 process and reloading Nginx..."
-pm2 delete dgt-nextjs 2>/dev/null || true
-pm2 start ecosystem.config.cjs || pm2 start npm --name "dgt-nextjs" -- start
+echo "[VPS 5/5] Saving PM2 process list and reloading Nginx..."
 pm2 save
 sudo systemctl reload nginx || systemctl reload nginx 2>/dev/null || true
 
