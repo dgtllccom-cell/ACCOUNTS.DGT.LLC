@@ -120,8 +120,7 @@ async function main() {
           update roznamcha_lines
           set debit = ${APPROVED_FINAL_AMOUNT},
               currency = 'AED',
-              usd_rate = 1,
-              updated_at = now()
+              usd_rate = 1
           where id = ${debitLine.id}::uuid
         `;
         console.log(`✓ Updated DR Line ${debitLine.id}: debit set to ${APPROVED_FINAL_AMOUNT} AED`);
@@ -132,8 +131,7 @@ async function main() {
           update roznamcha_lines
           set credit = ${APPROVED_FINAL_AMOUNT},
               currency = 'AED',
-              usd_rate = 1,
-              updated_at = now()
+              usd_rate = 1
           where id = ${creditLine.id}::uuid
         `;
         console.log(`✓ Updated CR Line ${creditLine.id}: credit set to ${APPROVED_FINAL_AMOUNT} AED`);
