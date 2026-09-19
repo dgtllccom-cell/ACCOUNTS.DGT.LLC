@@ -174,16 +174,16 @@ async function main() {
         await tx`
           insert into audit_logs (
             action,
-            entity_type,
+            entity_table,
             entity_id,
-            details,
+            after,
             created_at
           )
           values (
             'RECONCILE_DOUBLE_CONVERSION',
             'purchase_orders',
-            ${REPORTED_ORDER_ID},
-            ${JSON.stringify({
+            ${REPORTED_ORDER_ID}::uuid,
+            ${tx.json({
               billNo: REPORTED_BILL_NO,
               previousAmount: INCORRECT_POSTED_AMOUNT,
               correctedAmount: APPROVED_FINAL_AMOUNT,
