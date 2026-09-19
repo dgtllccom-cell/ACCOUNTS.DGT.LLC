@@ -253,7 +253,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: "New Purchase Booking Order", href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
           { label: "Purchase Booking Details & Register", href: "/dashboard/purchase/purchase-booking-journal-report", icon: FileBarChart },
-          { label: "Purchase Orders Payment", href: "/dashboard/purchase/purchase-order", icon: CreditCard },
+          { label: "Purchase Payments", href: "/dashboard/purchase/purchase-payments", icon: CreditCard },
+          { label: "Purchase Orders Payment", href: "/dashboard/purchase/purchase-order", icon: Receipt },
           { label: "Country Bill Payment", href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
           { label: "Purchase Loading Records", href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
         ],
