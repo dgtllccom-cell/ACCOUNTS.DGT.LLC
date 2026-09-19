@@ -3029,7 +3029,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       // always-populated columns are paid_amount (total across every payment kind) and
       // remaining_amount (kept in sync by recalc_sales_order_payment_totals on every posting).
       const finalAmount = orderTotal(row);
-      const advancePercent = Number(form.advancePercent || 0);
+      const paymentType = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase();
+      const isCreditBill = paymentType.includes("credit");
+      const isCashBill = paymentType.includes("cash");
+      const advancePercent = isCreditBill ? 0 : Number(form.advancePercent || 0);
+      const isAdvanceBill = paymentType.includes("advance") || paymentType.includes("endorsement") || (!isCreditBill && !isCashBill && advancePercent > 0);
       const requiredAdvance = (finalAmount * advancePercent) / 100;
       const totalPaid = Number((row as any).paid_amount || 0);
       const paidAdvance = Math.min(requiredAdvance, totalPaid);
@@ -3043,31 +3047,38 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const isRemainingCleared = remainingDue <= 0.01;
 
       if (activeMode === "advance") {
-        // Show all pending POs even if advancePercent is 0, so users can make manual advance payments
+        // Strict Business Rule: ONLY show Advance payment bills in Advance Journal
+        if (isCreditBill || isCashBill) return false;
+        if (!isAdvanceBill && advancePercent <= 0) return false;
+
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
         if (isFullyPaid) return false;
         
         if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance
 
       } else if (activeMode === "advance_completed") {
+        if (isCreditBill || isCashBill) return false;
         if (advancePercent === 0) return false;
         if (remainingAdvance > 0.01) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
-        // Required advance must be fully cleared first before appearing in remaining payments
+        // Strict Business Rule: Credit and Cash bills do NOT belong in Remaining Journal
+        if (isCreditBill || isCashBill) return false;
         if (advancePercent > 0 && remainingAdvance > 0.01) return false;
         if (remainingDue <= 0.01) return false; // Already cleared
 
         // NOTE: sales orders have no loading/container-transfer stage (that's a Country
-        // Purchase concept â sales_loading_records doesn't exist in this schema), so unlike
+        // Purchase concept — sales_loading_records doesn't exist in this schema), so unlike
         // the purchase side there is no "must be transferred to loading first" gate here. The
         // advance-cleared + remaining-due checks above are the correct, sufficient eligibility
         // rule for a domestic sales order's remaining payment.
       } else if (activeMode === "credit") {
+        // Strict Business Rule: ONLY show Credit bills in Credit Payment Journal
+        if (!isCreditBill) return false;
         if (isCreditPaid) return false; // Already cleared
       } else if (activeMode === "history") {
         // Show in history if fully cleared
-        const isFullyCleared = (advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared;
+        const isFullyCleared = isCreditBill ? isCreditPaid : ((advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared);
         if (!isFullyCleared && !isCreditPaid) return false;
       }
 

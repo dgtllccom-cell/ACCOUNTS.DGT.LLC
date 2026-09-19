@@ -533,6 +533,8 @@ function orderTotal(row: PurchaseOrderRow) {
 
 function requiredAdvanceAmount(row: PurchaseOrderRow) {
   const form = rowForm(row);
+  const isCredit = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase() === "credit";
+  if (isCredit) return 0;
   const pct = Number(form.advancePercent || 0);
   return pct > 0 ? (orderTotal(row) * pct) / 100 : Number(row.advance_paid || 0);
 }
@@ -563,12 +565,17 @@ function resolvePurchaseCalculations(row: PurchaseOrderRow, liveRates: any[] = [
     }
   }
 
+  // Check if credit bill
+  const isCredit = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase() === "credit";
+
   // Advance Percentage
-  const advancePercent = Number(form.advancePercent || 0);
+  const advancePercent = isCredit ? 0 : Number(form.advancePercent || 0);
 
   // Advance Amount in purchase currency
   let advanceAmountFC = 0;
-  if (advancePercent > 0) {
+  if (isCredit) {
+    advanceAmountFC = 0;
+  } else if (advancePercent > 0) {
     advanceAmountFC = (totalPurchaseFC * advancePercent) / 100;
   } else {
     const rawAdv = Number(row.advance_paid || form.advanceAmount || 0);
@@ -3101,7 +3108,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
       // Extract form values for clearance calculation
       const finalAmount = orderTotal(row);
-      const advancePercent = Number(form.advancePercent || 0);
+      const paymentType = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase();
+      const isCreditBill = paymentType.includes("credit");
+      const isCashBill = paymentType.includes("cash");
+      const advancePercent = isCreditBill ? 0 : Number(form.advancePercent || 0);
+      const isAdvanceBill = paymentType.includes("advance") || paymentType.includes("endorsement") || (!isCreditBill && !isCashBill && advancePercent > 0);
       const requiredAdvance = (finalAmount * advancePercent) / 100;
       const paidAdvance = Number(row.advance_paid || 0);
       const remainingAdvance = requiredAdvance - paidAdvance;
@@ -3119,17 +3130,24 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const isRemainingCleared = remainingDue <= 0.01;
 
       if (activeMode === "advance") {
-        // Show in Advance if advance is required and not yet cleared
+        // Strict Business Rule: ONLY show Advance payment bills in Advance Journal
+        if (isCreditBill || isCashBill) return false;
+        if (!isAdvanceBill && advancePercent <= 0) return false;
+
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
         if (isFullyPaid) return false;
         
         if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance -> moves to Loading
 
       } else if (activeMode === "advance_completed") {
+        if (isCreditBill || isCashBill) return false;
         if (advancePercent === 0 && paidAdvance <= 0) return false;
         if (advancePercent > 0 && remainingAdvance > 0.01) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
+        // Strict Business Rule: Credit and Cash bills do NOT belong in Remaining Journal
+        if (isCreditBill || isCashBill) return false;
+
         // Strict Business Rule: Required advance must be fully cleared first before appearing in remaining payments
         if (advancePercent > 0 && remainingAdvance > 0.01 && !isUrlLoadingScope) return false;
 
@@ -3147,10 +3165,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         const isFullyCleared = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
         if (isFullyCleared && remainingDue <= 0.01 && !isUrlLoadingScope) return false;
       } else if (activeMode === "credit") {
+        // Strict Business Rule: ONLY show Credit bills in Credit Payment Journal
+        if (!isCreditBill) return false;
         if (isCreditPaid) return false; // Already cleared
       } else if (activeMode === "history") {
         // Show in history if fully cleared
-        const isFullyCleared = (advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared;
+        const isFullyCleared = isCreditBill ? isCreditPaid : ((advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared);
         if (!isFullyCleared && !isCreditPaid) return false;
       }
 
@@ -4182,22 +4202,59 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           <td className="py-2.5 px-2.5 whitespace-nowrap">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-slate-900 dark:text-white text-xs">{partyName}</span>
-              {isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01) ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Paid
-                </span>
-              ) : calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  Partial
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                  Pending
-                </span>
-              )}
+              {(() => {
+                const isCreditBill = (activeMode as string) === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
+                const rowRemainingDue = Number(row.remaining_due ?? (calcs.totalPurchaseFC - Number(row.advance_paid || 0)));
+                const rowActualPaid = isCreditBill ? Number(row.advance_paid || 0) : calcs.advanceAmountFC;
+
+                if (isCreditBill) {
+                  if (rowActualPaid > 0 && rowRemainingDue <= 0.01) {
+                    return (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Paid
+                      </span>
+                    );
+                  }
+                  if (rowActualPaid > 0 && rowRemainingDue > 0.01) {
+                    return (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        Partial
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
+                      <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+                      Transferred / Credit Due
+                    </span>
+                  );
+                }
+
+                if (isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01)) {
+                  return (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Paid
+                    </span>
+                  );
+                }
+                if (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC > 0) {
+                  return (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      Partial
+                    </span>
+                  );
+                }
+                return (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0">
+                    <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                    Pending
+                  </span>
+                );
+              })()}
             </div>
           </td>
 
@@ -4663,36 +4720,65 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
             const goods = selected.form_data?.goodsEntries || [];
             const transport = (selected.form_data?.transportDetails || selected.form_data?.transport || {}) as any;
             const poCurrencyHeader = String(form.currencyType || form.currency || selected.currency_code || "USD").toUpperCase();
-            const exRateHeader = Number(selected.exchange_rate || form.exchangeRate || 1);
-            const purchaseTotalHeader = Number(selected.order_total || form.totalAmount || goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0));
-            const advancePercent = Number(form.advancePercent || 0);
-            const requiredAdvanceBC = (purchaseTotalHeader * advancePercent) / 100;
-            const paidAdvanceBC = Number(selected.advance_paid || 0);
-            const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
             const exRate = Number(selected.exchange_rate || form.exchangeRate || 1);
-            const statementPurchaseForeign = purchaseTotalHeader;
-            const statementPurchaseLocal = statementPurchaseForeign * exRate;
+            const exRateHeader = exRate;
 
-            // Form data mappings â real transaction/master values only, else empty/â
-            const countryName = rowCountryName(selected) || form.countryName || "â";
-            const branchName = rowBranchName(selected) || form.branchName || "â";
+            // Correctly resolve foreign (purchase) amount and local (converted) amount
+            const goodsSumFC = Array.isArray(goods) && goods.length > 0
+              ? goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || g.amount || 0), 0)
+              : 0;
+            const goodsSumLC = Array.isArray(goods) && goods.length > 0
+              ? goods.reduce((sum: number, g: any) => sum + Number(g.finalAmount || g.localAmount || 0), 0)
+              : 0;
+
+            const formFC = Number(form.totalAmount || form.subTotal || (selected as any)?.form_data?.totals?.grandPrimaryFinal || 0);
+            const rawOrderTotal = Number(selected.order_total || 0);
+
+            let statementPurchaseForeign = 0;
+            let statementPurchaseLocal = 0;
+
+            if (goodsSumFC > 0) {
+              statementPurchaseForeign = goodsSumFC;
+              statementPurchaseLocal = goodsSumLC > 0 ? goodsSumLC : goodsSumFC * exRate;
+            } else if (formFC > 0) {
+              statementPurchaseForeign = formFC;
+              statementPurchaseLocal = formFC * exRate;
+            } else if (rawOrderTotal > 0) {
+              if (exRate > 1) {
+                statementPurchaseForeign = rawOrderTotal / exRate;
+                statementPurchaseLocal = rawOrderTotal;
+              } else {
+                statementPurchaseForeign = rawOrderTotal;
+                statementPurchaseLocal = rawOrderTotal;
+              }
+            }
+
+            const purchaseTotalHeader = statementPurchaseForeign;
+            const isCredit = activeMode === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
+            const advancePercent = isCredit ? 0 : Number(form.advancePercent || 0);
+            const requiredAdvanceBC = isCredit ? 0 : (purchaseTotalHeader * advancePercent) / 100;
+            const paidAdvanceBC = isCredit ? 0 : Number(selected.advance_paid || 0);
+            const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
+
+            const countryName = rowCountryName(selected) || form.countryName || "—";
+            const branchName = rowBranchName(selected) || form.branchName || "—";
             const _sel = selected as any;
-            const userName = selected.audit?.userName || _sel.created_by_name || "â";
-            const userRoleLabel = String((selected.audit as any)?.userRole || _sel.created_by_role || "").replace(/_/g, " ") || "â";
-            const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "â";
+            const userName = selected.audit?.userName || _sel.created_by_name || "—";
+            const userRoleLabel = String((selected.audit as any)?.userRole || _sel.created_by_role || "").replace(/_/g, " ") || "—";
+            const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "—";
             const supplierCompany = form.salesCompanyName || "";
             const purchaseCompany = form.purchaseCompanyName || form.companyName || form.purchaseAccountName || "";
-            const debitAccountName = form.purchaseAccountName || form.purchaseAccountId || "â";
-            const creditAccountName = form.salesAccountName || form.salesAccountId || "â";
+            const debitAccountName = form.purchaseAccountName || form.purchaseAccountId || "—";
+            const creditAccountName = form.salesAccountName || form.salesAccountId || "—";
             const salesCurrency = String(form.salesCurrency || form.currencyType || baseCurrency || "").toUpperCase();
             const totalQtyDisplay = form.totalQuantity || (goods.length ? goods.reduce((acc: number, g: any) => acc + Number(g.qtyNo || g.quantity || 0), 0) : 0);
 
-            // Transport details â from the record, else empty
+            // Transport details — from the record, else empty
             const loadingCountry = transport.loadingCountry || form.loadingCountry || "";
             const loadingDate = transport.loadingDate || form.loadingDate || "";
             const receivingCountry = transport.receivingCountry || form.receivingCountry || "";
             const receivedDate = transport.receivedDate || form.receivedDate || "";
-            const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : "");
+            const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : isCredit ? "Credit Payment" : "");
 
             // Payment calculations
             const displayPayments = selectedOrderPayments.filter((p: any) => p.kind !== "booking");
@@ -4728,10 +4814,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               };
             });
 
-            const statTotalPaidFC = historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || (paidAdvanceBC || 0);
-            const statTotalPaidLC = statTotalPaidFC * exRate;
+            const statTotalPaidFC = isCredit
+              ? historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0)
+              : (historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || (paidAdvanceBC || 0));
+            const statTotalPaidLC = isCredit
+              ? historyWithBalance.reduce((sum, p) => sum + p.amtAED, 0)
+              : (statTotalPaidFC * exRate);
             const statRemainingFC = Math.max(0, statementPurchaseForeign - statTotalPaidFC);
-            const statRemainingLC = statRemainingFC * exRate;
+            const statRemainingLC = Math.max(0, statementPurchaseLocal - statTotalPaidLC);
 
             const activePaymentAmountUSD = amount > 0
               ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / Number(exchangeRate || exRate || 1))
@@ -4938,77 +5028,116 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                   </div>
 
-                  {/* Card 7: 7 Advance Payment & Financial Summary */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
-                    <div className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
-                      <span>7</span>
-                      <span>{t("sec_advance_payment_financial_summary", currentLanguage)}</span>
-                    </div>
-                    <div className="space-y-2 mt-2 text-[11px]">
-                      <div>
-                        <span className="text-[9.5px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Advance Payment Summary ({advancePercent}%)</span>
-                        <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[10.5px]">
-                          <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Required:")} </span><span className="font-mono font-bold">USD {requiredAdvanceBC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(requiredAdvanceBC * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                          <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Paid:")} </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                          <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Pending:")} </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">USD {Math.max(0, requiredAdvanceBC - statTotalPaidFC).toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(Math.max(0, requiredAdvanceBC - statTotalPaidFC) * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                  {/* Card 7: Advance or Credit Payment & Financial Summary */}
+                  {isCredit ? (
+                    <div className="rounded-xl border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
+                      <div className="text-[11px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                        <span>7</span>
+                        <span>{translateHeader(currentLanguage, "Credit Payment & Financial Summary")}</span>
+                      </div>
+                      <div className="space-y-2 mt-2 text-[11px]">
+                        <div>
+                          <span className="text-[9.5px] font-bold uppercase text-purple-600 dark:text-purple-400 block">
+                            {translateHeader(currentLanguage, "Credit Liability Summary (0% Advance)")}
+                          </span>
+                          <div className="space-y-1 text-slate-700 dark:text-slate-300 text-[10.5px] mt-1 font-semibold">
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Original Bill / Credit Amount:")}</span>
+                              <span className="font-mono font-bold text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Transferred Credit:")}</span>
+                              <span className="font-mono font-bold text-purple-600 dark:text-purple-400">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Total Credit Due:")}</span>
+                              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Remaining Credit:")}</span>
+                              <span className="font-mono font-black text-rose-600 dark:text-rose-400">USD {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1 font-bold text-purple-600 dark:text-purple-400">
+                            ✓ {translateHeader(currentLanguage, "Credit Liability Transferred. Actual payments will appear below only after money is paid.")}
+                          </span>
                         </div>
                       </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
+                      <div className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                        <span>7</span>
+                        <span>{t("sec_advance_payment_financial_summary", currentLanguage)}</span>
+                      </div>
+                      <div className="space-y-2 mt-2 text-[11px]">
+                        <div>
+                          <span className="text-[9.5px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Advance Payment Summary ({advancePercent}%)</span>
+                          <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[10.5px]">
+                            <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Required:")} </span><span className="font-mono font-bold">USD {requiredAdvanceBC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(requiredAdvanceBC * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                            <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Paid:")} </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                            <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Pending:")} </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">USD {Math.max(0, requiredAdvanceBC - statTotalPaidFC).toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(Math.max(0, requiredAdvanceBC - statTotalPaidFC) * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                          </div>
+                        </div>
 
-                      <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
-                        <span className="text-[9.5px] font-bold uppercase text-cyan-600 dark:text-cyan-400 block mb-1">{translateHeader(currentLanguage, "Payment Schedule & Installment Plan")}</span>
-                        <table className="w-full text-left text-[9px] border-collapse">
-                          <thead>
-                            <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                              <th className="py-0.5 font-bold">{translateHeader(currentLanguage, "Installment")}</th>
-                              <th className="py-0.5 text-center font-bold">{translateHeader(currentLanguage, "Percent")}</th>
-                              <th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (USD)")}</th>
-                              <th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (AED)")}</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-slate-800 dark:text-slate-300 font-mono">
-                            <tr>
-                              <td className="py-0.5 font-sans font-medium">Advance (30%)</td>
-                              <td className="py-0.5 text-center">30%</td>
-                              <td className="py-0.5 text-right">{(statementPurchaseForeign * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="py-0.5 text-right">{(statementPurchaseLocal * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            </tr>
-                            <tr>
-                              <td className="py-0.5 font-sans font-medium">2nd (40%)</td>
-                              <td className="py-0.5 text-center">40%</td>
-                              <td className="py-0.5 text-right">{(statementPurchaseForeign * 0.4).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="py-0.5 text-right">{(statementPurchaseLocal * 0.4).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            </tr>
-                            <tr>
-                              <td className="py-0.5 font-sans font-medium">Final (30%)</td>
-                              <td className="py-0.5 text-center">30%</td>
-                              <td className="py-0.5 text-right">{(statementPurchaseForeign * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="py-0.5 text-right">{(statementPurchaseLocal * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
+                          <span className="text-[9.5px] font-bold uppercase text-cyan-600 dark:text-cyan-400 block mb-1">{translateHeader(currentLanguage, "Payment Schedule & Installment Plan")}</span>
+                          <table className="w-full text-left text-[9px] border-collapse">
+                            <thead>
+                              <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                <th className="py-0.5 font-bold">{translateHeader(currentLanguage, "Installment")}</th>
+                                <th className="py-0.5 text-center font-bold">{translateHeader(currentLanguage, "Percent")}</th>
+                                <th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (USD)")}</th>
+                                <th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (AED)")}</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-slate-800 dark:text-slate-300 font-mono">
+                              <tr>
+                                <td className="py-0.5 font-sans font-medium">Advance (30%)</td>
+                                <td className="py-0.5 text-center">30%</td>
+                                <td className="py-0.5 text-right">{(statementPurchaseForeign * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="py-0.5 text-right">{(statementPurchaseLocal * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              </tr>
+                              <tr>
+                                <td className="py-0.5 font-sans font-medium">2nd (40%)</td>
+                                <td className="py-0.5 text-center">40%</td>
+                                <td className="py-0.5 text-right">{(statementPurchaseForeign * 0.4).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="py-0.5 text-right">{(statementPurchaseLocal * 0.4).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              </tr>
+                              <tr>
+                                <td className="py-0.5 font-sans font-medium">Final (30%)</td>
+                                <td className="py-0.5 text-center">30%</td>
+                                <td className="py-0.5 text-right">{(statementPurchaseForeign * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="py-0.5 text-right">{(statementPurchaseLocal * 0.3).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Card 8: 8 Total Payment & Balance Summary */}
+                  {/* Card 8: Total Payment & Balance Summary */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>8</span>
-                      <span>{t("sec_total_payment_balance_summary", currentLanguage)}</span>
+                      <span>{translateHeader(currentLanguage, isCredit ? "Credit Total Payment & Balance Summary" : "Total Payment & Balance Summary")}</span>
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Payment :")}</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Credit Amount :" : "Total Payment :")}</span>
                         <span className="font-mono font-black text-sm text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Paid Payment :")}</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Paid Credit (Cash/Bank) :" : "Total Paid Payment :")}</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-emerald-600/90 dark:text-emerald-400/80">AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, "Remaining Payment Balance :")}</span>
+                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Remaining Credit Balance :" : "Remaining Payment Balance :")}</span>
                         <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">USD {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-rose-600/90 dark:text-rose-400/90">AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
@@ -5052,7 +5181,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             <tr key={g.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                               <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
                               <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">
-                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "â"}
+                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "—"}
                               </td>
                               <td className="px-3 py-2 text-center font-mono">{itemQty.toLocaleString()} {g.unit || ""}</td>
                               <td className="px-3 py-2 text-right font-mono">{itemGross.toLocaleString()}</td>
@@ -5069,172 +5198,335 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ââ TABLE 2: PURCHASE ROZNAMCHA DETAILS ââ */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
-                  <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    {translateHeader(currentLanguage, "Purchase Roznamcha Details")}
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                          <th className="px-3 py-2 text-center w-10">S.#</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "User")}</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Branch")}</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Roz #")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total Amount (AED)")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Percent")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Advance (AED)")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Balance (AED)")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total (AED)")}</th>
-                          <th className="px-3 py-2 text-center">{t("transfer_label", currentLanguage)}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
-                        {(() => {
-                          const advPct = advancePercent || 0;
-                          const advAmt = advPct > 0 ? statementPurchaseLocal * (advPct / 100) : Number(selected.advance_paid || 0) * exRateHeader;
-                          const balAmt = Math.max(0, statementPurchaseLocal - advAmt);
-                          const isTransferred = String(selected.ledger_posting_status || "").toLowerCase() === "posted";
-                          return (
+                {/* ── CREDIT VS ADVANCE TABLES ── */}
+                {isCredit ? (
+                  <>
+                    {/* ── SEPARATE TABLE 1: TRANSFER RECORD (BILL TRANSFER / CREDIT LIABILITY) ── */}
+                    <div className="rounded-xl border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
+                      <div className="px-4 py-2 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/80 text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center justify-between">
+                        <span>{translateHeader(currentLanguage, "Transfer Record — Credit Liability (Bill Transfer)")}</span>
+                        <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">1 Record</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                              <th className="px-3 py-2 text-center w-10">S.#</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Transfer Date")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Bill No.")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Purchase A/c (DR)")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Supplier A/c (CR)")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roznamcha Serial")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Credit Amount (USD)")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Credit Amount (AED)")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Transfer Serial")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Status")}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                               <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">1</td>
-                              <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{date(_sel.order_date || selected.created_at) || "â"}</td>
-                              <td className="px-3 py-2 text-slate-800 dark:text-slate-200">{userName}</td>
-                              <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{branchName}</td>
-                              <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">{_sel.journal_no || selected.purchase_order_no || "â"}</td>
-                              <td className="px-3 py-2 text-right font-mono font-bold">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="px-3 py-2 text-center font-mono text-amber-600 dark:text-amber-400 font-bold">{advPct > 0 ? `${advPct}%` : "â"}</td>
-                              <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{advAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="px-3 py-2 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{balAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
+                                {date(form.transferAudit?.transferDate || _sel.order_date || selected.created_at) || "—"}
+                              </td>
+                              <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">
+                                {selected.purchase_order_no || "—"}
+                              </td>
+                              <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold truncate max-w-[150px]" title={debitAccountName}>
+                                {debitAccountName}
+                              </td>
+                              <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold truncate max-w-[150px]" title={creditAccountName}>
+                                {creditAccountName}
+                              </td>
+                              <td className="px-3 py-2 text-center font-mono font-bold text-slate-700 dark:text-slate-300">
+                                {_sel.journal_no || form.journalEntryNo || form.transferAudit?.referenceNo || "—"}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-white">
+                                USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">
+                                AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="px-3 py-2 text-center font-mono font-bold text-slate-600 dark:text-slate-400">
+                                {selected.super_admin_serial_number || _sel.super_admin_serial_number || `TRF-${String(selected.purchase_order_no || "").replace(/[^0-9]/g, "").slice(-4)}`}
+                              </td>
                               <td className="px-3 py-2 text-center">
-                                <span className={`font-bold ${isTransferred ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>{translateHeader(currentLanguage, isTransferred ? "Yes" : "No")}</span>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                                  {translateHeader(currentLanguage, "Transferred")}
+                                </span>
                               </td>
                             </tr>
-                          );
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
 
-                {/* ââ TABLE 3: ADVANCE TRANSACTIONS ââ */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
-                  <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Advance Transactions ({displayAdvanceTx.length} Entries)
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                          <th className="px-3 py-2 text-center w-10">#</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
-                          <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
-                          <th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</th>
-                          <th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
-                        {displayAdvanceTx.length === 0 && (
-                          <tr><td colSpan={10} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
-                        )}
-                        {displayAdvanceTx.map((tx: any, idx: number) => (
-                          <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                            <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "â"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "â"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "â"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.payment_method || tx.method || "â"}</td>
-                            <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{tx.debit_account_name || tx.dr || "â"}</td>
-                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "â"}</td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "â"}</td>
-                            <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="px-3 py-2 text-center whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingPayment({ payment: tx, row: selected });
-                                }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
-                                title={t("edit_payment_entry_tt", currentLanguage)}
-                              >
-                                <Edit3 className="h-3 w-3" />
-                                <span>{translateHeader(currentLanguage, "Edit")}</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                    {/* ── SEPARATE TABLE 2: ACTUAL PAYMENT TRANSACTIONS (0 UNTIL PAID) ── */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
+                      <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                        <span>{translateHeader(currentLanguage, "Actual Payment Transactions")}</span>
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                          historyWithBalance.length === 0
+                            ? "text-slate-500 bg-slate-100 dark:bg-slate-800"
+                            : "text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50"
+                        }`}>
+                          {historyWithBalance.length} {historyWithBalance.length === 1 ? "Entry" : "Entries"}
+                        </span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                              <th className="px-3 py-2 text-center w-10">#</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Date")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Payment Serial")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount Paid (USD)")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount Paid (AED)")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Account")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "DR / CR")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roznamcha Serial")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Remaining Balance (AED)")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                            {historyWithBalance.length === 0 ? (
+                              <tr>
+                                <td colSpan={10} className="px-3 py-8 text-center text-slate-400 dark:text-slate-500 font-normal">
+                                  <div className="flex flex-col items-center justify-center gap-1">
+                                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                      {translateHeader(currentLanguage, "No actual payment entries found (0 entries).")}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                                      {translateHeader(currentLanguage, "Bill is transferred under Credit Liability. Use \"+ Add Payment Entry\" below when money is paid.")}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : (
+                              historyWithBalance.map((tx: any, idx: number) => (
+                                <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                                  <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                  <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">
+                                    {tx.date || date(tx.entry_date || tx.created_at) || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-center font-mono font-bold text-slate-800 dark:text-slate-200">
+                                    {tx.voucher_no || tx.serial || tx.rName || `PAY-${idx + 1}`}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-white">
+                                    {Number(tx.amtUSD || tx.amountUSD || 0) > 0
+                                      ? `$${Number(tx.amtUSD || tx.amountUSD || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                                      : "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">
+                                    AED {Number(tx.amtAED ?? tx.amountAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-700 dark:text-slate-300 font-medium">
+                                    {tx.payment_method || tx.method || tx.credit_account_name || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-[11px]">
+                                    <span className="text-rose-600 dark:text-rose-400 font-bold">DR: {tx.debit_account_name || tx.dr || "—"}</span>
+                                    <span className="text-slate-400 mx-1">/</span>
+                                    <span className="text-blue-600 dark:text-blue-400 font-bold">CR: {tx.credit_account_name || tx.cr || "—"}</span>
+                                  </td>
+                                  <td className="px-3 py-2 text-center font-mono text-purple-600 dark:text-purple-400 font-bold">
+                                    {tx.journal_no || tx.rozNo || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-black text-rose-600 dark:text-rose-400">
+                                    AED {Number(tx.showRemainAED ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="px-3 py-2 text-center whitespace-nowrap">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingPayment({ payment: tx, row: selected });
+                                      }}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                      title={t("edit_payment_entry_tt", currentLanguage)}
+                                    >
+                                      <Edit3 className="h-3 w-3" />
+                                      <span>{translateHeader(currentLanguage, "Edit")}</span>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* ── TABLE 2: PURCHASE ROZNAMCHA DETAILS ── */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
+                      <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        {translateHeader(currentLanguage, "Purchase Roznamcha Details")}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                              <th className="px-3 py-2 text-center w-10">S.#</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "User")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Branch")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Roz #")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total Amount (AED)")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Percent")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Advance (AED)")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Balance (AED)")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total (AED)")}</th>
+                              <th className="px-3 py-2 text-center">{t("transfer_label", currentLanguage)}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                            {(() => {
+                              const advPct = advancePercent || 0;
+                              const advAmt = advPct > 0 ? statementPurchaseLocal * (advPct / 100) : Number(selected.advance_paid || 0) * exRateHeader;
+                              const balAmt = Math.max(0, statementPurchaseLocal - advAmt);
+                              const isTransferred = String(selected.ledger_posting_status || "").toLowerCase() === "posted";
+                              return (
+                                <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                                  <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">1</td>
+                                  <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{date(_sel.order_date || selected.created_at) || "—"}</td>
+                                  <td className="px-3 py-2 text-slate-800 dark:text-slate-200">{userName}</td>
+                                  <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{branchName}</td>
+                                  <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">{_sel.journal_no || selected.purchase_order_no || "—"}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-bold">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                  <td className="px-3 py-2 text-center font-mono text-amber-600 dark:text-amber-400 font-bold">{advPct > 0 ? `${advPct}%` : "—"}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{advAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{balAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                  <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                  <td className="px-3 py-2 text-center">
+                                    <span className={`font-bold ${isTransferred ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>{translateHeader(currentLanguage, isTransferred ? "Yes" : "No")}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
 
-                {/* ââ TABLE 4: ENDORSEMENT PAYMENT HISTORY ââ */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
-                  <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Endorsement Payment History ({displayEndorsement.length} Entries)
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                          <th className="px-3 py-2 text-center w-10">#</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
-                          <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
-                          <th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</th>
-                          <th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
-                        {displayEndorsement.length === 0 && (
-                          <tr><td colSpan={10} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
-                        )}
-                        {displayEndorsement.map((tx: any, idx: number) => (
-                          <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                            <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "â"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "â"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "â"}</td>
-                            <td className="px-3 py-2 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">{tx.payment_method || tx.method || "â"}</td>
-                            <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{tx.debit_account_name || tx.dr || "â"}</td>
-                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "â"}</td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "â"}</td>
-                            <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="px-3 py-2 text-center whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingPayment({ payment: tx, row: selected });
-                                }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
-                                title={t("edit_payment_entry_tt", currentLanguage)}
-                              >
-                                <Edit3 className="h-3 w-3" />
-                                <span>{translateHeader(currentLanguage, "Edit")}</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                    {/* ── TABLE 3: ADVANCE TRANSACTIONS ── */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
+                      <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Advance Transactions ({displayAdvanceTx.length} Entries)
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                              <th className="px-3 py-2 text-center w-10">#</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
+                              <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
+                              <th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</th>
+                              <th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                            {displayAdvanceTx.length === 0 && (
+                              <tr><td colSpan={11} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
+                            )}
+                            {displayAdvanceTx.map((tx: any, idx: number) => (
+                              <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                                <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "—"}</td>
+                                <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "—"}</td>
+                                <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "—"}</td>
+                                <td className="px-3 py-2 text-center font-mono">{tx.payment_method || tx.method || "—"}</td>
+                                <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{tx.debit_account_name || tx.dr || "—"}</td>
+                                <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "—"}</td>
+                                <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
+                                <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingPayment({ payment: tx, row: selected });
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                    title={t("edit_payment_entry_tt", currentLanguage)}
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                    <span>{translateHeader(currentLanguage, "Edit")}</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* ── TABLE 4: ENDORSEMENT PAYMENT HISTORY ── */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
+                      <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Endorsement Payment History ({displayEndorsement.length} Entries)
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                              <th className="px-3 py-2 text-center w-10">#</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
+                              <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
+                              <th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</th>
+                              <th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</th>
+                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</th>
+                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</th>
+                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                            {displayEndorsement.length === 0 && (
+                              <tr><td colSpan={11} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
+                            )}
+                            {displayEndorsement.map((tx: any, idx: number) => (
+                              <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                                <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "—"}</td>
+                                <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "—"}</td>
+                                <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "—"}</td>
+                                <td className="px-3 py-2 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">{tx.payment_method || tx.method || "—"}</td>
+                                <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{tx.debit_account_name || tx.dr || "—"}</td>
+                                <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "—"}</td>
+                                <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
+                                <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingPayment({ payment: tx, row: selected });
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                    title={t("edit_payment_entry_tt", currentLanguage)}
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                    <span>{translateHeader(currentLanguage, "Edit")}</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* ââ PAYMENT ENTRY ACTION / DOUBLE-ENTRY POSTING PANEL ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm p-4 space-y-4">
@@ -5626,7 +5918,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                               disabled={processingPayment || missing.length > 0}
                               className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                             >
-                              {processingPayment ? "Processing..." : `Post ${activeMode === "advance" ? "Advance" : "Remaining"} Payment Voucher`}
+                              {processingPayment ? "Processing..." : `Post ${activeMode === "advance" ? "Advance" : isCredit ? "Credit" : "Remaining"} Payment Voucher`}
                             </Button>
                           </div>
                         );

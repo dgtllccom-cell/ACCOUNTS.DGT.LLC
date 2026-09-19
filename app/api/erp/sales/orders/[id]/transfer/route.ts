@@ -326,22 +326,29 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       entry: journalRecord
     });
 
+    const isCreditSales = paymentRoute.paymentKind === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
+    const existingPaid = isCreditSales ? 0 : Number(orderRow.paid_amount || 0);
+    const newRemainingSales = isCreditSales ? totalSalesAmount : Math.max(0, totalSalesAmount - existingPaid);
+    const salesPaymentStatus = isCreditSales ? "pending" : (newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : (existingPaid > 0 ? "partial" : "pending"));
+
     const patch = {
       ledger_posting_status: "posted",
-      payment_status: "completed",
-      // sales_orders has no payment_kind column — the same information already lives in
-      // form_data.workflow.paymentKind below (patch.form_data.workflow), which is where every
-      // reader of this order (payment journal, reports) actually looks it up.
-      paid_amount: totalSalesAmount,
-      remaining_amount: 0,
+      payment_status: salesPaymentStatus,
+      paid_amount: existingPaid,
+      remaining_amount: newRemainingSales,
       updated_at: now,
       form_data: {
         ...updatedFormData,
+        form: {
+          ...updatedFormData.form,
+          ...(isCreditSales ? { advancePercent: 0, advanceAmount: 0 } : {})
+        },
         workflow: {
           ...updatedFormData.workflow,
           journalStatus: "posted",
           ledgerStatus: "posted",
           paymentKind: paymentRoute.paymentKind,
+          paymentStatus: salesPaymentStatus,
           lastPaymentId: paymentId,
           lastRoznamchaEntryId: paymentRecord.roznamcha_entry_id,
           lastPaymentPostedAt: now
@@ -407,10 +414,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       referenceNo,
       transferOnly: true,
       ledgerPostingStatus: "posted",
-      paymentStatus: "completed",
+      paymentStatus: salesPaymentStatus,
       paymentKind: paymentRoute.paymentKind,
-      paidAmount: totalSalesAmount,
-      remainingAmount: 0
+      paidAmount: existingPaid,
+      remainingAmount: newRemainingSales
     };
 
     if (idempotencyKey && tenantHash) {

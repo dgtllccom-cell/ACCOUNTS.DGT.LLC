@@ -80,7 +80,7 @@ import { VoiceFormFill } from "@/components/voice-form-fill";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
-const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+const PAYMENT_TYPES = ["Advance Payment", "Credit", "Cash", "Final Payment", "Invoice"];
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
@@ -6179,7 +6179,13 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                   <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                                   <select
                                     value={form.paymentType || ""}
-                                    onChange={(e) => setValue("paymentType", e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setValue("paymentType", val);
+                                      if (String(val).toLowerCase().includes("credit") || String(val).toLowerCase().includes("cash")) {
+                                        setValue("advancePercent", 0);
+                                      }
+                                    }}
                                     className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
                                   >
                                     <option value="">{t(lang, "common.select", "Select…")}</option>
@@ -6192,10 +6198,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     type="number"
                                     min="0"
                                     max="100"
-                                    value={form.advancePercent ?? ""}
+                                    disabled={String(form.paymentType || "").toLowerCase().includes("credit") || String(form.paymentType || "").toLowerCase().includes("cash")}
+                                    value={(String(form.paymentType || "").toLowerCase().includes("credit") || String(form.paymentType || "").toLowerCase().includes("cash")) ? 0 : (form.advancePercent ?? "")}
                                     onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
                                     placeholder="10"
-                                    className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono"
+                                    className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
                                   />
                                 </div>
                                 <div>

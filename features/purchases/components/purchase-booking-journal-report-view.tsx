@@ -3287,11 +3287,14 @@ export function PurchaseBookingJournalReportView({
             const avgRateKg = totalNet > 0 ? (totalUSDVal / totalNet) : 0;
             const avgRateTon = avgRateKg * 1000;
 
-            const advancePercent = selected.form_data?.form?.advancePercent || 10;
-            const advanceAmount = (totalUSDVal * advancePercent) / 100;
+            const paymentConditionText = selected.form_data?.form?.paymentType || selected.form_data?.form?.paymentCondition || "Advance Payment";
+            const isCreditBooking = String(paymentConditionText || "").toLowerCase().includes("credit");
+
+            const advancePercent = isCreditBooking ? 0 : Number(selected.form_data?.form?.advancePercent || 0);
+            const advanceAmount = isCreditBooking ? 0 : (totalUSDVal * advancePercent) / 100;
             const remainingPercent = 100 - advancePercent;
             const remainingAmount = totalUSDVal - advanceAmount;
-            const advanceAmountFinal = (totalPKRVal * advancePercent) / 100;
+            const advanceAmountFinal = isCreditBooking ? 0 : (totalPKRVal * advancePercent) / 100;
             const remainingAmountFinal = totalPKRVal - advanceAmountFinal;
 
             const remarksText = trField(selected, "remarks", selected.form_data?.form?.orderReportRemarks || selected.remarks || "No narration provided.");
@@ -3314,8 +3317,7 @@ export function PurchaseBookingJournalReportView({
             const modeOfShipment = "Sea Cargo";
             const scheduleRemarks = "-";
 
-            const paymentConditionText = selected.form_data?.form?.paymentType || "Advance Payment";
-            const advanceDueDateText = selected.form_data?.form?.advancePaymentDate || reportDate;
+            const advanceDueDateText = isCreditBooking ? "—" : (selected.form_data?.form?.advancePaymentDate || reportDate);
             const finalPaymentDueDateText = selected.form_data?.form?.paymentDate || reportDate;
 
             const journalEntryNumberText = selected.form_data?.form?.journalEntryNo || "Pending Posting";

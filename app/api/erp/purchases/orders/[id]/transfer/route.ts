@@ -423,18 +423,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // 4. Create purchase_order_payments record if still missing
     // ─────────────────────────────────────────────────────────────
     // Update order status in purchase_orders table
-    const existingAdvance = Number(orderRow.advance_paid) || 0;
-    const newRemainingDue = Math.max(0, expectedFinalAmount - existingAdvance);
-    let newPaymentStatus = "pending";
-    if (newRemainingDue <= 0.01) newPaymentStatus = "completed";
-    else if (existingAdvance > 0) newPaymentStatus = "partial";
     const selectedPaymentType = form.paymentType || body?.paymentType || "";
     const destination = resolvePurchaseBookingTransferDestination(selectedPaymentType);
+    const isCreditBooking = destination.flow === "credit" || String(selectedPaymentType || form.paymentCondition || "").toLowerCase().includes("credit");
+
+    const existingAdvance = isCreditBooking ? 0 : (Number(orderRow.advance_paid) || 0);
+    const newRemainingDue = isCreditBooking ? expectedFinalAmount : Math.max(0, expectedFinalAmount - existingAdvance);
+    let newPaymentStatus = "pending";
+    if (newRemainingDue <= 0.01 && existingAdvance > 0) newPaymentStatus = "completed";
+    else if (existingAdvance > 0) newPaymentStatus = "partial";
 
     const updatedFormData = {
       ...formData,
       form: {
         ...form,
+        ...(isCreditBooking ? { advancePercent: 0, advanceAmount: 0 } : {}),
         roznamchaEntryId,
         transferAudit: {
           userId: session.userId,
