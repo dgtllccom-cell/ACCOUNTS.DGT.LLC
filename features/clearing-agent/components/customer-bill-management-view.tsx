@@ -67,11 +67,11 @@ const CHARGE_CATEGORIES = [
 ] as const;
 
 const EXPENSE_TYPES = [
-  { id: "customer_expenses", labelKey: "Customer Expenses", defaultLabel: "Customer Expenses" },
-  { id: "customs_expenses", labelKey: "Customs Expenses", defaultLabel: "Customs Expenses" },
-  { id: "loading_expenses", labelKey: "Loading Expenses", defaultLabel: "Loading Expenses" },
-  { id: "truck_expenses", labelKey: "Truck Expenses", defaultLabel: "Truck Expenses" },
-  { id: "other_expenses", labelKey: "Other Expenses", defaultLabel: "Other Expenses" }
+  { id: "customer_expenses", labelKey: "cbill.charge_other", defaultLabel: "Customer Expenses" },
+  { id: "customs_expenses", labelKey: "cbill.charge_customs", defaultLabel: "Customs Expenses" },
+  { id: "loading_expenses", labelKey: "cbill.charge_loading", defaultLabel: "Loading Expenses" },
+  { id: "truck_expenses", labelKey: "cbill.charge_delivery", defaultLabel: "Truck Expenses" },
+  { id: "other_expenses", labelKey: "cbill.charge_other", defaultLabel: "Other Expenses" }
 ];
 
 export function CustomerBillManagementView() {
@@ -190,9 +190,9 @@ export function CustomerBillManagementView() {
       if (json.success && Array.isArray(json.data)) {
         const mapped: CustomerOrderOption[] = json.data.map((o: any) => ({
           id: o.id,
-          order_no: o.order_no || `ORD-${o.id.slice(0, 6)}`,
+          order_no: o.order_no || String(o.id),
           customer_id: o.customer_id,
-          customer_name: o.customer_name || "Customer",
+          customer_name: o.customer_name || null,
           customer_account_id: o.customer_account_id,
           customer_account_number: o.customer_account_number,
           transport_mode: o.transport_mode,
@@ -253,11 +253,14 @@ export function CustomerBillManagementView() {
             setSelectedCurrency(b.currency_code);
           }
 
-          // Pre-select order in CustomerOrderMultiSelect
-          if (b.order_id) {
-            setSelectedOrderIds([b.order_id]);
-            const matched = orders.find((o) => o.id === b.order_id);
-            if (matched) setSelectedOrdersList([matched]);
+          // Restore every persisted order link, not only the legacy primary order.
+          const persistedOrderIds = Array.from(new Set(
+            (Array.isArray(b.order_ids) && b.order_ids.length > 0 ? b.order_ids : [b.order_id])
+              .filter(Boolean)
+          ));
+          if (persistedOrderIds.length > 0) {
+            setSelectedOrderIds(persistedOrderIds);
+            setSelectedOrdersList(orders.filter((o) => persistedOrderIds.includes(o.id)));
           }
         }
       } else if (orderIdParam && orders.length > 0) {
@@ -294,10 +297,10 @@ export function CustomerBillManagementView() {
             order_id: primary.id,
             order_no: primary.order_no,
             customer_id: primary.customer_id || "",
-            customer_name: primary.customer_name || "Customer",
+            customer_name: primary.customer_name || null,
             customer_account_id: primary.customer_account_id || null,
-            customer_account_number: primary.customer_account_number || "AR-001245",
-            bill_no: "CB-2025-0001",
+            customer_account_number: primary.customer_account_number || null,
+            bill_no: "",
             bill_date: new Date().toISOString(),
             due_date: null,
             currency_code: selectedCurrency,
@@ -323,10 +326,10 @@ export function CustomerBillManagementView() {
             posted_by: null,
             posted_at: null,
             roznamcha_entry_id: null,
-            super_admin_serial: "0001245",
-            country_serial: "PK-00421",
-            branch_serial: "KHI-0123",
-            entry_serial: "0001",
+            super_admin_serial: null,
+            country_serial: null,
+            branch_serial: null,
+            entry_serial: null,
             country_id: null,
             country_branch_id: null,
             city_branch_id: null,
@@ -426,15 +429,21 @@ export function CustomerBillManagementView() {
         const createRes = await fetch("/api/erp/clearing-agent/customer-bill", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: targetOrderId })
+          body: JSON.stringify({ orderIds: selectedOrderIds.length > 0 ? selectedOrderIds : [targetOrderId] })
         });
         const createJson = await createRes.json();
         if (!createJson.success) throw new Error(createJson.error || "Failed to create customer bill.");
         activeBillId = createJson.data.id;
         setBill(createJson.data);
+        const createdOrderIds = Array.isArray(createJson.data.order_ids)
+          ? createJson.data.order_ids
+          : selectedOrderIds;
+        setSelectedOrderIds(createdOrderIds);
+        setSelectedOrdersList(availableOrders.filter((order) => createdOrderIds.includes(order.id)));
       }
 
       const payload = {
+        orderIds: selectedOrderIds,
         dueDate: dueDate || null,
         discountAmount: Number(discountAmount) || 0,
         otherCharges: Number(otherCharges) || 0,
@@ -462,6 +471,11 @@ export function CustomerBillManagementView() {
 
       setBill(json.data);
       setItems(json.data.items || []);
+      const savedOrderIds = Array.isArray(json.data.order_ids) && json.data.order_ids.length > 0
+        ? json.data.order_ids
+        : selectedOrderIds;
+      setSelectedOrderIds(savedOrderIds);
+      setSelectedOrdersList(availableOrders.filter((order) => savedOrderIds.includes(order.id)));
       setSuccessMsg(tt("cbill.save_draft", "Customer bill draft saved successfully!"));
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
@@ -546,11 +560,12 @@ export function CustomerBillManagementView() {
   // Share via WhatsApp
   function handleShareWhatsApp() {
     if (!bill) return;
-    const msg = `*Customer Bill: ${bill.bill_no}*\nOrder(s): ${bill.order_no ?? "N/A"}\nCustomer: ${bill.customer_name ?? "Customer"}\nTotal Due: ${selectedCurrency} ${grandTotal.toFixed(2)}\nStatus: ${bill.status.toUpperCase()}`;
+    const msg = `*Customer Bill: ${bill.bill_no || "—"}*\nOrder(s): ${bill.order_no ?? "—"}\nCustomer: ${bill.customer_name ?? "—"}\nTotal Due: ${selectedCurrency} ${grandTotal.toFixed(2)}\nStatus: ${bill.status.toUpperCase()}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
   const isLocked = bill?.status === "posted";
+  const displayValue = (value: unknown) => value === null || value === undefined || value === "" ? "—" : String(value);
 
   return (
     <div
@@ -563,11 +578,11 @@ export function CustomerBillManagementView() {
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
             <Link href="/dashboard" className="hover:text-blue-600 transition">
-              Dashboard
+              {tt("nav.dashboard", "Dashboard")}
             </Link>
             <span>/</span>
             <Link href="/dashboard/clearing-agent/customer-order" className="hover:text-blue-600 transition">
-              Shipping & Clearing
+              {tt("nav.shipping_clearing", "Shipping & Clearing")}
             </Link>
             <span>/</span>
             <span className="text-slate-800 dark:text-slate-200 font-bold">
@@ -602,10 +617,10 @@ export function CustomerBillManagementView() {
               onChange={(e) => setSelectedCurrency(e.target.value)}
               className="appearance-none ps-8 pe-7 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 shadow-2xs outline-none cursor-pointer hover:border-slate-300"
             >
-              <option value="PKR">Currency: PKR</option>
-              <option value="AED">Currency: AED</option>
-              <option value="USD">Currency: USD</option>
-              <option value="EUR">Currency: EUR</option>
+              <option value="PKR">{tt("common.currency", "Currency")}: PKR</option>
+              <option value="AED">{tt("common.currency", "Currency")}: AED</option>
+              <option value="USD">{tt("common.currency", "Currency")}: USD</option>
+              <option value="EUR">{tt("common.currency", "Currency")}: EUR</option>
             </select>
             <ChevronDown className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           </div>
@@ -722,21 +737,17 @@ export function CustomerBillManagementView() {
             </span>
           </div>
           <div>
-            <div className="text-sm font-black text-slate-900 dark:text-white">Karachi Head Office</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">DAMAAR Logistics (Pvt) Ltd.</div>
+            <div className="text-sm font-black text-slate-900 dark:text-white">{displayValue(bill?.city_branch_id || bill?.country_branch_id)}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{displayValue(bill?.country_id)}</div>
             <div className="mt-2 text-[11px] text-slate-500 space-y-0.5">
               <div className="flex items-center gap-1">
                 <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
-                <span>Karachi, Pakistan</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Phone className="h-3 w-3 text-slate-400 shrink-0" />
-                <span>+92 21 111 326 227</span>
+                <span>{displayValue(bill?.country_id)}</span>
               </div>
             </div>
           </div>
           <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-bold text-slate-400">
-            BR Code: <span className="font-mono text-slate-700 dark:text-slate-300">KHI-001</span>
+            {tt("cbill.branch_office", "Branch / Office")}: <span className="font-mono text-slate-700 dark:text-slate-300">{displayValue(bill?.city_branch_id || bill?.country_branch_id)}</span>
           </div>
         </div>
 
@@ -758,29 +769,29 @@ export function CustomerBillManagementView() {
             </span>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-base font-black text-blue-600 dark:text-blue-400 font-mono">
-                {bill?.bill_no || "CB-2025-0001"}
+                {displayValue(bill?.bill_no)}
               </span>
               <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 uppercase">
-                {bill?.status || "DRAFT"}
+                {tt(`cbill.status_${bill?.status || "draft"}`, "Draft")}
               </span>
             </div>
           </div>
           <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-4 gap-1 text-[10px] text-center">
             <div>
               <span className="text-slate-400 block text-[9px]">Global</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{bill?.super_admin_serial || "0001245"}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.super_admin_serial)}</span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[9px]">Country</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{bill?.country_serial || "PK-00421"}</span>
+              <span className="text-slate-400 block text-[9px]">{tt("report.col_country", "Country")}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.country_serial)}</span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[9px]">Branch</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{bill?.branch_serial || "KHI-0123"}</span>
+              <span className="text-slate-400 block text-[9px]">{tt("report.col_branch", "Branch")}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.branch_serial)}</span>
             </div>
             <div>
               <span className="text-slate-400 block text-[9px]">Entry</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{bill?.entry_serial || "0001"}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.entry_serial)}</span>
             </div>
           </div>
         </div>
@@ -803,25 +814,25 @@ export function CustomerBillManagementView() {
               <div className="h-4 w-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
                 ✓
               </div>
-              <span>Customer Bill (Current)</span>
+              <span>{tt("cbill.title", "Customer Bill")}</span>
             </div>
             <div className="flex items-center gap-2 text-slate-400 text-[11px]">
               <div className="h-3.5 w-3.5 rounded-full border border-slate-300 dark:border-slate-700"></div>
-              <span>Accounts Department</span>
+              <span>{tt("nav.accounts", "Accounts")}</span>
             </div>
             <div className="flex items-center gap-2 text-slate-400 text-[11px]">
               <div className="h-3.5 w-3.5 rounded-full border border-slate-300 dark:border-slate-700"></div>
-              <span>Finance Approval</span>
+              <span>{tt("cbs.final_approval_actions_label", "Final Approval")}</span>
             </div>
             <div className="flex items-center gap-2 text-slate-400 text-[11px]">
               <div className="h-3.5 w-3.5 rounded-full border border-slate-300 dark:border-slate-700"></div>
-              <span>Customer Statement</span>
+              <span>{tt("nav.customer_statement", "Customer Statement")}</span>
             </div>
           </div>
 
           <div className="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
-            <span>Workflow Status:</span>
-            <span className="font-bold text-amber-600 dark:text-amber-400">In Progress</span>
+            <span>{tt("tc.workflow_stage", "Workflow Status")}:</span>
+            <span className="font-bold text-amber-600 dark:text-amber-400">{tt("cinq.status_in_progress", "In Progress")}</span>
           </div>
         </div>
 
@@ -843,21 +854,16 @@ export function CustomerBillManagementView() {
 
           <div>
             <div className="text-sm font-black text-slate-900 dark:text-white truncate">
-              {bill?.customer_name || "Al Rehman Trading Co."}
+              {displayValue(bill?.customer_name)}
             </div>
             <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-              A/C No: {bill?.customer_account_number || "AR-001245"}
-            </div>
-            <div className="mt-2 text-[11px] text-slate-500 space-y-0.5">
-              <div className="truncate">Contact: Mr. Ahmed Khan</div>
-              <div className="truncate">Phone: +92 300 1234567</div>
-              <div className="truncate">Email: ahmed@alrehman.com</div>
+              {tt("cbill.account_number", "Account Number")}: {displayValue(bill?.customer_account_number)}
             </div>
           </div>
 
           <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
-            <span>Billing Profile:</span>
-            <span className="font-bold text-slate-700 dark:text-slate-300">Regular Customer</span>
+            <span>{tt("cbill.customer_name", "Customer Name")}</span>
+            <span className="font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.customer_name)}</span>
           </div>
         </div>
       </div>
@@ -878,7 +884,7 @@ export function CustomerBillManagementView() {
                     {tt("cbill.charge_entry", "Customer Charges & Expenses Entry")}
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Select customer orders, assign to a user and add charge details to create the customer bill.
+                    {tt("cbill.subtitle", "Create, review and post shipping customer bills linked to customer orders and accounting ledgers.")}
                   </p>
                 </div>
               </div>
@@ -927,7 +933,7 @@ export function CustomerBillManagementView() {
                   </label>
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  Choose one or more expense types to include in this bill.
+                  {tt("cbill.select_orders_sub", "Choose one or more expense types to include in this bill.")}
                 </p>
 
                 {/* Dropdown Container for Expense Types */}
@@ -938,7 +944,7 @@ export function CustomerBillManagementView() {
                   >
                     <div className="flex flex-wrap items-center gap-1.5 flex-1">
                       {selectedExpenseTypes.length === 0 ? (
-                        <span className="text-xs text-slate-400">Select expense types...</span>
+                        <span className="text-xs text-slate-400">{tt("cbill.bill_transfer_types", "Select Bill Transfer Types")}</span>
                       ) : (
                         selectedExpenseTypes.map((typeId) => {
                           const exp = EXPENSE_TYPES.find((e) => e.id === typeId);
@@ -947,7 +953,7 @@ export function CustomerBillManagementView() {
                               key={typeId}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/70"
                             >
-                              <span>{exp?.defaultLabel || typeId}</span>
+                              <span>{exp ? tt(exp.labelKey, exp.defaultLabel) : typeId}</span>
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -976,7 +982,7 @@ export function CustomerBillManagementView() {
                             type="text"
                             value={expenseSearchQuery}
                             onChange={(e) => setExpenseSearchQuery(e.target.value)}
-                            placeholder="Search expense types..."
+                            placeholder={`${tt("common.search", "Search")}...`}
                             className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 ps-8 pe-3 text-xs outline-none"
                           />
                         </div>
@@ -984,7 +990,7 @@ export function CustomerBillManagementView() {
 
                       <div className="divide-y divide-slate-100 dark:divide-slate-800/50 max-h-48 overflow-y-auto">
                         {EXPENSE_TYPES.filter((exp) =>
-                          exp.defaultLabel.toLowerCase().includes(expenseSearchQuery.toLowerCase())
+                          tt(exp.labelKey, exp.defaultLabel).toLowerCase().includes(expenseSearchQuery.toLowerCase())
                         ).map((exp) => {
                           const isChecked = selectedExpenseTypes.includes(exp.id);
                           return (
@@ -1003,7 +1009,7 @@ export function CustomerBillManagementView() {
                                 {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
                               </div>
                               <span className="font-semibold text-slate-800 dark:text-slate-200">
-                                {exp.defaultLabel}
+                                {tt(exp.labelKey, exp.defaultLabel)}
                               </span>
                             </div>
                           );
@@ -1057,9 +1063,8 @@ export function CustomerBillManagementView() {
                     <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 p-2.5 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-300">
                       <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                       <div className="text-[11px] leading-tight">
-                        <span>Bill will be transferred to </span>
-                        <strong className="font-bold text-emerald-900 dark:text-emerald-100">{assignedUser}</strong>.
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">Selected user will be notified.</div>
+                        <span>{tt("cbill.transfer_notice", "Bill will be transferred to selected user. Selected user will be notified.")}</span>
+                        <strong className="font-bold text-emerald-900 dark:text-emerald-100">{assignedUser}</strong>
                       </div>
                     </div>
                   </div>
@@ -1079,7 +1084,7 @@ export function CustomerBillManagementView() {
                       {tt("cbill.step_add_charges", "Add Charges")}
                     </label>
                     <p className="text-[11px] text-slate-500">
-                      Search and select a charge name or enter description to add details.
+                      {tt("cbill.charge_name", "Charge Name / Description")}
                     </p>
                   </div>
 
@@ -1091,7 +1096,7 @@ export function CustomerBillManagementView() {
                         type="text"
                         value={chargeSearchInput}
                         onChange={(e) => setChargeSearchInput(e.target.value)}
-                        placeholder="Search or select a charge name / description..."
+                        placeholder={tt("cbill.charge_name", "Charge Name / Description")}
                         className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 ps-10 pe-3 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-blue-600 shadow-2xs"
                       />
                     </div>
@@ -1401,7 +1406,7 @@ export function CustomerBillManagementView() {
                     {tt("cbill.title", "Customer Bill")}
                   </h3>
                   <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
-                    {bill?.status || "DRAFT"}
+                    {tt(`cbill.status_${bill?.status || "draft"}`, "Draft")}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
@@ -1410,36 +1415,32 @@ export function CustomerBillManagementView() {
 
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-3 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Bill Number</span>
+                    <span className="text-slate-400 block text-[10px]">{tt("cbill.bill_no", "Bill Number")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                      {bill?.bill_no || "CB-2025-0001"}
+                      {displayValue(bill?.bill_no)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Customer</span>
+                    <span className="text-slate-400 block text-[10px]">{tt("cbill.customer_name", "Customer")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
-                      {bill?.customer_name || "Al Rehman Trading Co."}
+                      {displayValue(bill?.customer_name)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Bill Date</span>
+                    <span className="text-slate-400 block text-[10px]">{tt("cbill.bill_date", "Bill Date")}</span>
                     <span className="text-slate-700 dark:text-slate-300">
-                      {bill?.bill_date ? String(bill.bill_date).slice(0, 10) : "20 May 2025"}
+                      {bill?.bill_date ? String(bill.bill_date).slice(0, 10) : "—"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">A/C No</span>
+                    <span className="text-slate-400 block text-[10px]">{tt("cbill.account_number", "A/C No")}</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-                      {bill?.customer_account_number || "AR-001245"}
+                      {displayValue(bill?.customer_account_number)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Due Date</span>
-                    <span className="text-slate-700 dark:text-slate-300">{dueDate || "Due upon receipt"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Phone</span>
-                    <span className="text-slate-700 dark:text-slate-300">+92 300 1234567</span>
+                    <span className="text-slate-400 block text-[10px]">{tt("cbill.due_date", "Due Date")}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{dueDate || "—"}</span>
                   </div>
                 </div>
               </div>
@@ -1511,11 +1512,11 @@ export function CustomerBillManagementView() {
                     <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
                       <tr>
                         <th className="py-2.5 px-3">#</th>
-                        <th className="py-2.5 px-3">DESCRIPTION</th>
-                        <th className="py-2.5 px-3 text-center">QTY</th>
-                        <th className="py-2.5 px-3 text-right">RATE</th>
-                        <th className="py-2.5 px-3 text-right">TAX %</th>
-                        <th className="py-2.5 px-3 text-right">AMOUNT</th>
+                        <th className="py-2.5 px-3">{tt("cbill.charge_name", "Description")}</th>
+                        <th className="py-2.5 px-3 text-center">{tt("cbill.quantity", "Qty")}</th>
+                        <th className="py-2.5 px-3 text-right">{tt("cbill.rate", "Rate")}</th>
+                        <th className="py-2.5 px-3 text-right">{tt("cbill.tax_pct", "Tax %")}</th>
+                        <th className="py-2.5 px-3 text-right">{tt("cbill.amount", "Amount")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1524,10 +1525,10 @@ export function CustomerBillManagementView() {
                           <td colSpan={6} className="py-10 text-center text-slate-400">
                             <div className="space-y-1">
                               <div className="font-bold text-slate-600 dark:text-slate-300">
-                                No charges added yet
+                                {tt("cbill.no_items", "No charges added yet.")}
                               </div>
                               <div className="text-[11px] text-slate-400">
-                                Add bill details using the form on the left to see them here.
+                                {tt("cbill.live_preview_sub", "Preview of customer bill. Updates in real-time as you add charges.")}
                               </div>
                             </div>
                           </td>
@@ -1561,20 +1562,20 @@ export function CustomerBillManagementView() {
                 {/* Subtotals footer */}
                 <div className="space-y-1 text-xs text-end pe-3 font-medium">
                   <div className="flex justify-end gap-6 text-slate-500">
-                    <span>Subtotal</span>
+                    <span>{tt("cbill.subtotal", "Subtotal")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                       {selectedCurrency} {subtotal.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-end gap-6 text-slate-500">
-                    <span>Total Tax</span>
+                    <span>{tt("cbill.tax_total", "Total Tax")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                       {selectedCurrency} {totalTax.toFixed(2)}
                     </span>
                   </div>
                   {Number(otherCharges) > 0 && (
                     <div className="flex justify-end gap-6 text-slate-500">
-                      <span>Other Surcharges</span>
+                      <span>{tt("cbill.other_charges", "Other Surcharges")}</span>
                       <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                         {selectedCurrency} {Number(otherCharges).toFixed(2)}
                       </span>
@@ -1582,14 +1583,14 @@ export function CustomerBillManagementView() {
                   )}
                   {Number(discountAmount) > 0 && (
                     <div className="flex justify-end gap-6 text-rose-600">
-                      <span>Discount</span>
+                      <span>{tt("cbill.discount", "Discount")}</span>
                       <span className="font-mono font-bold">
                         -{selectedCurrency} {Number(discountAmount).toFixed(2)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-end gap-6 pt-2 border-t border-slate-200 dark:border-slate-800 text-sm font-black text-slate-900 dark:text-white">
-                    <span>Total Due</span>
+                    <span>{tt("cbill.total_due", "Total Due")}</span>
                     <span className="font-mono text-blue-600 dark:text-blue-400">
                       {selectedCurrency} {grandTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </span>
@@ -1603,7 +1604,7 @@ export function CustomerBillManagementView() {
               <div className="space-y-3">
                 {selectedOrdersList.length === 0 ? (
                   <div className="p-8 text-center text-xs text-slate-400">
-                    Select customer orders in Step 1 to preview shipment details here.
+                    {tt("cbill.select_orders_sub", "Choose one or more customer orders to include in this bill.")}
                   </div>
                 ) : (
                   selectedOrdersList.map((ord) => (
@@ -1616,24 +1617,24 @@ export function CustomerBillManagementView() {
                           {ord.order_no}
                         </span>
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          {ord.transport_mode || "Sea"} • {ord.movement_type || "Import"}
+                          {ord.transport_mode || "—"} • {ord.movement_type || "—"}
                         </span>
                       </div>
                       <div className="text-slate-800 dark:text-slate-200 font-bold">
-                        {ord.customer_name || "Customer"}
+                        {displayValue(ord.customer_name)}
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
                         <div>
-                          B/L Number: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{ord.bl_number || "—"}</span>
+                          {tt("cbill.order_reference", "B/L Number")}: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{ord.bl_number || "—"}</span>
                         </div>
                         <div>
-                          Container: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{ord.container_number || "—"}</span>
+                          {tt("cbill.shipment_details", "Container")}: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{ord.container_number || "—"}</span>
                         </div>
                         <div>
-                          Route: <span className="font-semibold text-slate-700 dark:text-slate-300">{[ord.loading_port_name, ord.destination_port_name].filter(Boolean).join(" → ") || "Direct"}</span>
+                          {tt("cbill.route_path", "Route")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{[ord.loading_port_name, ord.destination_port_name].filter(Boolean).join(" → ") || "—"}</span>
                         </div>
                         <div>
-                          Vehicle: <span className="font-semibold text-slate-700 dark:text-slate-300">{ord.truck_number || "Assigned"}</span>
+                          {tt("cbill.truck_driver", "Vehicle")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{displayValue(ord.truck_number)}</span>
                         </div>
                       </div>
                     </div>
@@ -1647,14 +1648,14 @@ export function CustomerBillManagementView() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Invoice Notes & Payment Terms
+                {tt("cbill.tab_notes", "Invoice Notes & Payment Terms")}
                   </label>
                   <textarea
                     rows={4}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
                     disabled={isLocked}
-                    placeholder="Enter special instructions, bank payment details, or clearance terms..."
+                    placeholder={tt("cbill.transfer_notice", "Enter special instructions, bank payment details, or clearance terms...")}
                     className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs outline-none focus:border-blue-600"
                   />
                 </div>
@@ -1665,8 +1666,8 @@ export function CustomerBillManagementView() {
             {previewTab === "documents" && (
               <div className="p-6 text-center text-xs text-slate-400 space-y-2">
                 <Paperclip className="h-6 w-6 mx-auto text-slate-400" />
-                <div className="font-bold text-slate-700 dark:text-slate-300">Attached Shipping Documents</div>
-                <p className="text-[11px]">Goods Declaration (GD), Bill of Lading copy, and customs delivery orders are auto-linked.</p>
+                <div className="font-bold text-slate-700 dark:text-slate-300">{tt("cbill.tab_documents", "Documents")}</div>
+                <p className="text-[11px]">{tt("cbill.subtitle", "Shipping documents linked to this customer bill.")}</p>
               </div>
             )}
           </div>
@@ -1695,7 +1696,7 @@ export function CustomerBillManagementView() {
                 onClick={() => setConfirmPostOpen(false)}
                 className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-300 hover:bg-slate-100"
               >
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </button>
               <button
                 type="button"
@@ -1703,7 +1704,7 @@ export function CustomerBillManagementView() {
                 disabled={posting}
                 className="px-4 py-2 text-xs font-bold rounded-xl bg-purple-600 text-white hover:bg-purple-700"
               >
-                {posting ? "Posting..." : "Confirm & Post"}
+                {posting ? tt("common.loading", "Posting...") : `${tt("common.confirm", "Confirm")} & ${tt("cbill.post_to_ledger", "Post")}`}
               </button>
             </div>
           </div>

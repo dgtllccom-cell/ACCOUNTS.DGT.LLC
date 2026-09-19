@@ -80,10 +80,10 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
     if (msg && folder === "drafts") {
       // If clicking a draft, open directly in ComposeModal to continue editing
       setPrefilledData({
-        to: msg.to_address || "",
+        to: msg.recipient_email || "",
         subject: msg.subject || "",
         body: msg.body_text || "",
-        attachments: msg.attachments || [],
+        attachments: msg.attachments_json || [],
         draftId: msg.id,
         mode: "new",
       });
@@ -175,8 +175,8 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
     if (message.sender_email && message.sender_email !== user.email_address) {
       recipients.add(message.sender_email.trim());
     }
-    if (message.to_address) {
-      message.to_address.split(",").forEach((addr) => {
+    if (message.recipient_email) {
+      message.recipient_email.split(",").forEach((addr: string) => {
         const trimmed = addr.trim();
         if (trimmed && trimmed.toLowerCase() !== user.email_address.toLowerCase()) {
           recipients.add(trimmed);
@@ -199,8 +199,8 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
     setPrefilledData({
       to: "",
       subject: `Fwd: ${cleanSubj}`,
-      body: `\n\n---------- Forwarded message ---------\nFrom: ${message.sender_name ? `${message.sender_name} <${message.sender_email}>` : message.sender_email}\nDate: ${new Date(message.created_at).toLocaleString()}\nSubject: ${message.subject}\nTo: ${message.to_address}\n\n${message.body_text || ""}`,
-      attachments: message.attachments || [],
+      body: `\n\n---------- Forwarded message ---------\nFrom: ${message.sender_name ? `${message.sender_name} <${message.sender_email}>` : message.sender_email}\nDate: ${new Date(message.created_at).toLocaleString()}\nSubject: ${message.subject}\nTo: ${message.recipient_email}\n\n${message.body_text || ""}`,
+      attachments: message.attachments_json || [],
       mode: "forward",
     });
     setComposeOpen(true);

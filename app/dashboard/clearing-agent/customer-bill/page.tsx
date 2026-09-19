@@ -1,4 +1,4 @@
-import { ExpensesBillEntryForm } from "@/features/roznamcha/components/expenses-bill-entry-form";
+import { CustomerBillManagementView } from "@/features/clearing-agent/components/customer-bill-management-view";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 
@@ -8,8 +8,8 @@ export default async function CustomerBillsPage() {
   const lang = await getRequestLanguage();
 
   return (
-    <EntryMethodSelector targetModule="expenses" domain="business" lang={lang}>
-      <ExpensesBillEntryForm lang={lang} initialBillCategory="customer_expenses" />
+    <EntryMethodSelector targetModule="customer_orders" domain="shipping" lang={lang}>
+      <CustomerBillManagementView />
     </EntryMethodSelector>
   );
 }

@@ -134,6 +134,14 @@ export function getAutoEmailParams(entityType: EntityType): {
       label: "Create DGT Email",
       desc: "Create an official country@dgt.llc email account"
     },
+    main_branch: {
+      label: "Create Main Branch Email",
+      desc: "Create an official main branch@dgt.llc email account"
+    },
+    city_branch: {
+      label: "Create City Branch Email",
+      desc: "Create an official city branch@dgt.llc email account"
+    },
     branch: {
       label: "Create Branch Email",
       desc: "Create a branch office email account"

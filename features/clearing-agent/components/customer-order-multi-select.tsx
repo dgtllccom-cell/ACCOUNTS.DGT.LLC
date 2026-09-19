@@ -77,7 +77,7 @@ export function CustomerOrderMultiSelect({
   }, [isOpen]);
 
   // Selected orders lookup map
-  const selectedIdSet = useMemo(() => new Set(selectedOrderIds), [selectedOrderIds]);
+  const selectedIdSet = useMemo(() => new Set(selectedOrderIds.filter(Boolean)), [selectedOrderIds]);
 
   const selectedOrders = useMemo(() => {
     return orders.filter((ord) => selectedIdSet.has(ord.id));
@@ -141,7 +141,7 @@ export function CustomerOrderMultiSelect({
     onChange([], []);
   };
 
-  const isAllSelected = orders.length > 0 && selectedOrderIds.length === orders.length;
+  const isAllSelected = orders.length > 0 && orders.every((order) => selectedIdSet.has(order.id));
 
   const toggleOpen = () => {
     if (!disabled) {
@@ -231,7 +231,7 @@ export function CustomerOrderMultiSelect({
                 {!disabled && (
                   <button
                     type="button"
-                    aria-label={`Remove ${ord.order_no}`}
+                    aria-label={`${tt("cbill.select_orders", "Select Customer Orders")}: ${ord.order_no}`}
                     onClick={(e) => handleRemoveChip(e, ord.id)}
                     className="p-0.5 rounded-full hover:bg-blue-200/80 dark:hover:bg-blue-800/80 text-blue-500 dark:text-blue-300 hover:text-rose-600 dark:hover:text-rose-400 transition"
                   >

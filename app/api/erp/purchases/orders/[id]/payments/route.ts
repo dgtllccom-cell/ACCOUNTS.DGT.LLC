@@ -292,7 +292,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ? goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount || 0), 0)
       : Number(form.totalAmount || orderTotalPur);
 
-    const advancePercent = Number(form.advancePercent || 0);
+    const advancePercent = Number(form.endorsementPercent || form.endorsement_percent || form.advancePercent || form.advance_percent || 0);
     const requiredAdvancePur = advancePercent > 0 ? (formTotalPur * advancePercent) / 100 : 0;
     const remainingAdvancePur = Math.max(0, requiredAdvancePur - advancePaidPur);
     const tolerance = 0.01;
@@ -520,13 +520,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         if (!updated) return;
 
         const form = updated.form_data?.form ?? {};
-        const advancePercent = Number(form.advancePercent ?? 10);
+        const endorsementPercent = Number(form.endorsementPercent ?? form.endorsement_percent ?? form.advancePercent ?? form.advance_percent ?? 0);
         const orderTotal = Number(updated.order_total || 0);
-        const requiredAdvance = (orderTotal * advancePercent) / 100;
+        const requiredAdvance = endorsementPercent > 0 ? (orderTotal * endorsementPercent) / 100 : 0;
         const advancePaid = Number(updated.advance_paid || 0);
         const remainingDue = Number(updated.remaining_due || 0);
 
-        const isAdvanceCompleted = requiredAdvance > 0 && advancePaid >= requiredAdvance;
+        const isAdvanceCompleted = requiredAdvance > 0 && advancePaid >= (requiredAdvance - 0.01);
         const isFullyPaid = remainingDue <= 0.01;
 
         if (isFullyPaid) {
@@ -541,6 +541,22 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           const nextFormData = { ...(updated.form_data || {}), workflow: completedWorkflow };
           await sql`
             update purchase_orders set payment_status = 'completed', remaining_due = 0,
+              form_data = ${sql.json(nextFormData)}, updated_at = now()
+            where id = ${params.id}::uuid
+          `;
+        } else {
+          // Partial payment - never mark bill as fully paid prematurely
+          const partialWorkflow = {
+            ...(updated.form_data?.workflow || {}),
+            paymentStatus: "partial",
+            endorsementRequirement: requiredAdvance,
+            endorsementPaid: advancePaid,
+            endorsementRemaining: Math.max(0, requiredAdvance - advancePaid),
+            isEndorsementFulfilled: isAdvanceCompleted
+          };
+          const nextFormData = { ...(updated.form_data || {}), workflow: partialWorkflow };
+          await sql`
+            update purchase_orders set payment_status = 'partial',
               form_data = ${sql.json(nextFormData)}, updated_at = now()
             where id = ${params.id}::uuid
           `;

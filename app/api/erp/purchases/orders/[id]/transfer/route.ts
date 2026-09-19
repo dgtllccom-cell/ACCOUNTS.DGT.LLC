@@ -292,21 +292,27 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Reconcile an earlier RPC success whose final order update was interrupted.
     const { data: existingPayment, error: existingPaymentError } = await adminSupabase
       .from("purchase_order_payments")
-      .select("id, roznamcha_entry_id, amount, debit_ledger_id, credit_ledger_id")
+      .select("id, roznamcha_entry_id, amount, base_currency_amount, debit_ledger_id, credit_ledger_id")
       .eq("purchase_order_id", params.id)
       .eq("kind", "booking")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (existingPaymentError) throw existingPaymentError;
+    const expectedFinalAmount = Number(orderRow.order_total || 0) > 0 ? Number(orderRow.order_total) : (totalPurchaseAmount * exRate);
     if (existingPayment) {
       if (isPurchaseBookingTransferLocked(orderRow)) {
         throw new Error("This booking has already been transferred.");
       }
       paymentId = String(existingPayment.id);
       roznamchaEntryId = existingPayment.roznamcha_entry_id;
+      const recordedAmount = Number(existingPayment.base_currency_amount || existingPayment.amount || 0);
+      const amountMatches =
+        Math.abs(recordedAmount - expectedFinalAmount) < 0.05 ||
+        Math.abs(recordedAmount - totalPurchaseAmount) < 0.05 ||
+        Math.abs(Number(existingPayment.amount) - totalPurchaseAmount) < 0.05;
       if (
-        Number(existingPayment.amount) !== totalPurchaseAmount ||
+        !amountMatches ||
         existingPayment.debit_ledger_id !== debitAccountObj.id ||
         existingPayment.credit_ledger_id !== creditAccountObj.id
       ) {
@@ -418,9 +424,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // ─────────────────────────────────────────────────────────────
     // Update order status in purchase_orders table
     const existingAdvance = Number(orderRow.advance_paid) || 0;
-    const newRemainingDue = totalPurchaseAmount - existingAdvance;
+    const newRemainingDue = Math.max(0, expectedFinalAmount - existingAdvance);
     let newPaymentStatus = "pending";
-    if (newRemainingDue <= 0) newPaymentStatus = "completed";
+    if (newRemainingDue <= 0.01) newPaymentStatus = "completed";
     else if (existingAdvance > 0) newPaymentStatus = "partial";
     const selectedPaymentType = form.paymentType || body?.paymentType || "";
     const destination = resolvePurchaseBookingTransferDestination(selectedPaymentType);

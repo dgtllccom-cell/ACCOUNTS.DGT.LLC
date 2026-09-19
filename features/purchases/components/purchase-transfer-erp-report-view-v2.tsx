@@ -40,6 +40,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { Th } from "@/components/ui/translated-th";
+import { resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
 
 function money(value: unknown, decimals = 2) {
   return Number(value || 0).toLocaleString("en-US", {
@@ -183,9 +184,17 @@ function PurchaseTransferErpReportViewContent({
   const totalNetWt = goodsEntries.reduce((sum, g) => sum + (Number(g.netWeight) || 0), 0);
   const totalCartons = goodsEntries.reduce((sum, g) => sum + (Number(g.qtyNo) || 0), 0);
 
-  const advancePercent = Number(form.advancePercent || 0);
-  const advanceAmountFc = (totalAmountFc * advancePercent) / 100;
-  const advanceAmountLc = (totalAmountLc * advancePercent) / 100;
+  const paymentCondition = String(form.paymentType || form.paymentCondition || "Advance Payment");
+  const destination = resolvePurchaseBookingTransferDestination(paymentCondition);
+  const endorsementPercent = Number(form.endorsementPercent ?? form.endorsement_percent ?? form.advancePercent ?? form.advance_percent ?? 0);
+  const isEndorsement = paymentCondition.toLowerCase().includes("endorsement");
+  const requiredEndorsementLc = endorsementPercent > 0 ? (totalAmountLc * endorsementPercent) / 100 : 0;
+  const requiredEndorsementFc = endorsementPercent > 0 ? (totalAmountFc * endorsementPercent) / 100 : 0;
+  const alreadyAllocatedLc = Number(d?.advance_paid || 0);
+  const remainingEndorsementLc = Math.max(0, requiredEndorsementLc - alreadyAllocatedLc);
+  const advancePercent = endorsementPercent;
+  const advanceAmountFc = requiredEndorsementFc;
+  const advanceAmountLc = requiredEndorsementLc;
   const remainingAmountFc = Math.max(0, totalAmountFc - advanceAmountFc);
   const remainingAmountLc = Math.max(0, totalAmountLc - advanceAmountLc);
 
@@ -377,9 +386,38 @@ function PurchaseTransferErpReportViewContent({
               </div>
             </div>
 
+            {/* Four Scoped Serials Grid */}
+            <div className="space-y-2 rounded-xl bg-slate-50 p-3.5 border border-slate-200/80 dark:bg-slate-950/60 dark:border-slate-800/80">
+              <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="flex items-center gap-1.5"><Hash className="h-3 w-3 text-blue-600 dark:text-blue-400" /> {tt("pterv2.four_serials", "4 AUTHORITATIVE TRANSACTION SERIALS")}</span>
+                <span className="text-[8.5px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">SCOPED & VERIFIED</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[9px]">
+                <div className="rounded-lg bg-white p-2 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                  <div className="text-[8px] text-slate-400 uppercase font-sans font-bold">{tt("pterv2.super_admin_sn", "Super Admin S/N")}</div>
+                  <div className="font-extrabold text-blue-600 dark:text-blue-400 truncate" title={superAdminSerial}>{superAdminSerial}</div>
+                </div>
+                <div className="rounded-lg bg-white p-2 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                  <div className="text-[8px] text-slate-400 uppercase font-sans font-bold">{tt("pterv2.country_sn", "Country S/N")}</div>
+                  <div className="font-extrabold text-indigo-600 dark:text-indigo-400 truncate" title={countrySerial}>{countrySerial}</div>
+                </div>
+                <div className="rounded-lg bg-white p-2 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                  <div className="text-[8px] text-slate-400 uppercase font-sans font-bold">{tt("pterv2.branch_sn", "Branch S/N")}</div>
+                  <div className="font-extrabold text-purple-600 dark:text-purple-400 truncate" title={branchSerial}>{branchSerial}</div>
+                </div>
+                <div className="rounded-lg bg-white p-2 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                  <div className="text-[8px] text-slate-400 uppercase font-sans font-bold">{tt("pterv2.roznamcha_sn_label", "Roznamcha / Entry S/N")}</div>
+                  <div className="font-extrabold text-emerald-600 dark:text-emerald-400 truncate" title={roznamchaSerial}>{roznamchaSerial}</div>
+                </div>
+              </div>
+            </div>
+
             {/* Account Verification Summary */}
             <div className="space-y-3">
-              <div className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{tt("pterv2.verified_postings","VERIFIED LEDGER POSTINGS")}</div>
+              <div className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center justify-between">
+                <span>{tt("pterv2.verified_postings","VERIFIED LEDGER POSTINGS")}</span>
+                <span className="text-[9px] text-blue-600 dark:text-blue-400 font-mono font-bold">POSTED ONCE</span>
+              </div>
 
               {/* Purchase Account DR Card */}
               <div className="border border-blue-200 rounded-xl bg-blue-50/60 dark:border-blue-500/30 dark:bg-blue-950/40 p-3.5 space-y-1">
@@ -389,7 +427,7 @@ function PurchaseTransferErpReportViewContent({
                 </div>
                 <div className="text-xs font-black text-slate-900 dark:text-white uppercase">{purchaseAccName}</div>
                 <div className="text-[9.5px] text-slate-500 dark:text-slate-400 font-mono flex justify-between pt-1">
-                  <span>S/N: {debitSerial}</span>
+                  <span>DR S/N: {debitSerial}</span>
                   <span className="font-bold text-blue-700 dark:text-blue-300">{money(totalAmountLc)} {currencyLc}</span>
                 </div>
               </div>
@@ -402,29 +440,102 @@ function PurchaseTransferErpReportViewContent({
                 </div>
                 <div className="text-xs font-black text-slate-900 dark:text-white uppercase">{salesAccName}</div>
                 <div className="text-[9.5px] text-slate-500 dark:text-slate-400 font-mono flex justify-between pt-1">
-                  <span>S/N: {creditSerial}</span>
+                  <span>CR S/N: {creditSerial}</span>
                   <span className="font-bold text-emerald-700 dark:text-emerald-300">{money(totalAmountLc)} {currencyLc}</span>
                 </div>
               </div>
             </div>
 
             {/* Transfer Amount Total Banner Box */}
-            <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 text-center border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
-              <div className="text-[9px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">{tt("pterv2.total_value","TOTAL TRANSACTION VALUE")}</div>
-              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{money(totalAmountLc)} {currencyLc}</div>
-              <div className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-bold">${money(totalAmountFc)} {currencyFc} @ Ex. Rate {exchangeRate}</div>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 via-slate-50 to-blue-50 dark:from-emerald-950/30 dark:via-slate-950 dark:to-blue-950/30 p-4 text-center border border-emerald-200 dark:border-emerald-800/60 space-y-1 shadow-2xs">
+              <div className="text-[9px] font-extrabold uppercase text-emerald-800 dark:text-emerald-400 tracking-wider flex items-center justify-center gap-1">
+                <Coins className="h-3.5 w-3.5" />
+                {tt("pterv2.approved_posting_amount", "FINAL ROZNAMCHA POSTING AMOUNT")}
+              </div>
+              <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{money(totalAmountLc)} {currencyLc}</div>
+              <div className="text-[10px] text-slate-600 dark:text-slate-400 font-mono">
+                Original Transaction: <span className="font-bold text-blue-600 dark:text-blue-400">{money(totalAmountFc)} {currencyFc}</span> @ FX {exchangeRate}
+              </div>
+              <div className="text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-900/40 rounded-md py-0.5 px-2 mt-1 inline-block">
+                ✓ Posted exactly once in approved final currency ({currencyLc})
+              </div>
+            </div>
+
+            {/* Endorsement & Payment Condition Breakdown */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-950/60 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-[9.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> {tt("pterv2.endorsement_breakdown", "PAYMENT & ENDORSEMENT BREAKDOWN")}</span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 font-bold">{paymentCondition}</span>
+              </div>
+              <div className="space-y-1.5 text-[10px] pt-1">
+                <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                  <span>{tt("pterv2.total_bill", "Total Bill Value")}:</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">{money(totalAmountLc)} {currencyLc}</span>
+                </div>
+                {endorsementPercent > 0 && (
+                  <>
+                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                      <span>{isEndorsement ? tt("pterv2.endorsement_pct", "Endorsement Rate") : tt("pterv2.advance_pct", "Advance Rate")} ({endorsementPercent}%):</span>
+                      <span className="font-mono font-extrabold text-blue-600 dark:text-blue-400">{money(requiredEndorsementLc)} {currencyLc}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                      <span>{tt("pterv2.already_allocated", "Payments Already Allocated")}:</span>
+                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(alreadyAllocatedLc)} {currencyLc}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-1 text-slate-900 dark:text-white font-bold">
+                      <span>{tt("pterv2.remaining_required", "Remaining Balance Before Next Stage")}:</span>
+                      <span className="font-mono text-amber-600 dark:text-amber-400 font-extrabold">{money(remainingEndorsementLc)} {currencyLc}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Next Destination Information */}
+            <div className="rounded-xl border border-blue-200 bg-blue-50/40 dark:border-blue-800/40 dark:bg-blue-950/30 p-3 space-y-2">
+              <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                <span className="flex items-center gap-1.5"><ArrowRight className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> {tt("pterv2.next_destination", "NEXT STAGE DESTINATION")}</span>
+                <span className="font-mono text-[8.5px] font-bold uppercase">{destination.flow}</span>
+              </div>
+              <div className="text-xs font-black text-slate-900 dark:text-white">{destination.currentStepName}</div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Post DR/CR exactly once to Roznamcha, then proceed to {destination.currentStepName} without reposting the original bill.
+              </p>
+              {isPosted && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => router.push(`${destination.path}?purchaseOrderNo=${encodeURIComponent(bookingRef)}`)}
+                  className="w-full h-10 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md gap-2 flex items-center justify-center mt-1"
+                >
+                  <span>{tt("pterv2.go_to_stage", "Proceed to")} {destination.currentStepName}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* Primary Action Button */}
-            <Button
-              type="button"
-              onClick={handleTransferPayment}
-              disabled={transferring || d.ledger_posting_status === "posted"}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md gap-2 flex items-center justify-center"
-            >
-              <Send className="h-4 w-4" />
-              {transferring ? tt("pterv2.posting_btn","POSTING TO ROZNAMCHA...") : tt("pterv2.post_btn","POST TRANSACTION TO ROZNAMCHA")}
-            </Button>
+            {!isPosted ? (
+              <Button
+                type="button"
+                onClick={handleTransferPayment}
+                disabled={transferring || isPosted}
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md gap-2 flex items-center justify-center transition disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" />
+                {transferring ? tt("pterv2.posting_btn","POSTING TO ROZNAMCHA...") : tt("pterv2.post_btn","POST TRANSACTION TO ROZNAMCHA")}
+              </Button>
+            ) : (
+              <div className="rounded-xl border border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/60 p-3 text-center space-y-1">
+                <div className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {tt("pterv2.already_posted", "TRANSFERRED & POSTED TO ROZNAMCHA")}
+                </div>
+                <div className="text-[10px] text-emerald-700 dark:text-emerald-400">
+                  Double-entry posting confirmed in {currencyLc}.
+                </div>
+              </div>
+            )}
 
             {transferSuccess && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-950/60 p-3 text-xs font-bold text-emerald-800 dark:text-emerald-300">

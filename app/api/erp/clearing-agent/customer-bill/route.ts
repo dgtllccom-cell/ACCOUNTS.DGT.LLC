@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import {
   listCustomerBills,
-  ensureCustomerBillForOrder,
+  ensureCustomerBillForOrders,
   getCustomerBillByOrderId
 } from "@/lib/services/clearing-customer-bill-service";
+import { listCustomerOrders, type CustomerOrderScopeFilter } from "@/lib/services/clearing-customer-order-service";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { searchParams } = new URL(req.url);
     const orderId = searchParams.get("orderId");
     const customerId = searchParams.get("customerId");
@@ -18,6 +21,21 @@ export async function GET(req: NextRequest) {
 
     if (orderId) {
       const bill = await getCustomerBillByOrderId(orderId);
+      if (bill && !session.isSuperAdmin) {
+        const scope: CustomerOrderScopeFilter = {
+          isSuperAdmin: false,
+          countryIds: (session.countryIds ?? []) as string[],
+          countryBranchIds: (session.countryBranchIds ?? []) as string[],
+          cityBranchIds: (session.cityBranchIds ?? []) as string[],
+          clearingAgentIds: (session.clearingAgentIds ?? []) as string[],
+          createdByUserId: typeof session.userId === "string" ? session.userId : null
+        };
+        const visibleOrderIds = new Set((await listCustomerOrders(undefined, scope)).map((order: any) => String(order.id)));
+        const linkedOrderIds = Array.isArray(bill.order_ids) && bill.order_ids.length > 0 ? bill.order_ids : [bill.order_id];
+        if (!linkedOrderIds.some((id) => visibleOrderIds.has(String(id)))) {
+          return NextResponse.json({ success: false, error: "Not authorized to view this customer bill." }, { status: 403 });
+        }
+      }
       return NextResponse.json({ success: true, data: bill });
     }
 
@@ -25,7 +43,13 @@ export async function GET(req: NextRequest) {
       orderId: orderId ?? undefined,
       customerId: customerId ?? undefined,
       status: status ?? undefined,
-      search: search ?? undefined
+      search: search ?? undefined,
+      isSuperAdmin: !!session.isSuperAdmin,
+      countryIds: session.countryIds ?? [],
+      countryBranchIds: session.countryBranchIds ?? [],
+      cityBranchIds: session.cityBranchIds ?? [],
+      clearingAgentIds: session.clearingAgentIds ?? [],
+      createdByUserId: session.userId ?? null
     });
 
     return NextResponse.json({ success: true, data: bills });
@@ -42,17 +66,36 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "create" });
     const body = await req.json();
-    const { orderId } = body;
+    const orderIds: string[] = Array.from(new Set<string>(
+      (Array.isArray(body.orderIds) ? body.orderIds : [body.orderId])
+        .map((value: unknown) => String(value ?? "").trim())
+        .filter(Boolean)
+    )) as string[];
 
-    if (!orderId) {
+    if (orderIds.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Missing required orderId field." },
+        { success: false, error: "Missing required orderIds field." },
         { status: 400 }
       );
     }
 
-    const bill = await ensureCustomerBillForOrder(orderId, session.userId);
+    const orderScope: CustomerOrderScopeFilter = {
+      isSuperAdmin: !!session.isSuperAdmin,
+      countryIds: session.isSuperAdmin ? null : ((session.countryIds ?? []) as string[]),
+      countryBranchIds: session.isSuperAdmin ? null : ((session.countryBranchIds ?? []) as string[]),
+      cityBranchIds: session.isSuperAdmin ? null : ((session.cityBranchIds ?? []) as string[]),
+      clearingAgentIds: session.isSuperAdmin ? null : ((session.clearingAgentIds ?? []) as string[]),
+      createdByUserId: typeof session.userId === "string" ? session.userId : null
+    };
+    const visibleOrders = await listCustomerOrders(undefined, orderScope);
+    const visibleOrderIds = new Set(visibleOrders.map((order: any) => String(order.id)));
+    if (!session.isSuperAdmin && orderIds.some((id) => !visibleOrderIds.has(id))) {
+      return NextResponse.json({ success: false, error: "One or more selected customer orders are outside your authorized scope." }, { status: 403 });
+    }
+
+    const bill = await ensureCustomerBillForOrders(orderIds, typeof session.userId === "string" ? session.userId : null);
     return NextResponse.json({ success: true, data: bill });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);

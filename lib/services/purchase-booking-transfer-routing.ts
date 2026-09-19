@@ -17,7 +17,25 @@ export function resolvePurchaseBookingTransferDestination(
 ): PurchaseBookingTransferDestination {
   const normalized = String(paymentType ?? "").trim().toLowerCase();
 
-  if (normalized === "advance" || normalized === "advance payment") {
+  if (normalized.includes("endorsement")) {
+    return {
+      flow: "advance",
+      path: "/dashboard/journal/purchase-order-payment/advance",
+      currentStep: "purchase_endorsement_payment",
+      currentStepName: "Purchase Endorsement Payment"
+    };
+  }
+
+  if (normalized.includes("invoice")) {
+    return {
+      flow: "remaining",
+      path: "/dashboard/purchase/purchase-loading-form",
+      currentStep: "purchase_invoice_payment",
+      currentStepName: "Purchase Invoice Payment"
+    };
+  }
+
+  if (normalized === "advance" || normalized === "advance payment" || normalized.includes("advance")) {
     return {
       flow: "advance",
       path: "/dashboard/journal/purchase-order-payment/advance",
@@ -26,7 +44,7 @@ export function resolvePurchaseBookingTransferDestination(
     };
   }
 
-  if (normalized === "credit" || normalized === "credit payment") {
+  if (normalized === "credit" || normalized === "credit payment" || normalized.includes("credit")) {
     return {
       flow: "credit",
       path: "/dashboard/journal/purchase-order-payment/charges",
@@ -35,11 +53,20 @@ export function resolvePurchaseBookingTransferDestination(
     };
   }
 
+  if (normalized.includes("cash")) {
+    return {
+      flow: "remaining",
+      path: "/dashboard/journal/purchase-order-payment/remaining",
+      currentStep: "purchase_cash_payment",
+      currentStepName: "Purchase Cash Payment"
+    };
+  }
+
   return {
     flow: "remaining",
     path: "/dashboard/journal/purchase-order-payment/remaining",
     currentStep: "purchase_remaining_payment",
-    currentStepName: "Purchase Payment"
+    currentStepName: "Purchase Final Payment"
   };
 }
 

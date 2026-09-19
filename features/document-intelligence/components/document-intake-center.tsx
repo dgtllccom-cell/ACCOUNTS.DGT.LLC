@@ -386,8 +386,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
     async function loadAccounts() {
       try {
         const url = countryId ? `/api/erp/accounts?countryId=${countryId}` : `/api/erp/accounts`;
-        const res = await apiGet<{ accounts?: any[]; data?: any[] }>(url).catch(() => ({ accounts: [] }));
-        const accts = res?.accounts || res?.data || (Array.isArray(res) ? res : []);
+        const res = await apiGet<{ accounts?: any[]; data?: any[] }>(url).catch(
+          () => ({ accounts: [], data: [] })
+        );
+        const accts: any[] = res?.accounts || res?.data || (Array.isArray(res) ? res : []);
         setChartAccounts(accts);
 
         // Auto-assign sensible default accounts

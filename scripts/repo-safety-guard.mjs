@@ -87,7 +87,7 @@ function listFiles() {
     // backups, browser probes and Capacitor bundles that are intentionally not
     // versioned and may include test fixtures or third-party placeholder text.
     const ignored = new Set([
-      ".git", ".next", ".turbo", "node_modules", "dist", "build",
+      ".git", ".next", ".turbo", "node_modules", "dist", "build", ".claude",
       ".codex-backups", "backups", "exports", "scratch", "storage", "vendor",
       "uat-samples", "local-output", "android", "ios"
     ]);

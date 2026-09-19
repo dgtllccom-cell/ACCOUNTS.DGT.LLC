@@ -20,6 +20,7 @@ export interface CustomerBillItemInput {
 
 export interface CustomerBillSaveInput {
   id: string;
+  orderIds?: string[];
   dueDate?: string | null;
   discountAmount?: number;
   otherCharges?: number;
@@ -31,6 +32,7 @@ export interface CustomerBillSaveInput {
 export interface CustomerBillRow {
   id: string;
   order_id: string;
+  order_ids?: string[];
   order_no: string | null;
   customer_id: string;
   customer_name: string | null;
@@ -75,6 +77,7 @@ export interface CustomerBillRow {
   updated_at: string;
   items?: CustomerBillItemRow[];
   order?: Record<string, any> | null;
+  orders?: Array<Record<string, any>>;
 }
 
 export interface CustomerBillItemRow {
@@ -96,26 +99,97 @@ export interface CustomerBillItemRow {
   updated_at: string;
 }
 
+function normalizeOrderIds(orderIds: string[]): string[] {
+  return Array.from(new Set(orderIds.map((value) => String(value).trim()).filter(Boolean)));
+}
+
 /**
- * Ensures a Customer Bill draft exists for the given customer order.
- * If already existing, returns it.
- * If not, automatically creates a new draft inheriting customer account,
- * order reference, branch scope, serials, and shipment metadata.
+ * Ensures a Customer Bill draft exists for one or more customer orders.
+ * The bill keeps the first order in the legacy `order_id` column while every
+ * selected order is persisted in clearing_customer_bill_orders. All selected
+ * orders must belong to the same customer because a bill has one customer AR
+ * account and one posting identity.
  */
-export async function ensureCustomerBillForOrder(
-  orderId: string,
+export async function ensureCustomerBillForOrders(
+  inputOrderIds: string[],
   actorId?: string | null
 ): Promise<CustomerBillRow> {
+  const orderIds = normalizeOrderIds(inputOrderIds);
+  if (orderIds.length === 0) throw new Error("At least one customer order is required.");
+
   const result = await withLocalPg(async (sql) => {
-    // 1. Check if bill already exists
+    // 1. Load and validate every selected order from the shared order master.
+    const orders = await sql`
+      SELECT * FROM public.clearing_customer_orders
+      WHERE id = ANY(${orderIds}::uuid[]) AND deleted_at IS NULL
+      ORDER BY array_position(${orderIds}::uuid[], id)
+    `;
+    if (orders.length !== orderIds.length) {
+      throw new Error("One or more selected customer orders are no longer available.");
+    }
+    const customerIds = Array.from(new Set(orders.map((row: any) => row.customer_id).filter(Boolean)));
+    if (customerIds.length > 1) {
+      throw new Error("A customer bill can only include orders for one customer.");
+    }
+    const [primaryOrder] = orders;
+
+    // 2. Reopen an existing bill when the selected order is already linked.
     const existing = await sql`
-      SELECT * FROM public.clearing_customer_bills
-      WHERE order_id = ${orderId}::uuid AND deleted_at IS NULL
+      SELECT b.*
+      FROM public.clearing_customer_bills b
+      LEFT JOIN public.clearing_customer_bill_orders bo ON bo.bill_id = b.id
+      WHERE b.deleted_at IS NULL
+        AND (b.order_id = ANY(${orderIds}::uuid[]) OR bo.order_id = ANY(${orderIds}::uuid[]))
+      ORDER BY b.created_at DESC
       LIMIT 1
     `;
 
     if (existing && existing.length > 0) {
       const bill = existing[0] as unknown as CustomerBillRow;
+      const linked = await sql`
+        SELECT order_id::text, link_order
+        FROM public.clearing_customer_bill_orders
+        WHERE bill_id = ${bill.id}::uuid
+        ORDER BY link_order ASC, created_at ASC
+      `;
+      const linkedIds = linked.map((row: any) => String(row.order_id));
+      if (customerIds[0] && String(customerIds[0]) !== String(bill.customer_id)) {
+        throw new Error("The selected customer orders do not belong to this bill's customer.");
+      }
+      const missingIds = orderIds.filter((id) => !linkedIds.includes(id));
+      if (missingIds.length > 0 && bill.status !== "draft") {
+        throw new Error("Only a draft customer bill can have its selected orders changed.");
+      }
+      if (missingIds.length > 0) {
+        for (const id of missingIds) {
+          await sql`
+            INSERT INTO public.clearing_customer_bill_orders (bill_id, order_id, link_order)
+            VALUES (${bill.id}::uuid, ${id}::uuid, ${linkedIds.length + 1})
+            ON CONFLICT (bill_id, order_id) DO NOTHING
+          `;
+          linkedIds.push(id);
+        }
+        const orderNos = orders
+          .filter((row: any) => linkedIds.includes(String(row.id)))
+          .map((row: any) => row.order_no || row.id)
+          .join(", ");
+        await sql`
+          UPDATE public.clearing_customer_bills
+          SET order_no = ${orderNos}, updated_at = now()
+          WHERE id = ${bill.id}::uuid
+        `;
+        bill.order_no = orderNos;
+      }
+      const linkedOrders = await sql`
+        SELECT o.*
+        FROM public.clearing_customer_bill_orders bo
+        JOIN public.clearing_customer_orders o ON o.id = bo.order_id
+        WHERE bo.bill_id = ${bill.id}::uuid AND o.deleted_at IS NULL
+        ORDER BY bo.link_order ASC, bo.created_at ASC
+      `;
+      bill.order_ids = linkedOrders.map((row: any) => String(row.id));
+      bill.orders = linkedOrders as unknown as Array<Record<string, any>>;
+      bill.order = linkedOrders[0] ?? null;
       const items = await sql`
         SELECT * FROM public.clearing_customer_bill_items
         WHERE bill_id = ${bill.id}::uuid AND deleted_at IS NULL
@@ -125,15 +199,7 @@ export async function ensureCustomerBillForOrder(
       return bill;
     }
 
-    // 2. Fetch Customer Order details
-    const [order] = await sql`
-      SELECT * FROM public.clearing_customer_orders
-      WHERE id = ${orderId}::uuid AND deleted_at IS NULL
-      LIMIT 1
-    `;
-    if (!order) {
-      throw new Error(`Customer order ${orderId} not found.`);
-    }
+    const order = primaryOrder;
 
     // 3. Ensure Customer Shipping AR Ledger & Enterprise Account
     let customerAccountId: string | null = null;
@@ -248,6 +314,13 @@ export async function ensureCustomerBillForOrder(
       RETURNING *
     `;
 
+    await sql`
+      INSERT INTO public.clearing_customer_bill_orders (bill_id, order_id, link_order)
+      SELECT ${newBill.id}::uuid, value::uuid, ordinality::int
+      FROM unnest(${orderIds}::uuid[]) WITH ORDINALITY AS selected(value, ordinality)
+      ON CONFLICT (bill_id, order_id) DO NOTHING
+    `;
+
     // 6. Prepopulate standard default charges template if empty
     const defaultLines = [
       { charge_type: "freight", charge_name: "Ocean / Road Freight", rate: 0, qty: 1 },
@@ -272,6 +345,8 @@ export async function ensureCustomerBillForOrder(
     }
 
     const res = newBill as unknown as CustomerBillRow;
+    res.order_ids = orderIds;
+    res.orders = orders as unknown as Array<Record<string, any>>;
     res.items = insertedItems;
     res.order = order;
     return res;
@@ -279,6 +354,13 @@ export async function ensureCustomerBillForOrder(
 
   if (!result) throw new Error("Database connection not configured or operation failed.");
   return result;
+}
+
+export async function ensureCustomerBillForOrder(
+  orderId: string,
+  actorId?: string | null
+): Promise<CustomerBillRow> {
+  return ensureCustomerBillForOrders([orderId], actorId);
 }
 
 /**
@@ -308,13 +390,22 @@ export async function getCustomerBillById(billId: string): Promise<CustomerBillR
       ORDER BY item_order ASC, created_at ASC
     `;
 
-    const [order] = await sql`
-      SELECT * FROM public.clearing_customer_orders
-      WHERE id = ${bill.order_id}::uuid
-      LIMIT 1
+    const orders = await sql`
+      SELECT o.*
+      FROM public.clearing_customer_bill_orders bo
+      JOIN public.clearing_customer_orders o ON o.id = bo.order_id
+      WHERE bo.bill_id = ${bill.id}::uuid AND o.deleted_at IS NULL
+      ORDER BY bo.link_order ASC, bo.created_at ASC
     `;
+    const fallbackOrder = orders.length === 0
+      ? await sql`SELECT * FROM public.clearing_customer_orders WHERE id = ${bill.order_id}::uuid LIMIT 1`
+      : [];
+    const allOrders = (orders.length > 0 ? orders : fallbackOrder) as unknown as Array<Record<string, any>>;
+    const [order] = allOrders;
 
     const result = bill as unknown as CustomerBillRow;
+    result.order_ids = allOrders.map((row: any) => String(row.id));
+    result.orders = allOrders;
     result.items = (items as unknown) as CustomerBillItemRow[];
     result.order = order ?? null;
     return result;
@@ -327,8 +418,11 @@ export async function getCustomerBillById(billId: string): Promise<CustomerBillR
 export async function getCustomerBillByOrderId(orderId: string): Promise<CustomerBillRow | null> {
   const result = await withLocalPg(async (sql) => {
     const [bill] = await sql`
-      SELECT id FROM public.clearing_customer_bills
-      WHERE order_id = ${orderId}::uuid AND deleted_at IS NULL
+      SELECT b.id
+      FROM public.clearing_customer_bills b
+      LEFT JOIN public.clearing_customer_bill_orders bo ON bo.bill_id = b.id
+      WHERE b.deleted_at IS NULL
+        AND (b.order_id = ${orderId}::uuid OR bo.order_id = ${orderId}::uuid)
       LIMIT 1
     `;
     if (bill) {
@@ -351,6 +445,12 @@ export async function listCustomerBills(filters?: {
   orderId?: string;
   status?: string;
   countryId?: string;
+  countryIds?: string[] | null;
+  countryBranchIds?: string[] | null;
+  cityBranchIds?: string[] | null;
+  clearingAgentIds?: string[] | null;
+  createdByUserId?: string | null;
+  isSuperAdmin?: boolean;
   limit?: number;
   offset?: number;
 }): Promise<CustomerBillRow[]> {
@@ -361,6 +461,52 @@ export async function listCustomerBills(filters?: {
     const status = filters?.status?.trim();
     const limit = Math.min(filters?.limit ?? 50, 100);
     const offset = filters?.offset ?? 0;
+    // Bills inherit scope from their linked customer orders. Use the same
+    // narrowest-scope precedence as the order service instead of OR-ing every
+    // session dimension, which could expose a record from another country or
+    // branch merely because the creator id matched.
+    let scopeCondition = sql`false`;
+    if (filters?.isSuperAdmin) {
+      scopeCondition = sql`true`;
+    } else if (filters?.clearingAgentIds && filters.clearingAgentIds.length > 0) {
+      scopeCondition = sql`EXISTS (
+        SELECT 1
+        FROM public.clearing_customer_bill_orders bo_scope
+        JOIN public.clearing_customer_orders co_scope ON co_scope.id = bo_scope.order_id
+        WHERE bo_scope.bill_id = b.id
+          AND co_scope.deleted_at IS NULL
+          AND co_scope.clearing_agent_id = ANY(${filters.clearingAgentIds}::uuid[])
+      )`;
+    } else if (filters?.cityBranchIds && filters.cityBranchIds.length > 0) {
+      scopeCondition = sql`EXISTS (
+        SELECT 1
+        FROM public.clearing_customer_bill_orders bo_scope
+        JOIN public.clearing_customer_orders co_scope ON co_scope.id = bo_scope.order_id
+        WHERE bo_scope.bill_id = b.id
+          AND co_scope.deleted_at IS NULL
+          AND co_scope.city_branch_id = ANY(${filters.cityBranchIds}::uuid[])
+      )`;
+    } else if (filters?.countryBranchIds && filters.countryBranchIds.length > 0) {
+      scopeCondition = sql`EXISTS (
+        SELECT 1
+        FROM public.clearing_customer_bill_orders bo_scope
+        JOIN public.clearing_customer_orders co_scope ON co_scope.id = bo_scope.order_id
+        WHERE bo_scope.bill_id = b.id
+          AND co_scope.deleted_at IS NULL
+          AND co_scope.country_branch_id = ANY(${filters.countryBranchIds}::uuid[])
+      )`;
+    } else if (filters?.countryIds && filters.countryIds.length > 0) {
+      scopeCondition = sql`EXISTS (
+        SELECT 1
+        FROM public.clearing_customer_bill_orders bo_scope
+        JOIN public.clearing_customer_orders co_scope ON co_scope.id = bo_scope.order_id
+        WHERE bo_scope.bill_id = b.id
+          AND co_scope.deleted_at IS NULL
+          AND co_scope.country_id = ANY(${filters.countryIds}::uuid[])
+      )`;
+    } else if (filters?.createdByUserId) {
+      scopeCondition = sql`b.created_by = ${filters.createdByUserId}::uuid`;
+    }
 
     const rows = await sql`
       SELECT b.*,
@@ -370,6 +516,7 @@ export async function listCustomerBills(filters?: {
       LEFT JOIN public.customers c ON c.id = b.customer_id
       LEFT JOIN public.enterprise_accounts ea ON ea.id = b.customer_account_id
       WHERE b.deleted_at IS NULL
+        AND ${scopeCondition}
         ${orderId ? sql`AND b.order_id = ${orderId}::uuid` : sql``}
         ${customerId ? sql`AND b.customer_id = ${customerId}::uuid` : sql``}
         ${status && status !== "all" ? sql`AND b.status = ${status}` : sql``}
@@ -408,6 +555,34 @@ export async function saveCustomerBill(input: CustomerBillSaveInput): Promise<Cu
     `;
     if (!existing) throw new Error("Customer bill not found.");
     if (existing.status === "posted") throw new Error("Cannot modify a posted customer bill.");
+
+    const requestedOrderIds = input.orderIds ? normalizeOrderIds(input.orderIds) : [];
+    if (input.orderIds && requestedOrderIds.length === 0) {
+      throw new Error("At least one customer order is required.");
+    }
+    if (requestedOrderIds.length > 0) {
+      const selectedOrders = await sql`
+        SELECT id, order_no, customer_id
+        FROM public.clearing_customer_orders
+        WHERE id = ANY(${requestedOrderIds}::uuid[]) AND deleted_at IS NULL
+        ORDER BY array_position(${requestedOrderIds}::uuid[], id)
+      `;
+      if (selectedOrders.length !== requestedOrderIds.length) {
+        throw new Error("One or more selected customer orders are no longer available.");
+      }
+      const customerIds = Array.from(new Set(selectedOrders.map((row: any) => row.customer_id).filter(Boolean)));
+      if (customerIds.length > 1 || (customerIds[0] && String(customerIds[0]) !== String(existing.customer_id))) {
+        throw new Error("A customer bill can only include orders for its customer.");
+      }
+      await sql`DELETE FROM public.clearing_customer_bill_orders WHERE bill_id = ${billId}::uuid`;
+      for (let index = 0; index < selectedOrders.length; index += 1) {
+        await sql`
+          INSERT INTO public.clearing_customer_bill_orders (bill_id, order_id, link_order)
+          VALUES (${billId}::uuid, ${selectedOrders[index].id}::uuid, ${index + 1})
+          ON CONFLICT (bill_id, order_id) DO UPDATE SET link_order = EXCLUDED.link_order
+        `;
+      }
+    }
 
     // Recalculate line items
     let subtotal = 0;
@@ -465,12 +640,17 @@ export async function saveCustomerBill(input: CustomerBillSaveInput): Promise<Cu
         balance_due = ${balanceDue},
         due_date = ${input.dueDate ? sql`${input.dueDate}::date` : sql`due_date`},
         remarks = ${input.remarks !== undefined ? input.remarks : sql`remarks`},
+        order_id = ${requestedOrderIds.length > 0 ? sql`${requestedOrderIds[0]}::uuid` : sql`order_id`},
+        order_no = ${requestedOrderIds.length > 0
+          ? sql`(SELECT string_agg(COALESCE(order_no, id::text), ', ' ORDER BY array_position(${requestedOrderIds}::uuid[], id)) FROM public.clearing_customer_orders WHERE id = ANY(${requestedOrderIds}::uuid[]))`
+          : sql`order_no`},
         updated_at = ${now}
       WHERE id = ${billId}::uuid
       RETURNING *
     `;
 
     const res = updatedBill as unknown as CustomerBillRow;
+    if (requestedOrderIds.length > 0) res.order_ids = requestedOrderIds;
     res.items = insertedItems;
     return res;
   });

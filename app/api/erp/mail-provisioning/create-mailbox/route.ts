@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Generate secure password
     const password = generatePassword
       ? Array.from(crypto.getRandomValues(new Uint8Array(16)))
-          .map(b => String.fromCharCode(b))
+          .map((b) => String.fromCharCode(Number(b)))
           .join("")
           .replace(/[^a-zA-Z0-9!@#$%^&*]/g, (c) => "!@#$%^&*"[Math.random() * 8 | 0])
           .substring(0, 20)

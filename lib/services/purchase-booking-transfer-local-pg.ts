@@ -209,7 +209,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       }
 
       const existingPaymentRows = await tx`
-        select id, roznamcha_entry_id, amount, debit_ledger_id, credit_ledger_id
+        select id, roznamcha_entry_id, amount, base_currency_amount, debit_ledger_id, credit_ledger_id
         from purchase_order_payments
         where purchase_order_id = ${orderId}::uuid
           and kind = 'booking'
@@ -219,13 +219,21 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       `;
       const existingPayment = existingPaymentRows[0] ?? null;
 
+      const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+      const expectedFinalAmount = Number(orderRow.order_total || 0) > 0 ? Number(orderRow.order_total) : (totalPurchaseAmount * exRate);
+
       let paymentId: string | null = null;
       let roznamchaEntryId: string | null = null;
       if (existingPayment) {
         paymentId = String(existingPayment.id);
         roznamchaEntryId = existingPayment.roznamcha_entry_id;
+        const recordedAmount = Number(existingPayment.base_currency_amount || existingPayment.amount || 0);
+        const amountMatches =
+          Math.abs(recordedAmount - expectedFinalAmount) < 0.05 ||
+          Math.abs(recordedAmount - totalPurchaseAmount) < 0.05 ||
+          Math.abs(Number(existingPayment.amount) - totalPurchaseAmount) < 0.05;
         if (
-          Number(existingPayment.amount) !== totalPurchaseAmount ||
+          !amountMatches ||
           existingPayment.debit_ledger_id !== debitAccountObj.id ||
           existingPayment.credit_ledger_id !== creditAccountObj.id
         ) {
@@ -285,7 +293,6 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         from roznamcha_lines
         where roznamcha_entry_id = ${roznamchaEntryId}::uuid
       `;
-      const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
       assertDistinctBookingLedgers(debitAccountObj.id, creditAccountObj.id, "Business Roznamcha");
       assertBalancedPostedLines({
         label: "Business Roznamcha",
@@ -317,9 +324,9 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       }
 
       const existingAdvance = Number(orderRow.advance_paid) || 0;
-      const newRemainingDue = totalPurchaseAmount - existingAdvance;
+      const newRemainingDue = Math.max(0, expectedFinalAmount - existingAdvance);
       let newPaymentStatus = "pending";
-      if (newRemainingDue <= 0) newPaymentStatus = "completed";
+      if (newRemainingDue <= 0.01) newPaymentStatus = "completed";
       else if (existingAdvance > 0) newPaymentStatus = "partial";
       const selectedPaymentType = form.paymentType || body?.paymentType || "";
       const destination = resolvePurchaseBookingTransferDestination(selectedPaymentType);
