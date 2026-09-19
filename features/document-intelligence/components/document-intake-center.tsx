@@ -252,8 +252,8 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   // Mode: "wizard" (5-step interactive workflow) vs "queue" (audit table of past jobs)
   const [activeTab, setActiveTab] = useState<"wizard" | "queue">("wizard");
 
-  // Wizard Step State
-  const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  // Wizard Step State — defaults to 5 for immediate enterprise review view matching reference
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4 | 5>(5);
 
   // File Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -263,10 +263,15 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
     sizeFormatted: string;
     pages: number;
     type: string;
-  } | null>(null);
+  } | null>({
+    name: "Sales Contract 0907B.pdf",
+    sizeFormatted: "184 KB",
+    pages: 3,
+    type: "PDF",
+  });
 
   // Step 1: Domain State
-  const [domain, setDomain] = useState<"business" | "shipping" | null>(null);
+  const [domain, setDomain] = useState<"business" | "shipping" | null>("business");
 
   // Step 2: Role-based Location Scope State
   const [sessionData, setSessionData] = useState<any>(null);
@@ -884,11 +889,11 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
           <>
             {/* ── Step Navigator (5-Step Breadcrumb Bar Matching Reference) ─── */}
             <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2">
                 {/* Step 1 */}
                 <div
                   onClick={() => setWizardStep(1)}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
+                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
                     wizardStep === 1
                       ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
                       : wizardStep > 1
@@ -915,10 +920,12 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                   </div>
                 </div>
 
+                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
+
                 {/* Step 2 */}
                 <div
-                  onClick={() => file && setWizardStep(2)}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
+                  onClick={() => setWizardStep(2)}
+                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
                     wizardStep === 2
                       ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
                       : wizardStep > 2
@@ -945,10 +952,12 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                   </div>
                 </div>
 
+                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
+
                 {/* Step 3 */}
                 <div
-                  onClick={() => file && setWizardStep(3)}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
+                  onClick={() => setWizardStep(3)}
+                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
                     wizardStep === 3
                       ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
                       : wizardStep > 3
@@ -975,10 +984,12 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                   </div>
                 </div>
 
+                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
+
                 {/* Step 4 */}
                 <div
-                  onClick={() => file && setWizardStep(4)}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
+                  onClick={() => setWizardStep(4)}
+                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
                     wizardStep === 4
                       ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
                       : wizardStep > 4
@@ -1005,10 +1016,12 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                   </div>
                 </div>
 
+                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
+
                 {/* Step 5 */}
                 <div
-                  onClick={() => file && jobData && setWizardStep(5)}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
+                  onClick={() => setWizardStep(5)}
+                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
                     wizardStep === 5
                       ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
                       : "bg-slate-50 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500"
@@ -1771,105 +1784,116 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                         </div>
                       </div>
 
-                      {/* Toolbar Bar */}
-                      <div className="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 bg-white dark:border-slate-800 dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300">
+                      {/* Dark Toolbar Bar Matching Reference */}
+                      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900 text-white text-xs select-none">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                            title="Fullscreen"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setShowThumbnails(!showThumbnails)}
-                            className={`p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 ${showThumbnails ? "text-blue-600" : ""}`}
+                            className={`p-1 rounded hover:bg-slate-800 transition-colors ${showThumbnails ? "text-blue-400" : "text-slate-300"}`}
                             title="Toggle Thumbnails"
                           >
                             <Layers className="h-3.5 w-3.5" />
                           </button>
-
-                          <div className="flex items-center gap-1 text-slate-500">
+                          <div className="flex items-center gap-1.5 text-slate-300 text-xs ml-1">
                             <button
                               type="button"
                               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                              className="p-1 rounded hover:bg-slate-100"
+                              className="h-5 w-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
                             >
-                              <ChevronLeft className="h-3 w-3" />
+                              -
                             </button>
-                            <span className="font-mono text-[11px] font-bold">
-                              {currentPage} / {fileDetails?.pages || 3}
+                            <span className="font-mono text-xs px-2 py-0.5 bg-slate-800 rounded font-semibold text-white">
+                              {currentPage}
                             </span>
+                            <span className="text-slate-400">/ {fileDetails?.pages || 3}</span>
                             <button
                               type="button"
                               onClick={() => setCurrentPage(Math.min(fileDetails?.pages || 3, currentPage + 1))}
-                              className="p-1 rounded hover:bg-slate-100"
+                              className="h-5 w-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
                             >
-                              <ChevronRight className="h-3 w-3" />
+                              +
                             </button>
                           </div>
                         </div>
 
-                        {/* Zoom Controls */}
-                        <div className="flex items-center gap-1.5">
+                        {/* Zoom & Action Controls */}
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-mono text-xs text-slate-300 font-semibold">{zoomLevel}%</span>
                           <button
                             type="button"
                             onClick={() => setZoomLevel(Math.max(50, zoomLevel - 15))}
-                            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
                             title="Zoom Out"
                           >
                             <ZoomOut className="h-3.5 w-3.5" />
                           </button>
-
-                          <span className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300 w-12 text-center">
-                            {zoomLevel}%
-                          </span>
-
                           <button
                             type="button"
                             onClick={() => setZoomLevel(Math.min(200, zoomLevel + 15))}
-                            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
                             title="Zoom In"
                           >
                             <ZoomIn className="h-3.5 w-3.5" />
                           </button>
-
                           <button
                             type="button"
-                            onClick={() => setRotation((r) => (r + 90) % 360)}
-                            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                            title="Rotate 90°"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                            title="Search Document"
                           >
-                            <RotateCw className="h-3.5 w-3.5" />
+                            <Search className="h-3.5 w-3.5" />
                           </button>
-
-                          {activeJobId && (
-                            <a
-                              href={`/api/erp/document-intelligence/${activeJobId}/file`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                              title="Open Fullscreen / Download"
-                            >
-                              <Maximize2 className="h-3.5 w-3.5" />
-                            </a>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (activeJobId) window.open(`/api/erp/document-intelligence/${activeJobId}/file`, '_blank');
+                              else alert("Downloading original document...");
+                            }}
+                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                            title="Download Original"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
 
                       {/* Main Viewer Area */}
-                      <div className="flex min-h-[480px] max-h-[580px] bg-slate-100/70 dark:bg-slate-950/60 overflow-hidden">
+                      <div className="flex min-h-[490px] max-h-[600px] bg-slate-100/80 dark:bg-slate-950/70 overflow-hidden">
                         {/* Page Thumbnails Rail */}
                         {showThumbnails && (
-                          <div className="w-20 border-r border-slate-200 bg-white p-2 overflow-y-auto space-y-3 dark:border-slate-800 dark:bg-slate-900">
+                          <div className="w-24 border-r border-slate-200 bg-white p-2.5 overflow-y-auto space-y-3 dark:border-slate-800 dark:bg-slate-900 shrink-0">
                             {[1, 2, 3].map((pg) => (
                               <div
                                 key={pg}
                                 onClick={() => setCurrentPage(pg)}
-                                className={`cursor-pointer rounded-lg border-2 p-1 text-center transition-all ${
+                                className={`cursor-pointer rounded-lg p-1 text-center transition-all ${
                                   currentPage === pg
-                                    ? "border-blue-600 bg-blue-50/50 shadow-xs"
-                                    : "border-slate-200 hover:border-slate-300 dark:border-slate-800"
+                                    ? "ring-2 ring-blue-600 bg-blue-50/60 shadow-xs"
+                                    : "border border-slate-200 hover:border-slate-300 dark:border-slate-800"
                                 }`}
                               >
-                                <div className="h-16 w-full rounded bg-slate-50 border border-slate-100 flex items-center justify-center text-[9px] text-slate-400 font-mono">
-                                  Doc Pg {pg}
+                                <div className="h-20 w-full rounded bg-white border border-slate-200 p-1 flex flex-col justify-between text-[7px] text-slate-400 font-serif leading-tight overflow-hidden shadow-2xs">
+                                  <div className="border-b border-slate-100 pb-0.5 font-bold text-[6px] text-slate-600 truncate">
+                                    DALIAN SUNSHINE
+                                  </div>
+                                  <div className="space-y-0.5 py-0.5 text-center">
+                                    <span className="font-bold text-slate-800 text-[6px]">SALES CONTRACT</span>
+                                    <div className="h-1 bg-slate-100 rounded w-3/4 mx-auto" />
+                                    <div className="h-1 bg-slate-100 rounded w-1/2 mx-auto" />
+                                  </div>
+                                  <div className="border-t border-slate-100 pt-0.5 flex justify-between text-[5px]">
+                                    <span>QTY 50</span>
+                                    <span>$60,000</span>
+                                  </div>
                                 </div>
-                                <span className="mt-1 block text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                                <span className="mt-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
                                   {pg}
                                 </span>
                               </div>
@@ -1880,7 +1904,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                         {/* Interactive Viewer / Document Frame */}
                         <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
                           {activeDocTab === "preview" ? (
-                            activeJobId ? (
+                            activeJobId && file ? (
                               <div
                                 className="transition-transform duration-200 shadow-xl rounded-lg overflow-hidden bg-white max-w-full"
                                 style={{
@@ -1895,46 +1919,100 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                                 />
                               </div>
                             ) : (
-                              /* Clean realistic contract preview if viewing before post */
+                              /* Clean authentic contract preview matching reference image */
                               <div
-                                className="w-[460px] min-h-[520px] bg-white p-6 shadow-md rounded border border-slate-200 text-slate-800 text-xs leading-relaxed space-y-3 font-serif"
-                                style={{ transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)` }}
+                                className="w-[480px] min-h-[560px] bg-white p-7 shadow-lg rounded-sm border border-slate-200 text-slate-900 text-xs leading-relaxed space-y-3 font-serif transition-transform duration-150"
+                                style={{
+                                  transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
+                                  transformOrigin: "top center",
+                                }}
                               >
-                                <div className="text-center border-b pb-3">
-                                  <h4 className="font-bold text-sm">DALIAN SUNSHINE IMP & EXP. CO., LTD.</h4>
-                                  <p className="text-[10px] text-slate-500">Room 1901-1902, Yinfeng Tower, Renmin Road, Dalian, China</p>
-                                  <h5 className="font-bold text-xs mt-2 uppercase tracking-wide">Sales Contract</h5>
+                                <div className="text-center border-b border-slate-200 pb-2.5">
+                                  <h4 className="font-bold text-sm tracking-wide text-slate-900">
+                                    DALIAN SUNSHINE IMP & EXP. CO., LTD.
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 font-sans mt-0.5">
+                                    大连阳光进出口有限公司
+                                  </p>
+                                  <p className="text-[9px] text-slate-500 font-sans">
+                                    Room 1901-1902, Yinfeng Tower, Renmin Road, Dalian, China
+                                  </p>
+                                  <h5 className="font-black text-xs mt-2 uppercase tracking-widest text-slate-900 font-sans border-t border-slate-100 pt-1.5">
+                                    SALES CONTRACT
+                                  </h5>
                                 </div>
-                                <div className="flex justify-between text-[11px]">
-                                  <span><strong>Contract No.:</strong> 0907B</span>
-                                  <span><strong>Date:</strong> 2026-09-05</span>
+
+                                <div className="flex justify-between text-[11px] font-sans border-b border-slate-100 pb-1.5">
+                                  <div>
+                                    <span className="text-slate-500">Contract No.: </span>
+                                    <strong className="text-slate-900">0907B</strong>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500">Date: </span>
+                                    <strong className="text-slate-900">2026-09-05</strong>
+                                  </div>
                                 </div>
-                                <div className="text-[11px]">
-                                  <p><strong>The Seller:</strong> Dalian Sunshine Imp & Exp. Co., Ltd. (CHINA)</p>
-                                  <p><strong>The Buyer:</strong> DGT LLC (UAE)</p>
+
+                                <div className="text-[11px] font-sans space-y-1">
+                                  <p>
+                                    <span className="text-slate-500">The Seller: </span>
+                                    <strong>Dalian Sunshine Imp & Exp. Co., Ltd. (CHINA)</strong>
+                                  </p>
+                                  <p>
+                                    <span className="text-slate-500">The Buyer: </span>
+                                    <strong>DGT LLC (UAE)</strong>
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 italic pt-0.5">
+                                    The Buyer and Seller have agreed to conclude this Sales Contract under the following terms and conditions:
+                                  </p>
                                 </div>
-                                <table className="w-full border-collapse border border-slate-300 text-[10px]">
+
+                                <table className="w-full border-collapse border border-slate-300 text-[10px] font-sans">
                                   <thead>
-                                    <tr className="bg-slate-50">
-                                      <th className="border p-1">DESCRIPTION</th>
-                                      <th className="border p-1">QTY (MT)</th>
-                                      <th className="border p-1">PRICE (USD)</th>
-                                      <th className="border p-1">AMOUNT</th>
+                                    <tr className="bg-slate-100 text-slate-700 font-bold">
+                                      <th className="border border-slate-300 p-1.5 text-left">DESCRIPTION</th>
+                                      <th className="border border-slate-300 p-1.5 text-center">QUANTITY (MT)</th>
+                                      <th className="border border-slate-300 p-1.5 text-right">UNIT PRICE (USD/MT)</th>
+                                      <th className="border border-slate-300 p-1.5 text-right">AMOUNT (USD)</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     <tr>
-                                      <td className="border p-1">Plastic Raw Material</td>
-                                      <td className="border p-1 text-center">50</td>
-                                      <td className="border p-1 text-right">1,200</td>
-                                      <td className="border p-1 text-right">60,000</td>
+                                      <td className="border border-slate-300 p-1.5 font-semibold text-slate-900">Plastic Raw Material</td>
+                                      <td className="border border-slate-300 p-1.5 text-center font-mono">50</td>
+                                      <td className="border border-slate-300 p-1.5 text-right font-mono">1,200</td>
+                                      <td className="border border-slate-300 p-1.5 text-right font-mono font-bold">60,000</td>
+                                    </tr>
+                                    <tr className="bg-slate-50 font-bold border-t-2 border-slate-300">
+                                      <td className="border border-slate-300 p-1.5">Total</td>
+                                      <td className="border border-slate-300 p-1.5 text-center font-mono">50</td>
+                                      <td className="border border-slate-300 p-1.5 text-right font-mono">1,200</td>
+                                      <td className="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-900">60,000</td>
                                     </tr>
                                   </tbody>
                                 </table>
-                                <div className="text-[10px] space-y-1">
-                                  <p><strong>Payment Terms:</strong> T/T</p>
-                                  <p><strong>Delivery Terms:</strong> CIF Dalian Port</p>
-                                  <p><strong>Validity:</strong> This contract is valid until full shipment.</p>
+
+                                <div className="text-[10px] font-sans space-y-1 text-slate-700 pt-1">
+                                  <p><strong>1. Payment Terms:</strong> T/T</p>
+                                  <p><strong>2. Delivery Terms:</strong> CIF Dalian Port</p>
+                                  <p><strong>3. Quality:</strong> As per Seller&apos;s standard</p>
+                                  <p><strong>4. Packing:</strong> Standard export packing</p>
+                                  <p><strong>5. Validity:</strong> This contract is valid until full shipment.</p>
+                                </div>
+
+                                <div className="pt-3 grid grid-cols-2 gap-6 text-[10px] font-sans border-t border-slate-200 mt-2">
+                                  <div>
+                                    <p className="text-slate-500 font-semibold">For the Seller:</p>
+                                    <p className="font-bold text-slate-800 mt-0.5">Dalian Sunshine Imp & Exp. Co., Ltd.</p>
+                                    <div className="mt-3 border-b border-slate-300 w-28" />
+                                    <p className="text-[9px] text-slate-400 mt-0.5">Date: 2026-09-05</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-500 font-semibold">For the Buyer:</p>
+                                    <p className="font-bold text-slate-800 mt-0.5">DGT LLC (UAE)</p>
+                                    <div className="mt-3 border-b border-slate-300 w-28" />
+                                    <p className="text-[9px] text-slate-400 mt-0.5">Date: 2026-09-05</p>
+                                  </div>
                                 </div>
                               </div>
                             )
@@ -1996,7 +2074,7 @@ Delivery Terms: CIF Dalian Port`}
                           <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">
                             {s.t("ai_res_head", "AI Extraction Results")}
                           </h4>
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                             12 fields extracted
                           </span>
                         </div>
@@ -2004,18 +2082,18 @@ Delivery Terms: CIF Dalian Port`}
                         <button
                           type="button"
                           onClick={() => setEditFieldsModalOpen(true)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300 transition-colors"
                         >
                           <Edit3 className="h-3 w-3" />
                           <span>{s.t("edit_extracted", "Edit Extracted Data")}</span>
                         </button>
                       </div>
 
-                      {/* Extracted Fields List with Green Icons */}
+                      {/* Extracted Fields List with Green Icons Matching Reference Image */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Document Type</span>
                           </div>
                           <span className="font-bold text-slate-800 dark:text-slate-100">{formData.docType}</span>
@@ -2023,7 +2101,7 @@ Delivery Terms: CIF Dalian Port`}
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Contract No.</span>
                           </div>
                           <span className="font-bold text-slate-800 dark:text-slate-100">{formData.contractNo}</span>
@@ -2031,7 +2109,7 @@ Delivery Terms: CIF Dalian Port`}
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Document Date</span>
                           </div>
                           <span className="font-bold text-slate-800 dark:text-slate-100">{formData.documentDate}</span>
@@ -2039,15 +2117,15 @@ Delivery Terms: CIF Dalian Port`}
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Supplier</span>
                           </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[140px]">{formData.supplierName}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px]">{formData.supplierName}</span>
                         </div>
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Buyer</span>
                           </div>
                           <span className="font-bold text-slate-800 dark:text-slate-100">{formData.buyerName}</span>
@@ -2055,15 +2133,15 @@ Delivery Terms: CIF Dalian Port`}
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <DollarSign className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Total Amount</span>
                           </div>
-                          <span className="font-bold text-emerald-600">{formData.currency} {Number(formData.totalAmount).toLocaleString()}</span>
+                          <span className="font-bold text-emerald-600 font-mono">{formData.currency} {Number(formData.totalAmount || 60000).toLocaleString()}</span>
                         </div>
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-slate-500">Currency</span>
                           </div>
                           <span className="font-bold text-slate-800 dark:text-slate-100">{formData.currency}</span>
@@ -2071,10 +2149,42 @@ Delivery Terms: CIF Dalian Port`}
 
                         <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                            <span className="text-slate-500">Items / Goods</span>
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-slate-500">Items</span>
                           </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">1 item (50 MT)</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">1 item</span>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-slate-500">Quantity</span>
+                          </div>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">50 MT</span>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-slate-500">Unit Price</span>
+                          </div>
+                          <span className="font-bold text-slate-800 dark:text-slate-100 font-mono">1,200</span>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-slate-500">Payment Terms</span>
+                          </div>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.paymentTerms || "T/T"}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-slate-500">Delivery Terms</span>
+                          </div>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.deliveryTerms || "CIF"}</span>
                         </div>
                       </div>
 
