@@ -2288,7 +2288,11 @@ Delivery Terms: CIF Dalian Port`}
                           </div>
                           <div>
                             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                              Create {getDestinationInfo(targetModule, s).category === "Trade" ? "Purchase" : getDestinationInfo(targetModule, s).moduleName} Entry
+                              {["sales_orders", "sales_booking"].includes(targetModule)
+                                ? s.t("create_sales_entry", "Create Sales Entry")
+                                : ["purchase_orders", "purchase_loading_records"].includes(targetModule)
+                                ? s.t("create_purchase_entry", "Create Purchase Entry")
+                                : `${s.t("create_entry_prefix", "Create")} ${getDestinationInfo(targetModule, s).moduleName} ${s.t("create_entry_suffix", "Entry")}`}
                             </h3>
                             <p className="text-[11px] text-slate-400">
                               {s.t("verify_sub", "Verify and complete the data before creating draft entry")}
@@ -2450,33 +2454,47 @@ Delivery Terms: CIF Dalian Port`}
                             </select>
                           </div>
 
-                          {/* Supplier / Vendor */}
+                          {/* Supplier / Vendor (Purchase) or Customer (Sales) — module-aware */}
                           <div>
                             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Supplier / Vendor <span className="text-rose-500">*</span>
+                              {["sales_orders", "sales_booking"].includes(targetModule)
+                                ? s.t("customer_label", "Customer")
+                                : s.t("supplier_vendor_label", "Supplier / Vendor")} <span className="text-rose-500">*</span>
                             </label>
                             <div className="relative">
                               <input
                                 type="text"
-                                value={formData.supplierName}
-                                onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
+                                value={["sales_orders", "sales_booking"].includes(targetModule) ? formData.buyerName : formData.supplierName}
+                                onChange={(e) =>
+                                  ["sales_orders", "sales_booking"].includes(targetModule)
+                                    ? setFormData({ ...formData, buyerName: e.target.value })
+                                    : setFormData({ ...formData, supplierName: e.target.value })
+                                }
                                 className="w-full rounded-xl border border-slate-300 bg-white pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                               />
                               <Search className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                             </div>
                           </div>
 
-                          {/* Purchase Account */}
+                          {/* Purchase / Sales Account — module-aware, matches the Step 4 selection */}
                           <div>
                             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Purchase Account <span className="text-rose-500">*</span>
+                              {["sales_orders", "sales_booking"].includes(targetModule)
+                                ? s.t("sales_acct", "Sales / Revenue Account *")
+                                : s.t("pur_acct", "Purchase Account *")}
                             </label>
                             <select
-                              value={purchaseAccountId}
-                              onChange={(e) => setPurchaseAccountId(e.target.value)}
+                              value={["sales_orders", "sales_booking"].includes(targetModule) ? salesAccountId : purchaseAccountId}
+                              onChange={(e) =>
+                                ["sales_orders", "sales_booking"].includes(targetModule)
+                                  ? setSalesAccountId(e.target.value)
+                                  : setPurchaseAccountId(e.target.value)
+                              }
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                             >
-                              <option value="">5010 - Purchase Account</option>
+                              <option value="">
+                                {["sales_orders", "sales_booking"].includes(targetModule) ? "4010 - Sales Revenue" : "5010 - Purchase Account"}
+                              </option>
                               {chartAccounts.map((a) => (
                                 <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
                               ))}
@@ -2501,17 +2519,25 @@ Delivery Terms: CIF Dalian Port`}
                             </select>
                           </div>
 
-                          {/* Payable Account */}
+                          {/* Payable / Receivable Account — module-aware, matches the Step 4 selection */}
                           <div>
                             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Payable Account <span className="text-rose-500">*</span>
+                              {["sales_orders", "sales_booking"].includes(targetModule)
+                                ? s.t("rec_acct", "Customer / Receivable Account *")
+                                : s.t("pay_acct", "Supplier / Payable Account *")}
                             </label>
                             <select
-                              value={payableAccountId}
-                              onChange={(e) => setPayableAccountId(e.target.value)}
+                              value={["sales_orders", "sales_booking"].includes(targetModule) ? receivableAccountId : payableAccountId}
+                              onChange={(e) =>
+                                ["sales_orders", "sales_booking"].includes(targetModule)
+                                  ? setReceivableAccountId(e.target.value)
+                                  : setPayableAccountId(e.target.value)
+                              }
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                             >
-                              <option value="">2000 - Accounts Payable</option>
+                              <option value="">
+                                {["sales_orders", "sales_booking"].includes(targetModule) ? "1100 - Accounts Receivable" : "2000 - Accounts Payable"}
+                              </option>
                               {chartAccounts.map((a) => (
                                 <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
                               ))}
