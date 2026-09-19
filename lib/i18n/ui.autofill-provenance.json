@@ -3358,5 +3358,1957 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-18T12:49:13.794Z"
+  },
+  {
+    "key": "dintake.all_statuses",
+    "lang": "ur",
+    "value": "الل ستاتوسیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.all_statuses",
+    "lang": "ar",
+    "value": "الل ستاتوسیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.all_statuses",
+    "lang": "fa",
+    "value": "الل ستاتوسیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.all_statuses",
+    "lang": "ps",
+    "value": "الل ستاتوسیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.apply_changes",
+    "lang": "ur",
+    "value": "اپپلی چانگیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.apply_changes",
+    "lang": "ar",
+    "value": "اببلی تشانجیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.apply_changes",
+    "lang": "fa",
+    "value": "اپپلی چانگیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.apply_changes",
+    "lang": "ps",
+    "value": "اپپلی چانگیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.attached_doc",
+    "lang": "ur",
+    "value": "وپلوادید دوکومینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.attached_doc",
+    "lang": "ar",
+    "value": "وبلوادید دوإلىمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.attached_doc",
+    "lang": "fa",
+    "value": "وپلوادید دوبهمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.attached_doc",
+    "lang": "ps",
+    "value": "وپلوادید دوتهمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.basic_info",
+    "lang": "ur",
+    "value": "کے ساتھسیک ینفورماتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.basic_info",
+    "lang": "ar",
+    "value": "معسیک ینفورماتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.basic_info",
+    "lang": "fa",
+    "value": "باسیک ینفورماتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.basic_info",
+    "lang": "ps",
+    "value": "سرهسیک ینفورماتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.bl_no",
+    "lang": "ur",
+    "value": "ب/ل نومبر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.bl_no",
+    "lang": "ar",
+    "value": "ب/ل نومبر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.bl_no",
+    "lang": "fa",
+    "value": "ب/ل نومبر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.bl_no",
+    "lang": "ps",
+    "value": "ب/ل نومبر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.city_branch_label",
+    "lang": "ur",
+    "value": "سٹی برانچ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.city_branch_label",
+    "lang": "ar",
+    "value": "فرع المدينة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.city_branch_label",
+    "lang": "fa",
+    "value": "شعبه شهری",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.city_branch_label",
+    "lang": "ps",
+    "value": "د ښار څانګه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.create_entry",
+    "lang": "ur",
+    "value": "کریتی ینتری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.create_entry",
+    "lang": "ar",
+    "value": "کریتی ینتری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.create_entry",
+    "lang": "fa",
+    "value": "کریتی ینتری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.create_entry",
+    "lang": "ps",
+    "value": "کریتی ینتری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.doc_preview",
+    "lang": "ur",
+    "value": "دوکومینت پریوایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.doc_preview",
+    "lang": "ar",
+    "value": "دوإلىمینت بریوایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.doc_preview",
+    "lang": "fa",
+    "value": "دوبهمینت پریوایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.doc_preview",
+    "lang": "ps",
+    "value": "دوتهمینت پریوایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.entry_type",
+    "lang": "ur",
+    "value": "ینتری تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.entry_type",
+    "lang": "ar",
+    "value": "ینتری تیبی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.entry_type",
+    "lang": "fa",
+    "value": "ینتری تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.entry_type",
+    "lang": "ps",
+    "value": "ینتری تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.extracted_data_tab",
+    "lang": "ur",
+    "value": "یکستراکتید داتا",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.extracted_data_tab",
+    "lang": "ar",
+    "value": "یکستراکتید داتا",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.extracted_data_tab",
+    "lang": "fa",
+    "value": "یکستراکتید داتا",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.extracted_data_tab",
+    "lang": "ps",
+    "value": "یکستراکتید داتا",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.items_tab",
+    "lang": "ur",
+    "value": "یتیمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.items_tab",
+    "lang": "ar",
+    "value": "یتیمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.items_tab",
+    "lang": "fa",
+    "value": "یتیمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.items_tab",
+    "lang": "ps",
+    "value": "یتیمس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.load_template",
+    "lang": "ur",
+    "value": "لواد تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.load_template",
+    "lang": "ar",
+    "value": "لواد تیمبلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.load_template",
+    "lang": "fa",
+    "value": "لواد تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.load_template",
+    "lang": "ps",
+    "value": "لواد تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.need_help",
+    "lang": "ur",
+    "value": "نید ہیلپ?",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.need_help",
+    "lang": "ar",
+    "value": "نید ہیلب?",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.need_help",
+    "lang": "fa",
+    "value": "نید ہیلپ?",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.need_help",
+    "lang": "ps",
+    "value": "نید ہیلپ?",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.notes_tab",
+    "lang": "ur",
+    "value": "نوٹس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.notes_tab",
+    "lang": "ar",
+    "value": "ملاحظات",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.notes_tab",
+    "lang": "fa",
+    "value": "یادداشت‌ها",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.notes_tab",
+    "lang": "ps",
+    "value": "یادښتونه",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.ocr_text",
+    "lang": "ur",
+    "value": "وکر تیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.ocr_text",
+    "lang": "ar",
+    "value": "وکر تیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.ocr_text",
+    "lang": "fa",
+    "value": "وکر تیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.ocr_text",
+    "lang": "ps",
+    "value": "وکر تیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pages",
+    "lang": "ur",
+    "value": "پاگیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pages",
+    "lang": "ar",
+    "value": "معجیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pages",
+    "lang": "fa",
+    "value": "پاگیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pages",
+    "lang": "ps",
+    "value": "پاگیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pod_hint",
+    "lang": "ur",
+    "value": "بندرگاہِ تخلیہ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pod_hint",
+    "lang": "ar",
+    "value": "ميناء التفريغ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pod_hint",
+    "lang": "fa",
+    "value": "بندر تخلیه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pod_hint",
+    "lang": "ps",
+    "value": "د تخلیې بندر",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pol_hint",
+    "lang": "ur",
+    "value": "بندرگاہِ لوڈنگ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pol_hint",
+    "lang": "ar",
+    "value": "ميناء التحميل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pol_hint",
+    "lang": "fa",
+    "value": "بندر بارگیری",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.pol_hint",
+    "lang": "ps",
+    "value": "د بار بندر",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.proc_log",
+    "lang": "ur",
+    "value": "پروکیسسینگ لوگ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.proc_log",
+    "lang": "ar",
+    "value": "بروکیسسینج لوج",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.proc_log",
+    "lang": "fa",
+    "value": "پروکیسسینگ لوگ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.proc_log",
+    "lang": "ps",
+    "value": "پروکیسسینگ لوگ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.remove",
+    "lang": "ur",
+    "value": "ریمووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.remove",
+    "lang": "ar",
+    "value": "ریمووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.remove",
+    "lang": "fa",
+    "value": "ریمووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.remove",
+    "lang": "ps",
+    "value": "ریمووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.replace",
+    "lang": "ur",
+    "value": "ریپلاکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.replace",
+    "lang": "ar",
+    "value": "ریبلاکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.replace",
+    "lang": "fa",
+    "value": "ریپلاکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.replace",
+    "lang": "ps",
+    "value": "ریپلاکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step1_title",
+    "lang": "ur",
+    "value": "وپلواد دوکومینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step1_title",
+    "lang": "ar",
+    "value": "وبلواد دوإلىمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step1_title",
+    "lang": "fa",
+    "value": "وپلواد دوبهمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step1_title",
+    "lang": "ps",
+    "value": "وپلواد دوتهمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step3_title",
+    "lang": "ur",
+    "value": "رپ مودولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step3_title",
+    "lang": "ar",
+    "value": "رب مودولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step3_title",
+    "lang": "fa",
+    "value": "رپ مودولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step3_title",
+    "lang": "ps",
+    "value": "رپ مودولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step4_title",
+    "lang": "ur",
+    "value": "پرامیترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step4_title",
+    "lang": "ar",
+    "value": "برامیترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step4_title",
+    "lang": "fa",
+    "value": "پرامیترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.step4_title",
+    "lang": "ps",
+    "value": "پرامیترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.tab_wizard",
+    "lang": "ur",
+    "value": "ینتاکی ویزرد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.tab_wizard",
+    "lang": "ar",
+    "value": "ینتاکی ویزرد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.tab_wizard",
+    "lang": "fa",
+    "value": "ینتاکی ویزرد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.tab_wizard",
+    "lang": "ps",
+    "value": "ینتاکی ویزرد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-19T11:51:04.372Z"
+  },
+  {
+    "key": "dintake.ai_res_head",
+    "lang": "ur",
+    "value": "ای یکستراکتیون ریسولتس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.ai_res_head",
+    "lang": "ar",
+    "value": "ای یکستراکتیون ریسولتس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.ai_res_head",
+    "lang": "fa",
+    "value": "ای یکستراکتیون ریسولتس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.ai_res_head",
+    "lang": "ps",
+    "value": "ای یکستراکتیون ریسولتس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.analyzing",
+    "lang": "ur",
+    "value": "روآجینگ ای یکستراکتیون...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.analyzing",
+    "lang": "ar",
+    "value": "رواليومینج ای یکستراکتیون...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.analyzing",
+    "lang": "fa",
+    "value": "روامروزینگ ای یکستراکتیون...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.analyzing",
+    "lang": "ps",
+    "value": "روننینگ ای یکستراکتیون...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.branch_label",
+    "lang": "ur",
+    "value": "مین برانچ *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.branch_label",
+    "lang": "ar",
+    "value": "الفرع الرئيسي *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.branch_label",
+    "lang": "fa",
+    "value": "شعبه اصلی *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.branch_label",
+    "lang": "ps",
+    "value": "اصلي څانګه *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.contract_hint",
+    "lang": "ur",
+    "value": "کونتراکت / پو ریفرینکی ہینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.contract_hint",
+    "lang": "ar",
+    "value": "إلىنتراکت / بو ریفرینکی ہینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.contract_hint",
+    "lang": "fa",
+    "value": "بهنتراکت / پو ریفرینکی ہینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.contract_hint",
+    "lang": "ps",
+    "value": "تهنتراکت / پو ریفرینکی ہینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.credit_acct",
+    "lang": "ur",
+    "value": "کریڈٹ اکاؤنٹ *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.credit_acct",
+    "lang": "ar",
+    "value": "دائن حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.credit_acct",
+    "lang": "fa",
+    "value": "بستانکار حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.credit_acct",
+    "lang": "ps",
+    "value": "کریډیټ حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.debit_acct",
+    "lang": "ur",
+    "value": "ڈیبٹ اکاؤنٹ *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.debit_acct",
+    "lang": "ar",
+    "value": "مدين حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.debit_acct",
+    "lang": "fa",
+    "value": "بدهکار حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.debit_acct",
+    "lang": "ps",
+    "value": "ډیبیټ حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ok",
+    "lang": "ur",
+    "value": "دوکومینت انالیزید سوککیسسفوللی ویثاورت ریفرینکی کونفلیکتس.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ok",
+    "lang": "ar",
+    "value": "دوإلىمینت انالیزید سوککیسسفوللی ویثوت ریفرینکی إلىنفلیکتس.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ok",
+    "lang": "fa",
+    "value": "دوبهمینت انالیزید سوککیسسفوللی ویثوت ریفرینکی بهنفلیکتس.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ok",
+    "lang": "ps",
+    "value": "دوتهمینت انالیزید سوککیسسفوللی ویثاوت ریفرینکی تهنفلیکتس.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ref",
+    "lang": "ur",
+    "value": "دوکومینت ریفرینکی نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ref",
+    "lang": "ar",
+    "value": "دوإلىمینت ریفرینکی نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ref",
+    "lang": "fa",
+    "value": "دوبهمینت ریفرینکی نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.doc_ref",
+    "lang": "ps",
+    "value": "دوتهمینت ریفرینکی نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.domain_shipping_title",
+    "lang": "ur",
+    "value": "شپنگ & کلیئرنگ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.domain_shipping_title",
+    "lang": "ar",
+    "value": "الشحن & التخليص",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.domain_shipping_title",
+    "lang": "fa",
+    "value": "حمل و نقل & ترخیص",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.domain_shipping_title",
+    "lang": "ps",
+    "value": "لېږد & پاکول",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.drop_sub",
+    "lang": "ur",
+    "value": "سوپپورتس پدف, جپگ, پنگ, ویبپ, تیفف (ماکس 25 مب, 60 پاگیس)",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.drop_sub",
+    "lang": "ar",
+    "value": "سوببورتس بدف, جبج, بنج, ویبب, تیفف (ماکس 25 مب, 60 معجیس)",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.drop_sub",
+    "lang": "fa",
+    "value": "سوپپورتس پدف, جپگ, پنگ, ویبپ, تیفف (ماکس 25 مب, 60 پاگیس)",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.drop_sub",
+    "lang": "ps",
+    "value": "سوپپورتس پدف, جپگ, پنگ, ویبپ, تیفف (ماکس 25 مب, 60 پاگیس)",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_extracted",
+    "lang": "ur",
+    "value": "یدیت یکستراکتید داتا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_extracted",
+    "lang": "ar",
+    "value": "یدیت یکستراکتید داتا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_extracted",
+    "lang": "fa",
+    "value": "یدیت یکستراکتید داتا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_extracted",
+    "lang": "ps",
+    "value": "یدیت یکستراکتید داتا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_fields_title",
+    "lang": "ur",
+    "value": "یدیت یکستراکتید ینتیللیگینکی فایلدس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_fields_title",
+    "lang": "ar",
+    "value": "یدیت یکستراکتید ینتیللیجینکی فایلدس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_fields_title",
+    "lang": "fa",
+    "value": "یدیت یکستراکتید ینتیللیگینکی فایلدس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.edit_fields_title",
+    "lang": "ps",
+    "value": "یدیت یکستراکتید ینتیللیگینکی فایلدس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.empty_queue",
+    "lang": "ur",
+    "value": "نو ینتاکی جوبس فاورند ماتچینگ یاورر سکوپی ور کریتریا.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.empty_queue",
+    "lang": "ar",
+    "value": "نو ینتاکی جوبس فوند ماتتشینج یو سإلىبی ور کریتریا.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.empty_queue",
+    "lang": "fa",
+    "value": "نو ینتاکی جوبس فوند ماتچینگ یو سبهپی ور کریتریا.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.empty_queue",
+    "lang": "ps",
+    "value": "نو ینتاکی جوبس فاوند ماتچینگ یاو ستهپی ور کریتریا.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_module",
+    "lang": "ur",
+    "value": "نیکست: سیلیکت رپ مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_module",
+    "lang": "ar",
+    "value": "نیکست: سیلیکت رب مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_module",
+    "lang": "fa",
+    "value": "نیکست: سیلیکت رپ مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_module",
+    "lang": "ps",
+    "value": "نیکست: سیلیکت رپ مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_params",
+    "lang": "ur",
+    "value": "نیکست: دینامیک پرامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_params",
+    "lang": "ar",
+    "value": "نیکست: دینامیک برامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_params",
+    "lang": "fa",
+    "value": "نیکست: دینامیک پرامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.next_params",
+    "lang": "ps",
+    "value": "نیکست: دینامیک پرامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pay_acct",
+    "lang": "ur",
+    "value": "سپلائر / قابل ادائیگی اکاؤنٹ *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pay_acct",
+    "lang": "ar",
+    "value": "المورد / حساب الدفع *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pay_acct",
+    "lang": "fa",
+    "value": "تامین کامروزده / حساب پرداختنی *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pay_acct",
+    "lang": "ps",
+    "value": "ورتهنکی / د تادیې وړ حساب *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.payment_tab",
+    "lang": "ur",
+    "value": "پایمینت  اورر  دیلیوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.payment_tab",
+    "lang": "ar",
+    "value": "معیمینت  و دیلیوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.payment_tab",
+    "lang": "fa",
+    "value": "پایمینت  و  دیلیوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.payment_tab",
+    "lang": "ps",
+    "value": "پایمینت  او  دیلیوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.proc_uploading",
+    "lang": "ur",
+    "value": "وپلوادینگ دوکومینت سیکریلی تو رپ ینتاکی ستوراگی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.proc_uploading",
+    "lang": "ar",
+    "value": "وبلوادینج دوإلىمینت سیکریلی تو رب ینتاکی ستوراجی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.proc_uploading",
+    "lang": "fa",
+    "value": "وپلوادینگ دوبهمینت سیکریلی تو رپ ینتاکی ستوراگی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.proc_uploading",
+    "lang": "ps",
+    "value": "وپلوادینگ دوتهمینت سیکریلی تو رپ ینتاکی ستوراگی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.processing_doc",
+    "lang": "ur",
+    "value": "پروکیسسینگ دوکومینت ینتیللیگینکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.processing_doc",
+    "lang": "ar",
+    "value": "بروکیسسینج دوإلىمینت ینتیللیجینکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.processing_doc",
+    "lang": "fa",
+    "value": "پروکیسسینگ دوبهمینت ینتیللیگینکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.processing_doc",
+    "lang": "ps",
+    "value": "پروکیسسینگ دوتهمینت ینتیللیگینکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pur_acct",
+    "lang": "ur",
+    "value": "خریداری اکاؤنٹ *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pur_acct",
+    "lang": "ar",
+    "value": "شراء حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pur_acct",
+    "lang": "fa",
+    "value": "خرید حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.pur_acct",
+    "lang": "ps",
+    "value": "پیرودنه حساب *",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.rec_acct",
+    "lang": "ur",
+    "value": "گاہک / قابل وصولی اکاؤنٹ *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.rec_acct",
+    "lang": "ar",
+    "value": "العميل / حساب القبض *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.rec_acct",
+    "lang": "fa",
+    "value": "مشتری / حساب دریافتنی *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.rec_acct",
+    "lang": "ps",
+    "value": "پیرودونکی / د ترلاسه تهلو وړ حساب *",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.review",
+    "lang": "ur",
+    "value": "ریوایو  اورر  یدیت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.review",
+    "lang": "ar",
+    "value": "ریوایو  و یدیت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.review",
+    "lang": "fa",
+    "value": "ریوایو  و  یدیت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.review",
+    "lang": "ps",
+    "value": "ریوایو  او  یدیت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.run_ai",
+    "lang": "ur",
+    "value": "رون ای / وکر یکستراکتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.run_ai",
+    "lang": "ar",
+    "value": "رون ای / وکر یکستراکتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.run_ai",
+    "lang": "fa",
+    "value": "رون ای / وکر یکستراکتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.run_ai",
+    "lang": "ps",
+    "value": "رون ای / وکر یکستراکتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.sales_ref",
+    "lang": "ur",
+    "value": "سالیس کونتراکت / وردر نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.sales_ref",
+    "lang": "ar",
+    "value": "سالیس إلىنتراکت / وردر نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.sales_ref",
+    "lang": "fa",
+    "value": "سالیس بهنتراکت / وردر نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.sales_ref",
+    "lang": "ps",
+    "value": "سالیس تهنتراکت / وردر نو.",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.search_queue",
+    "lang": "ur",
+    "value": "سیرچ جوب نو, کونتراکت, ب/ل, ور دوکومینت نامی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.search_queue",
+    "lang": "ar",
+    "value": "سیرتش جوب نو, إلىنتراکت, ب/ل, ور دوإلىمینت نامی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.search_queue",
+    "lang": "fa",
+    "value": "سیرچ جوب نو, بهنتراکت, ب/ل, ور دوبهمینت نامی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.search_queue",
+    "lang": "ps",
+    "value": "سیرچ جوب نو, تهنتراکت, ب/ل, ور دوتهمینت نامی...",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.snap_camera",
+    "lang": "ur",
+    "value": "کاپتری ویا سکاآجر / کامرا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.snap_camera",
+    "lang": "ar",
+    "value": "منبتری ویا سماليومنر / منمرا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.snap_camera",
+    "lang": "fa",
+    "value": "ازپتری ویا سازامروزر / ازمرا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.snap_camera",
+    "lang": "ps",
+    "value": "دپتری ویا سدننر / دمرا",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step1_sub",
+    "lang": "ur",
+    "value": "اتتاچ یاورر فیلی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step1_sub",
+    "lang": "ar",
+    "value": "اتتاتش یو فیلی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step1_sub",
+    "lang": "fa",
+    "value": "اتتاچ یو فیلی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step1_sub",
+    "lang": "ps",
+    "value": "اتتاچ یاو فیلی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_head",
+    "lang": "ur",
+    "value": "لوکاتیون سکوپی  اورر  وپراتینگ وففیکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_head",
+    "lang": "ar",
+    "value": "لومنتیون سإلىبی  و وبراتینج وففیکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_head",
+    "lang": "fa",
+    "value": "لوازتیون سبهپی  و  وپراتینگ وففیکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_head",
+    "lang": "ps",
+    "value": "لودتیون ستهپی  او  وپراتینگ وففیکی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_sub",
+    "lang": "ur",
+    "value": "بوسینیسس ری  اورر  لوکاتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_sub",
+    "lang": "ar",
+    "value": "بوسینیسس ری  و لومنتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_sub",
+    "lang": "fa",
+    "value": "بوسینیسس ری  و  لوازتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_sub",
+    "lang": "ps",
+    "value": "بوسینیسس ری  او  لودتیون",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_title",
+    "lang": "ur",
+    "value": "کلاسسیفی  اورر  راورتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_title",
+    "lang": "ar",
+    "value": "الإجمالياسسیفی  و روتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_title",
+    "lang": "fa",
+    "value": "مجموعاسسیفی  و  روتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step2_title",
+    "lang": "ps",
+    "value": "ټولاسسیفی  او  راوتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_head",
+    "lang": "ur",
+    "value": "سیلیکت ترگیت رپ مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_head",
+    "lang": "ar",
+    "value": "سیلیکت ترجیت رب مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_head",
+    "lang": "fa",
+    "value": "سیلیکت ترگیت رپ مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_head",
+    "lang": "ps",
+    "value": "سیلیکت ترگیت رپ مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_sub",
+    "lang": "ur",
+    "value": "سیلیکت ریلاتید مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_sub",
+    "lang": "ar",
+    "value": "سیلیکت ریلاتید مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_sub",
+    "lang": "fa",
+    "value": "سیلیکت ریلاتید مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step3_sub",
+    "lang": "ps",
+    "value": "سیلیکت ریلاتید مودولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_head",
+    "lang": "ur",
+    "value": "اککاورنتینگ  اورر  ینتیتی پرامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_head",
+    "lang": "ar",
+    "value": "اککونتینج  و ینتیتی برامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_head",
+    "lang": "fa",
+    "value": "اککونتینگ  و  ینتیتی پرامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_head",
+    "lang": "ps",
+    "value": "اکدونتینگ  او  ینتیتی پرامیترس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_sub",
+    "lang": "ur",
+    "value": "اککاورنتس  اورر  اددیتیونال ینفو",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_sub",
+    "lang": "ar",
+    "value": "اککونتس  و اددیتیونال ینفو",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_sub",
+    "lang": "fa",
+    "value": "اککونتس  و  اددیتیونال ینفو",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step4_sub",
+    "lang": "ps",
+    "value": "اکدونتس  او  اددیتیونال ینفو",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step5_title",
+    "lang": "ur",
+    "value": "ریوایو  اورر  کریتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step5_title",
+    "lang": "ar",
+    "value": "ریوایو  و کریتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step5_title",
+    "lang": "fa",
+    "value": "ریوایو  و  کریتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.step5_title",
+    "lang": "ps",
+    "value": "ریوایو  او  کریتی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.tab_queue",
+    "lang": "ur",
+    "value": "کویوی  اورر  ہیستوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.tab_queue",
+    "lang": "ar",
+    "value": "إلىیوی  و ہیستوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.tab_queue",
+    "lang": "fa",
+    "value": "بهیوی  و  ہیستوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "dintake.tab_queue",
+    "lang": "ps",
+    "value": "تهیوی  او  ہیستوری",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-19T12:04:59.659Z"
   }
 ]

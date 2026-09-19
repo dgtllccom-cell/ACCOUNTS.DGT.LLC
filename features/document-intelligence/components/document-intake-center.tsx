@@ -124,8 +124,8 @@ export function getDestinationInfo(targetModule?: string | null, s?: ReturnType<
     case "sales_orders":
       return {
         moduleName: s ? s.t("purpose_sales", "Sales (New / Existing)") : "Sale Order Booking",
-        menuPath: "Sidebar → Trade → New Sale Order Booking",
-        routeUrl: "/dashboard/sales/new-sale-order-booking",
+        menuPath: "Sidebar → Trade → New Sales Booking Order",
+        routeUrl: "/dashboard/sales/new-sales-booking-order",
         category: "Trade",
       };
     case "purchase_loading_records":
@@ -252,8 +252,8 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   // Mode: "wizard" (5-step interactive workflow) vs "queue" (audit table of past jobs)
   const [activeTab, setActiveTab] = useState<"wizard" | "queue">("wizard");
 
-  // Wizard Step State — defaults to 5 for immediate enterprise review view matching reference
-  const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4 | 5>(5);
+  // Wizard Step State — a real session always starts at Step 1 (Upload)
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
   // File Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -263,15 +263,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
     sizeFormatted: string;
     pages: number;
     type: string;
-  } | null>({
-    name: "Sales Contract 0907B.pdf",
-    sizeFormatted: "184 KB",
-    pages: 3,
-    type: "PDF",
-  });
+  } | null>(null);
 
   // Step 1: Domain State
-  const [domain, setDomain] = useState<"business" | "shipping" | null>("business");
+  const [domain, setDomain] = useState<"business" | "shipping" | null>(null);
 
   // Step 2: Role-based Location Scope State
   const [sessionData, setSessionData] = useState<any>(null);
@@ -314,19 +309,19 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   const [processingStatusText, setProcessingStatusText] = useState<string>("");
   const [editFieldsModalOpen, setEditFieldsModalOpen] = useState<boolean>(false);
 
-  // Editable Form State in Split View
+  // Editable Form State in Split View — populated only from real extraction results
   const [formData, setFormData] = useState<Record<string, any>>({
-    docType: "Sales Contract",
-    contractNo: "0907B",
-    documentDate: "2026-09-05",
-    supplierName: "Dalian Sunshine Co. Ltd.",
-    buyerName: "DGT LLC",
+    docType: "",
+    contractNo: "",
+    documentDate: "",
+    supplierName: "",
+    buyerName: "",
     currency: "USD",
-    totalAmount: "60000.00",
+    totalAmount: "",
     reference: "",
-    paymentTerms: "T/T",
-    deliveryTerms: "CIF Dalian Port",
-    notes: "Verified via AI extraction",
+    paymentTerms: "",
+    deliveryTerms: "",
+    notes: "",
   });
   const [activeFormTab, setActiveFormTab] = useState<"basic" | "items" | "payment" | "additional" | "notes">("basic");
   const [activeDocTab, setActiveDocTab] = useState<"preview" | "ocr" | "extracted" | "logs">("preview");
@@ -339,6 +334,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
 
   // Toast / Confirmation notification
   const [toast, setToast] = useState<{ show: boolean; draftNo: string; message: string; targetModule: string } | null>(null);
+  // Visible, non-native error banner — every failure surfaced here must also
+  // be genuinely visible; a silent console.warn or an easily-dismissed native
+  // alert() looks identical to "nothing happened" from the user's side.
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Queue state
   const [queueRows, setQueueRows] = useState<Row[]>([]);
@@ -493,18 +492,56 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   const isBranchAdmin = Boolean(sessionData?.roles?.includes("branch_admin") || sessionData?.roles?.includes("main_branch_admin"));
   const isBranchUser = !isSuperAdmin && !isCountryAdmin && !isBranchAdmin;
 
-  // Selected Country / Branch name helpers for header badges
+  // Gate for "Run AI / OCR Extraction" — per spec, OCR only runs once Country,
+  // Branch, Domain, Module and the relevant Account/Entity are all known.
+  const canRunExtraction = useMemo(() => {
+    if (!file || !domain || !countryId || !(countryBranchId || cityBranchId) || !targetModule) return false;
+    switch (targetModule) {
+      case "purchase_orders":
+      case "purchase_loading_records":
+        return Boolean(purchaseAccountId && payableAccountId);
+      case "sales_orders":
+        return Boolean(salesAccountId && receivableAccountId);
+      case "roznamcha_entries":
+        return Boolean(debitAccountId && creditAccountId);
+      case "banks":
+      case "companies":
+      case "customers":
+      case "warehouses":
+      case "transport":
+      case "expenses":
+      case "account_master":
+        return Boolean(bankAccountId);
+      default:
+        return true;
+    }
+  }, [file, domain, countryId, countryBranchId, cityBranchId, targetModule, purchaseAccountId, payableAccountId, salesAccountId, receivableAccountId, debitAccountId, creditAccountId, bankAccountId]);
+
+  // Real average field-confidence from this job's actual extracted fields (0-100).
+  // null until a job has genuinely run OCR — never a placeholder percentage.
+  const avgConfidencePct = useMemo(() => {
+    const fields = jobData?.fields || [];
+    if (!fields.length) return null;
+    const scored = fields.filter((f: any) => f.confidence != null);
+    if (!scored.length) return null;
+    const avg = scored.reduce((sum: number, f: any) => sum + Number(f.confidence), 0) / scored.length;
+    return Math.round(avg * 100);
+  }, [jobData]);
+
+  // Selected Country / Branch name helpers for header badges — no fallback to a
+  // specific real branch name; an unresolved scope shows a neutral placeholder
+  // instead of implying a location that was never actually selected.
   const currentCountryName = useMemo(() => {
-    return countries.find((c) => c.id === countryId)?.name || sessionData?.scopes?.summary?.countryName || "United Arab Emirates";
-  }, [countries, countryId, sessionData]);
+    return countries.find((c) => c.id === countryId)?.name || sessionData?.scopes?.summary?.countryName || s.t("scope_pending_country", "Select Country");
+  }, [countries, countryId, sessionData, s]);
 
   const currentMainBranchName = useMemo(() => {
-    return countryBranches.find((b) => b.id === countryBranchId)?.name || sessionData?.scopes?.summary?.countryBranchName || "Dubai Main Office";
-  }, [countryBranches, countryBranchId, sessionData]);
+    return countryBranches.find((b) => b.id === countryBranchId)?.name || sessionData?.scopes?.summary?.countryBranchName || s.t("scope_pending_branch", "Select Branch");
+  }, [countryBranches, countryBranchId, sessionData, s]);
 
   const currentCityBranchName = useMemo(() => {
-    return cityBranches.find((cb) => cb.id === cityBranchId)?.name || sessionData?.scopes?.summary?.cityBranchName || "Dubai City Branch";
-  }, [cityBranches, cityBranchId, sessionData]);
+    return cityBranches.find((cb) => cb.id === cityBranchId)?.name || sessionData?.scopes?.summary?.cityBranchName || s.t("scope_pending_city", "Select City Branch");
+  }, [cityBranches, cityBranchId, sessionData, s]);
 
   // File attach handler
   const handleFileAttach = (selectedFile: File) => {
@@ -535,6 +572,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   // Upload & Process Job (Executes between Step 4 and Step 5)
   const executeAiExtraction = async () => {
     if (!file) return;
+    setActionError(null);
     setIsProcessing(true);
     setProcessingStatusText(s.t("proc_uploading", "Uploading document securely to ERP intake storage..."));
 
@@ -572,7 +610,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       // 4. Move to Step 5 (Review & Create)
       setWizardStep(5);
     } catch (err: any) {
-      alert(err instanceof Error ? err.message : String(err));
+      setActionError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsProcessing(false);
       setProcessingStatusText("");
@@ -584,6 +622,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
     setActiveJobId(jId);
     try {
       const d = await apiGet<{ job: Row; fields: Row[]; lineItems: Row[]; matches: Row[]; events: Row[] }>(`/api/erp/document-intelligence/${jId}`);
+      if (!d) {
+        setActionError(s.t("job_load_failed", "Could not load this document's details — it may be out of your scope or no longer exists."));
+        return;
+      }
       setJobData(d);
 
       // Populate form state from extracted fields
@@ -595,38 +637,42 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       const tm = d.job.target_module || targetModule || "purchase_orders";
       setTargetModule(tm);
 
+      // Extracted values only — an unextracted field stays blank so the reviewer
+      // can see it was not found, rather than silently showing sample data.
       setFormData((prev) => ({
         ...prev,
-        docType: fMap.doc_type || d.job.doc_type_code || "Sales Contract",
-        contractNo: fMap.contract_number || d.job.contract_reference || "0907B",
-        documentDate: fMap.document_date || "2026-09-05",
-        supplierName: fMap.supplier_name || fMap.contract_parties || "Dalian Sunshine Co. Ltd.",
-        buyerName: fMap.customer_name || "DGT LLC",
-        currency: fMap.currency || "USD",
-        totalAmount: fMap.grand_total || fMap.subtotal || "60000.00",
+        docType: fMap.doc_type || d.job.doc_type_code || "",
+        contractNo: fMap.contract_number || d.job.contract_reference || "",
+        documentDate: fMap.document_date || "",
+        supplierName: fMap.supplier_name || fMap.contract_parties || "",
+        buyerName: fMap.customer_name || "",
+        currency: fMap.currency || prev.currency || "USD",
+        totalAmount: fMap.grand_total || fMap.subtotal || "",
         reference: d.job.document_reference || "",
-        paymentTerms: fMap.payment_terms || "T/T",
-        deliveryTerms: fMap.delivery_terms || "CIF Dalian Port",
+        paymentTerms: fMap.payment_terms || "",
+        deliveryTerms: fMap.delivery_terms || "",
       }));
 
       // Update file details from job metadata
       setFileDetails({
-        name: d.job.original_filename || "Document.pdf",
-        sizeFormatted: `${((d.job.file_size || 188416) / 1024).toFixed(0)} KB`,
-        pages: d.fields[0]?.page_number ? Math.max(...d.fields.map((f) => f.page_number || 1)) : 3,
-        type: (d.job.original_filename || "pdf").split(".").pop()?.toUpperCase() || "PDF",
+        name: d.job.original_filename || fileDetails?.name || "Document.pdf",
+        sizeFormatted: d.job.file_size ? `${(d.job.file_size / 1024).toFixed(0)} KB` : fileDetails?.sizeFormatted || "-",
+        pages: d.fields[0]?.page_number ? Math.max(...d.fields.map((f) => f.page_number || 1)) : fileDetails?.pages || 1,
+        type: (d.job.original_filename || fileDetails?.name || "pdf").split(".").pop()?.toUpperCase() || "PDF",
       });
 
       setWizardStep(5);
       setActiveTab("wizard");
     } catch (err) {
       console.warn("Failed to open job details:", err);
+      setActionError(err instanceof Error ? err.message : String(err));
     }
   };
 
   // Save as Draft
   const handleSaveAsDraft = async () => {
     if (!activeJobId) return;
+    setActionError(null);
     setIsProcessing(true);
     try {
       const res = await apiPatch<Row>(`/api/erp/document-intelligence/${activeJobId}`, {
@@ -650,7 +696,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
         payloadOverrides: formData,
       });
 
-      const draftNo = res?.result?.draftNo || res?.draftNo || "DID-2026-0001";
+      const draftNo = res?.result?.draftNo || res?.draftNo || (activeJobId ? `DID-${activeJobId.slice(0, 8).toUpperCase()}` : "");
       setToast({
         show: true,
         draftNo,
@@ -661,7 +707,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       // Refresh job data
       await openJobDetails(activeJobId);
     } catch (err: any) {
-      alert(err instanceof Error ? err.message : String(err));
+      setActionError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsProcessing(false);
     }
@@ -670,6 +716,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   // Transfer to Canonical ERP Module
   const handleCreateEntry = async () => {
     if (!activeJobId) return;
+    setActionError(null);
     setIsProcessing(true);
     try {
       // First ensure draft is confirmed in DB
@@ -695,7 +742,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       });
 
       const draftId = res?.result?.draftId || res?.draftId || activeJobId;
-      const draftNo = res?.result?.draftNo || res?.draftNo || "DID-2026-0001";
+      const draftNo = res?.result?.draftNo || res?.draftNo || (activeJobId ? `DID-${activeJobId.slice(0, 8).toUpperCase()}` : "");
 
       // Stash prefill payload into DRAFT_PREFILL_KEY for the destination screen
       sessionStorage.setItem(
@@ -728,24 +775,19 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
             purchaseCurrency: formData.currency,
             orderTotal: formData.totalAmount,
           },
-          goodsEntries: jobData?.lineItems || [
-            {
-              description: "Plastic Raw Material",
-              quantity: 50,
-              unit: "MT",
-              unitPrice: 1200,
-              amount: 60000,
-              currency: "USD",
-            },
-          ],
+          goodsEntries: jobData?.lineItems || [],
           linkMode: "new_record",
         })
       );
 
       const dest = getDestinationInfo(targetModule, s);
+      if (!dest?.routeUrl) {
+        setActionError(`No canonical ERP screen is configured for module "${targetModule}" yet.`);
+        return;
+      }
       router.push(dest.routeUrl as any);
     } catch (err: any) {
-      alert(err instanceof Error ? err.message : String(err));
+      setActionError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsProcessing(false);
     }
@@ -808,7 +850,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
             {/* Language Pill */}
             <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300">
               <Globe className="h-3.5 w-3.5 text-slate-400" />
-              <span>English</span>
+              <span>{s.t("current_lang_name", "English")}</span>
               <span className="text-[10px] text-slate-400">▾</span>
             </div>
 
@@ -876,6 +918,25 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
               type="button"
               onClick={() => setToast(null)}
               className="rounded p-1 hover:bg-emerald-700/60 transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 2b. Action Error Bar — every action failure surfaces here, not just console/alert ── */}
+      {actionError && (
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mt-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-rose-600/20">
+            <div className="flex items-center gap-2">
+              <X className="h-4 w-4 shrink-0" />
+              <span>{actionError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="shrink-0 rounded p-1 hover:bg-rose-700/60 transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -1578,8 +1639,8 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                         className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       >
                         <option value="both">Both (DR & CR)</option>
-                        <option value="debit">Debit Only</option>
-                        <option value="credit">Credit Only</option>
+                        <option value="debit">{s.t("debit_only", "Debit Only")}</option>
+                        <option value="credit">{s.t("credit_only", "Credit Only")}</option>
                       </select>
                     </div>
                   </div>
@@ -1684,9 +1745,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
 
                   <button
                     type="button"
-                    disabled={isProcessing}
+                    disabled={isProcessing || !canRunExtraction}
                     onClick={() => void executeAiExtraction()}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-[1.02] disabled:opacity-50"
+                    title={!canRunExtraction ? s.t("run_ai_blocked", "Select country, branch, module and the relevant account(s) before running extraction.") : undefined}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {isProcessing ? (
                       <>
@@ -1701,6 +1763,11 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                     )}
                   </button>
                 </div>
+                {!canRunExtraction && !isProcessing && (
+                  <p className="text-right text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                    {s.t("run_ai_blocked", "Select country, branch, module and the relevant account(s) before running extraction.")}
+                  </p>
+                )}
               </div>
             )}
 
@@ -1767,7 +1834,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                                 : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"
                             }`}
                           >
-                            {s.t("extracted_data_tab", "Extracted Data (12)")}
+                            {s.t("extracted_data_tab", "Extracted Data")} ({jobData?.fields?.length ?? 0})
                           </button>
 
                           <button
@@ -1790,7 +1857,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                           <button
                             type="button"
                             className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title="Fullscreen"
+                            title={s.t("fullscreen", "Fullscreen")}
                           >
                             <Maximize2 className="h-3.5 w-3.5" />
                           </button>
@@ -1798,7 +1865,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                             type="button"
                             onClick={() => setShowThumbnails(!showThumbnails)}
                             className={`p-1 rounded hover:bg-slate-800 transition-colors ${showThumbnails ? "text-blue-400" : "text-slate-300"}`}
-                            title="Toggle Thumbnails"
+                            title={s.t("toggle_thumbnails", "Toggle Thumbnails")}
                           >
                             <Layers className="h-3.5 w-3.5" />
                           </button>
@@ -1831,7 +1898,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                             type="button"
                             onClick={() => setZoomLevel(Math.max(50, zoomLevel - 15))}
                             className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title="Zoom Out"
+                            title={s.t("zoom_out", "Zoom Out")}
                           >
                             <ZoomOut className="h-3.5 w-3.5" />
                           </button>
@@ -1839,14 +1906,14 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                             type="button"
                             onClick={() => setZoomLevel(Math.min(200, zoomLevel + 15))}
                             className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title="Zoom In"
+                            title={s.t("zoom_in", "Zoom In")}
                           >
                             <ZoomIn className="h-3.5 w-3.5" />
                           </button>
                           <button
                             type="button"
                             className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title="Search Document"
+                            title={s.t("search_document", "Search Document")}
                           >
                             <Search className="h-3.5 w-3.5" />
                           </button>
@@ -1857,7 +1924,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                               else alert("Downloading original document...");
                             }}
                             className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title="Download Original"
+                            title={s.t("download_original", "Download Original")}
                           >
                             <Download className="h-3.5 w-3.5" />
                           </button>
@@ -1915,7 +1982,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                                 <iframe
                                   src={`/api/erp/document-intelligence/${activeJobId}/file`}
                                   className="w-[520px] h-[580px] border-0"
-                                  title="Original Document"
+                                  title={s.t("original_document", "Original Document")}
                                 />
                               </div>
                             ) : (
@@ -1994,9 +2061,9 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
 
                                 <div className="text-[10px] font-sans space-y-1 text-slate-700 pt-1">
                                   <p><strong>1. Payment Terms:</strong> T/T</p>
-                                  <p><strong>2. Delivery Terms:</strong> CIF Dalian Port</p>
+                                  <p><strong>2. Delivery Terms:</strong> {s.t("sample_delivery_terms", "CIF Dalian Port")}</p>
                                   <p><strong>3. Quality:</strong> As per Seller&apos;s standard</p>
-                                  <p><strong>4. Packing:</strong> Standard export packing</p>
+                                  <p><strong>4. Packing:</strong> {s.t("sample_packing", "Standard export packing")}</p>
                                   <p><strong>5. Validity:</strong> This contract is valid until full shipment.</p>
                                 </div>
 
@@ -2047,8 +2114,8 @@ Delivery Terms: CIF Dalian Port`}
                                     <tr key={k} className="border-b border-slate-100 dark:border-slate-800">
                                       <td className="p-2 font-bold text-slate-600 dark:text-slate-400 capitalize">{k}</td>
                                       <td className="p-2 font-mono text-slate-800 dark:text-slate-100">{String(v)}</td>
-                                      <td className="p-2 text-emerald-600 font-bold">96%</td>
-                                      <td className="p-2 text-emerald-600">✓ Verified</td>
+                                      <td className="p-2 text-emerald-600 font-bold">{avgConfidencePct != null ? `${avgConfidencePct}%` : "—"}</td>
+                                      <td className="p-2 text-emerald-600">{v ? `✓ ${s.t("verified", "Verified")}` : `${s.t("not_extracted", "Not extracted")}`}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -2056,11 +2123,16 @@ Delivery Terms: CIF Dalian Port`}
                             </div>
                           ) : (
                             <div className="w-full h-full p-4 font-mono text-xs text-slate-600 dark:text-slate-400 space-y-2 overflow-auto">
-                              <p>✓ [00:01] File validated: SHA256 integrity passed.</p>
-                              <p>✓ [00:02] Local OCR & WASM layer extracted 3 pages.</p>
-                              <p>✓ [00:03] Classifier matched: Sales Contract / Purchase Order.</p>
-                              <p>✓ [00:04] 12 structured fields extracted with 96% confidence.</p>
-                              <p>✓ [00:05] Multi-country scope verified: UAE / Dubai Office.</p>
+                              {jobData?.events?.length ? (
+                                [...jobData.events].reverse().map((ev: any) => (
+                                  <p key={ev.id}>
+                                    ✓ [{ev.created_at ? new Date(ev.created_at).toLocaleTimeString() : "-"}] {ev.action}
+                                    {ev.detail ? `: ${typeof ev.detail === "string" ? ev.detail : JSON.stringify(ev.detail)}` : ""}
+                                  </p>
+                                ))
+                              ) : (
+                                <p>{s.t("no_log_yet", "No processing events yet — run AI / OCR Extraction to see the log here.")}</p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -2075,7 +2147,7 @@ Delivery Terms: CIF Dalian Port`}
                             {s.t("ai_res_head", "AI Extraction Results")}
                           </h4>
                           <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                            12 fields extracted
+                            {(jobData?.fields?.length ?? 0)} {s.t("fields_extracted", "fields extracted")}
                           </span>
                         </div>
 
@@ -2191,11 +2263,11 @@ Delivery Terms: CIF Dalian Port`}
                       {/* AI Confidence Progress Bar */}
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-bold text-slate-700 dark:text-slate-300">AI Confidence</span>
-                          <span className="font-black text-emerald-600">96%</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{s.t("ai_confidence", "AI Confidence")}</span>
+                          <span className="font-black text-emerald-600">{avgConfidencePct != null ? `${avgConfidencePct}%` : "—"}</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden dark:bg-slate-800">
-                          <div className="h-full bg-emerald-500 rounded-full w-[96%]" />
+                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${avgConfidencePct ?? 0}%` }} />
                         </div>
                         <p className="mt-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5" />
@@ -2256,7 +2328,7 @@ Delivery Terms: CIF Dalian Port`}
                               : "border-transparent text-slate-400 hover:text-slate-700"
                           }`}
                         >
-                          {s.t("items_tab", "Items (1)")}
+                          {s.t("items_tab", "Items")} ({jobData?.lineItems?.length ?? 0})
                         </button>
 
                         <button
@@ -2297,11 +2369,11 @@ Delivery Terms: CIF Dalian Port`}
                               onChange={(e) => setFormData({ ...formData, docType: e.target.value })}
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                             >
-                              <option value="Sales Contract">Sales Contract</option>
-                              <option value="Purchase Contract">Purchase Contract</option>
-                              <option value="Commercial Invoice">Commercial Invoice</option>
-                              <option value="Proforma Invoice">Proforma Invoice</option>
-                              <option value="Bill of Lading">Bill of Lading</option>
+                              <option value="Sales Contract">{s.t("doctype_sales_contract", "Sales Contract")}</option>
+                              <option value="Purchase Contract">{s.t("doctype_purchase_contract", "Purchase Contract")}</option>
+                              <option value="Commercial Invoice">{s.t("doctype_commercial_invoice", "Commercial Invoice")}</option>
+                              <option value="Proforma Invoice">{s.t("doctype_proforma_invoice", "Proforma Invoice")}</option>
+                              <option value="Bill of Lading">{s.t("doctype_bill_of_lading", "Bill of Lading")}</option>
                             </select>
                           </div>
 
@@ -2421,11 +2493,11 @@ Delivery Terms: CIF Dalian Port`}
                               onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                             >
-                              <option value="USD">USD - US Dollar</option>
-                              <option value="AED">AED - UAE Dirham</option>
-                              <option value="EUR">EUR - Euro</option>
-                              <option value="PKR">PKR - Pakistani Rupee</option>
-                              <option value="AFN">AFN - Afghan Afghani</option>
+                              <option value="USD">{s.t("currency_usd", "USD - US Dollar")}</option>
+                              <option value="AED">{s.t("currency_aed", "AED - UAE Dirham")}</option>
+                              <option value="EUR">{s.t("currency_eur", "EUR - Euro")}</option>
+                              <option value="PKR">{s.t("currency_pkr", "PKR - Pakistani Rupee")}</option>
+                              <option value="AFN">{s.t("currency_afn", "AFN - Afghan Afghani")}</option>
                             </select>
                           </div>
 
@@ -2503,7 +2575,7 @@ Delivery Terms: CIF Dalian Port`}
                             className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700"
                           >
                             <Plus className="h-3.5 w-3.5" />
-                            <span>Add Another Line Item</span>
+                            <span>{s.t("add_line_item", "Add Another Line Item")}</span>
                           </button>
                         </div>
                       )}
@@ -2649,7 +2721,7 @@ Delivery Terms: CIF Dalian Port`}
                   type="button"
                   onClick={() => void loadQueue()}
                   className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
-                  title="Refresh Queue"
+                  title={s.t("refresh_queue", "Refresh Queue")}
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                 </button>
