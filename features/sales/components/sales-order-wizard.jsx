@@ -654,7 +654,7 @@ export function SalesOrderWizard({ session }) {
   // but keyed off form.destCountryId/destCountryBranchId instead of the source (selling) scope.
   const [destMainBranches, setDestMainBranches] = useState([]);
   const [destCityBranches, setDestCityBranches] = useState([]);
-  const [scopeConfirmed, setScopeConfirmed] = useState(true);
+  const [scopeConfirmed, setScopeConfirmed] = useState(!isSuperAdmin);
   const [showScopeModal, setShowScopeModal] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
   const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
@@ -671,14 +671,24 @@ export function SalesOrderWizard({ session }) {
         setCountries(list);
         setAllCountries(list);
         if (list.length > 0 && !form.countryId) {
-          const first = list[0];
-          setForm((p) => ({
-            ...p,
-            countryId: first.id,
-            salesCurrency: first.currency_code || first.currencyCode || "USD",
-            secondaryCurrency: first.currency_code || first.currencyCode || "USD",
-            paymentCurrency: first.currency_code || first.currencyCode || "USD"
-          }));
+          // Super Admin has no home country/branch — silently defaulting to
+          // list[0] (Afghanistan, alphabetically first) wrongly scoped every
+          // subsequent account search/lookup to that one country, hiding real
+          // customers registered elsewhere. Prompt for an explicit working
+          // scope instead, exactly like the Purchase wizard already does.
+          if (isSuperAdmin) {
+            setShowScopeModal(true);
+            setScopeConfirmed(false);
+          } else {
+            const first = list[0];
+            setForm((p) => ({
+              ...p,
+              countryId: first.id,
+              salesCurrency: first.currency_code || first.currencyCode || "USD",
+              secondaryCurrency: first.currency_code || first.currencyCode || "USD",
+              paymentCurrency: first.currency_code || first.currencyCode || "USD"
+            }));
+          }
         }
       })
       .catch(() => {});
@@ -774,6 +784,7 @@ export function SalesOrderWizard({ session }) {
   }, [form.destCountryId, form.destCountryBranchId]);
 
   const mapEnterpriseAccount = (acc) => ({
+    id: acc.id || null,
     accountCode: acc.code || acc.account_number || "",
     accountName: acc.name || "",
     cityBranchName: acc.branch_code || acc.branch_name || "",
@@ -928,6 +939,19 @@ export function SalesOrderWizard({ session }) {
     const cCode = cName ? "COM-" + cName.slice(0, 3).toUpperCase() : "";
     const resolvedCompId = matchedComp?.id || companyId || (dbCompanies.length > 0 ? dbCompanies[0].id : null);
     const entityId = richAccount.customerId || richAccount.customer_id || richAccount.id || accountNo;
+    // enterprise_accounts.id specifically — sales_orders.customer_account_id FKs to
+    // enterprise_accounts, not ledgers, so entityId (customerId, which falls back to
+    // this same account's own id when there's no real linked customer) cannot be
+    // reused here. Mirrors purchase-order-wizard.jsx's resolvedAccountId.
+    const resolvedAccountId = richAccount.id || richAccount.accountId || null;
+    // customer_ledger_id FKs to ledgers(id) — a genuinely different table/id-space
+    // from enterprise_accounts. The bulk accounts list (dbAccounts) never carries a
+    // ledger id at all; only the background/type-ahead lookup's richer account
+    // object (lookupAccountMaster -> /api/erp/accounting/accounts/lookup) does. When
+    // it's absent (the normal click-to-select path), leave it null rather than
+    // reusing an enterprise_accounts id here — that mismatch previously failed the
+    // save with FK_VIOLATION on every Sales booking.
+    const resolvedLedgerId = richAccount.ledgerId || null;
 
     setForm((prev) => ({
       ...prev,
@@ -939,7 +963,8 @@ export function SalesOrderWizard({ session }) {
             customerAccountCurrency: currency || prev.customerAccountCurrency || prev.salesCurrency || prev.secondaryCurrency || "PKR",
             salesCurrency: currency || prev.salesCurrency || prev.secondaryCurrency || "PKR",
             customerId: entityId,
-            customerAccountLedgerId: entityId,
+            customerAccountId: resolvedAccountId,
+            customerAccountLedgerId: resolvedLedgerId,
             customerName: accountName || prev.customerName,
             salesCompanyId: resolvedCompId,
             salesCompanyName: cName,
@@ -1514,7 +1539,11 @@ export function SalesOrderWizard({ session }) {
       countryId: form.countryId || null,
       countryBranchId: form.countryBranchId || null,
       cityBranchId: form.cityBranchId || null,
-      customerAccountId: form.salesAccountLedgerId || null,
+      // customer_account_id FKs to enterprise_accounts(id); form.salesAccountLedgerId
+      // is the OTHER party's (Sales/CR account) id and form.customerAccountLedgerId is
+      // a ledgers.id — neither belongs here. This previously sent the wrong party's id
+      // into an enterprise_accounts FK, failing with FK_VIOLATION on save.
+      customerAccountId: form.customerAccountId || null,
       customerLedgerId: form.customerAccountLedgerId || null,
       // undefined ⇒ server assigns the real sequence (nextTransactionSerial); never a random client value
       salesOrderNo: (customOrderNo || form.salesOrderNo || undefined),

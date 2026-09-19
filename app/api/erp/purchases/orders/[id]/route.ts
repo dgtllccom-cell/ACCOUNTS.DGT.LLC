@@ -11,8 +11,7 @@ import {
   safeInsertPurchaseOrderItems,
   safeDeletePurchaseOrderItems,
   safeInsertPurchaseOrderExpenses,
-  safeDeletePurchaseOrderExpenses,
-  ensurePurchaseSchemaAndEnums
+  safeDeletePurchaseOrderExpenses
 } from "@/lib/services/purchase-table-manager";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
@@ -335,25 +334,18 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       // For now, let's keep it simple and not overwrite advance_paid.
     }
 
+    // Schema is applied via supabase/migrations, not per-request. This used to
+    // retry through a ~23-statement ensure-schema DDL block on any error whose
+    // message merely contained "column"/"currency"/etc — every purchase_orders
+    // column it (re)creates already exists, so that retry only added 50+s of
+    // catalog-lock overhead per save while masking the real error underneath.
     let updated;
     try {
       updated = await requireSupabaseData(
         supabase.from("purchase_orders").update(patch).eq("id", params.id).select("id").single()
       );
     } catch (e: any) {
-      const errMsg = String(e.message || e);
-      if (errMsg.includes("schema cache") || errMsg.includes("column") || errMsg.includes("relation") || errMsg.includes("landed_cost") || errMsg.includes("currency")) {
-        await ensurePurchaseSchemaAndEnums();
-        try {
-          updated = await requireSupabaseData(
-            supabase.from("purchase_orders").update(patch).eq("id", params.id).select("id").single()
-          );
-        } catch (retryErr: any) {
-          return apiError("UPDATE_FAILED", retryErr.message || String(retryErr), 400);
-        }
-      } else {
-        return apiError("UPDATE_FAILED", errMsg, 400);
-      }
+      return apiError("UPDATE_FAILED", e.message || String(e), 400);
     }
 
     // CASCADE BILL NUMBER TO PAYMENTS

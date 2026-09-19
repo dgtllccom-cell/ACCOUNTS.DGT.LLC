@@ -7,7 +7,6 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getDbUrl } from "@/lib/db/local-postgres";
-import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
 import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { transferPurchaseBookingViaLocalPg } from "@/lib/services/purchase-booking-transfer-local-pg";
@@ -146,7 +145,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   let idempotencyKey = "";
   let tenantHash = "";
   try {
-    await ensurePurchaseSchemaAndEnums();
+    // Schema is applied via supabase/migrations, not per-request — running the
+    // full ~23-statement ensure-schema DDL block on every transfer added
+    // 15-20s of pure catalog-lock overhead to a request that never needed it
+    // (confirmed: every purchase_orders column/table it creates already exists).
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const body = await request.json().catch(() => ({}));

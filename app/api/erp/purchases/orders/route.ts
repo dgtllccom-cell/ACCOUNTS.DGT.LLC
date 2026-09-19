@@ -619,24 +619,14 @@ export async function POST(request: NextRequest) {
     if (viaPgInsert) {
       inserted = viaPgInsert;
     } else {
+      // Schema is applied via supabase/migrations, not per-request — see the
+      // same fix in orders/[id]/route.ts PATCH for why the DDL retry was removed.
       try {
         inserted = await requireSupabaseData(
           (supabase as any).from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
         );
       } catch (e: any) {
-        const errMsg = String(e.message || e);
-        if (errMsg.includes("schema cache") || errMsg.includes("column") || errMsg.includes("relation") || errMsg.includes("landed_cost") || errMsg.includes("currency")) {
-          await ensurePurchaseSchemaAndEnums();
-          try {
-            inserted = await requireSupabaseData(
-              (supabase as any).from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
-            );
-          } catch (retryErr: any) {
-            return apiError("INSERT_FAILED", retryErr.message || String(retryErr), 400);
-          }
-        } else {
-          return apiError("INSERT_FAILED", errMsg, 400);
-        }
+        return apiError("INSERT_FAILED", e.message || String(e), 400);
       }
     }
 

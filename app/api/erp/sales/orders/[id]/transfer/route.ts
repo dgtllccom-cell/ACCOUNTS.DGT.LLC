@@ -145,7 +145,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Sales order total must be a valid number greater than zero to transfer.");
     }
 
-    if (!form.purchaseAccountNo) {
+    // The Sales wizard's own form state names this field customerAccountNo, not
+    // purchaseAccountNo (that name is only correct in the Purchase wizard's own
+    // form_data, which this check was originally copied from) — checking the
+    // wrong name meant this validation failed on every real Sales transfer.
+    if (!form.customerAccountNo) {
       throw new Error("Customer Account is required before transfer to payment.");
     }
     if (!form.salesAccountNo) {
@@ -217,8 +221,33 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       }
     };
 
-    const debitLedgerId = form.customerAccountLedgerId || orderRow.customer_ledger_id;
-    const creditLedgerId = form.salesAccountLedgerId || orderRow.customer_account_id;
+    // The Sales wizard's account picker only ever resolves an enterprise_accounts.id
+    // for the account the user clicked (form.customerAccountLedgerId /
+    // form.salesAccountLedgerId, despite the "Ledger" in their names) — never a real
+    // ledgers.id, because the bulk accounts list it searches (GET
+    // /api/erp/accounting/accounts) doesn't return one. Resolve the real ledgers row
+    // here via ledgers.enterprise_account_id, the same 1:1 link the DB already
+    // enforces, instead of posting against whatever id happened to be on the form.
+    const debitAccountId = orderRow.customer_account_id || form.customerAccountId || null;
+    const creditAccountId = form.salesAccountLedgerId || null;
+    const acctIdsToResolve = [debitAccountId, creditAccountId].filter(Boolean);
+    const resolvedLedgerByAccountId: Record<string, string> = {};
+    if (acctIdsToResolve.length > 0) {
+      const ledgerRows = await withLocalPg((sql) =>
+        sql`select id, enterprise_account_id from ledgers where enterprise_account_id = any(${acctIdsToResolve}::uuid[])`
+      );
+      for (const row of (ledgerRows ?? []) as any[]) {
+        if (row.enterprise_account_id) resolvedLedgerByAccountId[row.enterprise_account_id] = row.id;
+      }
+    }
+
+    const debitLedgerId =
+      (debitAccountId && resolvedLedgerByAccountId[debitAccountId]) ||
+      form.customerAccountLedgerId ||
+      orderRow.customer_ledger_id;
+    const creditLedgerId =
+      (creditAccountId && resolvedLedgerByAccountId[creditAccountId]) ||
+      form.salesAccountLedgerId;
 
     if (!debitLedgerId) {
       throw new Error("Customer Account Ledger ID is required before transfer to payment.");

@@ -365,11 +365,15 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
         const cl = cList?.countries ?? [];
         setCountries(cl);
 
-        const isSuper = sess?.scopes?.isSuperAdmin || sess?.roles?.includes("super_admin") || sess?.scopes?.summary?.level === "global";
         const assignedCountryId = sess?.scopes?.summary?.countryId || (sess?.scopes?.countryIds && sess.scopes.countryIds[0]);
         const assignedBranchId = sess?.scopes?.summary?.countryBranchId || sess?.scopes?.summary?.cityBranchId || (sess?.scopes?.countryBranchIds && sess.scopes.countryBranchIds[0]);
 
-        const initCid = assignedCountryId || (isSuper && cl[0]?.id) || "";
+        // Super Admin has no home country — silently defaulting to cl[0] (the
+        // first country returned, e.g. Afghanistan) pre-selected a country the
+        // admin never chose and scoped every subsequent account/goods lookup
+        // to it. Leave it blank; the dropdown above is already fully editable
+        // for Super Admin, so this only removes an incorrect default.
+        const initCid = assignedCountryId || "";
         if (initCid) {
           setCountryId(initCid);
           const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${initCid}`).catch(() => ({ countryBranches: [] }));

@@ -285,7 +285,8 @@ export async function POST(request: NextRequest) {
   let idempotencyKey = "";
   let tenantHash = "";
   try {
-    await ensureTableExists();
+    // transfer_date/transfer_user/transfer_serial_number are applied via
+    // migrations, not per-request — confirmed already present in the DB.
     const session = await requireErpSession();
     const rawJson = await request.json();
 
