@@ -257,6 +257,7 @@ export type CustomerOrderGoodsItem = {
   kgPerQty: string;
   totalKg: string;
   warehouseSourceType: "same" | "company_warehouse" | "customer_warehouse" | "other";
+  warehouseType?: "company" | "customer" | "other" | string;
   warehouseId: string;
   warehouseName: string;
   warehouseAddressText: string;
@@ -416,6 +417,8 @@ const EMPTY_FORM = {
   receiving_city_id: "",
   receiving_area_id: "",
   route_name: "",
+  customs_point_text: "",
+  customs_clearance_office: "",
 
   // Legacy single-goods and parties fields for full backward compatibility
   goods_id: "",
@@ -784,6 +787,17 @@ export function CustomerOrderManagementView() {
   // vs. "Assign to Another User" (reuses the canonical TaskHandoverModal / Transfer
   // Center — same order, no duplicate record) before clearing the wizard.
   const [justCompletedOrder, setJustCompletedOrder] = useState<{ id: string; orderNo: string; countryId: string | null; customerName: string | null } | null>(null);
+  const [stageHandoverPrompt, setStageHandoverPrompt] = useState<{
+    orderId: string;
+    orderNo: string;
+    currentStepNum: number;
+    currentStepTitle: string;
+    nextStepNum: number;
+    nextStepTitle: string;
+    nextSubStep: "1A" | "1B" | "1C";
+    defaultTask: string;
+    transferType: "truck_task" | "goods_verification" | "shipping_handover" | "other";
+  } | null>(null);
   const [handoffModalOpen, setHandoffModalOpen] = useState(false);
   const [approvalActionOrderId, setApprovalActionOrderId] = useState<string | null>(null);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
@@ -1883,7 +1897,23 @@ export function CustomerOrderManagementView() {
       await fetchInitialData();
 
       if (advanceStep && currentStep < 4) {
-        setCurrentStep((s) => (s + 1) as any);
+        const nextStep = (currentStep + 1) as 1 | 2 | 3 | 4;
+        const nextSub: "1A" | "1B" | "1C" = nextStep === 2 ? "1B" : nextStep === 3 ? "1C" : "1C";
+        setStageHandoverPrompt({
+          orderId: savedOrder?.id || editingOrderId || "",
+          orderNo: savedOrder?.order_no || formData.order_no || "Draft",
+          currentStepNum: currentStep,
+          currentStepTitle: stepsList[currentStep - 1]?.title || `Step ${currentStep}`,
+          nextStepNum: nextStep,
+          nextStepTitle: stepsList[nextStep - 1]?.title || `Step ${nextStep}`,
+          nextSubStep: nextSub,
+          defaultTask: currentStep === 1
+            ? `Please assign and enter Truck & Transport fleet details for Order ${savedOrder?.order_no || formData.order_no || ""}.`
+            : currentStep === 2
+            ? `Please enter Goods manifest and warehouse breakdown for Order ${savedOrder?.order_no || formData.order_no || ""}.`
+            : `Please review expenses, Shipping Line Admin and Customs clearance for Order ${savedOrder?.order_no || formData.order_no || ""}.`,
+          transferType: currentStep === 1 ? "truck_task" : currentStep === 2 ? "goods_verification" : "shipping_handover"
+        });
       } else if (advanceStep && currentStep === 4) {
         // Offer the handover choice before clearing the wizard — resetForm() runs
         // only after the user picks "Continue Myself" or finishes an assignment.
@@ -1970,23 +2000,23 @@ export function CustomerOrderManagementView() {
   const stepsList = [
     {
       num: 1,
-      title: "1A: " + t(lang, "comv.step1_name", "Customer & Basics"),
-      desc: t(lang, "comv.step1_desc", "Serials, Customer, Ship & Movement")
+      title: "1A: " + t(lang, "comv.step1_name", "Customer & Route"),
+      desc: t(lang, "comv.step1_desc", "Account, Movement Type (Import/Export/Transit) & Route")
     },
     {
       num: 2,
-      title: "1B: " + t(lang, "comv.step2_name", "Pickup, Truck & Goods"),
-      desc: t(lang, "comv.step2_desc", "Pickup, Vehicle, Goods & Warehouses")
+      title: "1B: " + t(lang, "comv.step2_name", "Truck & Transport"),
+      desc: t(lang, "comv.step2_desc", "Fleet Assignment & Driver Details")
     },
     {
       num: 3,
-      title: "1C: " + t(lang, "comv.step3_name", "Route & Delivery"),
-      desc: t(lang, "comv.step3_desc", "Dynamic Route, Dates & Ports")
+      title: "1C: " + t(lang, "comv.step3_name", "Goods & Warehouse"),
+      desc: t(lang, "comv.step3_desc", "Apna / Other Warehouse & Goods Manifest")
     },
     {
       num: 4,
-      title: t(lang, "comv.step4_name", "Review & Confirm"),
-      desc: t(lang, "comv.step4_desc", "Full Summary & Confirmation")
+      title: t(lang, "comv.step4_name", "Review, Shipping & Customs"),
+      desc: t(lang, "comv.step4_desc", "Expenses, Customs Agent & Confirmation")
     }
   ];
 
@@ -1997,6 +2027,76 @@ export function CustomerOrderManagementView() {
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
           <span>{successMessage}</span>
         </div>
+      ) : null}
+
+      {stageHandoverPrompt && !handoffModalOpen ? (
+        <SimpleModal
+          title={tt("stage_handover_title", "Step Saved — Next Handover Choice")}
+          onClose={() => {
+            setCurrentStep(stageHandoverPrompt.nextStepNum as any);
+            setStep1SubStep(stageHandoverPrompt.nextSubStep);
+            setStageHandoverPrompt(null);
+          }}
+          className="w-[95vw] max-w-md rounded-3xl font-sans shadow-2xl"
+        >
+          <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 p-5 text-xs text-slate-800 dark:text-slate-200">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/40">
+              <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>{stageHandoverPrompt.currentStepTitle} — Saved Successfully!</span>
+              </div>
+              <div className="mt-1 text-[11px] text-emerald-700/90 dark:text-emerald-400">
+                Order <span className="font-mono font-bold">{stageHandoverPrompt.orderNo}</span> progress is saved.
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Next Stage / Agla Marhala:
+              </div>
+              <div className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <ArrowRight className="h-4 w-4 text-blue-600" />
+                <span>{stageHandoverPrompt.nextStepTitle}</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2">
+                Aap yeh agla step khud mukammal karenge ya kisi doosre user ko assign / transfer karenge?
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentStep(stageHandoverPrompt.nextStepNum as any);
+                  setStep1SubStep(stageHandoverPrompt.nextSubStep);
+                  setStageHandoverPrompt(null);
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 shadow-sm transition"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span>Main khud agla step bharoonga (Continue Myself)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setJustCompletedOrder({
+                    id: stageHandoverPrompt.orderId,
+                    orderNo: stageHandoverPrompt.orderNo,
+                    countryId: formData.loading_country_id || formData.receiving_country_id || null,
+                    customerName: partySelections.supplier.customerName || formData.customer_name || null
+                  });
+                  setHandoffModalOpen(true);
+                  setStageHandoverPrompt(null);
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-2.5 transition dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+              >
+                <Users className="h-3.5 w-3.5" />
+                <span>Doosre User ko Assign / Transfer karein</span>
+              </button>
+            </div>
+          </div>
+        </SimpleModal>
       ) : null}
 
       {justCompletedOrder && !handoffModalOpen ? (
@@ -2873,27 +2973,23 @@ export function CustomerOrderManagementView() {
                     {currentStep === 1 ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setStep1SubStep("1B");
-                          setCurrentStep(2);
-                        }}
+                        onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        <span>Continue to Pickup & Goods (1B)</span>
+                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
+                        <span>Save & Continue to Truck & Fleet (1B)</span>
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     ) : currentStep === 2 ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setStep1SubStep("1C");
-                          setCurrentStep(3);
-                        }}
+                        onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        <span>Continue to Route & Delivery (1C)</span>
+                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
+                        <span>Save & Continue to Goods & Warehouse (1C)</span>
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     ) : currentStep === 3 ? (
@@ -2913,7 +3009,7 @@ export function CustomerOrderManagementView() {
                           className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
                         >
                           {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                          <span>Confirm & Save Customer Order</span>
+                          <span>Save & Proceed to Review (Step 4)</span>
                         </button>
                       </div>
                     ) : (
@@ -3057,14 +3153,14 @@ export function CustomerOrderManagementView() {
                     </div>
                   </div>
 
-                  {/* 2-Column Document Layout (Billing Address & Shipping Destination) */}
+                  {/* Customer Profile & Billing Address / Remarks Layout (Clean & Non-Duplicated) */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-                    {/* COLUMN 1: BILLING ADDRESS */}
+                    {/* COLUMN 1: BILLING ADDRESS & DIRECT CONTACT */}
                     <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
                       <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
                         <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                           <Building2 className="h-3 w-3" />
-                          BILLING ADDRESS
+                          BILLING ADDRESS & DIRECT CONTACT
                         </span>
                       </div>
                       <div className="space-y-1 text-slate-700 dark:text-slate-300">
@@ -3101,103 +3197,68 @@ export function CustomerOrderManagementView() {
                       </div>
                     </div>
 
-                    {/* COLUMN 2: SHIPPING ADDRESS / DELIVERY DESTINATION */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                          <Truck className="h-3 w-3" />
-                          SHIPPING & DELIVERY DESTINATION
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.customer_name || selectedCustomerInfo?.customer_name || "Consignee / Delivery Target"}
+                    {/* COLUMN 2: INSTRUCTIONS, REMARKS & SECONDARY PARTIES */}
+                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <FileText className="h-3 w-3" />
+                            ORDER INSTRUCTIONS & REMARKS
+                          </span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          {formData.final_delivery_location || (formData.destination_port_name ? `Port: ${formData.destination_port_name}` : "Delivery destination pending input")}
-                        </div>
-                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
-                          {[formData.destination_city, formData.receiving_country_name || selectedCustomerInfo?.country_name].filter(Boolean).join(", ") || "—"}
-                        </div>
-                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Transport:</span>
-                            <span className="font-bold text-blue-600 dark:text-blue-400 uppercase">
-                              {formData.transport_mode.replace("by_", "By ")} ({formData.movement_type})
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Planned Dispatch:</span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 truncate">
-                            <span className="font-semibold text-slate-500">Warehouse Source:</span>
-                            <span className="text-slate-800 dark:text-slate-200 truncate">{formData.goods_items?.[0]?.warehouseName || formData.loading_source_name || "Primary Warehouse"}</span>
-                          </div>
+                        <div className="text-slate-600 dark:text-slate-300 italic text-[11px] leading-relaxed pt-1.5">
+                          {formData.remarks || "No special instructions registered for this customer order."}
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* REMARKS (Directly matching Image 3) */}
-                  <div className="rounded-lg border border-slate-200/60 bg-slate-50/40 p-2.5 dark:border-slate-800/80 dark:bg-slate-850/40 text-xs">
-                    <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 mb-1">
-                      REMARKS & INSTRUCTIONS
-                    </div>
-                    <div className="text-slate-600 dark:text-slate-300 italic text-[11px]">
-                      {formData.remarks || "No additional instructions entered for this customer order."}
-                    </div>
-                  </div>
-
-                  {/* Secondary Related Parties if set */}
-                  {(partySelections.supplier?.companyName || partySelections.buyer?.companyName) ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800 text-xs">
-                      {partySelections.supplier?.companyName ? (
-                        <div className="flex items-center gap-2 rounded-lg bg-white/70 p-1.5 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-800">
-                          <Building2 className="h-3 w-3 text-purple-600 shrink-0" />
-                          <div className="truncate">
-                            <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Shipper / Supplier</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.supplier.companyName}</span>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {partySelections.buyer?.companyName ? (
-                        <div className="flex items-center gap-2 rounded-lg bg-white/70 p-1.5 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-800">
-                          <Users className="h-3 w-3 text-sky-600 shrink-0" />
-                          <div className="truncate">
-                            <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Buyer</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.buyer.companyName}</span>
-                          </div>
+                      {/* Secondary Parties if assigned */}
+                      {(partySelections.supplier?.companyName || partySelections.buyer?.companyName) ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-750 text-xs">
+                          {partySelections.supplier?.companyName ? (
+                            <div className="rounded-lg bg-white p-1.5 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700">
+                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Supplier</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.supplier.companyName}</span>
+                            </div>
+                          ) : null}
+                          {partySelections.buyer?.companyName ? (
+                            <div className="rounded-lg bg-white p-1.5 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700">
+                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Buyer</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.buyer.companyName}</span>
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
-                  ) : null}
+                  </div>
                 </div>
 
-                {/* 1. Loading & Origin Logistics Message Card (Matches Customer Message Card) */}
+                {/* 1. Unified Movement & Dynamic Route Journey Specification Card (Non-Duplicate) */}
                 <div className="rounded-xl border border-sky-200/90 bg-white p-4 shadow-sm dark:border-sky-900/60 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white font-black text-sm shadow-md shadow-sky-600/20">
-                        <Anchor className="h-5 w-5" />
+                        <Route className="h-5 w-5" />
                       </span>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {formData.loading_port_name || formData.exit_border_port_name || formData.loading_country_name || "Origin Loading & Port"}
+                            Movement & Route Journey
                           </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800 uppercase">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                            formData.movement_type === "import"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                              : formData.movement_type === "export"
+                              ? "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                              : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                          }`}>
                             {formData.movement_type || "Import"}
                           </span>
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 uppercase">
-                            {formData.shipment_mode?.replace("by_", "By ") || "By Road"}
+                            {formData.transport_mode?.replace("by_", "By ") || "By Road"}
                           </span>
                         </div>
                         <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("loading_origin_desc", "Origin Port, Pickup Warehouse & Loading Schedule")}</span>
-                          <span>•</span>
-                          <span className="text-slate-400">Origin: {formData.loading_country_name || "Pending Selection"}</span>
+                          <span>Route Corridor: <strong className="text-slate-700 dark:text-slate-300">{formData.route_name || "Direct Customs Corridor"}</strong></span>
                         </div>
                       </div>
                     </div>
@@ -3209,167 +3270,87 @@ export function CustomerOrderManagementView() {
                         setCurrentStep(1);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-xs font-bold text-sky-700 hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300 transition shadow-2xs"
-                      title="Transfer to Step 1A / Loading Entry"
+                      title="Transfer to Step 1A / Movement & Route Entry"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      <span>Transfer to Loading (1A)</span>
+                      <span>Transfer to Route (1A)</span>
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-                    {/* Origin Loading Details */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400 flex items-center gap-1.5">
+                  {/* 3-Stage Chronological Journey Diagram */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-850/50">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      {/* Stage 1: Origin & Loading */}
+                      <div className="rounded-lg bg-white p-2.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-sky-600 dark:text-sky-400">
                           <MapPin className="h-3 w-3" />
-                          LOADING ORIGIN & PORT
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.loading_country_name || "Loading Country Pending"}
+                          <span>1. Origin / Loading</span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          Port / Exit: <strong className="text-slate-800 dark:text-slate-200">{formData.loading_port_name || formData.exit_border_port_name || formData.origin_airport_name || "—"}</strong>
+                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                          {formData.loading_country_name || "Country Pending"}
                         </div>
-                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
-                          City / District: {[formData.loading_city_id, formData.loading_state_province_id].filter(Boolean).join(", ") || "—"}
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400">
+                          {formData.loading_port_name || formData.origin_airport_name || formData.exit_border_port_name || "Origin Port / Border"}
                         </div>
-                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Route Ref:</span>
-                            <span className="font-medium text-slate-800 dark:text-slate-200">{formData.route_name || "Direct Transit"}</span>
-                          </div>
+                        <div className="text-[10px] text-slate-400 truncate">
+                          Facility: {formData.loading_source_name || "Origin Facility"}
                         </div>
                       </div>
-                    </div>
 
-                    {/* Pickup Source & Schedule */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                          <Warehouse className="h-3 w-3" />
-                          PICKUP SOURCE & SCHEDULE
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.loading_source_name || formData.loading_source || "Shipping Warehouse"}
+                      {/* Stage 2: Customs & Border Transit */}
+                      <div className="rounded-lg bg-white p-2.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
+                          <Anchor className="h-3 w-3" />
+                          <span>2. Border & Customs</span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          Warehouse Source: <strong className="text-slate-800 dark:text-slate-200 capitalize">{formData.loading_source?.replace("_", " ") || "Company Warehouse"}</strong>
+                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                          {formData.entry_border_port_name || formData.exit_border_port_name || "Border Checkpoint"}
                         </div>
-                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Expected Loading:</span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{formData.expected_loading_date || "—"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Planned Pickup:</span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{formData.planned_pickup_date || "—"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Actual Pickup:</span>
-                            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{formData.actual_pickup_date || "—"}</span>
-                          </div>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
+                          Clearance: {formData.customs_clearance_office || "In-Transit Customs"}
+                        </div>
+                        <div className="text-[10px] text-slate-400 truncate">
+                          Corridor: {formData.route_name || "Bonded Highway"}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* 2. Receiving & Final Delivery Message Card (Matches Customer Message Card) */}
-                <div className="rounded-xl border border-emerald-200/90 bg-white p-4 shadow-sm dark:border-emerald-900/60 dark:bg-slate-900 space-y-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-md shadow-emerald-600/20">
-                        <Route className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {formData.destination_port_name || formData.entry_border_port_name || formData.receiving_country_name || "Receiving & Destination Port"}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 uppercase">
-                            Destination
-                          </span>
-                        </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("receiving_dest_desc", "Entry Border, Clearance Location & Final Delivery Address")}</span>
-                          <span>•</span>
-                          <span className="text-slate-400">Target: {formData.receiving_country_name || "Pending Selection"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1C");
-                        setCurrentStep(3);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 transition shadow-2xs"
-                      title="Transfer to Step 1C / Receiving & Route"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      <span>Transfer to Receiving (1C)</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-                    {/* Destination Port & Entry Border */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                      {/* Stage 3: Destination & Receiving */}
+                      <div className="rounded-lg bg-white p-2.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
                           <Globe2 className="h-3 w-3" />
-                          DESTINATION COUNTRY & ENTRY PORT
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.receiving_country_name || "Receiving Country Pending"}
+                          <span>3. Final Destination</span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          Port / Entry: <strong className="text-slate-800 dark:text-slate-200">{formData.destination_port_name || formData.entry_border_port_name || formData.destination_airport_name || "—"}</strong>
+                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                          {formData.receiving_country_name || "Target Country"}
                         </div>
-                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
-                          City / State: {[formData.destination_city, formData.route_dest_state_city].filter(Boolean).join(", ") || "—"}
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
+                          {formData.destination_port_name || formData.destination_city || "Destination Port / City"}
+                        </div>
+                        <div className="text-[10px] text-slate-400 truncate">
+                          Delivery: {formData.final_delivery_location || "Target Warehouse"}
                         </div>
                       </div>
                     </div>
 
-                    {/* Final Delivery Location & Arrival Schedule */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
-                          <Calendar className="h-3 w-3" />
-                          FINAL DELIVERY & SCHEDULE
-                        </span>
+                    {/* Operational Milestone Dates */}
+                    <div className="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-750 text-[10.5px]">
+                      <div>
+                        <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Planned Pickup</span>
+                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{formData.planned_pickup_date || "—"}</span>
                       </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.final_delivery_location || formData.route_final_delivery_location || "Destination Delivery Address Pending"}
-                        </div>
-                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Planned Dispatch:</span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Planned Arrival:</span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "—"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Actual Arrival:</span>
-                            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{formData.actual_arrival_date || "—"}</span>
-                          </div>
-                        </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Planned Dispatch</span>
+                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Planned Arrival</span>
+                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "—"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 3. Truck & Driver Assignment Message Card (Matches Customer Message Card) */}
+                {/* 2. Truck & Driver Assignment Message Card */}
                 <div className="rounded-xl border border-indigo-200/90 bg-white p-4 shadow-sm dark:border-indigo-900/60 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3461,7 +3442,7 @@ export function CustomerOrderManagementView() {
                   </div>
                 </div>
 
-                {/* 4. Goods & Cargo Manifest Breakdown Table Message Card */}
+                {/* 3. Goods & Cargo Manifest Breakdown Table Message Card */}
                 <div className="rounded-xl border border-emerald-200/90 bg-white p-4 shadow-sm dark:border-emerald-900/60 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3478,7 +3459,7 @@ export function CustomerOrderManagementView() {
                           </span>
                         </div>
                         <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("goods_manifest_desc", "Multi-item manifest specifications, CHS classification & gross weights")}</span>
+                          <span>{tt("goods_manifest_desc", "Multi-item manifest specifications, warehouse source & gross weights")}</span>
                         </div>
                       </div>
                     </div>
@@ -3486,14 +3467,14 @@ export function CustomerOrderManagementView() {
                     <button
                       type="button"
                       onClick={() => {
-                        setStep1SubStep("1B");
-                        setCurrentStep(2);
+                        setStep1SubStep("1C");
+                        setCurrentStep(3);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 transition shadow-2xs"
-                      title="Transfer to Step 1B / Goods Entry"
+                      title="Transfer to Step 1C / Goods & Warehouse Entry"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      <span>Transfer to Goods (1B)</span>
+                      <span>Transfer to Goods (1C)</span>
                     </button>
                   </div>
 
@@ -3548,8 +3529,20 @@ export function CustomerOrderManagementView() {
                               <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
                                 {mt} MT
                               </td>
-                              <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
-                                {it.warehouseName || formData.loading_source_name || "Primary Warehouse"}
+                              <td className="py-2.5 px-3">
+                                {it.warehouseType === "company" ? (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                                    🏢 Apna: {it.warehouseName || "Company"}
+                                  </span>
+                                ) : it.warehouseType === "customer" ? (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
+                                    👤 Customer: {it.warehouseName || "Client Yard"}
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                                    📍 Other: {it.warehouseName || formData.loading_source_name || "Warehouse"}
+                                  </span>
+                                )}
                               </td>
                               <td className="py-2.5 px-3 text-center">
                                 {it.photoUrl ? (
@@ -3606,69 +3599,6 @@ export function CustomerOrderManagementView() {
                       </div>
                     );
                   })()}
-                </div>
-
-                {/* 5. Dynamic Route Journey Track (Clean & Compact) */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-800/30 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                      <Route className="h-4 w-4 text-blue-600" />
-                      <span>Dynamic Route Journey</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1C");
-                        setCurrentStep(3);
-                      }}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                    >
-                      Edit Route (1C)
-                    </button>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
-                          <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                          <span className="truncate max-w-[95px]">{formData.loading_source_name || "Origin Warehouse"}</span>
-                        </div>
-                        <div className="text-[9px] text-slate-400">Origin Warehouse</div>
-                      </div>
-                      <div className="flex flex-col items-center px-1">
-                        <Truck className="h-3 w-3 text-blue-500" />
-                        <div className="w-6 sm:w-10 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
-                      </div>
-                      <div className="space-y-0.5 text-center">
-                        <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[85px]">
-                          {formData.loading_port_name || formData.exit_border_port_name || "Exit Port"}
-                        </div>
-                        <div className="text-[9px] text-slate-400">Loading / Exit</div>
-                      </div>
-                      <div className="flex flex-col items-center px-1">
-                        <Route className="h-3 w-3 text-blue-500" />
-                        <div className="w-6 sm:w-10 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
-                      </div>
-                      <div className="space-y-0.5 text-center">
-                        <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[85px]">
-                          {formData.destination_port_name || formData.entry_border_port_name || "Entry Port"}
-                        </div>
-                        <div className="text-[9px] text-slate-400">Entry / Clearance</div>
-                      </div>
-                      <div className="flex flex-col items-center px-1">
-                        <Truck className="h-3 w-3 text-blue-500" />
-                        <div className="w-6 sm:w-10 border-t border-dashed border-slate-300 dark:border-slate-600 my-0.5" />
-                      </div>
-                      <div className="space-y-0.5 text-right">
-                        <div className="flex items-center justify-end gap-1 text-[11px] font-bold text-slate-900 dark:text-white">
-                          <span className="truncate max-w-[95px]">{formData.final_delivery_location || formData.destination_city || "Final Delivery"}</span>
-                          <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                        </div>
-                        <div className="text-[9px] text-slate-400">{formData.receiving_country_name || "Destination"}</div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
@@ -4196,7 +4126,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Users className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1A" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">1A — Customer & Basics</span>
+          <span className="truncate">1A — Customer & Route</span>
           {formData.customer_id ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
         </button>
 
@@ -4210,7 +4140,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Truck className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1B" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">1B — Pickup & Goods</span>
+          <span className="truncate">1B — Truck & Fleet</span>
           {formData.truck_number || formData.truck_assignment_mode === "later" ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
@@ -4225,20 +4155,20 @@ function Step1BookingCustomer({
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
           }`}
         >
-          <Route className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">1C — Route & Delivery</span>
-          {formData.destination_port_name || formData.final_delivery_location ? (
+          <Boxes className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`} />
+          <span className="truncate">1C — Goods & Warehouse</span>
+          {(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length > 0 ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
         </button>
       </div>
 
       {/* ========================================================================= */}
-      {/* 1A — CUSTOMER & ORDER BASICS                                              */}
+      {/* 1A — CUSTOMER ACCOUNT, MOVEMENT TYPE & DYNAMIC ROUTE                      */}
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
         <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Compact Serials & Timestamp Bar (Reduces form bulk) */}
+          {/* Compact Serials & Timestamp Bar */}
           <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-850">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -4296,7 +4226,7 @@ function Step1BookingCustomer({
               emptyLabel="No matching customers found"
             />
 
-            {/* Minimal tag summary underneath input */}
+            {/* Tag summary underneath input */}
             {selectedCustomer || selectedAccount ? (
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-300">
                 <span className="font-bold text-slate-900 dark:text-white">
@@ -4318,9 +4248,8 @@ function Step1BookingCustomer({
             ) : null}
           </div>
 
-          {/* 2. Ship Type & Movement Type Selectors — Compact 2-Column Dropdowns */}
+          {/* 2. Ship Mode & Movement Type Selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Shipping / Transport Mode Dropdown */}
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Ship className="h-4 w-4 text-blue-600" />
@@ -4338,27 +4267,389 @@ function Step1BookingCustomer({
               </select>
             </div>
 
-            {/* Movement Type Dropdown */}
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Repeat2 className="h-4 w-4 text-purple-600" />
-                <span>Movement Type *</span>
+                <span>Movement Type (Route Type) *</span>
               </label>
               <select
                 value={formData.movement_type}
                 onChange={(e) => setFormData((curr) => ({ ...curr, movement_type: e.target.value as any }))}
                 className={selectClass}
               >
-                <option value="import">Import</option>
-                <option value="export">Export</option>
-                <option value="up_transit">Up Transit</option>
-                <option value="down_transit">Down Transit</option>
+                <option value="import">Import (Foreign Origin &rarr; Local Delivery)</option>
+                <option value="export">Export (Local Origin &rarr; Foreign Discharge)</option>
+                <option value="up_transit">Up Transit (Border Entry &rarr; Bonded Corridor)</option>
+                <option value="down_transit">Down Transit (Inland &rarr; Border Exit)</option>
               </select>
             </div>
           </div>
 
-          {/* 1A Reset Action */}
-          <div className="flex items-center justify-end pt-1">
+          {/* 3. DYNAMIC MOVEMENT & ROUTE FIELDS BASED ON MOVEMENT TYPE */}
+          {formData.movement_type === "import" && (
+            <div className="rounded-xl border border-sky-200 bg-sky-50/40 p-3.5 space-y-3 dark:border-sky-900/60 dark:bg-sky-950/20">
+              <div className="flex items-center justify-between border-b border-sky-200/60 pb-1.5 dark:border-sky-900/60">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-sky-800 dark:text-sky-300">
+                  <Ship className="h-4 w-4 text-sky-600" />
+                  <span>Import Movement & Route Specifications</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300">
+                  Import Clearance
+                </span>
+              </div>
+
+              {/* Row 1: Foreign Origin Country & Port of Loading */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Foreign Origin Country *
+                  </label>
+                  <select
+                    value={formData.loading_country_id}
+                    onChange={(e) => handleLoadingCountryChange(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Origin Country —</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Foreign Port of Loading
+                  </label>
+                  <select
+                    value={formData.loading_port_id}
+                    onChange={(e) => handleLoadingPortChange(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Port of Loading —</option>
+                    {ports.map((p) => (
+                      <option key={p.id} value={p.id}>{p.port_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Entry Sea Port / Border Port & Entry Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Entry Sea Port / Border Point *
+                  </label>
+                  <select
+                    value={formData.entry_border_port_id}
+                    onChange={(e) => {
+                      const p = ports.find((item) => item.id === e.target.value);
+                      setFormData((c) => ({
+                        ...c,
+                        entry_border_port_id: e.target.value,
+                        entry_border_port_name: p?.port_name || ""
+                      }));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Entry Port / Border —</option>
+                    {ports.map((p) => (
+                      <option key={p.id} value={p.id}>{p.port_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Expected Border Entry Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.border_entry_date}
+                    onChange={(e) => setFormData((c) => ({ ...c, border_entry_date: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Customs Clearance Office & Destination City */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Customs Clearance Point / Port
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Karachi Custom House / Torkham Customs"
+                    value={formData.customs_point_text || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, customs_point_text: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Destination Delivery City
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Lahore / Islamabad / Peshawar"
+                    value={formData.destination_city}
+                    onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {/* Row 4: Final Delivery Location / Warehouse */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Final Delivery Location / Warehouse Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Consignee Warehouse, Plot 14, Industrial Area"
+                  value={formData.final_delivery_location}
+                  onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          )}
+
+          {formData.movement_type === "export" && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+              <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5 dark:border-emerald-900/60">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
+                  <Repeat2 className="h-4 w-4 text-emerald-600" />
+                  <span>Export Movement & Route Specifications</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                  Export Clearance
+                </span>
+              </div>
+
+              {/* Row 1: Origin Loading City / Factory & Exit Border / Port of Loading */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Origin Loading City / Location *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Lahore / Sialkot Factory"
+                    value={formData.loading_source_name}
+                    onChange={(e) => setFormData((c) => ({ ...c, loading_source_name: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Exit Border / Port of Loading *
+                  </label>
+                  <select
+                    value={formData.exit_border_port_id || formData.loading_port_id}
+                    onChange={(e) => {
+                      const p = ports.find((item) => item.id === e.target.value);
+                      setFormData((c) => ({
+                        ...c,
+                        exit_border_port_id: e.target.value,
+                        exit_border_port_name: p?.port_name || "",
+                        loading_port_id: e.target.value,
+                        loading_port_name: p?.port_name || ""
+                      }));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Exit Port / Border —</option>
+                    {ports.map((p) => (
+                      <option key={p.id} value={p.id}>{p.port_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Planned Border Exit Date & Export Customs Point */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Planned Border Exit Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.planned_border_exit_date}
+                    onChange={(e) => setFormData((c) => ({ ...c, planned_border_exit_date: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Export Customs Point
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Port Qasim Export Customs"
+                    value={formData.customs_point_text || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, customs_point_text: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Destination Country & Foreign Port of Discharge */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Destination Country *
+                  </label>
+                  <select
+                    value={formData.receiving_country_id}
+                    onChange={(e) => handleReceivingCountryChange(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Destination Country —</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Foreign Port of Discharge / Destination City
+                  </label>
+                  <select
+                    value={formData.destination_port_id}
+                    onChange={(e) => handleDestinationPortChange(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Port of Discharge —</option>
+                    {ports.map((p) => (
+                      <option key={p.id} value={p.id}>{p.port_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(formData.movement_type === "transit" || formData.movement_type === "up_transit" || formData.movement_type === "down_transit") && (
+            <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-3.5 space-y-3 dark:border-purple-900/60 dark:bg-purple-950/20">
+              <div className="flex items-center justify-between border-b border-purple-200/60 pb-1.5 dark:border-purple-900/60">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-purple-800 dark:text-purple-300">
+                  <Repeat2 className="h-4 w-4 text-purple-600" />
+                  <span>Bonded Transit Movement Specifications</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 uppercase">
+                  {formData.movement_type.replace("_", " ")}
+                </span>
+              </div>
+
+              {/* Row 1: Entry Border / Port & Corridor */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Entry Sea Port / Border Point *
+                  </label>
+                  <select
+                    value={formData.entry_border_port_id}
+                    onChange={(e) => {
+                      const p = ports.find((item) => item.id === e.target.value);
+                      setFormData((c) => ({
+                        ...c,
+                        entry_border_port_id: e.target.value,
+                        entry_border_port_name: p?.port_name || ""
+                      }));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Entry Port / Border —</option>
+                    {ports.map((p) => (
+                      <option key={p.id} value={p.id}>{p.port_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Transit Corridor / Route Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Karachi - Chaman - Spin Boldak"
+                    value={formData.route_name}
+                    onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Exit Border Checkpoint & Planned Exit Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Exit Border Checkpoint *
+                  </label>
+                  <select
+                    value={formData.exit_border_port_id}
+                    onChange={(e) => {
+                      const p = ports.find((item) => item.id === e.target.value);
+                      setFormData((c) => ({
+                        ...c,
+                        exit_border_port_id: e.target.value,
+                        exit_border_port_name: p?.port_name || ""
+                      }));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Exit Border —</option>
+                    {ports.map((p) => (
+                      <option key={p.id} value={p.id}>{p.port_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Planned Border Exit Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.planned_border_exit_date}
+                    onChange={(e) => setFormData((c) => ({ ...c, planned_border_exit_date: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Final Transit Destination Country & City */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Transit Destination Country *
+                  </label>
+                  <select
+                    value={formData.receiving_country_id}
+                    onChange={(e) => handleReceivingCountryChange(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— Select Country —</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Destination City
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Kabul / Kandahar / Mazar-i-Sharif"
+                    value={formData.destination_city}
+                    onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 1A Action Footer */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => {
@@ -4374,12 +4665,21 @@ function Step1BookingCustomer({
             >
               Reset 1A Form
             </button>
+
+            <button
+              type="button"
+              onClick={onAdvanceToStep2}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
+            >
+              <span>Save & Continue to 1B (Truck)</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 1B — PICKUP / VEHICLE / GOODS                                             */}
+      {/* 1B — TRUCK / FLEET ASSIGNMENT & OPERATIONAL DATES                         */}
       {/* ========================================================================= */}
       {step1SubStep === "1B" && (
         <div className="space-y-4 animate-in fade-in duration-150">
@@ -4411,7 +4711,7 @@ function Step1BookingCustomer({
             </button>
           </div>
 
-          {/* Truck / Pre-Carriage Section — Compact 1-Vehicle Selection */}
+          {/* Truck / Pre-Carriage Section — Single Vehicle per Order */}
           <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
               <div className="flex items-center gap-2">
@@ -4557,11 +4857,11 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Operational Dates: Planned vs Actual Pickup & Dispatch */}
+          {/* Operational Dates: Planned vs Actual Pickup, Dispatch, Departure, Arrival */}
           <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
               <Calendar className="h-4 w-4 text-emerald-600" />
-              <span>Operational Dates — Planned vs. Actual</span>
+              <span>Operational Tracking Dates — Planned vs. Actual</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div>
@@ -4614,6 +4914,110 @@ function Step1BookingCustomer({
                   className={inputClass}
                 />
               </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Planned Departure Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.planned_departure_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, planned_departure_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Actual Departure Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.actual_departure_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, actual_departure_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Planned Arrival Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.planned_arrival_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, planned_arrival_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Actual Arrival Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.actual_arrival_date}
+                  onChange={(e) => setFormData((c) => ({ ...c, actual_arrival_date: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 1B Action Footer */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => selectSub("1A")}
+              className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back to 1A (Customer & Route)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onAdvanceToStep3}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
+            >
+              <span>Save & Continue to 1C (Goods & Warehouse)</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 1C — GOODS MANIFEST & WAREHOUSE SELECTION (APNA VS OTHER WAREHOUSE)       */}
+      {/* ========================================================================= */}
+      {step1SubStep === "1C" && (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          {/* Read-Only 1A & 1B Summary Badge Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
+                1A & 1B Summary
+              </span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
+              </span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-bold text-slate-600 dark:text-slate-400">
+                Truck: {formData.truck_number || "Later"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectSub("1A")}
+                className="text-[11px] font-bold text-blue-600 underline"
+              >
+                [Edit 1A]
+              </button>
+              <button
+                type="button"
+                onClick={() => selectSub("1B")}
+                className="text-[11px] font-bold text-blue-600 underline"
+              >
+                [Edit 1B]
+              </button>
             </div>
           </div>
 
@@ -4640,7 +5044,7 @@ function Step1BookingCustomer({
             </div>
 
             {/* Goods Entry / Edit Input Form */}
-            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3.5 space-y-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
@@ -4657,6 +5061,141 @@ function Step1BookingCustomer({
                     Cancel Edit
                   </button>
                 ) : null}
+              </div>
+
+              {/* Apna Warehouse ya Other Warehouse Prominent Toggle */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Warehouse className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Warehouse Location (Apna Warehouse ya Other Warehouse?) *</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-400">Step 3 Specification</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {/* Option 1: Apna Warehouse (Company) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDraftGoodsChange("warehouseSourceType", "company_warehouse");
+                    }}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                      draftGoodsItem.warehouseSourceType === "company_warehouse"
+                        ? "border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-500 shadow-xs ring-2 ring-blue-500/20"
+                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
+                    }`}
+                  >
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                      draftGoodsItem.warehouseSourceType === "company_warehouse" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    }`}>
+                      <Warehouse className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 dark:text-white">Apna Warehouse</div>
+                      <div className="text-[10px] text-slate-500">Company DGT Warehouse</div>
+                    </div>
+                  </button>
+
+                  {/* Option 2: Customer Warehouse */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDraftGoodsChange("warehouseSourceType", "customer_warehouse");
+                      handleDraftGoodsChange("warehouseName", selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse");
+                      handleDraftGoodsChange("warehouseAddressText", selectedCustomer?.address || "Customer Registered Address");
+                    }}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                      draftGoodsItem.warehouseSourceType === "customer_warehouse"
+                        ? "border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/40 dark:border-emerald-500 shadow-xs ring-2 ring-emerald-500/20"
+                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
+                    }`}
+                  >
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                      draftGoodsItem.warehouseSourceType === "customer_warehouse" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    }`}>
+                      <Building2 className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 dark:text-white">Customer Warehouse</div>
+                      <div className="text-[10px] text-slate-500">Client Premises / Yard</div>
+                    </div>
+                  </button>
+
+                  {/* Option 3: Other Warehouse */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDraftGoodsChange("warehouseSourceType", "other");
+                    }}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                      draftGoodsItem.warehouseSourceType === "other"
+                        ? "border-purple-600 bg-purple-50/80 dark:bg-purple-950/40 dark:border-purple-500 shadow-xs ring-2 ring-purple-500/20"
+                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
+                    }`}
+                  >
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                      draftGoodsItem.warehouseSourceType === "other" ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    }`}>
+                      <MapPin className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 dark:text-white">Other Warehouse</div>
+                      <div className="text-[10px] text-slate-500">Third-Party Yard / Port</div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Dynamic inputs based on selection */}
+                {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
+                  <div className="mt-2">
+                    <SearchSelect
+                      label="Select Company Warehouse *"
+                      value={draftGoodsItem.warehouseId}
+                      placeholder="Select Company Warehouse..."
+                      options={(warehousesList || []).map((w: any) => ({
+                        value: w.id,
+                        label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
+                        keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
+                      }))}
+                      onValueChange={(warehouseId) => {
+                        const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
+                        const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
+                        handleDraftGoodsChange("warehouseId", warehouseId);
+                        handleDraftGoodsChange("warehouseName", w?.warehouse_name || w?.name || "");
+                        handleDraftGoodsChange("warehouseAddressText", addr);
+                      }}
+                      searchPlaceholder="Search company warehouses..."
+                      emptyLabel="No warehouses found in master"
+                    />
+                  </div>
+                )}
+
+                {draftGoodsItem.warehouseSourceType === "customer_warehouse" && (
+                  <div className="mt-2 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
+                    <span className="font-bold text-emerald-900 dark:text-emerald-300">Customer Facility: </span>
+                    <span className="text-slate-700 dark:text-slate-300">{draftGoodsItem.warehouseAddressText || selectedCustomer?.address || "Address from customer account"}</span>
+                  </div>
+                )}
+
+                {draftGoodsItem.warehouseSourceType === "other" && (
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Other Warehouse / Yard Name *"
+                      value={draftGoodsItem.warehouseName}
+                      onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
+                      className={inputClass}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Address / Port Yard Location *"
+                      value={draftGoodsItem.warehouseAddressText}
+                      onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Row 1: Goods Master Selection */}
@@ -4742,128 +5281,40 @@ function Step1BookingCustomer({
                 </div>
               </div>
 
-              {/* Row 3: Warehouse Location & Quality Photo Upload */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-emerald-200/50 dark:border-emerald-900/40">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                    <Warehouse className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Warehouse / Pickup Location *</span>
-                  </label>
-                  <div className="space-y-1.5">
-                    <select
-                      value={draftGoodsItem.warehouseSourceType}
-                      onChange={(e) => {
-                        const key = e.target.value as any;
-                        if (key === "customer_warehouse") {
-                          handleDraftGoodsChange("warehouseSourceType", key);
-                          handleDraftGoodsChange("warehouseName", selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : "Customer Warehouse");
-                          handleDraftGoodsChange("warehouseAddressText", selectedCustomer?.address || "Customer Address");
-                        } else {
-                          handleDraftGoodsChange("warehouseSourceType", key);
-                        }
-                      }}
-                      className={selectClass}
-                    >
-                      <option value="company_warehouse">🏢 Company Warehouse</option>
-                      <option value="customer_warehouse">👤 Customer Warehouse</option>
-                      <option value="other">📍 Other / Custom Warehouse</option>
-                    </select>
-
-                    {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
-                      <SearchSelect
-                        label=""
-                        value={draftGoodsItem.warehouseId}
-                        placeholder="Select Company Warehouse..."
-                        options={(warehousesList || []).map((w: any) => ({
-                          value: w.id,
-                          label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
-                          keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
-                        }))}
-                        onValueChange={(warehouseId) => {
-                          const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
-                          const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
-                          handleDraftGoodsChange("warehouseId", warehouseId);
-                          handleDraftGoodsChange("warehouseName", w?.warehouse_name || w?.name || "");
-                          handleDraftGoodsChange("warehouseAddressText", addr);
-                        }}
-                        searchPlaceholder="Search warehouses..."
-                        emptyLabel="No warehouses found"
-                      />
-                    )}
-
-                    {draftGoodsItem.warehouseSourceType === "other" && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                        <input
-                          type="text"
-                          placeholder="Warehouse name"
-                          value={draftGoodsItem.warehouseName}
-                          onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
-                          className={inputClass}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Address / Yard location"
-                          value={draftGoodsItem.warehouseAddressText}
-                          onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Quality / Inspection Photo Upload */}
+              {/* Quality / Inspection Photo Upload & Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
                     <span>Quality / Loading Inspection Photo</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:border-blue-500 hover:text-blue-600 dark:border-slate-750 dark:bg-slate-850 dark:text-slate-300 transition">
-                      <Download className="h-3.5 w-3.5 text-slate-400 rotate-180" />
-                      <span>{draftGoodsItem.photoName ? draftGoodsItem.photoName : "Attach Photo (File / Camera)"}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleGoodsPhotoUpload}
-                        className="hidden"
-                      />
-                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleGoodsPhotoUpload}
+                      className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
+                    />
                     {draftGoodsItem.photoUrl ? (
-                      <div className="relative group">
-                        <img
-                          src={draftGoodsItem.photoUrl}
-                          alt="Quality inspection"
-                          className="h-9 w-9 rounded-lg object-cover border border-slate-300 dark:border-slate-700 shadow-2xs"
-                        />
-                        <a
-                          href={draftGoodsItem.photoUrl}
-                          download={draftGoodsItem.photoName || "quality-photo.jpg"}
-                          className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-1 shadow hover:bg-blue-700"
-                          title="Download photo"
-                        >
-                          <Download className="h-2.5 w-2.5" />
-                        </a>
-                      </div>
+                      <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
                     ) : null}
                   </div>
                 </div>
-              </div>
 
-              {/* Action: Save Goods Item to Table Button */}
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
-                <button
-                  type="button"
-                  onClick={handleSaveDraftGoods}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-emerald-700 transition"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>{editingGoodsIdx !== null ? "✓ Update Goods Item" : "+ Save Goods to Table"}</span>
-                </button>
+                <div className="flex items-end justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveDraftGoods}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{editingGoodsIdx !== null ? "Update Goods Item" : "Add to Manifest Table"}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Goods Manifest Table */}
+            {/* Manifest Table */}
             <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-850">
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
@@ -4912,7 +5363,15 @@ function Step1BookingCustomer({
                           {mt} MT
                         </td>
                         <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
-                          {it.warehouseName || "Warehouse"}
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            it.warehouseSourceType === "company_warehouse"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : it.warehouseSourceType === "customer_warehouse"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-purple-50 text-purple-700 border border-purple-200"
+                          }`}>
+                            {it.warehouseName || "Warehouse"}
+                          </span>
                         </td>
                         <td className="py-2.5 px-3 text-center">
                           {it.photoUrl ? (
@@ -4972,448 +5431,6 @@ function Step1BookingCustomer({
               </span>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 1C — ROUTE / BORDER / PORT / FINAL DELIVERY                               */}
-      {/* ========================================================================= */}
-      {step1SubStep === "1C" && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          {/* Read-Only 1A & 1B Summary Badge Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
-                1A & 1B Summary
-              </span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">
-                {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                {totalGoodsKg.toLocaleString()} KG ({totalGoodsMt} MT)
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-bold text-slate-600 dark:text-slate-400">
-                Truck: {formData.truck_number || "Later"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => selectSub("1A")}
-                className="text-[11px] font-bold text-blue-600 underline"
-              >
-                [Edit 1A]
-              </button>
-              <button
-                type="button"
-                onClick={() => selectSub("1B")}
-                className="text-[11px] font-bold text-blue-600 underline"
-              >
-                [Edit 1B]
-              </button>
-            </div>
-          </div>
-
-          {/* Dynamic Route Form adapted to Ship Type */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Route className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Route & Locations — Mode: {formData.transport_mode.replace("by_", "").toUpperCase()}
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">
-                Dynamic Route Form
-              </span>
-            </div>
-
-            {/* DYNAMIC CASE 1: BY ROAD */}
-            {formData.transport_mode === "by_road" && (
-              <div className="space-y-3">
-                {/* Auto Origin from 1B */}
-                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/50 dark:bg-blue-950/20">
-                  <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Origin Warehouse (Auto-filled from 1B):</span>
-                  </div>
-                  <div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
-                    {effectiveOriginWarehouse || "Main Company Warehouse"}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Loading / Origin Country *
-                    </label>
-                    <select
-                      value={formData.loading_country_id}
-                      onChange={(e) => handleLoadingCountryChange(e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">— Select Country —</option>
-                      {countries.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Origin City / State
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Quetta / Lahore"
-                      value={formData.loading_source_name}
-                      onChange={(e) => setFormData((c) => ({ ...c, loading_source_name: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Exit Border / Checkpoint
-                    </label>
-                    <select
-                      value={formData.exit_border_port_id}
-                      onChange={(e) => {
-                        const port = ports.find((p) => p.id === e.target.value);
-                        setFormData((c) => ({
-                          ...c,
-                          exit_border_port_id: e.target.value,
-                          exit_border_port_name: port?.port_name || ""
-                        }));
-                      }}
-                      className={selectClass}
-                    >
-                      <option value="">— Select Border Port —</option>
-                      {ports.map((p) => (
-                        <option key={p.id} value={p.id}>{p.port_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Planned Border Exit Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.planned_border_exit_date}
-                      onChange={(e) => setFormData((c) => ({ ...c, planned_border_exit_date: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Receiving / Destination Country *
-                    </label>
-                    <select
-                      value={formData.receiving_country_id}
-                      onChange={(e) => handleReceivingCountryChange(e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">— Select Country —</option>
-                      {countries.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Destination State / City
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Kabul / Kandahar"
-                      value={formData.destination_city}
-                      onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Entry Border / Receiving Checkpoint
-                    </label>
-                    <select
-                      value={formData.entry_border_port_id}
-                      onChange={(e) => {
-                        const port = ports.find((p) => p.id === e.target.value);
-                        setFormData((c) => ({
-                          ...c,
-                          entry_border_port_id: e.target.value,
-                          entry_border_port_name: port?.port_name || ""
-                        }));
-                      }}
-                      className={selectClass}
-                    >
-                      <option value="">— Select Entry Border —</option>
-                      {ports.map((p) => (
-                        <option key={p.id} value={p.id}>{p.port_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Border Entry Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.border_entry_date}
-                      onChange={(e) => setFormData((c) => ({ ...c, border_entry_date: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Final Delivery Location / Warehouse *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Kabul Custom Yard / Customer Central Warehouse"
-                    value={formData.final_delivery_location}
-                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* DYNAMIC CASE 2: BY SEA */}
-            {formData.transport_mode === "by_sea" && (
-              <div className="space-y-3">
-                {/* Auto Origin from 1B */}
-                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/50 dark:bg-blue-950/20">
-                  <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Origin Warehouse / Yard (From 1B):</span>
-                  </div>
-                  <div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
-                    {effectiveOriginWarehouse || "Primary Shipping Warehouse"}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Loading Port (Sea Port) *
-                    </label>
-                    <select
-                      value={formData.loading_port_id}
-                      onChange={(e) => handleLoadingPortChange(e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">— Select Loading Sea Port —</option>
-                      {ports.map((p) => (
-                        <option key={p.id} value={p.id}>{p.port_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Destination Port (Sea Port) *
-                    </label>
-                    <select
-                      value={formData.destination_port_id}
-                      onChange={(e) => handleDestinationPortChange(e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">— Select Destination Sea Port —</option>
-                      {ports.map((p) => (
-                        <option key={p.id} value={p.id}>{p.port_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Final Delivery Location is separate from Destination Port! */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Final Delivery Location / Warehouse (Separate from Sea Port!) *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Quetta Central Yard / Kabul City Warehouse (not the seaport)"
-                    value={formData.final_delivery_location}
-                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
-                    className={inputClass}
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Cargo discharges at {formData.destination_port_name || "seaport"} and moves inland to this final delivery location.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* DYNAMIC CASE 3: BY AIR */}
-            {formData.transport_mode === "by_air" && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Origin Airport *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Dubai Intl (DXB) / Islamabad (ISB)"
-                      value={formData.origin_airport_name}
-                      onChange={(e) => setFormData((c) => ({ ...c, origin_airport_name: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Destination Airport *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Kabul Intl (KBL) / London Heathrow (LHR)"
-                      value={formData.destination_airport_name}
-                      onChange={(e) => setFormData((c) => ({ ...c, destination_airport_name: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Final Delivery Location / Consignee Address *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Consignee warehouse or airport terminal release point"
-                    value={formData.final_delivery_location}
-                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* DYNAMIC CASE 4: BY TRAIN */}
-            {formData.transport_mode === "by_rail" && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Origin Rail Station / Dry Port *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Lahore Dry Port / Tashkent Rail Terminal"
-                      value={formData.origin_rail_station}
-                      onChange={(e) => setFormData((c) => ({ ...c, origin_rail_station: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Destination Rail Station *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Hairatan Border Station / Quetta Station"
-                      value={formData.destination_rail_station}
-                      onChange={(e) => setFormData((c) => ({ ...c, destination_rail_station: e.target.value }))}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Final Delivery Location / Warehouse *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Final destination warehouse or yard"
-                    value={formData.final_delivery_location}
-                    onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Route reference label */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                Route / Order Reference Label
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Karachi Port to Kabul via Torkham Border"
-                value={formData.route_name}
-                onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          {/* Operational Tracking Dates: Planned vs Actual Departure & Arrival */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              <span>Operational Schedule — Departure & Arrival</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Departure Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_departure_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_departure_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Departure Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_departure_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_departure_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Arrival Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_arrival_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_arrival_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Arrival Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_arrival_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_arrival_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          </div>
-
         </div>
       )}
     </div>
