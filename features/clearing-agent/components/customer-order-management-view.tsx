@@ -2065,7 +2065,7 @@ export function CustomerOrderManagementView() {
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 shadow-sm transition"
               >
                 <Pencil className="h-3.5 w-3.5" />
-                <span>Main khud agla step bharoonga (Continue Myself)</span>
+                <span>{tt("continue_myself", "Continue Myself")}</span>
               </button>
 
               <button
@@ -4197,7 +4197,7 @@ function Step1BookingCustomer({
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-blue-600" />
-                <span>Customer Account *</span>
+                <span>{tt("customer_account_label", "Customer Account")} *</span>
               </label>
               {formData.customer_name ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
@@ -4244,7 +4244,7 @@ function Step1BookingCustomer({
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Ship className="h-4 w-4 text-blue-600" />
-                <span>Shipping / Transport Mode *</span>
+                <span>{tt("shipping_transport_mode", "Shipping / Transport Mode")} *</span>
               </label>
               <select
                 value={formData.transport_mode}
@@ -4261,7 +4261,7 @@ function Step1BookingCustomer({
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Repeat2 className="h-4 w-4 text-purple-600" />
-                <span>Movement Type (Route Type) *</span>
+                <span>{tt("movement_type_route", "Movement Type (Route Type)")} *</span>
               </label>
               <select
                 value={formData.movement_type}

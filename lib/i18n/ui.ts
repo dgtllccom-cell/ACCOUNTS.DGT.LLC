@@ -8733,6 +8733,9 @@ export type UiKey =
   | "com.edit_item"
   | "com.remove_item"
   | "com.consignee_shipping_destination"
+  | "com.customer_account_label"
+  | "com.shipping_transport_mode"
+  | "com.movement_type_route"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -27939,6 +27942,9 @@ const en: Dict = {
   "com.edit_item": "Edit Item",
   "com.remove_item": "Remove Item",
   "com.consignee_shipping_destination": "Consignee & Shipping Destination",
+  "com.customer_account_label": "Customer Account",
+  "com.shipping_transport_mode": "Shipping / Transport Mode",
+  "com.movement_type_route": "Movement Type (Route Type)",
 };
 
 const ur: Dict = {
@@ -47119,6 +47125,9 @@ const ur: Dict = {
   "com.edit_item": "آئٹم میں ترمیم کریں",
   "com.remove_item": "آئٹم ہٹائیں",
   "com.consignee_shipping_destination": "کنسائنی اور شپنگ منزل",
+  "com.customer_account_label": "کسٹمر اکاؤنٹ",
+  "com.shipping_transport_mode": "شپنگ / ٹرانسپورٹ موڈ",
+  "com.movement_type_route": "نقل و حرکت کی قسم (روٹ کی قسم)",
 };
 
 const ar: Dict = {
@@ -66300,6 +66309,9 @@ const ar: Dict = {
   "com.edit_item": "تعديل الصنف",
   "com.remove_item": "إزالة الصنف",
   "com.consignee_shipping_destination": "المرسل إليه ووجهة الشحن",
+  "com.customer_account_label": "حساب العميل",
+  "com.shipping_transport_mode": "وضع الشحن / النقل",
+  "com.movement_type_route": "نوع الحركة (نوع المسار)",
 };
 
 const fa: Dict = {
@@ -85480,6 +85492,9 @@ const fa: Dict = {
   "com.edit_item": "ویرایش قلم",
   "com.remove_item": "حذف قلم",
   "com.consignee_shipping_destination": "گیرنده و مقصد حمل",
+  "com.customer_account_label": "حساب مشتری",
+  "com.shipping_transport_mode": "حالت حمل / ترابری",
+  "com.movement_type_route": "نوع حرکت (نوع مسیر)",
 };
 
 const ps: Dict = {
@@ -104667,6 +104682,9 @@ const ps: Dict = {
   "com.edit_item": "توکی ایډیټ کول",
   "com.remove_item": "توکی لرې کول",
   "com.consignee_shipping_destination": "ترلاسه کوونکی او د لېږد منزل",
+  "com.customer_account_label": "د پیرودونکي حساب",
+  "com.shipping_transport_mode": "د لېږد / ترانسپورت طریقه",
+  "com.movement_type_route": "د حرکت ډول (د لارې ډول)",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
