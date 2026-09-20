@@ -3,11 +3,11 @@ import { resetUserPassword } from "@/lib/public-mail/webmail-service";
 
 export async function POST(req: NextRequest) {
   try {
-    const { usernameOrEmail, newPassword } = await req.json();
+    const { usernameOrEmail, currentPassword, newPassword } = await req.json();
 
-    if (!usernameOrEmail || !newPassword) {
+    if (!usernameOrEmail || !currentPassword || !newPassword) {
       return NextResponse.json(
-        { success: false, error: "Username/email and new password are required" },
+        { success: false, error: "Username/email, current password, and new password are required" },
         { status: 400 }
       );
     }
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
 
     const result = await resetUserPassword({
       usernameOrEmail,
+      currentPassword,
       newPassword,
     });
 

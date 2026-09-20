@@ -36,3 +36,13 @@ export function generateVerificationCode(): string {
 export function generateSessionToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
+
+/**
+ * Hash a session token for storage (sha256 is fine here — this is a
+ * high-entropy random token, not a low-entropy password, so scrypt's
+ * deliberate slowness buys nothing and would just add latency to every
+ * authenticated request).
+ */
+export function hashSessionToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}

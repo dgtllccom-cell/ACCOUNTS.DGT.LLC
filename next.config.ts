@@ -210,6 +210,31 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/ledger/detailed",
         permanent: false,
       },
+      // /public-mail/* was an earlier, disconnected public-webmail build (no
+      // password field on registration, backed by erp_public_mail_users, which
+      // has 0 rows — no real accounts to migrate). The live, working
+      // implementation is /mail/* (public_mail_users, real registered users).
+      // Redirect rather than leave a dead-end registration flow reachable.
+      {
+        source: "/public-mail",
+        destination: "/mail",
+        permanent: false,
+      },
+      {
+        source: "/public-mail/register",
+        destination: "/mail/register",
+        permanent: false,
+      },
+      {
+        source: "/public-mail/login",
+        destination: "/mail/login",
+        permanent: false,
+      },
+      {
+        source: "/public-mail/inbox",
+        destination: "/mail/inbox",
+        permanent: false,
+      },
     ];
   },
   async headers() {

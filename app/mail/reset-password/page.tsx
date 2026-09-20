@@ -19,6 +19,7 @@ export default function PublicMailResetPasswordPage() {
   const router = useRouter();
 
   const [username, setUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,7 @@ export default function PublicMailResetPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usernameOrEmail: username.trim(),
+          currentPassword,
           newPassword,
         }),
       });
@@ -82,9 +84,9 @@ export default function PublicMailResetPasswordPage() {
             DGT<span className="text-blue-500">.LLC</span> MAIL
           </span>
         </Link>
-        <h2 className="text-2xl font-black text-white mt-3 tracking-tight">Reset Mailbox Password</h2>
+        <h2 className="text-2xl font-black text-white mt-3 tracking-tight">Change Mailbox Password</h2>
         <p className="text-xs text-slate-400 mt-1">
-          Enter your DGT Mail username or email to set a new password
+          Enter your current password to set a new one. Forgot your password entirely? Contact your administrator — self-service recovery by email is not available yet.
         </p>
       </div>
 
@@ -127,6 +129,23 @@ export default function PublicMailResetPasswordPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="username or username@dgt.llc"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs text-white placeholder:text-slate-600 outline-none transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Current Password
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••••••"
                   className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs text-white placeholder:text-slate-600 outline-none transition-all"
                   required
                 />

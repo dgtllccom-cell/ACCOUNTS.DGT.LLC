@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { registerPublicMailUser, isUsernameAvailable, validateUsername } from "@/lib/public-mail/webmail-service";
+import { registerPublicMailUser, isUsernameAvailable, validateUsername, createSession } from "@/lib/public-mail/webmail-service";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -49,9 +49,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: result.error || "Registration failed" }, { status: 400 });
     }
 
-    // Set auth cookie
+    // Set auth cookie — an opaque session token, not the raw user id (see
+    // lib/public-mail/webmail-service.ts createSession for why).
+    const token = await createSession(result.user.id);
     const response = NextResponse.json({ success: true, user: result.user });
-    response.cookies.set("dgt_mail_user_id", result.user.id, {
+    response.cookies.set("dgt_mail_user_id", token, {
       path: "/",
       httpOnly: true,
       sameSite: "lax",

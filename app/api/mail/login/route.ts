@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticatePublicMailUser } from "@/lib/public-mail/webmail-service";
+import { authenticatePublicMailUser, createSession, resolveSessionUserId, revokeSession } from "@/lib/public-mail/webmail-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,8 +20,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // The cookie carries an opaque session token, never the raw user id —
+    // the id is visible in admin lists/audit logs/message metadata, so using
+    // it directly as the credential would let anyone who saw it impersonate
+    // the account with no password check at all.
+    const token = await createSession(user.id);
     const response = NextResponse.json({ success: true, user });
-    response.cookies.set("dgt_mail_user_id", user.id, {
+    response.cookies.set("dgt_mail_user_id", token, {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
@@ -35,7 +40,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const token = req.cookies.get("dgt_mail_user_id")?.value;
+  const userId = await resolveSessionUserId(token);
+  if (userId) await revokeSession(userId);
   const response = NextResponse.json({ success: true });
   response.cookies.delete("dgt_mail_user_id");
   return response;

@@ -135,14 +135,14 @@ export async function getStalwartStats(): Promise<StalwartStats> {
       };
     }
   } catch {
-    // Return structured default telemetry
+    // Mail server unreachable — report honestly rather than fabricating telemetry.
   }
 
   return {
-    online: true,
-    version: "Stalwart v0.8.0-enterprise",
-    totalMailboxes: 1,
-    storageUsedBytes: 154828800, // ~147MB initial
+    online: false,
+    version: "unknown",
+    totalMailboxes: 0,
+    storageUsedBytes: 0,
     inboundQueueCount: 0,
     outboundQueueCount: 0,
     blockedSpamCount: 0,

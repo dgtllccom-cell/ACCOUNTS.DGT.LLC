@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
 import { getStalwartStats } from "@/lib/public-mail/stalwart-client";
+import { getErpSessionForApi } from "@/lib/auth/session";
 
 function getDb() {
   const url = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
@@ -8,6 +9,10 @@ function getDb() {
 }
 
 export async function GET() {
+  const session = await getErpSessionForApi();
+  if (!session || !session.isSuperAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const sql = getDb();
   try {
     const [userCounts] = await sql`

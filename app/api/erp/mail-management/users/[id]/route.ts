@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
 import { hashPassword } from "@/lib/public-mail/crypto";
 import { updateStalwartQuota, setStalwartAccountStatus, deleteStalwartAccount } from "@/lib/public-mail/stalwart-client";
+import { getErpSessionForApi } from "@/lib/auth/session";
 
 function getDb() {
   const url = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
@@ -9,6 +10,10 @@ function getDb() {
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getErpSessionForApi();
+  if (!session || !session.isSuperAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const { id } = await params;
   const body = await req.json();
   const sql = getDb();
@@ -47,7 +52,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Audit log
     await sql`
       INSERT INTO public.public_mail_audit_logs (user_id, action, performed_by, details)
-      VALUES (${id}, 'admin_update_user', 'super_admin', ${JSON.stringify(body)})
+      VALUES (${id}, 'admin_update_user', ${session.userId || session.email || "super_admin"}, ${JSON.stringify(body)})
     `;
 
     return NextResponse.json({ success: true, user: updated });
@@ -60,6 +65,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getErpSessionForApi();
+  if (!session || !session.isSuperAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const { id } = await params;
   const sql = getDb();
 

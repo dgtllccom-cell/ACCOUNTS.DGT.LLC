@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { provisionEntityEmail } from "@/lib/mail-provisioning/entity-auto-email";
+import { getErpSessionForApi } from "@/lib/auth/session";
 
 /**
  * POST /api/erp/entities/auto-email
@@ -7,6 +8,10 @@ import { provisionEntityEmail } from "@/lib/mail-provisioning/entity-auto-email"
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await getErpSessionForApi();
+    if (!session || !session.isSuperAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
     const { entityType, entityId, entityData, shouldCreate } = body;
 

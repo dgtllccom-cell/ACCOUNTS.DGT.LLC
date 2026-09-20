@@ -38,16 +38,16 @@ export default function DgtMailMonitoringPage() {
   const [activeModalRecord, setActiveModalRecord] = useState<DnsRecordItem | null>(null);
 
   const [serverStats, setServerStats] = useState({
-    online: true,
-    version: "Stalwart v0.8.0",
+    online: false,
+    version: "unknown",
     hostname: "mail.dgt.llc",
     ip: "72.60.209.121",
-    activeConnections: 1,
-    usedGB: "0.24",
-    totalGB: "10.00",
-    storagePercent: 2,
-    activeMailboxes: 3,
-    totalMailboxes: 3,
+    activeConnections: 0,
+    usedGB: "0.00",
+    totalGB: "0.00",
+    storagePercent: 0,
+    activeMailboxes: 0,
+    totalMailboxes: 0,
   });
 
   const fetchHealthCheck = async () => {
@@ -63,20 +63,21 @@ export default function DgtMailMonitoringPage() {
           : 2;
 
         setServerStats({
-          online: data.server?.online ?? true,
-          version: data.server?.version || "Stalwart v0.8.0",
+          online: data.server?.online ?? false,
+          version: data.server?.version || "unknown",
           hostname: data.server?.hostname || "mail.dgt.llc",
           ip: data.server?.ip || "72.60.209.121",
-          activeConnections: 1,
+          activeConnections: data.server?.online ? 1 : 0,
           usedGB: used,
           totalGB: quota,
           storagePercent: pct,
-          activeMailboxes: data.overview?.activeUsers ?? 3,
-          totalMailboxes: data.overview?.totalUsers ?? 3,
+          activeMailboxes: data.overview?.activeUsers ?? 0,
+          totalMailboxes: data.overview?.totalUsers ?? 0,
         });
       }
     } catch {
-      // Keep optimistic fallback
+      // Request failed — leave the honest offline default in place rather than
+      // assuming the mail server is up.
     } finally {
       setLastCheck(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
       setLoading(false);
@@ -93,11 +94,12 @@ export default function DgtMailMonitoringPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const portStatus = serverStats.online ? "online" : "offline";
   const ports = [
-    { port: 25, service: "SMTP", purpose: "Incoming Mail", status: "online" },
-    { port: 587, service: "Submission", purpose: "Outgoing Mail", status: "online" },
-    { port: 465, service: "SMTPS", purpose: "Secure Submission", status: "online" },
-    { port: 993, service: "IMAPS", purpose: "Secure Inbox", status: "online" },
+    { port: 25, service: "SMTP", purpose: "Incoming Mail", status: portStatus },
+    { port: 587, service: "Submission", purpose: "Outgoing Mail", status: portStatus },
+    { port: 465, service: "SMTPS", purpose: "Secure Submission", status: portStatus },
+    { port: 993, service: "IMAPS", purpose: "Secure Inbox", status: portStatus },
   ];
 
   const dnsRecords: DnsRecordItem[] = [

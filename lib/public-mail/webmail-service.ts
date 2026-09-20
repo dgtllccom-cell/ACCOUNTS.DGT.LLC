@@ -1,7 +1,71 @@
 import postgres from "postgres";
-import { hashPassword, verifyPassword } from "./crypto";
+import { hashPassword, verifyPassword, generateSessionToken, hashSessionToken } from "./crypto";
 import { encrypt } from "../crypto";
 import { createStalwartAccount, updateStalwartQuota, setStalwartAccountStatus } from "./stalwart-client";
+
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, matches the cookie's maxAge
+
+/**
+ * Issue a new opaque session token for a user, replacing any existing one
+ * (single active session). Returns the RAW token — only its hash is stored,
+ * so the raw value must be captured here and set directly as the cookie.
+ */
+export async function createSession(userId: string): Promise<string> {
+  const sql = getDb();
+  try {
+    const token = generateSessionToken();
+    const tokenHash = hashSessionToken(token);
+    const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+    await sql`
+      UPDATE public.public_mail_users
+      SET session_token_hash = ${tokenHash}, session_expires_at = ${expiresAt}
+      WHERE id = ${userId}
+    `;
+    return token;
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Resolve a raw session token (as read from the "dgt_mail_user_id" cookie —
+ * name kept for compatibility, value is now an opaque token, not a user id)
+ * to the user id it belongs to, or null if the token is missing/expired/
+ * revoked. Never trust the cookie value directly as a user id.
+ */
+export async function resolveSessionUserId(rawToken: string | undefined | null): Promise<string | null> {
+  if (!rawToken) return null;
+  const sql = getDb();
+  try {
+    const tokenHash = hashSessionToken(rawToken);
+    const [user] = await sql<{ id: string }[]>`
+      SELECT id FROM public.public_mail_users
+      WHERE session_token_hash = ${tokenHash}
+        AND session_expires_at IS NOT NULL
+        AND session_expires_at > NOW()
+      LIMIT 1
+    `;
+    return user?.id ?? null;
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
+ * Revoke a user's active session (logout / password change).
+ */
+export async function revokeSession(userId: string): Promise<void> {
+  const sql = getDb();
+  try {
+    await sql`
+      UPDATE public.public_mail_users
+      SET session_token_hash = NULL, session_expires_at = NULL
+      WHERE id = ${userId}
+    `;
+  } finally {
+    await sql.end();
+  }
+}
 
 const RESERVED_USERNAMES = new Set([
 "admin",
@@ -454,6 +518,11 @@ export async function sendWebmailMessage(params: {
     `;
 
     // 5. DGT-to-DGT Real Delivery: If recipient is also on @dgt.llc, deliver to their inbox!
+    // "@dgt.llc" is shared by TWO separate mailbox systems — this public webmail
+    // (public_mail_users) and the corporate/branch mailboxes (erp_email_accounts,
+    // e.g. chaman@dgt.llc, dubai@dgt.llc). A recipient can be valid and simply
+    // live in the other system; only report "Recipient not found" when the
+    // address doesn't exist in EITHER.
     const cleanRecipient = params.to.trim().toLowerCase();
     if (cleanRecipient.endsWith("@dgt.llc")) {
       const ingestResult = await ingestIncomingMessage({
@@ -465,7 +534,22 @@ export async function sendWebmailMessage(params: {
         attachments: params.attachments,
       });
       if (!ingestResult.success) {
-        return { success: false, error: ingestResult.error || "Recipient mailbox delivery failed (quota exceeded)" };
+        if (ingestResult.error === "Recipient not found") {
+          const [corporateMailbox] = await sql<{ id: string }[]>`
+            SELECT id FROM public.erp_email_accounts
+            WHERE lower(email_address) = ${cleanRecipient} AND is_active = true AND deleted_at IS NULL
+            LIMIT 1
+          `;
+          if (!corporateMailbox) {
+            return { success: false, error: "Recipient not found" };
+          }
+          // Valid corporate mailbox in the other system — recorded in the sender's
+          // Sent folder above; cross-system relay to the corporate inbox requires
+          // the corporate mail transport (Titan) to be connected, same as any
+          // external address. Do not report a false "not found".
+        } else {
+          return { success: false, error: ingestResult.error || "Recipient mailbox delivery failed (quota exceeded)" };
+        }
       }
     }
 
@@ -657,6 +741,7 @@ export async function resetUserPassword(params: {
   usernameOrEmail?: string;
   email?: string;
   username?: string;
+  currentPassword: string;
   newPassword: string;
 }): Promise<{ success: boolean; error?: string }> {
   if (!params.newPassword || params.newPassword.length < 8) {
@@ -666,16 +751,23 @@ export async function resetUserPassword(params: {
   if (!target.trim()) {
     return { success: false, error: "Username or email is required" };
   }
+  if (!params.currentPassword) {
+    return { success: false, error: "Current password is required" };
+  }
   const cleanId = target.trim().toLowerCase().replace(/@dgt\.llc$/, "");
   const newHash = hashPassword(params.newPassword);
   const sql = getDb();
   try {
-    const [user] = await sql<PublicMailUser[]>`
-      SELECT id, username FROM public.public_mail_users
+    const [user] = await sql<(PublicMailUser & { password_hash: string })[]>`
+      SELECT id, username, password_hash FROM public.public_mail_users
       WHERE username = ${cleanId}
       LIMIT 1
     `;
-    if (!user) return { success: false, error: "Account not found" };
+    // Same message whether the account doesn't exist or the password is wrong —
+    // do not let this endpoint be used to probe which usernames are registered.
+    if (!user || !verifyPassword(params.currentPassword, user.password_hash)) {
+      return { success: false, error: "Account not found or current password is incorrect" };
+    }
 
     await sql`
       UPDATE public.public_mail_users

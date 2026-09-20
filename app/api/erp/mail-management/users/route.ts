@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
+import { getErpSessionForApi } from "@/lib/auth/session";
 
 function getDb() {
   const url = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
@@ -7,6 +8,10 @@ function getDb() {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getErpSessionForApi();
+  if (!session || !session.isSuperAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search") || "";
   const status = searchParams.get("status") || "all";

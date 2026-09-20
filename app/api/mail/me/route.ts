@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
+import { resolveSessionUserId } from "@/lib/public-mail/webmail-service";
 
 function getDb() {
   const url = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
@@ -7,7 +8,7 @@ function getDb() {
 }
 
 export async function GET(req: NextRequest) {
-  const userId = req.cookies.get("dgt_mail_user_id")?.value;
+  const userId = await resolveSessionUserId(req.cookies.get("dgt_mail_user_id")?.value);
   if (!userId) {
     return NextResponse.json({ authenticated: false, user: null }, { status: 401 });
   }
