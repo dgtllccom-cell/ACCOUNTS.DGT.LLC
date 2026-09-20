@@ -8870,6 +8870,52 @@ export type UiKey =
   | "com.customer_authorized_consignee"
   | "com.official_seal_acceptance"
   | "com.err_delete_order_failed"
+  | "com.address_on_customer_file"
+  | "com.phone_colon"
+  | "com.whatsapp_colon"
+  | "com.email_colon"
+  | "com.transfer_route_1a"
+  | "com.stage_origin_loading"
+  | "com.stage_border_customs"
+  | "com.stage_final_destination"
+  | "com.route_corridor_colon"
+  | "com.country_pending"
+  | "com.origin_port_border_fallback"
+  | "com.facility_colon"
+  | "com.origin_facility_fallback"
+  | "com.border_checkpoint_fallback"
+  | "com.clearance_colon"
+  | "com.in_transit_customs_fallback"
+  | "com.corridor_colon"
+  | "com.bonded_highway_fallback"
+  | "com.target_country_fallback"
+  | "com.destination_port_city_fallback"
+  | "com.delivery_colon"
+  | "com.target_warehouse_fallback"
+  | "com.truck_assignment_pending_later"
+  | "com.vehicle_driver_unassigned"
+  | "com.hired_truck_value"
+  | "com.driver_colon"
+  | "com.transfer_truck_1b"
+  | "com.direct_customs_corridor"
+  | "com.warehouse_badge_own"
+  | "com.warehouse_badge_company_fallback"
+  | "com.warehouse_badge_customer"
+  | "com.warehouse_badge_client_yard"
+  | "com.warehouse_badge_other"
+  | "com.warehouse_badge_warehouse_fallback"
+  | "com.edit_goods_item_num"
+  | "com.add_goods_item"
+  | "com.cancel_edit_generic"
+  | "com.warehouse_location_toggle_label"
+  | "com.step3_specification"
+  | "com.own_warehouse_title"
+  | "com.company_dgt_warehouse"
+  | "com.customer_warehouse_title"
+  | "com.client_premises_yard"
+  | "com.other_warehouse_title"
+  | "com.third_party_yard_port"
+  | "com.customer_registered_address"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -28213,6 +28259,52 @@ const en: Dict = {
   "com.customer_authorized_consignee": "Customer / Authorized Consignee",
   "com.official_seal_acceptance": "Official Seal & Acceptance",
   "com.err_delete_order_failed": "Failed to delete order",
+  "com.address_on_customer_file": "Address on customer file",
+  "com.phone_colon": "Phone:",
+  "com.whatsapp_colon": "WhatsApp:",
+  "com.email_colon": "Email:",
+  "com.transfer_route_1a": "Transfer to Route (1A)",
+  "com.stage_origin_loading": "1. Origin / Loading",
+  "com.stage_border_customs": "2. Border & Customs",
+  "com.stage_final_destination": "3. Final Destination",
+  "com.route_corridor_colon": "Route Corridor:",
+  "com.country_pending": "Country Pending",
+  "com.origin_port_border_fallback": "Origin Port / Border",
+  "com.facility_colon": "Facility:",
+  "com.origin_facility_fallback": "Origin Facility",
+  "com.border_checkpoint_fallback": "Border Checkpoint",
+  "com.clearance_colon": "Clearance:",
+  "com.in_transit_customs_fallback": "In-Transit Customs",
+  "com.corridor_colon": "Corridor:",
+  "com.bonded_highway_fallback": "Bonded Highway",
+  "com.target_country_fallback": "Target Country",
+  "com.destination_port_city_fallback": "Destination Port / City",
+  "com.delivery_colon": "Delivery:",
+  "com.target_warehouse_fallback": "Target Warehouse",
+  "com.truck_assignment_pending_later": "Truck Assignment Pending (Later)",
+  "com.vehicle_driver_unassigned": "Vehicle & Driver Unassigned",
+  "com.hired_truck_value": "Hired Truck",
+  "com.driver_colon": "Driver:",
+  "com.transfer_truck_1b": "Transfer to Truck (1B)",
+  "com.direct_customs_corridor": "Direct Customs Corridor",
+  "com.warehouse_badge_own": "Own:",
+  "com.warehouse_badge_company_fallback": "Company",
+  "com.warehouse_badge_customer": "Customer:",
+  "com.warehouse_badge_client_yard": "Client Yard",
+  "com.warehouse_badge_other": "Other:",
+  "com.warehouse_badge_warehouse_fallback": "Warehouse",
+  "com.edit_goods_item_num": "Edit Goods Item #{n}",
+  "com.add_goods_item": "Add Goods Item",
+  "com.cancel_edit_generic": "Cancel Edit",
+  "com.warehouse_location_toggle_label": "Warehouse Location (Own Warehouse or Other Warehouse?)",
+  "com.step3_specification": "Step 3 Specification",
+  "com.own_warehouse_title": "Own Warehouse",
+  "com.company_dgt_warehouse": "Company DGT Warehouse",
+  "com.customer_warehouse_title": "Customer Warehouse",
+  "com.client_premises_yard": "Client Premises / Yard",
+  "com.other_warehouse_title": "Other Warehouse",
+  "com.third_party_yard_port": "Third-Party Yard / Port",
+  "com.customer_registered_address": "Customer Registered Address",
 };
 
 const ur: Dict = {
@@ -47530,6 +47622,52 @@ const ur: Dict = {
   "com.customer_authorized_consignee": "کسٹمر / مجاز کنسائنی",
   "com.official_seal_acceptance": "سرکاری مہر اور قبولیت",
   "com.err_delete_order_failed": "آرڈر حذف کرنے میں ناکامی",
+  "com.address_on_customer_file": "کسٹمر فائل پر پتہ",
+  "com.phone_colon": "فون:",
+  "com.whatsapp_colon": "واٹس ایپ:",
+  "com.email_colon": "ای میل:",
+  "com.transfer_route_1a": "روٹ (1A) کی طرف منتقل کریں",
+  "com.stage_origin_loading": "1۔ آغاز / لوڈنگ",
+  "com.stage_border_customs": "2۔ سرحد اور کسٹمز",
+  "com.stage_final_destination": "3۔ حتمی منزل",
+  "com.route_corridor_colon": "روٹ راہداری:",
+  "com.country_pending": "ملک زیر التواء",
+  "com.origin_port_border_fallback": "آغاز بندرگاہ / سرحد",
+  "com.facility_colon": "سہولت:",
+  "com.origin_facility_fallback": "آغاز سہولت",
+  "com.border_checkpoint_fallback": "سرحدی چیک پوسٹ",
+  "com.clearance_colon": "کلیئرنس:",
+  "com.in_transit_customs_fallback": "ٹرانزٹ کسٹمز",
+  "com.corridor_colon": "راہداری:",
+  "com.bonded_highway_fallback": "بانڈڈ ہائی وے",
+  "com.target_country_fallback": "ہدف ملک",
+  "com.destination_port_city_fallback": "منزل بندرگاہ / شہر",
+  "com.delivery_colon": "ترسیل:",
+  "com.target_warehouse_fallback": "ہدف گودام",
+  "com.truck_assignment_pending_later": "ٹرک تفویض زیر التواء (بعد میں)",
+  "com.vehicle_driver_unassigned": "گاڑی اور ڈرائیور تفویض نہیں ہوئے",
+  "com.hired_truck_value": "کرایہ ٹرک",
+  "com.driver_colon": "ڈرائیور:",
+  "com.transfer_truck_1b": "ٹرک (1B) کی طرف منتقل کریں",
+  "com.direct_customs_corridor": "براہ راست کسٹمز راہداری",
+  "com.warehouse_badge_own": "اپنا:",
+  "com.warehouse_badge_company_fallback": "کمپنی",
+  "com.warehouse_badge_customer": "کسٹمر:",
+  "com.warehouse_badge_client_yard": "کلائنٹ یارڈ",
+  "com.warehouse_badge_other": "دیگر:",
+  "com.warehouse_badge_warehouse_fallback": "گودام",
+  "com.edit_goods_item_num": "مال آئٹم میں ترمیم کریں #{n}",
+  "com.add_goods_item": "مال آئٹم شامل کریں",
+  "com.cancel_edit_generic": "ترمیم منسوخ کریں",
+  "com.warehouse_location_toggle_label": "گودام مقام (اپنا گودام یا دیگر گودام؟)",
+  "com.step3_specification": "مرحلہ 3 تفصیلات",
+  "com.own_warehouse_title": "اپنا گودام",
+  "com.company_dgt_warehouse": "کمپنی ڈی جی ٹی گودام",
+  "com.customer_warehouse_title": "کسٹمر گودام",
+  "com.client_premises_yard": "کلائنٹ احاطہ / یارڈ",
+  "com.other_warehouse_title": "دیگر گودام",
+  "com.third_party_yard_port": "تھرڈ پارٹی یارڈ / بندرگاہ",
+  "com.customer_registered_address": "کسٹمر رجسٹرڈ پتہ",
 };
 
 const ar: Dict = {
@@ -66848,6 +66986,52 @@ const ar: Dict = {
   "com.customer_authorized_consignee": "العميل / المرسل إليه المعتمد",
   "com.official_seal_acceptance": "الختم الرسمي والقبول",
   "com.err_delete_order_failed": "فشل حذف الطلب",
+  "com.address_on_customer_file": "العنوان في ملف العميل",
+  "com.phone_colon": "الهاتف:",
+  "com.whatsapp_colon": "واتساب:",
+  "com.email_colon": "البريد الإلكتروني:",
+  "com.transfer_route_1a": "النقل إلى المسار (1A)",
+  "com.stage_origin_loading": "1. المنشأ / الشحن",
+  "com.stage_border_customs": "2. الحدود والجمارك",
+  "com.stage_final_destination": "3. الوجهة النهائية",
+  "com.route_corridor_colon": "ممر المسار:",
+  "com.country_pending": "البلد قيد الانتظار",
+  "com.origin_port_border_fallback": "ميناء / حدود المنشأ",
+  "com.facility_colon": "المرفق:",
+  "com.origin_facility_fallback": "منشأة المنشأ",
+  "com.border_checkpoint_fallback": "نقطة التفتيش الحدودية",
+  "com.clearance_colon": "التخليص:",
+  "com.in_transit_customs_fallback": "جمارك العبور",
+  "com.corridor_colon": "الممر:",
+  "com.bonded_highway_fallback": "الطريق السريع المضمون",
+  "com.target_country_fallback": "البلد المستهدف",
+  "com.destination_port_city_fallback": "ميناء / مدينة الوجهة",
+  "com.delivery_colon": "التسليم:",
+  "com.target_warehouse_fallback": "المستودع المستهدف",
+  "com.truck_assignment_pending_later": "تخصيص الشاحنة معلق (لاحقًا)",
+  "com.vehicle_driver_unassigned": "لم يتم تعيين المركبة والسائق",
+  "com.hired_truck_value": "شاحنة مستأجرة",
+  "com.driver_colon": "السائق:",
+  "com.transfer_truck_1b": "النقل إلى الشاحنة (1B)",
+  "com.direct_customs_corridor": "الممر الجمركي المباشر",
+  "com.warehouse_badge_own": "خاص:",
+  "com.warehouse_badge_company_fallback": "الشركة",
+  "com.warehouse_badge_customer": "العميل:",
+  "com.warehouse_badge_client_yard": "ساحة العميل",
+  "com.warehouse_badge_other": "أخرى:",
+  "com.warehouse_badge_warehouse_fallback": "المستودع",
+  "com.edit_goods_item_num": "تعديل صنف البضاعة #{n}",
+  "com.add_goods_item": "إضافة صنف بضاعة",
+  "com.cancel_edit_generic": "إلغاء التعديل",
+  "com.warehouse_location_toggle_label": "موقع المستودع (مستودع خاص أم مستودع آخر؟)",
+  "com.step3_specification": "مواصفات الخطوة 3",
+  "com.own_warehouse_title": "المستودع الخاص",
+  "com.company_dgt_warehouse": "مستودع الشركة DGT",
+  "com.customer_warehouse_title": "مستودع العميل",
+  "com.client_premises_yard": "مقر العميل / الساحة",
+  "com.other_warehouse_title": "مستودع آخر",
+  "com.third_party_yard_port": "ساحة / ميناء طرف ثالث",
+  "com.customer_registered_address": "عنوان العميل المسجل",
 };
 
 const fa: Dict = {
@@ -86165,6 +86349,52 @@ const fa: Dict = {
   "com.customer_authorized_consignee": "مشتری / گیرنده مجاز",
   "com.official_seal_acceptance": "مهر رسمی و پذیرش",
   "com.err_delete_order_failed": "حذف سفارش ناموفق بود",
+  "com.address_on_customer_file": "آدرس در پرونده مشتری",
+  "com.phone_colon": "تلفن:",
+  "com.whatsapp_colon": "واتساپ:",
+  "com.email_colon": "ایمیل:",
+  "com.transfer_route_1a": "انتقال به مسیر (1A)",
+  "com.stage_origin_loading": "1. مبدأ / بارگیری",
+  "com.stage_border_customs": "2. مرز و گمرک",
+  "com.stage_final_destination": "3. مقصد نهایی",
+  "com.route_corridor_colon": "دالان مسیر:",
+  "com.country_pending": "کشور در انتظار",
+  "com.origin_port_border_fallback": "بندر / مرز مبدأ",
+  "com.facility_colon": "تسهیلات:",
+  "com.origin_facility_fallback": "تسهیلات مبدأ",
+  "com.border_checkpoint_fallback": "پاسگاه مرزی",
+  "com.clearance_colon": "ترخیص:",
+  "com.in_transit_customs_fallback": "گمرک ترانزیت",
+  "com.corridor_colon": "دالان:",
+  "com.bonded_highway_fallback": "بزرگراه انبار گمرکی",
+  "com.target_country_fallback": "کشور هدف",
+  "com.destination_port_city_fallback": "بندر / شهر مقصد",
+  "com.delivery_colon": "تحویل:",
+  "com.target_warehouse_fallback": "انبار هدف",
+  "com.truck_assignment_pending_later": "تخصیص کامیون در انتظار (بعداً)",
+  "com.vehicle_driver_unassigned": "وسیله نقلیه و راننده تخصیص داده نشده",
+  "com.hired_truck_value": "کامیون اجاره‌ای",
+  "com.driver_colon": "راننده:",
+  "com.transfer_truck_1b": "انتقال به کامیون (1B)",
+  "com.direct_customs_corridor": "دالان مستقیم گمرکی",
+  "com.warehouse_badge_own": "متعلق به خود:",
+  "com.warehouse_badge_company_fallback": "شرکت",
+  "com.warehouse_badge_customer": "مشتری:",
+  "com.warehouse_badge_client_yard": "محوطه مشتری",
+  "com.warehouse_badge_other": "سایر:",
+  "com.warehouse_badge_warehouse_fallback": "انبار",
+  "com.edit_goods_item_num": "ویرایش قلم کالا #{n}",
+  "com.add_goods_item": "افزودن قلم کالا",
+  "com.cancel_edit_generic": "لغو ویرایش",
+  "com.warehouse_location_toggle_label": "مکان انبار (انبار خودی یا انبار دیگر؟)",
+  "com.step3_specification": "مشخصات مرحله 3",
+  "com.own_warehouse_title": "انبار خودی",
+  "com.company_dgt_warehouse": "انبار شرکت DGT",
+  "com.customer_warehouse_title": "انبار مشتری",
+  "com.client_premises_yard": "محل / محوطه مشتری",
+  "com.other_warehouse_title": "انبار دیگر",
+  "com.third_party_yard_port": "محوطه / بندر شخص ثالث",
+  "com.customer_registered_address": "آدرس ثبت‌شده مشتری",
 };
 
 const ps: Dict = {
@@ -105489,6 +105719,52 @@ const ps: Dict = {
   "com.customer_authorized_consignee": "پیرودونکی / مجاز اخیستونکی",
   "com.official_seal_acceptance": "رسمي مهر او منل",
   "com.err_delete_order_failed": "د امر حذف پاتې راغی",
+  "com.address_on_customer_file": "د پیرودونکي فایل کې پته",
+  "com.phone_colon": "تلیفون:",
+  "com.whatsapp_colon": "واټساپ:",
+  "com.email_colon": "برېښنالیک:",
+  "com.transfer_route_1a": "لارې (1A) ته لېږدول",
+  "com.stage_origin_loading": "1. اصل / بارول",
+  "com.stage_border_customs": "2. پوله او ګمرک",
+  "com.stage_final_destination": "3. وروستۍ موخه",
+  "com.route_corridor_colon": "د لارې دهلیز:",
+  "com.country_pending": "هېواد ته پاتې",
+  "com.origin_port_border_fallback": "اصل بندر / پوله",
+  "com.facility_colon": "اسانتیا:",
+  "com.origin_facility_fallback": "اصلي اسانتیا",
+  "com.border_checkpoint_fallback": "پولې چک پوسټ",
+  "com.clearance_colon": "تخلیص:",
+  "com.in_transit_customs_fallback": "د ترانزیت ګمرک",
+  "com.corridor_colon": "دهلیز:",
+  "com.bonded_highway_fallback": "بانډ لوی سړک",
+  "com.target_country_fallback": "موخه هېواد",
+  "com.destination_port_city_fallback": "د موخې بندر / ښار",
+  "com.delivery_colon": "تحویل:",
+  "com.target_warehouse_fallback": "موخه ګدام",
+  "com.truck_assignment_pending_later": "د ټرک ټاکنه ته پاتې (وروسته)",
+  "com.vehicle_driver_unassigned": "موټر او ډرایور نه دي ټاکل شوي",
+  "com.hired_truck_value": "کرایه ټرک",
+  "com.driver_colon": "ډرایور:",
+  "com.transfer_truck_1b": "ټرک (1B) ته لېږدول",
+  "com.direct_customs_corridor": "مستقیم ګمرک دهلیز",
+  "com.warehouse_badge_own": "خپل:",
+  "com.warehouse_badge_company_fallback": "شرکت",
+  "com.warehouse_badge_customer": "پیرودونکی:",
+  "com.warehouse_badge_client_yard": "د پیرودونکي پيليز",
+  "com.warehouse_badge_other": "نور:",
+  "com.warehouse_badge_warehouse_fallback": "ګدام",
+  "com.edit_goods_item_num": "د توکو توکی سمول #{n}",
+  "com.add_goods_item": "د توکو توکی اضافه کول",
+  "com.cancel_edit_generic": "سمون لغوه کول",
+  "com.warehouse_location_toggle_label": "د ګدام ځای (خپل ګدام که نور ګدام؟)",
+  "com.step3_specification": "د 3 مرحلې مشخصات",
+  "com.own_warehouse_title": "خپل ګدام",
+  "com.company_dgt_warehouse": "د شرکت DGT ګدام",
+  "com.customer_warehouse_title": "د پیرودونکي ګدام",
+  "com.client_premises_yard": "د پیرودونکي ځای / پيليز",
+  "com.other_warehouse_title": "نور ګدام",
+  "com.third_party_yard_port": "د دریمې ډلې پيليز / بندر",
+  "com.customer_registered_address": "د پیرودونکي راجستر شوی پته",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
