@@ -87,7 +87,7 @@ export function WarehouseManagement() {
       const rows = await fetchWarehouses(lang);
       setWarehouses(rows);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load warehouses.");
+      setError(err?.message ?? tt("wh.failed_load", "Failed to load warehouses."));
     } finally {
       setLoading(false);
     }
@@ -191,31 +191,31 @@ export function WarehouseManagement() {
         lang,
         orientation: "portrait",
         columns: [
-          { key: "field", label: "Field" },
-          { key: "value", label: "Value" },
+          { key: "field", label: tt("wh.print_field_label", "Field") },
+          { key: "value", label: tt("wh.print_value_label", "Value") },
         ],
         rows: [
-          { field: "Warehouse Name", value: warehouse.warehouse_name },
-          { field: "Type", value: warehouse.warehouse_type },
-          { field: "Owner", value: warehouse.owner_name || "-" },
-          { field: "Status", value: warehouse.status },
-          { field: "Country", value: locationMaps.countries.get(warehouse.country_id || "") || "-" },
-          { field: "City", value: locationMaps.cities.get(warehouse.city_id || "") || "-" },
-          { field: "Area", value: locationMaps.areas.get(warehouse.area_id || "") || "-" },
-          { field: "Address", value: warehouse.full_address || "-" },
+          { field: tt("wh.warehouse_name_label", "Warehouse Name"), value: warehouse.warehouse_name },
+          { field: tt("common.type", "Type"), value: warehouse.warehouse_type },
+          { field: tt("wh.col_owner", "Owner"), value: warehouse.owner_name || "-" },
+          { field: tt("common.status", "Status"), value: warehouse.status },
+          { field: tt("common.country", "Country"), value: locationMaps.countries.get(warehouse.country_id || "") || "-" },
+          { field: tt("common.city", "City"), value: locationMaps.cities.get(warehouse.city_id || "") || "-" },
+          { field: tt("wh.area_label", "Area"), value: locationMaps.areas.get(warehouse.area_id || "") || "-" },
+          { field: tt("wh.address", "Address"), value: warehouse.full_address || "-" },
         ],
       });
     });
   };
 
   const handleDelete = async (warehouse: WarehouseRecord) => {
-    if (!window.confirm(`Delete warehouse "${warehouse.warehouse_name}"?`)) return;
+    if (!window.confirm(tt("wh.delete_confirm", "Delete warehouse \"{name}\"?").replace("{name}", warehouse.warehouse_name))) return;
     try {
       await deleteWarehouse(warehouse.id);
-      setMessage(`Deleted warehouse "${warehouse.warehouse_name}".`);
+      setMessage(tt("wh.deleted_success", "Deleted warehouse \"{name}\".").replace("{name}", warehouse.warehouse_name));
       await loadWarehouses();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to delete warehouse.");
+      setError(err?.message ?? tt("wh.failed_delete", "Failed to delete warehouse."));
     }
   };
 
@@ -447,7 +447,7 @@ export function WarehouseManagement() {
 
       {editingWarehouse ? (
         <SimpleModal
-          title={modalMode === "create" ? "Create Warehouse" : `Edit Warehouse - ${editingWarehouse.warehouse_name}`}
+          title={modalMode === "create" ? tt("wh.create_warehouse_title", "Create Warehouse") : tt("wh.edit_warehouse_title", "Edit Warehouse - {name}").replace("{name}", editingWarehouse.warehouse_name)}
           onClose={closeFormModal}
           className="max-w-6xl"
         >
@@ -468,7 +468,7 @@ export function WarehouseManagement() {
 
       {viewWarehouse ? (
         <SimpleModal
-          title={`Warehouse Details - ${viewWarehouse.warehouse_name}`}
+          title={tt("wh.warehouse_details_title", "Warehouse Details - {name}").replace("{name}", viewWarehouse.warehouse_name)}
           onClose={() => setViewWarehouse(null)}
           className="max-w-3xl"
         >
@@ -537,17 +537,17 @@ export function WarehouseManagement() {
         subtitle={t(lang, "wh.wm_complete_storage_facility_reg", "Complete Storage Facility, Yard, & Logistics Master Registry")}
         exportFileName="warehouse_registry_report"
         filters={[
-          { label: "Status Filter", value: statusFilter },
-          { label: "Search Query", value: search || "None" }
+          { label: tt("common.status_filter", "Status Filter"), value: statusFilter },
+          { label: tt("common.search_query", "Search Query"), value: search || tt("common.none", "None") }
         ]}
         columns={[
-          { key: "warehouse_name", label: "Warehouse Name" },
-          { key: "warehouse_code", label: "Code" },
-          { key: "country_name", label: "Country" },
-          { key: "city_name", label: "City" },
-          { key: "warehouse_type", label: "Type" },
-          { key: "full_address", label: "Address" },
-          { key: "status", label: "Status", align: "center" }
+          { key: "warehouse_name", label: tt("wh.warehouse_name_label", "Warehouse Name") },
+          { key: "warehouse_code", label: tt("common.code", "Code") },
+          { key: "country_name", label: tt("common.country", "Country") },
+          { key: "city_name", label: tt("common.city", "City") },
+          { key: "warehouse_type", label: tt("common.type", "Type") },
+          { key: "full_address", label: tt("wh.address", "Address") },
+          { key: "status", label: tt("common.status", "Status"), align: "center" }
         ]}
         data={filteredWarehouses.map(w => ({
           warehouse_name: w.warehouse_name,

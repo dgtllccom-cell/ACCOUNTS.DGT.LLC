@@ -8916,6 +8916,21 @@ export type UiKey =
   | "com.other_warehouse_title"
   | "com.third_party_yard_port"
   | "com.customer_registered_address"
+  | "wh.create_warehouse_title"
+  | "wh.edit_warehouse_title"
+  | "wh.warehouse_details_title"
+  | "wh.print_field_label"
+  | "wh.print_value_label"
+  | "wh.failed_load"
+  | "wh.delete_confirm"
+  | "wh.deleted_success"
+  | "wh.failed_delete"
+  | "wh.warehouse_name_label"
+  | "common.type"
+  | "common.status_filter"
+  | "common.search_query"
+  | "common.none"
+  | "wh.area_label"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -28305,6 +28320,21 @@ const en: Dict = {
   "com.other_warehouse_title": "Other Warehouse",
   "com.third_party_yard_port": "Third-Party Yard / Port",
   "com.customer_registered_address": "Customer Registered Address",
+  "wh.create_warehouse_title": "Create Warehouse",
+  "wh.edit_warehouse_title": "Edit Warehouse - {name}",
+  "wh.warehouse_details_title": "Warehouse Details - {name}",
+  "wh.print_field_label": "Field",
+  "wh.print_value_label": "Value",
+  "wh.failed_load": "Failed to load warehouses.",
+  "wh.delete_confirm": "Delete warehouse \"{name}\"?",
+  "wh.deleted_success": "Deleted warehouse \"{name}\".",
+  "wh.failed_delete": "Failed to delete warehouse.",
+  "wh.warehouse_name_label": "Warehouse Name",
+  "common.type": "Type",
+  "common.status_filter": "Status Filter",
+  "common.search_query": "Search Query",
+  "common.none": "None",
+  "wh.area_label": "Area",
 };
 
 const ur: Dict = {
@@ -47668,6 +47698,21 @@ const ur: Dict = {
   "com.other_warehouse_title": "دیگر گودام",
   "com.third_party_yard_port": "تھرڈ پارٹی یارڈ / بندرگاہ",
   "com.customer_registered_address": "کسٹمر رجسٹرڈ پتہ",
+  "wh.create_warehouse_title": "گودام بنائیں",
+  "wh.edit_warehouse_title": "گودام میں ترمیم کریں - {name}",
+  "wh.warehouse_details_title": "گودام کی تفصیلات - {name}",
+  "wh.print_field_label": "فیلڈ",
+  "wh.print_value_label": "قدر",
+  "wh.failed_load": "گوداموں کو لوڈ کرنے میں ناکامی۔",
+  "wh.delete_confirm": "گودام \"{name}\" حذف کریں؟",
+  "wh.deleted_success": "گودام \"{name}\" حذف کر دیا گیا۔",
+  "wh.failed_delete": "گودام حذف کرنے میں ناکامی۔",
+  "wh.warehouse_name_label": "گودام کا نام",
+  "common.type": "قسم",
+  "common.status_filter": "حیثیت فلٹر",
+  "common.search_query": "تلاش کی کوئری",
+  "common.none": "کوئی نہیں",
+  "wh.area_label": "علاقہ",
 };
 
 const ar: Dict = {
@@ -67032,6 +67077,21 @@ const ar: Dict = {
   "com.other_warehouse_title": "مستودع آخر",
   "com.third_party_yard_port": "ساحة / ميناء طرف ثالث",
   "com.customer_registered_address": "عنوان العميل المسجل",
+  "wh.create_warehouse_title": "إنشاء مستودع",
+  "wh.edit_warehouse_title": "تعديل المستودع - {name}",
+  "wh.warehouse_details_title": "تفاصيل المستودع - {name}",
+  "wh.print_field_label": "الحقل",
+  "wh.print_value_label": "القيمة",
+  "wh.failed_load": "فشل تحميل المستودعات.",
+  "wh.delete_confirm": "حذف المستودع \"{name}\"؟",
+  "wh.deleted_success": "تم حذف المستودع \"{name}\".",
+  "wh.failed_delete": "فشل حذف المستودع.",
+  "wh.warehouse_name_label": "اسم المستودع",
+  "common.type": "النوع",
+  "common.status_filter": "تصفية الحالة",
+  "common.search_query": "استعلام البحث",
+  "common.none": "لا شيء",
+  "wh.area_label": "المنطقة",
 };
 
 const fa: Dict = {
@@ -86395,6 +86455,21 @@ const fa: Dict = {
   "com.other_warehouse_title": "انبار دیگر",
   "com.third_party_yard_port": "محوطه / بندر شخص ثالث",
   "com.customer_registered_address": "آدرس ثبت‌شده مشتری",
+  "wh.create_warehouse_title": "ایجاد انبار",
+  "wh.edit_warehouse_title": "ویرایش انبار - {name}",
+  "wh.warehouse_details_title": "جزئیات انبار - {name}",
+  "wh.print_field_label": "فیلد",
+  "wh.print_value_label": "مقدار",
+  "wh.failed_load": "بارگذاری انبارها ناموفق بود.",
+  "wh.delete_confirm": "انبار \"{name}\" حذف شود؟",
+  "wh.deleted_success": "انبار \"{name}\" حذف شد.",
+  "wh.failed_delete": "حذف انبار ناموفق بود.",
+  "wh.warehouse_name_label": "نام انبار",
+  "common.type": "نوع",
+  "common.status_filter": "فیلتر وضعیت",
+  "common.search_query": "عبارت جستجو",
+  "common.none": "هیچ‌کدام",
+  "wh.area_label": "منطقه",
 };
 
 const ps: Dict = {
@@ -105765,6 +105840,21 @@ const ps: Dict = {
   "com.other_warehouse_title": "نور ګدام",
   "com.third_party_yard_port": "د دریمې ډلې پيليز / بندر",
   "com.customer_registered_address": "د پیرودونکي راجستر شوی پته",
+  "wh.create_warehouse_title": "ګدام جوړول",
+  "wh.edit_warehouse_title": "ګدام سمول - {name}",
+  "wh.warehouse_details_title": "د ګدام توضیحات - {name}",
+  "wh.print_field_label": "ساحه",
+  "wh.print_value_label": "ارزښت",
+  "wh.failed_load": "د ګدامونو لوډول پاتې راغی.",
+  "wh.delete_confirm": "ګدام \"{name}\" حذف کړئ؟",
+  "wh.deleted_success": "ګدام \"{name}\" حذف شو.",
+  "wh.failed_delete": "د ګدام حذف پاتې راغی.",
+  "wh.warehouse_name_label": "د ګدام نوم",
+  "common.type": "ډول",
+  "common.status_filter": "د حالت فلټر",
+  "common.search_query": "د لټون پوښتنه",
+  "common.none": "هېڅ",
+  "wh.area_label": "سیمه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
