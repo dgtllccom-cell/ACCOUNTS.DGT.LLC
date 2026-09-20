@@ -1,40 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as net from "net";
+import { ImapFlow } from "imapflow";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { decrypt } from "@/lib/crypto";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 
 export const dynamic = "force-dynamic";
 
-async function testImapConnection(config: {
-  host: string;
-  port: number;
-  user: string;
-  pass: string;
-}): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      socket?.destroy();
-      reject(new Error("IMAP connection timeout (5s)"));
-    }, 5000);
-
-    const socket = net.createConnection(
-      { host: config.host, port: config.port },
-      () => {
-        clearTimeout(timeout);
-        socket.destroy();
-        resolve(true);
-      }
-    );
-
-    socket.on("error", (err) => {
-      clearTimeout(timeout);
-      reject(new Error(`IMAP connection failed: ${err.message}`));
-    });
-  });
-}
-
+/**
+ * Real IMAP LOGIN test via ImapFlow. Previously this (a) read credentials
+ * from account.settings.smtpPass, a legacy field left empty for accounts
+ * actually configured through the encrypted-column path, and (b) never
+ * authenticated at all — it just opened a raw TCP socket to the host:port and
+ * declared success the instant it connected, so it reported "success" for
+ * any reachable server regardless of whether the username/password were even
+ * right.
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -57,44 +38,8 @@ export async function POST(
     const { id } = await params;
     const admin = createSupabaseAdminClient() as any;
 
-    const { data: account, error } = await admin
-      .from("erp_email_accounts")
-      .select("id, email_address, settings, is_active")
-      .eq("id", id)
-      .is("deleted_at", null)
-      .single();
-
-    if (error || !account) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: { code: "NOT_FOUND", message: "Email account not found." }
-        },
-        { status: 404 }
-      );
-    }
-
-    const settings = account.settings || {};
-    const imapPass = settings.smtpPass || settings.password || settings.appPassword || "";
-    const imapHost =
-      settings.imapHost ||
-      (account.email_address?.includes("gmail")
-        ? "imap.gmail.com"
-        : "imap.office365.com");
-    const imapPort = Number(settings.imapPort || 993);
-    const imapUser = settings.smtpUser || account.email_address || "";
-    const decryptedPass = decrypt(imapPass);
-
-    if (!imapHost || !imapUser || !decryptedPass) {
-      // Update test result
-      await admin
-        .from("erp_email_accounts")
-        .update({
-          last_tested_at: new Date().toISOString(),
-          last_test_result: "IMAP parameters missing (Host, Username, or Password)"
-        })
-        .eq("id", id);
-
+    const resolved = await resolveMailboxAccount(id);
+    if (!resolved) {
       return NextResponse.json(
         {
           ok: false,
@@ -108,14 +53,17 @@ export async function POST(
     }
 
     try {
-      await testImapConnection({
-        host: imapHost,
-        port: imapPort,
-        user: imapUser,
-        pass: decryptedPass
+      const imap = new ImapFlow({
+        host: resolved.imapHost,
+        port: resolved.imapPort,
+        secure: true,
+        auth: { user: resolved.imapUser, pass: resolved.imapPass },
+        logger: false,
+        tls: { rejectUnauthorized: false },
       });
+      await imap.connect();
+      await imap.logout();
 
-      // Update success
       await admin
         .from("erp_email_accounts")
         .update({
@@ -129,7 +77,6 @@ export async function POST(
         message: "IMAP connection verified successfully!"
       });
     } catch (testErr: any) {
-      // Update failure
       await admin
         .from("erp_email_accounts")
         .update({

@@ -97,6 +97,7 @@ export type SidebarSubItem = {
   icon: ComponentType<{ className?: string }>;
   children?: SidebarDeepChild[];
   roles?: string[];
+  tone?: "red" | "default";
 };
 
 export type SidebarMenuItem = {
