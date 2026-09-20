@@ -279,10 +279,14 @@ export function AdminUserManagementPanel() {
     const temporaryPassword = `DEV-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16).toUpperCase()}!Aa1`;
     const ok = window.confirm(`Generate and apply a new temporary password for ${user.name}?`);
     if (!ok) return;
-    // Never put the generated password into the audit/reason trail — it is shown
-    // to the operator once here and then only lives (hashed) in Supabase Auth.
-    await triggerUserPatch(user.id, { password: temporaryPassword }, `Temporary password reset for ${user.username}`);
-    window.alert(`Temporary password set once for ${user.username}:\n${temporaryPassword}\n\nShare it securely — it will not be shown again.`);
+    try {
+      // Never put the generated password into the audit/reason trail — it is shown
+      // to the operator once here and then only lives (hashed) in Supabase Auth.
+      await triggerUserPatch(user.id, { password: temporaryPassword }, `Temporary password reset for ${user.username}`);
+      window.alert(`Temporary password set once for ${user.username}:\n${temporaryPassword}\n\nShare it securely — it will not be shown again.`);
+    } catch (err) {
+      window.alert(`Failed to reset password for ${user.username}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const toggleUserStatus = async (user: BranchUser) => {
@@ -290,7 +294,11 @@ export function AdminUserManagementPanel() {
     const actionLabel = nextStatus ? "activate" : "disable";
     const ok = window.confirm(`Do you want to ${actionLabel} ${user.name}?`);
     if (!ok) return;
-    await triggerUserPatch(user.id, { isActive: nextStatus }, `User ${actionLabel}d.`);
+    try {
+      await triggerUserPatch(user.id, { isActive: nextStatus }, `User ${actionLabel}d.`);
+    } catch (err) {
+      window.alert(`Failed to ${actionLabel} ${user.username}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   // Filtered users for "All Users" view
