@@ -201,6 +201,50 @@ export class SettlementService {
   }
 
   /**
+   * Scope (country/branch) of a single settlement_transactions row, for
+   * authorizing a link/unlink before it touches records outside the
+   * caller's assigned scope.
+   */
+  async getTransactionScope(settlementId: string): Promise<{ country_id: string | null; country_branch_id: string | null; city_branch_id: string | null } | null> {
+    const result = await withLocalPg(async (sql) => {
+      const [row] = await sql`
+        SELECT country_id, country_branch_id, city_branch_id
+        FROM public.settlement_transactions
+        WHERE id = ${settlementId}::uuid
+        LIMIT 1
+      `;
+      return row ?? null;
+    });
+    return (result as any) ?? null;
+  }
+
+  /**
+   * Scope of both sides (cr + dr) of an existing link, for authorizing unlink.
+   */
+  async getLinkScope(linkId: string): Promise<{
+    cr: { country_id: string | null; country_branch_id: string | null; city_branch_id: string | null } | null;
+    dr: { country_id: string | null; country_branch_id: string | null; city_branch_id: string | null } | null;
+  }> {
+    return withLocalPg(async (sql) => {
+      const [row] = await sql`
+        SELECT
+          cr.country_id AS cr_country_id, cr.country_branch_id AS cr_country_branch_id, cr.city_branch_id AS cr_city_branch_id,
+          dr.country_id AS dr_country_id, dr.country_branch_id AS dr_country_branch_id, dr.city_branch_id AS dr_city_branch_id
+        FROM public.settlement_links sl
+        JOIN public.settlement_transactions cr ON cr.id = sl.cr_settlement_id
+        JOIN public.settlement_transactions dr ON dr.id = sl.dr_settlement_id
+        WHERE sl.id = ${linkId}::uuid
+        LIMIT 1
+      `;
+      if (!row) return { cr: null, dr: null };
+      return {
+        cr: { country_id: row.cr_country_id, country_branch_id: row.cr_country_branch_id, city_branch_id: row.cr_city_branch_id },
+        dr: { country_id: row.dr_country_id, country_branch_id: row.dr_country_branch_id, city_branch_id: row.dr_city_branch_id }
+      };
+    }) as any;
+  }
+
+  /**
    * Unlink a settlement link
    */
   async removeLink(input: {

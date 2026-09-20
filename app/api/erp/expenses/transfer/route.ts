@@ -3,6 +3,7 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { canAccessCityBranch } from "@/lib/permissions/middleware";
 import { z } from "zod";
 
 const transferPayloadSchema = z.object({
@@ -68,6 +69,9 @@ export async function POST(req: Request) {
 
     if (!bill) throw new Error("Bill not found");
     if (bill.transferred_to_roznamcha) throw new Error("Bill is already transferred");
+    if (!canAccessCityBranch(session, bill.city_branches?.id)) {
+      return NextResponse.json({ error: "This bill belongs to a branch outside your assigned scope." }, { status: 403 });
+    }
 
     const totalAmount = bill.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0;
     if (totalAmount <= 0) throw new Error("Bill amount must be greater than zero");

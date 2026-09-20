@@ -1,9 +1,20 @@
 import { NextRequest } from "next/server";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { settlementService } from "@/lib/services/settlement-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { canAccessCityBranch, canAccessCountryBranch, canAccessCountry } from "@/lib/permissions/middleware";
+import type { ErpSession } from "@/lib/auth/session";
+
+function canAccessScope(session: ErpSession, scope: { country_id: string | null; country_branch_id: string | null; city_branch_id: string | null } | null): boolean {
+  if (session.isSuperAdmin) return true;
+  if (!scope) return false;
+  if (scope.city_branch_id) return canAccessCityBranch(session, scope.city_branch_id);
+  if (scope.country_branch_id) return canAccessCountryBranch(session, scope.country_branch_id);
+  if (scope.country_id) return canAccessCountry(session, scope.country_id);
+  return false;
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -43,6 +54,14 @@ export async function POST(request: NextRequest) {
 
     if (!crSettlementId || !drSettlementId || !linkAmount || Number(linkAmount) <= 0) {
       return handleApiError(new Error("Missing required link parameters: crSettlementId, drSettlementId, linkAmount > 0"));
+    }
+
+    const [crScope, drScope] = await Promise.all([
+      settlementService.getTransactionScope(crSettlementId),
+      settlementService.getTransactionScope(drSettlementId)
+    ]);
+    if (!canAccessScope(session, crScope) || !canAccessScope(session, drScope)) {
+      return apiError("FORBIDDEN", "One or both settlement transactions are outside your assigned scope.", 403);
     }
 
     const result = await settlementService.createLink({

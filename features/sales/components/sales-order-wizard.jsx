@@ -1641,7 +1641,7 @@ export function SalesOrderWizard({ session }) {
         setIsFormOpen(false);
         handleReset();
         if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
-          router.push("/dashboard/sales/sales-booking-register");
+          router.push("/dashboard/sales/sales-booking-journal-report");
         }
       }
     } catch (err) {
@@ -2987,7 +2987,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           setIsFormOpen(false);
                           handleReset();
                           if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
-                            router.push("/dashboard/sales/sales-booking-register");
+                            router.push("/dashboard/sales/sales-booking-journal-report");
                           }
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 text-left transition border-b border-border/40 pb-2 mb-1"
@@ -3169,7 +3169,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         setIsFormOpen(false);
                         handleReset();
                         if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
-                          router.push("/dashboard/sales/sales-booking-register");
+                          router.push("/dashboard/sales/sales-booking-journal-report");
                         }
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 text-left transition border-b border-border/40 pb-2 mb-1"
@@ -5176,7 +5176,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/dashboard/sales/sales-booking-register")}
+              onClick={() => router.push("/dashboard/sales/sales-booking-journal-report")}
               className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-10 px-6 rounded-lg shadow-sm"
             >
               {t(lang, "sow.close_review", "Close Review ✕")}

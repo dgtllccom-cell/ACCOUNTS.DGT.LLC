@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canAccessCityBranch } from "@/lib/permissions/middleware";
 import { z } from "zod";
 
 const expensesBillLineSchema = z.object({
@@ -49,6 +50,10 @@ export async function POST(req: NextRequest) {
     const parsed = expensesBillPayloadSchema.parse(body);
     const { header, entries } = parsed;
 
+    if (!canAccessCityBranch(session, header.branch)) {
+      return NextResponse.json({ error: "This branch is outside your assigned scope." }, { status: 403 });
+    }
+
     const lockRes = await acquireIdempotencyLock({
       req,
       scopeModule: "EXPENSES",
@@ -88,9 +93,12 @@ export async function POST(req: NextRequest) {
 
     if (billId) {
       // Check if bill exists and is not transferred
-      const { data: existing, error: fetchErr } = await supabase.from("expenses_bills").select("transferred_to_roznamcha").eq("id", billId).single();
+      const { data: existing, error: fetchErr } = await supabase.from("expenses_bills").select("transferred_to_roznamcha, branch_id").eq("id", billId).single();
       if (fetchErr) throw new Error("Failed to fetch bill: " + fetchErr.message);
       if (existing?.transferred_to_roznamcha) throw new Error("Cannot edit a bill that has already been transferred to Roznamcha.");
+      if (!canAccessCityBranch(session, existing?.branch_id)) {
+        return NextResponse.json({ error: "This bill belongs to a branch outside your assigned scope." }, { status: 403 });
+      }
 
       const { error: updateErr } = await supabase
         .from("expenses_bills")
