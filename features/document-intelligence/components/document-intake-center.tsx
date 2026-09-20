@@ -641,11 +641,35 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       const tm = d.job.target_module || targetModule || "purchase_orders";
       setTargetModule(tm);
 
+      // Map the registry's doc_type_code (e.g. "purchase_contract", "commercial_invoice")
+      // to the exact <option value> this dropdown uses — the two are different naming
+      // schemes, so passing the raw code through left every non-matching classification
+      // (which was most of them) silently showing the select's first option ("Sales
+      // Contract") regardless of what was actually classified. Falls back to the
+      // target module's natural side rather than a fixed default.
+      const DOC_TYPE_OPTION_BY_CODE: Record<string, string> = {
+        sales_contract: "Sales Contract",
+        purchase_contract: "Purchase Contract",
+        purchase_order: "Purchase Contract",
+        purchase_booking: "Purchase Contract",
+        customer_po: "Sales Contract",
+        sales_booking: "Sales Contract",
+        sales_order: "Sales Contract",
+        commercial_invoice: "Commercial Invoice",
+        sales_invoice: "Commercial Invoice",
+        proforma_invoice: "Proforma Invoice",
+        bill_of_lading: "Bill of Lading",
+      };
+      const rawDocType = fMap.doc_type || d.job.doc_type_code || "";
+      const resolvedDocType =
+        DOC_TYPE_OPTION_BY_CODE[rawDocType] ||
+        (rawDocType === "" ? "" : tm === "sales_orders" ? "Sales Contract" : "Purchase Contract");
+
       // Extracted values only — an unextracted field stays blank so the reviewer
       // can see it was not found, rather than silently showing sample data.
       setFormData((prev) => ({
         ...prev,
-        docType: fMap.doc_type || d.job.doc_type_code || "",
+        docType: resolvedDocType,
         contractNo: fMap.contract_number || d.job.contract_reference || "",
         documentDate: fMap.document_date || "",
         supplierName: fMap.supplier_name || fMap.contract_parties || "",
@@ -2591,13 +2615,23 @@ Delivery Terms: CIF Dalian Port`}
                               </tr>
                             </thead>
                             <tbody>
-                              <tr className="border-t border-slate-100 dark:border-slate-800">
-                                <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100">Plastic Raw Material</td>
-                                <td className="p-2.5">50</td>
-                                <td className="p-2.5">MT</td>
-                                <td className="p-2.5">1,200</td>
-                                <td className="p-2.5 font-bold text-emerald-600">60,000.00</td>
-                              </tr>
+                              {(jobData?.lineItems ?? []).length > 0 ? (
+                                (jobData?.lineItems ?? []).map((li: any, idx: number) => (
+                                  <tr key={li.id ?? idx} className="border-t border-slate-100 dark:border-slate-800">
+                                    <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100">{li.description || li.goods_name || "-"}</td>
+                                    <td className="p-2.5">{li.quantity ?? "-"}</td>
+                                    <td className="p-2.5">{li.unit || "-"}</td>
+                                    <td className="p-2.5">{li.unit_price ?? "-"}</td>
+                                    <td className="p-2.5 font-bold text-emerald-600">{li.total_amount ?? "-"}</td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr className="border-t border-slate-100 dark:border-slate-800">
+                                  <td colSpan={5} className="p-2.5 text-slate-500 dark:text-slate-400 text-center">
+                                    {s.t("no_line_items_extracted", "No line items were extracted from this document — add one manually or leave blank.")}
+                                  </td>
+                                </tr>
+                              )}
                             </tbody>
                           </table>
                           <button

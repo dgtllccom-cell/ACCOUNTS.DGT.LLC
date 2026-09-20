@@ -354,7 +354,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: "Other Expenses Bill", href: "/dashboard/clearing-agent/other-expenses", icon: Receipt },
       { label: "Shipping Lines", href: "/dashboard/shipping-line", icon: Ship },
       { label: "BL Entry", href: "/dashboard/shipping-line/bl-entry", icon: FileText },
-      { label: "Container & Vessel Tracking", href: "/dashboard/shipping-line/tracking", icon: Compass },
+      { label: "Container & Vessel Tracking", href: "/dashboard/shipping-line/tracking", icon: Compass, tone: "red" },
       { label: "Inter-Country Shipping Claims", href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: "Clearing Agents", href: "/dashboard/clearing-agent", icon: Truck },
       { label: "Clearing Truck Registration", href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
