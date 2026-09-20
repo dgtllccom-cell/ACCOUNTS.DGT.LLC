@@ -560,6 +560,19 @@ export function SalesOrderWizard({ session }) {
   const [activeHandover, setActiveHandover] = useState(null);
   const [activeHandoverLoading, setActiveHandoverLoading] = useState(false);
 
+  // "Local Sales" (sidebar) deep-links here with ?source=local to pre-select the
+  // existing "Local Purchase" sale-source option instead of landing on a
+  // context-less generic booking form. Only applies to a brand-new order — an
+  // existing order being edited/resumed (id/salesOrderNo/transferId present)
+  // keeps its own saved saleSource.
+  const sourceParam = searchParams.get("source");
+  useEffect(() => {
+    if (sourceParam !== "local") return;
+    if (searchParams.get("id") || searchParams.get("salesOrderNo") || searchParams.get("transferId")) return;
+    setForm((prev) => (prev.saleSource === "local" ? prev : { ...prev, saleSource: "local" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceParam]);
+
   const transferIdParam = searchParams.get("transferId");
   useEffect(() => {
     if (!transferIdParam) return;
