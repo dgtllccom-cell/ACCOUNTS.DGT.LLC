@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 
 export type HostingerTitanConfig = {
   smtpHost: string;
@@ -46,30 +47,18 @@ export type EmailLogRecord = {
 };
 
 /**
- * Creates Nodemailer Transporter configured securely for Hostinger Titan Email.
- * Never exposes passwords or credentials to the browser client.
- */
-export function getTitanTransporter(senderEmail: string) {
-  const user = process.env[`TITAN_SMTP_USER_${senderEmail.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`] || process.env.TITAN_SMTP_USER || senderEmail;
-  const pass = process.env[`TITAN_SMTP_PASS_${senderEmail.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`] || process.env.TITAN_SMTP_PASS || "";
-
-  return nodemailer.createTransport({
-    host: DEFAULT_TITAN_CONFIG.smtpHost,
-    port: DEFAULT_TITAN_CONFIG.smtpPort,
-    secure: DEFAULT_TITAN_CONFIG.secure,
-    auth: {
-      user: user,
-      pass: pass
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-}
-
-/**
  * Sends an email using the saved Branch Email via Hostinger Titan SMTP,
  * and logs the full record tagged by country_id, branch_id, sender_user_id, and recipient_customer_id.
+ *
+ * Previously this read credentials from plain environment variables
+ * (TITAN_SMTP_USER/TITAN_SMTP_PASS) that were never actually set in any
+ * environment, and — worse — when they were missing it silently logged a
+ * console line and reported success anyway with a fabricated message id,
+ * so branch-to-customer emails could be shown as "sent" while nothing was
+ * ever transmitted. Fixed to resolve the branch mailbox's real, encrypted
+ * credentials the same way the corporate mailbox send route does
+ * (resolveMailboxAccount, backed by erp_email_accounts) and to fail
+ * honestly if no real mailbox is configured for that branch address yet.
  */
 export async function sendBranchEmail(options: SendBranchEmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const supabase = createSupabaseAdminClient() as any;
@@ -81,12 +70,17 @@ export async function sendBranchEmail(options: SendBranchEmailOptions): Promise<
   let messageId: string | undefined = undefined;
 
   try {
-    const transporter = getTitanTransporter(senderEmailClean);
-
-    // If SMTP pass is not configured in env, perform server-side verified transmission log
-    const hasSmtpAuth = Boolean(process.env.TITAN_SMTP_PASS);
-
-    if (hasSmtpAuth) {
+    const resolved = await resolveMailboxAccount(senderEmailClean);
+    if (!resolved || !resolved.smtpPass) {
+      errorMessage = `No configured Titan mailbox credentials for ${senderEmailClean}. Enter its password via /dashboard/dgt-mail-management before sending from this branch.`;
+    } else {
+      const transporter = nodemailer.createTransport({
+        host: resolved.smtpHost,
+        port: resolved.smtpPort,
+        secure: resolved.smtpSecure,
+        auth: { user: resolved.smtpUser, pass: resolved.smtpPass },
+        tls: { rejectUnauthorized: false },
+      });
       const info = await transporter.sendMail({
         from: `"${options.senderEmail.split("@")[0].toUpperCase()} Branch" <${senderEmailClean}>`,
         to: recipientEmailClean,
@@ -97,11 +91,6 @@ export async function sendBranchEmail(options: SendBranchEmailOptions): Promise<
       });
       messageId = info.messageId;
       sendStatus = "sent";
-    } else {
-      // Secure Titan SMTP server dispatch simulation when server environment key is being set up
-      console.log(`[Hostinger Titan SMTP Dispatch] Sent from ${senderEmailClean} to ${recipientEmailClean}: ${options.subject}`);
-      sendStatus = "sent";
-      messageId = `titan-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     }
   } catch (err: any) {
     errorMessage = err?.message || "Failed to deliver email via Titan SMTP.";

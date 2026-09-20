@@ -2,6 +2,11 @@ import postgres from "postgres";
 import { hashPassword, verifyPassword, generateSessionToken, hashSessionToken } from "./crypto";
 import { encrypt } from "../crypto";
 import { createStalwartAccount, updateStalwartQuota, setStalwartAccountStatus } from "./stalwart-client";
+import { isHostingerProvisioningEnabled, createHostingerMailbox } from "@/lib/email/hostinger-mail-provisioning";
+import { claimPoolMailbox } from "@/lib/email/assign-pool-mailbox";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
+import nodemailer from "nodemailer";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, matches the cookie's maxAge
 
@@ -113,6 +118,7 @@ export interface PublicMailUser {
   storage_warning_level: number;
   created_at: string;
   last_login_at: string | null;
+  linked_erp_account_id: string | null;
 }
 
 export interface MailMessage {
@@ -251,13 +257,27 @@ export async function registerPublicMailUser(params: {
       RETURNING id, username, domain, email_address, display_name, recovery_email, phone_number, plan_id, quota_bytes, used_bytes, status, storage_warning_level, created_at, last_login_at
     `;
 
-    // Provision on Stalwart mail engine
+    // Provision on Stalwart mail engine (no-op placeholder — nothing runs
+    // this today; kept for when/if it's ever stood up, see createStalwartAccount)
     await createStalwartAccount({
       username,
       domain: "dgt.llc",
       password: params.password,
       quotaBytes,
     });
+
+    // Real external send/receive: provision or claim a genuine Titan mailbox
+    // and link it. Never blocks registration — a user without a linked
+    // mailbox still gets their account and can be linked later by an admin;
+    // this only degrades to "internal DGT-to-DGT only" until one is available.
+    try {
+      const linkedAccountId = await provisionRealMailboxForPublicUser(username);
+      if (linkedAccountId) {
+        await sql`UPDATE public.public_mail_users SET linked_erp_account_id = ${linkedAccountId} WHERE id = ${user.id}`;
+      }
+    } catch (e) {
+      console.warn(`[registerPublicMailUser] Real mailbox provisioning failed for ${username}@dgt.llc (account still created, internal-only for now):`, e instanceof Error ? e.message : e);
+    }
 
     // Send Welcome Email to the new user's inbox
     const welcomeSubject = "Welcome to your official DGT.LLC email account!";
@@ -337,6 +357,63 @@ export async function registerPublicMailUser(params: {
 }
 
 /**
+ * Provisions a real, working Titan mailbox for a new public-mail username
+ * and returns the erp_email_accounts.id to link it to, or null if none
+ * could be provisioned right now (Hostinger API not configured AND pool
+ * empty — a real, expected state until the owner provides one or the
+ * other, not an error).
+ *
+ * Path 1 — Hostinger Mail API (automatic, real mailbox created on demand):
+ *   only attempted when HOSTINGER_MAIL_API_TOKEN + HOSTINGER_MAIL_ORDER_ID
+ *   are configured. Creates <username>@dgt.llc on the real Titan order,
+ *   stores its encrypted credentials in erp_email_accounts exactly like the
+ *   5 corporate mailboxes.
+ * Path 2 — mailbox pool (fallback): claims the next admin-pre-provisioned,
+ *   unassigned erp_email_accounts row tagged is_public_mail_pool = true.
+ */
+async function provisionRealMailboxForPublicUser(username: string): Promise<string | null> {
+  const admin = createSupabaseAdminClient() as any;
+
+  if (isHostingerProvisioningEnabled()) {
+    const emailAddress = `${username}@dgt.llc`;
+    const { password } = await createHostingerMailbox(username);
+
+    const { data: provider } = await admin
+      .from("erp_email_providers")
+      .select("id")
+      .eq("domain", "dgt.llc")
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .limit(1)
+      .maybeSingle();
+
+    const encryptedPassword = encrypt(password);
+    const { data: account, error } = await admin
+      .from("erp_email_accounts")
+      .insert({
+        provider_id: provider?.id || null,
+        email_address: emailAddress,
+        display_name: `${username} (Public Mail)`,
+        is_active: true,
+        plan_type: "public_mail",
+        imap_password_encrypted: encryptedPassword,
+        smtp_password_encrypted: encryptedPassword,
+        storage_quota_mb: 1024,
+      })
+      .select("id")
+      .single();
+
+    if (error || !account) {
+      throw new Error(`Hostinger mailbox was created but the erp_email_accounts record failed to save: ${error?.message}`);
+    }
+    return account.id;
+  }
+
+  const claimed = await claimPoolMailbox();
+  return claimed?.id ?? null;
+}
+
+/**
  * Authenticate public mail user
  */
 export async function authenticatePublicMailUser(identifier: string, password: string): Promise<PublicMailUser | null> {
@@ -375,9 +452,100 @@ export async function authenticatePublicMailUser(identifier: string, password: s
 }
 
 /**
+ * Real IMAP sync: pulls new messages from a linked Titan mailbox's real
+ * INBOX into public_mail_messages, deduped by IMAP UID (stored in the
+ * repurposed stalwart_id column). This is what makes external mail sent TO
+ * a linked user's real address (from Gmail, Yahoo, Outlook, etc.) actually
+ * show up in their DGT Mail inbox — on-demand, called from getUserMessages,
+ * rather than a background poller (no cron infra in this deployment yet).
+ * Best-effort: never throws past this function, so a slow/unreachable IMAP
+ * server never breaks the inbox view — it just shows what's already synced.
+ */
+async function syncLinkedMailboxInbox(userId: string, linkedErpAccountId: string): Promise<void> {
+  const sql = getDb();
+  try {
+    const resolved = await resolveMailboxAccount(linkedErpAccountId);
+    if (!resolved || !resolved.imapPass) return;
+
+    const { ImapFlow } = await import("imapflow");
+    const client = new ImapFlow({
+      host: resolved.imapHost,
+      port: resolved.imapPort,
+      secure: true,
+      auth: { user: resolved.imapUser, pass: resolved.imapPass },
+      logger: false,
+      tls: { rejectUnauthorized: false },
+    });
+
+    await client.connect();
+    try {
+      await client.mailboxOpen("INBOX");
+      const uids = await client.search({ all: true });
+      const recentUids = (Array.isArray(uids) ? uids : []).slice(-30);
+
+      for (const uid of recentUids) {
+        const dedupKey = `imap:${linkedErpAccountId}:${uid}`;
+        const [exists] = await sql`
+          SELECT 1 FROM public.public_mail_messages WHERE user_id = ${userId} AND stalwart_id = ${dedupKey} LIMIT 1
+        `;
+        if (exists) continue;
+
+        try {
+          const msg = await client.fetchOne(uid, { envelope: true, source: true, flags: true });
+          if (!msg || typeof msg !== "object") continue;
+
+          const raw = msg.source ? msg.source.toString() : "";
+          const bodyIdx = raw.indexOf("\r\n\r\n") !== -1 ? raw.indexOf("\r\n\r\n") + 4 : raw.indexOf("\n\n") !== -1 ? raw.indexOf("\n\n") + 2 : -1;
+          const bodyText = bodyIdx !== -1 ? raw.slice(bodyIdx).replace(/<[^>]+>/g, "").slice(0, 20000) : (msg.envelope?.subject || "");
+          const fromAddr = msg.envelope?.from?.[0]?.address || "unknown@unknown";
+          const fromName = msg.envelope?.from?.[0]?.name || fromAddr.split("@")[0];
+          const subject = msg.envelope?.subject || "(no subject)";
+          const hasAttachment = raw.toLowerCase().includes("content-disposition: attachment");
+          const size = Buffer.byteLength(raw, "utf8");
+
+          await sql`
+            INSERT INTO public.public_mail_messages (
+              user_id, folder, sender_email, sender_name, recipient_email,
+              subject, body_text, body_html, snippet, is_read, has_attachments,
+              size_bytes, sender_verified, stalwart_id
+            ) VALUES (
+              ${userId}, 'inbox', ${fromAddr}, ${fromName}, ${resolved.emailAddress},
+              ${subject}, ${bodyText}, ${'<p>' + bodyText.replace(/\n/g, '<br/>') + '</p>'},
+              ${bodyText.slice(0, 120)}, FALSE, ${hasAttachment},
+              ${size}, ${fromAddr.endsWith("@dgt.llc")}, ${dedupKey}
+            )
+            ON CONFLICT DO NOTHING
+          `;
+        } catch (msgErr) {
+          console.warn(`[syncLinkedMailboxInbox] Failed to sync UID ${uid} for ${resolved.emailAddress}:`, msgErr instanceof Error ? msgErr.message : msgErr);
+        }
+      }
+    } finally {
+      await client.logout().catch(() => {});
+    }
+  } catch (e) {
+    console.warn(`[syncLinkedMailboxInbox] Sync skipped (IMAP unreachable or misconfigured):`, e instanceof Error ? e.message : e);
+  } finally {
+    await sql.end();
+  }
+}
+
+/**
  * Get messages for a user by folder
  */
 export async function getUserMessages(userId: string, folder = "inbox", search = ""): Promise<MailMessage[]> {
+  if (folder === "inbox") {
+    const sqlCheck = getDb();
+    try {
+      const [user] = await sqlCheck`SELECT linked_erp_account_id FROM public.public_mail_users WHERE id = ${userId} LIMIT 1`;
+      if (user?.linked_erp_account_id) {
+        await syncLinkedMailboxInbox(userId, user.linked_erp_account_id);
+      }
+    } finally {
+      await sqlCheck.end();
+    }
+  }
+
   const sql = getDb();
   try {
     let query;
@@ -517,14 +685,64 @@ export async function sendWebmailMessage(params: {
       WHERE id = ${user.id}
     `;
 
-    // 5. DGT-to-DGT Real Delivery: If recipient is also on @dgt.llc, deliver to their inbox!
+    // 5. Real delivery for senders with a linked Titan mailbox.
+    // Once a public-mail user has a real erp_email_accounts mailbox linked
+    // (provisioned via Hostinger's API or claimed from the pool — see
+    // provisionRealMailboxForPublicUser), sending goes out through real
+    // SMTP to ANY address, internal or external — this is what makes
+    // Gmail/Yahoo/Outlook delivery genuine instead of simulated.
+    const cleanRecipient = params.to.trim().toLowerCase();
+    const isInternalDomain = cleanRecipient.endsWith("@dgt.llc");
+
+    if (user.linked_erp_account_id) {
+      // If the recipient is another @dgt.llc public-mail user who does NOT
+      // yet have a real mailbox linked, real SMTP would just bounce off a
+      // nonexistent Titan mailbox — fall back to the internal DB-to-DB
+      // simulation for that one case instead.
+      let recipientNeedsInternalFallback = false;
+      if (isInternalDomain) {
+        const [recipientPmu] = await sql<{ linked_erp_account_id: string | null }[]>`
+          SELECT linked_erp_account_id FROM public.public_mail_users WHERE email_address = ${cleanRecipient} LIMIT 1
+        `;
+        if (recipientPmu && !recipientPmu.linked_erp_account_id) {
+          recipientNeedsInternalFallback = true;
+        }
+      }
+
+      if (!recipientNeedsInternalFallback) {
+        const resolved = await resolveMailboxAccount(user.linked_erp_account_id);
+        if (!resolved || !resolved.smtpPass) {
+          return { success: false, error: "Your linked mailbox credentials are not configured correctly. Contact an administrator." };
+        }
+        try {
+          const transporter = nodemailer.createTransport({
+            host: resolved.smtpHost,
+            port: resolved.smtpPort,
+            secure: resolved.smtpSecure,
+            auth: { user: resolved.smtpUser, pass: resolved.smtpPass },
+            tls: { rejectUnauthorized: false },
+          });
+          const info = await transporter.sendMail({
+            from: `"${user.display_name}" <${resolved.emailAddress}>`,
+            to: cleanRecipient,
+            subject: params.subject,
+            text: params.body,
+            html: '<p>' + params.body.replace(/\n/g, '<br/>') + '</p>',
+          });
+          return { success: true, messageId: info.messageId || msg.id };
+        } catch (e) {
+          return { success: false, error: e instanceof Error ? `Real delivery failed: ${e.message}` : "Real delivery failed." };
+        }
+      }
+      // else fall through to the internal simulation below
+    }
+
     // "@dgt.llc" is shared by TWO separate mailbox systems — this public webmail
     // (public_mail_users) and the corporate/branch mailboxes (erp_email_accounts,
     // e.g. chaman@dgt.llc, dubai@dgt.llc). A recipient can be valid and simply
     // live in the other system; only report "Recipient not found" when the
     // address doesn't exist in EITHER.
-    const cleanRecipient = params.to.trim().toLowerCase();
-    if (cleanRecipient.endsWith("@dgt.llc")) {
+    if (isInternalDomain) {
       const ingestResult = await ingestIncomingMessage({
         recipientEmail: cleanRecipient,
         senderEmail: user.email_address,
@@ -551,6 +769,10 @@ export async function sendWebmailMessage(params: {
           return { success: false, error: ingestResult.error || "Recipient mailbox delivery failed (quota exceeded)" };
         }
       }
+    } else if (!user.linked_erp_account_id) {
+      // Genuinely external address and this sender has no real mailbox yet —
+      // be honest instead of silently pretending it was delivered.
+      return { success: false, error: "Real external email delivery is not yet enabled for your account. Ask an administrator to link a mailbox to send outside dgt.llc." };
     }
 
     return { success: true, messageId: msg.id };

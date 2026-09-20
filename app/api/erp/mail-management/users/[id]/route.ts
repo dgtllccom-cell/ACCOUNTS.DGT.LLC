@@ -42,6 +42,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       updates.password_hash = hashPassword(newPwd);
     }
 
+    // Link (or unlink with null) a real Titan mailbox — enables real
+    // external send/receive for this public-mail user via the same
+    // erp_email_accounts infrastructure the corporate mailboxes use.
+    if (body.linked_erp_account_id !== undefined) {
+      if (body.linked_erp_account_id !== null) {
+        const [account] = await sql`
+          SELECT id FROM public.erp_email_accounts
+          WHERE id = ${body.linked_erp_account_id} AND deleted_at IS NULL
+            AND smtp_password_encrypted IS NOT NULL AND imap_password_encrypted IS NOT NULL
+          LIMIT 1
+        `;
+        if (!account) {
+          return NextResponse.json({ error: "That mailbox doesn't exist or has no configured credentials yet." }, { status: 400 });
+        }
+      }
+      updates.linked_erp_account_id = body.linked_erp_account_id;
+    }
+
     const [updated] = await sql`
       UPDATE public.public_mail_users
       SET ${sql(updates)}
