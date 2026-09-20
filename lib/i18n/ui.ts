@@ -8561,6 +8561,43 @@ export type UiKey =
   | "mail.kb_size"
   | "mail.language_label"
   | "mail.menu_label"
+  | "ace.back_to_register"
+  | "ace.scan_upload"
+  | "ace.new_entry"
+  | "bler.back_to_register"
+  | "bler.title"
+  | "bler.search_ph"
+  | "bler.new_entry"
+  | "bler.scan_upload"
+  | "bler.col_bl_no"
+  | "bler.col_shipping_line"
+  | "bler.col_vessel_voyage"
+  | "bler.col_route"
+  | "bler.col_eta_etd"
+  | "bler.col_status"
+  | "bler.col_branch"
+  | "bler.empty"
+  | "cbr.back_to_register"
+  | "cbr.search_ph"
+  | "cbr.new_bill"
+  | "cbr.col_bill_no"
+  | "cbr.col_customer"
+  | "cbr.col_order"
+  | "cbr.col_total"
+  | "cbr.col_balance"
+  | "cbr.empty"
+  | "cer.back_to_register"
+  | "cer.title"
+  | "cer.search_ph"
+  | "cer.new_entry"
+  | "cer.col_journal_no"
+  | "cer.col_date"
+  | "cer.col_narration"
+  | "cer.col_branch"
+  | "cer.col_debit"
+  | "cer.col_credit"
+  | "cer.empty"
+  | "cbill.register_title"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -27595,6 +27632,43 @@ const en: Dict = {
   "mail.kb_size": "KB",
   "mail.language_label": "Language",
   "mail.menu_label": "Menu",
+  "ace.back_to_register": "Back to Register",
+  "ace.scan_upload": "Scan / Upload",
+  "ace.new_entry": "New Entry",
+  "bler.back_to_register": "Back to B/L Register",
+  "bler.title": "Bill of Lading Register",
+  "bler.search_ph": "Search B/L, container, vessel...",
+  "bler.new_entry": "New B/L Entry",
+  "bler.scan_upload": "Scan / Upload",
+  "bler.col_bl_no": "BL No",
+  "bler.col_shipping_line": "Shipping Line",
+  "bler.col_vessel_voyage": "Vessel / Voyage",
+  "bler.col_route": "Route",
+  "bler.col_eta_etd": "ETA / ETD",
+  "bler.col_status": "Status",
+  "bler.col_branch": "Branch",
+  "bler.empty": "No B/L records found. Click \"New B/L Entry\" to create one.",
+  "cbr.back_to_register": "Back to Bill Register",
+  "cbr.search_ph": "Search bill no, customer, order...",
+  "cbr.new_bill": "New Bill",
+  "cbr.col_bill_no": "Bill No",
+  "cbr.col_customer": "Customer",
+  "cbr.col_order": "Order",
+  "cbr.col_total": "Grand Total",
+  "cbr.col_balance": "Balance Due",
+  "cbr.empty": "No customer bills found. Click \"New Bill\" to create one.",
+  "cer.back_to_register": "Back to Register",
+  "cer.title": "Daily Cash Entry Register",
+  "cer.search_ph": "Search journal, voucher, narration...",
+  "cer.new_entry": "New Entry",
+  "cer.col_journal_no": "Journal No",
+  "cer.col_date": "Date",
+  "cer.col_narration": "Narration",
+  "cer.col_branch": "Branch",
+  "cer.col_debit": "Debit",
+  "cer.col_credit": "Credit",
+  "cer.empty": "No cash entries found. Click \"New Entry\" to create one.",
+  "cbill.register_title": "Customer Bill Register",
 };
 
 const ur: Dict = {
@@ -46603,6 +46677,43 @@ const ur: Dict = {
   "mail.kb_size": "کے بی",
   "mail.language_label": "زبان",
   "mail.menu_label": "مینو",
+  "ace.back_to_register": "رجسٹر پر واپس جائیں",
+  "ace.scan_upload": "اسکین / اپ لوڈ",
+  "ace.new_entry": "نئی انٹری",
+  "bler.back_to_register": "بی/ایل رجسٹر پر واپس جائیں",
+  "bler.title": "بل آف لیڈنگ رجسٹر",
+  "bler.search_ph": "بی/ایل، کنٹینر، بحری جہاز تلاش کریں...",
+  "bler.new_entry": "نئی بی/ایل انٹری",
+  "bler.scan_upload": "اسکین / اپ لوڈ",
+  "bler.col_bl_no": "بی ایل نمبر",
+  "bler.col_shipping_line": "شپنگ لائن",
+  "bler.col_vessel_voyage": "جہاز / سفر",
+  "bler.col_route": "روٹ",
+  "bler.col_eta_etd": "متوقع آمد / روانگی",
+  "bler.col_status": "حیثیت",
+  "bler.col_branch": "برانچ",
+  "bler.empty": "کوئی بی/ایل ریکارڈ نہیں ملا۔ ایک بنانے کے لیے \"نئی بی/ایل انٹری\" پر کلک کریں۔",
+  "cbr.back_to_register": "بل رجسٹر پر واپس جائیں",
+  "cbr.search_ph": "بل نمبر، کسٹمر، آرڈر تلاش کریں...",
+  "cbr.new_bill": "نیا بل",
+  "cbr.col_bill_no": "بل نمبر",
+  "cbr.col_customer": "کسٹمر",
+  "cbr.col_order": "آرڈر",
+  "cbr.col_total": "کل رقم",
+  "cbr.col_balance": "واجب الادا رقم",
+  "cbr.empty": "کوئی کسٹمر بل نہیں ملا۔ ایک بنانے کے لیے \"نیا بل\" پر کلک کریں۔",
+  "cer.back_to_register": "رجسٹر پر واپس جائیں",
+  "cer.title": "یومیہ نقد اندراج رجسٹر",
+  "cer.search_ph": "جرنل، واؤچر، تفصیل تلاش کریں...",
+  "cer.new_entry": "نئی انٹری",
+  "cer.col_journal_no": "جرنل نمبر",
+  "cer.col_date": "تاریخ",
+  "cer.col_narration": "تفصیل",
+  "cer.col_branch": "برانچ",
+  "cer.col_debit": "ڈیبٹ",
+  "cer.col_credit": "کریڈٹ",
+  "cer.empty": "کوئی نقد اندراج نہیں ملا۔ ایک بنانے کے لیے \"نئی انٹری\" پر کلک کریں۔",
+  "cbill.register_title": "کسٹمر بل رجسٹر",
 };
 
 const ar: Dict = {
@@ -65612,6 +65723,43 @@ const ar: Dict = {
   "mail.kb_size": "ك.ب",
   "mail.language_label": "اللغة",
   "mail.menu_label": "القائمة",
+  "ace.back_to_register": "العودة إلى السجل",
+  "ace.scan_upload": "مسح / رفع",
+  "ace.new_entry": "إدخال جديد",
+  "bler.back_to_register": "العودة إلى سجل بوليصة الشحن",
+  "bler.title": "سجل بوليصة الشحن",
+  "bler.search_ph": "ابحث عن بوليصة الشحن أو الحاوية أو السفينة...",
+  "bler.new_entry": "إدخال بوليصة شحن جديد",
+  "bler.scan_upload": "مسح / رفع",
+  "bler.col_bl_no": "رقم بوليصة الشحن",
+  "bler.col_shipping_line": "خط الشحن",
+  "bler.col_vessel_voyage": "السفينة / الرحلة",
+  "bler.col_route": "المسار",
+  "bler.col_eta_etd": "وقت الوصول / المغادرة المتوقع",
+  "bler.col_status": "الحالة",
+  "bler.col_branch": "الفرع",
+  "bler.empty": "لم يتم العثور على سجلات بوليصة شحن. انقر على \"إدخال بوليصة شحن جديد\" لإنشاء واحدة.",
+  "cbr.back_to_register": "العودة إلى سجل الفواتير",
+  "cbr.search_ph": "ابحث عن رقم الفاتورة أو العميل أو الطلب...",
+  "cbr.new_bill": "فاتورة جديدة",
+  "cbr.col_bill_no": "رقم الفاتورة",
+  "cbr.col_customer": "العميل",
+  "cbr.col_order": "الطلب",
+  "cbr.col_total": "المجموع الكلي",
+  "cbr.col_balance": "الرصيد المستحق",
+  "cbr.empty": "لم يتم العثور على فواتير عملاء. انقر على \"فاتورة جديدة\" لإنشاء واحدة.",
+  "cer.back_to_register": "العودة إلى السجل",
+  "cer.title": "سجل القيد النقدي اليومي",
+  "cer.search_ph": "ابحث عن القيد أو السند أو البيان...",
+  "cer.new_entry": "إدخال جديد",
+  "cer.col_journal_no": "رقم القيد",
+  "cer.col_date": "التاريخ",
+  "cer.col_narration": "البيان",
+  "cer.col_branch": "الفرع",
+  "cer.col_debit": "مدين",
+  "cer.col_credit": "دائن",
+  "cer.empty": "لم يتم العثور على قيود نقدية. انقر على \"إدخال جديد\" لإنشاء واحد.",
+  "cbill.register_title": "سجل فواتير العملاء",
 };
 
 const fa: Dict = {
@@ -84620,6 +84768,43 @@ const fa: Dict = {
   "mail.kb_size": "کیلوبایت",
   "mail.language_label": "زبان",
   "mail.menu_label": "منو",
+  "ace.back_to_register": "بازگشت به دفتر ثبت",
+  "ace.scan_upload": "اسکن / بارگذاری",
+  "ace.new_entry": "ورودی جدید",
+  "bler.back_to_register": "بازگشت به دفتر بارنامه",
+  "bler.title": "دفتر ثبت بارنامه",
+  "bler.search_ph": "جستجوی بارنامه، کانتینر، کشتی...",
+  "bler.new_entry": "ورودی بارنامه جدید",
+  "bler.scan_upload": "اسکن / بارگذاری",
+  "bler.col_bl_no": "شماره بارنامه",
+  "bler.col_shipping_line": "خط کشتیرانی",
+  "bler.col_vessel_voyage": "کشتی / سفر",
+  "bler.col_route": "مسیر",
+  "bler.col_eta_etd": "زمان تخمینی ورود / خروج",
+  "bler.col_status": "وضعیت",
+  "bler.col_branch": "شعبه",
+  "bler.empty": "هیچ بارنامه‌ای یافت نشد. برای ایجاد یکی روی «ورودی بارنامه جدید» کلیک کنید.",
+  "cbr.back_to_register": "بازگشت به دفتر صورتحساب‌ها",
+  "cbr.search_ph": "جستجوی شماره صورتحساب، مشتری، سفارش...",
+  "cbr.new_bill": "صورتحساب جدید",
+  "cbr.col_bill_no": "شماره صورتحساب",
+  "cbr.col_customer": "مشتری",
+  "cbr.col_order": "سفارش",
+  "cbr.col_total": "جمع کل",
+  "cbr.col_balance": "مانده بدهی",
+  "cbr.empty": "هیچ صورتحساب مشتری یافت نشد. برای ایجاد یکی روی «صورتحساب جدید» کلیک کنید.",
+  "cer.back_to_register": "بازگشت به دفتر ثبت",
+  "cer.title": "دفتر ثبت روزانه نقدی",
+  "cer.search_ph": "جستجوی دفتر روزنامه، سند، شرح...",
+  "cer.new_entry": "ورودی جدید",
+  "cer.col_journal_no": "شماره دفتر روزنامه",
+  "cer.col_date": "تاریخ",
+  "cer.col_narration": "شرح",
+  "cer.col_branch": "شعبه",
+  "cer.col_debit": "بدهکار",
+  "cer.col_credit": "بستانکار",
+  "cer.empty": "هیچ ثبت نقدی یافت نشد. برای ایجاد یکی روی «ورودی جدید» کلیک کنید.",
+  "cbill.register_title": "دفتر صورتحساب مشتری",
 };
 
 const ps: Dict = {
@@ -103635,6 +103820,43 @@ const ps: Dict = {
   "mail.kb_size": "کیلوبایټ",
   "mail.language_label": "ژبه",
   "mail.menu_label": "مینو",
+  "ace.back_to_register": "راجستر ته بیرته",
+  "ace.scan_upload": "سکین / اپلوډ",
+  "ace.new_entry": "نوی ننوتل",
+  "bler.back_to_register": "B/L راجستر ته بیرته",
+  "bler.title": "د بار لیک راجستر",
+  "bler.search_ph": "د B/L، کانتینر، بېړۍ لټون...",
+  "bler.new_entry": "نوی B/L ننوتل",
+  "bler.scan_upload": "سکین / اپلوډ",
+  "bler.col_bl_no": "د BL شمېره",
+  "bler.col_shipping_line": "د حمل او نقل کرښه",
+  "bler.col_vessel_voyage": "بېړۍ / سفر",
+  "bler.col_route": "لاره",
+  "bler.col_eta_etd": "د رسېدو / د روانېدو اټکل شوی وخت",
+  "bler.col_status": "حالت",
+  "bler.col_branch": "څانګه",
+  "bler.empty": "هیڅ B/L ریکارډ ونه موندل شو. د جوړولو لپاره \"نوی B/L ننوتل\" کېکاږئ.",
+  "cbr.back_to_register": "د بل راجستر ته بیرته",
+  "cbr.search_ph": "د بل شمېرې، پیرودونکي، امر لټون...",
+  "cbr.new_bill": "نوی بل",
+  "cbr.col_bill_no": "د بل شمېره",
+  "cbr.col_customer": "پیرودونکی",
+  "cbr.col_order": "امر",
+  "cbr.col_total": "ټول شمېر",
+  "cbr.col_balance": "پاتې تادیه",
+  "cbr.empty": "هیڅ د پیرودونکي بل ونه موندل شو. د جوړولو لپاره \"نوی بل\" کېکاږئ.",
+  "cer.back_to_register": "راجستر ته بیرته",
+  "cer.title": "د ورځني نغدو ننوتلو راجستر",
+  "cer.search_ph": "د جرنل، رسید، بیان لټون...",
+  "cer.new_entry": "نوی ننوتل",
+  "cer.col_journal_no": "د جرنل شمېره",
+  "cer.col_date": "نېټه",
+  "cer.col_narration": "بیان",
+  "cer.col_branch": "څانګه",
+  "cer.col_debit": "پور",
+  "cer.col_credit": "بور",
+  "cer.empty": "هیڅ د نغدو ننوتل ونه موندل شول. د جوړولو لپاره \"نوی ننوتل\" کېکاږئ.",
+  "cbill.register_title": "د پیرودونکي بل راجستر",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

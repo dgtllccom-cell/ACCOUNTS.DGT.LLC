@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Search, Loader2, RefreshCw, FileText, CheckCircle2, ShieldCheck, Landmark, Building2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Pencil, Search, Loader2, RefreshCw, FileText, CheckCircle2, ShieldCheck, Landmark, Building2, ScanLine, ArrowLeft } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
@@ -56,6 +57,7 @@ const EMPTY_ENTRY: any = {
 };
 
 export function AgentCustomEntryManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
+  const router = useRouter();
   const activeLang = useActiveLanguage();
   const lang = activeLang !== "en" ? activeLang : langProp;
   const dir = getLanguageDirection(lang);
@@ -69,6 +71,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
   const [statusFilter, setStatusFilter] = useState("all");
   const [form, setForm] = useState<any>(EMPTY_ENTRY);
   const [isEditing, setIsEditing] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "form">("list");
 
   // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
   const intake = useIntakeDraft("clearing_agent_custom_entries");
@@ -82,6 +85,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
     if (row) {
       setForm(row);
       setIsEditing(true);
+      setViewMode("form");
     }
   }, [intake.linkedSourceId, rows]);
 
@@ -90,6 +94,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
   // Remarks, same convention already used by the VoiceFormFill onApply below.
   useEffect(() => {
     if (!intake.draft) return;
+    setViewMode("form");
     const p = intake.payload;
     setForm((prev: any) => ({
       ...prev,
@@ -169,6 +174,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
       );
       setForm(EMPTY_ENTRY);
       setIsEditing(false);
+      setViewMode("list");
       loadData();
     } catch (err: any) {
       setError(err.message);
@@ -180,7 +186,14 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
   function handleEdit(row: AgentCustomEntryRow) {
     setForm(row);
     setIsEditing(true);
+    setViewMode("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleNewEntry() {
+    setForm(EMPTY_ENTRY);
+    setIsEditing(false);
+    setViewMode("form");
   }
 
   return (
@@ -225,13 +238,22 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
           </div>
         )}
 
-        {/* Custom Declaration Form */}
+        {/* Custom Declaration Form — only shown after "+ New Entry" / row Edit */}
+        {viewMode === "form" && (
         <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Landmark className="w-5 h-5 text-indigo-400" />
               {isEditing ? tt("ace.edit_title", "Edit Custom Declaration Entry") : tt("ace.new_title", "New Custom Declaration Entry")}
             </h2>
+            <button
+              type="button"
+              onClick={() => { setViewMode("list"); setForm(EMPTY_ENTRY); setIsEditing(false); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              {tt("ace.back_to_register", "Back to Register")}
+            </button>
           </div>
 
           {!isEditing && (
@@ -424,12 +446,14 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
             </button>
           </div>
         </form>
+        )}
 
-        {/* Declarations Register Table */}
+        {/* Declarations Register Table — the default view when the page opens */}
+        {viewMode === "list" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <h2 className="text-lg font-semibold text-white">{tt("ace.registered", "Registered Custom Declarations")} ({filteredRows.length})</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
                 <input
@@ -440,6 +464,22 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
                   className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 w-64 focus:outline-none focus:border-indigo-500"
                 />
               </div>
+              <button
+                type="button"
+                onClick={() => router.push(`/dashboard/document-intelligence?domain=shipping&module=clearing_agent_custom_entries`)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium border border-slate-700"
+              >
+                <ScanLine className="w-3.5 h-3.5" />
+                {tt("ace.scan_upload", "Scan / Upload")}
+              </button>
+              <button
+                type="button"
+                onClick={handleNewEntry}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {tt("ace.new_entry", "New Entry")}
+              </button>
             </div>
           </div>
 
@@ -506,6 +546,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
             </div>
           )}
         </div>
+        )}
       </div>
   );
 }

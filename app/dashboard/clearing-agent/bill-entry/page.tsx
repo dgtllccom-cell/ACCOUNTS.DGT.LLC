@@ -1,8 +1,10 @@
-import { BlEntryView } from "@/features/shipping/components/bl-entry-view";
+import { BlRecordsRegister } from "@/features/shipping/components/bl-records-register";
+import { requireErpSession } from "@/lib/auth/session";
 
 export const metadata = { title: "Clearing Agent — Bill Entry" };
 
 
-export default function ClearingBillEntryPage() {
-  return <BlEntryView context="shipping" />;
+export default async function ClearingBillEntryPage() {
+  const session = await requireErpSession();
+  return <BlRecordsRegister context="shipping" lang={session?.preferredLanguage ?? "en"} />;
 }

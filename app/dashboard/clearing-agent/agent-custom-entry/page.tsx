@@ -18,7 +18,7 @@ export default async function AgentCustomEntryPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl">
-        <EntryMethodSelector targetModule="clearing_agent_custom_entries" domain="shipping" lang={lang}>
+        <EntryMethodSelector targetModule="clearing_agent_custom_entries" domain="shipping" lang={lang} skipGate>
           <AgentCustomEntryManagementView lang={lang} />
         </EntryMethodSelector>
       </div>
