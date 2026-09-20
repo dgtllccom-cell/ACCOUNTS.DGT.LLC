@@ -8665,6 +8665,74 @@ export type UiKey =
   | "cst.portal_desc"
   | "cst.business_title"
   | "cst.business_desc"
+  | "com.assign_transfer_other_user"
+  | "com.order_completed_successfully"
+  | "com.order_progress_saved"
+  | "com.task_truck_transport"
+  | "com.task_goods_manifest"
+  | "com.task_expenses_review"
+  | "com.goods_item"
+  | "com.unit"
+  | "com.quantity"
+  | "com.kg_per_unit"
+  | "com.total_kg"
+  | "com.total_mt"
+  | "com.warehouse_source"
+  | "com.quality_photo"
+  | "com.import_movement_route"
+  | "com.export_movement_route"
+  | "com.bonded_transit_movement"
+  | "com.countries"
+  | "com.active_ports"
+  | "com.combined_cargo"
+  | "com.cross_border_routes"
+  | "com.global_group"
+  | "com.shipping_clearing_erp"
+  | "com.progress_complete"
+  | "com.progress_step3"
+  | "com.progress_step2"
+  | "com.progress_step1"
+  | "com.shipping_clearing_pipeline"
+  | "com.review_summary"
+  | "com.select_customer_account"
+  | "com.transfer_step1a_customer"
+  | "com.transfer_step1a_route"
+  | "com.transfer_step1b_truck"
+  | "com.transfer_step1c_goods"
+  | "com.inspection"
+  | "com.download_quality_photo"
+  | "com.select_customer_account_ph"
+  | "com.select_permanent_truck"
+  | "com.search_truck_ph"
+  | "com.driver_label"
+  | "com.truck_registration_no"
+  | "com.driver_name"
+  | "com.driver_full_name_ph"
+  | "com.driver_mobile"
+  | "com.po_hire_reference"
+  | "com.truck_assigned_later"
+  | "com.truck_assigned_later_hint"
+  | "com.select_company_warehouse"
+  | "com.select_company_warehouse_ph"
+  | "com.customer_facility"
+  | "com.address_from_customer_account"
+  | "com.other_warehouse_yard_name"
+  | "com.address_port_yard_location"
+  | "com.goods_name_from_master"
+  | "com.select_search_goods_ph"
+  | "com.qty_unit"
+  | "com.unit_bags"
+  | "com.unit_cartons"
+  | "com.unit_pallets"
+  | "com.unit_packages"
+  | "com.unit_boxes"
+  | "com.unit_loose"
+  | "com.unit_containers"
+  | "com.quality_loading_inspection_photo"
+  | "com.thumbnail"
+  | "com.edit_item"
+  | "com.remove_item"
+  | "com.consignee_shipping_destination"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -27803,6 +27871,74 @@ const en: Dict = {
   "cst.portal_desc": "Unified tracking across all transport modes: Search by Shipment No, BL No, Container No, Vessel, Voyage, Customer, or Shipping Line.",
   "cst.business_title": "Business Cargo & Container Tracking",
   "cst.business_desc": "Track physical movement of purchased goods, containers, and vessel routes across domestic and international transit.",
+  "com.assign_transfer_other_user": "Assign / Transfer to Another User",
+  "com.order_completed_successfully": "Order {orderNo} completed successfully!",
+  "com.order_progress_saved": "Order {orderNo} progress saved (Step {step}/4).",
+  "com.task_truck_transport": "Please assign and enter Truck & Transport fleet details for Order {orderNo}.",
+  "com.task_goods_manifest": "Please enter Goods manifest and warehouse breakdown for Order {orderNo}.",
+  "com.task_expenses_review": "Please review expenses, Shipping Line Admin and Customs clearance for Order {orderNo}.",
+  "com.goods_item": "Goods Item",
+  "com.unit": "Unit",
+  "com.quantity": "Quantity",
+  "com.kg_per_unit": "KG/Unit",
+  "com.total_kg": "Total KG",
+  "com.total_mt": "Total MT",
+  "com.warehouse_source": "Warehouse Source",
+  "com.quality_photo": "Quality Photo",
+  "com.import_movement_route": "Import Movement & Route Specifications",
+  "com.export_movement_route": "Export Movement & Route Specifications",
+  "com.bonded_transit_movement": "Bonded Transit Movement Specifications",
+  "com.countries": "Countries",
+  "com.active_ports": "Active Ports",
+  "com.combined_cargo": "Combined Cargo",
+  "com.cross_border_routes": "Cross-Border Routes",
+  "com.global_group": "Global Group",
+  "com.shipping_clearing_erp": "Shipping & Clearing ERP",
+  "com.progress_complete": "Complete (4/4)",
+  "com.progress_step3": "Step 3/4 (Shipping)",
+  "com.progress_step2": "Step 2/4 (Parties)",
+  "com.progress_step1": "Step 1/4 (Goods)",
+  "com.shipping_clearing_pipeline": "Shipping / Clearing pipeline — truck, goods verification, customs, handover",
+  "com.review_summary": "Review Summary",
+  "com.select_customer_account": "Select Customer Account",
+  "com.transfer_step1a_customer": "Transfer to Step 1A / Customer Profile",
+  "com.transfer_step1a_route": "Transfer to Step 1A / Movement & Route Entry",
+  "com.transfer_step1b_truck": "Transfer to Step 1B / Truck & Driver Entry",
+  "com.transfer_step1c_goods": "Transfer to Step 1C / Goods & Warehouse Entry",
+  "com.inspection": "Inspection",
+  "com.download_quality_photo": "Download quality photo",
+  "com.select_customer_account_ph": "Select Customer Account...",
+  "com.select_permanent_truck": "Select Permanent Truck",
+  "com.search_truck_ph": "Search truck by number, registration, driver or make...",
+  "com.driver_label": "Driver",
+  "com.truck_registration_no": "Truck / Registration No",
+  "com.driver_name": "Driver Name",
+  "com.driver_full_name_ph": "Driver full name",
+  "com.driver_mobile": "Driver Mobile",
+  "com.po_hire_reference": "PO / Hire Reference",
+  "com.truck_assigned_later": "Truck To Be Assigned Later",
+  "com.truck_assigned_later_hint": "This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.",
+  "com.select_company_warehouse": "Select Company Warehouse",
+  "com.select_company_warehouse_ph": "Select Company Warehouse...",
+  "com.customer_facility": "Customer Facility",
+  "com.address_from_customer_account": "Address from customer account",
+  "com.other_warehouse_yard_name": "Other Warehouse / Yard Name",
+  "com.address_port_yard_location": "Address / Port Yard Location",
+  "com.goods_name_from_master": "Goods Name (from Goods Master or New Item)",
+  "com.select_search_goods_ph": "Select or search goods from master...",
+  "com.qty_unit": "Qty Unit",
+  "com.unit_bags": "Bags",
+  "com.unit_cartons": "Cartons",
+  "com.unit_pallets": "Pallets",
+  "com.unit_packages": "Packages",
+  "com.unit_boxes": "Boxes",
+  "com.unit_loose": "Loose",
+  "com.unit_containers": "Containers",
+  "com.quality_loading_inspection_photo": "Quality / Loading Inspection Photo",
+  "com.thumbnail": "Thumbnail",
+  "com.edit_item": "Edit Item",
+  "com.remove_item": "Remove Item",
+  "com.consignee_shipping_destination": "Consignee & Shipping Destination",
 };
 
 const ur: Dict = {
@@ -46915,6 +47051,74 @@ const ur: Dict = {
   "cst.portal_desc": "تمام نقل و حمل کے طریقوں میں متحد ٹریکنگ: شپمنٹ نمبر، بی ایل نمبر، کنٹینر نمبر، بحری جہاز، سفر، کسٹمر، یا شپنگ لائن سے تلاش کریں۔",
   "cst.business_title": "بزنس کارگو اور کنٹینر ٹریکنگ",
   "cst.business_desc": "خریدے گئے سامان، کنٹینرز، اور بحری جہاز کے راستوں کی جسمانی نقل و حرکت کو ملکی اور بین الاقوامی ٹرانزٹ میں ٹریک کریں۔",
+  "com.assign_transfer_other_user": "دوسرے صارف کو تفویض / منتقل کریں",
+  "com.order_completed_successfully": "آرڈر {orderNo} کامیابی سے مکمل ہو گیا!",
+  "com.order_progress_saved": "آرڈر {orderNo} کی پیشرفت محفوظ ہو گئی (مرحلہ {step}/4)۔",
+  "com.task_truck_transport": "براہ کرم آرڈر {orderNo} کے لیے ٹرک اور ٹرانسپورٹ فلیٹ کی تفصیلات تفویض کریں اور درج کریں۔",
+  "com.task_goods_manifest": "براہ کرم آرڈر {orderNo} کے لیے سامان کی تفصیل اور گودام کی تقسیم درج کریں۔",
+  "com.task_expenses_review": "براہ کرم آرڈر {orderNo} کے اخراجات، شپنگ لائن ایڈمن اور کسٹمز کلیئرنس کا جائزہ لیں۔",
+  "com.goods_item": "سامان کی قسم",
+  "com.unit": "یونٹ",
+  "com.quantity": "مقدار",
+  "com.kg_per_unit": "کلوگرام/یونٹ",
+  "com.total_kg": "کل کلوگرام",
+  "com.total_mt": "کل میٹرک ٹن",
+  "com.warehouse_source": "گودام کا ماخذ",
+  "com.quality_photo": "کوالٹی تصویر",
+  "com.import_movement_route": "درآمد نقل و حرکت اور روٹ کی تفصیلات",
+  "com.export_movement_route": "برآمد نقل و حرکت اور روٹ کی تفصیلات",
+  "com.bonded_transit_movement": "بانڈڈ ٹرانزٹ نقل و حرکت کی تفصیلات",
+  "com.countries": "ممالک",
+  "com.active_ports": "فعال بندرگاہیں",
+  "com.combined_cargo": "مشترکہ کارگو",
+  "com.cross_border_routes": "سرحد پار راستے",
+  "com.global_group": "عالمی گروپ",
+  "com.shipping_clearing_erp": "شپنگ اور کلیئرنگ ای آر پی",
+  "com.progress_complete": "مکمل (4/4)",
+  "com.progress_step3": "مرحلہ 3/4 (شپنگ)",
+  "com.progress_step2": "مرحلہ 2/4 (فریقین)",
+  "com.progress_step1": "مرحلہ 1/4 (سامان)",
+  "com.shipping_clearing_pipeline": "شپنگ / کلیئرنگ پائپ لائن — ٹرک، سامان کی تصدیق، کسٹمز، ہینڈ اوور",
+  "com.review_summary": "جائزہ خلاصہ",
+  "com.select_customer_account": "کسٹمر اکاؤنٹ منتخب کریں",
+  "com.transfer_step1a_customer": "مرحلہ 1A / کسٹمر پروفائل میں منتقل کریں",
+  "com.transfer_step1a_route": "مرحلہ 1A / نقل و حرکت اور روٹ اندراج میں منتقل کریں",
+  "com.transfer_step1b_truck": "مرحلہ 1B / ٹرک اور ڈرائیور اندراج میں منتقل کریں",
+  "com.transfer_step1c_goods": "مرحلہ 1C / سامان اور گودام اندراج میں منتقل کریں",
+  "com.inspection": "معائنہ",
+  "com.download_quality_photo": "کوالٹی تصویر ڈاؤن لوڈ کریں",
+  "com.select_customer_account_ph": "کسٹمر اکاؤنٹ منتخب کریں...",
+  "com.select_permanent_truck": "مستقل ٹرک منتخب کریں",
+  "com.search_truck_ph": "نمبر، رجسٹریشن، ڈرائیور یا میک کے ذریعے ٹرک تلاش کریں...",
+  "com.driver_label": "ڈرائیور",
+  "com.truck_registration_no": "ٹرک / رجسٹریشن نمبر",
+  "com.driver_name": "ڈرائیور کا نام",
+  "com.driver_full_name_ph": "ڈرائیور کا مکمل نام",
+  "com.driver_mobile": "ڈرائیور موبائل",
+  "com.po_hire_reference": "پی او / ہائر حوالہ",
+  "com.truck_assigned_later": "ٹرک بعد میں تفویض کیا جائے گا",
+  "com.truck_assigned_later_hint": "یہ آرڈر بکنگ بغیر روکے محفوظ اور رجسٹر ہو جائے گی۔ ڈسپیچ آپریشنز کے دوران گاڑی تفویض کی جا سکتی ہے۔",
+  "com.select_company_warehouse": "کمپنی گودام منتخب کریں",
+  "com.select_company_warehouse_ph": "کمپنی گودام منتخب کریں...",
+  "com.customer_facility": "کسٹمر سہولت",
+  "com.address_from_customer_account": "کسٹمر اکاؤنٹ سے پتہ",
+  "com.other_warehouse_yard_name": "دیگر گودام / یارڈ کا نام",
+  "com.address_port_yard_location": "پتہ / پورٹ یارڈ کا مقام",
+  "com.goods_name_from_master": "سامان کا نام (گڈز ماسٹر یا نئی آئٹم سے)",
+  "com.select_search_goods_ph": "ماسٹر سے سامان منتخب یا تلاش کریں...",
+  "com.qty_unit": "مقدار یونٹ",
+  "com.unit_bags": "بوریاں",
+  "com.unit_cartons": "کارٹن",
+  "com.unit_pallets": "پیلٹس",
+  "com.unit_packages": "پیکجز",
+  "com.unit_boxes": "بکس",
+  "com.unit_loose": "کھلا",
+  "com.unit_containers": "کنٹینرز",
+  "com.quality_loading_inspection_photo": "کوالٹی / لوڈنگ معائنہ تصویر",
+  "com.thumbnail": "تھمب نیل",
+  "com.edit_item": "آئٹم میں ترمیم کریں",
+  "com.remove_item": "آئٹم ہٹائیں",
+  "com.consignee_shipping_destination": "کنسائنی اور شپنگ منزل",
 };
 
 const ar: Dict = {
@@ -66028,6 +66232,74 @@ const ar: Dict = {
   "cst.portal_desc": "تتبع موحد عبر جميع وسائط النقل: ابحث برقم الشحنة أو بوليصة الشحن أو رقم الحاوية أو السفينة أو الرحلة أو العميل أو خط الشحن.",
   "cst.business_title": "تتبع الشحن التجاري والحاوية",
   "cst.business_desc": "تتبع الحركة الفعلية للبضائع المشتراة والحاويات ومسارات السفن عبر النقل المحلي والدولي.",
+  "com.assign_transfer_other_user": "تعيين / نقل إلى مستخدم آخر",
+  "com.order_completed_successfully": "تم إكمال الطلب {orderNo} بنجاح!",
+  "com.order_progress_saved": "تم حفظ تقدم الطلب {orderNo} (الخطوة {step}/4).",
+  "com.task_truck_transport": "يرجى تعيين وإدخال تفاصيل أسطول الشاحنات والنقل للطلب {orderNo}.",
+  "com.task_goods_manifest": "يرجى إدخال بيان البضائع وتفصيل المستودع للطلب {orderNo}.",
+  "com.task_expenses_review": "يرجى مراجعة المصروفات وإدارة خط الشحن والتخليص الجمركي للطلب {orderNo}.",
+  "com.goods_item": "صنف البضاعة",
+  "com.unit": "الوحدة",
+  "com.quantity": "الكمية",
+  "com.kg_per_unit": "كجم/وحدة",
+  "com.total_kg": "إجمالي كجم",
+  "com.total_mt": "إجمالي طن متري",
+  "com.warehouse_source": "مصدر المستودع",
+  "com.quality_photo": "صورة الجودة",
+  "com.import_movement_route": "مواصفات حركة الاستيراد والمسار",
+  "com.export_movement_route": "مواصفات حركة التصدير والمسار",
+  "com.bonded_transit_movement": "مواصفات حركة العبور المضمون",
+  "com.countries": "الدول",
+  "com.active_ports": "الموانئ النشطة",
+  "com.combined_cargo": "الشحنة المجمعة",
+  "com.cross_border_routes": "الطرق العابرة للحدود",
+  "com.global_group": "المجموعة العالمية",
+  "com.shipping_clearing_erp": "نظام تخطيط موارد الشحن والتخليص",
+  "com.progress_complete": "مكتمل (4/4)",
+  "com.progress_step3": "الخطوة 3/4 (الشحن)",
+  "com.progress_step2": "الخطوة 2/4 (الأطراف)",
+  "com.progress_step1": "الخطوة 1/4 (البضائع)",
+  "com.shipping_clearing_pipeline": "خط أنابيب الشحن / التخليص — الشاحنة، التحقق من البضائع، الجمارك، التسليم",
+  "com.review_summary": "ملخص المراجعة",
+  "com.select_customer_account": "اختر حساب العميل",
+  "com.transfer_step1a_customer": "النقل إلى الخطوة 1A / ملف العميل",
+  "com.transfer_step1a_route": "النقل إلى الخطوة 1A / إدخال الحركة والمسار",
+  "com.transfer_step1b_truck": "النقل إلى الخطوة 1B / إدخال الشاحنة والسائق",
+  "com.transfer_step1c_goods": "النقل إلى الخطوة 1C / إدخال البضائع والمستودع",
+  "com.inspection": "الفحص",
+  "com.download_quality_photo": "تنزيل صورة الجودة",
+  "com.select_customer_account_ph": "اختر حساب العميل...",
+  "com.select_permanent_truck": "اختر شاحنة دائمة",
+  "com.search_truck_ph": "ابحث عن الشاحنة بالرقم أو التسجيل أو السائق أو الطراز...",
+  "com.driver_label": "السائق",
+  "com.truck_registration_no": "رقم الشاحنة / التسجيل",
+  "com.driver_name": "اسم السائق",
+  "com.driver_full_name_ph": "الاسم الكامل للسائق",
+  "com.driver_mobile": "جوال السائق",
+  "com.po_hire_reference": "أمر الشراء / مرجع الاستئجار",
+  "com.truck_assigned_later": "سيتم تعيين الشاحنة لاحقًا",
+  "com.truck_assigned_later_hint": "سيتم حفظ وتسجيل حجز الطلب هذا دون توقف. يمكن تعيين مركبة أثناء عمليات الإرسال.",
+  "com.select_company_warehouse": "اختر مستودع الشركة",
+  "com.select_company_warehouse_ph": "اختر مستودع الشركة...",
+  "com.customer_facility": "منشأة العميل",
+  "com.address_from_customer_account": "العنوان من حساب العميل",
+  "com.other_warehouse_yard_name": "اسم المستودع / الساحة الأخرى",
+  "com.address_port_yard_location": "العنوان / موقع ساحة الميناء",
+  "com.goods_name_from_master": "اسم البضاعة (من رئيسي البضائع أو صنف جديد)",
+  "com.select_search_goods_ph": "اختر أو ابحث عن البضائع من الرئيسي...",
+  "com.qty_unit": "وحدة الكمية",
+  "com.unit_bags": "أكياس",
+  "com.unit_cartons": "كراتين",
+  "com.unit_pallets": "منصات نقالة",
+  "com.unit_packages": "طرود",
+  "com.unit_boxes": "صناديق",
+  "com.unit_loose": "سائب",
+  "com.unit_containers": "حاويات",
+  "com.quality_loading_inspection_photo": "صورة فحص الجودة / التحميل",
+  "com.thumbnail": "صورة مصغرة",
+  "com.edit_item": "تعديل الصنف",
+  "com.remove_item": "إزالة الصنف",
+  "com.consignee_shipping_destination": "المرسل إليه ووجهة الشحن",
 };
 
 const fa: Dict = {
@@ -85140,6 +85412,74 @@ const fa: Dict = {
   "cst.portal_desc": "ردیابی یکپارچه در تمام روش‌های حمل‌ونقل: جستجو بر اساس شماره محموله، شماره بارنامه، شماره کانتینر، کشتی، سفر، مشتری یا خط کشتیرانی.",
   "cst.business_title": "ردیابی بار تجاری و کانتینر",
   "cst.business_desc": "حرکت فیزیکی کالاهای خریداری‌شده، کانتینرها و مسیرهای کشتی را در ترانزیت داخلی و بین‌المللی ردیابی کنید.",
+  "com.assign_transfer_other_user": "واگذاری / انتقال به کاربر دیگر",
+  "com.order_completed_successfully": "سفارش {orderNo} با موفقیت تکمیل شد!",
+  "com.order_progress_saved": "پیشرفت سفارش {orderNo} ذخیره شد (مرحله {step}/4).",
+  "com.task_truck_transport": "لطفاً جزئیات ناوگان کامیون و حمل‌ونقل را برای سفارش {orderNo} تخصیص و وارد کنید.",
+  "com.task_goods_manifest": "لطفاً بیانیه کالا و تفکیک انبار را برای سفارش {orderNo} وارد کنید.",
+  "com.task_expenses_review": "لطفاً هزینه‌ها، مدیریت خط کشتیرانی و ترخیص گمرکی سفارش {orderNo} را بررسی کنید.",
+  "com.goods_item": "قلم کالا",
+  "com.unit": "واحد",
+  "com.quantity": "مقدار",
+  "com.kg_per_unit": "کیلوگرم/واحد",
+  "com.total_kg": "مجموع کیلوگرم",
+  "com.total_mt": "مجموع تن متریک",
+  "com.warehouse_source": "منبع انبار",
+  "com.quality_photo": "عکس کیفیت",
+  "com.import_movement_route": "مشخصات حرکت واردات و مسیر",
+  "com.export_movement_route": "مشخصات حرکت صادرات و مسیر",
+  "com.bonded_transit_movement": "مشخصات حرکت ترانزیت گمرکی",
+  "com.countries": "کشورها",
+  "com.active_ports": "بنادر فعال",
+  "com.combined_cargo": "بار ترکیبی",
+  "com.cross_border_routes": "مسیرهای فرامرزی",
+  "com.global_group": "گروه جهانی",
+  "com.shipping_clearing_erp": "سامانه ERP حمل و ترخیص",
+  "com.progress_complete": "تکمیل‌شده (4/4)",
+  "com.progress_step3": "مرحله 3/4 (حمل)",
+  "com.progress_step2": "مرحله 2/4 (طرف‌ها)",
+  "com.progress_step1": "مرحله 1/4 (کالا)",
+  "com.shipping_clearing_pipeline": "خط لوله حمل / ترخیص — کامیون، بررسی کالا، گمرک، تحویل",
+  "com.review_summary": "خلاصه بازبینی",
+  "com.select_customer_account": "انتخاب حساب مشتری",
+  "com.transfer_step1a_customer": "انتقال به مرحله 1A / پروفایل مشتری",
+  "com.transfer_step1a_route": "انتقال به مرحله 1A / ورود حرکت و مسیر",
+  "com.transfer_step1b_truck": "انتقال به مرحله 1B / ورود کامیون و راننده",
+  "com.transfer_step1c_goods": "انتقال به مرحله 1C / ورود کالا و انبار",
+  "com.inspection": "بازرسی",
+  "com.download_quality_photo": "دانلود عکس کیفیت",
+  "com.select_customer_account_ph": "حساب مشتری را انتخاب کنید...",
+  "com.select_permanent_truck": "انتخاب کامیون دائمی",
+  "com.search_truck_ph": "جستجوی کامیون بر اساس شماره، ثبت، راننده یا مدل...",
+  "com.driver_label": "راننده",
+  "com.truck_registration_no": "شماره کامیون / ثبت",
+  "com.driver_name": "نام راننده",
+  "com.driver_full_name_ph": "نام کامل راننده",
+  "com.driver_mobile": "موبایل راننده",
+  "com.po_hire_reference": "شماره سفارش / مرجع اجاره",
+  "com.truck_assigned_later": "کامیون بعداً تخصیص داده می‌شود",
+  "com.truck_assigned_later_hint": "این رزرو سفارش بدون مانع ذخیره و ثبت خواهد شد. یک وسیله نقلیه می‌تواند در حین عملیات ارسال تخصیص یابد.",
+  "com.select_company_warehouse": "انتخاب انبار شرکت",
+  "com.select_company_warehouse_ph": "انبار شرکت را انتخاب کنید...",
+  "com.customer_facility": "تسهیلات مشتری",
+  "com.address_from_customer_account": "آدرس از حساب مشتری",
+  "com.other_warehouse_yard_name": "نام انبار / محوطه دیگر",
+  "com.address_port_yard_location": "آدرس / موقعیت محوطه بندر",
+  "com.goods_name_from_master": "نام کالا (از فهرست اصلی کالا یا قلم جدید)",
+  "com.select_search_goods_ph": "کالا را از فهرست اصلی انتخاب یا جستجو کنید...",
+  "com.qty_unit": "واحد مقدار",
+  "com.unit_bags": "کیسه‌ها",
+  "com.unit_cartons": "کارتن‌ها",
+  "com.unit_pallets": "پالت‌ها",
+  "com.unit_packages": "بسته‌ها",
+  "com.unit_boxes": "جعبه‌ها",
+  "com.unit_loose": "فله",
+  "com.unit_containers": "کانتینرها",
+  "com.quality_loading_inspection_photo": "عکس بازرسی کیفیت / بارگیری",
+  "com.thumbnail": "بندانگشتی",
+  "com.edit_item": "ویرایش قلم",
+  "com.remove_item": "حذف قلم",
+  "com.consignee_shipping_destination": "گیرنده و مقصد حمل",
 };
 
 const ps: Dict = {
@@ -104259,6 +104599,74 @@ const ps: Dict = {
   "cst.portal_desc": "د لېږد ټولو ډولونو کې متحد تعقیب: د بار شمېرې، BL شمېرې، کانتینر شمېرې، بېړۍ، سفر، پیرودونکي، یا حمل کرښې له مخې لټون وکړئ.",
   "cst.business_title": "سوداګریز بار او کانتینر تعقیب",
   "cst.business_desc": "د پیرودل شویو توکو، کانتینرونو، او د بېړۍ لارو فزیکي حرکت د کورني او نړیوال لېږد په اوږدو کې تعقیب کړئ.",
+  "com.assign_transfer_other_user": "بل کارونکي ته وسپارل / لېږدول",
+  "com.order_completed_successfully": "امر {orderNo} په بریالیتوب سره بشپړ شو!",
+  "com.order_progress_saved": "د امر {orderNo} پرمختګ خوندي شو (پړاو {step}/4).",
+  "com.task_truck_transport": "مهرباني وکړئ د امر {orderNo} لپاره د لارۍ او لېږد ناوگان توضیحات وسپارئ او ورننباسئ.",
+  "com.task_goods_manifest": "مهرباني وکړئ د امر {orderNo} لپاره د توکو بیان او ګدام ویش ورننباسئ.",
+  "com.task_expenses_review": "مهرباني وکړئ د امر {orderNo} لګښتونه، د حمل کرښې اداره او ګمرکي پاکېدنه وګورئ.",
+  "com.goods_item": "د توکو قلم",
+  "com.unit": "واحد",
+  "com.quantity": "اندازه",
+  "com.kg_per_unit": "کیلوګرام/واحد",
+  "com.total_kg": "ټول کیلوګرامونه",
+  "com.total_mt": "ټول میتریک ټنونه",
+  "com.warehouse_source": "د ګدام سرچینه",
+  "com.quality_photo": "د کیفیت انځور",
+  "com.import_movement_route": "د واردولو حرکت او د لارې مشخصات",
+  "com.export_movement_route": "د صادرولو حرکت او د لارې مشخصات",
+  "com.bonded_transit_movement": "د تضمین شوي لېږد حرکت مشخصات",
+  "com.countries": "هېوادونه",
+  "com.active_ports": "فعال بندرګاهونه",
+  "com.combined_cargo": "ګډ بار",
+  "com.cross_border_routes": "د پولې پورې لارې",
+  "com.global_group": "نړیوال ګروپ",
+  "com.shipping_clearing_erp": "د حمل او پاکېدنې ERP",
+  "com.progress_complete": "بشپړ (4/4)",
+  "com.progress_step3": "پړاو 3/4 (لېږد)",
+  "com.progress_step2": "پړاو 2/4 (اړخونه)",
+  "com.progress_step1": "پړاو 1/4 (توکي)",
+  "com.shipping_clearing_pipeline": "د لېږد / پاکېدنې پایپ‌لاین — لاري، د توکو تصدیق، ګمرک، سپارنه",
+  "com.review_summary": "د بیاکتنې لنډیز",
+  "com.select_customer_account": "د پیرودونکي حساب وټاکئ",
+  "com.transfer_step1a_customer": "پړاو 1A / د پیرودونکي پروفایل ته لېږدول",
+  "com.transfer_step1a_route": "پړاو 1A / د حرکت او لارې ننوتلو ته لېږدول",
+  "com.transfer_step1b_truck": "پړاو 1B / د لارۍ او چلوونکي ننوتلو ته لېږدول",
+  "com.transfer_step1c_goods": "پړاو 1C / د توکو او ګدام ننوتلو ته لېږدول",
+  "com.inspection": "معاینه",
+  "com.download_quality_photo": "د کیفیت انځور ډاونلوډ کړئ",
+  "com.select_customer_account_ph": "د پیرودونکي حساب وټاکئ...",
+  "com.select_permanent_truck": "دایمي لاري وټاکئ",
+  "com.search_truck_ph": "لاري د شمېرې، راجستریشن، چلوونکي یا ډول له مخې ولټوئ...",
+  "com.driver_label": "چلوونکی",
+  "com.truck_registration_no": "د لارۍ / راجستریشن شمېره",
+  "com.driver_name": "د چلوونکي نوم",
+  "com.driver_full_name_ph": "د چلوونکي بشپړ نوم",
+  "com.driver_mobile": "د چلوونکي موبایل",
+  "com.po_hire_reference": "PO / د کرایې حواله",
+  "com.truck_assigned_later": "لاري به وروسته وسپارل شي",
+  "com.truck_assigned_later_hint": "دا د امر بکنګ به پرته له بندېدو خوندي او راجستر شي. یوه وسیله د لېږد په عملیاتو کې وسپارل کیدی شي.",
+  "com.select_company_warehouse": "د شرکت ګدام وټاکئ",
+  "com.select_company_warehouse_ph": "د شرکت ګدام وټاکئ...",
+  "com.customer_facility": "د پیرودونکي اسانتیا",
+  "com.address_from_customer_account": "د پیرودونکي حساب څخه پته",
+  "com.other_warehouse_yard_name": "د نور ګدام / حویلۍ نوم",
+  "com.address_port_yard_location": "پته / د بندر حویلۍ ځای",
+  "com.goods_name_from_master": "د توکو نوم (د توکو ماسټر یا نوي توکي څخه)",
+  "com.select_search_goods_ph": "د ماسټر څخه توکي وټاکئ یا ولټوئ...",
+  "com.qty_unit": "د اندازې واحد",
+  "com.unit_bags": "بوجۍ",
+  "com.unit_cartons": "کارتنونه",
+  "com.unit_pallets": "پلیټونه",
+  "com.unit_packages": "بسته بندۍ",
+  "com.unit_boxes": "بکسونه",
+  "com.unit_loose": "خلاص",
+  "com.unit_containers": "کانتینرونه",
+  "com.quality_loading_inspection_photo": "د کیفیت / بارولو معاینې انځور",
+  "com.thumbnail": "کوچنی انځور",
+  "com.edit_item": "توکی ایډیټ کول",
+  "com.remove_item": "توکی لرې کول",
+  "com.consignee_shipping_destination": "ترلاسه کوونکی او د لېږد منزل",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

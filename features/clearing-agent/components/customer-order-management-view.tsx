@@ -236,15 +236,6 @@ type PartySelection = {
   addressSource: string;
 };
 
-const PARTY_ROLES: Array<{ key: PartyRoleKey; label: string; labelKey: string; required?: boolean }> = [
-  { key: "supplier", label: "Supplier / Order Party", labelKey: "role_supplier", required: true },
-  { key: "importer", label: "Importer", labelKey: "role_importer", required: true },
-  { key: "exporter", label: "Exporter", labelKey: "role_exporter", required: true },
-  { key: "notify_party", label: "Notify Party", labelKey: "role_notify_party" },
-  { key: "buyer", label: "Buyer", labelKey: "role_buyer" },
-  { key: "consignee", label: "Consignee", labelKey: "role_consignee" }
-];
-
 export type CustomerOrderGoodsItem = {
   id?: string;
   goodsId: string;
@@ -592,15 +583,15 @@ function getOrderProgress(order: ClearingCustomerOrderRow) {
   const hasLogistics = Boolean(order.loading_country_id || order.receiving_country_id || order.loading_port_id || order.route_name);
 
   if (hasGoods && hasSupplier && hasShipping && hasLogistics) {
-    return { step: 4, label: "Complete (4/4)", color: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800" };
+    return { step: 4, labelKey: "progress_complete", label: "Complete (4/4)", color: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800" };
   }
   if (hasGoods && hasSupplier && hasShipping) {
-    return { step: 3, label: "Step 3/4 (Shipping)", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800" };
+    return { step: 3, labelKey: "progress_step3", label: "Step 3/4 (Shipping)", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800" };
   }
   if (hasGoods && hasSupplier) {
-    return { step: 2, label: "Step 2/4 (Parties)", color: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800" };
+    return { step: 2, labelKey: "progress_step2", label: "Step 2/4 (Parties)", color: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800" };
   }
-  return { step: 1, label: "Step 1/4 (Goods)", color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" };
+  return { step: 1, labelKey: "progress_step1", label: "Step 1/4 (Goods)", color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" };
 }
 
 function PartyRolePanel({
@@ -1890,8 +1881,8 @@ export function CustomerOrderManagementView() {
 
       setSuccessMessage(
         advanceStep && currentStep === 4
-          ? `Order ${savedOrder?.order_no || ""} completed successfully!`
-          : `Order ${savedOrder?.order_no || ""} progress saved (Step ${currentStep}/4).`
+          ? tt("order_completed_successfully", "Order {orderNo} completed successfully!").replace("{orderNo}", savedOrder?.order_no || "")
+          : tt("order_progress_saved", "Order {orderNo} progress saved (Step {step}/4).").replace("{orderNo}", savedOrder?.order_no || "").replace("{step}", String(currentStep))
       );
 
       await fetchInitialData();
@@ -1908,10 +1899,10 @@ export function CustomerOrderManagementView() {
           nextStepTitle: stepsList[nextStep - 1]?.title || `Step ${nextStep}`,
           nextSubStep: nextSub,
           defaultTask: currentStep === 1
-            ? `Please assign and enter Truck & Transport fleet details for Order ${savedOrder?.order_no || formData.order_no || ""}.`
+            ? tt("task_truck_transport", "Please assign and enter Truck & Transport fleet details for Order {orderNo}.").replace("{orderNo}", savedOrder?.order_no || formData.order_no || "")
             : currentStep === 2
-            ? `Please enter Goods manifest and warehouse breakdown for Order ${savedOrder?.order_no || formData.order_no || ""}.`
-            : `Please review expenses, Shipping Line Admin and Customs clearance for Order ${savedOrder?.order_no || formData.order_no || ""}.`,
+            ? tt("task_goods_manifest", "Please enter Goods manifest and warehouse breakdown for Order {orderNo}.").replace("{orderNo}", savedOrder?.order_no || formData.order_no || "")
+            : tt("task_expenses_review", "Please review expenses, Shipping Line Admin and Customs clearance for Order {orderNo}.").replace("{orderNo}", savedOrder?.order_no || formData.order_no || ""),
           transferType: currentStep === 1 ? "truck_task" : currentStep === 2 ? "goods_verification" : "shipping_handover"
         });
       } else if (advanceStep && currentStep === 4) {
@@ -2092,7 +2083,7 @@ export function CustomerOrderManagementView() {
                 className="w-full flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-2.5 transition dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
               >
                 <Users className="h-3.5 w-3.5" />
-                <span>Doosre User ko Assign / Transfer karein</span>
+                <span>{tt("assign_transfer_other_user", "Assign / Transfer to Another User")}</span>
               </button>
             </div>
           </div>
@@ -2258,8 +2249,8 @@ export function CustomerOrderManagementView() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_locations", "Locations & Ports")}</span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400"><Anchor className="h-3.5 w-3.5" /></span>
               </div>
-              <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{countries.length} <span className="text-xs font-normal text-slate-400">Countries</span></div>
-              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{ports.length} Active Ports</div>
+              <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{countries.length} <span className="text-xs font-normal text-slate-400">{tt("countries", "Countries")}</span></div>
+              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{ports.length} {tt("active_ports", "Active Ports")}</div>
             </div>
 
             {/* 4. Total Volume */}
@@ -2269,7 +2260,7 @@ export function CustomerOrderManagementView() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400"><Scale className="h-3.5 w-3.5" /></span>
               </div>
               <div className="mt-2 text-xl font-black text-indigo-600 dark:text-indigo-400">{orderCounts.totalVolume.toLocaleString()} <span className="text-xs font-normal text-slate-400">MT</span></div>
-              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">Combined Cargo</div>
+              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{tt("combined_cargo", "Combined Cargo")}</div>
             </div>
 
             {/* 5. Active Routes */}
@@ -2279,7 +2270,7 @@ export function CustomerOrderManagementView() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><Globe2 className="h-3.5 w-3.5" /></span>
               </div>
               <div className="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400">{orderCounts.uniqueRoutes}</div>
-              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">Cross-Border Routes</div>
+              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{tt("cross_border_routes", "Cross-Border Routes")}</div>
             </div>
 
             {/* 6. Quick Info */}
@@ -2288,8 +2279,8 @@ export function CustomerOrderManagementView() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_quick_info", "Quick Info")}</span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"><BadgeInfo className="h-3.5 w-3.5" /></span>
               </div>
-              <div className="mt-2 text-xs font-black text-slate-800 dark:text-slate-200 truncate">{userContext.context?.branchName || "Global Group"}</div>
-              <div className="mt-1 text-[9.5px] font-medium text-slate-500">Shipping & Clearing ERP</div>
+              <div className="mt-2 text-xs font-black text-slate-800 dark:text-slate-200 truncate">{userContext.context?.branchName || tt("global_group", "Global Group")}</div>
+              <div className="mt-1 text-[9.5px] font-medium text-slate-500">{tt("shipping_clearing_erp", "Shipping & Clearing ERP")}</div>
             </div>
           </div>
 
@@ -2448,7 +2439,7 @@ export function CustomerOrderManagementView() {
                             <a
                               href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
                               className="font-mono font-bold text-blue-600 hover:underline dark:text-blue-400"
-                              title="Shipping / Clearing pipeline — truck, goods verification, customs, handover"
+                              title={tt("shipping_clearing_pipeline", "Shipping / Clearing pipeline — truck, goods verification, customs, handover")}
                             >
                               {order.order_no || `CL-${order.id.slice(0, 6)}`}
                             </a>
@@ -2493,7 +2484,7 @@ export function CustomerOrderManagementView() {
                           </td>
                           <td className="px-3.5 py-3">
                             <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${prog.color}`}>
-                              {prog.label}
+                              {tt(prog.labelKey, prog.label)}
                             </span>
                             {order.status === "approved" || order.status === "rejected" || order.status === "pending_approval" ? (
                               <div className="mt-1">
@@ -3000,7 +2991,7 @@ export function CustomerOrderManagementView() {
                           disabled={saving}
                           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
                         >
-                          <span>Review Summary</span>
+                          <span>{tt("review_summary", "Review Summary")}</span>
                         </button>
                         <button
                           type="button"
@@ -3020,7 +3011,7 @@ export function CustomerOrderManagementView() {
                         className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-6 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
                       >
                         {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                        <span>Confirm & Save Customer Order</span>
+                        <span>{tt("confirm_save_order", "Confirm & Save Customer Order")}</span>
                       </button>
                     )}
                   </div>
@@ -3103,7 +3094,7 @@ export function CustomerOrderManagementView() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || "— Select Customer Account —"}
+                            {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || `— ${tt("select_customer_account", "Select Customer Account")} —`}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                             {selectedAccountInfo?.code || selectedCustomerInfo?.person_code || "ACC"}
@@ -3145,7 +3136,7 @@ export function CustomerOrderManagementView() {
                           setCurrentStep(1);
                         }}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
-                        title="Transfer to Step 1A / Customer Profile"
+                        title={tt("transfer_step1a_customer", "Transfer to Step 1A / Customer Profile")}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         <span>Transfer to 1A</span>
@@ -3270,7 +3261,7 @@ export function CustomerOrderManagementView() {
                         setCurrentStep(1);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-xs font-bold text-sky-700 hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300 transition shadow-2xs"
-                      title="Transfer to Step 1A / Movement & Route Entry"
+                      title={tt("transfer_step1a_route", "Transfer to Step 1A / Movement & Route Entry")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       <span>Transfer to Route (1A)</span>
@@ -3387,7 +3378,7 @@ export function CustomerOrderManagementView() {
                         setCurrentStep(2);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300 transition shadow-2xs"
-                      title="Transfer to Step 1B / Truck & Driver Entry"
+                      title={tt("transfer_step1b_truck", "Transfer to Step 1B / Truck & Driver Entry")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       <span>Transfer to Truck (1B)</span>
@@ -3471,7 +3462,7 @@ export function CustomerOrderManagementView() {
                         setCurrentStep(3);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 transition shadow-2xs"
-                      title="Transfer to Step 1C / Goods & Warehouse Entry"
+                      title={tt("transfer_step1c_goods", "Transfer to Step 1C / Goods & Warehouse Entry")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       <span>Transfer to Goods (1C)</span>
@@ -3484,15 +3475,15 @@ export function CustomerOrderManagementView() {
                       <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
                         <tr>
                           <th className="py-2.5 px-3">#</th>
-                          <th className="py-2.5 px-3">Goods Item</th>
-                          <th className="py-2.5 px-3">CHS Code</th>
-                          <th className="py-2.5 px-3">Unit</th>
-                          <th className="py-2.5 px-3 text-right">Quantity</th>
-                          <th className="py-2.5 px-3 text-right">KG/Unit</th>
-                          <th className="py-2.5 px-3 text-right">Total KG</th>
-                          <th className="py-2.5 px-3 text-right">Total MT</th>
-                          <th className="py-2.5 px-3">Warehouse Source</th>
-                          <th className="py-2.5 px-3 text-center">Quality Photo</th>
+                          <th className="py-2.5 px-3">{tt("goods_item", "Goods Item")}</th>
+                          <th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</th>
+                          <th className="py-2.5 px-3">{tt("unit", "Unit")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("kg_per_unit", "KG/Unit")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("total_kg", "Total KG")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("total_mt", "Total MT")}</th>
+                          <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
+                          <th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
@@ -3549,14 +3540,14 @@ export function CustomerOrderManagementView() {
                                   <div className="inline-flex items-center justify-center gap-1">
                                     <img
                                       src={it.photoUrl}
-                                      alt="Inspection"
+                                      alt={tt("inspection", "Inspection")}
                                       className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700 shadow-2xs"
                                     />
                                     <a
                                       href={it.photoUrl}
                                       download={it.photoName || `inspection-${idx + 1}.jpg`}
                                       className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition"
-                                      title="Download quality photo"
+                                      title={tt("download_quality_photo", "Download quality photo")}
                                     >
                                       <Download className="h-3 w-3" />
                                     </a>
@@ -4219,7 +4210,7 @@ function Step1BookingCustomer({
               label=""
               value={formData.customer_id}
               options={customerOptions}
-              placeholder="Select Customer Account..."
+              placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
               onValueChange={handleCustomerSelection}
               disabled={loading}
               searchPlaceholder="Search customer by name, code or mobile..."
@@ -4291,7 +4282,7 @@ function Step1BookingCustomer({
               <div className="flex items-center justify-between border-b border-sky-200/60 pb-1.5 dark:border-sky-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-sky-800 dark:text-sky-300">
                   <Ship className="h-4 w-4 text-sky-600" />
-                  <span>Import Movement & Route Specifications</span>
+                  <span>{tt("import_movement_route", "Import Movement & Route Specifications")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300">
                   Import Clearance
@@ -4418,7 +4409,7 @@ function Step1BookingCustomer({
               <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5 dark:border-emerald-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
                   <Repeat2 className="h-4 w-4 text-emerald-600" />
-                  <span>Export Movement & Route Specifications</span>
+                  <span>{tt("export_movement_route", "Export Movement & Route Specifications")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
                   Export Clearance
@@ -4533,7 +4524,7 @@ function Step1BookingCustomer({
               <div className="flex items-center justify-between border-b border-purple-200/60 pb-1.5 dark:border-purple-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-purple-800 dark:text-purple-300">
                   <Repeat2 className="h-4 w-4 text-purple-600" />
-                  <span>Bonded Transit Movement Specifications</span>
+                  <span>{tt("bonded_transit_movement", "Bonded Transit Movement Specifications")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 uppercase">
                   {formData.movement_type.replace("_", " ")}
@@ -4752,9 +4743,9 @@ function Step1BookingCustomer({
               {formData.truck_assignment_mode === "permanent" && (
                 <div className="space-y-2">
                   <SearchSelect
-                    label="Select Permanent Truck *"
+                    label={`${tt("select_permanent_truck", "Select Permanent Truck")} *`}
                     value={formData.truck_id}
-                    placeholder="Search truck by number, registration, driver or make..."
+                    placeholder={tt("search_truck_ph", "Search truck by number, registration, driver or make...")}
                     options={(trucksList || []).map((t: any) => ({
                       value: t.id,
                       label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
@@ -4782,7 +4773,7 @@ function Step1BookingCustomer({
                     <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
-                        <span className="text-slate-400 ml-2">Driver: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
+                        <span className="text-slate-400 ml-2">{tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
                       </div>
                       {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
                     </div>
@@ -4794,7 +4785,7 @@ function Step1BookingCustomer({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Truck / Registration No *
+                      {tt("truck_registration_no", "Truck / Registration No")} *
                     </label>
                     <input
                       type="text"
@@ -4806,19 +4797,19 @@ function Step1BookingCustomer({
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Driver Name
+                      {tt("driver_name", "Driver Name")}
                     </label>
                     <input
                       type="text"
                       value={formData.truck_driver_name}
                       onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
-                      placeholder="Driver full name"
+                      placeholder={tt("driver_full_name_ph", "Driver full name")}
                       className={inputClass}
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      Driver Mobile
+                      {tt("driver_mobile", "Driver Mobile")}
                     </label>
                     <input
                       type="text"
@@ -4830,7 +4821,7 @@ function Step1BookingCustomer({
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      PO / Hire Reference
+                      {tt("po_hire_reference", "PO / Hire Reference")}
                     </label>
                     <input
                       type="text"
@@ -4847,10 +4838,10 @@ function Step1BookingCustomer({
                 <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
                   <div className="font-bold flex items-center gap-1.5">
                     <BadgeInfo className="h-4 w-4 text-amber-600" />
-                    <span>Truck To Be Assigned Later</span>
+                    <span>{tt("truck_assigned_later", "Truck To Be Assigned Later")}</span>
                   </div>
                   <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
-                    This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.
+                    {tt("truck_assigned_later_hint", "This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.")}
                   </p>
                 </div>
               )}
@@ -5150,9 +5141,9 @@ function Step1BookingCustomer({
                 {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
                   <div className="mt-2">
                     <SearchSelect
-                      label="Select Company Warehouse *"
+                      label={`${tt("select_company_warehouse", "Select Company Warehouse")} *`}
                       value={draftGoodsItem.warehouseId}
-                      placeholder="Select Company Warehouse..."
+                      placeholder={tt("select_company_warehouse_ph", "Select Company Warehouse...")}
                       options={(warehousesList || []).map((w: any) => ({
                         value: w.id,
                         label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
@@ -5173,8 +5164,8 @@ function Step1BookingCustomer({
 
                 {draftGoodsItem.warehouseSourceType === "customer_warehouse" && (
                   <div className="mt-2 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
-                    <span className="font-bold text-emerald-900 dark:text-emerald-300">Customer Facility: </span>
-                    <span className="text-slate-700 dark:text-slate-300">{draftGoodsItem.warehouseAddressText || selectedCustomer?.address || "Address from customer account"}</span>
+                    <span className="font-bold text-emerald-900 dark:text-emerald-300">{tt("customer_facility", "Customer Facility")}: </span>
+                    <span className="text-slate-700 dark:text-slate-300">{draftGoodsItem.warehouseAddressText || selectedCustomer?.address || tt("address_from_customer_account", "Address from customer account")}</span>
                   </div>
                 )}
 
@@ -5182,14 +5173,14 @@ function Step1BookingCustomer({
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input
                       type="text"
-                      placeholder="Other Warehouse / Yard Name *"
+                      placeholder={`${tt("other_warehouse_yard_name", "Other Warehouse / Yard Name")} *`}
                       value={draftGoodsItem.warehouseName}
                       onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
                       className={inputClass}
                     />
                     <input
                       type="text"
-                      placeholder="Address / Port Yard Location *"
+                      placeholder={`${tt("address_port_yard_location", "Address / Port Yard Location")} *`}
                       value={draftGoodsItem.warehouseAddressText}
                       onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
                       className={inputClass}
@@ -5201,12 +5192,12 @@ function Step1BookingCustomer({
               {/* Row 1: Goods Master Selection */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Goods Name (from Goods Master or New Item) *
+                  {tt("goods_name_from_master", "Goods Name (from Goods Master or New Item)")} *
                 </label>
                 <SearchSelect
                   label=""
                   value={draftGoodsItem.goodsId}
-                  placeholder="Select or search goods from master..."
+                  placeholder={tt("select_search_goods_ph", "Select or search goods from master...")}
                   options={(goodsMasterList || []).map((g: any) => ({
                     value: g.id,
                     label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
@@ -5226,21 +5217,21 @@ function Step1BookingCustomer({
               {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total KG */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Qty Unit</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">{tt("qty_unit", "Qty Unit")}</label>
                   <select
                     value={draftGoodsItem.unit}
                     onChange={(e) => handleDraftGoodsChange("unit", e.target.value)}
                     className={selectClass}
                   >
-                    <option value="Bags">Bags</option>
-                    <option value="Cartons">Cartons</option>
-                    <option value="Pallets">Pallets</option>
-                    <option value="Packages">Packages</option>
-                    <option value="Boxes">Boxes</option>
+                    <option value="Bags">{tt("unit_bags", "Bags")}</option>
+                    <option value="Cartons">{tt("unit_cartons", "Cartons")}</option>
+                    <option value="Pallets">{tt("unit_pallets", "Pallets")}</option>
+                    <option value="Packages">{tt("unit_packages", "Packages")}</option>
+                    <option value="Boxes">{tt("unit_boxes", "Boxes")}</option>
                     <option value="MT">MT</option>
                     <option value="KG">KG</option>
-                    <option value="Loose">Loose</option>
-                    <option value="Containers">Containers</option>
+                    <option value="Loose">{tt("unit_loose", "Loose")}</option>
+                    <option value="Containers">{tt("unit_containers", "Containers")}</option>
                   </select>
                 </div>
 
@@ -5286,7 +5277,7 @@ function Step1BookingCustomer({
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                    <span>Quality / Loading Inspection Photo</span>
+                    <span>{tt("quality_loading_inspection_photo", "Quality / Loading Inspection Photo")}</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -5378,14 +5369,14 @@ function Step1BookingCustomer({
                             <div className="inline-flex items-center gap-1">
                               <img
                                 src={it.photoUrl}
-                                alt="Thumbnail"
+                                alt={tt("thumbnail", "Thumbnail")}
                                 className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700"
                               />
                               <a
                                 href={it.photoUrl}
                                 download={it.photoName || `goods-photo-${idx + 1}.jpg`}
                                 className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                title="Download Quality Photo"
+                                title={tt("download_quality_photo", "Download quality photo")}
                               >
                                 <Download className="h-3.5 w-3.5" />
                               </a>
@@ -5400,7 +5391,7 @@ function Step1BookingCustomer({
                               type="button"
                               onClick={() => handleEditGoodsRow(idx)}
                               className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                              title="Edit Item"
+                              title={tt("edit_item", "Edit Item")}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -5408,7 +5399,7 @@ function Step1BookingCustomer({
                               type="button"
                               onClick={() => removeGoodsItem(idx)}
                               className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                              title="Remove Item"
+                              title={tt("remove_item", "Remove Item")}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -6687,7 +6678,7 @@ function Step4ReviewConfirm({
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                   <MapPin className="h-3.5 w-3.5" />
-                  <span>Consignee & Shipping Destination</span>
+                  <span>{tt("consignee_shipping_destination", "Consignee & Shipping Destination")}</span>
                 </div>
                 <button
                   type="button"
