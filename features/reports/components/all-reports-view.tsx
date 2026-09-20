@@ -248,7 +248,7 @@ export function AllReportsView() {
       kpis: [
         { label: tr("Total Reports"), value: ALL_REPORTS_CATALOG.length, color: "blue" },
         { label: tr("Filtered Count"), value: filteredReports.length, color: "emerald" },
-        { label: tr("Category Filter"), value: selectedCategory === "all" ? "All Categories" : selectedCategory, color: "purple" },
+        { label: tr("Category Filter"), value: selectedCategory === "all" ? tr("All Categories") : selectedCategory, color: "purple" },
       ],
       filters: [
         ...(searchQuery ? [{ label: tr("Search Query"), value: searchQuery }] : []),
