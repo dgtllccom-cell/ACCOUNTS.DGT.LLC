@@ -24,7 +24,6 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingRecords, setLoadingRecords] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selectedBill, setSelectedBill] = useState<any | null>(null);
@@ -33,22 +32,18 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
   async function loadData() {
     setLoading(true);
     try {
-      const [poRes, lrRes, payRes] = await Promise.all([
+      const [poRes, lrRes] = await Promise.all([
         fetch("/api/erp/purchases/orders?limit=1000", { cache: "no-store" }),
-        fetch("/api/erp/purchases/loading-records?limit=1000", { cache: "no-store" }),
-        fetch("/api/erp/purchases/payments?limit=1000", { cache: "no-store" }).catch(() => null)
+        fetch("/api/erp/purchases/loading-records?limit=1000", { cache: "no-store" })
       ]);
       const poPayload = await poRes.json().catch(() => ({}));
       const lrPayload = await lrRes.json().catch(() => ({}));
-      const payPayload = payRes ? await payRes.json().catch(() => ({})) : {};
 
       const allOrders = Array.isArray(poPayload.data) ? poPayload.data : (poPayload.data?.orders || poPayload.orders || []);
       const allLoading = lrPayload.data?.records || [];
-      const allPayments = payPayload.data?.payments || payPayload.payments || [];
 
       setOrders(allOrders);
       setLoadingRecords(allLoading);
-      setPayments(allPayments);
     } catch (err) {
       console.error("Error loading completed purchase bills:", err);
     } finally {

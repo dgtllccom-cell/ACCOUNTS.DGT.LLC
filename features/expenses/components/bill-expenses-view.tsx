@@ -715,13 +715,20 @@ function BillExpenseDetailModal({
   async function removeLine(lineId: string) {
     setBusy(true);
     try {
-      await fetch(`/api/erp/bill-expenses/${id}/lines`, {
+      const res = await fetch(`/api/erp/bill-expenses/${id}/lines`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lineId })
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErr(data.error?.message || data.error || s.t("toast_error", "Could not save the expense. Please try again."));
+        return;
+      }
       await reload();
       onChanged();
+    } catch {
+      setErr(s.t("toast_error", "Could not save the expense. Please try again."));
     } finally {
       setBusy(false);
     }

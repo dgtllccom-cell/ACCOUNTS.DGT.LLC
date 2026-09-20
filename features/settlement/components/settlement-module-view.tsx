@@ -178,19 +178,23 @@ export function SettlementModuleView({
   }
 
   async function handleUnlink(linkId: string) {
-    if (!confirm("Are you sure you want to remove this settlement link? Both balances will be restored.")) return;
+    if (!confirm(th("Are you sure you want to remove this settlement link? Both balances will be restored."))) return;
 
     try {
       const res = await fetch(`/api/erp/settlement/link/${linkId}`, {
         method: "DELETE"
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setLinkMsg({ text: th("Link successfully removed and balances reversed"), type: "success" });
         loadData();
         if (selectedTxn) handleSelectTxn(selectedTxn);
+      } else {
+        setLinkMsg({ text: data.error?.message || data.error || th("Failed to remove link"), type: "error" });
       }
     } catch (e) {
       console.error("Failed to remove link", e);
+      setLinkMsg({ text: th("Network error while removing link"), type: "error" });
     }
   }
 
