@@ -8483,6 +8483,84 @@ export type UiKey =
   | "email.titan_auto"
   | "email.custom_server"
 
+  | "mail.cloud_mail_platform"
+  | "mail.search_placeholder"
+  | "mail.upgrade_quota"
+  | "mail.erp_control_hub"
+  | "mail.storage_plans"
+  | "mail.sign_out"
+  | "mail.compose"
+  | "mail.inbox"
+  | "mail.starred"
+  | "mail.sent"
+  | "mail.drafts"
+  | "mail.spam"
+  | "mail.trash"
+  | "mail.storage"
+  | "mail.used_of_plan"
+  | "mail.plan_suffix"
+  | "mail.approaching_quota"
+  | "mail.get_more_storage"
+  | "mail.no_emails_in"
+  | "mail.no_emails_hint"
+  | "mail.no_subject"
+  | "mail.no_preview"
+  | "mail.code_label"
+  | "mail.back_to_list"
+  | "mail.star_message"
+  | "mail.mark_unread"
+  | "mail.mark_read"
+  | "mail.restore"
+  | "mail.restore_to_inbox"
+  | "mail.delete_forever"
+  | "mail.delete_permanently"
+  | "mail.delete_move_trash"
+  | "mail.reply"
+  | "mail.reply_to_sender"
+  | "mail.reply_all"
+  | "mail.reply_all_hint"
+  | "mail.forward"
+  | "mail.forward_message"
+  | "mail.verified"
+  | "mail.from_label"
+  | "mail.to_label"
+  | "mail.verification_code_detected"
+  | "mail.verification_code_hint"
+  | "mail.copy_code"
+  | "mail.copied"
+  | "mail.attachments"
+  | "mail.download_attachment"
+  | "mail.attachment_stored_notice"
+  | "mail.select_email_to_view"
+  | "mail.select_email_hint"
+  | "mail.refresh_messages"
+  | "mail.critical_quota_msg"
+  | "mail.warning_quota_msg"
+  | "mail.upgrade_storage_plan"
+  | "mail.compose_new_title"
+  | "mail.compose_reply_title"
+  | "mail.compose_reply_all_title"
+  | "mail.compose_forward_title"
+  | "mail.draft_saved_badge"
+  | "mail.from_field"
+  | "mail.to_field"
+  | "mail.subject_field"
+  | "mail.recipient_placeholder"
+  | "mail.subject_placeholder"
+  | "mail.body_placeholder"
+  | "mail.attach_files"
+  | "mail.attach"
+  | "mail.save_draft"
+  | "mail.saving"
+  | "mail.discard"
+  | "mail.send"
+  | "mail.sending"
+  | "mail.err_recipient_required"
+  | "mail.err_subject_required"
+  | "mail.err_over_quota"
+  | "mail.kb_size"
+  | "mail.language_label"
+  | "mail.menu_label"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -27439,6 +27517,84 @@ const en: Dict = {
   "dintake.create_entry_suffix": "Entry",
   "dintake.customer_label": "Customer",
   "dintake.supplier_vendor_label": "Supplier / Vendor",
+  "mail.cloud_mail_platform": "Cloud Mail Platform",
+  "mail.search_placeholder": "Search mail, senders, subjects, or verification codes...",
+  "mail.upgrade_quota": "Upgrade Quota",
+  "mail.erp_control_hub": "DGT ERP Control Hub",
+  "mail.storage_plans": "Storage & Plans",
+  "mail.sign_out": "Sign Out",
+  "mail.compose": "Compose",
+  "mail.inbox": "Inbox",
+  "mail.starred": "Starred",
+  "mail.sent": "Sent",
+  "mail.drafts": "Drafts",
+  "mail.spam": "Spam",
+  "mail.trash": "Trash",
+  "mail.storage": "Storage",
+  "mail.used_of_plan": "used",
+  "mail.plan_suffix": "plan",
+  "mail.approaching_quota": "Approaching quota limit",
+  "mail.get_more_storage": "Get More Storage",
+  "mail.no_emails_in": "No emails in",
+  "mail.no_emails_hint": "When external senders, social platforms, or services send you emails, they will appear right here.",
+  "mail.no_subject": "(No Subject)",
+  "mail.no_preview": "No preview",
+  "mail.code_label": "Code",
+  "mail.back_to_list": "Back to list",
+  "mail.star_message": "Star message",
+  "mail.mark_unread": "Mark as unread",
+  "mail.mark_read": "Mark as read",
+  "mail.restore": "Restore",
+  "mail.restore_to_inbox": "Restore to Inbox",
+  "mail.delete_forever": "Delete Forever",
+  "mail.delete_permanently": "Delete permanently",
+  "mail.delete_move_trash": "Delete / Move to Trash",
+  "mail.reply": "Reply",
+  "mail.reply_to_sender": "Reply to sender",
+  "mail.reply_all": "Reply All",
+  "mail.reply_all_hint": "Reply to all recipients",
+  "mail.forward": "Forward",
+  "mail.forward_message": "Forward message",
+  "mail.verified": "Verified",
+  "mail.from_label": "From",
+  "mail.to_label": "To",
+  "mail.verification_code_detected": "Online Verification Code Detected",
+  "mail.verification_code_hint": "Use this single-use code to complete verification for your account.",
+  "mail.copy_code": "Copy Code",
+  "mail.copied": "Copied",
+  "mail.attachments": "Attachments",
+  "mail.download_attachment": "Download attachment",
+  "mail.attachment_stored_notice": "Attachment is stored in mail storage.",
+  "mail.select_email_to_view": "Select an email to view",
+  "mail.select_email_hint": "Choose an email from the list on the left to read its contents or copy verification codes.",
+  "mail.refresh_messages": "Refresh messages",
+  "mail.critical_quota_msg": "Critical: Your mailbox is {percent}% full. Incoming emails may bounce.",
+  "mail.warning_quota_msg": "Notice: You have used {percent}% of your storage quota.",
+  "mail.upgrade_storage_plan": "Upgrade Storage Plan",
+  "mail.compose_new_title": "New Message",
+  "mail.compose_reply_title": "Reply",
+  "mail.compose_reply_all_title": "Reply All",
+  "mail.compose_forward_title": "Forward",
+  "mail.draft_saved_badge": "Draft saved",
+  "mail.from_field": "From:",
+  "mail.to_field": "To:",
+  "mail.subject_field": "Subject:",
+  "mail.recipient_placeholder": "recipient@example.com, gmail.com, etc.",
+  "mail.subject_placeholder": "Email subject...",
+  "mail.body_placeholder": "Type your message here...",
+  "mail.attach_files": "Attach Files",
+  "mail.attach": "Attach",
+  "mail.save_draft": "Save Draft",
+  "mail.saving": "Saving...",
+  "mail.discard": "Discard",
+  "mail.send": "Send",
+  "mail.sending": "Sending...",
+  "mail.err_recipient_required": "Please specify a recipient email address",
+  "mail.err_subject_required": "Please specify a subject for the email",
+  "mail.err_over_quota": "Message size exceeds your remaining storage quota. Upgrade your plan or delete old messages.",
+  "mail.kb_size": "KB",
+  "mail.language_label": "Language",
+  "mail.menu_label": "Menu",
 };
 
 const ur: Dict = {
@@ -46369,6 +46525,84 @@ const ur: Dict = {
   "dintake.step4_sub": "اکاؤنٹس اور اضافی معلومات",
   "dintake.step5_title": "جائزہ اور تخلیق",
   "dintake.tab_queue": "قطار اور تاریخ",
+  "mail.cloud_mail_platform": "کلاؤڈ میل پلیٹ فارم",
+  "mail.search_placeholder": "میل، بھیجنے والوں، موضوعات یا تصدیقی کوڈز میں تلاش کریں...",
+  "mail.upgrade_quota": "کوٹہ اپ گریڈ کریں",
+  "mail.erp_control_hub": "ڈی جی ٹی ای آر پی کنٹرول حب",
+  "mail.storage_plans": "اسٹوریج اور پلانز",
+  "mail.sign_out": "سائن آؤٹ",
+  "mail.compose": "نیا پیغام لکھیں",
+  "mail.inbox": "ان باکس",
+  "mail.starred": "ستارہ دار",
+  "mail.sent": "بھیجی گئی",
+  "mail.drafts": "ڈرافٹس",
+  "mail.spam": "اسپیم",
+  "mail.trash": "ٹریش",
+  "mail.storage": "اسٹوریج",
+  "mail.used_of_plan": "استعمال شدہ",
+  "mail.plan_suffix": "پلان",
+  "mail.approaching_quota": "کوٹہ کی حد کے قریب",
+  "mail.get_more_storage": "مزید اسٹوریج حاصل کریں",
+  "mail.no_emails_in": "میں کوئی ای میل موجود نہیں",
+  "mail.no_emails_hint": "جب بیرونی بھیجنے والے، سوشل پلیٹ فارمز یا سروسز آپ کو ای میل بھیجیں گی، وہ یہاں ظاہر ہوں گی۔",
+  "mail.no_subject": "(کوئی موضوع نہیں)",
+  "mail.no_preview": "کوئی جھلک دستیاب نہیں",
+  "mail.code_label": "کوڈ",
+  "mail.back_to_list": "فہرست پر واپس جائیں",
+  "mail.star_message": "پیغام کو ستارہ دیں",
+  "mail.mark_unread": "غیر پڑھا نشان زد کریں",
+  "mail.mark_read": "پڑھا ہوا نشان زد کریں",
+  "mail.restore": "بحال کریں",
+  "mail.restore_to_inbox": "ان باکس میں بحال کریں",
+  "mail.delete_forever": "مستقل طور پر حذف کریں",
+  "mail.delete_permanently": "مستقل طور پر حذف کریں",
+  "mail.delete_move_trash": "حذف کریں / ٹریش میں منتقل کریں",
+  "mail.reply": "جواب دیں",
+  "mail.reply_to_sender": "بھیجنے والے کو جواب دیں",
+  "mail.reply_all": "سب کو جواب دیں",
+  "mail.reply_all_hint": "تمام وصول کنندگان کو جواب دیں",
+  "mail.forward": "آگے بھیجیں",
+  "mail.forward_message": "پیغام آگے بھیجیں",
+  "mail.verified": "تصدیق شدہ",
+  "mail.from_label": "بھیجنے والا",
+  "mail.to_label": "بنام",
+  "mail.verification_code_detected": "آن لائن تصدیقی کوڈ کا پتہ چلا",
+  "mail.verification_code_hint": "اپنے اکاؤنٹ کی تصدیق مکمل کرنے کے لیے یہ یک بارہ استعمال کوڈ استعمال کریں۔",
+  "mail.copy_code": "کوڈ کاپی کریں",
+  "mail.copied": "کاپی ہو گیا",
+  "mail.attachments": "منسلکات",
+  "mail.download_attachment": "منسلکہ ڈاؤن لوڈ کریں",
+  "mail.attachment_stored_notice": "منسلکہ میل اسٹوریج میں محفوظ ہے۔",
+  "mail.select_email_to_view": "دیکھنے کے لیے ای میل منتخب کریں",
+  "mail.select_email_hint": "اس کے مواد کو پڑھنے یا تصدیقی کوڈ کاپی کرنے کے لیے بائیں جانب فہرست سے ایک ای میل منتخب کریں۔",
+  "mail.refresh_messages": "پیغامات تازہ کریں",
+  "mail.critical_quota_msg": "انتباہ: آپ کا میل باکس {percent}% بھر چکا ہے۔ آنے والی ای میلز واپس ہو سکتی ہیں۔",
+  "mail.warning_quota_msg": "نوٹس: آپ نے اپنے اسٹوریج کوٹے کا {percent}% استعمال کر لیا ہے۔",
+  "mail.upgrade_storage_plan": "اسٹوریج پلان اپ گریڈ کریں",
+  "mail.compose_new_title": "نیا پیغام",
+  "mail.compose_reply_title": "جواب",
+  "mail.compose_reply_all_title": "سب کو جواب",
+  "mail.compose_forward_title": "آگے بھیجیں",
+  "mail.draft_saved_badge": "ڈرافٹ محفوظ ہو گیا",
+  "mail.from_field": "بھیجنے والا:",
+  "mail.to_field": "بنام:",
+  "mail.subject_field": "موضوع:",
+  "mail.recipient_placeholder": "recipient@example.com، gmail.com وغیرہ",
+  "mail.subject_placeholder": "ای میل کا موضوع...",
+  "mail.body_placeholder": "اپنا پیغام یہاں لکھیں...",
+  "mail.attach_files": "فائلیں منسلک کریں",
+  "mail.attach": "منسلک کریں",
+  "mail.save_draft": "ڈرافٹ محفوظ کریں",
+  "mail.saving": "محفوظ ہو رہا ہے...",
+  "mail.discard": "منسوخ کریں",
+  "mail.send": "بھیجیں",
+  "mail.sending": "بھیجا جا رہا ہے...",
+  "mail.err_recipient_required": "براہ کرم وصول کنندہ کا ای میل ایڈریس درج کریں",
+  "mail.err_subject_required": "براہ کرم ای میل کا موضوع درج کریں",
+  "mail.err_over_quota": "پیغام کا سائز آپ کے باقی ماندہ اسٹوریج کوٹے سے زیادہ ہے۔ اپنا پلان اپ گریڈ کریں یا پرانے پیغامات حذف کریں۔",
+  "mail.kb_size": "کے بی",
+  "mail.language_label": "زبان",
+  "mail.menu_label": "مینو",
 };
 
 const ar: Dict = {
@@ -65300,6 +65534,84 @@ const ar: Dict = {
   "dintake.step4_sub": "الحسابات ومعلومات إضافية",
   "dintake.step5_title": "المراجعة والإنشاء",
   "dintake.tab_queue": "قائمة الانتظار والسجل",
+  "mail.cloud_mail_platform": "منصة البريد السحابي",
+  "mail.search_placeholder": "ابحث في البريد أو المرسلين أو الموضوعات أو رموز التحقق...",
+  "mail.upgrade_quota": "ترقية الحصة",
+  "mail.erp_control_hub": "مركز التحكم في نظام DGT ERP",
+  "mail.storage_plans": "التخزين والخطط",
+  "mail.sign_out": "تسجيل الخروج",
+  "mail.compose": "إنشاء رسالة",
+  "mail.inbox": "البريد الوارد",
+  "mail.starred": "المميزة بنجمة",
+  "mail.sent": "المرسلة",
+  "mail.drafts": "المسودات",
+  "mail.spam": "البريد العشوائي",
+  "mail.trash": "المهملات",
+  "mail.storage": "التخزين",
+  "mail.used_of_plan": "مستخدم",
+  "mail.plan_suffix": "خطة",
+  "mail.approaching_quota": "الاقتراب من حد الحصة",
+  "mail.get_more_storage": "احصل على مساحة تخزين أكبر",
+  "mail.no_emails_in": "لا توجد رسائل في",
+  "mail.no_emails_hint": "عندما يرسل لك المرسلون الخارجيون أو المنصات الاجتماعية أو الخدمات رسائل، ستظهر هنا.",
+  "mail.no_subject": "(بدون موضوع)",
+  "mail.no_preview": "لا توجد معاينة",
+  "mail.code_label": "الرمز",
+  "mail.back_to_list": "العودة إلى القائمة",
+  "mail.star_message": "تمييز الرسالة بنجمة",
+  "mail.mark_unread": "وضع علامة غير مقروءة",
+  "mail.mark_read": "وضع علامة مقروءة",
+  "mail.restore": "استعادة",
+  "mail.restore_to_inbox": "استعادة إلى البريد الوارد",
+  "mail.delete_forever": "حذف نهائي",
+  "mail.delete_permanently": "الحذف بشكل نهائي",
+  "mail.delete_move_trash": "حذف / نقل إلى المهملات",
+  "mail.reply": "رد",
+  "mail.reply_to_sender": "الرد على المرسل",
+  "mail.reply_all": "الرد على الكل",
+  "mail.reply_all_hint": "الرد على جميع المستلمين",
+  "mail.forward": "إعادة توجيه",
+  "mail.forward_message": "إعادة توجيه الرسالة",
+  "mail.verified": "موثّق",
+  "mail.from_label": "من",
+  "mail.to_label": "إلى",
+  "mail.verification_code_detected": "تم اكتشاف رمز تحقق عبر الإنترنت",
+  "mail.verification_code_hint": "استخدم هذا الرمز المخصص لمرة واحدة لإكمال التحقق من حسابك.",
+  "mail.copy_code": "نسخ الرمز",
+  "mail.copied": "تم النسخ",
+  "mail.attachments": "المرفقات",
+  "mail.download_attachment": "تنزيل المرفق",
+  "mail.attachment_stored_notice": "المرفق مخزّن في مساحة تخزين البريد.",
+  "mail.select_email_to_view": "اختر رسالة للعرض",
+  "mail.select_email_hint": "اختر رسالة من القائمة على اليسار لقراءة محتواها أو نسخ رموز التحقق.",
+  "mail.refresh_messages": "تحديث الرسائل",
+  "mail.critical_quota_msg": "تحذير هام: صندوق بريدك ممتلئ بنسبة {percent}%. قد ترتد الرسائل الواردة.",
+  "mail.warning_quota_msg": "تنبيه: لقد استخدمت {percent}% من حصة التخزين الخاصة بك.",
+  "mail.upgrade_storage_plan": "ترقية خطة التخزين",
+  "mail.compose_new_title": "رسالة جديدة",
+  "mail.compose_reply_title": "رد",
+  "mail.compose_reply_all_title": "الرد على الكل",
+  "mail.compose_forward_title": "إعادة توجيه",
+  "mail.draft_saved_badge": "تم حفظ المسودة",
+  "mail.from_field": "من:",
+  "mail.to_field": "إلى:",
+  "mail.subject_field": "الموضوع:",
+  "mail.recipient_placeholder": "recipient@example.com، gmail.com إلخ",
+  "mail.subject_placeholder": "موضوع الرسالة...",
+  "mail.body_placeholder": "اكتب رسالتك هنا...",
+  "mail.attach_files": "إرفاق ملفات",
+  "mail.attach": "إرفاق",
+  "mail.save_draft": "حفظ كمسودة",
+  "mail.saving": "جارٍ الحفظ...",
+  "mail.discard": "تجاهل",
+  "mail.send": "إرسال",
+  "mail.sending": "جارٍ الإرسال...",
+  "mail.err_recipient_required": "يرجى تحديد عنوان البريد الإلكتروني للمستلم",
+  "mail.err_subject_required": "يرجى تحديد موضوع للرسالة",
+  "mail.err_over_quota": "حجم الرسالة يتجاوز حصة التخزين المتبقية لديك. قم بترقية خطتك أو احذف الرسائل القديمة.",
+  "mail.kb_size": "ك.ب",
+  "mail.language_label": "اللغة",
+  "mail.menu_label": "القائمة",
 };
 
 const fa: Dict = {
@@ -84230,6 +84542,84 @@ const fa: Dict = {
   "dintake.step4_sub": "حساب‌ها و اطلاعات تکمیلی",
   "dintake.step5_title": "بازبینی و ایجاد",
   "dintake.tab_queue": "صف و تاریخچه",
+  "mail.cloud_mail_platform": "پلتفرم پست ابری",
+  "mail.search_placeholder": "جستجو در ایمیل‌ها، فرستنده‌ها، موضوعات یا کدهای تأیید...",
+  "mail.upgrade_quota": "ارتقاء سهمیه",
+  "mail.erp_control_hub": "مرکز کنترل DGT ERP",
+  "mail.storage_plans": "فضای ذخیره‌سازی و طرح‌ها",
+  "mail.sign_out": "خروج از سیستم",
+  "mail.compose": "نوشتن ایمیل",
+  "mail.inbox": "صندوق ورودی",
+  "mail.starred": "ستاره‌دار",
+  "mail.sent": "ارسال‌شده",
+  "mail.drafts": "پیش‌نویس‌ها",
+  "mail.spam": "هرزنامه",
+  "mail.trash": "زباله‌دان",
+  "mail.storage": "فضای ذخیره‌سازی",
+  "mail.used_of_plan": "استفاده‌شده",
+  "mail.plan_suffix": "طرح",
+  "mail.approaching_quota": "نزدیک به سقف سهمیه",
+  "mail.get_more_storage": "دریافت فضای ذخیره‌سازی بیشتر",
+  "mail.no_emails_in": "ایمیلی در این پوشه وجود ندارد:",
+  "mail.no_emails_hint": "هنگامی که فرستنده‌های خارجی، شبکه‌های اجتماعی یا سرویس‌ها برای شما ایمیل ارسال کنند، در همین‌جا نمایش داده می‌شود.",
+  "mail.no_subject": "(بدون موضوع)",
+  "mail.no_preview": "پیش‌نمایشی موجود نیست",
+  "mail.code_label": "کد",
+  "mail.back_to_list": "بازگشت به فهرست",
+  "mail.star_message": "ستاره‌دار کردن پیام",
+  "mail.mark_unread": "علامت‌گذاری به‌عنوان خوانده‌نشده",
+  "mail.mark_read": "علامت‌گذاری به‌عنوان خوانده‌شده",
+  "mail.restore": "بازیابی",
+  "mail.restore_to_inbox": "بازیابی به صندوق ورودی",
+  "mail.delete_forever": "حذف دائمی",
+  "mail.delete_permanently": "حذف به‌طور دائم",
+  "mail.delete_move_trash": "حذف / انتقال به زباله‌دان",
+  "mail.reply": "پاسخ",
+  "mail.reply_to_sender": "پاسخ به فرستنده",
+  "mail.reply_all": "پاسخ به همه",
+  "mail.reply_all_hint": "پاسخ به همه گیرندگان",
+  "mail.forward": "بازارسال",
+  "mail.forward_message": "بازارسال پیام",
+  "mail.verified": "تأییدشده",
+  "mail.from_label": "از",
+  "mail.to_label": "به",
+  "mail.verification_code_detected": "کد تأیید آنلاین شناسایی شد",
+  "mail.verification_code_hint": "از این کد یک‌بارمصرف برای تکمیل تأیید حساب خود استفاده کنید.",
+  "mail.copy_code": "کپی کد",
+  "mail.copied": "کپی شد",
+  "mail.attachments": "پیوست‌ها",
+  "mail.download_attachment": "دانلود پیوست",
+  "mail.attachment_stored_notice": "پیوست در فضای ذخیره‌سازی ایمیل نگهداری می‌شود.",
+  "mail.select_email_to_view": "برای مشاهده یک ایمیل انتخاب کنید",
+  "mail.select_email_hint": "برای خواندن محتوا یا کپی کردن کدهای تأیید، یک ایمیل را از فهرست انتخاب کنید.",
+  "mail.refresh_messages": "بازخوانی پیام‌ها",
+  "mail.critical_quota_msg": "هشدار مهم: صندوق ایمیل شما {percent}% پر شده است. ایمیل‌های ورودی ممکن است برگردانده شوند.",
+  "mail.warning_quota_msg": "توجه: شما {percent}% از سهمیه ذخیره‌سازی خود را استفاده کرده‌اید.",
+  "mail.upgrade_storage_plan": "ارتقاء طرح ذخیره‌سازی",
+  "mail.compose_new_title": "پیام جدید",
+  "mail.compose_reply_title": "پاسخ",
+  "mail.compose_reply_all_title": "پاسخ به همه",
+  "mail.compose_forward_title": "بازارسال",
+  "mail.draft_saved_badge": "پیش‌نویس ذخیره شد",
+  "mail.from_field": "از:",
+  "mail.to_field": "به:",
+  "mail.subject_field": "موضوع:",
+  "mail.recipient_placeholder": "recipient@example.com، gmail.com و غیره",
+  "mail.subject_placeholder": "موضوع ایمیل...",
+  "mail.body_placeholder": "پیام خود را اینجا بنویسید...",
+  "mail.attach_files": "پیوست فایل‌ها",
+  "mail.attach": "پیوست",
+  "mail.save_draft": "ذخیره پیش‌نویس",
+  "mail.saving": "در حال ذخیره...",
+  "mail.discard": "لغو",
+  "mail.send": "ارسال",
+  "mail.sending": "در حال ارسال...",
+  "mail.err_recipient_required": "لطفاً آدرس ایمیل گیرنده را وارد کنید",
+  "mail.err_subject_required": "لطفاً موضوع ایمیل را وارد کنید",
+  "mail.err_over_quota": "حجم پیام از سهمیه ذخیره‌سازی باقی‌مانده شما بیشتر است. طرح خود را ارتقاء دهید یا پیام‌های قدیمی را حذف کنید.",
+  "mail.kb_size": "کیلوبایت",
+  "mail.language_label": "زبان",
+  "mail.menu_label": "منو",
 };
 
 const ps: Dict = {
@@ -103167,6 +103557,84 @@ const ps: Dict = {
   "dintake.step4_sub": "حسابونه او اضافي معلومات",
   "dintake.step5_title": "بیاکتنه او جوړول",
   "dintake.tab_queue": "کتار او تاریخچه",
+  "mail.cloud_mail_platform": "کلاوډ میل پلیټفارم",
+  "mail.search_placeholder": "په میل، لیږونکو، موضوعاتو یا تایید کوډونو کې لټون وکړئ...",
+  "mail.upgrade_quota": "کوټه ارتقا کړئ",
+  "mail.erp_control_hub": "د DGT ERP کنټرول مرکز",
+  "mail.storage_plans": "ذخیره او پلانونه",
+  "mail.sign_out": "وتل",
+  "mail.compose": "لیکل",
+  "mail.inbox": "راغلي بریښنالیکونه",
+  "mail.starred": "ستوري شوي",
+  "mail.sent": "لیږل شوي",
+  "mail.drafts": "مسودې",
+  "mail.spam": "سپام",
+  "mail.trash": "کثافت‌دانۍ",
+  "mail.storage": "ذخیره ځای",
+  "mail.used_of_plan": "کارول شوی",
+  "mail.plan_suffix": "پلان",
+  "mail.approaching_quota": "د کوټې حد ته نږدې",
+  "mail.get_more_storage": "نور ذخیره ځای ترلاسه کړئ",
+  "mail.no_emails_in": "هیڅ بریښنالیک نشته په",
+  "mail.no_emails_hint": "کله چې بهرني لیږونکي، ټولنیز پلیټفارمونه یا خدمتونه تاسو ته بریښنالیکونه واستوي، دلته به ښکاره شي.",
+  "mail.no_subject": "(هیڅ موضوع نشته)",
+  "mail.no_preview": "هیڅ مخکتنه نشته",
+  "mail.code_label": "کوډ",
+  "mail.back_to_list": "فهرست ته بیرته",
+  "mail.star_message": "پیغام ستوري کول",
+  "mail.mark_unread": "د نالوستل شوي په توګه نښه کول",
+  "mail.mark_read": "د لوستل شوي په توګه نښه کول",
+  "mail.restore": "بیرته راوستل",
+  "mail.restore_to_inbox": "راغلي بریښنالیکونو ته بیرته راوستل",
+  "mail.delete_forever": "همیشه لپاره ړنګول",
+  "mail.delete_permanently": "همیشنی ړنګول",
+  "mail.delete_move_trash": "ړنګول / کثافت‌دانۍ ته لیږل",
+  "mail.reply": "ځواب",
+  "mail.reply_to_sender": "لیږونکي ته ځواب",
+  "mail.reply_all": "ټولو ته ځواب",
+  "mail.reply_all_hint": "ټولو ترلاسه کوونکو ته ځواب",
+  "mail.forward": "مخکې لېږل",
+  "mail.forward_message": "پیغام مخکې لېږل",
+  "mail.verified": "تایید شوی",
+  "mail.from_label": "له",
+  "mail.to_label": "ته",
+  "mail.verification_code_detected": "آنلاین تایید کوډ وموندل شو",
+  "mail.verification_code_hint": "د خپل حساب د تایید بشپړولو لپاره دا یو ځلی کوډ وکاروئ.",
+  "mail.copy_code": "کوډ کاپي کړئ",
+  "mail.copied": "کاپي شو",
+  "mail.attachments": "ضمیمې",
+  "mail.download_attachment": "ضمیمه ډاونلوډ کړئ",
+  "mail.attachment_stored_notice": "ضمیمه د میل ذخیره کې خوندي شوې ده.",
+  "mail.select_email_to_view": "د کتلو لپاره بریښنالیک وټاکئ",
+  "mail.select_email_hint": "د محتوا لوستلو یا د تایید کوډونو کاپي کولو لپاره یو بریښنالیک وټاکئ.",
+  "mail.refresh_messages": "پیغامونه تازه کړئ",
+  "mail.critical_quota_msg": "خطرناک: ستاسو میل بکس {percent}٪ ډک دی. راتلونکي بریښنالیکونه ممکن بیرته وګرځي.",
+  "mail.warning_quota_msg": "خبرداری: تاسو د خپل ذخیره کوټې {percent}٪ کارولی دی.",
+  "mail.upgrade_storage_plan": "د ذخیرې پلان ارتقا کړئ",
+  "mail.compose_new_title": "نوی پیغام",
+  "mail.compose_reply_title": "ځواب",
+  "mail.compose_reply_all_title": "ټولو ته ځواب",
+  "mail.compose_forward_title": "مخکې لېږل",
+  "mail.draft_saved_badge": "مسوده خوندي شوه",
+  "mail.from_field": "له:",
+  "mail.to_field": "ته:",
+  "mail.subject_field": "موضوع:",
+  "mail.recipient_placeholder": "recipient@example.com، gmail.com او نور",
+  "mail.subject_placeholder": "د بریښنالیک موضوع...",
+  "mail.body_placeholder": "خپل پیغام دلته ولیکئ...",
+  "mail.attach_files": "فایلونه ضمیمه کړئ",
+  "mail.attach": "ضمیمه",
+  "mail.save_draft": "مسوده خوندي کول",
+  "mail.saving": "خوندي کیږي...",
+  "mail.discard": "لغوه کول",
+  "mail.send": "لیږل",
+  "mail.sending": "لیږل کیږي...",
+  "mail.err_recipient_required": "مهرباني وکړئ د ترلاسه کوونکي بریښنالیک پته ورکړئ",
+  "mail.err_subject_required": "مهرباني وکړئ د بریښنالیک موضوع ورکړئ",
+  "mail.err_over_quota": "د پیغام کچه ستاسو د پاتې ذخیرې کوټې څخه ډېره ده. خپل پلان ارتقا کړئ یا زاړه پیغامونه ړنګ کړئ.",
+  "mail.kb_size": "کیلوبایټ",
+  "mail.language_label": "ژبه",
+  "mail.menu_label": "مینو",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

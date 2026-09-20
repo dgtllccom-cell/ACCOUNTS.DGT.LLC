@@ -10,6 +10,9 @@ import { MailView } from "./mail-view";
 import { ComposeModal, type ComposeInitialData } from "./compose-modal";
 import { StorageUpgradeModal } from "./storage-upgrade-modal";
 import type { PublicMailUser, MailMessage } from "@/lib/public-mail/webmail-service";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { rtlLanguages } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 
 interface ExtendedUser extends PublicMailUser {
   usage_percent: number;
@@ -17,6 +20,10 @@ interface ExtendedUser extends PublicMailUser {
 
 export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
   const router = useRouter();
+  const lang = useActiveLanguage();
+  const isRtl = rtlLanguages.includes(lang);
+  const tt = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+
   const [user, setUser] = useState<ExtendedUser>(initialUser);
   const [folder, setFolder] = useState<string>("inbox");
   const [messages, setMessages] = useState<MailMessage[]>([]);
@@ -26,6 +33,7 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
   const [composeOpen, setComposeOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [prefilledData, setPrefilledData] = useState<ComposeInitialData | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Fetch messages
   const loadMessages = useCallback(async () => {
@@ -217,7 +225,7 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
   const availableBytes = Math.max(0, user.quota_bytes - user.used_bytes);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100 dark:bg-slate-950 font-sans">
+    <div dir={isRtl ? "rtl" : "ltr"} className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100 dark:bg-slate-950 font-sans">
       {/* Top Navbar */}
       <MailNavbar
         user={user}
@@ -225,12 +233,13 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
         onSearchChange={setSearchQuery}
         onLogout={handleLogout}
         onOpenUpgrade={() => setUpgradeOpen(true)}
+        onToggleSidebar={() => setMobileSidebarOpen(true)}
       />
 
       {/* Warning Banner if quota is high */}
       {user.usage_percent >= 80 && (
         <div
-          className={`px-6 py-2 flex items-center justify-between text-xs font-medium ${
+          className={`px-3 sm:px-6 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-medium ${
             user.usage_percent >= 95
               ? "bg-rose-600 text-white"
               : "bg-amber-500 text-slate-950"
@@ -240,22 +249,22 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
               {user.usage_percent >= 95
-                ? `Critical: Your mailbox is ${user.usage_percent}% full. Incoming emails may bounce.`
-                : `Notice: You have used ${user.usage_percent}% of your storage quota.`}
+                ? tt("mail.critical_quota_msg", `Critical: Your mailbox is ${user.usage_percent}% full. Incoming emails may bounce.`).replace("{percent}", String(user.usage_percent))
+                : tt("mail.warning_quota_msg", `Notice: You have used ${user.usage_percent}% of your storage quota.`).replace("{percent}", String(user.usage_percent))}
             </span>
           </div>
           <button
             onClick={() => setUpgradeOpen(true)}
-            className="px-3 py-1 rounded bg-white text-slate-900 font-bold hover:bg-slate-100 transition-colors shadow-sm"
+            className="px-3 py-1 rounded bg-white text-slate-900 font-bold hover:bg-slate-100 transition-colors shadow-sm shrink-0"
           >
-            Upgrade Storage Plan
+            {tt("mail.upgrade_storage_plan", "Upgrade Storage Plan")}
           </button>
         </div>
       )}
 
       {/* Main Mail Viewport */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+        {/* Sidebar (desktop static + mobile overlay) */}
         <MailSidebar
           activeFolder={folder}
           onSelectFolder={(f) => {
@@ -271,18 +280,27 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
           storageQuotaBytes={user.quota_bytes}
           storageWarningLevel={user.storage_warning_level}
           unreadCount={unreadCount}
+          mobileOpen={mobileSidebarOpen}
+          onCloseMobile={() => setMobileSidebarOpen(false)}
         />
 
-        {/* Message List Column */}
-        <div className="w-80 lg:w-96 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full bg-white dark:bg-slate-900 shrink-0">
+        {/* Message List Column — hidden on mobile once a message is open */}
+        <div
+          className={`w-full lg:w-80 xl:w-96 border-e border-slate-200 dark:border-slate-800 flex-col h-full bg-white dark:bg-slate-900 shrink-0 ${
+            selectedMessage ? "hidden lg:flex" : "flex"
+          }`}
+        >
           <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 capitalize">
-              {folder} &bull; {messages.length}
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              {tt(
+                { inbox: "mail.inbox", starred: "mail.starred", sent: "mail.sent", drafts: "mail.drafts", spam: "mail.spam", trash: "mail.trash" }[folder] as Parameters<typeof t>[1] ?? "mail.inbox",
+                folder
+              )} &bull; {messages.length}
             </span>
             <button
               onClick={() => loadMessages()}
               className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
-              title="Refresh messages"
+              title={tt("mail.refresh_messages", "Refresh messages")}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             </button>
@@ -299,8 +317,12 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
           </div>
         </div>
 
-        {/* Message Reading Pane */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
+        {/* Message Reading Pane — full width overlay on mobile when a message is open */}
+        <div
+          className={`flex-1 flex-col h-full overflow-hidden bg-white dark:bg-slate-900 ${
+            selectedMessage ? "flex" : "hidden lg:flex"
+          }`}
+        >
           {selectedMessage ? (
             <MailView
               message={selectedMessage}
@@ -320,10 +342,10 @@ export function MailClient({ initialUser }: { initialUser: ExtendedUser }) {
                 <HardDrive className="h-8 w-8 text-slate-300 dark:text-slate-600" />
               </div>
               <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Select an email to view
+                {tt("mail.select_email_to_view", "Select an email to view")}
               </h3>
               <p className="text-xs text-slate-400 max-w-xs mt-1">
-                Choose an email from the list on the left to read its contents or copy verification codes.
+                {tt("mail.select_email_hint", "Choose an email from the list on the left to read its contents or copy verification codes.")}
               </p>
             </div>
           )}

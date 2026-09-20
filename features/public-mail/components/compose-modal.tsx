@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Send, Save, Trash2, X, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Paperclip, Send, Save, X, AlertCircle } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { rtlLanguages } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 
 export interface ComposeInitialData {
   to?: string;
@@ -29,6 +32,10 @@ export function ComposeModal({
   availableStorageBytes,
   initialData,
 }: ComposeModalProps) {
+  const lang = useActiveLanguage();
+  const isRtl = rtlLanguages.includes(lang);
+  const tt = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -108,7 +115,7 @@ export function ComposeModal({
       if (data.draftId) {
         setDraftId(data.draftId);
       }
-      setDraftSavedMessage("Draft saved");
+      setDraftSavedMessage(tt("mail.draft_saved_badge", "Draft saved"));
       setTimeout(() => setDraftSavedMessage(null), 2500);
       onSent(); // Refresh message lists
     } catch (err: unknown) {
@@ -121,15 +128,15 @@ export function ComposeModal({
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!to.trim()) {
-      setError("Please specify a recipient email address");
+      setError(tt("mail.err_recipient_required", "Please specify a recipient email address"));
       return;
     }
     if (!subject.trim()) {
-      setError("Please specify a subject for the email");
+      setError(tt("mail.err_subject_required", "Please specify a subject for the email"));
       return;
     }
     if (isOverQuota) {
-      setError("Message size exceeds your remaining storage quota. Upgrade your plan or delete old messages.");
+      setError(tt("mail.err_over_quota", "Message size exceeds your remaining storage quota. Upgrade your plan or delete old messages."));
       return;
     }
 
@@ -164,17 +171,20 @@ export function ComposeModal({
   };
 
   const getTitle = () => {
-    if (initialData?.mode === "reply") return "Reply • DGT Mail";
-    if (initialData?.mode === "replyAll") return "Reply All • DGT Mail";
-    if (initialData?.mode === "forward") return "Forward • DGT Mail";
-    return "New Message • DGT Mail";
+    if (initialData?.mode === "reply") return tt("mail.compose_reply_title", "Reply");
+    if (initialData?.mode === "replyAll") return tt("mail.compose_reply_all_title", "Reply All");
+    if (initialData?.mode === "forward") return tt("mail.compose_forward_title", "Forward");
+    return tt("mail.compose_new_title", "New Message");
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      dir={isRtl ? "rtl" : "ltr"}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end sm:pe-6 sm:pb-0 bg-slate-900/50 backdrop-blur-sm"
+    >
+      <div className="relative w-full sm:max-w-2xl h-full sm:h-auto rounded-t-2xl sm:rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col sm:max-h-[85vh] sm:mb-6">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white border-b border-slate-800">
+        <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold tracking-wide">{getTitle()}</span>
             {draftSavedMessage && (
@@ -202,32 +212,32 @@ export function ComposeModal({
 
           {/* From */}
           <div className="flex items-center px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 text-xs text-slate-500">
-            <span className="w-16 font-semibold">From:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-mono font-medium">{senderEmail}</span>
+            <span className="w-16 font-semibold shrink-0">{tt("mail.from_field", "From:")}</span>
+            <span className="text-slate-800 dark:text-slate-200 font-mono font-medium truncate">{senderEmail}</span>
           </div>
 
           {/* To */}
           <div className="flex items-center px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 text-xs">
-            <span className="w-16 font-semibold text-slate-500">To:</span>
+            <span className="w-16 font-semibold text-slate-500 shrink-0">{tt("mail.to_field", "To:")}</span>
             <input
               type="email"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              placeholder="recipient@example.com, gmail.com, etc."
-              className="flex-1 bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-xs"
+              placeholder={tt("mail.recipient_placeholder", "recipient@example.com, gmail.com, etc.")}
+              className="flex-1 bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-xs min-w-0"
               required
             />
           </div>
 
           {/* Subject */}
           <div className="flex items-center px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 text-xs">
-            <span className="w-16 font-semibold text-slate-500">Subject:</span>
+            <span className="w-16 font-semibold text-slate-500 shrink-0">{tt("mail.subject_field", "Subject:")}</span>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Email subject..."
-              className="flex-1 bg-transparent border-none outline-none text-slate-800 dark:text-white font-medium placeholder:text-slate-400 text-xs"
+              placeholder={tt("mail.subject_placeholder", "Email subject...")}
+              className="flex-1 bg-transparent border-none outline-none text-slate-800 dark:text-white font-medium placeholder:text-slate-400 text-xs min-w-0"
               required
             />
           </div>
@@ -237,7 +247,7 @@ export function ComposeModal({
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Type your message here..."
+              placeholder={tt("mail.body_placeholder", "Type your message here...")}
               className="w-full flex-1 bg-transparent border-none outline-none resize-none text-slate-800 dark:text-slate-100 text-sm leading-relaxed placeholder:text-slate-400 font-sans"
             />
           </div>
@@ -252,11 +262,11 @@ export function ComposeModal({
                 >
                   <Paperclip className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <span className="max-w-[150px] truncate">{att.name}</span>
-                  <span className="text-[10px] text-slate-400">({(att.size / 1024).toFixed(1)} KB)</span>
+                  <span className="text-[10px] text-slate-400 tabular-nums">({(att.size / 1024).toFixed(1)} {tt("mail.kb_size", "KB")})</span>
                   <button
                     type="button"
                     onClick={() => removeAttachment(idx)}
-                    className="text-slate-400 hover:text-red-500 ml-1"
+                    className="text-slate-400 hover:text-red-500 ms-1"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -266,8 +276,8 @@ export function ComposeModal({
           )}
 
           {/* Footer Bar */}
-          <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <input
                 type="file"
                 multiple
@@ -279,10 +289,10 @@ export function ComposeModal({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 text-xs font-medium"
-                title="Attach Files"
+                title={tt("mail.attach_files", "Attach Files")}
               >
                 <Paperclip className="h-4 w-4" />
-                <span>Attach</span>
+                <span>{tt("mail.attach", "Attach")}</span>
               </button>
 
               <button
@@ -292,21 +302,21 @@ export function ComposeModal({
                 className="px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 text-xs font-medium disabled:opacity-50"
               >
                 <Save className="h-3.5 w-3.5" />
-                <span>{draftSaving ? "Saving..." : "Save Draft"}</span>
+                <span>{draftSaving ? tt("mail.saving", "Saving...") : tt("mail.save_draft", "Save Draft")}</span>
               </button>
 
-              <span className="text-[11px] text-slate-400">
-                {(messageSizeBytes / 1024).toFixed(1)} KB
+              <span className="text-[11px] text-slate-400 tabular-nums">
+                {(messageSizeBytes / 1024).toFixed(1)} {tt("mail.kb_size", "KB")}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-end">
               <button
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
-                Discard
+                {tt("mail.discard", "Discard")}
               </button>
               <button
                 type="submit"
@@ -314,11 +324,11 @@ export function ComposeModal({
                 className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-600/30 disabled:opacity-50 transition-all flex items-center gap-2"
               >
                 {loading ? (
-                  <span>Sending...</span>
+                  <span>{tt("mail.sending", "Sending...")}</span>
                 ) : (
                   <>
-                    <Send className="h-3.5 w-3.5" />
-                    <span>Send</span>
+                    <Send className={`h-3.5 w-3.5 ${isRtl ? "scale-x-[-1]" : ""}`} />
+                    <span>{tt("mail.send", "Send")}</span>
                   </>
                 )}
               </button>

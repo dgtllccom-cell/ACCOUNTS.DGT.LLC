@@ -5,14 +5,18 @@ import {
   ExternalLink,
   LogOut,
   Mail,
+  Menu,
   Search,
   Settings,
   Shield,
-  User,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import type { PublicMailUser } from "@/lib/public-mail/webmail-service";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { rtlLanguages } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
+import { MailLanguageSwitcher } from "./mail-language-switcher";
 
 interface MailNavbarProps {
   user: PublicMailUser;
@@ -20,6 +24,7 @@ interface MailNavbarProps {
   onSearchChange: (q: string) => void;
   onLogout: () => void;
   onOpenUpgrade: () => void;
+  onToggleSidebar: () => void;
 }
 
 export function MailNavbar({
@@ -28,13 +33,30 @@ export function MailNavbar({
   onSearchChange,
   onLogout,
   onOpenUpgrade,
+  onToggleSidebar,
 }: MailNavbarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
+  const lang = useActiveLanguage();
+  const isRtl = rtlLanguages.includes(lang);
+  const tt = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between gap-4 z-20 shrink-0">
+    <header
+      dir={isRtl ? "rtl" : "ltr"}
+      className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 z-20 shrink-0"
+    >
+      {/* Mobile sidebar toggle */}
+      <button
+        type="button"
+        onClick={onToggleSidebar}
+        className="lg:hidden p-2 -ms-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+        title={tt("mail.menu_label", "Menu")}
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
       {/* Brand */}
-      <div className="flex items-center gap-3">
+      <div className="hidden sm:flex items-center gap-3 shrink-0">
         <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white shadow-md">
           <Mail className="h-5 w-5" />
         </div>
@@ -47,25 +69,25 @@ export function MailNavbar({
               MAIL
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 block -mt-0.5">Cloud Mail Platform</span>
+          <span className="text-[11px] text-slate-400 block -mt-0.5">{tt("mail.cloud_mail_platform", "Cloud Mail Platform")}</span>
         </div>
       </div>
 
       {/* Global Search */}
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1 max-w-xl min-w-0">
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search mail, senders, subjects, or verification codes..."
-            className="w-full pl-10 pr-10 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border-none outline-none text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-600/30 transition-all"
+            placeholder={tt("mail.search_placeholder", "Search mail, senders, subjects, or verification codes...")}
+            className="w-full ps-10 pe-10 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border-none outline-none text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-600/30 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -74,12 +96,14 @@ export function MailNavbar({
       </div>
 
       {/* User Controls & Profile */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <MailLanguageSwitcher language={lang} />
+
         <button
           onClick={onOpenUpgrade}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 transition-colors border border-blue-200 dark:border-blue-900"
+          className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 transition-colors border border-blue-200 dark:border-blue-900"
         >
-          <span>Upgrade Quota</span>
+          <span>{tt("mail.upgrade_quota", "Upgrade Quota")}</span>
         </button>
 
         <div className="relative">
@@ -93,7 +117,7 @@ export function MailNavbar({
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50">
+            <div className="absolute end-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50">
               <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-sm shrink-0">
                   {user.display_name[0]?.toUpperCase() || user.username[0]?.toUpperCase()}
@@ -112,8 +136,8 @@ export function MailNavbar({
                   className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <Shield className="h-4 w-4 text-blue-600" />
-                  <span>DGT ERP Control Hub</span>
-                  <ExternalLink className="h-3 w-3 ml-auto text-slate-400" />
+                  <span>{tt("mail.erp_control_hub", "DGT ERP Control Hub")}</span>
+                  <ExternalLink className="h-3 w-3 ms-auto text-slate-400" />
                 </Link>
 
                 <button
@@ -121,10 +145,10 @@ export function MailNavbar({
                     setProfileOpen(false);
                     onOpenUpgrade();
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-start"
                 >
                   <Settings className="h-4 w-4 text-slate-500" />
-                  <span>Storage & Plans</span>
+                  <span>{tt("mail.storage_plans", "Storage & Plans")}</span>
                 </button>
               </div>
 
@@ -134,7 +158,7 @@ export function MailNavbar({
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-xs font-semibold"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
+                  <span>{tt("mail.sign_out", "Sign Out")}</span>
                 </button>
               </div>
             </div>
