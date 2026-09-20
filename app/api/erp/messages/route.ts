@@ -827,7 +827,7 @@ export async function GET(request: NextRequest) {
 
     const { data: accountsData } = await admin
       .from("erp_email_accounts")
-      .select("id, email_address, is_active, scope, settings, smtp_password_encrypted, smtp_host, country_id, country_branch_id, city_branch_id, provider:erp_email_providers(provider_name)")
+      .select("id, email_address, is_active, scope, settings, smtp_password_encrypted, country_id, country_branch_id, city_branch_id, provider:erp_email_providers(provider_name)")
       .is("deleted_at", null);
 
     const emailAccounts = accountsData || [];
@@ -861,7 +861,7 @@ export async function GET(request: NextRequest) {
         // populate — checking `settings` alone always showed them as
         // "Configuration Incomplete" even when they work.
         const hasPassword = Boolean(matchedAccount.smtp_password_encrypted || settings.smtpPass || settings.password || settings.appPassword);
-        const hasHost = Boolean(matchedAccount.smtp_host || settings.smtpHost || settings.host) || Boolean(matchedAccount.smtp_password_encrypted);
+        const hasHost = Boolean(matchedAccount.smtp_password_encrypted || settings.smtpHost || settings.host);
 
         if (hasPassword && hasHost) {
           smtpStatus = matchedAccount.is_active ? "Connected" : "🔴 SMTP Failed";
