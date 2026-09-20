@@ -72,3 +72,6 @@ supabase/backups/*.dump
 # Capacitor copies a built Next.js bundle here on `npx cap sync`; it is a build
 # artifact (and the app loads server.url remotely), never source of truth
 android/app/src/main/assets/public/server/
+
+# Sneat design source package (large, local-only reference for Phase 2)
+design-assets/

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { MailClient } from "@/features/public-mail/components/mail-client";
+import { resolveSessionUserId } from "@/lib/public-mail/webmail-service";
 
 export const metadata = {
   title: "Inbox — DGT Mail",
@@ -14,7 +15,8 @@ function getDb() {
 
 export default async function DgtMailInboxPage() {
   const cookieStore = await cookies();
-  const userId = cookieStore.get("dgt_mail_user_id")?.value;
+  const rawToken = cookieStore.get("dgt_mail_user_id")?.value;
+  const userId = await resolveSessionUserId(rawToken);
 
   if (!userId) {
     redirect("/mail/login");
