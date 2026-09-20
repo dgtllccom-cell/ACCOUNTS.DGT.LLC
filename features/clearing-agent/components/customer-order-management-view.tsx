@@ -1954,7 +1954,7 @@ export function CustomerOrderManagementView() {
       const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err.error || "Failed to delete order");
+        alert(err.error || tt("err_delete_order_failed", "Failed to delete order"));
         return;
       }
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
@@ -3049,7 +3049,7 @@ export function CustomerOrderManagementView() {
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <Hash className="h-3.5 w-3.5 text-blue-600" />
-                      Auto-Generated Order Serials & Timestamp
+                      {tt("auto_generated_order_serials", "Auto-Generated Order Serials & Timestamp")}
                     </span>
                     <span className="text-[10px] font-mono font-bold text-slate-400">
                       {formData.order_date || "—"} • {formData.order_time || "—"}
@@ -3057,25 +3057,25 @@ export function CustomerOrderManagementView() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Global Serial</span>
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("global_serial", "Global Serial")}</span>
                       <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-[11px] truncate block">
                         {formData.global_serial || "—"}
                       </span>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Country Serial</span>
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("country_serial", "Country Serial")}</span>
                       <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
                         {formData.country_serial || "—"}
                       </span>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Branch Serial</span>
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("branch_serial", "Branch Serial")}</span>
                       <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
                         {formData.branch_serial || "—"}
                       </span>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Entry Serial</span>
+                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("entry_serial", "Entry Serial")}</span>
                       <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px] truncate block">
                         {formData.entry_serial || "—"}
                       </span>
@@ -3139,7 +3139,7 @@ export function CustomerOrderManagementView() {
                         title={tt("transfer_step1a_customer", "Transfer to Step 1A / Customer Profile")}
                       >
                         <Pencil className="h-3.5 w-3.5" />
-                        <span>Transfer to 1A</span>
+                        <span>{tt("transfer_step1a_short", "Transfer to 1A")}</span>
                       </button>
                     </div>
                   </div>
@@ -3151,7 +3151,7 @@ export function CustomerOrderManagementView() {
                       <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
                         <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                           <Building2 className="h-3 w-3" />
-                          BILLING ADDRESS & DIRECT CONTACT
+                          {tt("billing_address_direct_contact", "Billing Address & Direct Contact")}
                         </span>
                       </div>
                       <div className="space-y-1 text-slate-700 dark:text-slate-300">
@@ -3194,11 +3194,11 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
                           <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
                             <FileText className="h-3 w-3" />
-                            ORDER INSTRUCTIONS & REMARKS
+                            {tt("order_instructions_remarks", "Order Instructions & Remarks")}
                           </span>
                         </div>
                         <div className="text-slate-600 dark:text-slate-300 italic text-[11px] leading-relaxed pt-1.5">
-                          {formData.remarks || "No special instructions registered for this customer order."}
+                          {formData.remarks || tt("no_special_instructions", "No special instructions registered for this customer order.")}
                         </div>
                       </div>
 
@@ -3207,13 +3207,13 @@ export function CustomerOrderManagementView() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-750 text-xs">
                           {partySelections.supplier?.companyName ? (
                             <div className="rounded-lg bg-white p-1.5 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700">
-                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Supplier</span>
+                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">{tt("supplier_label", "Supplier")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.supplier.companyName}</span>
                             </div>
                           ) : null}
                           {partySelections.buyer?.companyName ? (
                             <div className="rounded-lg bg-white p-1.5 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700">
-                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Buyer</span>
+                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">{tt("buyer_label", "Buyer")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.buyer.companyName}</span>
                             </div>
                           ) : null}
@@ -3233,7 +3233,7 @@ export function CustomerOrderManagementView() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black text-slate-900 dark:text-white">
-                            Movement & Route Journey
+                            {tt("movement_route_journey", "Movement & Route Journey")}
                           </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
                             formData.movement_type === "import"
@@ -3391,18 +3391,18 @@ export function CustomerOrderManagementView() {
                       <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
                         <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
                           <Truck className="h-3 w-3" />
-                          VEHICLE SPECIFICATIONS
+                          {tt("vehicle_specifications", "Vehicle Specifications")}
                         </span>
                       </div>
                       <div className="space-y-1 text-slate-700 dark:text-slate-300">
                         <div className="font-black text-slate-900 dark:text-white text-sm font-mono">
-                          {formData.truck_assignment_mode === "later" ? "To Be Assigned Later" : (formData.truck_number || "—")}
+                          {formData.truck_assignment_mode === "later" ? tt("to_be_assigned_later", "To Be Assigned Later") : (formData.truck_number || "—")}
                         </div>
                         <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          Transporter: <strong className="text-slate-800 dark:text-slate-200">{formData.truck_transport_company || formData.truck_owner_name || "Internal Fleet"}</strong>
+                          {tt("transporter_label", "Transporter:")} <strong className="text-slate-800 dark:text-slate-200">{formData.truck_transport_company || formData.truck_owner_name || tt("internal_fleet", "Internal Fleet")}</strong>
                         </div>
                         <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
-                          Registration: <span className="capitalize font-semibold">{formData.truck_registration_type || "Registered"}</span>
+                          {tt("registration_label", "Registration:")} <span className="capitalize font-semibold">{formData.truck_registration_type || tt("registered_status", "Registered")}</span>
                         </div>
                       </div>
                     </div>
@@ -3412,19 +3412,19 @@ export function CustomerOrderManagementView() {
                       <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
                         <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                           <Users className="h-3 w-3" />
-                          DRIVER CREDENTIALS & DISPATCH
+                          {tt("driver_credentials_dispatch", "Driver Credentials & Dispatch")}
                         </span>
                       </div>
                       <div className="space-y-1 text-slate-700 dark:text-slate-300">
                         <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.truck_assignment_mode === "later" ? "—" : (formData.truck_driver_name || "Driver Unassigned")}
+                          {formData.truck_assignment_mode === "later" ? "—" : (formData.truck_driver_name || tt("driver_unassigned", "Driver Unassigned"))}
                         </div>
                         <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          Mobile: <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{formData.truck_driver_mobile || "—"}</span>
+                          {tt("mobile_label", "Mobile:")} <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{formData.truck_driver_mobile || "—"}</span>
                         </div>
                         <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
                           <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">Actual Dispatch:</span>
+                            <span className="font-semibold text-slate-500">{tt("actual_dispatch_label", "Actual Dispatch:")}</span>
                             <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{formData.actual_dispatch_date || "—"}</span>
                           </div>
                         </div>
@@ -3443,7 +3443,7 @@ export function CustomerOrderManagementView() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black text-slate-900 dark:text-white">
-                            Goods & Cargo Manifest Breakdown
+                            {tt("goods_cargo_manifest_breakdown", "Goods & Cargo Manifest Breakdown")}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
                             {(formData.goods_items?.length || 1)} Item{(formData.goods_items?.length || 1) > 1 ? "s" : ""}
@@ -4285,7 +4285,7 @@ function Step1BookingCustomer({
                   <span>{tt("import_movement_route", "Import Movement & Route Specifications")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300">
-                  Import Clearance
+                  {tt("import_clearance_badge", "Import Clearance")}
                 </span>
               </div>
 
@@ -4293,14 +4293,14 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Foreign Origin Country *
+                    {tt("foreign_origin_country", "Foreign Origin Country")} *
                   </label>
                   <select
                     value={formData.loading_country_id}
                     onChange={(e) => handleLoadingCountryChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— Select Origin Country —</option>
+                    <option value="">— {tt("select_origin_country", "Select Origin Country")} —</option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -4308,14 +4308,14 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Foreign Port of Loading
+                    {tt("foreign_port_of_loading", "Foreign Port of Loading")}
                   </label>
                   <select
                     value={formData.loading_port_id}
                     onChange={(e) => handleLoadingPortChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— Select Port of Loading —</option>
+                    <option value="">— {tt("select_port_of_loading", "Select Port of Loading")} —</option>
                     {ports.map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
@@ -4327,7 +4327,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Entry Sea Port / Border Point *
+                    {tt("entry_sea_port_border", "Entry Sea Port / Border Point")} *
                   </label>
                   <select
                     value={formData.entry_border_port_id}
@@ -4341,7 +4341,7 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— Select Entry Port / Border —</option>
+                    <option value="">— {tt("select_entry_port_border", "Select Entry Port / Border")} —</option>
                     {ports.map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
@@ -4349,7 +4349,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Expected Border Entry Date
+                    {tt("expected_border_entry_date", "Expected Border Entry Date")}
                   </label>
                   <input
                     type="date"
@@ -4364,11 +4364,11 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Customs Clearance Point / Port
+                    {tt("customs_clearance_point", "Customs Clearance Point / Port")}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Karachi Custom House / Torkham Customs"
+                    placeholder={tt("ph_customs_point", "e.g. Karachi Custom House / Torkham Customs")}
                     value={formData.customs_point_text || ""}
                     onChange={(e) => setFormData((c) => ({ ...c, customs_point_text: e.target.value }))}
                     className={inputClass}
@@ -4376,11 +4376,11 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Destination Delivery City
+                    {tt("destination_delivery_city", "Destination Delivery City")}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Lahore / Islamabad / Peshawar"
+                    placeholder={tt("ph_destination_city_pk", "e.g. Lahore / Islamabad / Peshawar")}
                     value={formData.destination_city}
                     onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
                     className={inputClass}
@@ -4391,11 +4391,11 @@ function Step1BookingCustomer({
               {/* Row 4: Final Delivery Location / Warehouse */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Final Delivery Location / Warehouse Address
+                  {tt("final_delivery_location", "Final Delivery Location / Warehouse Address")}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Consignee Warehouse, Plot 14, Industrial Area"
+                  placeholder={tt("ph_final_delivery", "e.g. Consignee Warehouse, Plot 14, Industrial Area")}
                   value={formData.final_delivery_location}
                   onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
                   className={inputClass}
@@ -4412,7 +4412,7 @@ function Step1BookingCustomer({
                   <span>{tt("export_movement_route", "Export Movement & Route Specifications")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                  Export Clearance
+                  {tt("export_clearance_badge", "Export Clearance")}
                 </span>
               </div>
 
@@ -4420,11 +4420,11 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Origin Loading City / Location *
+                    {tt("origin_loading_city_location", "Origin Loading City / Location")} *
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Lahore / Sialkot Factory"
+                    placeholder={tt("ph_origin_loading_city", "e.g. Lahore / Sialkot Factory")}
                     value={formData.loading_source_name}
                     onChange={(e) => setFormData((c) => ({ ...c, loading_source_name: e.target.value }))}
                     className={inputClass}
@@ -4432,7 +4432,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Exit Border / Port of Loading *
+                    {tt("exit_border_port_loading", "Exit Border / Port of Loading")} *
                   </label>
                   <select
                     value={formData.exit_border_port_id || formData.loading_port_id}
@@ -4448,7 +4448,7 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— Select Exit Port / Border —</option>
+                    <option value="">— {tt("select_exit_port_border", "Select Exit Port / Border")} —</option>
                     {ports.map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
@@ -4460,7 +4460,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Planned Border Exit Date
+                    {tt("planned_border_exit_date", "Planned Border Exit Date")}
                   </label>
                   <input
                     type="date"
@@ -4471,11 +4471,11 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Export Customs Point
+                    {tt("export_customs_point", "Export Customs Point")}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Port Qasim Export Customs"
+                    placeholder={tt("ph_export_customs", "e.g. Port Qasim Export Customs")}
                     value={formData.customs_point_text || ""}
                     onChange={(e) => setFormData((c) => ({ ...c, customs_point_text: e.target.value }))}
                     className={inputClass}
@@ -4487,14 +4487,14 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Destination Country *
+                    {tt("destination_country", "Destination Country")} *
                   </label>
                   <select
                     value={formData.receiving_country_id}
                     onChange={(e) => handleReceivingCountryChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— Select Destination Country —</option>
+                    <option value="">— {tt("select_destination_country", "Select Destination Country")} —</option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -4502,14 +4502,14 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Foreign Port of Discharge / Destination City
+                    {tt("foreign_port_discharge_city", "Foreign Port of Discharge / Destination City")}
                   </label>
                   <select
                     value={formData.destination_port_id}
                     onChange={(e) => handleDestinationPortChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— Select Port of Discharge —</option>
+                    <option value="">— {tt("select_port_discharge", "Select Port of Discharge")} —</option>
                     {ports.map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
@@ -4535,7 +4535,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Entry Sea Port / Border Point *
+                    {tt("entry_sea_port_border", "Entry Sea Port / Border Point")} *
                   </label>
                   <select
                     value={formData.entry_border_port_id}
@@ -4549,7 +4549,7 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— Select Entry Port / Border —</option>
+                    <option value="">— {tt("select_entry_port_border", "Select Entry Port / Border")} —</option>
                     {ports.map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
@@ -4557,11 +4557,11 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Transit Corridor / Route Name
+                    {tt("transit_corridor_route", "Transit Corridor / Route Name")}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Karachi - Chaman - Spin Boldak"
+                    placeholder={tt("ph_transit_corridor", "e.g. Karachi - Chaman - Spin Boldak")}
                     value={formData.route_name}
                     onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
                     className={inputClass}
@@ -4573,7 +4573,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Exit Border Checkpoint *
+                    {tt("exit_border_checkpoint", "Exit Border Checkpoint")} *
                   </label>
                   <select
                     value={formData.exit_border_port_id}
@@ -4587,7 +4587,7 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— Select Exit Border —</option>
+                    <option value="">— {tt("select_exit_border", "Select Exit Border")} —</option>
                     {ports.map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
@@ -4595,7 +4595,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Planned Border Exit Date
+                    {tt("planned_border_exit_date", "Planned Border Exit Date")}
                   </label>
                   <input
                     type="date"
@@ -4610,14 +4610,14 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Transit Destination Country *
+                    {tt("transit_destination_country", "Transit Destination Country")} *
                   </label>
                   <select
                     value={formData.receiving_country_id}
                     onChange={(e) => handleReceivingCountryChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— Select Country —</option>
+                    <option value="">— {tt("select_country_generic", "Select Country")} —</option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -4625,11 +4625,11 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Destination City
+                    {tt("destination_city_label", "Destination City")}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Kabul / Kandahar / Mazar-i-Sharif"
+                    placeholder={tt("ph_destination_city_af", "e.g. Kabul / Kandahar / Mazar-i-Sharif")}
                     value={formData.destination_city}
                     onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
                     className={inputClass}
@@ -4654,7 +4654,7 @@ function Step1BookingCustomer({
               }}
               className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
             >
-              Reset 1A Form
+              {tt("reset_1a_form", "Reset 1A Form")}
             </button>
 
             <button
@@ -4662,7 +4662,7 @@ function Step1BookingCustomer({
               onClick={onAdvanceToStep2}
               className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
             >
-              <span>Save & Continue to 1B (Truck)</span>
+              <span>{tt("save_continue_1b", "Save & Continue to 1B (Truck)")}</span>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -4678,18 +4678,18 @@ function Step1BookingCustomer({
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/60 dark:bg-blue-950/30">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
-                1A Summary
+                {tt("summary_1a_badge", "1A Summary")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                Customer: <span className="text-blue-700 dark:text-blue-300">{formData.customer_name || "—"}</span>
+                {tt("customer_label_colon", "Customer:")} <span className="text-blue-700 dark:text-blue-300">{formData.customer_name || "—"}</span>
               </span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
-                Ship: {formData.transport_mode.replace("by_", "")}
+                {tt("ship_label_colon", "Ship:")} {formData.transport_mode.replace("by_", "")}
               </span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">
-                Movement: {formData.movement_type.replace("_", " ")}
+                {tt("movement_label_colon", "Movement:")} {formData.movement_type.replace("_", " ")}
               </span>
             </div>
             <button
@@ -4698,7 +4698,7 @@ function Step1BookingCustomer({
               className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline"
             >
               <Pencil className="h-3 w-3" />
-              <span>[Edit (1A)]</span>
+              <span>{tt("edit_1a_bracket", "[Edit (1A)]")}</span>
             </button>
           </div>
 
@@ -4708,17 +4708,17 @@ function Step1BookingCustomer({
               <div className="flex items-center gap-2">
                 <Truck className="h-4 w-4 text-blue-600" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Truck / Fleet Assignment (Single Vehicle per Order)
+                  {tt("truck_fleet_assignment_single", "Truck / Fleet Assignment (Single Vehicle per Order)")}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">Road / Transport</span>
+              <span className="text-[10px] font-bold text-slate-400">{tt("road_transport", "Road / Transport")}</span>
             </div>
 
             {/* Truck Assignment Dropdown & Inputs */}
             <div className="space-y-2.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Truck Assignment Mode *
+                  {tt("truck_assignment_mode_label", "Truck Assignment Mode")} *
                 </label>
                 <select
                   value={formData.truck_assignment_mode}
@@ -4733,9 +4733,9 @@ function Step1BookingCustomer({
                   }}
                   className={selectClass}
                 >
-                  <option value="permanent">Option 1: Permanent Truck (From Fleet Master)</option>
-                  <option value="hired">Option 2: Hired / External Truck (Manual Entry)</option>
-                  <option value="later">Option 3: Assign Later (Unblock Booking)</option>
+                  <option value="permanent">{tt("opt_permanent_truck", "Option 1: Permanent Truck (From Fleet Master)")}</option>
+                  <option value="hired">{tt("opt_hired_truck", "Option 2: Hired / External Truck (Manual Entry)")}</option>
+                  <option value="later">{tt("opt_assign_later", "Option 3: Assign Later (Unblock Booking)")}</option>
                 </select>
               </div>
 
@@ -6543,22 +6543,22 @@ function Step4ReviewConfirm({
                 ACCOUNTS.DGT.LLC
               </span>
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Freight Forwarding & Customs Clearing
+                {tt("freight_forwarding_tagline", "Freight Forwarding & Customs Clearing")}
               </span>
             </div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
-              Customer Order Specification & Review
+              {tt("order_spec_review_title", "Customer Order Specification & Review")}
             </h1>
             <p className="text-xs text-slate-500">
-              Official shipment order manifest • Movement:{" "}
+              {tt("official_shipment_manifest", "Official shipment order manifest")} • {tt("movement_colon", "Movement:")}{" "}
               <strong className="uppercase text-slate-800 dark:text-slate-200">
                 {formData.movement_type || "IMPORT"}
               </strong>{" "}
-              • Mode:{" "}
+              • {tt("mode_colon", "Mode:")}{" "}
               <strong className="uppercase text-slate-800 dark:text-slate-200">
                 {formData.transport_mode?.replace("_", " ") || "BY ROAD"}
               </strong>{" "}
-              • Type:{" "}
+              • {tt("type_colon", "Type:")}{" "}
               <strong className="uppercase text-slate-800 dark:text-slate-200">
                 {formData.shipment_type || "FCL"}
               </strong>
@@ -6586,20 +6586,20 @@ function Step4ReviewConfirm({
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 text-xs">
             <div>
-              <span className="text-[10px] font-semibold text-slate-500 block">Entry Serial</span>
+              <span className="text-[10px] font-semibold text-slate-500 block">{tt("entry_serial", "Entry Serial")}</span>
               <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
                 {formData.entry_serial || "-"}
               </span>
             </div>
             <div>
-              <span className="text-[10px] font-semibold text-slate-500 block">Global Serial / Bill</span>
+              <span className="text-[10px] font-semibold text-slate-500 block">{tt("global_serial_bill", "Global Serial / Bill")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">
                 {formData.global_serial || formData.order_no || "-"}
               </span>
             </div>
             {canSeeSerial("country", ctx) && (
               <div>
-                <span className="text-[10px] font-semibold text-slate-500 block">Country Serial</span>
+                <span className="text-[10px] font-semibold text-slate-500 block">{tt("country_serial", "Country Serial")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
                   {formData.country_serial || "-"}
                 </span>
@@ -6607,7 +6607,7 @@ function Step4ReviewConfirm({
             )}
             {canSeeSerial("branch", ctx) && (
               <div>
-                <span className="text-[10px] font-semibold text-slate-500 block">Branch Serial</span>
+                <span className="text-[10px] font-semibold text-slate-500 block">{tt("branch_serial", "Branch Serial")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
                   {formData.branch_serial || "-"}
                 </span>
@@ -6615,7 +6615,7 @@ function Step4ReviewConfirm({
             )}
             {canSeeSerial("super", ctx) && (
               <div>
-                <span className="text-[10px] font-semibold text-slate-500 block">Super Admin Serial</span>
+                <span className="text-[10px] font-semibold text-slate-500 block">{tt("super_admin_serial", "Super Admin Serial")}</span>
                 <span className="font-mono font-bold text-purple-700 dark:text-purple-400 text-sm">
                   {formData.super_admin_serial || "-"}
                 </span>
@@ -6632,24 +6632,24 @@ function Step4ReviewConfirm({
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                   <Building2 className="h-3.5 w-3.5" />
-                  <span>1A. Customer & Billing Profile</span>
+                  <span>{tt("section_customer_billing_profile", "1A. Customer & Billing Profile")}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => onGoToSubStep("1A")}
                   className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
                 >
-                  Edit 1A
+                  {tt("edit_1a", "Edit 1A")}
                 </button>
               </div>
               <div className="text-sm font-black text-slate-900 dark:text-white">{custName}</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Company</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("field_company", "Company")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custCompany}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Account Ref</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("account_ref", "Account Ref")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {selectedAccountInfo?.name
                       ? `${selectedAccountInfo.name} (${selectedAccountInfo.code || ""})`
@@ -6657,15 +6657,15 @@ function Step4ReviewConfirm({
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Phone / Mobile</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("phone_mobile", "Phone / Mobile")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custPhone}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Email</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("field_email", "Email")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">{custEmail}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-[10px] text-slate-400 block">Registered Address</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("registered_address", "Registered Address")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custAddress}</span>
                 </div>
               </div>
@@ -6685,25 +6685,25 @@ function Step4ReviewConfirm({
                   onClick={() => onGoToSubStep("1C")}
                   className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline print:hidden"
                 >
-                  Edit 1C
+                  {tt("edit_1c", "Edit 1C")}
                 </button>
               </div>
               <div className="text-sm font-black text-slate-900 dark:text-white">{consigneeName}</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Movement Type</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("movement_type_field", "Movement Type")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                     {formData.movement_type || "Import"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Transport Mode</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("transport_mode_field", "Transport Mode")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                     {formData.transport_mode?.replace("_", " ") || "By Road"}
                   </span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-[10px] text-slate-400 block">Final Delivery Destination</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("final_delivery_destination", "Final Delivery Destination")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {formData.final_delivery_location ||
                       formData.destination_city ||
@@ -6712,13 +6712,13 @@ function Step4ReviewConfirm({
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Buyer Name</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("buyer_name", "Buyer Name")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {partySelections.buyer.customerName || "-"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Notify Party</span>
+                  <span className="text-[10px] text-slate-400 block">{tt("notify_party_field", "Notify Party")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {partySelections.notify_party.customerName || "-"}
                   </span>
@@ -6733,26 +6733,26 @@ function Step4ReviewConfirm({
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               <Route className="h-3.5 w-3.5 text-blue-600" />
-              <span>1C. Dynamic Route & Operational Schedule</span>
+              <span>{tt("section_route_schedule", "1C. Dynamic Route & Operational Schedule")}</span>
             </div>
             <button
               type="button"
               onClick={() => onGoToSubStep("1C")}
               className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
             >
-              Edit 1C
+              {tt("edit_1c", "Edit 1C")}
             </button>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">Pickup Source</span>
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{tt("pickup_source_field", "Pickup Source")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                 {formData.loading_source_name || formData.loading_source || "-"}
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">Origin Loading</span>
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{tt("origin_loading_field", "Origin Loading")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                 {formData.loading_country_name || "-"}{" "}
                 {formData.loading_port_name ? `(${formData.loading_port_name})` : ""}
@@ -6760,7 +6760,7 @@ function Step4ReviewConfirm({
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-                Destination Port / Border
+                {tt("destination_port_border", "Destination Port / Border")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                 {formData.destination_port_name ||
@@ -6771,7 +6771,7 @@ function Step4ReviewConfirm({
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-                Final Destination Country
+                {tt("final_destination_country_field", "Final Destination Country")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                 {formData.receiving_country_name || "-"}
@@ -6782,37 +6782,37 @@ function Step4ReviewConfirm({
           {/* Operational Milestones (Planned vs Actual) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1 text-xs">
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">Planned Pickup</span>
+              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("planned_pickup_badge", "Planned Pickup")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.planned_pickup_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">Actual Pickup</span>
+              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("actual_pickup_badge", "Actual Pickup")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.actual_pickup_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">Planned Dispatch</span>
+              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("planned_dispatch_badge", "Planned Dispatch")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.planned_dispatch_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">Actual Dispatch</span>
+              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("actual_dispatch_badge", "Actual Dispatch")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.actual_dispatch_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">Planned Arrival</span>
+              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("planned_arrival_badge", "Planned Arrival")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.planned_arrival_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">Actual Arrival</span>
+              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("actual_arrival_badge", "Actual Arrival")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.actual_arrival_date || "-"}
               </span>
@@ -6825,42 +6825,42 @@ function Step4ReviewConfirm({
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               <Truck className="h-3.5 w-3.5 text-blue-600" />
-              <span>1B. Assigned Vehicle & Driver Details</span>
+              <span>{tt("section_vehicle_driver", "1B. Assigned Vehicle & Driver Details")}</span>
             </div>
             <button
               type="button"
               onClick={() => onGoToSubStep("1B")}
               className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
             >
-              Edit 1B
+              {tt("edit_1b", "Edit 1B")}
             </button>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Assignment Mode</span>
+              <span className="text-[10px] text-slate-400 block uppercase">{tt("assignment_mode_field", "Assignment Mode")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {formData.truck_assignment_mode === "permanent"
-                  ? "Permanent Fleet"
+                  ? tt("permanent_fleet_value", "Permanent Fleet")
                   : formData.truck_assignment_mode === "hired"
-                  ? "Hired / External Truck"
-                  : "Assign Later"}
+                  ? tt("hired_external_truck_value", "Hired / External Truck")
+                  : tt("assign_later_value", "Assign Later")}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Truck / Vehicle Plate</span>
+              <span className="text-[10px] text-slate-400 block uppercase">{tt("truck_vehicle_plate", "Truck / Vehicle Plate")}</span>
               <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
-                {formData.truck_number || "Not Assigned"}
+                {formData.truck_number || tt("not_assigned_value", "Not Assigned")}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Driver Name</span>
+              <span className="text-[10px] text-slate-400 block uppercase">{tt("driver_name_field", "Driver Name")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">
                 {formData.truck_driver_name || "-"}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Driver Mobile</span>
+              <span className="text-[10px] text-slate-400 block uppercase">{tt("driver_mobile_field", "Driver Mobile")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">
                 {formData.truck_driver_mobile || "-"}
               </span>
@@ -6873,14 +6873,14 @@ function Step4ReviewConfirm({
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
               <Boxes className="h-3.5 w-3.5 text-blue-600" />
-              <span>Goods & Cargo Manifest Breakdown ({cargoTotals.count})</span>
+              <span>{tt("goods_manifest_breakdown_count", "Goods & Cargo Manifest Breakdown ({n})").replace("{n}", String(cargoTotals.count))}</span>
             </div>
             <button
               type="button"
               onClick={() => onGoToSubStep("1B")}
               className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
             >
-              Edit Goods (1B)
+              {tt("edit_goods_1b", "Edit Goods (1B)")}
             </button>
           </div>
 
@@ -6889,21 +6889,21 @@ function Step4ReviewConfirm({
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
                   <th className="py-2.5 px-3">#</th>
-                  <th className="py-2.5 px-3">Goods Description</th>
-                  <th className="py-2.5 px-3">CHS Code</th>
-                  <th className="py-2.5 px-3">Packaging / Unit</th>
-                  <th className="py-2.5 px-3 text-right">Quantity</th>
-                  <th className="py-2.5 px-3 text-right">KG / Unit</th>
-                  <th className="py-2.5 px-3 text-right">Total KG</th>
-                  <th className="py-2.5 px-3 text-right">Total MT</th>
-                  <th className="py-2.5 px-3">Warehouse Source</th>
+                  <th className="py-2.5 px-3">{tt("goods_description_th", "Goods Description")}</th>
+                  <th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</th>
+                  <th className="py-2.5 px-3">{tt("packaging_unit_th", "Packaging / Unit")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("kg_per_unit_th", "KG / Unit")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("total_kg", "Total KG")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("total_mt", "Total MT")}</th>
+                  <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {goodsList.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-4 text-center text-slate-400">
-                      No cargo items added.
+                      {tt("no_cargo_items", "No cargo items added.")}
                     </td>
                   </tr>
                 ) : (
@@ -6919,7 +6919,7 @@ function Step4ReviewConfirm({
                         <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
                         <td className="py-2.5 px-3">
                           <span className="font-bold text-slate-900 dark:text-white block">
-                            {item.goodsName || "General Cargo"}
+                            {item.goodsName || tt("general_cargo_fallback", "General Cargo")}
                           </span>
                           {item.goodsVariationLabel ? (
                             <span className="text-[10px] text-slate-400 block">{item.goodsVariationLabel}</span>
@@ -6957,7 +6957,7 @@ function Step4ReviewConfirm({
                     colSpan={4}
                     className="py-3 px-3 uppercase text-[11px] tracking-wider text-slate-700 dark:text-slate-300"
                   >
-                    Grand Manifest Totals ({cargoTotals.count} items)
+                    {tt("grand_manifest_totals", "Grand Manifest Totals ({n} items)").replace("{n}", String(cargoTotals.count))}
                   </td>
                   <td className="py-3 px-3 text-right text-sm text-slate-900 dark:text-white">
                     {cargoTotals.qty.toLocaleString()}
@@ -6981,14 +6981,14 @@ function Step4ReviewConfirm({
           <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs space-y-2">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                Multi-Leg Transit Route ({formData.legs.length})
+                {tt("multi_leg_transit_route_count", "Multi-Leg Transit Route ({n})").replace("{n}", String(formData.legs.length))}
               </div>
               <button
                 type="button"
                 onClick={() => onGoToSubStep("1C")}
                 className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
               >
-                Edit Legs (1C)
+                {tt("edit_legs_1c", "Edit Legs (1C)")}
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
@@ -6998,11 +6998,11 @@ function Step4ReviewConfirm({
                   className="rounded-lg border border-slate-100 bg-slate-50/60 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-800/40 space-y-1"
                 >
                   <div className="font-black text-blue-700 dark:text-blue-400">
-                    Leg #{leg.legNo}: {summaryValue(leg.fromCountryName || leg.fromLocationText)} →{" "}
+                    {tt("leg_hash", "Leg #{n}:").replace("{n}", String(leg.legNo))} {summaryValue(leg.fromCountryName || leg.fromLocationText)} →{" "}
                     {summaryValue(leg.toCountryName || leg.toLocationText)}
                   </div>
                   <div className="text-[11px] text-slate-500">
-                    Mode: <strong className="uppercase">{leg.transportMode || "-"}</strong> • Agent:{" "}
+                    {tt("mode_colon", "Mode:")} <strong className="uppercase">{leg.transportMode || "-"}</strong> • {tt("agent_colon", "Agent:")}{" "}
                     <strong>
                       {leg.responsibleClearingAgentId ? agentName(leg.responsibleClearingAgentId) : "-"}
                     </strong>
@@ -7016,11 +7016,11 @@ function Step4ReviewConfirm({
         {/* Section 6: Special Remarks & Instructions */}
         <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80 shadow-xs space-y-1">
           <div className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-            Special Instructions & Logistics Remarks
+            {tt("special_instructions_logistics", "Special Instructions & Logistics Remarks")}
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">
             {formData.remarks ||
-              "No special instructions noted. All standard customs clearing, tariff verification, and road transit safety protocols apply."}
+              tt("no_special_instructions_full", "No special instructions noted. All standard customs clearing, tariff verification, and road transit safety protocols apply.")}
           </p>
         </div>
 
@@ -7029,31 +7029,31 @@ function Step4ReviewConfirm({
           <div className="grid grid-cols-3 gap-6 text-center text-xs">
             <div className="space-y-8">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Prepared By (Operator / Agent)
+                {tt("prepared_by_operator", "Prepared By (Operator / Agent)")}
               </span>
               <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
               <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
-                Signature & Date
+                {tt("signature_date", "Signature & Date")}
               </span>
             </div>
 
             <div className="space-y-8">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Fleet / Driver Acceptance
+                {tt("fleet_driver_acceptance", "Fleet / Driver Acceptance")}
               </span>
               <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
               <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
-                Driver Signature & Vehicle Stamp
+                {tt("driver_signature_vehicle_stamp", "Driver Signature & Vehicle Stamp")}
               </span>
             </div>
 
             <div className="space-y-8">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Customer / Authorized Consignee
+                {tt("customer_authorized_consignee", "Customer / Authorized Consignee")}
               </span>
               <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
               <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
-                Official Seal & Acceptance
+                {tt("official_seal_acceptance", "Official Seal & Acceptance")}
               </span>
             </div>
           </div>
