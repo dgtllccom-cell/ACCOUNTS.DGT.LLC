@@ -81,6 +81,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
   const [form, setForm] = useState<any>(EMPTY_BILL);
   const [handoffModalOpen, setHandoffModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "form">("list");
 
   // Auto-calculated total bill amount
   const calculatedTotal = useMemo(() => {
@@ -167,6 +168,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
       setSuccessMessage(`Payment Bill ${json.data.bill_no || "saved"} ${isEditing ? "updated" : "created"} successfully!`);
       setForm(EMPTY_BILL);
       setIsEditing(false);
+      setViewMode("list");
       loadData();
     } catch (err: any) {
       setError(err.message);
@@ -178,7 +180,14 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
   function handleEdit(row: PaymentBillRow) {
     setForm(row);
     setIsEditing(true);
+    setViewMode("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleNewEntry() {
+    setForm(EMPTY_BILL);
+    setIsEditing(false);
+    setViewMode("form");
   }
 
   return (
@@ -261,25 +270,26 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
           </div>
         )}
 
-        {/* Bill Entry Form */}
+        {/* Bill Entry Form — only shown after "+ New Entry" / row Edit */}
+        {viewMode === "form" && (
+        <>
         <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <FileText className="w-5 h-5 text-indigo-400" />
               {isEditing ? tt("clbill.edit_entry", "Edit Payment Bill Entry") : tt("clbill.new_entry", "Create New Payment Bill Entry")}
             </h2>
-            {isEditing && (
-              <button
-                type="button"
-                onClick={() => {
-                  setForm(EMPTY_BILL);
-                  setIsEditing(false);
-                }}
-                className="text-xs text-slate-400 hover:text-white border border-slate-700 px-3 py-1 rounded-lg"
-              >
-                {tt("clbill.cancel_edit", "Cancel Edit")}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setForm(EMPTY_BILL);
+                setIsEditing(false);
+                setViewMode("list");
+              }}
+              className="text-xs text-slate-400 hover:text-white border border-slate-700 px-3 py-1 rounded-lg"
+            >
+              {isEditing ? tt("clbill.cancel_edit", "Cancel Edit") : tt("clbill.back_to_register", "Back to Register")}
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -568,8 +578,11 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             lang={lang}
           />
         )}
+        </>
+        )}
 
-        {/* Payment Bill Register Table */}
+        {/* Payment Bill Register Table — the default view when the page opens */}
+        {viewMode === "list" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
@@ -578,6 +591,14 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             </div>
 
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleNewEntry}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 whitespace-nowrap"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {tt("clbill.new_entry", "New Entry")}
+              </button>
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
                 <input
@@ -683,6 +704,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             </div>
           )}
         </div>
+        )}
       </div>
   );
 }

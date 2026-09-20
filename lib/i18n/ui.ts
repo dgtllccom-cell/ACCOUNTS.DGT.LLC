@@ -8736,6 +8736,7 @@ export type UiKey =
   | "com.customer_account_label"
   | "com.shipping_transport_mode"
   | "com.movement_type_route"
+  | "clbill.back_to_register"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -27945,6 +27946,7 @@ const en: Dict = {
   "com.customer_account_label": "Customer Account",
   "com.shipping_transport_mode": "Shipping / Transport Mode",
   "com.movement_type_route": "Movement Type (Route Type)",
+  "clbill.back_to_register": "Back to Register",
 };
 
 const ur: Dict = {
@@ -47128,6 +47130,7 @@ const ur: Dict = {
   "com.customer_account_label": "کسٹمر اکاؤنٹ",
   "com.shipping_transport_mode": "شپنگ / ٹرانسپورٹ موڈ",
   "com.movement_type_route": "نقل و حرکت کی قسم (روٹ کی قسم)",
+  "clbill.back_to_register": "رجسٹر پر واپس جائیں",
 };
 
 const ar: Dict = {
@@ -66312,6 +66315,7 @@ const ar: Dict = {
   "com.customer_account_label": "حساب العميل",
   "com.shipping_transport_mode": "وضع الشحن / النقل",
   "com.movement_type_route": "نوع الحركة (نوع المسار)",
+  "clbill.back_to_register": "العودة إلى السجل",
 };
 
 const fa: Dict = {
@@ -85495,6 +85499,7 @@ const fa: Dict = {
   "com.customer_account_label": "حساب مشتری",
   "com.shipping_transport_mode": "حالت حمل / ترابری",
   "com.movement_type_route": "نوع حرکت (نوع مسیر)",
+  "clbill.back_to_register": "بازگشت به دفتر ثبت",
 };
 
 const ps: Dict = {
@@ -104685,6 +104690,7 @@ const ps: Dict = {
   "com.customer_account_label": "د پیرودونکي حساب",
   "com.shipping_transport_mode": "د لېږد / ترانسپورت طریقه",
   "com.movement_type_route": "د حرکت ډول (د لارې ډول)",
+  "clbill.back_to_register": "راجستر ته بیرته",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

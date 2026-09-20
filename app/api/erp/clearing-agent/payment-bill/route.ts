@@ -16,6 +16,17 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
+    // Row-level scope: narrow to city-branch when the caller has one, else
+    // country-branch, else country — matching enforceScopeFilter()'s
+    // precedence (lib/api/scope-middleware.ts) since this route uses raw SQL
+    // and can't call that Supabase-query-builder helper directly. A country
+    // admin still sees every bill in their country; a city-branch-scoped
+    // clearing user now sees only their own branch's bills, not the whole
+    // country's.
+    const cityBranchIds = session.cityBranchIds ?? [];
+    const countryBranchIds = session.countryBranchIds ?? [];
+    const countryIds = session.countryIds ?? [];
+
     const rows = await withLocalPg(async (sql) => {
       return sql`
         select b.id, b.country_id, b.country_branch_id, b.city_branch_id, b.bill_no, b.order_no, b.order_id, b.customer_id,
@@ -27,7 +38,13 @@ export async function GET(req: NextRequest) {
         left join public.customers c on c.id = b.customer_id
         where b.deleted_at is null
           and (${status && status !== "all" ? sql`b.payment_status = ${status}` : sql`true`})
-          and (${session.isSuperAdmin ? sql`true` : sql`(b.country_id = any(${session.countryIds}) or (b.country_id is null and b.customer_id is null))`})
+          and (
+            ${session.isSuperAdmin}
+            or (b.country_id is null and b.customer_id is null)
+            or (${cityBranchIds.length > 0} and b.city_branch_id = any(${cityBranchIds}))
+            or (${cityBranchIds.length === 0 && countryBranchIds.length > 0} and b.country_branch_id = any(${countryBranchIds}))
+            or (${cityBranchIds.length === 0 && countryBranchIds.length === 0} and b.country_id = any(${countryIds}))
+          )
         order by b.created_at desc
       `;
     });
