@@ -5,7 +5,16 @@ import { requireErpSession } from "@/lib/auth/session";
 import { appendCountryEmailSignature, resolveCountryEmailConfig } from "@/lib/email/country-email-config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendEmailDirect } from "@/lib/email/smtp-client";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 import { decrypt } from "@/lib/crypto";
+
+function safeDecrypt(value: string): string {
+  try {
+    return decrypt(value);
+  } catch {
+    return value;
+  }
+}
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
@@ -818,7 +827,7 @@ export async function GET(request: NextRequest) {
 
     const { data: accountsData } = await admin
       .from("erp_email_accounts")
-      .select("id, email_address, is_active, scope, settings, country_id, country_branch_id, city_branch_id, provider:erp_email_providers(provider_name)")
+      .select("id, email_address, is_active, scope, settings, smtp_password_encrypted, smtp_host, country_id, country_branch_id, city_branch_id, provider:erp_email_providers(provider_name)")
       .is("deleted_at", null);
 
     const emailAccounts = accountsData || [];
@@ -847,9 +856,13 @@ export async function GET(request: NextRequest) {
       if (matchedAccount) {
         officialEmail = matchedAccount.email_address;
         const settings = matchedAccount.settings || {};
-        const hasPassword = Boolean(settings.smtpPass || settings.password || settings.appPassword);
-        const hasHost = Boolean(settings.smtpHost || settings.host);
-        
+        // Real, encrypted mailbox credentials (Titan) take priority over the
+        // legacy `settings` JSON, which the real corporate mailboxes never
+        // populate — checking `settings` alone always showed them as
+        // "Configuration Incomplete" even when they work.
+        const hasPassword = Boolean(matchedAccount.smtp_password_encrypted || settings.smtpPass || settings.password || settings.appPassword);
+        const hasHost = Boolean(matchedAccount.smtp_host || settings.smtpHost || settings.host) || Boolean(matchedAccount.smtp_password_encrypted);
+
         if (hasPassword && hasHost) {
           smtpStatus = matchedAccount.is_active ? "Connected" : "🔴 SMTP Failed";
           emailStatus = matchedAccount.is_active ? "✅ Ready" : "❌ Not Ready";
@@ -1109,16 +1122,19 @@ export async function POST(request: NextRequest) {
             .maybeSingle()
         : { data: null, error: null };
 
-      const accountSettings = (accountRes.data?.settings ?? {}) as Record<string, any>;
+      // Real, encrypted mailbox record (Titan) takes priority — same
+      // resolver as the corporate mailboxes — before the legacy
+      // country/env fallback for scopes with no linked account yet.
+      const resolved = scopedSenderEmail ? await resolveMailboxAccount(scopedSenderEmail) : null;
       const countrySettings = (country?.email_server_settings ?? {}) as Record<string, any>;
 
       const smtpConfig = {
-        host: accountSettings.smtpHost ?? countrySettings.smtpHost ?? process.env.SMTP_HOST ?? "smtp.gmail.com",
-        port: Number(accountSettings.smtpPort ?? countrySettings.smtpPort ?? process.env.SMTP_PORT ?? 465),
-        secure: Boolean(accountSettings.smtpSecure !== undefined ? accountSettings.smtpSecure : (countrySettings.smtpSecure !== undefined ? countrySettings.smtpSecure : true)),
+        host: resolved?.smtpHost ?? countrySettings.smtpHost ?? process.env.SMTP_HOST ?? "smtp.gmail.com",
+        port: Number(resolved?.smtpPort ?? countrySettings.smtpPort ?? process.env.SMTP_PORT ?? 465),
+        secure: resolved ? resolved.smtpSecure : Boolean(countrySettings.smtpSecure !== undefined ? countrySettings.smtpSecure : true),
         auth: {
-          user: accountSettings.smtpUser ?? countrySettings.smtpUser ?? process.env.SMTP_USER ?? scopedSenderEmail ?? "",
-          pass: decrypt(accountSettings.smtpPass ?? countrySettings.smtpPass ?? process.env.SMTP_PASS ?? "")
+          user: resolved?.smtpUser ?? countrySettings.smtpUser ?? process.env.SMTP_USER ?? scopedSenderEmail ?? "",
+          pass: resolved?.smtpPass || (countrySettings.smtpPass ? safeDecrypt(countrySettings.smtpPass) : (process.env.SMTP_PASS ?? ""))
         }
       };
 

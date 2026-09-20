@@ -3,9 +3,18 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { testSmtpConnection } from "@/lib/email/smtp-client";
+import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 import { decrypt } from "@/lib/crypto";
 
 export const dynamic = "force-dynamic";
+
+function safeDecrypt(value: string): string {
+  try {
+    return decrypt(value);
+  } catch {
+    return value;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -105,15 +114,19 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Real, encrypted mailbox record takes priority — same resolver the
+      // corporate mailboxes/Titan integration use — before falling back to
+      // the legacy `settings` JSON (which the real mailboxes don't populate).
+      const resolved = emailAccount?.id ? await resolveMailboxAccount(emailAccount.id) : null;
       const smtpPass = settings.smtpPass || settings.password || settings.appPassword || "";
 
       smtpConfig = {
-        host: settings.smtpHost || (emailAccount?.email_address?.includes("gmail") ? "smtp.gmail.com" : "smtp.office365.com"),
-        port: Number(settings.smtpPort || 465),
-        secure: settings.smtpSecure !== undefined ? settings.smtpSecure : true,
+        host: resolved?.smtpHost || settings.smtpHost || (emailAccount?.email_address?.includes("gmail") ? "smtp.gmail.com" : "smtp.office365.com"),
+        port: Number(resolved?.smtpPort || settings.smtpPort || 465),
+        secure: resolved ? resolved.smtpSecure : (settings.smtpSecure !== undefined ? settings.smtpSecure : true),
         auth: {
-          user: settings.smtpUser || emailAccount?.email_address || "",
-          pass: decrypt(smtpPass)
+          user: resolved?.smtpUser || settings.smtpUser || emailAccount?.email_address || "",
+          pass: resolved?.smtpPass || safeDecrypt(smtpPass)
         }
       };
     }
