@@ -8598,6 +8598,73 @@ export type UiKey =
   | "cer.col_credit"
   | "cer.empty"
   | "cbill.register_title"
+  | "cst.eyebrow_business"
+  | "cst.eyebrow_canonical"
+  | "cst.title_default"
+  | "cst.desc_default"
+  | "cst.refresh"
+  | "cst.add_journey_event"
+  | "cst.shipment_registry"
+  | "cst.records_suffix"
+  | "cst.search_ph"
+  | "cst.searching"
+  | "cst.no_matches"
+  | "cst.stage_booking"
+  | "cst.container_label"
+  | "cst.bl_label"
+  | "cst.loading_journey"
+  | "cst.kpi_status"
+  | "cst.kpi_location"
+  | "cst.kpi_container"
+  | "cst.kpi_eta"
+  | "cst.pending"
+  | "cst.shipping_line_label"
+  | "cst.leg_of"
+  | "cst.business_handover"
+  | "cst.pol"
+  | "cst.etd_label"
+  | "cst.direct_transit"
+  | "cst.pod"
+  | "cst.eta_label"
+  | "cst.multi_leg_title"
+  | "cst.leg_no"
+  | "cst.active"
+  | "cst.origin"
+  | "cst.destination"
+  | "cst.truck_label"
+  | "cst.to_be_assigned"
+  | "cst.driver_label"
+  | "cst.vessel_label"
+  | "cst.voyage_label"
+  | "cst.timeline_title"
+  | "cst.events_recorded"
+  | "cst.no_events"
+  | "cst.revised_eta"
+  | "cst.select_shipment_title"
+  | "cst.select_shipment_hint"
+  | "cst.record_event_title"
+  | "cst.milestone_event"
+  | "cst.location_current_port"
+  | "cst.location_ph"
+  | "cst.vessel_name_label"
+  | "cst.vessel_name_ph"
+  | "cst.voyage_number_label"
+  | "cst.voyage_number_ph"
+  | "cst.container_number_label"
+  | "cst.container_number_ph"
+  | "cst.event_remarks_label"
+  | "cst.event_remarks_ph"
+  | "cst.cancel"
+  | "cst.saving_event"
+  | "cst.record_milestone"
+  | "cst.err_load_tracking"
+  | "cst.err_load_details"
+  | "cst.err_record_event"
+  | "cst.err_record_event_alert"
+  | "cst.portal_title"
+  | "cst.portal_desc"
+  | "cst.business_title"
+  | "cst.business_desc"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -27669,6 +27736,73 @@ const en: Dict = {
   "cer.col_credit": "Credit",
   "cer.empty": "No cash entries found. Click \"New Entry\" to create one.",
   "cbill.register_title": "Customer Bill Register",
+  "cst.eyebrow_business": "Business / Trading Cargo Tracking",
+  "cst.eyebrow_canonical": "Canonical Shipment & Container Tracking",
+  "cst.title_default": "Live Shipment & Container Auto-Tracker",
+  "cst.desc_default": "Unified multi-modal tracking: Search by Shipment No, BL, Container, Vessel, Voyage, Customer or Shipping Line.",
+  "cst.refresh": "Refresh",
+  "cst.add_journey_event": "Add Journey Event",
+  "cst.shipment_registry": "Shipment Registry",
+  "cst.records_suffix": "Records",
+  "cst.search_ph": "Search Shipment, BL, Container, Vessel, Customer...",
+  "cst.searching": "Searching shipments...",
+  "cst.no_matches": "No matching shipments found.",
+  "cst.stage_booking": "BOOKING",
+  "cst.container_label": "Container",
+  "cst.bl_label": "BL",
+  "cst.loading_journey": "Loading shipment journey...",
+  "cst.kpi_status": "Shipment Status",
+  "cst.kpi_location": "Current Location",
+  "cst.kpi_container": "Container Number",
+  "cst.kpi_eta": "Estimated Arrival (ETA)",
+  "cst.pending": "Pending",
+  "cst.shipping_line_label": "Shipping Line",
+  "cst.leg_of": "Leg {a} of {b}",
+  "cst.business_handover": "Business Handover #{n}",
+  "cst.pol": "Port of Loading (POL)",
+  "cst.etd_label": "ETD",
+  "cst.direct_transit": "Direct Transit",
+  "cst.pod": "Port of Discharge (POD)",
+  "cst.eta_label": "ETA",
+  "cst.multi_leg_title": "Multi-Leg Movement Sequence ({n} Transport Legs)",
+  "cst.leg_no": "Leg #{n}",
+  "cst.active": "Active",
+  "cst.origin": "Origin",
+  "cst.destination": "Destination",
+  "cst.truck_label": "Truck",
+  "cst.to_be_assigned": "To be assigned",
+  "cst.driver_label": "Driver",
+  "cst.vessel_label": "Vessel",
+  "cst.voyage_label": "Voyage",
+  "cst.timeline_title": "Complete Journey Event Timeline (Milestones & Vessel Changes)",
+  "cst.events_recorded": "Events Recorded",
+  "cst.no_events": "No events logged yet. Click \"Add Journey Event\" to start recording shipment progress.",
+  "cst.revised_eta": "Revised ETA",
+  "cst.select_shipment_title": "Select a Shipment to Track",
+  "cst.select_shipment_hint": "Search or select any shipment or customer order from the left registry to see its live container location, vessel route, and full 12-milestone history.",
+  "cst.record_event_title": "Record Journey Event & Milestone",
+  "cst.milestone_event": "Milestone Event",
+  "cst.location_current_port": "Location / Current Port",
+  "cst.location_ph": "e.g. Jebel Ali Port, Karachi Port, or Chaman Border",
+  "cst.vessel_name_label": "Vessel Name",
+  "cst.vessel_name_ph": "e.g. MSC LAUREN",
+  "cst.voyage_number_label": "Voyage Number",
+  "cst.voyage_number_ph": "e.g. V-2026A",
+  "cst.container_number_label": "Container Number",
+  "cst.container_number_ph": "e.g. MSCU-7890123",
+  "cst.event_remarks_label": "Event Remarks / Operational Notes",
+  "cst.event_remarks_ph": "Notes on departure, transshipment, customs clearance or inspection...",
+  "cst.cancel": "Cancel",
+  "cst.saving_event": "Saving Event...",
+  "cst.record_milestone": "Record Milestone",
+  "cst.err_load_tracking": "Failed to load tracking data",
+  "cst.err_load_details": "Unable to load shipment details",
+  "cst.err_record_event": "Failed to record event",
+  "cst.err_record_event_alert": "Failed to record tracking event",
+  "cst.portal_title": "Shipment & Container Auto-Tracking Portal",
+  "cst.portal_desc": "Unified tracking across all transport modes: Search by Shipment No, BL No, Container No, Vessel, Voyage, Customer, or Shipping Line.",
+  "cst.business_title": "Business Cargo & Container Tracking",
+  "cst.business_desc": "Track physical movement of purchased goods, containers, and vessel routes across domestic and international transit.",
 };
 
 const ur: Dict = {
@@ -46714,6 +46848,73 @@ const ur: Dict = {
   "cer.col_credit": "کریڈٹ",
   "cer.empty": "کوئی نقد اندراج نہیں ملا۔ ایک بنانے کے لیے \"نئی انٹری\" پر کلک کریں۔",
   "cbill.register_title": "کسٹمر بل رجسٹر",
+  "cst.eyebrow_business": "بزنس / تجارتی کارگو ٹریکنگ",
+  "cst.eyebrow_canonical": "معیاری شپمنٹ اور کنٹینر ٹریکنگ",
+  "cst.title_default": "لائیو شپمنٹ اور کنٹینر خودکار ٹریکر",
+  "cst.desc_default": "متحد ملٹی موڈل ٹریکنگ: شپمنٹ نمبر، بی ایل، کنٹینر، بحری جہاز، سفر، کسٹمر یا شپنگ لائن سے تلاش کریں۔",
+  "cst.refresh": "تازہ کریں",
+  "cst.add_journey_event": "سفر کا واقعہ شامل کریں",
+  "cst.shipment_registry": "شپمنٹ رجسٹری",
+  "cst.records_suffix": "ریکارڈز",
+  "cst.search_ph": "شپمنٹ، بی ایل، کنٹینر، بحری جہاز، کسٹمر تلاش کریں...",
+  "cst.searching": "شپمنٹس تلاش کی جا رہی ہیں...",
+  "cst.no_matches": "کوئی مماثل شپمنٹ نہیں ملی۔",
+  "cst.stage_booking": "بکنگ",
+  "cst.container_label": "کنٹینر",
+  "cst.bl_label": "بی ایل",
+  "cst.loading_journey": "شپمنٹ کا سفر لوڈ ہو رہا ہے...",
+  "cst.kpi_status": "شپمنٹ کی حیثیت",
+  "cst.kpi_location": "موجودہ مقام",
+  "cst.kpi_container": "کنٹینر نمبر",
+  "cst.kpi_eta": "متوقع آمد (ای ٹی اے)",
+  "cst.pending": "زیر التوا",
+  "cst.shipping_line_label": "شپنگ لائن",
+  "cst.leg_of": "مرحلہ {a} از {b}",
+  "cst.business_handover": "بزنس ہینڈ اوور #{n}",
+  "cst.pol": "لوڈنگ بندرگاہ (POL)",
+  "cst.etd_label": "روانگی کا وقت",
+  "cst.direct_transit": "براہ راست ٹرانزٹ",
+  "cst.pod": "ڈسچارج بندرگاہ (POD)",
+  "cst.eta_label": "متوقع آمد",
+  "cst.multi_leg_title": "ملٹی لیگ نقل و حرکت ترتیب ({n} ٹرانسپورٹ مراحل)",
+  "cst.leg_no": "مرحلہ #{n}",
+  "cst.active": "فعال",
+  "cst.origin": "ماخذ",
+  "cst.destination": "منزل",
+  "cst.truck_label": "ٹرک",
+  "cst.to_be_assigned": "تفویض ہونا باقی ہے",
+  "cst.driver_label": "ڈرائیور",
+  "cst.vessel_label": "بحری جہاز",
+  "cst.voyage_label": "سفر",
+  "cst.timeline_title": "مکمل سفری واقعات کی ٹائم لائن (سنگ میل اور جہاز کی تبدیلیاں)",
+  "cst.events_recorded": "درج شدہ واقعات",
+  "cst.no_events": "ابھی تک کوئی واقعہ درج نہیں ہوا۔ شپمنٹ کی پیشرفت ریکارڈ کرنا شروع کرنے کے لیے \"سفر کا واقعہ شامل کریں\" پر کلک کریں۔",
+  "cst.revised_eta": "نظرثانی شدہ آمد کا وقت",
+  "cst.select_shipment_title": "ٹریک کرنے کے لیے شپمنٹ منتخب کریں",
+  "cst.select_shipment_hint": "اس کے لائیو کنٹینر مقام، بحری جہاز کے روٹ اور مکمل 12 سنگ میل تاریخ دیکھنے کے لیے بائیں رجسٹری سے کوئی بھی شپمنٹ یا کسٹمر آرڈر تلاش کریں یا منتخب کریں۔",
+  "cst.record_event_title": "سفر کا واقعہ اور سنگ میل درج کریں",
+  "cst.milestone_event": "سنگ میل واقعہ",
+  "cst.location_current_port": "مقام / موجودہ بندرگاہ",
+  "cst.location_ph": "مثال کے طور پر جبل علی بندرگاہ، کراچی بندرگاہ، یا چمن بارڈر",
+  "cst.vessel_name_label": "بحری جہاز کا نام",
+  "cst.vessel_name_ph": "مثال کے طور پر MSC LAUREN",
+  "cst.voyage_number_label": "سفر نمبر",
+  "cst.voyage_number_ph": "مثال کے طور پر V-2026A",
+  "cst.container_number_label": "کنٹینر نمبر",
+  "cst.container_number_ph": "مثال کے طور پر MSCU-7890123",
+  "cst.event_remarks_label": "واقعہ کی تفصیل / آپریشنل نوٹس",
+  "cst.event_remarks_ph": "روانگی، ٹرانس شپمنٹ، کسٹم کلیئرنس یا معائنے کے بارے میں نوٹس...",
+  "cst.cancel": "منسوخ کریں",
+  "cst.saving_event": "واقعہ محفوظ ہو رہا ہے...",
+  "cst.record_milestone": "سنگ میل درج کریں",
+  "cst.err_load_tracking": "ٹریکنگ ڈیٹا لوڈ کرنے میں ناکامی",
+  "cst.err_load_details": "شپمنٹ کی تفصیلات لوڈ کرنے سے قاصر",
+  "cst.err_record_event": "واقعہ درج کرنے میں ناکامی",
+  "cst.err_record_event_alert": "ٹریکنگ واقعہ درج کرنے میں ناکامی",
+  "cst.portal_title": "شپمنٹ اور کنٹینر خودکار ٹریکنگ پورٹل",
+  "cst.portal_desc": "تمام نقل و حمل کے طریقوں میں متحد ٹریکنگ: شپمنٹ نمبر، بی ایل نمبر، کنٹینر نمبر، بحری جہاز، سفر، کسٹمر، یا شپنگ لائن سے تلاش کریں۔",
+  "cst.business_title": "بزنس کارگو اور کنٹینر ٹریکنگ",
+  "cst.business_desc": "خریدے گئے سامان، کنٹینرز، اور بحری جہاز کے راستوں کی جسمانی نقل و حرکت کو ملکی اور بین الاقوامی ٹرانزٹ میں ٹریک کریں۔",
 };
 
 const ar: Dict = {
@@ -65760,6 +65961,73 @@ const ar: Dict = {
   "cer.col_credit": "دائن",
   "cer.empty": "لم يتم العثور على قيود نقدية. انقر على \"إدخال جديد\" لإنشاء واحد.",
   "cbill.register_title": "سجل فواتير العملاء",
+  "cst.eyebrow_business": "تتبع الشحن التجاري",
+  "cst.eyebrow_canonical": "تتبع الشحنة والحاوية القياسي",
+  "cst.title_default": "متتبع الشحنة والحاوية المباشر التلقائي",
+  "cst.desc_default": "تتبع موحد متعدد الوسائط: ابحث برقم الشحنة أو بوليصة الشحن أو الحاوية أو السفينة أو الرحلة أو العميل أو خط الشحن.",
+  "cst.refresh": "تحديث",
+  "cst.add_journey_event": "إضافة حدث الرحلة",
+  "cst.shipment_registry": "سجل الشحنات",
+  "cst.records_suffix": "سجلات",
+  "cst.search_ph": "ابحث عن الشحنة أو بوليصة الشحن أو الحاوية أو السفينة أو العميل...",
+  "cst.searching": "جارٍ البحث عن الشحنات...",
+  "cst.no_matches": "لم يتم العثور على شحنات مطابقة.",
+  "cst.stage_booking": "الحجز",
+  "cst.container_label": "الحاوية",
+  "cst.bl_label": "بوليصة الشحن",
+  "cst.loading_journey": "جارٍ تحميل رحلة الشحنة...",
+  "cst.kpi_status": "حالة الشحنة",
+  "cst.kpi_location": "الموقع الحالي",
+  "cst.kpi_container": "رقم الحاوية",
+  "cst.kpi_eta": "الوصول المتوقع",
+  "cst.pending": "قيد الانتظار",
+  "cst.shipping_line_label": "خط الشحن",
+  "cst.leg_of": "المرحلة {a} من {b}",
+  "cst.business_handover": "تسليم الأعمال رقم {n}#",
+  "cst.pol": "ميناء التحميل",
+  "cst.etd_label": "وقت المغادرة",
+  "cst.direct_transit": "عبور مباشر",
+  "cst.pod": "ميناء التفريغ",
+  "cst.eta_label": "الوصول المتوقع",
+  "cst.multi_leg_title": "تسلسل الحركة متعدد المراحل ({n} مراحل نقل)",
+  "cst.leg_no": "المرحلة #{n}",
+  "cst.active": "نشط",
+  "cst.origin": "المنشأ",
+  "cst.destination": "الوجهة",
+  "cst.truck_label": "الشاحنة",
+  "cst.to_be_assigned": "سيتم تعيينه",
+  "cst.driver_label": "السائق",
+  "cst.vessel_label": "السفينة",
+  "cst.voyage_label": "الرحلة",
+  "cst.timeline_title": "الجدول الزمني الكامل لأحداث الرحلة (المعالم وتغييرات السفينة)",
+  "cst.events_recorded": "الأحداث المسجلة",
+  "cst.no_events": "لم يتم تسجيل أي أحداث بعد. انقر على \"إضافة حدث الرحلة\" لبدء تسجيل تقدم الشحنة.",
+  "cst.revised_eta": "الوصول المعدل",
+  "cst.select_shipment_title": "اختر شحنة لتتبعها",
+  "cst.select_shipment_hint": "ابحث أو اختر أي شحنة أو طلب عميل من السجل الأيسر لعرض موقع الحاوية المباشر ومسار السفينة والتاريخ الكامل لـ 12 معلمًا.",
+  "cst.record_event_title": "تسجيل حدث الرحلة والمعلم",
+  "cst.milestone_event": "حدث المعلم",
+  "cst.location_current_port": "الموقع / الميناء الحالي",
+  "cst.location_ph": "مثال: ميناء جبل علي، ميناء كراتشي، أو حدود تشامان",
+  "cst.vessel_name_label": "اسم السفينة",
+  "cst.vessel_name_ph": "مثال: MSC LAUREN",
+  "cst.voyage_number_label": "رقم الرحلة",
+  "cst.voyage_number_ph": "مثال: V-2026A",
+  "cst.container_number_label": "رقم الحاوية",
+  "cst.container_number_ph": "مثال: MSCU-7890123",
+  "cst.event_remarks_label": "ملاحظات الحدث / ملاحظات تشغيلية",
+  "cst.event_remarks_ph": "ملاحظات حول المغادرة أو إعادة الشحن أو التخليص الجمركي أو الفحص...",
+  "cst.cancel": "إلغاء",
+  "cst.saving_event": "جارٍ حفظ الحدث...",
+  "cst.record_milestone": "تسجيل المعلم",
+  "cst.err_load_tracking": "فشل تحميل بيانات التتبع",
+  "cst.err_load_details": "تعذر تحميل تفاصيل الشحنة",
+  "cst.err_record_event": "فشل تسجيل الحدث",
+  "cst.err_record_event_alert": "فشل تسجيل حدث التتبع",
+  "cst.portal_title": "بوابة التتبع التلقائي للشحنة والحاوية",
+  "cst.portal_desc": "تتبع موحد عبر جميع وسائط النقل: ابحث برقم الشحنة أو بوليصة الشحن أو رقم الحاوية أو السفينة أو الرحلة أو العميل أو خط الشحن.",
+  "cst.business_title": "تتبع الشحن التجاري والحاوية",
+  "cst.business_desc": "تتبع الحركة الفعلية للبضائع المشتراة والحاويات ومسارات السفن عبر النقل المحلي والدولي.",
 };
 
 const fa: Dict = {
@@ -84805,6 +85073,73 @@ const fa: Dict = {
   "cer.col_credit": "بستانکار",
   "cer.empty": "هیچ ثبت نقدی یافت نشد. برای ایجاد یکی روی «ورودی جدید» کلیک کنید.",
   "cbill.register_title": "دفتر صورتحساب مشتری",
+  "cst.eyebrow_business": "ردیابی بار تجاری",
+  "cst.eyebrow_canonical": "ردیابی استاندارد محموله و کانتینر",
+  "cst.title_default": "ردیاب زنده و خودکار محموله و کانتینر",
+  "cst.desc_default": "ردیابی یکپارچه چندوجهی: جستجو بر اساس شماره محموله، بارنامه، کانتینر، کشتی، سفر، مشتری یا خط کشتیرانی.",
+  "cst.refresh": "بازخوانی",
+  "cst.add_journey_event": "افزودن رویداد سفر",
+  "cst.shipment_registry": "دفتر ثبت محموله‌ها",
+  "cst.records_suffix": "رکورد",
+  "cst.search_ph": "جستجوی محموله، بارنامه، کانتینر، کشتی، مشتری...",
+  "cst.searching": "در حال جستجوی محموله‌ها...",
+  "cst.no_matches": "هیچ محموله مطابقی یافت نشد.",
+  "cst.stage_booking": "رزرو",
+  "cst.container_label": "کانتینر",
+  "cst.bl_label": "بارنامه",
+  "cst.loading_journey": "در حال بارگذاری سفر محموله...",
+  "cst.kpi_status": "وضعیت محموله",
+  "cst.kpi_location": "موقعیت فعلی",
+  "cst.kpi_container": "شماره کانتینر",
+  "cst.kpi_eta": "زمان تخمینی ورود",
+  "cst.pending": "در انتظار",
+  "cst.shipping_line_label": "خط کشتیرانی",
+  "cst.leg_of": "مرحله {a} از {b}",
+  "cst.business_handover": "تحویل تجاری #{n}",
+  "cst.pol": "بندر بارگیری",
+  "cst.etd_label": "زمان حرکت",
+  "cst.direct_transit": "ترانزیت مستقیم",
+  "cst.pod": "بندر تخلیه",
+  "cst.eta_label": "زمان تخمینی ورود",
+  "cst.multi_leg_title": "توالی حرکت چندمرحله‌ای ({n} مرحله حمل)",
+  "cst.leg_no": "مرحله #{n}",
+  "cst.active": "فعال",
+  "cst.origin": "مبدأ",
+  "cst.destination": "مقصد",
+  "cst.truck_label": "کامیون",
+  "cst.to_be_assigned": "در انتظار تخصیص",
+  "cst.driver_label": "راننده",
+  "cst.vessel_label": "کشتی",
+  "cst.voyage_label": "سفر",
+  "cst.timeline_title": "جدول زمانی کامل رویدادهای سفر (نقاط عطف و تغییرات کشتی)",
+  "cst.events_recorded": "رویدادهای ثبت‌شده",
+  "cst.no_events": "هنوز رویدادی ثبت نشده است. برای شروع ثبت پیشرفت محموله روی «افزودن رویداد سفر» کلیک کنید.",
+  "cst.revised_eta": "زمان ورود اصلاح‌شده",
+  "cst.select_shipment_title": "یک محموله را برای ردیابی انتخاب کنید",
+  "cst.select_shipment_hint": "برای مشاهده موقعیت زنده کانتینر، مسیر کشتی و تاریخچه کامل ۱۲ نقطه عطف، هر محموله یا سفارش مشتری را از دفتر سمت چپ جستجو یا انتخاب کنید.",
+  "cst.record_event_title": "ثبت رویداد و نقطه عطف سفر",
+  "cst.milestone_event": "رویداد نقطه عطف",
+  "cst.location_current_port": "موقعیت / بندر فعلی",
+  "cst.location_ph": "مثلاً بندر جبل علی، بندر کراچی، یا مرز چمن",
+  "cst.vessel_name_label": "نام کشتی",
+  "cst.vessel_name_ph": "مثلاً MSC LAUREN",
+  "cst.voyage_number_label": "شماره سفر",
+  "cst.voyage_number_ph": "مثلاً V-2026A",
+  "cst.container_number_label": "شماره کانتینر",
+  "cst.container_number_ph": "مثلاً MSCU-7890123",
+  "cst.event_remarks_label": "توضیحات رویداد / یادداشت‌های عملیاتی",
+  "cst.event_remarks_ph": "یادداشت درباره حرکت، انتقال بار، ترخیص گمرکی یا بازرسی...",
+  "cst.cancel": "لغو",
+  "cst.saving_event": "در حال ذخیره رویداد...",
+  "cst.record_milestone": "ثبت نقطه عطف",
+  "cst.err_load_tracking": "بارگذاری داده‌های ردیابی ناموفق بود",
+  "cst.err_load_details": "بارگذاری جزئیات محموله ممکن نشد",
+  "cst.err_record_event": "ثبت رویداد ناموفق بود",
+  "cst.err_record_event_alert": "ثبت رویداد ردیابی ناموفق بود",
+  "cst.portal_title": "پورتال ردیابی خودکار محموله و کانتینر",
+  "cst.portal_desc": "ردیابی یکپارچه در تمام روش‌های حمل‌ونقل: جستجو بر اساس شماره محموله، شماره بارنامه، شماره کانتینر، کشتی، سفر، مشتری یا خط کشتیرانی.",
+  "cst.business_title": "ردیابی بار تجاری و کانتینر",
+  "cst.business_desc": "حرکت فیزیکی کالاهای خریداری‌شده، کانتینرها و مسیرهای کشتی را در ترانزیت داخلی و بین‌المللی ردیابی کنید.",
 };
 
 const ps: Dict = {
@@ -103857,6 +104192,73 @@ const ps: Dict = {
   "cer.col_credit": "بور",
   "cer.empty": "هیڅ د نغدو ننوتل ونه موندل شول. د جوړولو لپاره \"نوی ننوتل\" کېکاږئ.",
   "cbill.register_title": "د پیرودونکي بل راجستر",
+  "cst.eyebrow_business": "سوداګریز بار تعقیب",
+  "cst.eyebrow_canonical": "معياري بار او کانتینر تعقیب",
+  "cst.title_default": "ژوندی بار او کانتینر اتومات تعقیب کوونکی",
+  "cst.desc_default": "متحد څو ډوله تعقیب: د بار شمېرې، BL، کانتینر، بېړۍ، سفر، پیرودونکي یا حمل کرښې له مخې لټون وکړئ.",
+  "cst.refresh": "تازه کول",
+  "cst.add_journey_event": "د سفر پېښه اضافه کړئ",
+  "cst.shipment_registry": "د بار راجستري",
+  "cst.records_suffix": "ریکارډونه",
+  "cst.search_ph": "د بار، BL، کانتینر، بېړۍ، پیرودونکي لټون...",
+  "cst.searching": "بارونه لټول کیږي...",
+  "cst.no_matches": "هیڅ مطابق بار ونه موندل شو.",
+  "cst.stage_booking": "بکینګ",
+  "cst.container_label": "کانتینر",
+  "cst.bl_label": "BL",
+  "cst.loading_journey": "د بار سفر بارېږي...",
+  "cst.kpi_status": "د بار حالت",
+  "cst.kpi_location": "اوسنی ځای",
+  "cst.kpi_container": "د کانتینر شمېره",
+  "cst.kpi_eta": "اټکل شوی رسېدو وخت",
+  "cst.pending": "په تمه",
+  "cst.shipping_line_label": "د حمل کرښه",
+  "cst.leg_of": "مرحله {a} د {b} څخه",
+  "cst.business_handover": "سوداګریز سپارنه #{n}",
+  "cst.pol": "د بارولو بندرګاه",
+  "cst.etd_label": "د روانېدو وخت",
+  "cst.direct_transit": "مستقیم لېږد",
+  "cst.pod": "د تخلیې بندرګاه",
+  "cst.eta_label": "اټکل شوی رسېدو",
+  "cst.multi_leg_title": "څو مرحلې حرکت ترتیب ({n} د لېږد مرحلې)",
+  "cst.leg_no": "مرحله #{n}",
+  "cst.active": "فعال",
+  "cst.origin": "سرچینه",
+  "cst.destination": "منزل",
+  "cst.truck_label": "لاري",
+  "cst.to_be_assigned": "ټاکل کیدونکی",
+  "cst.driver_label": "چلوونکی",
+  "cst.vessel_label": "بېړۍ",
+  "cst.voyage_label": "سفر",
+  "cst.timeline_title": "د سفر بشپړ پېښو مهالویش (پړاوونه او د بېړۍ بدلونونه)",
+  "cst.events_recorded": "ثبت شوي پېښې",
+  "cst.no_events": "لا تر اوسه هیڅ پېښه ثبت نه ده شوې. د بار پرمختګ ثبتولو پیل لپاره \"د سفر پېښه اضافه کړئ\" کېکاږئ.",
+  "cst.revised_eta": "بیاکتل شوی د رسېدو وخت",
+  "cst.select_shipment_title": "د تعقیب لپاره یو بار وټاکئ",
+  "cst.select_shipment_hint": "د دې د ژوندي کانتینر ځای، د بېړۍ لاره، او بشپړ د ۱۲ پړاوونو تاریخچې کتلو لپاره د کیڼ لور راجستري څخه هر بار یا د پیرودونکي امر ولټوئ یا وټاکئ.",
+  "cst.record_event_title": "د سفر پېښه او پړاو ثبت کړئ",
+  "cst.milestone_event": "د پړاو پېښه",
+  "cst.location_current_port": "ځای / اوسنی بندرګاه",
+  "cst.location_ph": "لکه د جبل علي بندرګاه، کراچۍ بندرګاه، یا چمن پوله",
+  "cst.vessel_name_label": "د بېړۍ نوم",
+  "cst.vessel_name_ph": "لکه MSC LAUREN",
+  "cst.voyage_number_label": "د سفر شمېره",
+  "cst.voyage_number_ph": "لکه V-2026A",
+  "cst.container_number_label": "د کانتینر شمېره",
+  "cst.container_number_ph": "لکه MSCU-7890123",
+  "cst.event_remarks_label": "د پېښې یادښتونه / عملیاتي یادښتونه",
+  "cst.event_remarks_ph": "د روانېدو، بار لېږد، ګمرکي پاکېدو یا معاینې په اړه یادښتونه...",
+  "cst.cancel": "لغوه کول",
+  "cst.saving_event": "پېښه خوندي کیږي...",
+  "cst.record_milestone": "پړاو ثبت کړئ",
+  "cst.err_load_tracking": "د تعقیب معلومات بارول ناکام شول",
+  "cst.err_load_details": "د بار توضیحات بارول ونشول",
+  "cst.err_record_event": "د پېښې ثبتول ناکام شول",
+  "cst.err_record_event_alert": "د تعقیب پېښې ثبتول ناکام شول",
+  "cst.portal_title": "د بار او کانتینر اتومات تعقیب پورتال",
+  "cst.portal_desc": "د لېږد ټولو ډولونو کې متحد تعقیب: د بار شمېرې، BL شمېرې، کانتینر شمېرې، بېړۍ، سفر، پیرودونکي، یا حمل کرښې له مخې لټون وکړئ.",
+  "cst.business_title": "سوداګریز بار او کانتینر تعقیب",
+  "cst.business_desc": "د پیرودل شویو توکو، کانتینرونو، او د بېړۍ لارو فزیکي حرکت د کورني او نړیوال لېږد په اوږدو کې تعقیب کړئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -58,6 +58,7 @@ export function CanonicalShipmentTrackingView({
 }: CanonicalShipmentTrackingViewProps) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const _ = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -102,7 +103,7 @@ export function CanonicalShipmentTrackingView({
       const res = await fetch(`/api/erp/tracking/${encodeURIComponent(id)}?domain=${domain}`);
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json?.error?.message || "Failed to load tracking data");
+        throw new Error(json?.error?.message || _("cst.err_load_tracking", "Failed to load tracking data"));
       }
       setTrackingData(json.data);
       // Pre-fill modal state
@@ -112,7 +113,7 @@ export function CanonicalShipmentTrackingView({
         setNewContainerNumber(json.data.kpis.containerNumber !== "—" ? json.data.kpis.containerNumber : "");
       }
     } catch (e: any) {
-      setError(e.message || "Unable to load shipment details");
+      setError(e.message || _("cst.err_load_details", "Unable to load shipment details"));
     } finally {
       setLoading(false);
     }
@@ -150,14 +151,14 @@ export function CanonicalShipmentTrackingView({
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json?.error?.message || "Failed to record event");
+        throw new Error(json?.error?.message || _("cst.err_record_event", "Failed to record event"));
       }
       setIsAddEventOpen(false);
       setNewLocationName("");
       setNewRemarks("");
       await loadTrackingDetails(selectedShipmentId);
     } catch (err: any) {
-      alert(err.message || "Failed to record tracking event");
+      alert(err.message || _("cst.err_record_event_alert", "Failed to record tracking event"));
     } finally {
       setIsSavingEvent(false);
     }
@@ -177,19 +178,19 @@ export function CanonicalShipmentTrackingView({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border border-border/70 p-6 rounded-2xl shadow-sm">
         <div>
           <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary mb-1">
             <Anchor className="h-4 w-4" />
-            <span>{domain === "business" ? "Business / Trading Cargo Tracking" : "Canonical Shipment & Container Tracking"}</span>
+            <span>{domain === "business" ? _("cst.eyebrow_business", "Business / Trading Cargo Tracking") : _("cst.eyebrow_canonical", "Canonical Shipment & Container Tracking")}</span>
           </div>
           <h1 className="text-2xl font-black tracking-tight text-foreground">
-            {title || "Live Shipment & Container Auto-Tracker"}
+            {title || _("cst.title_default", "Live Shipment & Container Auto-Tracker")}
           </h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-            {description || "Unified multi-modal tracking: Search by Shipment No, BL, Container, Vessel, Voyage, Customer or Shipping Line."}
+            {description || _("cst.desc_default", "Unified multi-modal tracking: Search by Shipment No, BL, Container, Vessel, Voyage, Customer or Shipping Line.")}
           </p>
         </div>
 
@@ -202,7 +203,7 @@ export function CanonicalShipmentTrackingView({
               className="gap-1.5 text-xs font-bold rounded-xl"
             >
               <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-              <span>Refresh</span>
+              <span>{_("cst.refresh", "Refresh")}</span>
             </Button>
           )}
 
@@ -213,7 +214,7 @@ export function CanonicalShipmentTrackingView({
               className="gap-1.5 text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Add Journey Event</span>
+              <span>{_("cst.add_journey_event", "Add Journey Event")}</span>
             </Button>
           )}
         </div>
@@ -226,8 +227,8 @@ export function CanonicalShipmentTrackingView({
           <Card className="rounded-2xl border-border/70 shadow-sm overflow-hidden">
             <CardHeader className="bg-muted/40 border-b border-border/60 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                <span>Shipment Registry</span>
-                <span className="text-[10px] text-primary font-mono font-bold">{searchResults.length} Records</span>
+                <span>{_("cst.shipment_registry", "Shipment Registry")}</span>
+                <span className="text-[10px] text-primary font-mono font-bold">{searchResults.length} {_("cst.records_suffix", "Records")}</span>
               </CardTitle>
               {/* Universal Search Input */}
               <div className="relative mt-2">
@@ -239,7 +240,7 @@ export function CanonicalShipmentTrackingView({
                     setSearchQuery(e.target.value);
                     handleSearch(e.target.value);
                   }}
-                  placeholder="Search Shipment, BL, Container, Vessel, Customer..."
+                  placeholder={_("cst.search_ph", "Search Shipment, BL, Container, Vessel, Customer...")}
                   className="pl-9 text-xs h-9 bg-background rounded-xl border-border/80"
                 />
               </div>
@@ -247,9 +248,9 @@ export function CanonicalShipmentTrackingView({
 
             <CardContent className="p-2 space-y-1.5 max-h-[640px] overflow-y-auto">
               {isSearching ? (
-                <div className="p-6 text-center text-xs text-muted-foreground font-medium">Searching shipments...</div>
+                <div className="p-6 text-center text-xs text-muted-foreground font-medium">{_("cst.searching", "Searching shipments...")}</div>
               ) : searchResults.length === 0 ? (
-                <div className="p-6 text-center text-xs text-muted-foreground">No matching shipments found.</div>
+                <div className="p-6 text-center text-xs text-muted-foreground">{_("cst.no_matches", "No matching shipments found.")}</div>
               ) : (
                 searchResults.map((item) => {
                   const isSelected = selectedShipmentId === item.id;
@@ -269,7 +270,7 @@ export function CanonicalShipmentTrackingView({
                       <div className="flex items-center justify-between">
                         <span className="font-mono font-black text-foreground text-xs">{item.orderNo}</span>
                         <Badge variant="outline" className="text-[9px] uppercase font-bold px-1.5 py-0">
-                          {item.currentStage?.replace(/_/g, " ") || "BOOKING"}
+                          {item.currentStage?.replace(/_/g, " ") || _("cst.stage_booking", "BOOKING")}
                         </Badge>
                       </div>
 
@@ -278,8 +279,8 @@ export function CanonicalShipmentTrackingView({
                       </div>
 
                       <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
-                        <span className="truncate max-w-[140px]">Container: {item.containerNumber}</span>
-                        <span>BL: {item.blNumber}</span>
+                        <span className="truncate max-w-[140px]">{_("cst.container_label", "Container")}: {item.containerNumber}</span>
+                        <span>{_("cst.bl_label", "BL")}: {item.blNumber}</span>
                       </div>
 
                       {(item.vesselName !== "—" || item.voyageNumber !== "—") && (
@@ -301,7 +302,7 @@ export function CanonicalShipmentTrackingView({
           {loading ? (
             <Card className="p-12 text-center rounded-2xl border-border/70 text-muted-foreground">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-              <p className="text-xs font-semibold">Loading shipment journey...</p>
+              <p className="text-xs font-semibold">{_("cst.loading_journey", "Loading shipment journey...")}</p>
             </Card>
           ) : error ? (
             <Card className="p-8 text-center rounded-2xl border-destructive/40 bg-destructive/5 text-destructive text-xs">
@@ -313,7 +314,7 @@ export function CanonicalShipmentTrackingView({
               {/* Top KPI Status Matrix */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-card border border-border/70 p-3.5 rounded-2xl shadow-2xs">
-                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">Shipment Status</span>
+                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">{_("cst.kpi_status", "Shipment Status")}</span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <CircleDot className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
                     <span className="text-sm font-black text-foreground uppercase truncate">
@@ -323,7 +324,7 @@ export function CanonicalShipmentTrackingView({
                 </div>
 
                 <div className="bg-card border border-border/70 p-3.5 rounded-2xl shadow-2xs">
-                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">Current Location</span>
+                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">{_("cst.kpi_location", "Current Location")}</span>
                   <div className="flex items-center gap-1 mt-1 text-sm font-black text-foreground truncate">
                     <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate">{trackingData.kpis.currentLocation}</span>
@@ -331,17 +332,17 @@ export function CanonicalShipmentTrackingView({
                 </div>
 
                 <div className="bg-card border border-border/70 p-3.5 rounded-2xl shadow-2xs">
-                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">Container Number</span>
+                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">{_("cst.kpi_container", "Container Number")}</span>
                   <span className="text-sm font-black font-mono text-primary mt-1 block truncate">
                     {trackingData.kpis.containerNumber}
                   </span>
                 </div>
 
                 <div className="bg-card border border-border/70 p-3.5 rounded-2xl shadow-2xs">
-                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">Estimated Arrival (ETA)</span>
+                  <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground block">{_("cst.kpi_eta", "Estimated Arrival (ETA)")}</span>
                   <div className="flex items-center gap-1 mt-1 text-sm font-black text-foreground font-mono truncate">
                     <Calendar className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    <span>{trackingData.kpis.eta ? new Date(trackingData.kpis.eta).toLocaleDateString() : "Pending"}</span>
+                    <span>{trackingData.kpis.eta ? new Date(trackingData.kpis.eta).toLocaleDateString() : _("cst.pending", "Pending")}</span>
                   </div>
                 </div>
               </div>
@@ -357,17 +358,17 @@ export function CanonicalShipmentTrackingView({
                         <span className="text-xs font-normal text-muted-foreground">• {trackingData.shipment.customer_name}</span>
                       </CardTitle>
                       <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                        Shipping Line: <strong className="text-foreground">{trackingData.kpis.shippingLine}</strong> • B/L: <strong className="text-foreground font-mono">{trackingData.kpis.blNumber}</strong>
+                        {_("cst.shipping_line_label", "Shipping Line")}: <strong className="text-foreground">{trackingData.kpis.shippingLine}</strong> • {_("cst.bl_label", "BL")}: <strong className="text-foreground font-mono">{trackingData.kpis.blNumber}</strong>
                       </CardDescription>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="font-mono text-xs px-2.5 py-1 font-bold">
-                        Leg {trackingData.kpis.activeLegNo} of {trackingData.kpis.totalLegs}
+                        {_("cst.leg_of", "Leg {a} of {b}").replace("{a}", String(trackingData.kpis.activeLegNo)).replace("{b}", String(trackingData.kpis.totalLegs))}
                       </Badge>
                       {trackingData.handover && (
                         <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold">
-                          Business Handover #{trackingData.handover.handover_no}
+                          {_("cst.business_handover", "Business Handover #{n}").replace("{n}", String(trackingData.handover.handover_no))}
                         </Badge>
                       )}
                     </div>
@@ -378,21 +379,21 @@ export function CanonicalShipmentTrackingView({
                   {/* Route Bar (POL -> POD) */}
                   <div className="p-4 rounded-xl border border-border/80 bg-muted/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Port of Loading (POL)</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{_("cst.pol", "Port of Loading (POL)")}</span>
                       <div className="text-sm font-black text-foreground flex items-center gap-1.5">
                         <Anchor className="h-4 w-4 text-primary" />
                         <span>{trackingData.kpis.pol}</span>
                       </div>
                       {trackingData.kpis.etd && (
                         <span className="text-[11px] text-muted-foreground font-mono block">
-                          ETD: {new Date(trackingData.kpis.etd).toLocaleDateString()}
+                          {_("cst.etd_label", "ETD")}: {new Date(trackingData.kpis.etd).toLocaleDateString()}
                         </span>
                       )}
                     </div>
 
                     <div className="hidden sm:flex flex-col items-center justify-center px-4">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase mb-1">
-                        {trackingData.kpis.vesselName !== "—" ? `${trackingData.kpis.vesselName} (${trackingData.kpis.voyageNumber})` : "Direct Transit"}
+                        {trackingData.kpis.vesselName !== "—" ? `${trackingData.kpis.vesselName} (${trackingData.kpis.voyageNumber})` : _("cst.direct_transit", "Direct Transit")}
                       </span>
                       <div className="flex items-center gap-2 text-primary">
                         <div className="h-[2px] w-16 bg-primary/40" />
@@ -402,14 +403,14 @@ export function CanonicalShipmentTrackingView({
                     </div>
 
                     <div className="space-y-1 sm:text-right">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Port of Discharge (POD)</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{_("cst.pod", "Port of Discharge (POD)")}</span>
                       <div className="text-sm font-black text-foreground flex items-center sm:justify-end gap-1.5">
                         <MapPin className="h-4 w-4 text-emerald-500" />
                         <span>{trackingData.kpis.pod}</span>
                       </div>
                       {trackingData.kpis.eta && (
                         <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold block">
-                          ETA: {new Date(trackingData.kpis.eta).toLocaleDateString()}
+                          {_("cst.eta_label", "ETA")}: {new Date(trackingData.kpis.eta).toLocaleDateString()}
                         </span>
                       )}
                     </div>
@@ -419,7 +420,7 @@ export function CanonicalShipmentTrackingView({
                   <div className="space-y-2.5">
                     <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
                       <Layers className="h-4 w-4 text-primary" />
-                      <span>Multi-Leg Movement Sequence ({trackingData.legs.length} Transport Legs)</span>
+                      <span>{_("cst.multi_leg_title", "Multi-Leg Movement Sequence ({n} Transport Legs)").replace("{n}", String(trackingData.legs.length))}</span>
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -438,33 +439,33 @@ export function CanonicalShipmentTrackingView({
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 {modeIcon(leg.transport_mode)}
-                                <span>Leg #{leg.leg_no}: {leg.transport_mode?.replace("by_", "").toUpperCase()}</span>
+                                <span>{_("cst.leg_no", "Leg #{n}").replace("{n}", String(leg.leg_no))}: {leg.transport_mode?.replace("by_", "").toUpperCase()}</span>
                               </span>
                               {isActive ? (
                                 <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0 font-bold uppercase">
-                                  Active
+                                  {_("cst.active", "Active")}
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="text-[9px] uppercase px-1.5 py-0">
-                                  {leg.status || "Pending"}
+                                  {leg.status || _("cst.pending", "Pending")}
                                 </Badge>
                               )}
                             </div>
 
                             <div className="text-xs font-bold text-foreground">
-                              {leg.from_location_text || leg.from_country_name || "Origin"} → {leg.to_location_text || leg.to_country_name || "Destination"}
+                              {leg.from_location_text || leg.from_country_name || _("cst.origin", "Origin")} → {leg.to_location_text || leg.to_country_name || _("cst.destination", "Destination")}
                             </div>
 
                             <div className="mt-2 text-[10.5px] text-muted-foreground space-y-0.5 font-mono">
                               {leg.transport_mode === "by_road" ? (
                                 <>
-                                  <div>Truck: <strong className="text-foreground">{leg.truck_number || "To be assigned"}</strong></div>
-                                  <div>Driver: <span>{leg.truck_driver_name || "—"}</span></div>
+                                  <div>{_("cst.truck_label", "Truck")}: <strong className="text-foreground">{leg.truck_number || _("cst.to_be_assigned", "To be assigned")}</strong></div>
+                                  <div>{_("cst.driver_label", "Driver")}: <span>{leg.truck_driver_name || "—"}</span></div>
                                 </>
                               ) : (
                                 <>
-                                  <div>Vessel: <strong className="text-foreground">{leg.vessel_name || "Pending"}</strong></div>
-                                  <div>Voyage: <span>{leg.voyage_number || "—"}</span></div>
+                                  <div>{_("cst.vessel_label", "Vessel")}: <strong className="text-foreground">{leg.vessel_name || _("cst.pending", "Pending")}</strong></div>
+                                  <div>{_("cst.voyage_label", "Voyage")}: <span>{leg.voyage_number || "—"}</span></div>
                                 </>
                               )}
                             </div>
@@ -479,14 +480,14 @@ export function CanonicalShipmentTrackingView({
                     <div className="flex items-center justify-between border-b border-border/60 pb-2">
                       <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
                         <History className="h-4 w-4 text-primary" />
-                        <span>Complete Journey Event Timeline (Milestones & Vessel Changes)</span>
+                        <span>{_("cst.timeline_title", "Complete Journey Event Timeline (Milestones & Vessel Changes)")}</span>
                       </h3>
-                      <span className="text-[10px] font-mono text-muted-foreground">{trackingData.events.length} Events Recorded</span>
+                      <span className="text-[10px] font-mono text-muted-foreground">{trackingData.events.length} {_("cst.events_recorded", "Events Recorded")}</span>
                     </div>
 
                     {trackingData.events.length === 0 ? (
                       <div className="p-8 text-center border border-dashed rounded-xl bg-muted/20 text-xs text-muted-foreground">
-                        No events logged yet. Click &quot;Add Journey Event&quot; to start recording shipment progress.
+                        {_("cst.no_events", "No events logged yet. Click \"Add Journey Event\" to start recording shipment progress.")}
                       </div>
                     ) : (
                       <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border/80">
@@ -534,11 +535,11 @@ export function CanonicalShipmentTrackingView({
                                     </span>
                                   )}
                                   {ev.container_number && (
-                                    <span>Container: <strong className="font-mono text-foreground">{ev.container_number}</strong></span>
+                                    <span>{_("cst.container_label", "Container")}: <strong className="font-mono text-foreground">{ev.container_number}</strong></span>
                                   )}
                                   {ev.eta && (
                                     <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                      Revised ETA: {new Date(ev.eta).toLocaleDateString()}
+                                      {_("cst.revised_eta", "Revised ETA")}: {new Date(ev.eta).toLocaleDateString()}
                                     </span>
                                   )}
                                 </div>
@@ -561,9 +562,9 @@ export function CanonicalShipmentTrackingView({
           ) : (
             <Card className="p-16 text-center rounded-2xl border-border/70">
               <Ship className="h-10 w-10 mx-auto mb-3 text-primary/40" />
-              <h3 className="text-sm font-bold text-foreground">Select a Shipment to Track</h3>
+              <h3 className="text-sm font-bold text-foreground">{_("cst.select_shipment_title", "Select a Shipment to Track")}</h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                Search or select any shipment or customer order from the left registry to see its live container location, vessel route, and full 12-milestone history.
+                {_("cst.select_shipment_hint", "Search or select any shipment or customer order from the left registry to see its live container location, vessel route, and full 12-milestone history.")}
               </p>
             </Card>
           )}
@@ -576,13 +577,13 @@ export function CanonicalShipmentTrackingView({
           <DialogHeader>
             <DialogTitle className="text-base font-black flex items-center gap-2">
               <Plus className="h-4 w-4 text-primary" />
-              <span>Record Journey Event & Milestone</span>
+              <span>{_("cst.record_event_title", "Record Journey Event & Milestone")}</span>
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSaveEvent} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Milestone Event *</Label>
+              <Label className="text-xs font-semibold">{_("cst.milestone_event", "Milestone Event")} *</Label>
               <select
                 value={newEventCode}
                 onChange={(e) => setNewEventCode(e.target.value as TrackingEventCode)}
@@ -597,32 +598,32 @@ export function CanonicalShipmentTrackingView({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Location / Current Port</Label>
+              <Label className="text-xs font-semibold">{_("cst.location_current_port", "Location / Current Port")}</Label>
               <Input
                 value={newLocationName}
                 onChange={(e) => setNewLocationName(e.target.value)}
-                placeholder="e.g. Jebel Ali Port, Karachi Port, or Chaman Border"
+                placeholder={_("cst.location_ph", "e.g. Jebel Ali Port, Karachi Port, or Chaman Border")}
                 className="h-9 text-xs rounded-xl"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Vessel Name</Label>
+                <Label className="text-xs font-semibold">{_("cst.vessel_name_label", "Vessel Name")}</Label>
                 <Input
                   value={newVesselName}
                   onChange={(e) => setNewVesselName(e.target.value)}
-                  placeholder="e.g. MSC LAUREN"
+                  placeholder={_("cst.vessel_name_ph", "e.g. MSC LAUREN")}
                   className="h-9 text-xs rounded-xl"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Voyage Number</Label>
+                <Label className="text-xs font-semibold">{_("cst.voyage_number_label", "Voyage Number")}</Label>
                 <Input
                   value={newVoyageNumber}
                   onChange={(e) => setNewVoyageNumber(e.target.value)}
-                  placeholder="e.g. V-2026A"
+                  placeholder={_("cst.voyage_number_ph", "e.g. V-2026A")}
                   className="h-9 text-xs rounded-xl"
                 />
               </div>
@@ -630,17 +631,17 @@ export function CanonicalShipmentTrackingView({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Container Number</Label>
+                <Label className="text-xs font-semibold">{_("cst.container_number_label", "Container Number")}</Label>
                 <Input
                   value={newContainerNumber}
                   onChange={(e) => setNewContainerNumber(e.target.value)}
-                  placeholder="e.g. MSCU-7890123"
+                  placeholder={_("cst.container_number_ph", "e.g. MSCU-7890123")}
                   className="h-9 text-xs font-mono rounded-xl"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Revised ETA</Label>
+                <Label className="text-xs font-semibold">{_("cst.revised_eta", "Revised ETA")}</Label>
                 <Input
                   type="date"
                   value={newEta}
@@ -651,11 +652,11 @@ export function CanonicalShipmentTrackingView({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Event Remarks / Operational Notes</Label>
+              <Label className="text-xs font-semibold">{_("cst.event_remarks_label", "Event Remarks / Operational Notes")}</Label>
               <Input
                 value={newRemarks}
                 onChange={(e) => setNewRemarks(e.target.value)}
-                placeholder="Notes on departure, transshipment, customs clearance or inspection..."
+                placeholder={_("cst.event_remarks_ph", "Notes on departure, transshipment, customs clearance or inspection...")}
                 className="h-9 text-xs rounded-xl"
               />
             </div>
@@ -668,7 +669,7 @@ export function CanonicalShipmentTrackingView({
                 onClick={() => setIsAddEventOpen(false)}
                 className="rounded-xl text-xs font-bold"
               >
-                Cancel
+                {_("cst.cancel", "Cancel")}
               </Button>
               <Button
                 type="submit"
@@ -676,7 +677,7 @@ export function CanonicalShipmentTrackingView({
                 size="sm"
                 className="rounded-xl text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                {isSavingEvent ? "Saving Event..." : "Record Milestone"}
+                {isSavingEvent ? _("cst.saving_event", "Saving Event...") : _("cst.record_milestone", "Record Milestone")}
               </Button>
             </DialogFooter>
           </form>
