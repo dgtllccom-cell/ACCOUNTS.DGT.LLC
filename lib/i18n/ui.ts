@@ -8931,6 +8931,12 @@ export type UiKey =
   | "common.search_query"
   | "common.none"
   | "wh.area_label"
+  | "lp.click_new_purchase_hint"
+  | "lp.items_count_badge"
+  | "lp.active_item_badge"
+  | "lp.f_payment_mode"
+  | "lp.global_system_branch"
+  | "lp.f_date"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -28335,6 +28341,12 @@ const en: Dict = {
   "common.search_query": "Search Query",
   "common.none": "None",
   "wh.area_label": "Area",
+  "lp.click_new_purchase_hint": "Click \"+ New Purchase\" to create a new local purchase bill.",
+  "lp.items_count_badge": "{n} Item(s)",
+  "lp.active_item_badge": "Active Item",
+  "lp.f_payment_mode": "Payment Mode:",
+  "lp.global_system_branch": "Global System Branch",
+  "lp.f_date": "Date:",
 };
 
 const ur: Dict = {
@@ -47713,6 +47725,12 @@ const ur: Dict = {
   "common.search_query": "تلاش کی کوئری",
   "common.none": "کوئی نہیں",
   "wh.area_label": "علاقہ",
+  "lp.click_new_purchase_hint": "نئی لوکل خریداری بل بنانے کے لیے \"+ نئی خریداری\" پر کلک کریں۔",
+  "lp.items_count_badge": "{n} آئٹم",
+  "lp.active_item_badge": "فعال آئٹم",
+  "lp.f_payment_mode": "ادائیگی کا طریقہ:",
+  "lp.global_system_branch": "عالمی سسٹم برانچ",
+  "lp.f_date": "تاریخ:",
 };
 
 const ar: Dict = {
@@ -67092,6 +67110,12 @@ const ar: Dict = {
   "common.search_query": "استعلام البحث",
   "common.none": "لا شيء",
   "wh.area_label": "المنطقة",
+  "lp.click_new_purchase_hint": "انقر على \"+ شراء جديد\" لإنشاء فاتورة شراء محلي جديدة.",
+  "lp.items_count_badge": "{n} صنف",
+  "lp.active_item_badge": "صنف نشط",
+  "lp.f_payment_mode": "طريقة الدفع:",
+  "lp.global_system_branch": "فرع النظام العالمي",
+  "lp.f_date": "التاريخ:",
 };
 
 const fa: Dict = {
@@ -86470,6 +86494,12 @@ const fa: Dict = {
   "common.search_query": "عبارت جستجو",
   "common.none": "هیچ‌کدام",
   "wh.area_label": "منطقه",
+  "lp.click_new_purchase_hint": "برای ایجاد صورتحساب خرید محلی جدید روی \"+ خرید جدید\" کلیک کنید.",
+  "lp.items_count_badge": "{n} قلم",
+  "lp.active_item_badge": "قلم فعال",
+  "lp.f_payment_mode": "روش پرداخت:",
+  "lp.global_system_branch": "شعبه سیستم جهانی",
+  "lp.f_date": "تاریخ:",
 };
 
 const ps: Dict = {
@@ -105855,6 +105885,12 @@ const ps: Dict = {
   "common.search_query": "د لټون پوښتنه",
   "common.none": "هېڅ",
   "wh.area_label": "سیمه",
+  "lp.click_new_purchase_hint": "د نوي کورني پیرودنې بل جوړولو لپاره \"+ نوې پیرودنه\" کلیک وکړئ.",
+  "lp.items_count_badge": "{n} توکي",
+  "lp.active_item_badge": "فعال توکی",
+  "lp.f_payment_mode": "د تادیې طریقه:",
+  "lp.global_system_branch": "نړیوال سیسټم څانګه",
+  "lp.f_date": "نېټه:",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

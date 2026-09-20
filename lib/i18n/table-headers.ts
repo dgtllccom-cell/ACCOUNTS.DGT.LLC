@@ -2915,7 +2915,9 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "REPORT TITLE": { ur: "رپورٹ کا عنوان", ar: "عنوان التقرير", fa: "عنوان گزارش", ps: "د راپور سرلیک" },
   "ALL CATEGORIES": { ur: "تمام زمرہ جات", ar: "جميع الفئات", fa: "همه دسته‌ها", ps: "ټولې کټګورۍ" },
   "DESCRIPTION & SCOPE": { ur: "تفصیل اور دائرہ کار", ar: "الوصف والنطاق", fa: "شرح و دامنه", ps: "تفصیل او ساحه" },
-};
+
+  "ASSIGN TO ANOTHER USER": { ur: "دوسرے صارف کو تفویض کریں", ar: "تعيين لمستخدم آخر", fa: "تخصیص به کاربر دیگر", ps: "بل کارونکي ته سپارل" },
+  "EDIT LOCAL PURCHASE": { ur: "لوکل خریداری میں ترمیم کریں", ar: "تعديل الشراء المحلي", fa: "ویرایش خرید محلی", ps: "کورنۍ پیرودنه سمول" },};
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
 function normalize(label: string): string {

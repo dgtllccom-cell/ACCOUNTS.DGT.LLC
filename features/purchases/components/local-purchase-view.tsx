@@ -3245,7 +3245,7 @@ export function LocalPurchaseView({
                   <Package className="h-4 w-4 text-emerald-600" /> {th("ADDED GOODS ITEMS TABLE")}
                 </CardTitle>
                 <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
-                  {draftItems.length > 0 ? `${draftItems.length} Item(s)` : "Active Item"}
+                  {draftItems.length > 0 ? t(lang, "lp.items_count_badge", "{n} Item(s)").replace("{n}", String(draftItems.length)) : t(lang, "lp.active_item_badge", "Active Item")}
                 </span>
               </CardHeader>
               <CardContent className="p-0">
@@ -3742,7 +3742,7 @@ export function LocalPurchaseView({
                             {t(lang, "lp.no_bills_found", "No bills found")}
                           </p>
                           <p className="text-xs text-slate-400 mt-1">
-                            Click &quot;+ New Purchase&quot; to create a new local purchase bill.
+                            {t(lang, "lp.click_new_purchase_hint", "Click \"+ New Purchase\" to create a new local purchase bill.")}
                           </p>
                         </td>
                       </tr>
@@ -4910,12 +4910,12 @@ export function LocalPurchaseView({
                 <div>
                   <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">{th("LOCAL PURCHASE BILL VOUCHER")}</h2>
                   <p className="text-[10px] text-slate-500 font-bold uppercase">
-                    {selectedRowForVoucher.branchName || "Global System Branch"}
+                    {selectedRowForVoucher.branchName || t(lang, "lp.global_system_branch", "Global System Branch")}
                   </p>
                 </div>
                 <div className="text-right text-xs font-mono">
                   <span className="font-black text-blue-600 block text-sm">LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}</span>
-                  <span className="text-[9px] text-slate-500 block">Date: {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at).toLocaleDateString("en-GB")}</span>
+                  <span className="text-[9px] text-slate-500 block">{t(lang, "lp.f_date", "Date:")} {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at).toLocaleDateString("en-GB")}</span>
                 </div>
               </div>
 
@@ -4924,7 +4924,7 @@ export function LocalPurchaseView({
                   <span className="text-[9px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_supplier_vendor", "Supplier / Vendor:")}</span>
                   <span className="font-bold text-slate-800 text-xs">{selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "-"}</span>
                   <span className="text-[9px] text-emerald-600 block font-bold mt-1 uppercase">
-                    Payment Mode: {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
+                    {t(lang, "lp.f_payment_mode", "Payment Mode:")} {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
                   </span>
                 </div>
                 <div className="text-right text-[10px] space-y-0.5">
