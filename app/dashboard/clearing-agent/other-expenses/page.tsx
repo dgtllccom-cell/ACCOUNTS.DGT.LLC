@@ -8,7 +8,7 @@ export default async function OtherExpensesBillPage() {
   const lang = await getRequestLanguage();
 
   return (
-    <EntryMethodSelector targetModule="expenses" domain="business" lang={lang}>
+    <EntryMethodSelector targetModule="expenses" domain="business" lang={lang} skipGate>
       <ExpensesBillEntryForm lang={lang} initialBillCategory="other_expenses" />
     </EntryMethodSelector>
   );
