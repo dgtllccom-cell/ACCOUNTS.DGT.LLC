@@ -75,3 +75,7 @@ android/app/src/main/assets/public/server/
 
 # Sneat design source package (large, local-only reference for Phase 2)
 design-assets/
+
+# Local incremental TypeScript build cache — regenerates every tsc run and
+# should never be tracked (was causing spurious "dirty tree" deploy aborts)
+tsconfig.tsbuildinfo
