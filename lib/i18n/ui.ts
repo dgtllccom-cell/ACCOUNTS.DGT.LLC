@@ -8938,6 +8938,13 @@ export type UiKey =
   | "lp.global_system_branch"
   | "lp.f_date"
   | "pom.total_purchase_orders_subtitle"
+  | "sales.sodash_admin_user"
+  | "sales.sodash_booking_invoice_title"
+  | "sales.sodash_orders_suffix"
+  | "sales.sodash_pending_transfers_colon"
+  | "sales.sodash_invoice_amount_colon"
+  | "sales.sodash_payments_recd_colon"
+  | "sales.sodash_finalized_orders_colon"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -28349,6 +28356,13 @@ const en: Dict = {
   "lp.global_system_branch": "Global System Branch",
   "lp.f_date": "Date:",
   "pom.total_purchase_orders_subtitle": "Total {n} purchase orders",
+  "sales.sodash_admin_user": "Admin User",
+  "sales.sodash_booking_invoice_title": "Sales Booking Invoice",
+  "sales.sodash_orders_suffix": "Orders",
+  "sales.sodash_pending_transfers_colon": "Pending Transfers:",
+  "sales.sodash_invoice_amount_colon": "Invoice Amount:",
+  "sales.sodash_payments_recd_colon": "Payments Recd:",
+  "sales.sodash_finalized_orders_colon": "Finalized Orders:",
 };
 
 const ur: Dict = {
@@ -47734,6 +47748,13 @@ const ur: Dict = {
   "lp.global_system_branch": "عالمی سسٹم برانچ",
   "lp.f_date": "تاریخ:",
   "pom.total_purchase_orders_subtitle": "کل {n} خریداری آرڈرز",
+  "sales.sodash_admin_user": "ایڈمن صارف",
+  "sales.sodash_booking_invoice_title": "سیلز بکنگ انوائس",
+  "sales.sodash_orders_suffix": "آرڈرز",
+  "sales.sodash_pending_transfers_colon": "زیر التواء منتقلیاں:",
+  "sales.sodash_invoice_amount_colon": "انوائس رقم:",
+  "sales.sodash_payments_recd_colon": "موصولہ ادائیگیاں:",
+  "sales.sodash_finalized_orders_colon": "حتمی آرڈرز:",
 };
 
 const ar: Dict = {
@@ -67120,6 +67141,13 @@ const ar: Dict = {
   "lp.global_system_branch": "فرع النظام العالمي",
   "lp.f_date": "التاريخ:",
   "pom.total_purchase_orders_subtitle": "إجمالي {n} طلبات شراء",
+  "sales.sodash_admin_user": "مستخدم المسؤول",
+  "sales.sodash_booking_invoice_title": "فاتورة حجز المبيعات",
+  "sales.sodash_orders_suffix": "طلبات",
+  "sales.sodash_pending_transfers_colon": "التحويلات المعلقة:",
+  "sales.sodash_invoice_amount_colon": "مبلغ الفاتورة:",
+  "sales.sodash_payments_recd_colon": "المدفوعات المستلمة:",
+  "sales.sodash_finalized_orders_colon": "الطلبات النهائية:",
 };
 
 const fa: Dict = {
@@ -86505,6 +86533,13 @@ const fa: Dict = {
   "lp.global_system_branch": "شعبه سیستم جهانی",
   "lp.f_date": "تاریخ:",
   "pom.total_purchase_orders_subtitle": "مجموع {n} سفارش خرید",
+  "sales.sodash_admin_user": "کاربر مدیر",
+  "sales.sodash_booking_invoice_title": "فاکتور رزرو فروش",
+  "sales.sodash_orders_suffix": "سفارش‌ها",
+  "sales.sodash_pending_transfers_colon": "انتقال‌های در انتظار:",
+  "sales.sodash_invoice_amount_colon": "مبلغ فاکتور:",
+  "sales.sodash_payments_recd_colon": "پرداخت‌های دریافتی:",
+  "sales.sodash_finalized_orders_colon": "سفارش‌های نهایی‌شده:",
 };
 
 const ps: Dict = {
@@ -105897,6 +105932,13 @@ const ps: Dict = {
   "lp.global_system_branch": "نړیوال سیسټم څانګه",
   "lp.f_date": "نېټه:",
   "pom.total_purchase_orders_subtitle": "ټول {n} پیرودنې امرونه",
+  "sales.sodash_admin_user": "اډمین کارونکی",
+  "sales.sodash_booking_invoice_title": "د پلور بکینګ بل",
+  "sales.sodash_orders_suffix": "امرونه",
+  "sales.sodash_pending_transfers_colon": "پاتې لېږدونه:",
+  "sales.sodash_invoice_amount_colon": "د بل مبلغ:",
+  "sales.sodash_payments_recd_colon": "ترلاسه شوي تادیات:",
+  "sales.sodash_finalized_orders_colon": "پای ته رسیدلي امرونه:",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

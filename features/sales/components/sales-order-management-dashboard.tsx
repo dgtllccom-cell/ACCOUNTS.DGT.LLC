@@ -227,14 +227,14 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
       createdAt: order.created_at,
       form_data: order.form_data,
       audit: {
-        userName: raw.form?.userName || "Admin User",
+        userName: raw.form?.userName || t(activeLang, "sales.sodash_admin_user", "Admin User"),
         userId: raw.form?.userId || "USR-001",
         branchCode: raw.form?.branchCode || "QTA"
       }
     };
 
     openSalesA4ReportWindow({
-      title: "Sales Booking Invoice",
+      title: t(activeLang, "sales.sodash_booking_invoice_title", "Sales Booking Invoice"),
       salesData: reportData
     });
   }
@@ -310,8 +310,8 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/20 border border-blue-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_total_sales_orders", "Total Sales Orders")}</span>
-            <span className="text-2xl font-black text-blue-700 font-sans">{dashboardStats.totalSalesOrders} Orders</span>
-            <span className="text-[9.5px] text-indigo-500 font-bold block">Pending Transfers: {dashboardStats.pendingTransfers}</span>
+            <span className="text-2xl font-black text-blue-700 font-sans">{dashboardStats.totalSalesOrders} {t(activeLang, "sales.sodash_orders_suffix", "Orders")}</span>
+            <span className="text-[9.5px] text-indigo-500 font-bold block">{t(activeLang, "sales.sodash_pending_transfers_colon", "Pending Transfers:")} {dashboardStats.pendingTransfers}</span>
           </div>
           <div className="bg-blue-100 text-blue-700 p-2.5 rounded-xl">
             <Boxes className="h-6 w-6" />
@@ -323,7 +323,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           <div className="space-y-1">
             <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_original_total_sales", "Original Total Sales")}</span>
             <span className="text-xl font-black text-emerald-700 font-sans">${dashboardStats.totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-            <span className="text-[9.5px] text-teal-600 font-bold block">Invoice Amount: ${dashboardStats.totalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span className="text-[9.5px] text-teal-600 font-bold block">{t(activeLang, "sales.sodash_invoice_amount_colon", "Invoice Amount:")} ${dashboardStats.totalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl">
             <BadgeDollarSign className="h-6 w-6" />
@@ -335,7 +335,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           <div className="space-y-1">
             <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_final_currency_value", "Final Currency Value")}</span>
             <span className="text-xl font-black text-purple-700 font-sans">{dashboardStats.totalFinalCurrencyAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-            <span className="text-[9.5px] text-pink-600 font-bold block">Payments Recd: {dashboardStats.totalPaymentsReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
+            <span className="text-[9.5px] text-pink-600 font-bold block">{t(activeLang, "sales.sodash_payments_recd_colon", "Payments Recd:")} {dashboardStats.totalPaymentsReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
           </div>
           <div className="bg-purple-100 text-purple-700 p-2.5 rounded-xl">
             <CheckCircle2 className="h-6 w-6" />
@@ -347,7 +347,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           <div className="space-y-1">
             <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_outstanding_receivables", "Outstanding Receivables")}</span>
             <span className="text-xl font-black text-amber-700 font-sans">{dashboardStats.outstandingReceivables.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-            <span className="text-[9.5px] text-orange-600 font-bold block">Finalized Orders: {dashboardStats.finalizedOrders}</span>
+            <span className="text-[9.5px] text-orange-600 font-bold block">{t(activeLang, "sales.sodash_finalized_orders_colon", "Finalized Orders:")} {dashboardStats.finalizedOrders}</span>
           </div>
           <div className="bg-amber-100 text-amber-700 p-2.5 rounded-xl">
             <Clock3 className="h-6 w-6" />
