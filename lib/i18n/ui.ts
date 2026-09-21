@@ -1675,7 +1675,7 @@ export type UiKey =
   | "roz.loading_cash_report"
   | "roz.loading_invoice_report"
   | "roz.loading_transfer_report"
-  | "pojp.loading_advance"
+  | "pojp.loading_advance" | "pojp.loading_final"
   | "pojp.loading_advance_completed"
   | "pojp.loading_charges"
   | "pojp.loading_history"
@@ -7548,6 +7548,8 @@ export type UiKey =
   | "cbr.pdf_role_label" | "cbr.pdf_whatsapp_business"
   | "pjt.page_title"
   | "pjt.page_title_sales"
+  | "pjt.final_payment_report" | "pjt.unable_to_load_records" | "pjt.breadcrumb_purchase" | "pjt.breadcrumb_purchase_payments"
+  | "pjt.unable_to_load_records_sales" | "pjt.breadcrumb_sales" | "pjt.breadcrumb_sales_payments"
   | "pjt.search_placeholder"
   | "pjt.no_payment_records_found"
   | "pjt.try_adjusting_filters"
@@ -17778,6 +17780,13 @@ const en: Dict = {
   "port.save": "Save Port",
 
   "pjt.page_title": "Traceable Purchase Order Payment Journal",
+  "pjt.unable_to_load_records": "Unable to load purchase order payment records.",
+  "pjt.breadcrumb_purchase": "Purchase",
+  "pjt.breadcrumb_purchase_payments": "Purchase Payments",
+  "pjt.unable_to_load_records_sales": "Unable to load sales order payment records.",
+  "pjt.breadcrumb_sales": "Sales",
+  "pjt.breadcrumb_sales_payments": "Sales Payments",
+  "pjt.final_payment_report": "Final / Remaining Balance Payment",
   "pjt.page_title_sales": "Traceable Sales Order Payment Journal",
   "pjt.search_placeholder": "Search by PO#, contract, status, supplier name, country, city...",
   "pjt.no_payment_records_found": "No payment records found.",
@@ -22484,6 +22493,7 @@ const en: Dict = {
 
 
   "pojp.loading_advance": "Loading Purchase Advance Payment Journal...",
+  "pojp.loading_final": "Loading Final Payment Report...",
 
 
   "pojp.loading_advance_completed": "Loading Advance Completed Journal...",
@@ -37669,6 +37679,13 @@ const ur: Dict = {
   "port.save": "بندرگاہ محفوظ کریں",
 
   "pjt.page_title": "ٹریک ایبل پرچیز آرڈر پیمنٹ جرنل",
+  "pjt.unable_to_load_records": "خریداری آرڈر ادائیگی ریکارڈ لوڈ نہیں ہو سکے۔",
+  "pjt.breadcrumb_purchase": "خریداری",
+  "pjt.breadcrumb_purchase_payments": "خریداری ادائیگیاں",
+  "pjt.unable_to_load_records_sales": "سیلز آرڈر ادائیگی ریکارڈ لوڈ نہیں ہو سکے۔",
+  "pjt.breadcrumb_sales": "سیلز",
+  "pjt.breadcrumb_sales_payments": "سیلز ادائیگیاں",
+  "pjt.final_payment_report": "حتمی / بقایا رقم کی ادائیگی",
   "pjt.page_title_sales": "ٹریک ایبل سیلز آرڈر پیمنٹ جرنل",
   "pjt.search_placeholder": "پرچیز آرڈر نمبر، معاہدہ، حیثیت، سپلائر کا نام، ملک، شہر سے تلاش کریں...",
   "pjt.no_payment_records_found": "کوئی ادائیگی کا ریکارڈ نہیں ملا۔",
@@ -42363,6 +42380,7 @@ const ur: Dict = {
 
 
   "pojp.loading_advance": "پرچیز ایڈوانس پیمنٹ جرنل لوڈ ہو رہا ہے...",
+  "pojp.loading_final": "حتمی ادائیگی رپورٹ لوڈ ہو رہی ہے...",
 
 
   "pojp.loading_advance_completed": "ایڈوانس کمپلیٹڈ جرنل لوڈ ہو رہا ہے...",
@@ -57391,6 +57409,13 @@ const ar: Dict = {
   "port.save": "حفظ الميناء",
 
   "pjt.page_title": "دفتر يوميات مدفوعات طلب الشراء القابل للتتبع",
+  "pjt.unable_to_load_records": "تعذر تحميل سجلات دفعات طلب الشراء.",
+  "pjt.breadcrumb_purchase": "المشتريات",
+  "pjt.breadcrumb_purchase_payments": "مدفوعات المشتريات",
+  "pjt.unable_to_load_records_sales": "تعذر تحميل سجلات دفعات طلب البيع.",
+  "pjt.breadcrumb_sales": "المبيعات",
+  "pjt.breadcrumb_sales_payments": "مدفوعات المبيعات",
+  "pjt.final_payment_report": "الدفعة النهائية / الرصيد المتبقي",
   "pjt.page_title_sales": "دفتر يوميات مدفوعات طلب البيع القابل للتتبع",
   "pjt.search_placeholder": "ابحث برقم طلب الشراء، العقد، الحالة، اسم المورد، البلد، المدينة...",
   "pjt.no_payment_records_found": "لم يتم العثور على سجلات دفع.",
@@ -62085,6 +62110,7 @@ const ar: Dict = {
 
 
   "pojp.loading_advance": "جارٍ تحميل سجل دفعة السلفة على المشتريات...",
+  "pojp.loading_final": "جارٍ تحميل تقرير الدفعة النهائية...",
 
 
   "pojp.loading_advance_completed": "جارٍ تحميل سجل السلف المكتملة...",
@@ -77163,6 +77189,13 @@ const fa: Dict = {
   "port.save": "ذخیره بندر",
 
   "pjt.page_title": "دفتر روزنامه پرداخت سفارش خرید قابل پیگیری",
+  "pjt.unable_to_load_records": "بارگذاری رکوردهای پرداخت سفارش خرید ممکن نشد.",
+  "pjt.breadcrumb_purchase": "خرید",
+  "pjt.breadcrumb_purchase_payments": "پرداخت‌های خرید",
+  "pjt.unable_to_load_records_sales": "بارگذاری رکوردهای پرداخت سفارش فروش ممکن نشد.",
+  "pjt.breadcrumb_sales": "فروش",
+  "pjt.breadcrumb_sales_payments": "پرداخت‌های فروش",
+  "pjt.final_payment_report": "پرداخت نهایی / مانده باقی‌مانده",
   "pjt.page_title_sales": "دفتر روزنامه پرداخت سفارش فروش قابل پیگیری",
   "pjt.search_placeholder": "جستجو بر اساس شماره سفارش، قرارداد، وضعیت، نام تأمین‌کننده، کشور، شهر...",
   "pjt.no_payment_records_found": "هیچ رکورد پرداختی یافت نشد.",
@@ -81857,6 +81890,7 @@ const fa: Dict = {
 
 
   "pojp.loading_advance": "در حال بارگذاری دفتر پیش‌پرداخت خرید...",
+  "pojp.loading_final": "در حال بارگذاری گزارش پرداخت نهایی...",
 
 
   "pojp.loading_advance_completed": "در حال بارگذاری دفتر پیش‌پرداخت‌های تکمیل‌شده...",
@@ -96933,6 +96967,13 @@ const ps: Dict = {
   "port.save": "بندر خوندي کړئ",
 
   "pjt.page_title": "د تعقیب وړ پیرود امر تادیې ژورنال",
+  "pjt.unable_to_load_records": "د پیرودلو امر تادیاتو ریکارډونه نه بارېدل.",
+  "pjt.breadcrumb_purchase": "پیرودل",
+  "pjt.breadcrumb_purchase_payments": "د پیرودلو تادیات",
+  "pjt.unable_to_load_records_sales": "د پلورلو امر تادیاتو ریکارډونه نه بارېدل.",
+  "pjt.breadcrumb_sales": "پلورل",
+  "pjt.breadcrumb_sales_payments": "د پلورلو تادیات",
+  "pjt.final_payment_report": "وروستی / پاتې بیلانس تادیه",
   "pjt.page_title_sales": "د تعقیب وړ پلور امر تادیې ژورنال",
   "pjt.search_placeholder": "د پیرود امر، قرارداد، حالت، چمتو کونکي نوم، هیواد، ښار په واسطه لټون وکړئ...",
   "pjt.no_payment_records_found": "د تادیې هیڅ ریکارډ ونه موندل شو.",
@@ -101627,6 +101668,7 @@ const ps: Dict = {
 
 
   "pojp.loading_advance": "د پیرودنې پیشکي تادیاتو جرنل پورته کیږي...",
+  "pojp.loading_final": "د وروستي تادیې راپور بارېږي...",
 
 
   "pojp.loading_advance_completed": "د بشپړ شویو پیشکیو جرنل پورته کیږي...",

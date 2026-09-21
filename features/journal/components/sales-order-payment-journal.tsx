@@ -88,7 +88,7 @@ function isUuid(value: any): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
 }
 
-type PaymentMode = "advance" | "advance_completed" | "remaining" | "credit" | "charges" | "history";
+type PaymentMode = "advance" | "advance_completed" | "remaining" | "credit" | "charges" | "history" | "final";
 
 type PurchaseOrderRow = {
   id: string;
@@ -351,7 +351,8 @@ const modeLabels: Record<PaymentMode, string> = {
   credit: "Credit Payment",
   charges: "Credit Payment",
   history: "Payment History",
-  advance_completed: "Advance Completed"
+  advance_completed: "Advance Completed",
+  final: "Final / Remaining Balance Payment"
 };
 
 function money(value: unknown, currency = "") {
@@ -1471,7 +1472,7 @@ function DashboardSummaryHeader({
 
   const notTransferredPercentLC = summary.totalPurchaseLC > 0 ? (summary.remainingBalanceLC / summary.totalPurchaseLC) * 100 : 0;
   const numCurrencies = Object.keys(summary.foreignCurrencies).length;
-  const reportType = mode === "advance" ? "Advance Payment Summary" : mode === "credit" ? "Credit Payment Summary" : "Purchase Payment Summary";
+  const reportType = mode === "advance" ? "Advance Payment Summary" : mode === "credit" ? "Credit Payment Summary" : mode === "final" ? "Final / Remaining Balance Payment Summary" : "Purchase Payment Summary";
   const now = new Date();
   
   // Format Date & Time based on Pakistan time (or local system)
@@ -2951,7 +2952,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       }
     } catch (err) {
       setOrders([]);
-      setError(err instanceof Error ? err.message : "Unable to load sales order payment records.");
+      setError(err instanceof Error ? err.message : t("unable_to_load_records_sales", currentLanguage));
     } finally {
       setLoading(false);
     }
@@ -3080,6 +3081,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         // Show in history if fully cleared
         const isFullyCleared = isCreditBill ? isCreditPaid : ((advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared);
         if (!isFullyCleared && !isCreditPaid) return false;
+      } else if (activeMode === "final") {
+        // Final / Remaining Balance report: a read-only reconciliation across every
+        // sales order regardless of bill type or payment status — intentionally no
+        // exclusion rules, so every order's final paid/remaining position is visible.
       }
 
       if (!needle) return true;
@@ -4171,9 +4176,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       <PaymentJournalV2Header
         title={t("page_title_sales", currentLanguage) || "Sales Payments"}
         breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Sales", href: "/dashboard/sales" },
-          { label: "Sales Payments", href: "/dashboard/journal/sales-order-payment/remaining" },
+          { label: tGlobal(currentLanguage, "common.dashboard", "Dashboard"), href: "/dashboard" },
+          { label: t("breadcrumb_sales", currentLanguage), href: "/dashboard/sales" },
+          { label: t("breadcrumb_sales_payments", currentLanguage), href: "/dashboard/journal/sales-order-payment/remaining" },
           {
             label:
               activeMode === "advance"
@@ -4184,6 +4189,8 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 ? "Credit Payment / Receipt"
                 : activeMode === "history"
                 ? "Sales Payment History"
+                : activeMode === "final"
+                ? t("final_payment_report", currentLanguage) || "Final / Remaining Balance Payment"
                 : "Remaining Payment / Recovery",
             active: true
           }
