@@ -154,16 +154,6 @@ const emptyForm = {
   carrierRemarks: ""
 };
 
-const shipmentStatuses = [
-  { value: "draft", label: "Draft" },
-  { value: "booked", label: "Booked" },
-  { value: "in_transit", label: "In Transit" },
-  { value: "arrived", label: "Arrived" },
-  { value: "cleared", label: "Cleared" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancelled" }
-];
-
 function money(value: number | string | null | undefined) {
   const n = Number(value ?? 0);
   return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -476,16 +466,16 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
       countryName: selectedCountry?.name ?? null,
       orientation: "landscape",
       columns: [
-        { key: (r) => (r as any).countries?.name ?? "-", label: "Country" },
-        { key: (r) => (r as any).country_branches?.name ?? "-", label: "Branch" },
-        { key: (r) => (r as any).city_branches?.name ?? "-", label: "City Branch" },
-        { key: "shipping_line_name", label: "Shipping Line" },
-        { key: "bl_number", label: "B/L Number" },
-        { key: (r) => (r as any).profiles?.full_name ?? "-", label: "User" },
-        { key: (r) => (r as any).account_number ?? (r as any).ledgers?.code ?? "-", label: "Account Number" },
-        { key: "debit", label: "Debit", format: "currency", align: "right" },
-        { key: "credit", label: "Credit", format: "currency", align: "right" },
-        { key: "shipment_status", label: "Shipment Status", format: "status" },
+        { key: (r) => (r as any).countries?.name ?? "-", label: _("common.country", "Country") },
+        { key: (r) => (r as any).country_branches?.name ?? "-", label: _("common.branch", "Branch") },
+        { key: (r) => (r as any).city_branches?.name ?? "-", label: _("ble.csv_city_branch", "City Branch") },
+        { key: "shipping_line_name", label: _("ble.ml_shipping_line", "Shipping Line") },
+        { key: "bl_number", label: _("ble.csv_bl_number", "B/L Number") },
+        { key: (r) => (r as any).profiles?.full_name ?? "-", label: _("common.user", "User") },
+        { key: (r) => (r as any).account_number ?? (r as any).ledgers?.code ?? "-", label: _("ajr.account_number_col", "Account Number") },
+        { key: "debit", label: _("ble.csv_debit", "Debit"), format: "currency", align: "right" },
+        { key: "credit", label: _("ble.csv_credit", "Credit"), format: "currency", align: "right" },
+        { key: "shipment_status", label: _("ble.csv_shipment_status", "Shipment Status"), format: "status" },
       ],
       rows: records as unknown as Record<string, unknown>[],
     });
@@ -622,14 +612,14 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                   <Field label={_("ble.lbl_customer_account", "Customer Account No *")} value={form.customerAccountNo} onChange={(v) => updateField("customerAccountNo", v)} />
                   <div className="grid grid-cols-2 gap-2">
                     <Field label={_("ble.lbl_shipping_type", "Shipping Type *")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
-                    <Field label={_("ble.lbl_shipment_type", "Shipment Type *")} value={form.shipmentType} onChange={(v) => updateField("shipmentType", v)} asSelect options={[{ value: "Import", label: "Import" }, { value: "Export", label: "Export" }, { value: "Transit", label: "Transit" }]} />
+                    <Field label={_("ble.lbl_shipment_type", "Shipment Type *")} value={form.shipmentType} onChange={(v) => updateField("shipmentType", v)} asSelect options={[{ value: "Import", label: _("ble.opt_import", "Import") }, { value: "Export", label: _("ble.opt_export", "Export") }, { value: "Transit", label: _("ble.opt_transit", "Transit") }]} />
                   </div>
                   <Field label={_("ble.lbl_importer", "Importer *")} value={form.importer} onChange={(v) => updateField("importer", v)} placeholder={_("ble.ph_importer", "Select / enter importer...")} />
                   <Field label={_("ble.lbl_exporter", "Exporter *")} value={form.exporter} onChange={(v) => updateField("exporter", v)} placeholder={_("ble.ph_exporter", "Select / enter exporter...")} />
                   <Field label={_("ble.lbl_notify_party", "Notify Party")} value={form.notifyParty} onChange={(v) => updateField("notifyParty", v)} placeholder={_("ble.ph_notify_party", "Enter notify party (optional)...")} />
                   <div className="grid grid-cols-2 gap-2">
                     <Field label={_("ble.lbl_booking_no", "Booking No *")} value={form.bookingNo} onChange={(v) => updateField("bookingNo", v)} />
-                    <Field label={_("ble.lbl_booking_company_type", "Booking Company Type *")} value={form.bookingCompanyType} onChange={(v) => updateField("bookingCompanyType", v)} asSelect options={[{ value: "Shipping Line", label: "Shipping Line" }, { value: "Transport Company", label: "Transport Company" }, { value: "Airline", label: "Airline" }]} />
+                    <Field label={_("ble.lbl_booking_company_type", "Booking Company Type *")} value={form.bookingCompanyType} onChange={(v) => updateField("bookingCompanyType", v)} asSelect options={[{ value: "Shipping Line", label: _("ble.opt_shipping_line", "Shipping Line") }, { value: "Transport Company", label: _("ble.opt_transport_company", "Transport Company") }, { value: "Airline", label: _("ble.opt_airline", "Airline") }]} />
                     <Field label={_("ble.lbl_booking_company_name", "Booking Company Name *")} value={form.bookingCompanyName} onChange={(v) => updateField("bookingCompanyName", v)} />
                     <Field label={_("ble.lbl_booking_date", "Booking Date *")} type="date" value={form.bookingDate} onChange={(v) => updateField("bookingDate", v)} />
                     <Field label={_("ble.lbl_vessel_name", "Vessel Name *")} value={form.vesselName} onChange={(v) => updateField("vesselName", v)} placeholder={_("ble.vessel_name_ph", "e.g. MSC ATHENS")} />
@@ -646,13 +636,13 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                     <Field label={_("ble.lbl_issue_serial", "Issue Serial No *")} value={form.issueSerial} onChange={(v) => updateField("issueSerial", v)} />
                   </div>
                   <div className="grid grid-cols-[1fr_1fr_72px] gap-2">
-                    <Field label={_("ble.lbl_bl_type", "BL Type")} value={form.blType} onChange={(v) => updateField("blType", v)} asSelect options={[{ value: "New BL", label: "New BL" }, { value: "Old BL", label: "Old BL" }]} />
+                    <Field label={_("ble.lbl_bl_type", "BL Type")} value={form.blType} onChange={(v) => updateField("blType", v)} asSelect options={[{ value: "New BL", label: _("ble.opt_new_bl", "New BL") }, { value: "Old BL", label: _("ble.opt_old_bl", "Old BL") }]} />
                     <Field label={_("ble.lbl_bl_no", "BL No")} value={form.blNumber} onChange={(v) => updateField("blNumber", v)} />
                     <button className="mt-5 h-8 rounded bg-blue-600 text-[10px] font-black text-white" type="button">{_("ble.btn_search", "Search")}</button>
                   </div>
                   <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.section_route", "Transport / Route Details")}</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label={_("ble.lbl_route_type", "1) Route Type")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
+                    <Field label={_("ble.lbl_route_type", "1) Route Type")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: _("ble.opt_by_sea", "By Sea") }, { value: "By Road", label: _("ble.opt_by_road", "By Road") }, { value: "By Air", label: _("ble.opt_by_air", "By Air") }]} />
                     <Field label={_("ble.lbl_route_country", "2) Route Country")} value={form.routeCountry} onChange={(v) => updateField("routeCountry", v)} asSelect options={[{ value: "PK / UAE", label: "PK / UAE" }, { value: "AF / PK", label: "AF / PK" }, { value: "IR / UAE", label: "IR / UAE" }]} />
                   </div>
                   <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-2">

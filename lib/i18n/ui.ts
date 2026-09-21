@@ -8945,6 +8945,17 @@ export type UiKey =
   | "sales.sodash_invoice_amount_colon"
   | "sales.sodash_payments_recd_colon"
   | "sales.sodash_finalized_orders_colon"
+  | "ble.opt_import"
+  | "ble.opt_export"
+  | "ble.opt_transit"
+  | "ble.opt_shipping_line"
+  | "ble.opt_transport_company"
+  | "ble.opt_airline"
+  | "ble.opt_new_bl"
+  | "ble.opt_old_bl"
+  | "ble.opt_by_sea"
+  | "ble.opt_by_road"
+  | "ble.opt_by_air"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -28363,6 +28374,17 @@ const en: Dict = {
   "sales.sodash_invoice_amount_colon": "Invoice Amount:",
   "sales.sodash_payments_recd_colon": "Payments Recd:",
   "sales.sodash_finalized_orders_colon": "Finalized Orders:",
+  "ble.opt_import": "Import",
+  "ble.opt_export": "Export",
+  "ble.opt_transit": "Transit",
+  "ble.opt_shipping_line": "Shipping Line",
+  "ble.opt_transport_company": "Transport Company",
+  "ble.opt_airline": "Airline",
+  "ble.opt_new_bl": "New BL",
+  "ble.opt_old_bl": "Old BL",
+  "ble.opt_by_sea": "By Sea",
+  "ble.opt_by_road": "By Road",
+  "ble.opt_by_air": "By Air",
 };
 
 const ur: Dict = {
@@ -47755,6 +47777,17 @@ const ur: Dict = {
   "sales.sodash_invoice_amount_colon": "انوائس رقم:",
   "sales.sodash_payments_recd_colon": "موصولہ ادائیگیاں:",
   "sales.sodash_finalized_orders_colon": "حتمی آرڈرز:",
+  "ble.opt_import": "درآمد",
+  "ble.opt_export": "برآمد",
+  "ble.opt_transit": "ٹرانزٹ",
+  "ble.opt_shipping_line": "شپنگ لائن",
+  "ble.opt_transport_company": "ٹرانسپورٹ کمپنی",
+  "ble.opt_airline": "ایئر لائن",
+  "ble.opt_new_bl": "نیا بی ایل",
+  "ble.opt_old_bl": "پرانا بی ایل",
+  "ble.opt_by_sea": "بذریعہ سمندر",
+  "ble.opt_by_road": "بذریعہ سڑک",
+  "ble.opt_by_air": "بذریعہ ہوائی جہاز",
 };
 
 const ar: Dict = {
@@ -67148,6 +67181,17 @@ const ar: Dict = {
   "sales.sodash_invoice_amount_colon": "مبلغ الفاتورة:",
   "sales.sodash_payments_recd_colon": "المدفوعات المستلمة:",
   "sales.sodash_finalized_orders_colon": "الطلبات النهائية:",
+  "ble.opt_import": "استيراد",
+  "ble.opt_export": "تصدير",
+  "ble.opt_transit": "عبور",
+  "ble.opt_shipping_line": "خط الشحن",
+  "ble.opt_transport_company": "شركة النقل",
+  "ble.opt_airline": "شركة الطيران",
+  "ble.opt_new_bl": "بوليصة شحن جديدة",
+  "ble.opt_old_bl": "بوليصة شحن قديمة",
+  "ble.opt_by_sea": "عن طريق البحر",
+  "ble.opt_by_road": "عن طريق البر",
+  "ble.opt_by_air": "عن طريق الجو",
 };
 
 const fa: Dict = {
@@ -86540,6 +86584,17 @@ const fa: Dict = {
   "sales.sodash_invoice_amount_colon": "مبلغ فاکتور:",
   "sales.sodash_payments_recd_colon": "پرداخت‌های دریافتی:",
   "sales.sodash_finalized_orders_colon": "سفارش‌های نهایی‌شده:",
+  "ble.opt_import": "واردات",
+  "ble.opt_export": "صادرات",
+  "ble.opt_transit": "ترانزیت",
+  "ble.opt_shipping_line": "خط کشتیرانی",
+  "ble.opt_transport_company": "شرکت حمل و نقل",
+  "ble.opt_airline": "شرکت هواپیمایی",
+  "ble.opt_new_bl": "بارنامه جدید",
+  "ble.opt_old_bl": "بارنامه قدیمی",
+  "ble.opt_by_sea": "از طریق دریا",
+  "ble.opt_by_road": "از طریق جاده",
+  "ble.opt_by_air": "از طریق هوا",
 };
 
 const ps: Dict = {
@@ -105939,6 +105994,17 @@ const ps: Dict = {
   "sales.sodash_invoice_amount_colon": "د بل مبلغ:",
   "sales.sodash_payments_recd_colon": "ترلاسه شوي تادیات:",
   "sales.sodash_finalized_orders_colon": "پای ته رسیدلي امرونه:",
+  "ble.opt_import": "واردول",
+  "ble.opt_export": "صادرول",
+  "ble.opt_transit": "ترانزیت",
+  "ble.opt_shipping_line": "د لېږد کرښه",
+  "ble.opt_transport_company": "د لېږد شرکت",
+  "ble.opt_airline": "هوایی کرښه",
+  "ble.opt_new_bl": "نوی BL",
+  "ble.opt_old_bl": "زوړ BL",
+  "ble.opt_by_sea": "د بحر له لارې",
+  "ble.opt_by_road": "د سړک له لارې",
+  "ble.opt_by_air": "د هوا له لارې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
