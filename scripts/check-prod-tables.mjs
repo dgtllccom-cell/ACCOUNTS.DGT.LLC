@@ -1,7 +1,11 @@
 import postgres from "postgres";
 
 // Target: Production Supabase Ref: inmayhrxucimxqhgseqi
-const PROD_DB_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const PROD_DB_URL = process.env.PROD_DATABASE_URL;
+if (!PROD_DB_URL) {
+  console.error("FATAL: PROD_DATABASE_URL is not set.");
+  process.exit(1);
+}
 
 async function checkProdTables() {
   console.log("Checking Production Supabase (inmayhrxucimxqhgseqi) for public_mail tables...");

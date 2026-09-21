@@ -4,7 +4,8 @@ import { updateStalwartQuota } from "@/lib/public-mail/stalwart-client";
 import { resolveSessionUserId } from "@/lib/public-mail/webmail-service";
 
 function getDb() {
-  const url = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
   return postgres(url, { max: 1, prepare: false, connect_timeout: 10 });
 }
 

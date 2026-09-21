@@ -58,6 +58,18 @@ const rules = [
     msg: "plaintext credential literal — rotate via Supabase, never commit it",
   },
   {
+    id: "PLAINTEXT-DB-URL",
+    // A postgres connection string with a real embedded password (plain "@" or
+    // URL-encoded "%40") — found 2026-09-21 hardcoded as a DATABASE_URL fallback
+    // across 9 files (Gulistan%409090@...pooler.supabase.com), which the credential
+    // regex above missed because the password segment isn't its own quoted literal.
+    // Excludes obvious non-secrets: the Supabase-local-CLI default (postgres:postgres),
+    // doc placeholders (PASSWORD/USER/your-password/<pw>/[YOUR-PASSWORD]), and
+    // template-literal interpolation (${...}).
+    re: /postgres(?:ql)?:\/\/[^:\/\s"'`]+:(?!postgres@|password@|your-?password@)(?![^@]*[$<[{])[^@\/\s"'`]{4,}@/i,
+    msg: "hardcoded DB connection string with an embedded password — rotate via Supabase, use process.env.DATABASE_URL with no fallback",
+  },
+  {
     id: "DESTRUCTIVE-AUTH-SQL",
     re: /delete\s+from\s+(?:auth\.users|public\.profiles|auth\."users")|encrypted_password\s*=\s*crypt\s*\(\s*["'`]/i,
     msg: "destructive/identity SQL in a loose script — use the Supabase dashboard or a reviewed migration",

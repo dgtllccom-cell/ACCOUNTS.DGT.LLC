@@ -37,9 +37,11 @@ import {
 } from "../lib/public-mail/webmail-service";
 import { provisionEntityEmail } from "../lib/mail-provisioning/entity-auto-email";
 
-const TEST_DB_URL =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const TEST_DB_URL = process.env.DATABASE_URL;
+if (!TEST_DB_URL) {
+  console.error("FATAL: DATABASE_URL is not set (needs the Dev/Test Supabase connection string).");
+  process.exit(1);
+}
 
 // Strictly verify that we are connecting to the TEST database
 if (!TEST_DB_URL.includes("csesvyxxjivnkkozgopt")) {

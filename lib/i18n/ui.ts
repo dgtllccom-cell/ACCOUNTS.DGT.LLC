@@ -1279,6 +1279,10 @@ export type UiKey =
   | "tl.edit"
   | "tl.delete"
   | "tl.save"
+  | "tl.err_select_truck"
+  | "tl.err_load"
+  | "tl.err_save"
+  | "tl.err_delete"
   | "tl.cancel"
   | "tl.search"
   | "tl.empty"
@@ -7335,7 +7339,7 @@ export type UiKey =
   | "ers.this_month" | "ers.bills_created" | "ers.amount" | "ers.quick_info"
   | "ers.currency" | "ers.exchange_rate_avg" | "ers.company" | "ers.financial_year"
   | "ers.export" | "ers.report" | "ers.print" | "ers.more"
-  | "ta.save_first" | "ta.documents" | "ta.upload" | "ta.empty"
+  | "ta.save_first" | "ta.documents" | "ta.upload" | "ta.empty" | "ta.confirm_delete_document"
   | "ta.cat_photo" | "ta.cat_registration" | "ta.cat_insurance" | "ta.cat_driver" | "ta.cat_vehicle" | "ta.cat_other"
   | "dpc.title" | "dpc.subtitle" | "dpc.filters" | "dpc.table" | "dpc.city_branch" | "dpc.all_city_branches"
   | "dpc.loading" | "dpc.empty"
@@ -8492,6 +8496,7 @@ export type UiKey =
   | "mail.sign_out"
   | "mail.compose"
   | "mail.inbox"
+  | "mail.inbox_page_title"
   | "mail.starred"
   | "mail.sent"
   | "mail.drafts"
@@ -12363,6 +12368,10 @@ const en: Dict = {
   "tl.add": "New Loading",
   "tl.edit": "Edit",
   "tl.delete": "Delete",
+  "tl.err_select_truck": "Select a truck",
+  "tl.err_load": "Failed to load",
+  "tl.err_save": "Failed to save",
+  "tl.err_delete": "Failed to delete",
   "tl.save": "Save",
   "tl.cancel": "Cancel",
   "tl.search": "Search loadings...",
@@ -17333,6 +17342,7 @@ const en: Dict = {
   "ta.documents": "Documents",
   "ta.upload": "Upload",
   "ta.empty": "No documents in this category yet.",
+  "ta.confirm_delete_document": "Delete this document?",
   "ta.cat_photo": "Photo",
   "ta.cat_registration": "Registration Card",
   "ta.cat_insurance": "Insurance Documents",
@@ -27929,6 +27939,7 @@ const en: Dict = {
   "mail.sign_out": "Sign Out",
   "mail.compose": "Compose",
   "mail.inbox": "Inbox",
+  "mail.inbox_page_title": "Inbox — DGT Mail",
   "mail.starred": "Starred",
   "mail.sent": "Sent",
   "mail.drafts": "Drafts",
@@ -32940,6 +32951,10 @@ const ur: Dict = {
   "tl.add": "نئی لوڈنگ",
   "tl.edit": "ترمیم",
   "tl.delete": "حذف",
+  "tl.err_select_truck": "ایک ٹرک منتخب کریں",
+  "tl.err_load": "لوڈ کرنے میں ناکامی",
+  "tl.err_save": "محفوظ کرنے میں ناکامی",
+  "tl.err_delete": "حذف کرنے میں ناکامی",
   "tl.save": "محفوظ کریں",
   "tl.cancel": "منسوخ",
   "tl.search": "لوڈنگ تلاش کریں...",
@@ -36863,6 +36878,7 @@ const ur: Dict = {
   "ta.documents": "دستاویزات",
   "ta.upload": "اپ لوڈ",
   "ta.empty": "اس کیٹیگری میں ابھی کوئی دستاویز نہیں ہے۔",
+  "ta.confirm_delete_document": "کیا یہ دستاویز حذف کریں؟",
   "ta.cat_photo": "تصویر",
   "ta.cat_registration": "رجسٹریشن کارڈ",
   "ta.cat_insurance": "انشورنس دستاویزات",
@@ -47340,6 +47356,7 @@ const ur: Dict = {
   "mail.sign_out": "سائن آؤٹ",
   "mail.compose": "نیا پیغام لکھیں",
   "mail.inbox": "ان باکس",
+  "mail.inbox_page_title": "ان باکس — DGT میل",
   "mail.starred": "ستارہ دار",
   "mail.sent": "بھیجی گئی",
   "mail.drafts": "ڈرافٹس",
@@ -52304,6 +52321,10 @@ const ar: Dict = {
   "tl.add": "تحميل جديد",
   "tl.edit": "تعديل",
   "tl.delete": "حذف",
+  "tl.err_select_truck": "اختر شاحنة",
+  "tl.err_load": "فشل التحميل",
+  "tl.err_save": "فشل الحفظ",
+  "tl.err_delete": "فشل الحذف",
   "tl.save": "حفظ",
   "tl.cancel": "إلغاء",
   "tl.search": "بحث عن التحميلات...",
@@ -56224,6 +56245,7 @@ const ar: Dict = {
   "ta.documents": "المستندات",
   "ta.upload": "رفع",
   "ta.empty": "لا توجد مستندات في هذه الفئة بعد.",
+  "ta.confirm_delete_document": "هل تريد حذف هذا المستند؟",
   "ta.cat_photo": "صورة",
   "ta.cat_registration": "بطاقة التسجيل",
   "ta.cat_insurance": "وثائق التأمين",
@@ -66752,6 +66774,7 @@ const ar: Dict = {
   "mail.sign_out": "تسجيل الخروج",
   "mail.compose": "إنشاء رسالة",
   "mail.inbox": "البريد الوارد",
+  "mail.inbox_page_title": "البريد الوارد — DGT ميل",
   "mail.starred": "المميزة بنجمة",
   "mail.sent": "المرسلة",
   "mail.drafts": "المسودات",
@@ -71726,6 +71749,10 @@ const fa: Dict = {
   "tl.add": "بارگیری جدید",
   "tl.edit": "ویرایش",
   "tl.delete": "حذف",
+  "tl.err_select_truck": "یک کامیون انتخاب کنید",
+  "tl.err_load": "بارگذاری ناموفق بود",
+  "tl.err_save": "ذخیره ناموفق بود",
+  "tl.err_delete": "حذف ناموفق بود",
   "tl.save": "ذخیره",
   "tl.cancel": "لغو",
   "tl.search": "جستجوی بارگیری‌ها...",
@@ -75635,6 +75662,7 @@ const fa: Dict = {
   "ta.documents": "اسناد",
   "ta.upload": "بارگذاری",
   "ta.empty": "هنوز هیچ سندی در این دسته وجود ندارد.",
+  "ta.confirm_delete_document": "این سند حذف شود؟",
   "ta.cat_photo": "عکس",
   "ta.cat_registration": "کارت ثبت",
   "ta.cat_insurance": "اسناد بیمه",
@@ -86163,6 +86191,7 @@ const fa: Dict = {
   "mail.sign_out": "خروج از سیستم",
   "mail.compose": "نوشتن ایمیل",
   "mail.inbox": "صندوق ورودی",
+  "mail.inbox_page_title": "صندوق ورودی — DGT میل",
   "mail.starred": "ستاره‌دار",
   "mail.sent": "ارسال‌شده",
   "mail.drafts": "پیش‌نویس‌ها",
@@ -91129,6 +91158,10 @@ const ps: Dict = {
   "tl.add": "نوی بار",
   "tl.edit": "سمون",
   "tl.delete": "ړنګول",
+  "tl.err_select_truck": "یو موټر وټاکئ",
+  "tl.err_load": "بارول ناکام شول",
+  "tl.err_save": "خوندي کول ناکام شول",
+  "tl.err_delete": "ړنګول ناکام شول",
   "tl.save": "خوندي کول",
   "tl.cancel": "لغوه کول",
   "tl.search": "د بارونو لټون...",
@@ -95044,6 +95077,7 @@ const ps: Dict = {
   "ta.documents": "دستاویزات",
   "ta.upload": "اپلوډ",
   "ta.empty": "دې کټیګورۍ کې لا هیڅ دستاویز نشته.",
+  "ta.confirm_delete_document": "دا دستاویز ړنګ کړئ؟",
   "ta.cat_photo": "انځور",
   "ta.cat_registration": "د ثبت کارت",
   "ta.cat_insurance": "د بیمې دستاویزات",
@@ -105581,6 +105615,7 @@ const ps: Dict = {
   "mail.sign_out": "وتل",
   "mail.compose": "لیکل",
   "mail.inbox": "راغلي بریښنالیکونه",
+  "mail.inbox_page_title": "راغلي بریښنالیکونه — DGT میل",
   "mail.starred": "ستوري شوي",
   "mail.sent": "لیږل شوي",
   "mail.drafts": "مسودې",

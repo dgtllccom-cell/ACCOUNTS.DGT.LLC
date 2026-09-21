@@ -3,13 +3,19 @@ import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { MailClient } from "@/features/public-mail/components/mail-client";
 import { resolveSessionUserId } from "@/lib/public-mail/webmail-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 
-export const metadata = {
-  title: "Inbox — DGT Mail",
-};
+export async function generateMetadata() {
+  const lang = await getRequestLanguage();
+  return {
+    title: t(lang, "mail.inbox_page_title", "Inbox — DGT Mail"),
+  };
+}
 
 function getDb() {
-  const url = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
   return postgres(url, { max: 1, prepare: false, connect_timeout: 10 });
 }
 
