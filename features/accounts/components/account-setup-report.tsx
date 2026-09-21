@@ -8,7 +8,7 @@ import {
   Phone, Mail, MoreVertical, FileSpreadsheet,
   FileText, Send, MessageCircle, Printer, RefreshCw,
   Eye, Edit3, Filter, X, ChevronDown, CheckCircle2,
-  XCircle, Loader2, LayoutList, Plus,
+  XCircle, Loader2, LayoutList, Plus, ArrowLeft, ChevronRight, Layers, ArrowUpDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
@@ -54,6 +54,10 @@ type AccountRow = {
   latestActivityAt: string;
   recentActivityLabel: string | null;
   contacts: Array<{ type: string; value: string }>;
+  openingBalance?: number;
+  debitTotal?: number;
+  creditTotal?: number;
+  currentBalance?: number;
 };
 
 type ReportMeta = {
@@ -78,6 +82,10 @@ type SessionInfo = {
 };
 
 /* Helpers */
+function fmtNum(val: number | string | undefined | null) {
+  const n = Number(val) || 0;
+  return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 function fmt(date: string) {
   if (!date) return "-";
   return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -167,9 +175,14 @@ export function AccountSetupReport({
   const [branch, setBranch] = useState("all");
   const [accType, setAccType] = useState("all");
   const [subType, setSubType] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currencyFilter, setCurrencyFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const actionRef = useRef<HTMLDivElement>(null);
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
 
   /* Fetch */
   async function fetchSessionInfo() {
@@ -245,6 +258,7 @@ export function AccountSetupReport({
   }, [rows, draftCountry]);
   const uniqueTypes     = useMemo(() => [...new Set(rows.map(r => r.accountCategory).filter(Boolean))].sort(), [rows]);
   const uniqueSubs      = useMemo(() => [...new Set(rows.map(r => r.subType).filter(Boolean))].sort(), [rows]);
+  const uniqueCurrencies = useMemo(() => [...new Set(rows.map(r => r.currency).filter(Boolean))].sort(), [rows]);
 
   // Sync external filters when provided
   useEffect(() => {
@@ -305,15 +319,37 @@ export function AccountSetupReport({
     if (branch !== "all" && !branchMatches(r, branch)) return false;
     if (accType !== "all" && r.accountCategory.toLowerCase() !== accType.toLowerCase()) return false;
     if (subType !== "all" && r.subType.toLowerCase() !== subType.toLowerCase()) return false;
+    if (statusFilter !== "all" && (r.status || "active").toLowerCase() !== statusFilter.toLowerCase()) return false;
+    if (currencyFilter !== "all" && (r.currency || "").toLowerCase() !== currencyFilter.toLowerCase()) return false;
+    if (dateFrom && r.createdAt && new Date(r.createdAt) < new Date(dateFrom)) return false;
+    if (dateTo && r.createdAt && new Date(r.createdAt) > new Date(`${dateTo}T23:59:59`)) return false;
 
     return true;
-  }), [rows, accNo, searchField, accName, country, branch, accType, subType]);
+  }), [rows, accNo, searchField, accName, country, branch, accType, subType, statusFilter, currencyFilter, dateFrom, dateTo]);
 
   /* Counts */
   const customers = useMemo(() => filtered.filter(r => r.accountCategory.toLowerCase().includes("customer") || r.customerNumber?.startsWith("CUST")).length, [filtered]);
   const companies = useMemo(() => filtered.filter(r => r.companyName && r.companyName !== "-").length, [filtered]);
   const banks     = useMemo(() => filtered.filter(r => r.accountCategory.toLowerCase().includes("bank") || r.accountCategory.toLowerCase().includes("asset")).length, [filtered]);
   const expenses  = useMemo(() => filtered.filter(r => r.accountCategory.toLowerCase().includes("expense") || r.subType.toLowerCase().includes("expense")).length, [filtered]);
+  const activeCount = useMemo(() => filtered.filter(r => (r.status || "active").toLowerCase() === "active").length, [filtered]);
+  const inactiveCount = useMemo(() => filtered.filter(r => (r.status || "active").toLowerCase() !== "active").length, [filtered]);
+  const newThisMonth = useMemo(() => {
+    const now = new Date();
+    return filtered.filter(r => {
+      if (!r.createdAt) return false;
+      const d = new Date(r.createdAt);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+  }, [filtered]);
+  const suppliers = useMemo(() => {
+    return filtered.filter(r => r.accountCategory.toLowerCase().includes("supplier") || (r.subType || "").toLowerCase().includes("supplier")).length;
+  }, [filtered]);
+  const cashAccounts = useMemo(() => {
+    return filtered.filter(r => r.accountName.toLowerCase().includes("cash") || r.accountCategory.toLowerCase().includes("cash")).length;
+  }, [filtered]);
+  const totalDebit = useMemo(() => filtered.reduce((s, r) => s + (Number(r.debitTotal) || 0), 0), [filtered]);
+  const totalCredit = useMemo(() => filtered.reduce((s, r) => s + (Number(r.creditTotal) || 0), 0), [filtered]);
 
   /* Country-Wise Breakdown */
   const countryBreakdowns = useMemo(() => {
@@ -342,6 +378,18 @@ export function AccountSetupReport({
     return Array.from(map.entries()).map(([name, stats]) => ({ name, ...stats })).sort((a, b) => b.total - a.total);
   }, [filtered]);
 
+  function toggleSelectAll() {
+    if (Object.keys(selectedIds).length === filtered.length) {
+      setSelectedIds({});
+    } else {
+      const next: Record<string, boolean> = {};
+      filtered.forEach((r) => { next[r.accountId] = true; });
+      setSelectedIds(next);
+    }
+  }
+  function toggleSelectRow(id: string) {
+    setSelectedIds((p) => ({ ...p, [id]: !p[id] }));
+  }
   function applyFilters() {
     setAccNo(draftAccNo); setAccName(draftName); setCountry(draftCountry);
     setBranch(draftBranch); setAccType(draftType); setSubType(draftSub);
@@ -361,19 +409,19 @@ export function AccountSetupReport({
   const reportSeed = filtered[0] ?? rows[0] ?? null;
   
   const reportColumns: GenericReportColumn[] = [
-    { key: "accountCode", label: "Account Number" },
-    { key: "sadCode", label: "Super Admin Account Number" },
-    { key: "countrySerialNumber", label: "Country Serial" },
-    { key: "branchSerialNumber", label: "Branch Serial" },
-    { key: "manualReferenceNumber", label: "Manual Ref No" },
-    { key: "accountName", label: "Customer Name / Account" },
-    { key: "customerName", label: "Owner" },
-    { key: "subType", label: "Account Type" },
-    { key: "accountCategory", label: "Category", format: "status" },
-    { key: "branchName", label: "Branch Name" },
-    { key: "branchCode", label: "Branch Code" },
-    { key: "countryName", label: "Country" },
-    { key: "currency", label: "Currency" },
+    { key: "accountCode", label: t(lang, "asr.col_account_number", "Account Number") },
+    { key: "sadCode", label: t(lang, "asr.col_sad_code", "Super Admin Account Number") },
+    { key: "countrySerialNumber", label: t(lang, "asr.col_country_serial", "Country Serial") },
+    { key: "branchSerialNumber", label: t(lang, "asr.col_branch_serial", "Branch Serial") },
+    { key: "manualReferenceNumber", label: t(lang, "asr.col_manual_ref", "Manual Ref No") },
+    { key: "accountName", label: t(lang, "asr.col_customer_account", "Customer Name / Account") },
+    { key: "customerName", label: t(lang, "asr.col_owner", "Owner") },
+    { key: "subType", label: t(lang, "asr.col_account_type", "Account Type") },
+    { key: "accountCategory", label: t(lang, "asr.col_category", "Category"), format: "status" },
+    { key: "branchName", label: t(lang, "asr.col_branch_name", "Branch Name") },
+    { key: "branchCode", label: t(lang, "asr.col_branch_code", "Branch Code") },
+    { key: "countryName", label: t(lang, "asr.country", "Country") },
+    { key: "currency", label: t(lang, "asr.currency", "Currency") },
   ];
 
   const reportSummary = {
@@ -393,25 +441,25 @@ export function AccountSetupReport({
 
   function triggerOfficialReportPreview() {
     openGenericErpReport({
-      title: "Account Setup Report",
-      subtitle: `Total ${filtered.length} accounts • ${reportContext.countryName} / ${reportContext.branchName}`,
+      title: t(lang, "asr.print_title", "Account Setup Report"),
+      subtitle: `${t(lang, "common.total", "Total")} ${filtered.length} ${t(lang, "asr.accounts", "accounts")} • ${reportContext.countryName} / ${reportContext.branchName}`,
       lang,
       columns: reportColumns,
       rows: reportRows as Record<string, unknown>[],
       summary: reportSummary,
       filters: [
-        { label: "Country", value: reportContext.countryName },
-        { label: "Branch", value: reportContext.branchName },
-        { label: "User", value: reportContext.userName },
-        { label: "Role", value: reportContext.userRole },
-        { label: "Category", value: accType },
-        { label: "Search", value: accNo.trim() || "All" },
+        { label: t(lang, "asr.country", "Country"), value: reportContext.countryName },
+        { label: t(lang, "asr.branch", "Branch"), value: reportContext.branchName },
+        { label: t(lang, "asr.user_name", "User"), value: reportContext.userName },
+        { label: t(lang, "asr.role", "Role"), value: reportContext.userRole },
+        { label: t(lang, "asr.col_category", "Category"), value: accType },
+        { label: t(lang, "asr.search", "Search"), value: accNo.trim() || t(lang, "common.all_statuses", "All") },
       ],
       companyInfo: {
         country: reportContext.countryName,
         branch: reportContext.branchName,
         printedBy: reportContext.userName,
-        reportPeriod: `Generated on ${reportContext.date} ${reportContext.time}`,
+        reportPeriod: `${t(lang, "asr.generated_on", "Generated on")} ${reportContext.date} ${reportContext.time}`,
       },
       orientation: "landscape",
     });
@@ -430,603 +478,409 @@ export function AccountSetupReport({
     date: fmt(generatedAt),
     time: fmtTime(generatedAt)
   };
-
   return (
-    <div id="asr-report-shell" className="asr-shell" dir={isRtl ? "rtl" : "ltr"}>
-      <AsrStyles />
-
-      {/* Portals to main page header */}
-      {titlePortalNode && createPortal(
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xs font-black text-slate-900 dark:text-slate-100 whitespace-nowrap">{tr("Account Management & Setup")}</h1>
-          <span className="asr-badge text-[9px] px-1.5 py-0.5">{loading ? "..." : filtered.length} {tr("accounts")}</span>
-          {hasActiveFilters && (
-            <span className="asr-badge asr-badge-orange text-[9px] px-1.5 py-0.5">{activeFilterCount} {tr("active")}</span>
-          )}
-          <span className="rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[9.5px] font-bold px-2 py-0.5">
-            {reportContext.countryName === "All Countries" ? "🌍 Global - All Countries" : `${reportContext.countryName} • ${reportContext.branchName}`}
-          </span>
-          
-          <div className="hidden lg:flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
-            <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
-            <span className="text-slate-500 font-extrabold uppercase">{tr("Country")}:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-bold">{reportContext.countryName}</span>
-
-            <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-500 font-extrabold uppercase">{tr("Branch")}:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-bold truncate max-w-[80px]">{reportContext.branchName}</span>
-
-            <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-500 font-extrabold uppercase">{tr("User")}:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-bold">{reportContext.userName}</span>
-
-            <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-500 font-extrabold uppercase">{tr("Role")}:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-bold whitespace-nowrap">{reportContext.userRole}</span>
-          </div>
-        </div>,
-        titlePortalNode
-      )}
-
-      {portalNode && createPortal(
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Create New Account Button */}
-          {onNewAccount && (
-            <button
-              type="button"
-              onClick={onNewAccount}
-              className="flex h-7 items-center gap-1 rounded-lg bg-indigo-600 px-2.5 text-[10px] font-black text-white shadow-2xs transition-colors hover:bg-indigo-700 shrink-0"
-              title={tr("Create New Account Entry")}
-            >
-              <Plus className="h-3 w-3" />
-              <span>{tr("New Account")}</span>
-            </button>
-          )}
-
-          {/* Bulk Import Button */}
-          {onBulkImport && (
-            <button
-              type="button"
-              onClick={onBulkImport}
-              className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shrink-0"
-              title={tr("Bulk Document Import / AI Scan")}
-            >
-              <FileText className="h-3 w-3 text-indigo-500" />
-              <span>{tr("Bulk Import")}</span>
-            </button>
-          )}
-
-          {/* Instant Search with Dropdown select */}
-          <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900 h-7 shadow-sm">
-            <select
-              className="h-full bg-slate-50 dark:bg-slate-800 text-[10px] font-bold px-1.5 border-r border-slate-200 dark:border-slate-800 outline-none text-slate-500 cursor-pointer hover:bg-slate-100"
-              value={searchField}
-              onChange={e => setSearchField(e.target.value)}
-            >
-              <option value="all">{tr("All")}</option>
-              <option value="code">{tr("Account Number")}</option>
-              <option value="name">{tr("Name")}</option>
-              <option value="country">{tr("Country")}</option>
-              <option value="branch">{tr("Branch")}</option>
-            </select>
-            <input
-              type="text"
-              placeholder={tr("Search")}
-              className="h-full px-2 text-[10px] font-semibold outline-none bg-transparent w-[90px] focus:w-[130px] transition-all text-slate-900 dark:text-slate-100"
-              value={accNo}
-              onChange={e => {
-                setAccNo(e.target.value);
-                setDraftAccNo(e.target.value);
-              }}
-            />
-          </div>
-
-          {/* Refresh */}
-          <button type="button" className="asr-icon-btn" onClick={fetchReport} title={t(lang, "common.refresh", "Refresh")} disabled={loading}>
-            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
-          </button>
-
-          {/* Filters toggle */}
+    <div id="asr-report-shell" className="w-full space-y-4 font-sans antialiased text-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── BREADCRUMB & HEADER ── */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <button
             type="button"
-            className={cn("asr-toolbar-btn", filtersOpen && "asr-toolbar-btn-active")}
-            onClick={() => setFiltersOpen(v => !v)}
+            onClick={() => router.back()}
+            className="flex items-center gap-1 hover:text-blue-600 font-bold transition-colors"
           >
-            <Filter className="h-3 w-3" />
-            <span>{tr("Filters")}</span>
-            {activeFilterCount > 0 && (
-              <span className="asr-filter-count">{activeFilterCount}</span>
-            )}
-            <ChevronDown className={cn("h-3 w-3 transition-transform", filtersOpen && "rotate-180")} />
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>{t(lang, "asr.back", "Back")}</span>
           </button>
-
-          <JournalPrintButton
-            title={t(lang, "nav.account_setup_report", "Account Setup Report")}
-            subtitle={`${t(lang, "common.total", "Total")} ${filtered.length} ${t(lang, "acct.asr_accounts_word_lc", "accounts")} • ${reportContext.countryName} / ${reportContext.branchName}`}
-            columns={reportColumns}
-            rows={reportRows as Record<string, unknown>[]}
-            summary={reportSummary}
-            orientation="landscape"
-          />
-          {/* Three-dot action menu */}
-          <div className="relative" ref={actionRef}>
-            <button
-              type="button"
-              className="asr-icon-btn"
-              onClick={() => setActionMenuOpen(v => !v)}
-              title={t(lang, "acct.asr_export_share", "Export & Share")}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </button>
-            {actionMenuOpen && (
-              <div className="asr-action-menu">
-                <div className="asr-action-section-label">{tr("Export")}</div>
-                {[
-                  { icon: FileSpreadsheet, label: "Export Excel", color: "text-emerald-600", action: () => exportCSV(filtered) },
-                  { icon: FileText, label: "Export CSV", color: "text-blue-600", action: () => exportCSV(filtered) },
-                  { icon: FileText, label: "Export PDF", color: "text-red-600", action: () => triggerOfficialReportPreview() },
-                ].map(({ icon: Icon, label, color, action }) => (
-                  <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
-                    <Icon className={cn("h-3.5 w-3.5 shrink-0", color)} />
-                    <span>{tr(label)}</span>
-                  </button>
-                ))}
-                <div className="asr-action-divider" />
-                <div className="asr-action-section-label">{tr("Share")}</div>
-                {[
-                  { icon: Send, label: "Email Report", color: "text-indigo-600", action: () => {
-                    const subject = encodeURIComponent("Account Setup Report");
-                    const body = encodeURIComponent(`Account Setup Report\nAccounts: ${filtered.length}\nGenerated on: ${new Date(generatedAt).toLocaleString()}`);
-                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-                  }},
-                  { icon: MessageCircle, label: "WhatsApp Share", color: "text-emerald-600", action: () => {
-                    const text = encodeURIComponent(`Account Setup Report: ${filtered.length} accounts found.`);
-                    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
-                  }},
-                ].map(({ icon: Icon, label, color, action }) => (
-                  <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
-                    <Icon className={cn("h-3.5 w-3.5 shrink-0", color)} />
-                    <span>{tr(label)}</span>
-                  </button>
-                ))}
-                <div className="asr-action-divider" />
-                <div className="asr-action-section-label">{tr("Print")}</div>
-                {[
-                  { icon: Printer, label: "Print Report", action: () => { import("@/lib/reports/print-dom-fragment").then(m => m.printDomFragmentViaModal("asr-report-shell", "Account Setup Report")); } },
-                  { icon: DownloadActionIcon, label: "Download Report", action: () => exportCSV(filtered) },
-                ].map(({ icon: Icon, label, action }) => (
-                  <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
-                    <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    <span>{tr(label)}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>,
-        portalNode
-      )}
-
-      {/* Filter Panel */}
-      {filtersOpen && (
-        <div className="asr-filter-panel">
-          <div className="asr-filter-grid">
-            {/* Account Number */}
-            <div className="asr-filter-field">
-              <label className="asr-filter-label">{tr("Account Number")}</label>
-              <div className="relative">
-                <Search className="asr-filter-icon" />
-                <input className="asr-filter-input" placeholder={tr("Search")} value={draftAccNo} onChange={e => setDraftAccNo(e.target.value)} />
-              </div>
-            </div>
-            {/* Account Name */}
-            <div className="asr-filter-field">
-              <label className="asr-filter-label">{tr("Account Name")}</label>
-              <div className="relative">
-                <Search className="asr-filter-icon" />
-                <input className="asr-filter-input" placeholder={tr("Search")} value={draftName} onChange={e => setDraftName(e.target.value)} />
-              </div>
-            </div>
-            {/* Country */}
-            <div className="asr-filter-field">
-              <label className="asr-filter-label">{tr("Country")}</label>
-              <select className="asr-filter-select" value={draftCountry} onChange={e => setDraftCountry(e.target.value)}>
-                <option value="all">{tr("All Countries")}</option>
-                {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            {/* Branch */}
-            <div className="asr-filter-field">
-              <label className="asr-filter-label">{tr("Branch")}</label>
-              <select className="asr-filter-select" value={draftBranch} onChange={e => setDraftBranch(e.target.value)}>
-                <option value="all">{tr("All Branches")}</option>
-                {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
-            {/* Account Type */}
-            <div className="asr-filter-field">
-              <label className="asr-filter-label">{tr("Account Type")}</label>
-              <select className="asr-filter-select" value={draftType} onChange={e => setDraftType(e.target.value)}>
-                <option value="all">{tr("All Types")}</option>
-                {uniqueTypes.map(t => <option key={t} value={t}>{tv(t)}</option>)}
-              </select>
-            </div>
-            {/* Sub Type */}
-            <div className="asr-filter-field">
-              <label className="asr-filter-label">{tr("Sub Type")}</label>
-              <select className="asr-filter-select" value={draftSub} onChange={e => setDraftSub(e.target.value)}>
-                <option value="all">{tr("All Sub Types")}</option>
-                {uniqueSubs.map(s => <option key={s} value={s}>{tv(s)}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <button type="button" className="asr-btn-primary" onClick={applyFilters}>{tr("Apply Filters")}</button>
-            <button type="button" className="asr-btn-secondary" onClick={resetFilters}>
-              <X className="h-3.5 w-3.5" /> {tr("Reset")}
-            </button>
-          </div>
+          <span>/</span>
+          <span className="hover:text-blue-600 cursor-pointer">{t(lang, "asr.dashboard", "Dashboard")}</span>
+          <ChevronRight className="h-3 w-3 text-slate-400" />
+          <span className="hover:text-blue-600 cursor-pointer">{t(lang, "asr.finance", "Finance")}</span>
+          <ChevronRight className="h-3 w-3 text-slate-400" />
+          <span className="hover:text-blue-600 cursor-pointer">{t(lang, "asr.account_setup", "Account Setup")}</span>
+          <ChevronRight className="h-3 w-3 text-slate-400" />
+          <span className="text-slate-800 dark:text-slate-200 font-bold">{t(lang, "asr.new_account_entry", "New Account Entry")}</span>
         </div>
-      )}
 
-      {/* Country-Wise Breakdown */}
-      <div className="asr-executive-panel">
-        <div className="flex flex-col gap-3 p-3.5">
-          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-            <div className="flex items-center gap-2">
-              <span className="grid h-5 w-5 place-items-center rounded-md bg-blue-600 text-white font-black text-[10px] shadow-sm">{t(lang, "report.scope_global", "Global")}</span>
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                {tr("Country-Wise Accounts Summary Report")} ({countryBreakdowns.length} {countryBreakdowns.length === 1 ? tr("Country") : tr("Countries")})
-              </h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 flex-wrap">
-                <span>{tr("Total Accounts")}: <strong className="text-blue-600 dark:text-blue-400">{filtered.length}</strong></span> |
-                <span>{tr("Customers")}: <strong className="text-emerald-600 dark:text-emerald-400">{customers}</strong></span> |
-                <span>{tr("Companies")}: <strong className="text-purple-600 dark:text-purple-400">{companies}</strong></span> |
-                <span>{tr("Banks")}: <strong className="text-amber-600 dark:text-amber-400">{banks}</strong></span> |
-                <span>{tr("Expenses")}: <strong className="text-rose-600 dark:text-rose-400">{expenses}</strong></span>
-              </span>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
+              <Building2 className="h-6 w-6" />
             </div>
-            {hasActiveFilters && (
-              <button type="button" onClick={resetFilters} className="asr-clear-chip-compact">
-                <X className="h-3 w-3" /> {t(lang, "acct.asr_clear_filters", "Clear filters")}
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 h-24 animate-pulse" />
-              ))
-            ) : countryBreakdowns.length === 0 ? (
-              <div className="col-span-full text-center py-5 text-xs text-slate-400 font-bold">
-                {t(lang, "acct.asr_no_country_accounts_found", "No country accounts found matching the criteria.")}
-              </div>
-            ) : (
-              countryBreakdowns.map((cb) => {
-                const isSelected = country === cb.name;
-                return (
-                  <div
-                    key={cb.name}
-                    onClick={() => setCountry(isSelected ? "all" : cb.name)}
-                    className={cn(
-                      "group relative overflow-hidden rounded-xl border p-3 transition-all duration-200 cursor-pointer shadow-xs",
-                      isSelected
-                        ? "bg-blue-50/95 dark:bg-blue-950/60 border-blue-600 shadow-md ring-2 ring-blue-500/20"
-                        : "bg-white dark:bg-slate-900/90 border-slate-200/90 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-700 hover:shadow-md"
-                    )}
-                  >
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2 mb-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="grid h-5 w-5 place-items-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black text-[9px] shrink-0">
-                          {cb.name.slice(0, 2).toUpperCase()}
-                        </span>
-                        <span className="font-black text-[11px] text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors">
-                          {cb.name}
-                        </span>
-                      </div>
-                      <span className="inline-flex items-center rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-black text-white shadow-xs shrink-0">
-                        {cb.total} {cb.total === 1 ? t(lang, "acct.asr_acc_singular", "Acc") : t(lang, "acct.asr_acc_plural", "Accs")}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-5 gap-1 text-center">
-                      <div className="rounded bg-emerald-50 dark:bg-emerald-950/40 p-1 border border-emerald-100 dark:border-emerald-900/40">
-                        <div className="text-[7px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">{t(lang, "acct.asr_cust_abbr", "Cust")}</div>
-                        <div className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 font-mono leading-none mt-0.5">{cb.customers}</div>
-                      </div>
-                      <div className="rounded bg-purple-50 dark:bg-purple-950/40 p-1 border border-purple-100 dark:border-purple-900/40">
-                        <div className="text-[7px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">{t(lang, "acct.asr_comp_abbr", "Comp")}</div>
-                        <div className="text-[11px] font-black text-purple-700 dark:text-purple-300 font-mono leading-none mt-0.5">{cb.companies}</div>
-                      </div>
-                      <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 border border-amber-100 dark:border-amber-900/40">
-                        <div className="text-[7px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">{t(lang, "bdash.bank", "Bank")}</div>
-                        <div className="text-[11px] font-black text-amber-700 dark:text-amber-300 font-mono leading-none mt-0.5">{cb.banks}</div>
-                      </div>
-                      <div className="rounded bg-rose-50 dark:bg-rose-950/40 p-1 border border-rose-100 dark:border-rose-900/40">
-                        <div className="text-[7px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">{t(lang, "acct.asr_exp_abbr", "Exp")}</div>
-                        <div className="text-[11px] font-black text-rose-700 dark:text-rose-300 font-mono leading-none mt-0.5">{cb.expenses}</div>
-                      </div>
-                      <div className="rounded bg-slate-50 dark:bg-slate-800/60 p-1 border border-slate-150 dark:border-slate-700/50">
-                        <div className="text-[7px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "acct.asr_pers_abbr", "Pers")}</div>
-                        <div className="text-[11px] font-black text-slate-700 dark:text-slate-200 font-mono leading-none mt-0.5">{cb.personal}</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+            <div>
+              <h1 className="text-xl font-black text-slate-900 dark:text-white">
+                {t(lang, "asr.title", "Account Setup / New Account Entry")}
+              </h1>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {t(lang, "asr.subtitle", "Create and manage chart of accounts for all companies, branches and locations.")}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-      {/* Table */}
-      <div className="asr-table-wrap">
+
+      {/* ── 4 KPI SUMMARY CARDS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        {/* Card 1: Branch & User Details */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-blue-600 to-indigo-600" />
+          <div className="p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-blue-600" />
+                {t(lang, "asr.branch_user_details", "Branch & User Details")}
+              </span>
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.branch", "Branch")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.branchName}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.country", "Country")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.countryName}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_name", "User Name")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.userName}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_id", "User ID")}:</span><span className="font-mono text-[11px] font-bold text-blue-600">{reportContext.userId}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.role", "Role")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.userRole}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Account Summary */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
+          <div className="p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                {t(lang, "asr.account_summary", "Account Summary")}
+              </span>
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.total_accounts", "Total Accounts")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{filtered.length}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "common.active", "Active")}:</span><span className="font-bold text-emerald-600">{activeCount}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "common.inactive", "Inactive")}:</span><span className="font-bold text-rose-600">{inactiveCount}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.new_this_month", "New This Month")}:</span><span className="font-bold text-blue-600">{newThisMonth}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Account Type Summary */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-amber-500 to-purple-600" />
+          <div className="p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                <Layers className="h-3.5 w-3.5 text-amber-600" />
+                {t(lang, "asr.account_type_summary", "Account Type Summary")}
+              </span>
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.customers", "Customers")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{customers}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.suppliers", "Suppliers")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{suppliers}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.banks", "Banks")}:</span><span className="font-bold text-amber-600">{banks}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.cash_accounts", "Cash Accounts")}:</span><span className="font-bold text-purple-600">{cashAccounts}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.expense_accounts", "Expense Accounts")}:</span><span className="font-bold text-rose-600">{expenses}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: All Countries Account Report */}
+        {sessionInfo?.scopes?.isSuperAdmin ? (
+          <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-amber-600 to-orange-600" />
+            <div className="p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <Landmark className="h-3.5 w-3.5 text-amber-600" />
+                  {t(lang, "asr.all_countries_report", "All Countries Account Report")}
+                </span>
+                <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  {t(lang, "asr.super_admin_only", "Super Admin Only")}
+                </span>
+              </div>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.countries", "Countries")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{uniqueCountries.length}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "common.branch", "Branches")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{uniqueBranches.length}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.total_debit", "Total Debit")}:</span><span className="font-mono font-bold text-blue-600">{totalDebit.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.total_credit", "Total Credit")}:</span><span className="font-mono font-bold text-emerald-600">{totalCredit.toLocaleString()}</span></div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* ── FILTER & ACTION ROW ── */}
+      <div className="flex flex-wrap items-center gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={accNo}
+            onChange={(e) => {
+              setAccNo(e.target.value);
+              setDraftAccNo(e.target.value);
+            }}
+            placeholder={t(lang, "asr.search_placeholder", "Search by account code or name...")}
+            className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* All Countries */}
+        <select
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
+          {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+
+        {/* All Branches */}
+        <select
+          value={branch}
+          onChange={(e) => setBranch(e.target.value)}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
+          {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+
+        {/* All Types */}
+        <select
+          value={accType}
+          onChange={(e) => setAccType(e.target.value)}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "asr.all_types", "All Types")}</option>
+          {uniqueTypes.map(ty => <option key={ty} value={ty}>{tv(ty)}</option>)}
+        </select>
+
+        {/* All Currencies */}
+        <select
+          value={currencyFilter}
+          onChange={(e) => setCurrencyFilter(e.target.value)}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "asr.all_currencies", "All Currencies")}</option>
+          {uniqueCurrencies.map(cur => <option key={cur} value={cur}>{cur}</option>)}
+        </select>
+
+        {/* All Statuses */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "common.all_statuses", "All Statuses")}</option>
+          <option value="active">{t(lang, "common.active", "Active")}</option>
+          <option value="inactive">{t(lang, "common.inactive", "Inactive")}</option>
+        </select>
+
+        {/* Date Range */}
+        <div className="flex items-center gap-1.5 h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-transparent outline-none w-[110px]" />
+          <span>–</span>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-transparent outline-none w-[110px]" />
+        </div>
+
+        {/* Refresh */}
+        <button
+          type="button"
+          onClick={fetchReport}
+          title={t(lang, "asr.refresh", "Refresh")}
+          className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+        >
+          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+        </button>
+
+        {/* + New Account Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (onNewAccount) onNewAccount();
+            else router.push("/dashboard/accounts/setup?mode=new");
+          }}
+          className="h-9 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+        >
+          <Plus className="h-4 w-4" />
+          <span>{t(lang, "asr.new_account", "New Account")}</span>
+        </button>
+      </div>
+
+      {/* ── REGISTER TABLE CARD ── */}
+      <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+        {/* Table Toolbar */}
+        <div className="flex flex-wrap items-center justify-between p-3.5 border-b border-slate-100 dark:border-slate-800 gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white">
+              {t(lang, "asr.register_title", "Chart of Accounts Register")}
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              {filtered.length} {t(lang, "asr.records", "records")}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={triggerOfficialReportPreview}
+              className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
+            >
+              <Printer className="h-3.5 w-3.5 text-slate-500" />
+              <span>{t(lang, "asr.print", "Print")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={triggerOfficialReportPreview}
+              className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
+            >
+              <FileText className="h-3.5 w-3.5 text-red-500" />
+              <span>{t(lang, "asr.pdf", "PDF")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => exportCSV(filtered)}
+              className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{t(lang, "asr.excel", "Excel")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Table Content */}
         <div className="overflow-x-auto">
-          <table className="asr-table">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr>
-                {[
-                  "#",
-                  "Account Number",
-                  "Super Admin Account Number",
-                  "Country Serial",
-                  "Branch Serial",
-                  "Manual Ref No",
-                  "Customer Name / Account",
-                  "Owner",
-                  "Account Type",
-                  "Category",
-                  "Branch Name",
-                  "Branch Code",
-                  "Country",
-                  "Currency",
-                  "Company",
-                  "Bank",
-                  "Contact",
-                  "Actions",
-                ].map(h => (
-                  <Th key={h} className="asr-th">{h}</Th>
-                ))}
+              <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                <th className="p-3 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300"
+                    checked={filtered.length > 0 && Object.keys(selectedIds).length === filtered.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+                <th className="p-3">{t(lang, "asr.col_account_code", "Account Code")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3">{t(lang, "asr.col_account_name", "Account Name")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3">{t(lang, "asr.col_account_type", "Account Type")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3">{t(lang, "asr.country", "Country")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3">{t(lang, "asr.branch", "Branch")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3">{t(lang, "asr.currency", "Currency")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3 text-right">{t(lang, "asr.col_opening_debit", "Opening Debit")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3 text-right">{t(lang, "asr.col_opening_credit", "Opening Credit")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3 text-right">{t(lang, "asr.col_current_balance", "Current Balance")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3">{t(lang, "asr.col_parent_account", "Parent Account")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3 text-center">{t(lang, "asr.status", "Status")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
+                <th className="p-3 text-center">{t(lang, "asr.actions", "Actions")}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={18} className="asr-empty-cell">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-[#1f5eff]" />
-                      <span>{tr("Loading accounts report...")}</span>
-                    </div>
+                  <td colSpan={13} className="p-8 text-center text-slate-400">
+                    <Loader2 className="inline h-5 w-5 animate-spin mr-2 text-blue-600" />
+                    {t(lang, "asr.loading", "Loading accounts register...")}
                   </td>
                 </tr>
-              ) : errorMsg ? (
+              ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="asr-empty-cell text-red-500 font-bold">
-                    Error: {errorMsg}
+                  <td colSpan={13} className="p-8 text-center text-slate-400 font-medium">
+                    {t(lang, "asr.no_accounts", "No accounts found matching the criteria.")}
                   </td>
                 </tr>
-              ) : filtered.length > 0 ? (
-                filtered.map((row, idx) => {
-                  const hasCompany = Boolean(row.companyName && row.companyName !== "-");
-                  const hasBank = row.accountCategory.toLowerCase().includes("asset") || row.accountCategory.toLowerCase().includes("bank");
-
+              ) : (
+                filtered.map((row) => {
+                  const isActive = (row.status || "active").toLowerCase() === "active";
+                  const isSelected = !!selectedIds[row.accountId];
                   return (
-                    <tr key={row.accountId} className="asr-row">
-                      {/* # */}
-                      <td className="asr-td asr-td-num">{idx + 1}</td>
-
-                      {/* Account Number */}
-                      <td className="asr-td">
-                        {onEditAccount ? (
-                          <button
-                            type="button"
-                            onClick={() => onEditAccount(row.accountId)}
-                            className="font-mono font-bold text-[#1455ff] text-[11px] leading-tight whitespace-nowrap hover:underline text-left cursor-pointer flex items-center gap-1 group"
-                            title={tr("Click to view or edit account")}
-                          >
-                            <span>{row.accountCode}</span>
-                            <Edit3 className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500" />
-                          </button>
-                        ) : (
-                          <div className="font-mono font-bold text-[#1455ff] text-[11px] leading-tight whitespace-nowrap">
-                            {row.accountCode}
-                          </div>
-                        )}
-                        {row.journalCode && row.journalCode !== row.accountCode && (
-                          <div className="text-[9px] text-[var(--asr-muted)] font-mono mt-0.5">{row.journalCode}</div>
-                        )}
+                    <tr key={row.accountId} className={cn("hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition", isSelected && "bg-blue-50/40 dark:bg-blue-950/20")}>
+                      <td className="p-3 text-center">
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-300"
+                          checked={isSelected}
+                          onChange={() => toggleSelectRow(row.accountId)}
+                        />
                       </td>
-
-                      {/* Super Admin Account Number */}
-                      <td className="asr-td text-center">
-                        <span className="font-mono text-[10px] font-bold text-slate-700">
-                          {"SAD-" + String(row.accountSerialNumber).padStart(3, "0")}
+                      <td className="p-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onEditAccount) onEditAccount(row.accountId);
+                            else router.push(`/dashboard/accounts/setup?accountId=${row.accountId}&mode=edit`);
+                          }}
+                          className="font-mono font-bold text-blue-600 hover:underline"
+                        >
+                          {row.accountCode}
+                        </button>
+                      </td>
+                      <td className="p-3">
+                        <span className="font-bold text-slate-900 dark:text-white">{row.accountName}</span>
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          {tv(row.subType || row.accountCategory)}
                         </span>
                       </td>
-
-                      {/* Country Serial */}
-                      <td className="asr-td text-center">
-                        <span className="font-mono text-[10px] font-bold text-slate-600">
-                          {row.countrySerialNumber}
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{row.countryName}</td>
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{row.branchName}</td>
+                      <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300">{row.currency}</td>
+                      <td className="p-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
+                        {fmtNum(row.openingBalance || 0)}
+                      </td>
+                      <td className="p-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
+                        {fmtNum(row.creditTotal || 0)}
+                      </td>
+                      <td className="p-3 text-right font-mono font-bold text-emerald-600">
+                        {fmtNum(row.currentBalance || 0)}
+                      </td>
+                      <td className="p-3 font-mono text-slate-500">
+                        {row.companyName && row.companyName !== "-" ? row.companyName : "-"}
+                      </td>
+                      <td className="p-3 text-center">
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                            isActive
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                              : "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                          )}
+                        >
+                          {isActive ? t(lang, "common.active", "Active") : t(lang, "common.inactive", "Inactive")}
                         </span>
                       </td>
-
-                      {/* Branch Serial */}
-                      <td className="asr-td text-center">
-                        <span className="font-mono text-[10px] font-bold text-slate-600">
-                          {row.branchSerialNumber}
-                        </span>
-                      </td>
-
-                      {/* Manual Ref No */}
-                      <td className="asr-td">
-                        <span className="font-mono text-[10px] font-semibold text-slate-500">
-                          {row.manualReferenceNumber || "-"}
-                        </span>
-                      </td>
-
-                      {/* Customer Name / Account */}
-                      <td className="asr-td">
-                        <div className="flex items-center gap-2">
-                          <div className="asr-avatar">{row.accountName.charAt(0).toUpperCase()}</div>
-                          <div>
-                            <div className="font-black text-[var(--asr-title)] text-[11px] leading-tight">{row.accountName}</div>
-                            <div className="text-[9px] text-[var(--asr-muted)] font-mono mt-0.5">{row.customerNumber}</div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Owner */}
-                      <td className="asr-td">
-                        <span className="font-bold text-[#10b981] text-[11px]">{row.customerName && row.customerName !== "-" ? row.customerName : "-"}</span>
-                      </td>
-
-                      {/* Account Type */}
-                      <td className="asr-td">
-                        <span className="asr-type-badge">{tv(row.subType)}</span>
-                      </td>
-
-                      {/* Category */}
-                      <td className="asr-td">
-                        <span className={cn("asr-cat-badge", {
-                          "asr-cat-asset":     row.accountCategory.toLowerCase() === "asset",
-                          "asr-cat-expense":   row.accountCategory.toLowerCase() === "expense",
-                          "asr-cat-income":    row.accountCategory.toLowerCase() === "income",
-                          "asr-cat-liability": row.accountCategory.toLowerCase() === "liability",
-                          "asr-cat-equity":    row.accountCategory.toLowerCase() === "equity",
-                        })}>
-                          {tv(row.accountCategory)}
-                        </span>
-                      </td>
-
-                      {/* Branch Name */}
-                      <td className="asr-td">
-                        <div className="font-semibold text-[11px] leading-tight">{row.branchName}</div>
-                        <div className="text-[9px] text-[var(--asr-muted)] mt-0.5">{tv(row.branchType)}</div>
-                      </td>
-
-                      {/* Branch Code */}
-                      <td className="asr-td">
-                        <span className="font-mono font-black text-[10px] text-[#1455ff]">{row.branchCode || "-"}</span>
-                      </td>
-
-                      {/* Country */}
-                      <td className="asr-td font-semibold text-[11px]">{row.countryName}</td>
-
-                      {/* Currency */}
-                      <td className="asr-td">
-                        <span className="font-mono font-bold text-[11px]">{row.currency}</span>
-                      </td>
-
-                      {/* Company Status */}
-                      <td className="asr-td text-center">
-                        {row.companyId ? (
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
-                            onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${row.companyId}`)}
-                            className="cursor-pointer hover:scale-110 transition-transform focus:outline-none block mx-auto"
-                            title={t(lang, "acct.asr_click_view_company_profile", "Click to view company profile file")}
-                          >
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
-                          </button>
-                        ) : hasCompany ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto opacity-60" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-400 mx-auto" />
-                        )}
-                      </td>
-
-                      {/* Bank Status */}
-                      <td className="asr-td text-center">
-                        {row.bankId ? (
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${row.bankId}`)}
-                            className="cursor-pointer hover:scale-110 transition-transform focus:outline-none block mx-auto"
-                            title={t(lang, "acct.asr_click_view_bank_profile", "Click to view bank profile file")}
-                          >
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
-                          </button>
-                        ) : hasBank ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto opacity-60" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-400 mx-auto" />
-                        )}
-                      </td>
-
-                      {/* Contact Status */}
-                      <td className="asr-td">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {(() => {
-                            let parsedContacts = row.contacts;
-                            if (typeof parsedContacts === "string") {
-                              try { parsedContacts = JSON.parse(parsedContacts); } catch (e) { parsedContacts = []; }
-                            }
-                            const safeContacts: Array<{ type: string; value: string }> = Array.isArray(parsedContacts) ? parsedContacts : [];
-                            const phones = safeContacts.filter((c) => c?.type?.toLowerCase().includes("mobile") || c?.type?.toLowerCase().includes("whatsapp") || c?.type?.toLowerCase().includes("phone") || c?.type?.toLowerCase().includes("landline") || c?.type?.toLowerCase().includes("office"));
-                            const emails = safeContacts.filter((c) => c?.type?.toLowerCase().includes("email"));
-                            
-                            return (
-                              <>
-                                <span 
-                                  className={cn("asr-contact-dot", phones?.length ? "bg-rose-50 text-rose-500 border-rose-100" : "bg-slate-50 text-slate-300 border-slate-100")}
-                                  title={phones?.length ? phones.map(p => `${p.type}: ${p.value}`).join("\\n") : t(lang, "acct.asr_no_phone", "No Phone")}
-                                >
-                                  <Phone className="h-2.5 w-2.5" />
-                                </span>
-                                <span 
-                                  className={cn("asr-contact-dot", emails?.length ? "bg-purple-50 text-purple-500 border-purple-100" : "bg-slate-50 text-slate-300 border-slate-100")}
-                                  title={emails?.length ? emails.map(e => `${e.type}: ${e.value}`).join("\\n") : t(lang, "acct.asr_no_email", "No Email")}
-                                >
-                                  <Mail className="h-2.5 w-2.5" />
-                                </span>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="asr-td">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            className="asr-action-btn asr-action-view"
-                            title={t(lang, "acct.asr_view_account_profile", "View Account Profile")}
-                            onClick={() => router.push(`/dashboard/accounts/view?accountId=${row.accountId}`)}
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            <span>{tr("View")}</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="asr-action-btn asr-action-edit"
-                            title={t(lang, "acct.asr_edit_account", "Edit Account")}
-                            onClick={() => router.push(`/dashboard/accounts/setup?accountId=${row.accountId}&mode=edit`)}
+                            onClick={() => {
+                              if (onEditAccount) onEditAccount(row.accountId);
+                              else router.push(`/dashboard/accounts/setup?accountId=${row.accountId}&mode=edit`);
+                            }}
+                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"
+                            title={t(lang, "asr.edit", "Edit")}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
-                            <span>{tr("Edit")}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/dashboard/accounts/view?accountId=${row.accountId}`)}
+                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"
+                            title={t(lang, "asr.view", "View")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
                     </tr>
                   );
                 })
-              ) : (
-                <tr>
-                  <td colSpan={18} className="asr-empty-cell">
-                    {tr("No accounts found matching the selected filters.")}
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>
         </div>
 
         {/* Table Footer */}
-        <div className="asr-table-footer">
-          <span>{tr("Showing")} <strong>{filtered.length}</strong> {tr("of")} <strong>{rows.length}</strong> {tr("accounts")}</span>
-          <span className="text-[var(--asr-muted)]">{tr("Generated")} {fmt(generatedAt)} {tr("at")} {fmtTime(generatedAt)}</span>
+        <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-500 font-medium">
+          <span>{t(lang, "asr.showing", "Showing")} <strong>{filtered.length}</strong> {t(lang, "asr.of", "of")} <strong>{rows.length}</strong> {t(lang, "asr.accounts", "accounts")}</span>
+          <span>{t(lang, "asr.generated_on", "Generated on")} {reportContext.date} {reportContext.time}</span>
         </div>
       </div>
     </div>

@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
 
     const moduleName = searchParams.get("module");
     const userFilter = searchParams.get("user");
+    const riskLevel = searchParams.get("riskLevel");
+    const approvalStatus = searchParams.get("approvalStatus");
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
     const search = searchParams.get("search")?.trim().toLowerCase() || null;
@@ -132,17 +134,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (approvalStatus && approvalStatus !== "all") {
+      records = records.filter((r: any) => r.approval_status === approvalStatus);
+    }
+    if (riskLevel && riskLevel !== "all") {
+      records = records.filter((r: any) => r.risk_level === riskLevel);
+    }
+
     const total = records.length;
     const paged = records.slice(offset, offset + limit);
 
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
     const kpis = {
       editsToday: records.filter((r: any) => String(r.created_at).slice(0, 10) === todayStr).length,
-      pendingApprovals: 0,
+      editsThisWeek: records.filter((r: any) => new Date(r.created_at) >= weekAgo).length,
+      editsThisMonth: records.filter((r: any) => new Date(r.created_at) >= monthAgo).length,
+      pendingApprovals: records.filter((r: any) => r.approval_status === "Pending").length,
       highRiskChanges: records.filter((r: any) => r.risk_level === "High").length,
+      rejectedChanges: records.filter((r: any) => r.approval_status === "Rejected").length,
       expiredAccess: 0,
       totalCountries: new Set(records.map((r: any) => r.country_name)).size,
-      totalBranches: new Set(records.map((r: any) => r.branch_name)).size
+      totalBranches: new Set(records.map((r: any) => r.branch_name)).size,
+      totalModules: new Set(records.map((r: any) => r.module)).size,
+      totalUsers: new Set(records.map((r: any) => r.user_name)).size
     };
 
     return NextResponse.json({ success: true, records: paged, total, kpis, timelineByRecord: result.report.history });
@@ -153,5 +170,8 @@ export async function GET(request: NextRequest) {
 }
 
 function emptyKpis() {
-  return { editsToday: 0, pendingApprovals: 0, highRiskChanges: 0, expiredAccess: 0, totalCountries: 0, totalBranches: 0 };
+  return {
+    editsToday: 0, editsThisWeek: 0, editsThisMonth: 0, pendingApprovals: 0, highRiskChanges: 0,
+    rejectedChanges: 0, expiredAccess: 0, totalCountries: 0, totalBranches: 0, totalModules: 0, totalUsers: 0
+  };
 }

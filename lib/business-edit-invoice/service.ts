@@ -296,11 +296,13 @@ export async function listInvoices(session: ErpSession, opts: { q?: string; docT
   const limit = Math.min(Math.max(Number(opts.limit || 300), 1), 1000);
 
   let rows = await withLocalPg(async (sql) => sql`
-    select bei.*, cib.city_name as city_branch_name, cb.name as country_branch_name, c.name as country_name
+    select bei.*, cib.city_name as city_branch_name, cb.name as country_branch_name, c.name as country_name,
+      p.full_name as created_by_name
     from public.business_edit_invoices bei
     left join public.countries c on c.id = bei.country_id
     left join public.country_branches cb on cb.id = bei.country_branch_id
     left join public.city_branches cib on cib.id = bei.city_branch_id
+    left join public.profiles p on p.id = bei.created_by
     where bei.deleted_at is null
       ${opts.docType && BEI_DOC_TYPES.includes(opts.docType as BeiDocType) ? sql`and bei.doc_type = ${opts.docType}` : sql``}
       ${opts.status && ["draft","finalized","void"].includes(opts.status) ? sql`and bei.status = ${opts.status}` : sql``}
@@ -320,6 +322,8 @@ export async function listInvoices(session: ErpSession, opts: { q?: string; docT
   return rows.map((r: any) => ({
     ...toInvoiceDto(r, []),
     branchLabel: r.city_branch_name || r.country_branch_name || r.country_name || "—",
+    countryName: r.country_name || null,
+    createdByName: r.created_by_name || null,
   }));
 }
 

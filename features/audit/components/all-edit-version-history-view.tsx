@@ -33,9 +33,18 @@ import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { apiGet } from "@/lib/api/client";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 import { VersionComparisonModal } from "./version-comparison-modal";
+
+type SessionInfo = {
+  user?: { fullName?: string | null; email?: string | null };
+  scopes?: {
+    isSuperAdmin?: boolean;
+    summary?: { countryName?: string | null; branchDisplayName?: string | null; scopeLabel?: string | null };
+  };
+};
 
 interface EditHistoryRow {
   entity_type: string;
@@ -84,13 +93,19 @@ export function AllEditVersionHistoryView() {
 
   // Data & Pagination
   const [records, setRecords] = useState<EditHistoryRow[]>([]);
+  const [session, setSession] = useState<SessionInfo | null>(null);
   const [kpis, setKpis] = useState({
     editsToday: 0,
+    editsThisWeek: 0,
+    editsThisMonth: 0,
     pendingApprovals: 0,
     highRiskChanges: 0,
+    rejectedChanges: 0,
     expiredAccess: 0,
     totalCountries: 0,
-    totalBranches: 0
+    totalBranches: 0,
+    totalModules: 0,
+    totalUsers: 0
   });
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,6 +123,7 @@ export function AllEditVersionHistoryView() {
 
   useEffect(() => {
     fetchFilterOptions();
+    apiGet<SessionInfo>("/api/erp/auth/session").then(setSession).catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -244,370 +260,274 @@ export function AllEditVersionHistoryView() {
   }
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const isSuperAdmin = !!session?.scopes?.isSuperAdmin;
+  const moduleOptions = Array.from(new Set(records.map((r) => r.module).filter(Boolean))).sort();
+  const userOptions = Array.from(
+    new Map(records.filter((r) => r.user_id).map((r) => [r.user_id, r.user_name])).entries()
+  );
 
   return (
-    <div className="mx-auto w-full max-w-[1720px] p-4 lg:p-6 space-y-6 font-sans antialiased text-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
-      
-      {/* ── HEADER STRIP ── */}
-      <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl lg:text-2xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2.5">
-            <History className="h-6 w-6 text-blue-600" />
-            <span>{t(lang, "audit.edit_history_title", "All Edit / Version History — All Countries & Branches")}</span>
-          </h1>
-          <p className="text-xs text-slate-500 font-medium mt-1">
-            {t(lang, "audit.edit_history_subtitle", "Enterprise version control, immutable before/after field comparisons, and Super Admin audit trails")}
+    <div className="mx-auto w-full max-w-[1720px] p-4 lg:p-6 space-y-4 font-sans antialiased text-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
+
+      {/* ── BREADCRUMB + HEADER ── */}
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors w-fit"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          <span>{t(lang, "common.back", "Back")}</span>
+        </button>
+
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {t(lang, "audit.edit_history_title", "All Edit / Version History — All Countries & Branches")}
+              </h1>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {t(lang, "audit.edit_history_subtitle_v2", "Track every change. Ensure compliance. Maintain a complete and immutable audit trail.")}
+              </p>
+            </div>
+          </div>
+          <div className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 self-center">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>{t(lang, "audit.immutable_banner", "Immutable Audit Trail — All records are read-only and cannot be altered or deleted.")}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 4 KPI SUMMARY CARDS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        {/* Card 1: Branch & User Details */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-blue-600 to-indigo-600" />
+          <div className="p-3.5 space-y-2.5">
+            <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-blue-600" />
+              {t(lang, "audit.branch_user_details", "Branch & User Details")}
+            </span>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.filter_branch", "Branch")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{session?.scopes?.summary?.branchDisplayName || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.filter_country", "Country")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{session?.scopes?.summary?.countryName || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "common.user_name", "User Name")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{session?.user?.fullName || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.user_email", "User Email")}:</span><span className="font-mono text-[11px] font-bold text-blue-600 truncate max-w-[130px]" title={session?.user?.email || ""}>{session?.user?.email || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.role", "Role")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{isSuperAdmin ? t(lang, "audit.super_admin", "Super Admin") : (session?.scopes?.summary?.scopeLabel || "—")}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Edit Activity Summary */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-purple-500 to-violet-600" />
+          <div className="p-3.5 space-y-2.5">
+            <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5 text-purple-600" />
+              {t(lang, "audit.edit_activity_summary", "Edit Activity Summary")}
+            </span>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.kpi_edits_today", "Edits Today")}:</span><span className="font-bold text-purple-600">{kpis.editsToday}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.this_week", "This Week")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{kpis.editsThisWeek}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.this_month", "This Month")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{kpis.editsThisMonth}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.total_versions", "Total Versions")}:</span><span className="font-bold text-blue-600">{totalCount}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Approval & Risk Summary */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+          <div className="p-3.5 space-y-2.5">
+            <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
+              {t(lang, "audit.approval_risk_summary", "Approval & Risk Summary")}
+            </span>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.kpi_pending_approvals", "Pending Approvals")}:</span><span className="font-bold text-amber-600">{kpis.pendingApprovals}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.kpi_high_risk_changes", "High-Risk Changes")}:</span><span className="font-bold text-rose-600">{kpis.highRiskChanges}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.status_rejected", "Rejected")}:</span><span className="font-bold text-red-600">{kpis.rejectedChanges}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.kpi_expired_access", "Expired Access")}:</span><span className="font-bold text-slate-500">{kpis.expiredAccess}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: All Countries Audit Report */}
+        {isSuperAdmin ? (
+          <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
+            <div className="p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5 text-emerald-600" />
+                  {t(lang, "audit.all_countries_report", "All Countries Audit Report")}
+                </span>
+                <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  {t(lang, "audit.super_admin_only", "Super Admin Only")}
+                </span>
+              </div>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.kpi_countries", "Countries")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{kpis.totalCountries}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.kpi_branches", "Branches")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{kpis.totalBranches}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.modules", "Modules")}:</span><span className="font-bold text-emerald-600">{kpis.totalModules}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "audit.users", "Users")}:</span><span className="font-bold text-blue-600">{kpis.totalUsers}</span></div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* ── FILTER ROW ── */}
+      <div className="flex flex-wrap items-center gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
+        {/* Country */}
+        <select
+          value={selectedCountry}
+          onChange={(e) => { setSelectedCountry(e.target.value); setCurrentPage(1); }}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "audit.filter_all_countries", "All Countries")}</option>
+          {countriesList.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+
+        {/* Branch */}
+        <select
+          value={selectedBranch}
+          onChange={(e) => { setSelectedBranch(e.target.value); setCurrentPage(1); }}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "audit.filter_all_branches", "All Branches")}</option>
+          {branchesList.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+
+        {/* Module */}
+        <select
+          value={selectedModule}
+          onChange={(e) => { setSelectedModule(e.target.value); setCurrentPage(1); }}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "audit.filter_all_modules", "All Modules")}</option>
+          {moduleOptions.map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+
+        {/* Edited By */}
+        <select
+          value={selectedUser}
+          onChange={(e) => { setSelectedUser(e.target.value); setCurrentPage(1); }}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "audit.filter_all_users", "All Users")}</option>
+          {userOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </select>
+
+        {/* Risk Level */}
+        <select
+          value={selectedRisk}
+          onChange={(e) => { setSelectedRisk(e.target.value); setCurrentPage(1); }}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "audit.filter_all_risk_levels", "All Risk Levels")}</option>
+          <option value="High">{t(lang, "audit.risk_high", "High")}</option>
+          <option value="Medium">{t(lang, "audit.risk_medium", "Medium")}</option>
+          <option value="Low">{t(lang, "audit.risk_low", "Low")}</option>
+        </select>
+
+        {/* Approval Status */}
+        <select
+          value={selectedApprovalStatus}
+          onChange={(e) => { setSelectedApprovalStatus(e.target.value); setCurrentPage(1); }}
+          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
+        >
+          <option value="all">{t(lang, "audit.filter_all_statuses", "All Statuses")}</option>
+          <option value="Completed">{t(lang, "audit.status_approved", "Approved")}</option>
+          <option value="Pending">{t(lang, "audit.status_pending", "Pending")}</option>
+          <option value="Rejected">{t(lang, "audit.status_rejected", "Rejected")}</option>
+        </select>
+
+        {/* Date Range */}
+        <div className="w-64">
+          <ErpDatePicker
+            mode="range"
+            lang={lang}
+            size="sm"
+            value={{ from: fromDate || null, to: toDate || null }}
+            onApply={(v) => { setFromDate(v.from ?? ""); setToDate(v.to ?? ""); }}
+          />
+        </div>
+
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <Input
+            type="text"
+            placeholder={t(lang, "audit.search_placeholder", "Search Bill / Reference No...")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && fetchRecords()}
+            className="h-9 pl-9 pr-3 text-xs bg-slate-50/50 dark:bg-slate-800"
+          />
+        </div>
+
+        {/* Refresh */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={fetchRecords}
+          className="h-9 w-9 p-0 border-slate-200 dark:border-slate-800"
+          title={t(lang, "audit.refresh", "Refresh")}
+        >
+          <RefreshCw className={`h-4 w-4 text-slate-600 ${loading ? "animate-spin" : ""}`} />
+        </Button>
+
+        {/* Export CSV */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExportCsv}
+          className="h-9 px-3 text-xs font-bold border-slate-200 dark:border-slate-800"
+        >
+          <Download className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
+          {t(lang, "audit.export_csv", "Export CSV")}
+        </Button>
+
+        {/* Audit PDF */}
+        <Button
+          type="button"
+          onClick={handlePrint}
+          className="h-9 px-3.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+        >
+          <FileText className="h-3.5 w-3.5 mr-1.5" />
+          {t(lang, "audit.audit_pdf", "Audit PDF")}
+        </Button>
+      </div>
+
+      {/* ── REGISTER TABLE CARD ── */}
+      <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+        {/* Table Header */}
+        <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white">
+              {t(lang, "audit.register_title", "Version History & Audit Register")}
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              {totalCount} {t(lang, "audit.showing_records", "records")}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium">
+            {t(lang, "audit.immutable_notice_full", "This is an immutable audit trail. All changes are permanently recorded for compliance and cannot be modified or deleted.")}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleExportCsv}
-            className="flex items-center gap-1.5 h-9 px-3.5 border-slate-200 dark:border-slate-700 font-bold text-xs hover:bg-slate-50"
-          >
-            <Download className="h-4 w-4 text-slate-600" />
-            <span>{t(lang, "audit.export_csv", "Export CSV")}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 h-9 px-3.5 border-slate-200 dark:border-slate-700 font-bold text-xs hover:bg-slate-50"
-          >
-            <FileText className="h-4 w-4 text-blue-600" />
-            <span>{t(lang, "audit.audit_pdf", "Audit PDF")}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={fetchRecords}
-            className="flex items-center gap-1.5 h-9 px-3 border-slate-200 dark:border-slate-700 font-bold text-xs"
-            title={t(lang, "audit.refresh", "Refresh")}
-          >
-            <RefreshCw className={`h-4 w-4 text-slate-600 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">{t(lang, "audit.refresh", "Refresh")}</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* ── 6 KPI SUMMARY CARDS ── */}
-      <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3.5">
-        
-        {/* KPI 1: Edits Today */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t(lang, "audit.kpi_edits_today", "Edits Today")}
-              </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {kpis.editsToday.toLocaleString()}
-              </div>
-            </div>
-            <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center shadow-xs">
-              <History className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* KPI 2: Pending Approvals */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t(lang, "audit.kpi_pending_approvals", "Pending Approvals")}
-              </div>
-              <div className="text-2xl font-black text-amber-600 mt-1">
-                {kpis.pendingApprovals.toLocaleString()}
-              </div>
-              <div className="flex items-center gap-1 text-[10.5px] font-semibold text-amber-600 mt-1">
-                <Clock className="h-3 w-3" />
-                <span>{t(lang, "audit.requires_review", "Requires Review")}</span>
-              </div>
-            </div>
-            <div className="h-11 w-11 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center shadow-xs">
-              <Clock className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* KPI 3: High-Risk Changes */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t(lang, "audit.kpi_high_risk_changes", "High-Risk Changes")}
-              </div>
-              <div className="text-2xl font-black text-rose-700 mt-1">
-                {kpis.highRiskChanges.toLocaleString()}
-              </div>
-              <div className="flex items-center gap-1 text-[10.5px] font-semibold text-rose-600 mt-1">
-                <ShieldAlert className="h-3 w-3" />
-                <span>{t(lang, "audit.financial_account_diffs", "Financial / Account diffs")}</span>
-              </div>
-            </div>
-            <div className="h-11 w-11 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 flex items-center justify-center shadow-xs">
-              <ShieldAlert className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* KPI 4: Expired Access */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t(lang, "audit.kpi_expired_access", "Expired Access")}
-              </div>
-              <div className="text-2xl font-black text-slate-700 dark:text-slate-300 mt-1">
-                {kpis.expiredAccess.toLocaleString()}
-              </div>
-              <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                {t(lang, "audit.window_closed", "Window closed")}
-              </div>
-            </div>
-            <div className="h-11 w-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 flex items-center justify-center shadow-xs">
-              <RotateCcw className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* KPI 5: Countries */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t(lang, "audit.kpi_countries", "Countries")}
-              </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {kpis.totalCountries}
-              </div>
-              <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                {t(lang, "audit.all_operating_countries", "All operating countries")}
-              </div>
-            </div>
-            <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center shadow-xs">
-              <Globe className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* KPI 6: Branches */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t(lang, "audit.kpi_branches", "Branches")}
-              </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {kpis.totalBranches}
-              </div>
-              <div className="text-[10.5px] font-medium text-slate-400 mt-1">
-                {t(lang, "audit.all_offices_branches", "All offices / branches")}
-              </div>
-            </div>
-            <div className="h-11 w-11 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 flex items-center justify-center shadow-xs">
-              <Building2 className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* ── COMPREHENSIVE FILTER BAR ── */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
-          
-          {/* Country */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t(lang, "audit.filter_country", "Country")}
-            </label>
-            <select
-              value={selectedCountry}
-              onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
-            >
-              <option value="all">{t(lang, "audit.filter_all_countries", "All Countries")}</option>
-              {countriesList.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Branch */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t(lang, "audit.filter_branch", "Branch")}
-            </label>
-            <select
-              value={selectedBranch}
-              onChange={(e) => {
-                setSelectedBranch(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
-            >
-              <option value="all">{t(lang, "audit.filter_all_branches", "All Branches")}</option>
-              {branchesList.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Module */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t(lang, "audit.filter_module", "Module")}
-            </label>
-            <select
-              value={selectedModule}
-              onChange={(e) => {
-                setSelectedModule(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
-            >
-              <option value="all">{t(lang, "audit.filter_all_modules", "All Modules")}</option>
-              <option value="Purchase">{t(lang, "audit.mod_purchase", "Purchase")}</option>
-              <option value="Local Purchase">{t(lang, "audit.mod_local_purchase", "Local Purchase")}</option>
-              <option value="Sales">{t(lang, "audit.mod_sales", "Sales")}</option>
-              <option value="Local Sales">{t(lang, "audit.mod_local_sales", "Local Sales")}</option>
-              <option value="Cash Entry">{t(lang, "audit.mod_cash_roznamcha", "Cash Entry / Roznamcha")}</option>
-              <option value="Ledger">{t(lang, "audit.mod_ledger", "Ledger")}</option>
-              <option value="Payment">{t(lang, "audit.mod_payment_transfers", "Payment & Transfers")}</option>
-              <option value="Shipping">{t(lang, "audit.mod_shipping_clearing", "Shipping & Clearing")}</option>
-              <option value="Invoices">{t(lang, "audit.mod_invoices_endorsements", "Invoices & Endorsements")}</option>
-            </select>
-          </div>
-
-          {/* User */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t(lang, "audit.filter_edited_by", "Edited By")}
-            </label>
-            <select
-              value={selectedUser}
-              onChange={(e) => {
-                setSelectedUser(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
-            >
-              <option value="all">{t(lang, "audit.filter_all_users", "All Users")}</option>
-              {Array.from(new Set(records.map((r) => r.user_name).filter(Boolean))).sort().map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Risk Level */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t(lang, "audit.filter_risk_level", "Risk Level")}
-            </label>
-            <select
-              value={selectedRisk}
-              onChange={(e) => {
-                setSelectedRisk(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
-            >
-              <option value="all">{t(lang, "audit.filter_all_risk_levels", "All Risk Levels")}</option>
-              <option value="High">{t(lang, "audit.risk_high", "High")}</option>
-              <option value="Medium">{t(lang, "audit.risk_medium", "Medium")}</option>
-              <option value="Low">{t(lang, "audit.risk_low", "Low")}</option>
-            </select>
-          </div>
-
-          {/* Approval Status */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t(lang, "audit.filter_approval_status", "Approval Status")}
-            </label>
-            <select
-              value={selectedApprovalStatus}
-              onChange={(e) => {
-                setSelectedApprovalStatus(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
-            >
-              <option value="all">{t(lang, "audit.filter_all_statuses", "All Statuses")}</option>
-              <option value="Approved">{t(lang, "audit.status_approved", "Approved")}</option>
-              <option value="Pending">{t(lang, "audit.status_pending", "Pending")}</option>
-              <option value="Rejected">{t(lang, "audit.status_rejected", "Rejected")}</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Dates and Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <div className="w-full sm:w-64">
-              <ErpDatePicker
-                mode="range"
-                lang={lang}
-                size="sm"
-                value={{ from: fromDate || null, to: toDate || null }}
-                onApply={(v) => {
-                  setFromDate(v.from ?? "");
-                  setToDate(v.to ?? "");
-                }}
-              />
-            </div>
-
-            <div className="relative flex-1 sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-              <Input
-                type="text"
-                placeholder={t(lang, "audit.search_placeholder", "Search bill, reference or keywords...")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && fetchRecords()}
-                className="h-8.5 pl-8 pr-3 text-xs bg-slate-50/50 dark:bg-slate-800"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleResetFilters}
-              className="h-8.5 px-3 text-xs font-bold border-slate-200 dark:border-slate-700"
-            >
-              {t(lang, "audit.reset", "Reset")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={fetchRecords}
-              className="h-8.5 px-4 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
-            >
-              <Filter className="h-3.5 w-3.5 mr-1" />
-              {t(lang, "audit.filter_btn", "Filter")}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── MAIN EDIT HISTORY TABLE (1 Row Per Record with Edit Count Button) ── */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3.5 text-center w-8">#</th>
-                <th className="py-3 px-3.5">{t(lang, "audit.th_bill_ref", "Bill / Ref No.")}</th>
+                <th className="py-3 px-3 text-center w-8"><input type="checkbox" className="rounded border-slate-300" /></th>
+                <th className="py-3 px-3 text-center w-8">#</th>
+                <th className="py-3 px-3">{t(lang, "audit.th_bill_ref", "Bill / Ref No.")}</th>
                 <th className="py-3 px-3 text-center">{t(lang, "audit.th_version", "Total Edits")}</th>
                 <th className="py-3 px-3">{t(lang, "audit.th_module", "Module")}</th>
                 <th className="py-3 px-3">{t(lang, "audit.th_country", "Country")}</th>
@@ -616,22 +536,23 @@ export function AllEditVersionHistoryView() {
                 <th className="py-3 px-3">{t(lang, "audit.th_original_date", "Original Date")}</th>
                 <th className="py-3 px-3">{t(lang, "audit.th_edited_at", "Last Edited At")}</th>
                 <th className="py-3 px-3">{t(lang, "audit.th_edited_by", "Last Edited By")}</th>
+                <th className="py-3 px-3 text-center">{t(lang, "audit.th_change_type", "Change Type")}</th>
                 <th className="py-3 px-3 text-center">{t(lang, "audit.th_risk", "Risk")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_status", "Approval")}</th>
-                <th className="py-3 px-3.5 text-center">{t(lang, "audit.th_action", "Action")}</th>
+                <th className="py-3 px-3 text-center">{t(lang, "audit.th_status", "Approval Status")}</th>
+                <th className="py-3 px-3 text-center">{t(lang, "audit.th_action", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">
               {loading ? (
                 <tr>
-                  <td colSpan={13} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={15} className="py-12 text-center text-slate-400 font-medium">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
                     {t(lang, "audit.loading_edit_history", "Loading enterprise edit & version history...")}
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={15} className="py-12 text-center text-slate-400 font-medium">
                     {t(lang, "audit.no_versioned_records", "No versioned records found matching current criteria.")}
                   </td>
                 </tr>
@@ -641,27 +562,22 @@ export function AllEditVersionHistoryView() {
                   const editCount = row.edit_count || row.total_versions - 1 || 1;
                   return (
                     <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
-                      <td className="py-2.5 px-3.5 text-center font-mono text-slate-400 text-[10.5px]">
-                        {itemNumber}
-                      </td>
+                      <td className="py-2.5 px-3 text-center"><input type="checkbox" className="rounded border-slate-300" /></td>
+                      <td className="py-2.5 px-3 text-center font-mono text-slate-400 text-[10.5px]">{itemNumber}</td>
 
                       {/* Bill / Ref No */}
-                      <td className="py-2.5 px-3.5">
+                      <td className="py-2.5 px-3">
                         <span className="font-mono font-bold text-slate-900 dark:text-white">
                           {row.reference_no || row.entity_id}
                         </span>
                       </td>
 
-                      {/* Edit Count Button */}
+                      {/* Edit Count */}
                       <td className="py-2.5 px-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenVersionHistory(row)}
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-300 transition shadow-xs"
-                        >
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                           <Sparkles className="h-3 w-3" />
-                          <span>+{editCount} Edits</span>
-                        </button>
+                          +{editCount}
+                        </span>
                       </td>
 
                       {/* Module */}
@@ -671,20 +587,9 @@ export function AllEditVersionHistoryView() {
                         </span>
                       </td>
 
-                      {/* Country */}
-                      <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
-                        {row.country_name || "Global"}
-                      </td>
-
-                      {/* Branch */}
-                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                        {row.branch_name || "Main Branch"}
-                      </td>
-
-                      {/* Record / Party */}
-                      <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                        {row.party_name || "General Entry"}
-                      </td>
+                      <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">{row.country_name || t(lang, "audit.global", "Global")}</td>
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">{row.branch_name || t(lang, "audit.main_branch", "Main Branch")}</td>
+                      <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">{row.party_name || t(lang, "audit.general_entry", "General Entry")}</td>
 
                       {/* Original Date */}
                       <td className="py-2.5 px-3 text-slate-500 font-mono text-[11px]">
@@ -701,6 +606,13 @@ export function AllEditVersionHistoryView() {
                         {row.user_name || "—"}
                       </td>
 
+                      {/* Change Type */}
+                      <td className="py-2.5 px-3 text-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                          {row.reason || t(lang, "audit.field_update", "Field Update")}
+                        </span>
+                      </td>
+
                       {/* Risk Level */}
                       <td className="py-2.5 px-3 text-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
@@ -710,7 +622,7 @@ export function AllEditVersionHistoryView() {
                             ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
                             : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                         }`}>
-                          {row.risk_level}
+                          {row.risk_level === "High" ? t(lang, "audit.risk_high", "High") : row.risk_level === "Medium" ? t(lang, "audit.risk_medium", "Medium") : t(lang, "audit.risk_low", "Low")}
                         </span>
                       </td>
 
@@ -723,21 +635,23 @@ export function AllEditVersionHistoryView() {
                             ? "bg-rose-50 text-rose-600 border border-rose-200"
                             : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         }`}>
-                          {row.approval_status || "Approved"}
+                          {row.approval_status === "Pending" ? t(lang, "audit.status_pending", "Pending")
+                            : row.approval_status === "Rejected" ? t(lang, "audit.status_rejected", "Rejected")
+                            : t(lang, "audit.status_approved", "Approved")}
                         </span>
                       </td>
 
-                      {/* Action Button */}
-                      <td className="py-2.5 px-3.5 text-center">
+                      {/* Action */}
+                      <td className="py-2.5 px-3 text-center">
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
                           onClick={() => handleOpenVersionHistory(row)}
-                          className="h-7.5 px-2.5 text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400"
+                          className="h-7 px-2.5 text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400"
                         >
                           <Eye className="h-3 w-3 mr-1" />
-                          <span>{t(lang, "audit.view_changes", "View Changes")}</span>
+                          {t(lang, "audit.view_changes", "View")}
                         </Button>
                       </td>
                     </tr>
@@ -748,7 +662,7 @@ export function AllEditVersionHistoryView() {
           </table>
         </div>
 
-        {/* ── PAGINATION CONTROLS ── */}
+        {/* Pagination */}
         <div className="p-3.5 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <div className="text-slate-500 font-medium">
             {t(lang, "audit.showing_range", "Showing")} <span className="font-bold text-slate-800 dark:text-slate-200">{records.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> {t(lang, "audit.showing_to", "to")} <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPage * pageSize, totalCount)}</span> {t(lang, "audit.showing_of", "of")} <span className="font-bold text-slate-800 dark:text-slate-200">{totalCount.toLocaleString()}</span> {t(lang, "audit.showing_records", "records")}
@@ -757,67 +671,30 @@ export function AllEditVersionHistoryView() {
           <div className="flex items-center gap-2">
             <select
               value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
               className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs font-semibold"
             >
-              <option value="25">{t(lang, "audit.per_page_25", "25 per page")}</option>
-              <option value="50">{t(lang, "audit.per_page_50", "50 per page")}</option>
-              <option value="100">{t(lang, "audit.per_page_100", "100 per page")}</option>
+              {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} {t(lang, "audit.per_page", "per page")}</option>)}
             </select>
 
             <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(1)}
-                className="h-8 w-8"
-              >
+              <Button type="button" variant="outline" size="icon" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className="h-8 w-8">
                 <ChevronsLeft className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => p - 1)}
-                className="h-8 w-8"
-              >
+              <Button type="button" variant="outline" size="icon" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)} className="h-8 w-8">
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-
-              <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white font-black text-xs">
-                {currentPage}
-              </span>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(p => p + 1)}
-                className="h-8 w-8"
-              >
+              <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white font-black text-xs">{currentPage}</span>
+              <Button type="button" variant="outline" size="icon" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} className="h-8 w-8">
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(totalPages)}
-                className="h-8 w-8"
-              >
+              <Button type="button" variant="outline" size="icon" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(totalPages)} className="h-8 w-8">
                 <ChevronsRight className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ── VERSION COMPARISON MODAL ── */}
       {compareModalOpen && (
