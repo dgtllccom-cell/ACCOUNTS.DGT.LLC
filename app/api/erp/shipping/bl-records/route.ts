@@ -8,6 +8,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
@@ -226,7 +227,7 @@ export async function GET(request: NextRequest) {
     try {
       supabase = createSupabaseAdminClient() as any;
     } catch (error) {
-      return apiOk(emptyShippingPayload(session, error instanceof Error ? error.message : "Shipping data source unavailable"));
+      return apiOk(emptyShippingPayload(session, error instanceof Error ? error.message : t(session.preferredLanguage, "ble.err_data_source_unavailable", "Shipping data source unavailable")));
     }
     let recordsQuery = supabase
       .from("shipping_bl_records")
@@ -376,8 +377,15 @@ export async function POST(request: NextRequest) {
       debit: body.debit,
       credit: body.credit,
       currency_code: body.currencyCode,
-      // report_payload has a DB default of '{}' and is not a client input on this schema.
-      report_payload: {}
+      // No dedicated columns yet for importer/exporter/notify-party or the wizard's
+      // goods/booking/container-loading details — persisted in report_payload instead
+      // of leaving them silently discarded.
+      report_payload: {
+        ...(body.reportPayload ?? {}),
+        importer: body.importer,
+        exporter: body.exporter,
+        notifyParty: body.notifyParty ?? null
+      }
     };
 
     const inserted = await requireSupabaseData(
@@ -433,7 +441,7 @@ export async function PATCH(request: NextRequest) {
     } = body;
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: { message: "Record ID is required" } }, { status: 400 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "ble.err_record_id_required", "Record ID is required") } }, { status: 400 });
     }
 
     const supabase = createSupabaseAdminClient() as any;
@@ -446,7 +454,7 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (fetchError || !before) {
-      return NextResponse.json({ ok: false, error: { message: "Record not found" } }, { status: 404 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "ble.err_record_not_found", "Record not found") } }, { status: 404 });
     }
 
     authorizeApiScope(session, {
@@ -467,7 +475,7 @@ export async function PATCH(request: NextRequest) {
     const effectiveEtd = etd !== undefined ? etd : before.etd;
 
     if (effectiveEta && effectiveEtd && new Date(effectiveEta).getTime() < new Date(effectiveEtd).getTime()) {
-      return NextResponse.json({ ok: false, error: { message: "ETA (Arrival Date) must be on or after ETD (Departure Date)" } }, { status: 400 });
+      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "ble.err_eta_etd", "ETA (Arrival Date) must be on or after ETD (Departure Date)") } }, { status: 400 });
     }
 
     const payload = {

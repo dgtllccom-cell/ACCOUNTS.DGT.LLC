@@ -7488,7 +7488,8 @@ export type UiKey =
   | "ble.ml_discharge_vessel_date"
   | "ble.ms_bl_basic" | "ble.ms_booking" | "ble.ms_system_user" | "ble.ms_vessel_discharge"
   | "ble.generated_bl_msg" | "ble.err_eta_etd" | "ble.err_importer" | "ble.err_exporter"
-  | "ble.err_load" | "ble.err_save" | "ble.csv_city_branch" | "ble.csv_bl_number"
+  | "ble.err_load" | "ble.err_save" | "ble.err_data_source_unavailable" | "ble.err_record_id_required"
+  | "ble.err_record_not_found" | "ble.csv_city_branch" | "ble.csv_bl_number"
   | "ble.csv_shipment_status" | "ble.csv_debit" | "ble.csv_credit" | "ble.gt_sr"
   | "ble.gt_good_name" | "ble.gt_qty_no" | "ble.gt_total_gross_kg" | "ble.gt_empty_bag_kg"
   | "ble.gt_total_empty_kg" | "ble.gt_net_weight_kg" | "ble.gt_container_no" | "ble.gt_seal_no"
@@ -8956,6 +8957,11 @@ export type UiKey =
   | "ble.opt_by_sea"
   | "ble.opt_by_road"
   | "ble.opt_by_air"
+  | "ble.opt_carton"
+  | "ble.opt_dry_container_20ft"
+  | "ble.opt_dry_container_40ft"
+  | "ble.opt_reefer_container_40ft"
+  | "ble.print_title_bl_report"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -17194,6 +17200,9 @@ const en: Dict = {
   "ble.err_exporter": "Please enter or select a valid Exporter.",
   "ble.err_load": "Unable to load B/L records",
   "ble.err_save": "Unable to save B/L record",
+  "ble.err_data_source_unavailable": "Shipping data source unavailable",
+  "ble.err_record_id_required": "Record ID is required",
+  "ble.err_record_not_found": "Record not found",
   "ble.csv_city_branch": "City Branch",
   "ble.csv_bl_number": "B/L Number",
   "ble.csv_shipment_status": "Shipment Status",
@@ -28385,6 +28394,11 @@ const en: Dict = {
   "ble.opt_by_sea": "By Sea",
   "ble.opt_by_road": "By Road",
   "ble.opt_by_air": "By Air",
+  "ble.opt_carton": "Carton",
+  "ble.opt_dry_container_20ft": "Dry Container 20FT",
+  "ble.opt_dry_container_40ft": "Dry Container 40FT",
+  "ble.opt_reefer_container_40ft": "Reefer Container 40FT",
+  "ble.print_title_bl_report": "Bill of Lading (B/L) Report",
 };
 
 const ur: Dict = {
@@ -36716,6 +36730,9 @@ const ur: Dict = {
   "ble.err_exporter": "براہ کرم درست برآمد کنندہ درج یا منتخب کریں۔",
   "ble.err_load": "بی ایل ریکارڈز لوڈ نہیں ہو سکے",
   "ble.err_save": "بی ایل ریکارڈ محفوظ نہیں ہو سکا",
+  "ble.err_data_source_unavailable": "شپنگ ڈیٹا ماخذ دستیاب نہیں",
+  "ble.err_record_id_required": "ریکارڈ آئی ڈی درکار ہے",
+  "ble.err_record_not_found": "ریکارڈ نہیں ملا",
   "ble.csv_city_branch": "سٹی برانچ",
   "ble.csv_bl_number": "بی ایل نمبر",
   "ble.csv_shipment_status": "شپمنٹ کی حیثیت",
@@ -47788,6 +47805,11 @@ const ur: Dict = {
   "ble.opt_by_sea": "بذریعہ سمندر",
   "ble.opt_by_road": "بذریعہ سڑک",
   "ble.opt_by_air": "بذریعہ ہوائی جہاز",
+  "ble.opt_carton": "کارٹن",
+  "ble.opt_dry_container_20ft": "ڈرائی کنٹینر 20 فٹ",
+  "ble.opt_dry_container_40ft": "ڈرائی کنٹینر 40 فٹ",
+  "ble.opt_reefer_container_40ft": "ریفر کنٹینر 40 فٹ",
+  "ble.print_title_bl_report": "بل آف لیڈنگ (B/L) رپورٹ",
 };
 
 const ar: Dict = {
@@ -56067,6 +56089,9 @@ const ar: Dict = {
   "ble.err_exporter": "يرجى إدخال أو اختيار مصدّر صالح.",
   "ble.err_load": "تعذر تحميل سجلات بوليصة الشحن",
   "ble.err_save": "تعذر حفظ سجل بوليصة الشحن",
+  "ble.err_data_source_unavailable": "مصدر بيانات الشحن غير متوفر",
+  "ble.err_record_id_required": "معرف السجل مطلوب",
+  "ble.err_record_not_found": "السجل غير موجود",
   "ble.csv_city_branch": "فرع المدينة",
   "ble.csv_bl_number": "رقم بوليصة الشحن",
   "ble.csv_shipment_status": "حالة الشحنة",
@@ -67192,6 +67217,11 @@ const ar: Dict = {
   "ble.opt_by_sea": "عن طريق البحر",
   "ble.opt_by_road": "عن طريق البر",
   "ble.opt_by_air": "عن طريق الجو",
+  "ble.opt_carton": "كرتون",
+  "ble.opt_dry_container_20ft": "حاوية جافة 20 قدم",
+  "ble.opt_dry_container_40ft": "حاوية جافة 40 قدم",
+  "ble.opt_reefer_container_40ft": "حاوية مبردة 40 قدم",
+  "ble.print_title_bl_report": "تقرير بوليصة الشحن (B/L)",
 };
 
 const fa: Dict = {
@@ -75470,6 +75500,9 @@ const fa: Dict = {
   "ble.err_exporter": "لطفاً یک صادرکننده معتبر وارد یا انتخاب کنید.",
   "ble.err_load": "بارگذاری سوابق بارنامه ممکن نشد",
   "ble.err_save": "ذخیره سابقه بارنامه ممکن نشد",
+  "ble.err_data_source_unavailable": "منبع داده حمل‌ونقل در دسترس نیست",
+  "ble.err_record_id_required": "شناسه رکورد الزامی است",
+  "ble.err_record_not_found": "رکورد یافت نشد",
   "ble.csv_city_branch": "شعبه شهر",
   "ble.csv_bl_number": "شماره بارنامه",
   "ble.csv_shipment_status": "وضعیت محموله",
@@ -86595,6 +86628,11 @@ const fa: Dict = {
   "ble.opt_by_sea": "از طریق دریا",
   "ble.opt_by_road": "از طریق جاده",
   "ble.opt_by_air": "از طریق هوا",
+  "ble.opt_carton": "کارتن",
+  "ble.opt_dry_container_20ft": "کانتینر خشک 20 فوت",
+  "ble.opt_dry_container_40ft": "کانتینر خشک 40 فوت",
+  "ble.opt_reefer_container_40ft": "کانتینر یخچالی 40 فوت",
+  "ble.print_title_bl_report": "گزارش بارنامه (B/L)",
 };
 
 const ps: Dict = {
@@ -94871,6 +94909,9 @@ const ps: Dict = {
   "ble.err_exporter": "مهرباني وکړئ سم صادروونکی دننه یا وټاکئ.",
   "ble.err_load": "د بی‌ال ریکارډونه بار نشول",
   "ble.err_save": "د بی‌ال ریکارډ خوندي نشو",
+  "ble.err_data_source_unavailable": "د حمل و نقل د معلوماتو سرچینه شتون نلري",
+  "ble.err_record_id_required": "د ریکارډ پیژندنه اړینه ده",
+  "ble.err_record_not_found": "ریکارډ ونه موندل شو",
   "ble.csv_city_branch": "د ښار څانګه",
   "ble.csv_bl_number": "د بی‌ال نمبر",
   "ble.csv_shipment_status": "د بار حالت",
@@ -106005,6 +106046,11 @@ const ps: Dict = {
   "ble.opt_by_sea": "د بحر له لارې",
   "ble.opt_by_road": "د سړک له لارې",
   "ble.opt_by_air": "د هوا له لارې",
+  "ble.opt_carton": "کارتن",
+  "ble.opt_dry_container_20ft": "وچ کانتینر 20 فوټ",
+  "ble.opt_dry_container_40ft": "وچ کانتینر 40 فوټ",
+  "ble.opt_reefer_container_40ft": "یخچالي کانتینر 40 فوټ",
+  "ble.print_title_bl_report": "د بار لیک (B/L) راپور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -14,6 +14,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
+import { GoodsPicker, type GoodsPickerValue } from "@/features/goods-master/components/goods-picker";
 import { apiGet } from "@/lib/api/client";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
@@ -130,6 +131,10 @@ const emptyForm = {
   receivingCountry: "",
   loadDate: todayIso(),
   receiveDate: todayIso(),
+  goodsId: "",
+  goodsVariationId: "",
+  goodsChsCode: "",
+  goodsOriginCountryId: "",
   goodsName: "",
   goodsSize: "",
   goodsBrand: "",
@@ -434,10 +439,62 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
           debit: Number(form.debit || 0),
           credit: Number(form.credit || 0),
           currencyCode: form.currencyCode || "USD",
+          importer: form.importer,
+          exporter: form.exporter,
+          notifyParty: form.notifyParty || null,
           reportPayload: {
             supplierCustomer: form.supplierCustomer,
             deliveryStatus: form.deliveryStatus,
-            linkedModules: ["purchase_orders", "sales_orders", "loading_records", "roznamcha_entries", "ledger_entries"]
+            linkedModules: ["purchase_orders", "sales_orders", "loading_records", "roznamcha_entries", "ledger_entries"],
+            customerAccountNo: form.customerAccountNo,
+            shippingType: form.shippingType,
+            shipmentType: form.shipmentType,
+            purchaseConfirmationStatus: form.purchaseConfirmationStatus,
+            loadingStatus: form.loadingStatus,
+            booking: {
+              bookingNo: form.bookingNo,
+              bookingCompanyType: form.bookingCompanyType,
+              bookingCompanyName: form.bookingCompanyName,
+              bookingDate: form.bookingDate,
+              issueDate: form.issueDate,
+              issueSerial: form.issueSerial,
+              blType: form.blType,
+              routeCountry: form.routeCountry,
+              loadingCountry: form.loadingCountry,
+              receivingCountry: form.receivingCountry,
+              loadDate: form.loadDate,
+              receiveDate: form.receiveDate
+            },
+            goods: {
+              goodsId: form.goodsId || null,
+              goodsVariationId: form.goodsVariationId || null,
+              goodsChsCode: form.goodsChsCode || null,
+              goodsName: form.goodsName,
+              goodsSize: form.goodsSize,
+              goodsBrand: form.goodsBrand,
+              goodsOrigin: form.goodsOrigin,
+              goodsOriginCountryId: form.goodsOriginCountryId || null,
+              hsCode: form.hsCode,
+              allotName: form.allotName,
+              warehouse: form.warehouse,
+              qtyName: form.qtyName,
+              qtyNo: form.qtyNo,
+              totalGrossWeight: form.totalGrossWeight,
+              emptyPerBag: form.emptyPerBag,
+              totalEmptyWeight: form.totalEmptyWeight,
+              netWeight: form.netWeight,
+              divideName: form.divideName,
+              divideNumber: form.divideNumber,
+              totalDivide: form.totalDivide
+            },
+            containerLoading: {
+              containerType: form.containerType,
+              containerName: form.containerName,
+              sealNumber: form.sealNumber,
+              dischargeVessel: form.dischargeVessel,
+              dischargeDate: form.dischargeDate,
+              carrierRemarks: form.carrierRemarks
+            }
           }
         })
       });
@@ -458,7 +515,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
     setMenuOpen(false);
     const { openScopedGenericReport } = await import("@/lib/reports/open-scoped-report");
     await openScopedGenericReport({
-      title: "Bill of Lading (B/L) Report",
+      title: _("ble.print_title_bl_report", "Bill of Lading (B/L) Report"),
       lang,
       countryId: form.countryId || null,
       countryBranchId: form.countryBranchId || null,
@@ -611,7 +668,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                   <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.step1_heading", "SR#: 1 - Parties & Booking")}</div>
                   <Field label={_("ble.lbl_customer_account", "Customer Account No *")} value={form.customerAccountNo} onChange={(v) => updateField("customerAccountNo", v)} />
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label={_("ble.lbl_shipping_type", "Shipping Type *")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
+                    <Field label={_("ble.lbl_shipping_type", "Shipping Type *")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: _("ble.opt_by_sea", "By Sea") }, { value: "By Road", label: _("ble.opt_by_road", "By Road") }, { value: "By Air", label: _("ble.opt_by_air", "By Air") }]} />
                     <Field label={_("ble.lbl_shipment_type", "Shipment Type *")} value={form.shipmentType} onChange={(v) => updateField("shipmentType", v)} asSelect options={[{ value: "Import", label: _("ble.opt_import", "Import") }, { value: "Export", label: _("ble.opt_export", "Export") }, { value: "Transit", label: _("ble.opt_transit", "Transit") }]} />
                   </div>
                   <Field label={_("ble.lbl_importer", "Importer *")} value={form.importer} onChange={(v) => updateField("importer", v)} placeholder={_("ble.ph_importer", "Select / enter importer...")} />
@@ -670,7 +727,25 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
               {activeStep === 3 ? (
                 <div className="space-y-3">
                   <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.step3_heading", "SR#: 1 - Goods Entry")}</div>
-                  <Field label={_("ble.lbl_goods", "Goods *")} value={form.goodsName} onChange={(v) => updateField("goodsName", v)} asSelect options={[{ value: "PISTACHIOS KERNEL", label: "PISTACHIOS KERNEL" }, { value: "BADAM", label: "BADAM" }, { value: "WALNUT KERNELS", label: "WALNUT KERNELS" }]} />
+                  <GoodsPicker
+                    label={_("ble.lbl_goods", "Goods *")}
+                    value={form.goodsId}
+                    variationValue={form.goodsVariationId}
+                    onSelect={(v: GoodsPickerValue) => {
+                      const originCountry = countries.find((row) => row.id === v.originCountryId);
+                      setForm((current) => ({
+                        ...current,
+                        goodsId: v.goodsId,
+                        goodsVariationId: v.goodsVariationId || "",
+                        goodsChsCode: v.goodsChsCode || "",
+                        goodsName: v.goodsName,
+                        goodsBrand: v.brand || "",
+                        goodsSize: v.size || "",
+                        goodsOriginCountryId: v.originCountryId || "",
+                        goodsOrigin: originCountry?.name || current.goodsOrigin
+                      }));
+                    }}
+                  />
                   <div className="grid grid-cols-2 gap-2">
                     <Field label={_("ble.lbl_size", "Size")} value={form.goodsSize} onChange={(v) => updateField("goodsSize", v)} />
                     <Field label={_("ble.lbl_brand", "Brand")} value={form.goodsBrand} onChange={(v) => updateField("goodsBrand", v)} />
@@ -683,7 +758,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                     <Field label={_("ble.lbl_total_gross_kg", "Total Gross Weight (KG)")} type="number" value={form.totalGrossWeight} onChange={(v) => updateField("totalGrossWeight", v)} />
                     <Field label={_("ble.lbl_empty_per_bag", "Empty Wt / Bag (KG)")} type="number" value={form.emptyPerBag} onChange={(v) => updateField("emptyPerBag", v)} />
                     <Field label={_("ble.lbl_net_weight", "Net Weight (KG)")} type="number" value={form.netWeight} onChange={(v) => updateField("netWeight", v)} />
-                    <Field label={_("ble.lbl_divide_name", "Divide Name")} value={form.divideName} onChange={(v) => updateField("divideName", v)} asSelect options={[{ value: "Ton", label: "Ton" }, { value: "KG", label: "KG" }, { value: "Bag", label: "Bag" }, { value: "Carton", label: "Carton" }]} />
+                    <Field label={_("ble.lbl_divide_name", "Divide Name")} value={form.divideName} onChange={(v) => updateField("divideName", v)} asSelect options={[{ value: "Ton", label: "Ton" }, { value: "KG", label: "KG" }, { value: "Bag", label: "Bag" }, { value: "Carton", label: _("ble.opt_carton", "Carton") }]} />
                   </div>
                   <div className="grid grid-cols-2 gap-2 rounded border bg-background p-2 text-[9px] text-muted-foreground">
                     <div>{_("ble.sum_gross", "Total Gross Weight:")} <b className="text-foreground">{form.totalGrossWeight}</b></div>
@@ -726,8 +801,8 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                       />
                     </div>
                   </div>
-                  <Field label={_("ble.lbl_loading_type", "Loading Type")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
-                  <Field label={_("ble.lbl_container_type", "Container Type")} value={form.containerType} onChange={(v) => updateField("containerType", v)} asSelect options={[{ value: "Dry Container 20FT", label: "Dry Container 20FT" }, { value: "Dry Container 40FT", label: "Dry Container 40FT" }, { value: "Reefer Container 40FT", label: "Reefer Container 40FT" }]} />
+                  <Field label={_("ble.lbl_loading_type", "Loading Type")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: _("ble.opt_by_sea", "By Sea") }, { value: "By Road", label: _("ble.opt_by_road", "By Road") }, { value: "By Air", label: _("ble.opt_by_air", "By Air") }]} />
+                  <Field label={_("ble.lbl_container_type", "Container Type")} value={form.containerType} onChange={(v) => updateField("containerType", v)} asSelect options={[{ value: "Dry Container 20FT", label: _("ble.opt_dry_container_20ft", "Dry Container 20FT") }, { value: "Dry Container 40FT", label: _("ble.opt_dry_container_40ft", "Dry Container 40FT") }, { value: "Reefer Container 40FT", label: _("ble.opt_reefer_container_40ft", "Reefer Container 40FT") }]} />
                   <Field label={_("ble.lbl_container_name", "Container Name")} value={form.containerName} onChange={(v) => updateField("containerName", v)} />
                   <div className="grid grid-cols-2 gap-2">
                     <Field label={_("ble.lbl_container_numbers", "Container Numbers *")} value={form.containerNumber} onChange={(v) => updateField("containerNumber", v)} />

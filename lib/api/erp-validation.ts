@@ -539,6 +539,15 @@ export const shippingBlRecordCreateSchema = scopeSchema.extend({
   debit: z.coerce.number().finite().min(0).default(0),
   credit: z.coerce.number().finite().min(0).default(0),
   currencyCode: currencyCodeSchema.default("USD"),
+  // Bill of Lading party names — required by the entry wizard's own client-side gate,
+  // validated again here since they carry real customs/shipment meaning.
+  importer: z.string().trim().min(1).max(200),
+  exporter: z.string().trim().min(1).max(200),
+  notifyParty: z.string().trim().max(200).nullable().optional(),
+  // Everything the multi-step wizard collects that has no dedicated column yet (goods,
+  // booking/route, container-loading details) — stored as-is in report_payload rather
+  // than adding new columns for a still-evolving form shape.
+  reportPayload: z.record(z.any()).optional(),
 }).refine(
   (data) => {
     if (data.eta && data.etd) {
