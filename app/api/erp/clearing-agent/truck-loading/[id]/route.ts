@@ -6,7 +6,7 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, booking_company_id, remarks, status, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, booking_company_id, remarks, status, is_active, report_payload, created_at, updated_at";
 
 const FIELDS = [
   "dest_country_id", "dest_state_province_id", "dest_district_id", "dest_city_id",
@@ -16,6 +16,14 @@ const FIELDS = [
   "booking_company_id",
 ];
 const NUM = ["quantity", "net_weight", "gross_weight"];
+const NON_PAYLOAD_KEYS = new Set(["id", "is_active", ...FIELDS, ...NUM]);
+function extractReportPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const key of Object.keys(body)) {
+    if (!NON_PAYLOAD_KEYS.has(key)) payload[key] = body[key];
+  }
+  return payload;
+}
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -30,6 +38,10 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 
     const supabase = createSupabaseAdminClient() as any;
+
+    const { data: before } = await supabase.from("truck_loadings").select("report_payload").eq("id", id).single();
+    patch.report_payload = { ...(before?.report_payload ?? {}), ...extractReportPayload(body) };
+
     const { data, error } = await supabase.from("truck_loadings").update(patch).eq("id", id).is("deleted_at", null).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

@@ -33,6 +33,7 @@ import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { ReportActions } from "@/components/ui/report-actions";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
+import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 
 /**
  * Clearing Truck Registration (Shipping & Clearing). Table: trucks.
@@ -1178,6 +1179,8 @@ export function TruckRecreationWizard({
                     </label>
                   </div>
                 </div>
+
+                {editingId ? <div className="mt-3.5 border-t border-slate-100 pt-3.5 dark:border-slate-800"><TruckAttachments entityId={editingId} entityKey="truck" /></div> : null}
 
                 <div className="mt-3.5 flex flex-wrap items-center gap-2">
                   <button

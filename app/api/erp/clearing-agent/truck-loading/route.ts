@@ -12,7 +12,7 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
  * Attachments reuse /api/erp/documents (entity_type = 'truck_loading').
  */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, booking_company_id, remarks, status, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, booking_company_id, remarks, status, is_active, report_payload, created_at, updated_at";
 
 export async function GET(req: Request) {
   try {
@@ -45,6 +45,17 @@ const FIELDS = [
   "booking_company_id",
 ];
 const NUM = ["quantity", "net_weight", "gross_weight"];
+// Everything the form collects that isn't a real column — booking/route/goods/
+// carrier details the wizard shows but truck_loadings has no dedicated column
+// for. Stored as-is in report_payload rather than silently discarded.
+const NON_PAYLOAD_KEYS = new Set(["id", "country_id", "country_branch_id", "city_branch_id", ...FIELDS, ...NUM]);
+function extractReportPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const key of Object.keys(body)) {
+    if (!NON_PAYLOAD_KEYS.has(key)) payload[key] = body[key];
+  }
+  return payload;
+}
 
 export async function POST(req: Request) {
   try {
@@ -66,6 +77,7 @@ export async function POST(req: Request) {
     };
     for (const f of FIELDS) if (body[f] !== undefined) row[f] = body[f] === "" ? null : body[f];
     for (const n of NUM) if (body[n] !== undefined && body[n] !== "" && body[n] !== null) row[n] = Number(body[n]);
+    row.report_payload = extractReportPayload(body);
     if (!row.loading_date) row.loading_date = new Date().toISOString().slice(0, 10);
 
     // Four independent serials for THIS form (never mixed with other modules).

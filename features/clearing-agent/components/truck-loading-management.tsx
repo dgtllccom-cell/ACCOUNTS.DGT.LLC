@@ -31,6 +31,7 @@ type Loading = {
   gross_weight: number | null;
   destination: string | null;
   remarks: string | null;
+  report_payload?: Record<string, any> | null;
 };
 
 type TruckOpt = {
@@ -87,7 +88,7 @@ const EMPTY: any = {
   receivePlace: "Jebel Ali Port",
   loadDate: new Date().toISOString().slice(0, 10),
   receiveDate: new Date().toISOString().slice(0, 10),
-  goodsSize: "Large",
+  goodsSize: "",
   goodsBrand: "",
   goodsOrigin: "",
   hsCode: "",
@@ -98,8 +99,9 @@ const EMPTY: any = {
   divideNumber: "1000",
   carrierType: "container",
   carrierSubType: "Dry Container 20FT",
-  carrierName: "Container Line",
-  sealNumber: "SEAL-7788",
+  carrierName: "",
+  containerNumber: "",
+  sealNumber: "",
   dest_country_id: null,
   dest_state_province_id: null,
   dest_district_id: null,
@@ -161,7 +163,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         fetch("/api/erp/clearing-agent/customer-order?status=pending"),
       ]);
       const j1 = await r1.json(); const j2 = await r2.json(); const j3 = await r3.json();
-      if (!r1.ok) throw new Error(formatError(j1.error) || "Failed to load");
+      if (!r1.ok) throw new Error(formatError(j1.error) || t(lang, "tl.err_load", "Failed to load"));
       setRows(j1.records || []);
       setTrucks(r2.ok ? (j2.trucks || []) : []);
       if (j3.success) setPendingOrders(j3.data || []);
@@ -205,7 +207,19 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
   }, [rows, query, transportModeFilter, movementTypeFilter]);
 
   function startAdd() { setForm(EMPTY); setActiveTab("parties"); setEditing(true); }
-  function startEdit(r: Loading) { setForm({ ...EMPTY, ...r, quantity: r.quantity ?? "", net_weight: r.net_weight ?? "", gross_weight: r.gross_weight ?? "", loading_date: r.loading_date ?? "" }); setActiveTab("parties"); setEditing(true); }
+  function startEdit(r: Loading) {
+    setForm({
+      ...EMPTY,
+      ...r,
+      ...(r.report_payload || {}),
+      quantity: r.quantity ?? "",
+      net_weight: r.net_weight ?? "",
+      gross_weight: r.gross_weight ?? "",
+      loading_date: r.loading_date ?? ""
+    });
+    setActiveTab("parties");
+    setEditing(true);
+  }
 
   function onSelectTruck(truckId: string) {
     const tr = trucks.find((x) => x.id === truckId);
@@ -220,7 +234,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
   }
 
   async function save() {
-    if (!form.truck_id && !String(form.truck_number).trim()) { setError("Select a truck"); return; }
+    if (!form.truck_id && !String(form.truck_number).trim()) { setError(t(lang, "tl.err_select_truck", "Select a truck")); return; }
     setSaving(true); setError(null);
     try {
       const payload = { ...form }; delete payload.id;
@@ -228,7 +242,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         ? await fetch(`/api/erp/clearing-agent/truck-loading/${form.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
         : await fetch("/api/erp/clearing-agent/truck-loading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
-      if (!res.ok) throw new Error(formatError(json.error) || "Failed to save");
+      if (!res.ok) throw new Error(formatError(json.error) || t(lang, "tl.err_save", "Failed to save"));
       setEditing(false); setForm(EMPTY); await load();
     } catch (e: any) { setError(formatError(e)); } finally { setSaving(false); }
   }
@@ -238,7 +252,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
     try {
       const res = fetch(`/api/erp/clearing-agent/truck-loading/${id}`, { method: "DELETE" });
       const json = await (await res).json();
-      if (!(await res).ok) throw new Error(formatError(json.error) || "Failed to delete");
+      if (!(await res).ok) throw new Error(formatError(json.error) || t(lang, "tl.err_delete", "Failed to delete"));
       await load();
     } catch (e: any) { setError(formatError(e)); }
   }
@@ -524,7 +538,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                       <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.customer_account_no")}</label>
                       <input
                         type="text"
-                        value={form.customerAccountNo || "CUST-1001"}
+                        value={form.customerAccountNo}
                         onChange={e => setForm({ ...form, customerAccountNo: e.target.value })}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900"
                       />
@@ -584,7 +598,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.booking_no")}</label>
                         <input
                           type="text"
-                          value={form.bookingNo || "BK-2026-001"}
+                          value={form.bookingNo}
                           onChange={e => setForm({ ...form, bookingNo: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
                         />
@@ -629,7 +643,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.issue_serial")}</label>
                         <input
                           type="text"
-                          value={form.issueSerial || "ISS-671867"}
+                          value={form.issueSerial}
                           onChange={e => setForm({ ...form, issueSerial: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
                         />
@@ -652,7 +666,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.bl_no")}</label>
                         <input
                           type="text"
-                          value={form.blNo || "BL-671867"}
+                          value={form.blNo}
                           onChange={e => setForm({ ...form, blNo: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
                         />
@@ -666,7 +680,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.loading_country")}</label>
                           <input
                             type="text"
-                            value={form.loadCountry || "Pakistan"}
+                            value={form.loadCountry}
                             onChange={e => setForm({ ...form, loadCountry: e.target.value })}
                             className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                           />
@@ -675,7 +689,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.loading_border_port")}</label>
                           <input
                             type="text"
-                            value={form.loadPlace || "Karachi Port"}
+                            value={form.loadPlace}
                             onChange={e => setForm({ ...form, loadPlace: e.target.value })}
                             className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                           />
@@ -684,7 +698,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.receiving_country")}</label>
                           <input
                             type="text"
-                            value={form.receiveCountry || "UAE"}
+                            value={form.receiveCountry}
                             onChange={e => setForm({ ...form, receiveCountry: e.target.value })}
                             className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                           />
@@ -693,7 +707,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.receiving_border_port")}</label>
                           <input
                             type="text"
-                            value={form.receivePlace || "Dubai Border"}
+                            value={form.receivePlace}
                             onChange={e => setForm({ ...form, receivePlace: e.target.value })}
                             className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                           />
@@ -738,7 +752,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                       <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.goods_name_label")}</label>
                       <input
                         type="text"
-                        value={form.goods_name || "PISTACHIOS KERNEL"}
+                        value={form.goods_name}
                         onChange={e => setForm({ ...form, goods_name: e.target.value })}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900"
                       />
@@ -749,7 +763,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.size")}</label>
                         <input
                           type="text"
-                          value={form.goodsSize || "Large"}
+                          value={form.goodsSize}
                           onChange={e => setForm({ ...form, goodsSize: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                         />
@@ -758,7 +772,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.brand")}</label>
                         <input
                           type="text"
-                          value={form.goodsBrand || "Premium"}
+                          value={form.goodsBrand}
                           onChange={e => setForm({ ...form, goodsBrand: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                         />
@@ -767,7 +781,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.quantity_bags")}</label>
                         <input
                           type="number"
-                          value={form.quantity || "100"}
+                          value={form.quantity}
                           onChange={e => setForm({ ...form, quantity: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold dark:border-slate-800 dark:bg-slate-950"
                         />
@@ -776,7 +790,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.gross_weight_kg")}</label>
                         <input
                           type="number"
-                          value={form.gross_weight || "5000"}
+                          value={form.gross_weight}
                           onChange={e => setForm({ ...form, gross_weight: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold dark:border-slate-800 dark:bg-slate-950"
                         />
@@ -841,8 +855,8 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.container_truck_no")}</label>
                         <input
                           type="text"
-                          value={form.truck_number || "CONT-123456"}
-                          onChange={e => setForm({ ...form, truck_number: e.target.value })}
+                          value={form.containerNumber}
+                          onChange={e => setForm({ ...form, containerNumber: e.target.value })}
                           placeholder={t(lang, "tl.container_no_placeholder")}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
                         />
@@ -851,7 +865,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.seal_number")}</label>
                         <input
                           type="text"
-                          value={form.sealNumber || "SEAL-7788"}
+                          value={form.sealNumber}
                           onChange={e => setForm({ ...form, sealNumber: e.target.value })}
                           placeholder="SEAL-7788"
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
@@ -890,6 +904,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         />
                       </div>
                     )}
+                    {form.id ? <div className="border-t border-slate-100 pt-3 dark:border-slate-800"><TruckAttachments entityId={form.id} entityKey="truck_loading" /></div> : null}
                   </div>
                 )}
               </div>

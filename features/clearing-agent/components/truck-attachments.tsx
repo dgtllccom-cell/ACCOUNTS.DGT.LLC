@@ -68,7 +68,7 @@ export function TruckAttachments({ truckId, entityId, entityKey = "truck" }: { t
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this document?")) return;
+    if (!confirm(tt("ta.confirm_delete_document", "Delete this document?"))) return;
     try {
       const res = await fetch(`/api/erp/documents/${id}`, { method: "DELETE" });
       if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j?.error?.message || j?.error || "Delete failed"); }
