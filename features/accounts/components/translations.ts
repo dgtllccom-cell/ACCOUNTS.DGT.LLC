@@ -330,6 +330,13 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "وضعیت",
     ps: "حالت"
   },
+  actions: {
+    en: "Actions",
+    ur: "اقدامات",
+    ar: "الإجراءات",
+    fa: "اقدامات",
+    ps: "کړنې"
+  },
   branch: {
     en: "Branch",
     ur: "برانچ",
