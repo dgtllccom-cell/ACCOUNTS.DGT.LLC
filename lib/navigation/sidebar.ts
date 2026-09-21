@@ -817,6 +817,12 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "shipping_records", action: "read" }
       },
       {
+        key: "clearing-cross-stuffing",
+        labelKey: "nav.cross_stuffing",
+        href: "/dashboard/clearing-agent/cross-stuffing" as Route,
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
         key: "clearing-custom",
         labelKey: "nav.agent_custom_entry",
         href: "/dashboard/clearing-agent/agent-custom-entry" as Route,
