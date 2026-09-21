@@ -8937,6 +8937,7 @@ export type UiKey =
   | "lp.f_payment_mode"
   | "lp.global_system_branch"
   | "lp.f_date"
+  | "pom.total_purchase_orders_subtitle"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -28347,6 +28348,7 @@ const en: Dict = {
   "lp.f_payment_mode": "Payment Mode:",
   "lp.global_system_branch": "Global System Branch",
   "lp.f_date": "Date:",
+  "pom.total_purchase_orders_subtitle": "Total {n} purchase orders",
 };
 
 const ur: Dict = {
@@ -47731,6 +47733,7 @@ const ur: Dict = {
   "lp.f_payment_mode": "ادائیگی کا طریقہ:",
   "lp.global_system_branch": "عالمی سسٹم برانچ",
   "lp.f_date": "تاریخ:",
+  "pom.total_purchase_orders_subtitle": "کل {n} خریداری آرڈرز",
 };
 
 const ar: Dict = {
@@ -67116,6 +67119,7 @@ const ar: Dict = {
   "lp.f_payment_mode": "طريقة الدفع:",
   "lp.global_system_branch": "فرع النظام العالمي",
   "lp.f_date": "التاريخ:",
+  "pom.total_purchase_orders_subtitle": "إجمالي {n} طلبات شراء",
 };
 
 const fa: Dict = {
@@ -86500,6 +86504,7 @@ const fa: Dict = {
   "lp.f_payment_mode": "روش پرداخت:",
   "lp.global_system_branch": "شعبه سیستم جهانی",
   "lp.f_date": "تاریخ:",
+  "pom.total_purchase_orders_subtitle": "مجموع {n} سفارش خرید",
 };
 
 const ps: Dict = {
@@ -105891,6 +105896,7 @@ const ps: Dict = {
   "lp.f_payment_mode": "د تادیې طریقه:",
   "lp.global_system_branch": "نړیوال سیسټم څانګه",
   "lp.f_date": "نېټه:",
+  "pom.total_purchase_orders_subtitle": "ټول {n} پیرودنې امرونه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

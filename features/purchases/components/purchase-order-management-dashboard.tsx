@@ -292,21 +292,6 @@ const getFlag = (country: string) => {
   return "";
 };
 
-const workflowSteps = [
-  "Booking Purchase Order",
-  "Booking Confirm",
-  "Journal Entry",
-  "Payment Transfer",
-  "Advance Payment",
-  "Confirmed Purchase Orders",
-  "Container Loading",
-  "Remaining Payment",
-  "Shipping Documents",
-  "Final Confirmation",
-  "Inventory Entry",
-  "Stock Available"
-];
-
 const lifecycleTabs = [
   "Dashboard Overview",
   "Booking Purchase Orders",
@@ -319,8 +304,6 @@ const lifecycleTabs = [
 ] as const;
 
 type LifecycleTab = (typeof lifecycleTabs)[number];
-
-const documentTypes = ["Invoice", "Packing List", "Bill of Lading", "Insurance", "Customs Documents", "Other Attachments"];
 
 function money(value: unknown, currency?: string) {
   const amount = Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -352,11 +335,11 @@ function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: Supp
     lang,
     autoPrint,
     scope: {
-      scopeLevel: "Purchase Order Document",
-      country: report.countryName || "All Countries",
+      scopeLevel: tr("Purchase Order Document"),
+      country: report.countryName || tr("All Countries"),
       branch: report.branchName || "",
       currency: report.currency || "USD",
-      userName: report.audit?.userName || "Admin User",
+      userName: report.audit?.userName || tr("Admin User"),
     },
     partyDetails: {
       type: "supplier",
@@ -380,7 +363,7 @@ function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: Supp
     ],
     rows: [
       {
-        item: report.productName || report.goodsDescription || "Standard Goods",
+        item: report.productName || report.goodsDescription || tr("Standard Goods"),
         quantity: qty,
         rate: Number(report.purchaseRate || (qty > 0 ? totalAmt / qty : 0)),
         total: totalAmt,
@@ -393,9 +376,9 @@ function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: Supp
     paymentTerms: report.paymentStatus ? `${tr("Payment Status")}: ${report.paymentStatus}` : undefined,
     showSignatures: true,
     signatureBlocks: [
-      { title: tr("Prepared By"), subtitle: report.audit?.userName || "Procurement Officer" },
-      { title: tr("Verified & Audited"), subtitle: "Accounts Department" },
-      { title: tr("Authorized Signature"), subtitle: "Managing Director" },
+      { title: tr("Prepared By"), subtitle: report.audit?.userName || tr("Procurement Officer") },
+      { title: tr("Verified & Audited"), subtitle: tr("Accounts Department") },
+      { title: tr("Authorized Signature"), subtitle: tr("Managing Director") },
     ]
   });
 }
@@ -522,23 +505,24 @@ function csvEscape(value: string) {
   return value;
 }
 
-function downloadCsv(rows: PurchaseReport[]) {
+function downloadCsv(rows: PurchaseReport[], lang: SupportedLanguage = "en") {
+  const tr = (label: string) => translateHeader(lang, label);
   const headers = [
-    "Global Serial Number",
-    "Company Serial Number",
-    "Branch Serial Number",
-    "Booking Date",
-    "Created By (User Name)",
-    "Purchase Code",
-    "Sales Code",
-    "Goods Description",
-    "Origin Country",
-    "Total Quantity",
-    "Total Gross Weight",
-    "Total Net Weight",
-    "Purchase Amount",
-    "Final Amount",
-    "Status"
+    tr("Global Serial Number"),
+    tr("Company Serial Number"),
+    tr("Branch Serial Number"),
+    tr("Booking Date"),
+    tr("Created By (User Name)"),
+    tr("Purchase Code"),
+    tr("Sales Code"),
+    tr("Goods Description"),
+    tr("Origin Country"),
+    tr("Total Quantity"),
+    tr("Total Gross Weight"),
+    tr("Total Net Weight"),
+    tr("Purchase Amount"),
+    tr("Final Amount"),
+    tr("Status")
   ];
   const body = rows.map((row, index) =>
     [
@@ -606,14 +590,14 @@ function SelectFilter({ lang, label, value, options, onChange }: { lang: Support
 function printPurchaseRegister(rows: PurchaseReport[], lang: SupportedLanguage) {
   const tr = (label: string) => translateHeader(lang, label);
   openUniversalPrintReport({
-    title: "Purchase Order Tracking Register",
-    subtitle: `Total ${rows.length} purchase orders`,
+    title: tr("Purchase Order Tracking Register"),
+    subtitle: tUi(lang, "pom.total_purchase_orders_subtitle", "Total {n} purchase orders").replace("{n}", String(rows.length)),
     lang,
     moduleType: "purchase_procurement",
     orientation: "landscape",
     scope: {
-      scopeLevel: "Purchase Management Tracking",
-      userName: "ERP User",
+      scopeLevel: tr("Purchase Management Tracking"),
+      userName: tr("ERP User"),
     },
     columns: [
       { key: "purchaseBookingOrderNumber", label: tr("PO Number"), width: "12%" },
@@ -734,7 +718,7 @@ function DashboardSummaryHeader({
 
   const notTransferredPercentLC = summary.totalPurchaseLC > 0 ? (summary.remainingBalanceLC / summary.totalPurchaseLC) * 100 : 0;
   const numCurrencies = Object.keys(summary.foreignCurrencies).length;
-  const reportType = mode === "advance" ? "Advance Payment Summary" : mode === "credit" ? "Credit Payment Summary" : mode === "transfer" ? "Transfer Payment Summary" : "Purchase Booking Summary";
+  const reportType = mode === "advance" ? tr("Advance Payment Summary") : mode === "credit" ? tr("Credit Payment Summary") : mode === "transfer" ? tr("Transfer Payment Summary") : tr("Purchase Booking Summary");
   const now = new Date();
 
   // Format Date & Time based on Pakistan time (or local system)
@@ -2109,7 +2093,7 @@ export function PurchaseOrderManagementDashboard() {
       </Button>
 
       {/* Three-dots menu (ReportActions) */}
-      <PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered)} />
+      <PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered, activeLang)} />
 
       {/* Calendar Date/Time Indicator */}
       <div className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
@@ -2850,7 +2834,7 @@ export function PurchaseOrderManagementDashboard() {
                {(() => {
             const goodsEntries = selected.form_data?.goodsEntries || [
               {
-                goodsName: selected.productName || selected.goodsDescription || "Purchase Cargo",
+                goodsName: selected.productName || selected.goodsDescription || tr("Purchase Cargo"),
                 brand: selected.goodsDescription || "-",
                 origin: selected.countryName || "-",
                 qtyNo: selected.quantity || 0,
@@ -2926,14 +2910,14 @@ export function PurchaseOrderManagementDashboard() {
             const expectedArrivalDate = "-";
             const actualArrivalDate = "-";
             const shippingLineCarrier = "-";
-            const modeOfShipment = "Sea Cargo";
+            const modeOfShipment = tr("Sea Cargo");
             const scheduleRemarks = "-";
 
-            const paymentConditionText = selected.form_data?.form?.paymentType || "Advance Payment";
+            const paymentConditionText = selected.form_data?.form?.paymentType || tr("Advance Payment");
             const advanceDueDateText = selected.form_data?.form?.advancePaymentDate || reportDate;
             const finalPaymentDueDateText = selected.form_data?.form?.paymentDate || reportDate;
 
-            const journalEntryNumberText = selected.form_data?.form?.journalEntryNo || "Pending Posting";
+            const journalEntryNumberText = selected.form_data?.form?.journalEntryNo || tr("Pending Posting");
             const paymentStatusLabel = (selected.paymentStatus || "PENDING").toUpperCase();
 
             return (
@@ -3075,7 +3059,7 @@ export function PurchaseOrderManagementDashboard() {
                             {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "INV-001"}
                           </td>
                           <td className="px-2 py-1.5 font-bold">
-                            {localizedReportValue(selected, "purchaseAccountName", activeLang, selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName || "Purchase Inventory Account")}
+                            {localizedReportValue(selected, "purchaseAccountName", activeLang, selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName || tr("Purchase Inventory Account"))}
                           </td>
                           <td className="px-2 py-1.5 text-right font-mono font-bold text-emerald-600">
                             {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -3087,7 +3071,7 @@ export function PurchaseOrderManagementDashboard() {
                             {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "AP-001"}
                           </td>
                           <td className="px-2 py-1.5 font-bold">
-                            {localizedReportValue(selected, "salesAccountName", activeLang, selected.form_data?.form?.salesAccountName || selected.salesAccountName || selected.supplierName || "Supplier Payable Account")}
+                            {localizedReportValue(selected, "salesAccountName", activeLang, selected.form_data?.form?.salesAccountName || selected.salesAccountName || selected.supplierName || tr("Supplier Payable Account"))}
                           </td>
                           <td className="px-2 py-1.5 text-right font-mono text-slate-400">-</td>
                           <td className="px-2 py-1.5 text-right font-mono font-bold text-rose-600">
@@ -3466,9 +3450,9 @@ export function PurchaseOrderManagementDashboard() {
                       <div className="text-[10px] text-slate-300 uppercase tracking-widest font-black mb-1">{tr("Transfer Amount")}</div>
                       <div className="text-2xl font-black font-mono tracking-tight text-emerald-400">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-sm text-slate-400">{displayCurrency}</span></div>
                       <div className="mt-2 text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                        <span className="truncate max-w-[100px]">{selected.purchaseAccountName || "Purchase A/C"}</span>
+                        <span className="truncate max-w-[100px]">{selected.purchaseAccountName || tr("Purchase A/C")}</span>
                         <span className="text-blue-400">→</span>
-                        <span className="truncate max-w-[100px]">{selected.salesAccountName || "Sales A/C"}</span>
+                        <span className="truncate max-w-[100px]">{selected.salesAccountName || tr("Sales A/C")}</span>
                       </div>
                     </div>
                   </div>
