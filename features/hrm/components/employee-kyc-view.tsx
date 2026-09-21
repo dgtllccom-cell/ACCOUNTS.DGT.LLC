@@ -240,7 +240,11 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
   });
 
   return (
-    <div dir={s.dir} className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1120] text-slate-800 dark:text-slate-100 pb-16 font-sans">
+    <div dir={s.dir} className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1120] text-slate-800 dark:text-slate-100 pb-16 font-sans ring-4 ring-red-500 ring-inset">
+      {/* TEMP REVIEW MARKER — remove this block before final production release */}
+      <div className="sticky top-0 z-[60] flex items-center justify-center gap-1.5 bg-red-600 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow">
+        NEW / CHANGED — TEMP REVIEW MARKER — Employee KYC / QVC
+      </div>
       <div className="mx-auto max-w-[1700px] p-4 sm:p-6 lg:p-7 space-y-6">
 
         {/* 1. TOP BREADCRUMBS */}
