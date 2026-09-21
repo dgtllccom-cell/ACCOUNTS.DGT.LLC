@@ -92,6 +92,15 @@ type TruckRow = {
   model: string | null;
   chassis_number: string | null;
   engine_number: string | null;
+  registration_number: string | null;
+  truck_type: string | null;
+  make: string | null;
+  manufacturing_year: number | null;
+  color: string | null;
+  fuel_type: string | null;
+  capacity: string | null;
+  registration_expiry_date: string | null;
+  insurance_expiry_date: string | null;
   owner_person_id: string | null;
   owner_display_name: string | null;
   transport_company_id: string | null;
@@ -130,6 +139,15 @@ const EMPTY_FORM = {
   remarks: "",
   status: "active",
   registrationDate: new Date().toISOString().slice(0, 10),
+  registrationNumber: "",
+  truckType: "",
+  make: "",
+  manufacturingYear: "",
+  color: "",
+  fuelType: "",
+  capacity: "",
+  registrationExpiryDate: "",
+  insuranceExpiryDate: "",
 };
 
 type ViewMode = "list" | "form";
@@ -186,6 +204,28 @@ export function TruckRecreationWizard({
   });
 
   const [nowStr] = useState(() => new Date().toLocaleString());
+
+  type TruckOption = { id: string; category: string; code: string; name_en: string; name_ur: string; name_ar: string; name_fa: string; name_ps: string };
+  const [truckOptions, setTruckOptions] = useState<TruckOption[]>([]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/erp/master-data/truck-options");
+        const json = await res.json().catch(() => ({}));
+        setTruckOptions(json.options || []);
+      } catch {
+        setTruckOptions([]);
+      }
+    })();
+  }, []);
+  function optionLabel(o: TruckOption): string {
+    const byLang: Record<string, string | undefined> = { en: o.name_en, ur: o.name_ur, ar: o.name_ar, fa: o.name_fa, ps: o.name_ps };
+    return byLang[activeLang] || o.name_en || o.code;
+  }
+  const truckTypeOptions = useMemo(() => truckOptions.filter((o) => o.category === "truck_type"), [truckOptions]);
+  const makeOptions = useMemo(() => truckOptions.filter((o) => o.category === "make"), [truckOptions]);
+  const colorOptions = useMemo(() => truckOptions.filter((o) => o.category === "color"), [truckOptions]);
+  const fuelTypeOptions = useMemo(() => truckOptions.filter((o) => o.category === "fuel_type"), [truckOptions]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -344,6 +384,15 @@ export function TruckRecreationWizard({
       remarks: row.notes || "",
       status: row.status || "active",
       registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+      registrationNumber: row.registration_number || "",
+      truckType: row.truck_type || "",
+      make: row.make || "",
+      manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "",
+      color: row.color || "",
+      fuelType: row.fuel_type || "",
+      capacity: row.capacity || "",
+      registrationExpiryDate: row.registration_expiry_date || "",
+      insuranceExpiryDate: row.insurance_expiry_date || "",
     });
     setMessage(null);
     setView("form");
@@ -383,6 +432,20 @@ export function TruckRecreationWizard({
             { label: tt("trk.model", "Model *").replace(" *", ""), value: row.model },
             { label: tt("trk.chassis_no", "Chassis No *").replace(" *", ""), value: row.chassis_number },
             { label: tt("trk.engine_no", "Engine No"), value: row.engine_number },
+          ],
+        },
+        {
+          title: tt("com.vehicle_specifications", "Vehicle Specifications"),
+          rows: [
+            { label: tt("trk.reg_no", "Registration No *").replace(" *", ""), value: row.registration_number },
+            { label: tt("trk.truck_type", "Truck Type *").replace(" *", ""), value: row.truck_type },
+            { label: tt("trk.make", "Make *").replace(" *", ""), value: row.make },
+            { label: tt("trk.year", "Year *").replace(" *", ""), value: row.manufacturing_year ? String(row.manufacturing_year) : null },
+            { label: tt("trk.color", "Color"), value: row.color },
+            { label: tt("trk.fuel_type", "Fuel Type"), value: row.fuel_type },
+            { label: tt("trk.capacity", "Capacity (Tons) *").replace(" *", ""), value: row.capacity },
+            { label: tt("tr.reg_expiry", "Reg. Expiry"), value: row.registration_expiry_date },
+            { label: tt("tr.ins_expiry", "Insurance Expiry"), value: row.insurance_expiry_date },
           ],
         },
         {
@@ -452,6 +515,15 @@ export function TruckRecreationWizard({
         driver_docs_expiry_date: form.driverLicenseExpiry || null,
         notes: form.remarks.trim() || null,
         status: form.status,
+        registration_number: form.registrationNumber.trim() || null,
+        truck_type: form.truckType || null,
+        make: form.make || null,
+        manufacturing_year: form.manufacturingYear ? Number(form.manufacturingYear) : null,
+        color: form.color || null,
+        fuel_type: form.fuelType || null,
+        capacity: form.capacity.trim() || null,
+        registration_expiry_date: form.registrationExpiryDate || null,
+        insurance_expiry_date: form.insuranceExpiryDate || null,
       };
 
       const url = editingId ? `/api/erp/master-data/trucks/${editingId}` : "/api/erp/master-data/trucks";
@@ -1033,6 +1105,118 @@ export function TruckRecreationWizard({
                 </div>
               </section>
 
+              {/* 2b. Vehicle Specifications — registration_number/truck_type/make/
+                  manufacturing_year/color/fuel_type/capacity/registration_expiry_date/
+                  insurance_expiry_date all exist as real trucks columns and were
+                  already accepted by /api/erp/master-data/trucks, but this wizard
+                  never collected them. truck_type/make/color/fuel_type dropdowns
+                  are backed by the real erp_truck_master_options master (5-language,
+                  fetched above) instead of hardcoded lists. */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
+                  <ListChecks className="h-3.5 w-3.5" /> {tt("com.vehicle_specifications", "Vehicle Specifications")}
+                </h2>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.reg_no", "Registration No *").replace(" *", "")}</span>
+                    <input
+                      value={form.registrationNumber}
+                      onChange={(e) => setForm((p) => ({ ...p, registrationNumber: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    />
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.truck_type", "Truck Type *").replace(" *", "")}</span>
+                    <select
+                      value={form.truckType}
+                      onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    >
+                      <option value="" />
+                      {truckTypeOptions.map((o) => (
+                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.make", "Make *").replace(" *", "")}</span>
+                    <select
+                      value={form.make}
+                      onChange={(e) => setForm((p) => ({ ...p, make: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    >
+                      <option value="" />
+                      {makeOptions.map((o) => (
+                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.year", "Year *").replace(" *", "")}</span>
+                    <input
+                      type="number"
+                      min={1980}
+                      max={new Date().getFullYear() + 1}
+                      value={form.manufacturingYear}
+                      onChange={(e) => setForm((p) => ({ ...p, manufacturingYear: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    />
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.color", "Color")}</span>
+                    <select
+                      value={form.color}
+                      onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    >
+                      <option value="" />
+                      {colorOptions.map((o) => (
+                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.fuel_type", "Fuel Type")}</span>
+                    <select
+                      value={form.fuelType}
+                      onChange={(e) => setForm((p) => ({ ...p, fuelType: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    >
+                      <option value="" />
+                      {fuelTypeOptions.map((o) => (
+                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.capacity", "Capacity (Tons) *").replace(" *", "")}</span>
+                    <input
+                      value={form.capacity}
+                      onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    />
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("tr.reg_expiry", "Reg. Expiry")}</span>
+                    <input
+                      type="date"
+                      value={form.registrationExpiryDate}
+                      onChange={(e) => setForm((p) => ({ ...p, registrationExpiryDate: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    />
+                  </label>
+                  <label className="space-y-1 text-xs">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("tr.ins_expiry", "Insurance Expiry")}</span>
+                    <input
+                      type="date"
+                      value={form.insuranceExpiryDate}
+                      onChange={(e) => setForm((p) => ({ ...p, insuranceExpiryDate: e.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                    />
+                  </label>
+                </div>
+              </section>
+
               {/* 3. Company */}
               <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
@@ -1247,6 +1431,22 @@ export function TruckRecreationWizard({
                       { label: tt("trk.model", "Model *").replace(" *", ""), value: form.truckModel },
                       { label: tt("trk.chassis_no", "Chassis No *").replace(" *", ""), value: form.chassisNumber },
                       { label: tt("trk.engine_no", "Engine No"), value: form.engineNumber },
+                    ]}
+                  />
+
+                  <ReportSection
+                    title={tt("com.vehicle_specifications", "Vehicle Specifications")}
+                    icon={ListChecks}
+                    rows={[
+                      { label: tt("trk.reg_no", "Registration No *").replace(" *", ""), value: form.registrationNumber },
+                      { label: tt("trk.truck_type", "Truck Type *").replace(" *", ""), value: truckTypeOptions.find((o) => o.code === form.truckType) ? optionLabel(truckTypeOptions.find((o) => o.code === form.truckType)!) : form.truckType },
+                      { label: tt("trk.make", "Make *").replace(" *", ""), value: makeOptions.find((o) => o.code === form.make) ? optionLabel(makeOptions.find((o) => o.code === form.make)!) : form.make },
+                      { label: tt("trk.year", "Year *").replace(" *", ""), value: form.manufacturingYear },
+                      { label: tt("trk.color", "Color"), value: colorOptions.find((o) => o.code === form.color) ? optionLabel(colorOptions.find((o) => o.code === form.color)!) : form.color },
+                      { label: tt("trk.fuel_type", "Fuel Type"), value: fuelTypeOptions.find((o) => o.code === form.fuelType) ? optionLabel(fuelTypeOptions.find((o) => o.code === form.fuelType)!) : form.fuelType },
+                      { label: tt("trk.capacity", "Capacity (Tons) *").replace(" *", ""), value: form.capacity },
+                      { label: tt("tr.reg_expiry", "Reg. Expiry"), value: form.registrationExpiryDate },
+                      { label: tt("tr.ins_expiry", "Insurance Expiry"), value: form.insuranceExpiryDate },
                     ]}
                   />
 

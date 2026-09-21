@@ -22,7 +22,7 @@ import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 const TEXT = [
   "truck_serial", "truck_number", "truck_name", "registration_number", "truck_type", "make", "model",
-  "color", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
+  "color", "fuel_type", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
   "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "notes",
 ];
 const DATES = ["registration_expiry_date", "insurance_expiry_date", "driver_docs_expiry_date"];
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       return sql`
         select t.id, t.country_id, t.country_branch_id, t.city_branch_id, t.super_admin_serial, t.country_serial,
                t.branch_serial, t.entry_serial, t.truck_serial, t.truck_number, t.truck_name, t.registration_number,
-               t.registration_country_id, t.truck_type, t.make, t.model, t.manufacturing_year, t.color,
+               t.registration_country_id, t.truck_type, t.make, t.model, t.manufacturing_year, t.color, t.fuel_type,
                t.chassis_number, t.engine_number, t.capacity, t.owner_name, t.owner_mobile, t.owner_person_id,
                t.transport_company, t.transport_company_id, t.transporter_person_id,
                t.driver_name, t.driver_mobile, t.driver_cnic_passport,
@@ -165,7 +165,7 @@ export async function POST(req: Request) {
         insert into public.trucks ${sql(row as any)}
         returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
                   branch_serial, entry_serial, truck_serial, truck_number, truck_name, registration_number,
-                  registration_country_id, truck_type, make, model, manufacturing_year, color,
+                  registration_country_id, truck_type, make, model, manufacturing_year, color, fuel_type,
                   chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
                   transport_company, transport_company_id, transporter_person_id, driver_name, driver_mobile, driver_cnic_passport,
                   driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,

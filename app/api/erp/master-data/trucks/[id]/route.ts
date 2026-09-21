@@ -9,7 +9,7 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 const TEXT = [
   "truck_serial", "truck_number", "truck_name", "registration_number", "truck_type", "make", "model",
-  "color", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
+  "color", "fuel_type", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
   "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "notes",
 ];
 const DATES = ["registration_expiry_date", "insurance_expiry_date", "driver_docs_expiry_date"];
@@ -100,7 +100,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
         where id = ${id}::uuid and deleted_at is null
         returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
                   branch_serial, entry_serial, truck_serial, truck_number, truck_name, registration_number,
-                  registration_country_id, truck_type, make, model, manufacturing_year, color,
+                  registration_country_id, truck_type, make, model, manufacturing_year, color, fuel_type,
                   chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
                   transport_company, transport_company_id, transporter_person_id, driver_name, driver_mobile, driver_cnic_passport,
                   driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
