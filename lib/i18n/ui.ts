@@ -4265,6 +4265,8 @@ export type UiKey =
   | "roz.col_credit_debit"
   | "roz.col_debit"
   | "roz.col_credit"
+  | "roz.balance_dr_banam"
+  | "roz.balance_cr_jama"
   | "roz.loading_entries"
   | "roz.entry_details"
   | "roz.lines"
@@ -13709,6 +13711,8 @@ const en: Dict = {
   "roz.col_credit_debit": "Credit/Debit",
   "roz.col_debit": "Debit",
   "roz.col_credit": "Credit",
+  "roz.balance_dr_banam": "Dr (Banam)",
+  "roz.balance_cr_jama": "Cr (Jama)",
   "roz.loading_entries": "Loading entries...",
   "roz.entry_details": "Entry Details",
   "roz.lines": "Lines",
@@ -33329,6 +33333,8 @@ const ur: Dict = {
   "roz.col_credit_debit": "جمع / بنام",
   "roz.col_debit": "بنام (وصولی)",
   "roz.col_credit": "جمع (ادائیگی)",
+  "roz.balance_dr_banam": "ڈیبٹ (بنام)",
+  "roz.balance_cr_jama": "کریڈٹ (جمع)",
   "roz.loading_entries": "لوڈ ہو رہا ہے...",
   "roz.entry_details": "انٹری تفصیل",
   "roz.lines": "لائنز",
@@ -52680,6 +52686,8 @@ const ar: Dict = {
   "roz.col_credit_debit": "دائن / مدين",
   "roz.col_debit": "مدين",
   "roz.col_credit": "دائن",
+  "roz.balance_dr_banam": "مدين (Dr)",
+  "roz.balance_cr_jama": "دائن (Cr)",
   "roz.loading_entries": "جار التحميل...",
   "roz.entry_details": "تفاصيل القيد",
   "roz.lines": "السطور",
@@ -72045,6 +72053,8 @@ const fa: Dict = {
   "roz.col_credit_debit": "بستانکار / بدهکار",
   "roz.col_debit": "بدهکار",
   "roz.col_credit": "بستانکار",
+  "roz.balance_dr_banam": "بدهکار (بنام)",
+  "roz.balance_cr_jama": "بستانکار (جمع)",
   "roz.loading_entries": "در حال بارگذاری...",
   "roz.entry_details": "جزئیات ثبت",
   "roz.lines": "ردیف‌ها",
@@ -91416,6 +91426,8 @@ const ps: Dict = {
   "roz.col_credit_debit": "کریډیټ / ډیبیټ",
   "roz.col_debit": "ډیبیټ (ترلاسه شوی)",
   "roz.col_credit": "کریډیټ (تادیه شوی)",
+  "roz.balance_dr_banam": "ډیبیټ (په نوم)",
+  "roz.balance_cr_jama": "کریډیټ (جمع)",
   "roz.loading_entries": "بارول کیږي...",
   "roz.entry_details": "د انټري تفصيل",
   "roz.lines": "کرښې",

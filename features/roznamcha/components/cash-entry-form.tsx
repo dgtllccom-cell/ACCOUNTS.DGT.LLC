@@ -905,7 +905,7 @@ export function CashEntryForm({
     if (isCreditNormal) {
       isDebit = bal < 0;
     }
-    const label = isDebit ? "Dr (Banam)" : "Cr (Jama)";
+    const label = isDebit ? t(lang, "roz.balance_dr_banam", "Dr (Banam)") : t(lang, "roz.balance_cr_jama", "Cr (Jama)");
     return `${fmtAmount(Math.abs(bal))} ${selectedCashLedger.ledgerCurrency || branchCurrency} ${label}`;
   }, [selectedCashLedger, branchCurrency]);
 
