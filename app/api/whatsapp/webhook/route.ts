@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 // ─── Signature verification ───────────────────────────────────────────────────
 
 function verifySignature(body: string, signature: string): boolean {
-  if (!APP_SECRET) return true; // Dev mode: skip if secret not configured
+  if (!APP_SECRET) return false; // Fail closed — an unconfigured secret must not accept unsigned webhooks
   if (!signature.startsWith("sha256=")) return false;
   const expected = crypto.createHmac("sha256", APP_SECRET).update(body).digest("hex");
   return crypto.timingSafeEqual(Buffer.from(`sha256=${expected}`), Buffer.from(signature));

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
 import fs from "fs";
 import path from "path";
+import { getErpSessionForApi } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,6 +23,9 @@ function getDbUrl() {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getErpSessionForApi();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const dbUrl = getDbUrl();
     if (!dbUrl) {
       return NextResponse.json({ error: "DATABASE_URL not configured" }, { status: 500 });

@@ -116,6 +116,14 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const { searchParams } = request.nextUrl;
 
+    // Country scope enforcement for non-super-admins — matches the check
+    // already used by documents/download, [id]/audit, and [id]/version.
+    // Without it, any authenticated user could list every country's
+    // documents regardless of their own assignment.
+    const isSuperAdmin = session.isSuperAdmin;
+    const allowedCountries: string[] = session.countryIds ?? [];
+    const scopeCountryFilter = !isSuperAdmin && allowedCountries.length > 0;
+
     const countryId = searchParams.get("countryId");
     const mainBranchId = searchParams.get("mainBranchId");
     const cityBranchId = searchParams.get("cityBranchId");
@@ -150,6 +158,7 @@ export async function GET(request: NextRequest) {
         select *
         from public.office_documents
         where deleted_at is null
+          and (${scopeCountryFilter ? sql`(country_id is null or country_id = any(${allowedCountries}))` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${mainBranchId ? sql`country_branch_id = ${mainBranchId}` : sql`true`})
           and (${cityBranchId ? sql`city_branch_id = ${cityBranchId}` : sql`true`})
@@ -204,6 +213,7 @@ export async function GET(request: NextRequest) {
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
+    if (scopeCountryFilter) query = query.or(`country_id.is.null,country_id.in.(${allowedCountries.join(",")})`);
     if (countryId) query = query.eq("country_id", countryId);
     if (mainBranchId) query = query.eq("country_branch_id", mainBranchId);
     if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
@@ -546,6 +556,25 @@ export async function PATCH(request: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 
+    // Country scope enforcement for non-super-admins — matches documents/download,
+    // [id]/audit, and [id]/version. Without it, any authenticated user could edit
+    // any other country's document by id.
+    {
+      const isSuperAdmin = session.isSuperAdmin;
+      const allowedCountries: string[] = session.countryIds ?? [];
+      if (!isSuperAdmin && allowedCountries.length > 0) {
+        const { data: scopeDoc } = await createSupabaseAdminClient()
+          .from("office_documents" as any)
+          .select("country_id")
+          .eq("id", id)
+          .maybeSingle();
+        const docCountryId = (scopeDoc as any)?.country_id ?? null;
+        if (docCountryId && !allowedCountries.includes(docCountryId)) {
+          return NextResponse.json({ error: "This document is outside your assigned country scope." }, { status: 403 });
+        }
+      }
+    }
+
     const updatedAt = new Date().toISOString();
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
@@ -657,6 +686,25 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id") || body?.id || null;
 
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
+
+    // Country scope enforcement for non-super-admins — matches documents/download,
+    // [id]/audit, and [id]/version. Without it, any authenticated user could
+    // delete any other country's document by id.
+    {
+      const isSuperAdmin = session.isSuperAdmin;
+      const allowedCountries: string[] = session.countryIds ?? [];
+      if (!isSuperAdmin && allowedCountries.length > 0) {
+        const { data: scopeDoc } = await createSupabaseAdminClient()
+          .from("office_documents" as any)
+          .select("country_id")
+          .eq("id", id)
+          .maybeSingle();
+        const docCountryId = (scopeDoc as any)?.country_id ?? null;
+        if (docCountryId && !allowedCountries.includes(docCountryId)) {
+          return NextResponse.json({ error: "This document is outside your assigned country scope." }, { status: 403 });
+        }
+      }
+    }
 
     const deletedAt = new Date().toISOString();
     let storageKey = null as string | null;
