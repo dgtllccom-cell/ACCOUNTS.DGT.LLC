@@ -147,9 +147,16 @@ export function CompanyIncorporationForm({
   const [companyNameLocal, setCompanyNameLocal] = useState("");
   const [legalStructure, setLegalStructure] = useState("");
   const [baseCurrency, setBaseCurrency] = useState("");
+  // Real master-data IDs (was: two hardcoded, disconnected name lists — see the
+  // countries/cityBranches fetch below). selectedCountry/selectedMainBranch keep
+  // the display names shown in the read-only preview panel.
+  const [countryId, setCountryId] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
+  const [cityBranchId, setCityBranchId] = useState("");
   const [selectedMainBranch, setSelectedMainBranch] = useState("");
   const [natureOfBusiness, setNatureOfBusiness] = useState("");
+  const [countryOptions, setCountryOptions] = useState<{ id: string; name: string }[]>([]);
+  const [cityBranchOptions, setCityBranchOptions] = useState<{ id: string; name: string; city_name?: string | null }[]>([]);
 
   // Registration IDs
   const [regPan, setRegPan] = useState("");
@@ -217,6 +224,34 @@ export function CompanyIncorporationForm({
       } catch {}
     })();
   }, []);
+
+  // Real Country / Main Branch-City master data — the Country and Main Branch/City
+  // selects were hardcoded 8- and 5-item name lists with no connection to the real
+  // countries/city_branches tables, so a value picked here could never resolve to a
+  // real countryId/cityBranchId and was silently dropped from the save payload (see
+  // saveCompanyNow below). Wired to the same endpoints the rest of the ERP uses.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res: any = await apiGet("/api/branch-management/countries");
+        setCountryOptions((res?.countries || []).map((c: any) => ({ id: c.id, name: c.name })));
+      } catch {
+        setCountryOptions([]);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!countryId) { setCityBranchOptions([]); return; }
+    (async () => {
+      try {
+        const res: any = await apiGet(`/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}`);
+        setCityBranchOptions((res?.cityBranches || []).map((b: any) => ({ id: b.id, name: b.name, city_name: b.city_name })));
+      } catch {
+        setCityBranchOptions([]);
+      }
+    })();
+  }, [countryId]);
 
   // Sync English to Local Language automatically
   useEffect(() => {
@@ -351,15 +386,15 @@ export function CompanyIncorporationForm({
     // fake defaults). A draft may still be incomplete; a final save may not.
     if (!isDraft) {
       const missing: string[] = [];
-      if (!companyNameEn.trim()) missing.push("Company Name");
-      if (!legalStructure) missing.push("Legal Structure");
-      if (!baseCurrency) missing.push("Base Currency");
-      if (!selectedCountry) missing.push("Country");
-      if (!selectedMainBranch) missing.push("Main Branch / City");
-      if (!natureOfBusiness) missing.push("Business Type / Nature of Business");
-      if (!ownerName.trim()) missing.push("Owner");
+      if (!companyNameEn.trim()) missing.push(t(lang, "cinc.f_company_name", "Company Name"));
+      if (!legalStructure) missing.push(t(lang, "cinc.f_legal_structure", "Legal Structure"));
+      if (!baseCurrency) missing.push(t(lang, "cinc.f_base_currency", "Base Currency"));
+      if (!countryId) missing.push(t(lang, "common.country", "Country"));
+      if (!cityBranchId) missing.push(t(lang, "cinc.f_main_branch_city", "Main Branch / City"));
+      if (!natureOfBusiness) missing.push(t(lang, "cinc.f_nature_of_business", "Business Type / Nature of Business"));
+      if (!ownerName.trim()) missing.push(t(lang, "cinc.f_owner", "Owner"));
       if (missing.length > 0) {
-        alert(`Please complete the required fields before saving: ${missing.join(", ")}.`);
+        alert(`${t(lang, "cinc.err_required_fields", "Please complete the required fields before saving:")} ${missing.join(", ")}.`);
         return;
       }
     }
@@ -405,10 +440,16 @@ export function CompanyIncorporationForm({
         legalName: companyNameEn.trim(),
         ownerName: ownerName.trim(),
         ownerPersonId: ownerPersonId || undefined,
-        businessType: legalStructure,
+        // companies has one businessType text column — Legal Structure and Nature of
+        // Business are both validated as required on screen but there's no separate
+        // column for the latter, so both are combined rather than one being dropped.
+        businessType: [legalStructure, natureOfBusiness].filter(Boolean).join(" — "),
         registrationType: "PAN / CIN / GSTIN",
         licenseNumber: regGstin || regPan || regCin,
         baseCurrency: baseCurrency ? baseCurrency.split(" - ")[0] : undefined,
+        countryId: countryId || undefined,
+        countryName: selectedCountry || undefined,
+        cityBranchId: cityBranchId || undefined,
         address: selectedMainBranch,
         contacts: contacts.map((c) => ({
           type: `${c.type} (${c.designation})`,
@@ -879,15 +920,15 @@ export function CompanyIncorporationForm({
                   </span>
                   <div>
                     <CardTitle className="text-sm font-black text-slate-900 dark:text-white">
-                      New Company Registration
+                      {t(lang, "cinc.title", "New Company Registration")}
                     </CardTitle>
                     <p className="text-xs text-slate-500 font-medium">
-                      Enter the new company information under the selected owner account.
+                      {t(lang, "cinc.subtitle", "Enter the new company information under the selected owner account.")}
                     </p>
                   </div>
                 </div>
                 <span className="px-3 py-1 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900">
-                  Step 2 of 4
+                  {t(lang, "cinc.step_2_of_4", "Step 2 of 4")}
                 </span>
               </div>
             </CardHeader>
@@ -897,7 +938,7 @@ export function CompanyIncorporationForm({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    Company Name (English) <span className="text-red-500">*</span>
+                    {t(lang, "cinc.f_company_name_en", "Company Name (English)")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     value={companyNameEn}
@@ -909,7 +950,7 @@ export function CompanyIncorporationForm({
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    Company Name (Local Language)
+                    {t(lang, "cinc.f_company_name_local", "Company Name (Local Language)")}
                   </Label>
                   <Input
                     value={companyNameLocal}
@@ -924,33 +965,33 @@ export function CompanyIncorporationForm({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    Legal Structure <span className="text-red-500">*</span>
+                    {t(lang, "cinc.f_legal_structure", "Legal Structure")} <span className="text-red-500">*</span>
                   </Label>
                   <select
                     value={legalStructure}
                     onChange={(e) => setLegalStructure(e.target.value)}
                     className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">— Select Legal Structure —</option>
-                    <option value="Private Limited Company (Pvt Ltd)">Private Limited Company (Pvt Ltd)</option>
-                    <option value="Limited Liability Company (LLC)">Limited Liability Company (LLC)</option>
-                    <option value="Sole Proprietorship">Sole Proprietorship</option>
-                    <option value="Partnership / LLP">Partnership / LLP</option>
-                    <option value="Freezone Company">Freezone Company</option>
-                    <option value="Public Limited Company">Public Limited Company</option>
+                    <option value="">{t(lang, "cinc.select_legal_structure", "— Select Legal Structure —")}</option>
+                    <option value="Private Limited Company (Pvt Ltd)">{t(lang, "cinc.ls_pvt_ltd", "Private Limited Company (Pvt Ltd)")}</option>
+                    <option value="Limited Liability Company (LLC)">{t(lang, "cinc.ls_llc", "Limited Liability Company (LLC)")}</option>
+                    <option value="Sole Proprietorship">{t(lang, "cinc.ls_sole_prop", "Sole Proprietorship")}</option>
+                    <option value="Partnership / LLP">{t(lang, "cinc.ls_partnership", "Partnership / LLP")}</option>
+                    <option value="Freezone Company">{t(lang, "cinc.ls_freezone", "Freezone Company")}</option>
+                    <option value="Public Limited Company">{t(lang, "cinc.ls_public_ltd", "Public Limited Company")}</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    Base Currency <span className="text-red-500">*</span>
+                    {t(lang, "cinc.f_base_currency", "Base Currency")} <span className="text-red-500">*</span>
                   </Label>
                   <select
                     value={baseCurrency}
                     onChange={(e) => setBaseCurrency(e.target.value)}
                     className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">— Select Base Currency —</option>
+                    <option value="">{t(lang, "cinc.select_base_currency", "— Select Base Currency —")}</option>
                     <option value="INR - Indian Rupee (₹)">INR - Indian Rupee (₹)</option>
                     <option value="USD - US Dollar ($)">USD - US Dollar ($)</option>
                     <option value="AED - UAE Dirham (د.إ)">AED - UAE Dirham (د.إ)</option>
@@ -965,43 +1006,48 @@ export function CompanyIncorporationForm({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    Country <span className="text-red-500">*</span>
+                    {t(lang, "common.country", "Country")} <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <select
-                      value={selectedCountry}
-                      onChange={(e) => setSelectedCountry(e.target.value)}
+                      value={countryId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setCountryId(id);
+                        setSelectedCountry(countryOptions.find((c) => c.id === id)?.name || "");
+                        setCityBranchId("");
+                        setSelectedMainBranch("");
+                      }}
                       className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">— Select Country —</option>
-                      <option value="India">🇮🇳 India</option>
-                      <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
-                      <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
-                      <option value="Pakistan">🇵🇰 Pakistan</option>
-                      <option value="China">🇨🇳 China</option>
-                      <option value="Afghanistan">🇦🇫 Afghanistan</option>
-                      <option value="Tajikistan">🇹🇯 Tajikistan</option>
-                      <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
+                      <option value="">{t(lang, "cinc.select_country", "— Select Country —")}</option>
+                      {countryOptions.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    Main Branch / City <span className="text-red-500">*</span>
+                    {t(lang, "cinc.f_main_branch_city", "Main Branch / City")} <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <select
-                      value={selectedMainBranch}
-                      onChange={(e) => setSelectedMainBranch(e.target.value)}
-                      className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
+                      value={cityBranchId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setCityBranchId(id);
+                        const found = cityBranchOptions.find((b) => b.id === id);
+                        setSelectedMainBranch(found ? [found.name, found.city_name].filter(Boolean).join(" - ") : "");
+                      }}
+                      disabled={!countryId}
+                      className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      <option value="">— Select Main Branch / City —</option>
-                      <option value="Mumbai - Maharashtra">🏢 Mumbai - Maharashtra</option>
-                      <option value="Delhi - NCR">🏢 Delhi - NCR</option>
-                      <option value="Deira - Dubai">🏢 Deira - Dubai</option>
-                      <option value="Riyadh Central">🏢 Riyadh Central</option>
-                      <option value="Karachi Port">🏢 Karachi Port</option>
+                      <option value="">{t(lang, "cinc.select_branch", "— Select Main Branch / City —")}</option>
+                      {cityBranchOptions.map((b) => (
+                        <option key={b.id} value={b.id}>{[b.name, b.city_name].filter(Boolean).join(" - ")}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -1013,7 +1059,7 @@ export function CompanyIncorporationForm({
                   <div className="flex items-center gap-1.5">
                     <Briefcase className="h-3.5 w-3.5 text-red-500" />
                     <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                      Business Type / Nature of Business <span className="text-red-500">*</span>
+                      {t(lang, "cinc.f_nature_of_business", "Business Type / Nature of Business")} <span className="text-red-500">*</span>
                     </Label>
                   </div>
                   <select
@@ -1021,13 +1067,13 @@ export function CompanyIncorporationForm({
                     onChange={(e) => setNatureOfBusiness(e.target.value)}
                     className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">— Select Business Type —</option>
-                    <option value="Logistics / Transportation">Logistics / Transportation</option>
-                    <option value="Trading & General Order Supplier">Trading &amp; General Order Supplier</option>
-                    <option value="Retail & Wholesale">Retail &amp; Wholesale</option>
-                    <option value="Import & Export">Import &amp; Export</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Services & Consultancy">Services &amp; Consultancy</option>
+                    <option value="">{t(lang, "cinc.select_business_type", "— Select Business Type —")}</option>
+                    <option value="Logistics / Transportation">{t(lang, "cinc.bt_logistics", "Logistics / Transportation")}</option>
+                    <option value="Trading & General Order Supplier">{t(lang, "cinc.bt_trading", "Trading & General Order Supplier")}</option>
+                    <option value="Retail & Wholesale">{t(lang, "cinc.bt_retail", "Retail & Wholesale")}</option>
+                    <option value="Import & Export">{t(lang, "cinc.bt_import_export", "Import & Export")}</option>
+                    <option value="Manufacturing">{t(lang, "cinc.bt_manufacturing", "Manufacturing")}</option>
+                    <option value="Services & Consultancy">{t(lang, "cinc.bt_services", "Services & Consultancy")}</option>
                   </select>
                 </div>
 

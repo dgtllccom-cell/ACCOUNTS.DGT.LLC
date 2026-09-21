@@ -8,9 +8,26 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const { id } = await context.params;
     const body = await req.json();
+
+    // Re-scope to the TARGET record's own country/branch, not just a generic
+    // "does the caller have this permission anywhere" check — otherwise any
+    // country-scoped user with shipping_records:update could edit another
+    // country's customs declaration by id (the sibling bl-records route
+    // already does this; this route didn't).
+    const existing = await withLocalPg(async (sql) => {
+      const rows = await sql`select country_id, country_branch_id, city_branch_id from public.clearing_agent_custom_entries where id = ${id}::uuid and deleted_at is null limit 1`;
+      return rows[0];
+    });
+    if (!existing) return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "update",
+      countryId: (existing as any).country_id,
+      countryBranchId: (existing as any).country_branch_id,
+      cityBranchId: (existing as any).city_branch_id
+    });
 
     const data = await withLocalPg(async (sql) => {
       const rows = await sql`
@@ -59,8 +76,21 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const { id } = await context.params;
+
+    const existing = await withLocalPg(async (sql) => {
+      const rows = await sql`select country_id, country_branch_id, city_branch_id from public.clearing_agent_custom_entries where id = ${id}::uuid and deleted_at is null limit 1`;
+      return rows[0];
+    });
+    if (!existing) return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "delete",
+      countryId: (existing as any).country_id,
+      countryBranchId: (existing as any).country_branch_id,
+      cityBranchId: (existing as any).city_branch_id
+    });
+
     await withLocalPg(async (sql) => {
       await sql`
         update public.clearing_agent_custom_entries

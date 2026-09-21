@@ -278,8 +278,8 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               >
-                <option value="active font-semibold">{tt("common.active", "Active")}</option>
-                <option value="inactive font-semibold">{tt("common.inactive", "Inactive")}</option>
+                <option value="active">{tt("common.active", "Active")}</option>
+                <option value="inactive">{tt("common.inactive", "Inactive")}</option>
               </select>
             </div>
           </div>

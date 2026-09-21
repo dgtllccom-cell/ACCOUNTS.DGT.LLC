@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { shippingLinesRepository } from "@/lib/repositories/shipping-lines-repository";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -9,7 +10,8 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
@@ -34,11 +36,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Was fully anonymous ("allow fallback userId if unauthenticated demo") —
-    // no permission string exists yet for this resource to gate on safely
-    // without guessing which roles should be excluded, so the minimal,
-    // non-breaking fix is requiring a real session, matching every other
-    // creation endpoint in this codebase.
+    // fixed to require a real session in a prior pass; this pass adds the
+    // scope check every other shipping_records route already uses (trucks,
+    // bl-records) — same resource string, so it was always safe to add.
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "create" });
 
     const body = await request.json();
     if (!body?.name || !String(body.name).trim()) {

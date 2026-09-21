@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { shippingLinesRepository } from "@/lib/repositories/shipping-lines-repository";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -15,7 +16,8 @@ async function localizeShippingLine(shippingLine: any, lang: ReturnType<typeof n
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
 
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
@@ -31,7 +33,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
     const body = await request.json();
@@ -52,6 +55,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
 export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
 
