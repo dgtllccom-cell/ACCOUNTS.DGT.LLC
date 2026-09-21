@@ -2715,6 +2715,10 @@ export type UiKey =
   | "safd.sql_schemas"
   | "safd.hierarchy_levels"
   | "safd.rights_reserved"
+  | "cl.import" | "cl.more_actions" | "cl.breadcrumb_sales_crm" | "cl.all_countries" | "cl.all_branches" | "cl.add_customer"
+  | "cl.assigned_user" | "cl.customer_register" | "cl.customer_register_sub" | "cl.more"
+  | "cl.col_customer_id" | "cl.col_customer_name" | "cl.col_mobile" | "cl.col_created_date"
+  | "cl.showing" | "cl.to_pagination" | "cl.of_records" | "cl.search_ph_full"
   | "cl.col_name"
   | "cl.col_company"
   | "cl.col_source"
@@ -24428,6 +24432,24 @@ const en: Dict = {
 
 
   "safd.rights_reserved": "All rights reserved.",
+  "cl.import": "Import",
+  "cl.add_customer": "Add Customer",
+  "cl.more_actions": "More Actions",
+  "cl.breadcrumb_sales_crm": "Sales & CRM",
+  "cl.all_countries": "All Countries",
+  "cl.all_branches": "All Branches",
+  "cl.assigned_user": "Assigned User",
+  "cl.customer_register": "Customer Register",
+  "cl.customer_register_sub": "Manage and view all registered customers",
+  "cl.more": "More",
+  "cl.col_customer_id": "Customer ID",
+  "cl.col_customer_name": "Customer Name",
+  "cl.col_mobile": "Mobile",
+  "cl.col_created_date": "Created Date",
+  "cl.showing": "Showing",
+  "cl.to_pagination": "to",
+  "cl.of_records": "of",
+  "cl.search_ph_full": "Search by customer name, company or mobile...",
   "cl.col_name": "Name",
 
 
@@ -44017,6 +44039,24 @@ const ur: Dict = {
 
   "safd.rights_reserved": "جملہ حقوق محفوظ ہیں۔",
   "cl.col_name": "نام",
+  "cl.import": "درآمد کریں",
+  "cl.add_customer": "کسٹمر شامل کریں",
+  "cl.more_actions": "مزید اقدامات",
+  "cl.breadcrumb_sales_crm": "سیلز اور سی آر ایم",
+  "cl.all_countries": "تمام ممالک",
+  "cl.all_branches": "تمام برانچیں",
+  "cl.assigned_user": "تفویض شدہ صارف",
+  "cl.customer_register": "کسٹمر رجسٹر",
+  "cl.customer_register_sub": "تمام رجسٹرڈ کسٹمرز کا نظم اور مشاہدہ کریں",
+  "cl.more": "مزید",
+  "cl.col_customer_id": "کسٹمر آئی ڈی",
+  "cl.col_customer_name": "کسٹمر کا نام",
+  "cl.col_mobile": "موبائل",
+  "cl.col_created_date": "تاریخ تخلیق",
+  "cl.showing": "دکھایا جا رہا ہے",
+  "cl.to_pagination": "تا",
+  "cl.of_records": "از",
+  "cl.search_ph_full": "کسٹمر کا نام، کمپنی یا موبائل سے تلاش کریں...",
 
 
   "cl.col_company": "کمپنی",
@@ -63747,6 +63787,24 @@ const ar: Dict = {
 
   "safd.rights_reserved": "جميع الحقوق محفوظة.",
   "cl.col_name": "الاسم",
+  "cl.import": "استيراد",
+  "cl.add_customer": "إضافة عميل",
+  "cl.more_actions": "إجراءات أخرى",
+  "cl.breadcrumb_sales_crm": "المبيعات وإدارة العملاء",
+  "cl.all_countries": "جميع الدول",
+  "cl.all_branches": "جميع الفروع",
+  "cl.assigned_user": "المستخدم المعين",
+  "cl.customer_register": "سجل العملاء",
+  "cl.customer_register_sub": "إدارة وعرض جميع العملاء المسجلين",
+  "cl.more": "المزيد",
+  "cl.col_customer_id": "معرف العميل",
+  "cl.col_customer_name": "اسم العميل",
+  "cl.col_mobile": "الجوال",
+  "cl.col_created_date": "تاريخ الإنشاء",
+  "cl.showing": "عرض",
+  "cl.to_pagination": "إلى",
+  "cl.of_records": "من",
+  "cl.search_ph_full": "البحث باسم العميل أو الشركة أو رقم الجوال...",
 
 
   "cl.col_company": "الشركة",
@@ -83527,6 +83585,24 @@ const fa: Dict = {
 
   "safd.rights_reserved": "کلیه حقوق محفوظ است.",
   "cl.col_name": "نام",
+  "cl.import": "وارد کردن",
+  "cl.add_customer": "افزودن مشتری",
+  "cl.more_actions": "اقدامات بیشتر",
+  "cl.breadcrumb_sales_crm": "فروش و CRM",
+  "cl.all_countries": "همه کشورها",
+  "cl.all_branches": "همه شعب",
+  "cl.assigned_user": "کاربر تخصیص‌یافته",
+  "cl.customer_register": "ثبت مشتریان",
+  "cl.customer_register_sub": "مدیریت و مشاهده همه مشتریان ثبت‌شده",
+  "cl.more": "بیشتر",
+  "cl.col_customer_id": "شناسه مشتری",
+  "cl.col_customer_name": "نام مشتری",
+  "cl.col_mobile": "موبایل",
+  "cl.col_created_date": "تاریخ ایجاد",
+  "cl.showing": "نمایش",
+  "cl.to_pagination": "تا",
+  "cl.of_records": "از",
+  "cl.search_ph_full": "جستجو بر اساس نام مشتری، شرکت یا موبایل...",
 
 
   "cl.col_company": "شرکت",
@@ -103305,6 +103381,24 @@ const ps: Dict = {
 
   "safd.rights_reserved": "ټول حقونه خوندي دي.",
   "cl.col_name": "نوم",
+  "cl.import": "واردول",
+  "cl.add_customer": "پیرودونکی اضافه کړئ",
+  "cl.more_actions": "نور اقدامات",
+  "cl.breadcrumb_sales_crm": "پلورنه او CRM",
+  "cl.all_countries": "ټول هیوادونه",
+  "cl.all_branches": "ټولې څانګې",
+  "cl.assigned_user": "ټاکل شوی کارن",
+  "cl.customer_register": "د پیرودونکو راجستر",
+  "cl.customer_register_sub": "د ټولو ثبت شویو پیرودونکو مدیریت او کتنه",
+  "cl.more": "نور",
+  "cl.col_customer_id": "د پیرودونکي پیژندنه",
+  "cl.col_customer_name": "د پیرودونکي نوم",
+  "cl.col_mobile": "ګرځنده",
+  "cl.col_created_date": "د جوړېدو نیټه",
+  "cl.showing": "ښودل کیږي",
+  "cl.to_pagination": "تر",
+  "cl.of_records": "د",
+  "cl.search_ph_full": "د پیرودونکي نوم، شرکت یا ګرځنده لخوا لټون...",
 
 
   "cl.col_company": "شرکت",

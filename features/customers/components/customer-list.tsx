@@ -168,10 +168,25 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  type SessionInfo = {
+    user?: { fullName?: string | null };
+    scopes?: { isSuperAdmin?: boolean; summary?: { branchDisplayName?: string | null } };
+  };
+  const [session, setSession] = useState<SessionInfo | null>(null);
+  useEffect(() => {
+    fetch("/api/erp/auth/session")
+      .then((r) => r.json())
+      .then((json) => setSession(json?.data ?? json ?? null))
+      .catch(() => setSession(null));
+  }, []);
+  const isSuperAdmin = !!session?.scopes?.isSuperAdmin;
+
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatusTab, setSelectedStatusTab] = useState("all");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("all");
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState("all");
+  const [selectedAssignedFilter, setSelectedAssignedFilter] = useState("all");
 
   // Selection & Pagination state
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -270,6 +285,23 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     return counts;
   }, [parsedCustomers]);
 
+  // Country / Branch Report stats
+  const geoStats = useMemo(() => {
+    const countryCounts: Record<string, number> = {};
+    const branchSet = new Set<string>();
+    parsedCustomers.forEach((c) => {
+      const country = c.meta.countryName;
+      if (country) countryCounts[country] = (countryCounts[country] || 0) + 1;
+      if (c.meta.cityName) branchSet.add(c.meta.cityName);
+    });
+    const topEntry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0];
+    return {
+      countries: Object.keys(countryCounts).length,
+      branches: branchSet.size,
+      topCountry: topEntry ? `${topEntry[0]} (${topEntry[1]})` : "—",
+    };
+  }, [parsedCustomers]);
+
   // Filtered List
   const filteredList = useMemo(() => {
     let list = parsedCustomers;
@@ -303,8 +335,33 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       );
     }
 
+    // Branch (city) filter
+    if (selectedBranchFilter !== "all") {
+      list = list.filter(
+        (c) => c.meta.cityName?.toLowerCase() === selectedBranchFilter.toLowerCase()
+      );
+    }
+
+    // Assigned user filter
+    if (selectedAssignedFilter !== "all") {
+      list = list.filter(
+        (c) => c.meta.assignedStaff?.toLowerCase() === selectedAssignedFilter.toLowerCase()
+      );
+    }
+
     return list;
-  }, [parsedCustomers, searchQuery, selectedStatusTab, selectedCountryFilter]);
+  }, [parsedCustomers, searchQuery, selectedStatusTab, selectedCountryFilter, selectedBranchFilter, selectedAssignedFilter]);
+
+  // Real filter-option lists, derived from actual customer records (never a fixed sample list).
+  const filterOptions = useMemo(() => {
+    const uniq = (vals: (string | undefined)[]) =>
+      Array.from(new Set(vals.filter((v): v is string => !!v))).sort();
+    return {
+      countries: uniq(parsedCustomers.map((c) => c.meta.countryName)),
+      branches: uniq(parsedCustomers.map((c) => c.meta.cityName)),
+      assignees: uniq(parsedCustomers.map((c) => c.meta.assignedStaff)),
+    };
+  }, [parsedCustomers]);
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredList.length / pageSize));
@@ -401,8 +458,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             onClick={() => window.history.back()}
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 transition"
           >
-            <span className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs font-bold text-[11px]">&larr; Back</span>
-            <span className="text-xs text-slate-500 font-semibold">Home / Sales &amp; CRM / Customer Management</span>
+            <span className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs font-bold text-[11px]">&larr; {t(lang, "common.back", "Back")}</span>
+            <span className="text-xs text-slate-500 font-semibold">
+              {t(lang, "common.home", "Home")} / {t(lang, "cl.breadcrumb_sales_crm", "Sales & CRM")} / {t(lang, "cl.customer_management", "Customer Management")}
+            </span>
           </button>
 
           {/* Right Header Buttons */}
@@ -414,7 +473,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 gap-1.5"
             >
               <Download className="h-3.5 w-3.5 rotate-180 text-blue-600" />
-              <span>Import</span>
+              <span>{t(lang, "cl.import", "Import")}</span>
             </Button>
             <Button
               variant="outline"
@@ -422,7 +481,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               onClick={() => setShowUniversalDirectory(true)}
               className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 gap-1.5"
             >
-              <span>More Actions</span>
+              <span>{t(lang, "cl.more_actions", "More Actions")}</span>
               <span className="text-[10px]">▼</span>
             </Button>
           </div>
@@ -436,10 +495,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         </div>
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-            Customer Management
+            {t(lang, "cl.customer_management", "Customer Management")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
-            Manage and track your customers, from inquiry to close.
+            {t(lang, "cl.subtitle", "Manage and track your customers, from inquiry to close.")}
           </p>
         </div>
       </div>
@@ -458,20 +517,20 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Branch</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">Head Office</span>
+              <span>{t(lang, "cl.f_branch", "Branch")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{session?.scopes?.summary?.branchDisplayName || t(lang, "cl.head_office", "Head Office")}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Users</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">12</span>
+              <span>{t(lang, "cl.f_total_users", "Total Users")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">—</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Active Users</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">10</span>
+              <span>{t(lang, "cl.f_active_users", "Active Users")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">—</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Inactive Users</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">2</span>
+              <span>{t(lang, "cl.f_inactive_users", "Inactive Users")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">—</span>
             </div>
           </div>
         </div>
@@ -483,34 +542,34 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               <Users className="h-4 w-4" />
             </div>
             <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-              Customer Summary
+              {t(lang, "cl.kpi_customer_summary", "Customer Summary")}
             </h3>
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Customers</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length || 28}</span>
+              <span>{t(lang, "cl.f_total_customers", "Total Customers")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Active Customers</span>
+              <span>{t(lang, "cl.f_active_customers", "Active Customers")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
-                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "active" || (c.meta.leadStatus || "").toLowerCase() === "closed").length || 18}
+                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "active" || (c.meta.leadStatus || "").toLowerCase() === "closed").length}
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>New This Month</span>
+              <span>{t(lang, "cl.f_new_this_month", "New This Month")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
                 {parsedCustomers.filter(c => {
                   const d = new Date(c.created_at);
                   const now = new Date();
                   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                }).length || 6}
+                }).length}
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Inactive Customers</span>
+              <span>{t(lang, "cl.f_inactive_customers", "Inactive Customers")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
-                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "inactive" || (c.meta.leadStatus || "").toLowerCase() === "lost").length || 4}
+                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "inactive" || (c.meta.leadStatus || "").toLowerCase() === "lost").length}
               </span>
             </div>
           </div>
@@ -523,37 +582,37 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               <SlidersHorizontal className="h-4 w-4" />
             </div>
             <h3 className="text-xs font-bold text-amber-900 dark:text-amber-300">
-              Customer Pipeline / Status Summary
+              {t(lang, "cl.kpi_pipeline_summary", "Customer Pipeline / Status Summary")}
             </h3>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>New</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["New"] ?? 8}</span>
+              <span>{t(lang, "cl.status_new", "New")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["New"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Negotiation</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Negotiation"] ?? 3}</span>
+              <span>{t(lang, "cl.status_negotiation", "Negotiation")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Negotiation"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Contacted</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Contacted"] ?? 5}</span>
+              <span>{t(lang, "cl.status_contacted", "Contacted")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Contacted"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Closed</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Closed"] ?? 2}</span>
+              <span>{t(lang, "cl.status_closed", "Closed")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Closed"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Qualified</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Qualified"] ?? 6}</span>
+              <span>{t(lang, "cl.status_qualified", "Qualified")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Qualified"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Lost</span>
+              <span>{t(lang, "cl.status_lost", "Lost")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Lost"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Proposal</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Proposal"] ?? 4}</span>
+              <span>{t(lang, "cl.status_proposal", "Proposal")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Proposal"] ?? 0}</span>
             </div>
             <div></div>
           </div>
@@ -567,29 +626,29 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 <Globe className="h-4 w-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Country / Branch Customer Report
+                {t(lang, "cl.kpi_country_branch", "Country / Branch Customer Report")}
               </h3>
             </div>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#6366f1] text-white">
-              Super Admin Only
+              {t(lang, "audit.super_admin_only", "Super Admin Only")}
             </span>
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Countries</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">4</span>
+              <span>{t(lang, "cl.f_total_countries", "Total Countries")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{geoStats.countries}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Branches</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">2</span>
+              <span>{t(lang, "cl.f_total_branches", "Total Branches")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{geoStats.branches}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Customers (This Branch)</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length || 28}</span>
+              <span>{t(lang, "cl.f_customers_this_branch", "Customers (This Branch)")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Top Country</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">Afghanistan (12)</span>
+              <span>{t(lang, "cl.f_top_country", "Top Country")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{geoStats.topCountry}</span>
             </div>
           </div>
         </div>
@@ -643,7 +702,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search by customer name, company or mobile..."
+            placeholder={t(lang, "cl.search_ph_full", "Search by customer name, company or mobile...")}
             className="w-full h-9 pl-9 pr-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 font-medium"
           />
         </div>
@@ -658,13 +717,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             }}
             className="h-9 pl-3 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="all">All Countries</option>
-            <option value="Afghanistan">Afghanistan</option>
-            <option value="Pakistan">Pakistan</option>
-            <option value="UAE">UAE</option>
-            <option value="China">China</option>
-            <option value="India">India</option>
-            <option value="Oman">Oman</option>
+            <option value="all">{t(lang, "cl.all_countries", "All Countries")}</option>
+            {filterOptions.countries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
         </div>
@@ -672,13 +728,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         {/* All Branches Select */}
         <div className="relative">
           <select
+            value={selectedBranchFilter}
+            onChange={(e) => {
+              setSelectedBranchFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="h-9 pl-3 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="all">All Branches</option>
-            <option value="main">Main Headquarters</option>
-            <option value="karachi">Karachi Branch</option>
-            <option value="dubai">Dubai Branch</option>
-            <option value="muscat">Muscat Branch</option>
+            <option value="all">{t(lang, "cl.all_branches", "All Branches")}</option>
+            {filterOptions.branches.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
           </select>
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
         </div>
@@ -686,14 +746,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         {/* Assigned User Select */}
         <div className="relative">
           <select
+            value={selectedAssignedFilter}
+            onChange={(e) => {
+              setSelectedAssignedFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="h-9 pl-3 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="all">Assigned User</option>
-            <option value="ali">Ali Hassan</option>
-            <option value="sara">Sara Khan</option>
-            <option value="omar">Omar Farooq</option>
-            <option value="fatima">Fatima Ali</option>
-            <option value="hassan">Hassan Raza</option>
+            <option value="all">{t(lang, "cl.assigned_user", "Assigned User")}</option>
+            {filterOptions.assignees.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
           </select>
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
         </div>
@@ -708,22 +771,16 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             }}
             className="h-9 pl-3 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="all">All Statuses</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Qualified">Qualified</option>
-            <option value="Proposal">Proposal</option>
-            <option value="Negotiation">Negotiation</option>
-            <option value="Closed">Closed</option>
-            <option value="Lost">Lost</option>
+            <option value="all">{t(lang, "cl.all_status", "All Statuses")}</option>
+            <option value="New">{t(lang, "cl.status_new", "New")}</option>
+            <option value="Contacted">{t(lang, "cl.status_contacted", "Contacted")}</option>
+            <option value="Qualified">{t(lang, "cl.status_qualified", "Qualified")}</option>
+            <option value="Proposal">{t(lang, "cl.status_proposal", "Proposal")}</option>
+            <option value="Negotiation">{t(lang, "cl.status_negotiation", "Negotiation")}</option>
+            <option value="Closed">{t(lang, "cl.status_closed", "Closed")}</option>
+            <option value="Lost">{t(lang, "cl.status_lost", "Lost")}</option>
           </select>
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
-        </div>
-
-        {/* Date Range */}
-        <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300">
-          <Calendar className="h-3.5 w-3.5 text-slate-400" />
-          <span>01 Sept 2026 - 30 Sept 2026</span>
         </div>
 
         {/* Refresh Button */}
@@ -734,10 +791,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          <span>Refresh</span>
+          <span>{t(lang, "common.refresh", "Refresh")}</span>
         </Button>
 
-        {/* Filter Button */}
+        {/* Filter Button (Reset all filters) */}
         <Button
           type="button"
           variant="outline"
@@ -745,11 +802,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             setSearchQuery("");
             setSelectedStatusTab("all");
             setSelectedCountryFilter("all");
+            setSelectedBranchFilter("all");
+            setSelectedAssignedFilter("all");
           }}
           className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          <span>Filter</span>
+          <span>{t(lang, "cl.reset_all_filters", "Reset all filters")}</span>
         </Button>
 
         {/* Second Filter Button */}
@@ -759,7 +818,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          <span>Filter</span>
+          <span>{t(lang, "cl.filters", "Filter")}</span>
         </Button>
 
         {/* + Add Customer Button (Solid Blue) */}
@@ -769,7 +828,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           className="h-9 px-4 gap-1.5 bg-[#1d63ed] hover:bg-[#1a55cd] text-white font-bold rounded-xl text-xs shadow-xs transition-all"
         >
           <Plus className="h-3.5 w-3.5" />
-          <span>+ Add Customer</span>
+          <span>+ {t(lang, "cl.add_customer", "Add Customer")}</span>
         </Button>
       </div>
 
@@ -789,10 +848,10 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             </div>
             <div>
               <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                Customer Register
+                {t(lang, "cl.customer_register", "Customer Register")}
               </h2>
               <p className="text-[11px] text-slate-400 font-medium">
-                Manage and view all registered customers
+                {t(lang, "cl.customer_register_sub", "Manage and view all registered customers")}
               </p>
             </div>
           </div>
@@ -805,7 +864,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-8 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span>Print</span>
+              <span>{t(lang, "common.print", "Print")}</span>
             </Button>
             <Button
               variant="outline"
@@ -814,7 +873,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-8 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300"
             >
               <FileText className="h-3.5 w-3.5 text-red-500" />
-              <span>PDF</span>
+              <span>{t(lang, "wh.pdf", "PDF")}</span>
             </Button>
             <Button
               variant="outline"
@@ -823,7 +882,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-8 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Excel</span>
+              <span>{t(lang, "asr.excel", "Excel")}</span>
             </Button>
             <Button
               variant="outline"
@@ -832,7 +891,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               className="h-8 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300"
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
-              <span>... More</span>
+              <span>... {t(lang, "cl.more", "More")}</span>
             </Button>
           </div>
         </div>
@@ -854,17 +913,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   />
                 </th>
                 <th className="px-3 py-3.5 w-12 text-slate-400">#</th>
-                <th className="px-4 py-3.5 font-bold">CUSTOMER ID</th>
-                <th className="px-4 py-3.5 font-bold">CUSTOMER NAME</th>
-                <th className="px-4 py-3.5 font-bold">COMPANY</th>
-                <th className="px-4 py-3.5 font-bold">COUNTRY</th>
-                <th className="px-4 py-3.5 font-bold">BRANCH</th>
-                <th className="px-4 py-3.5 font-bold">SOURCE</th>
-                <th className="px-4 py-3.5 font-bold">STATUS</th>
-                <th className="px-4 py-3.5 font-bold">ASSIGNED TO</th>
-                <th className="px-4 py-3.5 font-bold">MOBILE</th>
-                <th className="px-4 py-3.5 font-bold">CREATED DATE</th>
-                <th className="px-4 py-3.5 text-center font-bold">ACTIONS</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_customer_id", "Customer ID")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_customer_name", "Customer Name")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_company", "Company")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_country", "Country")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.f_branch", "Branch")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_source", "Source")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_status", "Status")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_assigned_to", "Assigned To")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_mobile", "Mobile")}</th>
+                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_created_date", "Created Date")}</th>
+                <th className="px-4 py-3.5 text-center font-bold">{t(lang, "cl.col_actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -881,11 +940,11 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   const countryInfo = getCountryFlagAndName(c.meta.countryName);
                   const initials = getInitials(c.customer_name);
                   const avatarColor = getAvatarColor(c.customer_name);
-                  const source = c.meta.source || "Website";
-                  const leadStatus = c.meta.leadStatus || "New";
+                  const source = c.meta.source || "—";
+                  const leadStatus = c.meta.leadStatus || "—";
                   const cleanPhone = (c.meta.phone || "").replace(/[^0-9+]/g, "");
-                  const customerId = c.person_code || `CUS-${String(28 - idx).padStart(4, "0")}`;
-                  const branch = c.meta.cityName ? `${c.meta.cityName} Branch` : "Main Headquarters";
+                  const customerId = c.person_code || "—";
+                  const branch = c.meta.cityName ? `${c.meta.cityName} Branch` : "—";
 
                   return (
                     <tr
@@ -1003,7 +1062,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* ASSIGNED TO */}
                       <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap">
-                        {c.meta.assignedStaff || "Ali Hassan"}
+                        {c.meta.assignedStaff || "—"}
                       </td>
 
                       {/* MOBILE */}
@@ -1095,8 +1154,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           {/* Left: Showing count & per page dropdown */}
           <div className="flex items-center gap-3">
             <span>
-              Showing {filteredList.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
-              {Math.min(currentPage * pageSize, filteredList.length)} of {filteredList.length} leads
+              {t(lang, "cl.showing", "Showing")} {filteredList.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} {t(lang, "cl.to_pagination", "to")}{" "}
+              {Math.min(currentPage * pageSize, filteredList.length)} {t(lang, "cl.of_records", "of")} {filteredList.length} {t(lang, "cl.customers_group", "Customers")}
             </span>
             <div className="relative inline-block">
               <select
