@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as tUi } from "@/lib/i18n/ui";
 
 function getCountryFlagAndName(countryStr?: string | null): { flag: string; name: string } {
   if (!countryStr) return { flag: "🇦🇪", name: "UAE" };
@@ -80,6 +81,7 @@ export interface EmployeeRecord {
 export function VipRegisterEmployeeView() {
   const lang = useActiveLanguage();
   const dir: "rtl" | "ltr" = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps" ? "rtl" : "ltr";
+  const T = (key: string, fallback: string) => tUi(lang, key, fallback);
 
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,10 +127,10 @@ export function VipRegisterEmployeeView() {
           name: empName,
           initials,
           avatarColor,
-          department: emp.department || "General",
-          position: emp.designation || "Staff",
-          branch: emp.branch || emp.branch_name || "Main Headquarters",
-          country: emp.country?.name || emp.country_name || "Pakistan",
+          department: emp.department || "—",
+          position: emp.designation || "—",
+          branch: emp.branch || emp.branch_name || "—",
+          country: emp.country?.name || emp.country_name || "—",
           mobile: emp.mobile || "—",
           whatsapp: emp.whatsapp || emp.mobile?.replace(/\D/g, "") || "",
           email: emp.email || "—",
@@ -152,15 +154,41 @@ export function VipRegisterEmployeeView() {
     loadEmployees();
   }, []);
 
+  type SessionInfo = {
+    user?: { fullName?: string | null };
+    scopes?: { isSuperAdmin?: boolean; summary?: { branchDisplayName?: string | null } };
+  };
+  const [session, setSession] = useState<SessionInfo | null>(null);
+  useEffect(() => {
+    fetch("/api/erp/auth/session")
+      .then((r) => r.json())
+      .then((json) => setSession(json?.data ?? json ?? null))
+      .catch(() => setSession(null));
+  }, []);
+  const isSuperAdmin = !!session?.scopes?.isSuperAdmin;
+
   // Computed dynamic stats from real database data
   const stats = useMemo(() => {
     const total = employees.length;
     const active = employees.filter(e => e.status === "Active").length;
     const onLeave = employees.filter(e => e.status === "On Leave").length;
     const inactive = employees.filter(e => e.status === "Inactive").length;
-    const departments = new Set(employees.map(e => e.department).filter(Boolean)).size;
-    const branches = new Set(employees.map(e => e.branch).filter(Boolean)).size;
-    return { total, active, onLeave, inactive, departments, branches };
+    const departments = new Set(employees.map(e => e.department).filter(v => v && v !== "—")).size;
+    const branches = new Set(employees.map(e => e.branch).filter(v => v && v !== "—")).size;
+    const designations = new Set(employees.map(e => e.position).filter(v => v && v !== "—")).size;
+    const countries = new Set(employees.map(e => e.country).filter(v => v && v !== "—")).size;
+    return { total, active, onLeave, inactive, departments, branches, designations, countries };
+  }, [employees]);
+
+  // Real filter-option lists, derived from actual employee records (never a fixed sample list).
+  const filterOptions = useMemo(() => {
+    const uniq = (vals: (string | undefined)[]) =>
+      Array.from(new Set(vals.filter((v): v is string => !!v && v !== "—"))).sort();
+    return {
+      countries: uniq(employees.map(e => e.country)),
+      branches: uniq(employees.map(e => e.branch)),
+      departments: uniq(employees.map(e => e.department)),
+    };
   }, [employees]);
 
   // Checkbox selection
@@ -354,25 +382,21 @@ export function VipRegisterEmployeeView() {
               <Building2 className="h-4 w-4" />
             </div>
             <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-              Branch & User Details
+              {T("asr.branch_user_details", "Branch & User Details")}
             </h3>
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Branch</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">Main Headquarters</span>
+              <span>{T("empdir.branch", "Branch")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{session?.scopes?.summary?.branchDisplayName || "—"}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Users</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">12</span>
+              <span>{T("hrm.role", "Role")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{isSuperAdmin ? T("empdir.super_admin", "Super Admin") : "—"}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Active Users</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">10</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Inactive Users</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">2</span>
+              <span>{T("common.user", "User")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{session?.user?.fullName || "—"}</span>
             </div>
           </div>
         </div>
@@ -384,25 +408,25 @@ export function VipRegisterEmployeeView() {
               <Users className="h-4 w-4" />
             </div>
             <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-              Employee Summary
+              {T("empdir.employee_summary", "Employee Summary")}
             </h3>
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Employees</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{stats.total || 54}</span>
+              <span>{T("hrm.total_employees", "Total Employees")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.total}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Active Employees</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{stats.active || 48}</span>
+              <span>{T("empdir.active_employees", "Active Employees")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.active}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>On Leave</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{stats.onLeave || 3}</span>
+              <span>{T("common.on_leave", "On Leave")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.onLeave}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Inactive Employees</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{stats.inactive || 3}</span>
+              <span>{T("empdir.inactive_employees", "Inactive Employees")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.inactive}</span>
             </div>
           </div>
         </div>
@@ -414,21 +438,21 @@ export function VipRegisterEmployeeView() {
               <Building className="h-4 w-4" />
             </div>
             <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-              Department & Position Summary
+              {T("empdir.dept_position_summary", "Department & Position Summary")}
             </h3>
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Departments</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{stats.departments || 8}</span>
+              <span>{T("hrm.departments", "Departments")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.departments}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Designations</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">15</span>
+              <span>{T("hrm.designations", "Designations")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.designations}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Vacancies</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">5</span>
+              <span>{T("empdir.vacancies", "Vacancies")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">—</span>
             </div>
           </div>
         </div>
@@ -441,25 +465,25 @@ export function VipRegisterEmployeeView() {
                 <Globe className="h-4 w-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                All Countries Employee Report
+                {T("empdir.all_countries_report", "All Countries Employee Report")}
               </h3>
             </div>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#6366f1] text-white">
-              Super Admin Only
+              {T("hrm.super_admin_only", "Super Admin Only")}
             </span>
           </div>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Countries</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">4</span>
+              <span>{T("bgr.total_countries", "Total Countries")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.countries}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Branches</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">8</span>
+              <span>{T("ajr.total_branches", "Total Branches")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.branches}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Total Employees</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{stats.total || 54}</span>
+              <span>{T("hrm.total_employees", "Total Employees")}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">{stats.total}</span>
             </div>
           </div>
         </div>
@@ -477,7 +501,7 @@ export function VipRegisterEmployeeView() {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search Employee (name, ID, mobile...)"
+            placeholder={T("empdir.search_placeholder", "Search Employee (name, ID, mobile...)")}
             className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:ring-1 focus:ring-blue-500 font-medium"
           />
         </div>
@@ -492,11 +516,10 @@ export function VipRegisterEmployeeView() {
             }}
             className="h-9 pl-7 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="All">All Countries</option>
-            <option value="United Arab Emirates">UAE</option>
-            <option value="Pakistan">Pakistan</option>
-            <option value="Afghanistan">Afghanistan</option>
-            <option value="China">China</option>
+            <option value="All">{T("bankroz.all_countries", "All Countries")}</option>
+            {filterOptions.countries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
           <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
@@ -512,11 +535,10 @@ export function VipRegisterEmployeeView() {
             }}
             className="h-9 pl-7 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="All">All Branches</option>
-            <option value="Main Headquarters">Main Headquarters</option>
-            <option value="Karachi Branch">Karachi Branch</option>
-            <option value="Dubai Branch">Dubai Branch</option>
-            <option value="Kabul Branch">Kabul Branch</option>
+            <option value="All">{T("bankroz.all_branches", "All Branches")}</option>
+            {filterOptions.branches.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
           </select>
           <Building2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
@@ -532,11 +554,10 @@ export function VipRegisterEmployeeView() {
             }}
             className="h-9 pl-7 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="All">All Departments</option>
-            <option value="General Operations">General Operations</option>
-            <option value="Operations & Management">Operations & Management</option>
-            <option value="Executive Management">Executive Management</option>
-            <option value="Office Staff">Office Staff</option>
+            <option value="All">{T("empdir.all_departments", "All Departments")}</option>
+            {filterOptions.departments.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
           </select>
           <Layers className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
@@ -552,10 +573,10 @@ export function VipRegisterEmployeeView() {
             }}
             className="h-9 pl-7 pr-7 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none"
           >
-            <option value="All">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="On Leave">On Leave</option>
-            <option value="Inactive">Inactive</option>
+            <option value="All">{T("clbill.all_statuses", "All Statuses")}</option>
+            <option value="Active">{T("common.active", "Active")}</option>
+            <option value="On Leave">{T("common.on_leave", "On Leave")}</option>
+            <option value="Inactive">{T("common.inactive", "Inactive")}</option>
           </select>
           <Users className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
@@ -575,7 +596,7 @@ export function VipRegisterEmployeeView() {
           className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          <span>Refresh</span>
+          <span>{T("aicall.refresh", "Refresh")}</span>
         </Button>
 
         {/* + Register Employee Button */}
@@ -584,7 +605,7 @@ export function VipRegisterEmployeeView() {
           className="h-9 px-4 rounded-xl bg-[#1d63ed] hover:bg-[#1a55cd] text-white font-bold text-xs shadow-xs gap-1.5"
         >
           <Plus className="h-4 w-4" />
-          <span>Register Employee</span>
+          <span>{T("nav.register_employee", "Register Employee")}</span>
         </Button>
       </div>
 
@@ -614,7 +635,7 @@ export function VipRegisterEmployeeView() {
               className="h-8 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span>Print</span>
+              <span>{T("common.print", "Print")}</span>
             </Button>
 
             <Button
@@ -651,7 +672,7 @@ export function VipRegisterEmployeeView() {
               className="h-8 px-3 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Excel</span>
+              <span>{T("asr.excel", "Excel")}</span>
             </Button>
           </div>
         </div>
@@ -818,7 +839,7 @@ export function VipRegisterEmployeeView() {
                               className="flex items-center gap-2 px-3 py-2 rounded-xl text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 font-bold transition"
                             >
                               <Mail className="h-4 w-4" />
-                              <span>Send Email</span>
+                              <span>{T("email_mgmt.send_email", "Send Email")}</span>
                             </a>
                           </div>
                         )}
@@ -899,7 +920,7 @@ export function VipRegisterEmployeeView() {
                               className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-semibold"
                             >
                               <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                              <span>Delete</span>
+                              <span>{T("common.delete", "Delete")}</span>
                             </button>
                           </div>
                         )}
@@ -1016,7 +1037,7 @@ export function VipRegisterEmployeeView() {
                   <Input
                     value={formData.fatherName}
                     onChange={e => setFormData({ ...formData, fatherName: e.target.value })}
-                    placeholder="Father or Guardian name"
+                    placeholder={T("empdir.father_guardian_placeholder", "Father or Guardian name")}
                     className="h-9 rounded-xl text-xs"
                   />
                 </div>
@@ -1024,20 +1045,15 @@ export function VipRegisterEmployeeView() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Department</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{T("hrm.departments", "Department")}</label>
                   <select
                     value={formData.department}
                     onChange={e => setFormData({ ...formData, department: e.target.value })}
                     className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-medium"
                   >
-                    <option value="Accounts">Accounts</option>
-                    <option value="HR">HR</option>
-                    <option value="Purchase">Purchase</option>
-                    <option value="Sales">Sales</option>
-                    <option value="Logistics">Logistics</option>
-                    <option value="i-Documents">i-Documents</option>
-                    <option value="Inventory">Inventory</option>
-                    <option value="Admin">Admin</option>
+                    {filterOptions.departments.length > 0
+                      ? filterOptions.departments.map((d) => <option key={d} value={d}>{d}</option>)
+                      : <option value={formData.department}>{formData.department}</option>}
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -1053,32 +1069,27 @@ export function VipRegisterEmployeeView() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Branch</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{T("empdir.branch", "Branch")}</label>
                   <select
                     value={formData.branch}
                     onChange={e => setFormData({ ...formData, branch: e.target.value })}
                     className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-medium"
                   >
-                    <option value="Karachi Main">Karachi Main</option>
-                    <option value="Lahore Branch">Lahore Branch</option>
-                    <option value="Islamabad">Islamabad</option>
-                    <option value="Dubai Office">Dubai Office</option>
-                    <option value="Peshawar">Peshawar</option>
-                    <option value="Quetta Main">Quetta Main</option>
-                    <option value="Chaman Border">Chaman Border</option>
+                    {filterOptions.branches.length > 0
+                      ? filterOptions.branches.map((b) => <option key={b} value={b}>{b}</option>)
+                      : <option value={formData.branch}>{formData.branch}</option>}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Country</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{T("common.country", "Country")}</label>
                   <select
                     value={formData.country}
                     onChange={e => setFormData({ ...formData, country: e.target.value })}
                     className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-medium"
                   >
-                    <option value="Pakistan">Pakistan</option>
-                    <option value="United Arab Emirates">United Arab Emirates</option>
-                    <option value="Afghanistan">Afghanistan</option>
-                    <option value="India">India</option>
+                    {filterOptions.countries.length > 0
+                      ? filterOptions.countries.map((c) => <option key={c} value={c}>{c}</option>)
+                      : <option value={formData.country}>{formData.country}</option>}
                   </select>
                 </div>
               </div>
@@ -1123,9 +1134,9 @@ export function VipRegisterEmployeeView() {
                     onChange={e => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-medium"
                   >
-                    <option value="Active">Active</option>
-                    <option value="On Leave">On Leave</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="Active">{T("common.active", "Active")}</option>
+                    <option value="On Leave">{T("common.on_leave", "On Leave")}</option>
+                    <option value="Inactive">{T("common.inactive", "Inactive")}</option>
                   </select>
                 </div>
               </div>
@@ -1137,7 +1148,7 @@ export function VipRegisterEmployeeView() {
                   onClick={() => setIsRegisterOpen(false)}
                   className="h-9 px-4 rounded-xl text-xs"
                 >
-                  Cancel
+                  {T("common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -1226,7 +1237,7 @@ export function VipRegisterEmployeeView() {
                 className="h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
               >
                 <MessageCircle className="h-4 w-4" />
-                <span>WhatsApp</span>
+                <span>{T("branch.whatsapp", "WhatsApp")}</span>
               </a>
               <Button
                 variant="outline"
@@ -1295,7 +1306,7 @@ export function VipRegisterEmployeeView() {
                 className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs gap-1.5 shadow-md shadow-indigo-500/20"
               >
                 <Printer className="h-4 w-4" />
-                <span>Print Official Master Report</span>
+                <span>{T("empdir.print_official_master_report", "Print Official Master Report")}</span>
               </Button>
               <Button
                 variant="outline"

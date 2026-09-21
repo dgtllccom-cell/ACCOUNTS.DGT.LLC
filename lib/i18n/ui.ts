@@ -8987,6 +8987,13 @@ export type UiKey =
   | "cinc.select_base_currency" | "cinc.select_business_type" | "cinc.select_legal_structure"
   | "cinc.bt_logistics" | "cinc.bt_trading" | "cinc.bt_retail" | "cinc.bt_import_export" | "cinc.bt_manufacturing" | "cinc.bt_services"
   | "cinc.ls_pvt_ltd" | "cinc.ls_llc" | "cinc.ls_sole_prop" | "cinc.ls_partnership" | "cinc.ls_freezone" | "cinc.ls_public_ltd"
+  | "empdir.branch_user_details" | "empdir.branch" | "empdir.super_admin"
+  | "empdir.employee_summary" | "empdir.total_employees" | "empdir.active_employees" | "empdir.on_leave"
+  | "empdir.inactive_employees" | "empdir.dept_position_summary" | "empdir.departments" | "empdir.designations"
+  | "empdir.vacancies" | "empdir.all_countries_report" | "empdir.super_admin_only" | "empdir.total_countries"
+  | "empdir.total_branches" | "empdir.all_countries" | "empdir.all_branches" | "empdir.all_departments"
+  | "empdir.all_statuses" | "empdir.active" | "empdir.inactive" | "empdir.refresh" | "empdir.register_employee"
+  | "empdir.search_placeholder" | "empdir.father_guardian_placeholder" | "empdir.print_official_master_report"
   | "hrm.branch_user_details" | "hrm.summary" | "hrm.new_this_month" | "hrm.total_employees" | "hrm.department_heads"
   | "hrm.total_monthly_budget" | "hrm.all_countries_report" | "hrm.super_admin_only" | "hrm.countries" | "hrm.all_heads"
   | "hrm.register_title_dept" | "hrm.register_title_desig" | "hrm.showing" | "hrm.of" | "hrm.to" | "hrm.entries" | "hrm.show"
@@ -19290,6 +19297,18 @@ const en: Dict = {
   "hrm.add_designation": "Add Designation",
   "hrm.search": "Search…",
   "hrm.active": "Active",
+  "empdir.branch": "Branch",
+  "empdir.father_guardian_placeholder": "Father or Guardian name",
+  "empdir.print_official_master_report": "Print Official Master Report",
+  "empdir.super_admin": "Super Admin",
+  "empdir.employee_summary": "Employee Summary",
+  "empdir.active_employees": "Active Employees",
+  "empdir.inactive_employees": "Inactive Employees",
+  "empdir.dept_position_summary": "Department & Position Summary",
+  "empdir.vacancies": "Vacancies",
+  "empdir.all_countries_report": "All Countries Employee Report",
+  "empdir.all_departments": "All Departments",
+  "empdir.search_placeholder": "Search Employee (name, ID, mobile...)",
   "hrm.branch_user_details": "Branch & User Details",
   "hrm.summary": "Summary",
   "hrm.new_this_month": "New This Month",
@@ -48602,6 +48621,18 @@ const ur: Dict = {
   "cinc.ls_partnership": "پارٹنرشپ / LLP",
   "cinc.ls_freezone": "فری زون کمپنی",
   "cinc.ls_public_ltd": "پبلک لمیٹڈ کمپنی",
+  "empdir.branch": "برانچ",
+  "empdir.father_guardian_placeholder": "والد یا سرپرست کا نام",
+  "empdir.print_official_master_report": "سرکاری ماسٹر رپورٹ پرنٹ کریں",
+  "empdir.dept_position_summary": "شعبہ اور عہدہ کا خلاصہ",
+  "empdir.all_countries_report": "تمام ممالک ملازمین رپورٹ",
+  "empdir.search_placeholder": "ملازم تلاش کریں (نام، آئی ڈی، موبائل...)",
+  "empdir.super_admin": "سوپر ادمین",
+  "empdir.employee_summary": "ملازمین کا خلاصہ",
+  "empdir.active_employees": "فعال ملازمین",
+  "empdir.inactive_employees": "غیر فعال ملازمین",
+  "empdir.vacancies": "خالی آسامیاں",
+  "empdir.all_departments": "تمام شعبہ جات",
 };
 
 const ar: Dict = {
@@ -68363,6 +68394,18 @@ const ar: Dict = {
   "cinc.ls_partnership": "شراكة / LLP",
   "cinc.ls_freezone": "شركة منطقة حرة",
   "cinc.ls_public_ltd": "شركة مساهمة عامة",
+  "empdir.branch": "الفرع",
+  "empdir.father_guardian_placeholder": "اسم الأب أو ولي الأمر",
+  "empdir.print_official_master_report": "طباعة التقرير الرسمي الرئيسي",
+  "empdir.dept_position_summary": "ملخص القسم والمنصب",
+  "empdir.all_countries_report": "تقرير موظفي جميع الدول",
+  "empdir.search_placeholder": "البحث عن موظف (الاسم، الرقم، الجوال...)",
+  "empdir.super_admin": "سوبر ادمین",
+  "empdir.employee_summary": "ملخص الموظفين",
+  "empdir.active_employees": "الموظفون النشطون",
+  "empdir.inactive_employees": "الموظفون غير النشطين",
+  "empdir.vacancies": "الشواغر",
+  "empdir.all_departments": "جميع الأقسام",
 };
 
 const fa: Dict = {
@@ -88123,6 +88166,18 @@ const fa: Dict = {
   "cinc.ls_partnership": "مشارکت / LLP",
   "cinc.ls_freezone": "شرکت منطقه آزاد",
   "cinc.ls_public_ltd": "شرکت سهامی عام",
+  "empdir.branch": "شعبه",
+  "empdir.father_guardian_placeholder": "نام پدر یا سرپرست",
+  "empdir.print_official_master_report": "چاپ گزارش رسمی اصلی",
+  "empdir.dept_position_summary": "خلاصه بخش و سمت",
+  "empdir.all_countries_report": "گزارش کارکنان همه کشورها",
+  "empdir.search_placeholder": "جستجوی کارمند (نام، شناسه، موبایل...)",
+  "empdir.super_admin": "سوپر ادمین",
+  "empdir.employee_summary": "خلاصه کارکنان",
+  "empdir.active_employees": "کارکنان فعال",
+  "empdir.inactive_employees": "کارکنان غیرفعال",
+  "empdir.vacancies": "مشاغل خالی",
+  "empdir.all_departments": "همه دپارتمان‌ها",
 };
 
 const ps: Dict = {
@@ -107890,6 +107945,18 @@ const ps: Dict = {
   "cinc.ls_partnership": "شراکت / LLP",
   "cinc.ls_freezone": "فري زون شرکت",
   "cinc.ls_public_ltd": "عامه محدود شرکت",
+  "empdir.branch": "څانګه",
+  "empdir.father_guardian_placeholder": "د پلار یا کفیل نوم",
+  "empdir.print_official_master_report": "رسمي ماسټر راپور چاپ کړئ",
+  "empdir.dept_position_summary": "د څانګې او دندې لنډیز",
+  "empdir.all_countries_report": "د ټولو هیوادونو د کارمندانو راپور",
+  "empdir.search_placeholder": "کارمند ولټوئ (نوم، آی ډي، ګرځنده...)",
+  "empdir.super_admin": "سوپر ادمین",
+  "empdir.employee_summary": "د کارمندانو لنډیز",
+  "empdir.active_employees": "فعال کارمندان",
+  "empdir.inactive_employees": "غیرفعال کارمندان",
+  "empdir.vacancies": "خالي دندې",
+  "empdir.all_departments": "ټولې څانګې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

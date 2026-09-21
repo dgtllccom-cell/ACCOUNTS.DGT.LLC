@@ -5310,5 +5310,709 @@
     "engine": "memory",
     "confidence": 0.8,
     "at": "2026-09-19T12:04:59.659Z"
+  },
+  {
+    "key": "empdir.branch",
+    "lang": "ur",
+    "value": "برانچ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.branch",
+    "lang": "ar",
+    "value": "الفرع",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.branch",
+    "lang": "fa",
+    "value": "شعبه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.branch",
+    "lang": "ps",
+    "value": "څانګه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.role",
+    "lang": "ur",
+    "value": "رولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.role",
+    "lang": "ar",
+    "value": "رولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.role",
+    "lang": "fa",
+    "value": "رولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.role",
+    "lang": "ps",
+    "value": "رولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.super_admin",
+    "lang": "ur",
+    "value": "سوپر ادمین",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.super_admin",
+    "lang": "ar",
+    "value": "سوبر ادمین",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.super_admin",
+    "lang": "fa",
+    "value": "سوپر ادمین",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.super_admin",
+    "lang": "ps",
+    "value": "سوپر ادمین",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.user",
+    "lang": "ur",
+    "value": "وسر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.user",
+    "lang": "ar",
+    "value": "وسر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.user",
+    "lang": "fa",
+    "value": "وسر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.user",
+    "lang": "ps",
+    "value": "وسر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.employee_summary",
+    "lang": "ur",
+    "value": "یمپلویی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.employee_summary",
+    "lang": "ar",
+    "value": "یمبلویی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.employee_summary",
+    "lang": "fa",
+    "value": "یمپلویی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.employee_summary",
+    "lang": "ps",
+    "value": "یمپلویی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_employees",
+    "lang": "ur",
+    "value": "توتال یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_employees",
+    "lang": "ar",
+    "value": "توتال یمبلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_employees",
+    "lang": "fa",
+    "value": "توتال یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_employees",
+    "lang": "ps",
+    "value": "توتال یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active_employees",
+    "lang": "ur",
+    "value": "اکتیوی یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active_employees",
+    "lang": "ar",
+    "value": "اکتیوی یمبلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active_employees",
+    "lang": "fa",
+    "value": "اکتیوی یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active_employees",
+    "lang": "ps",
+    "value": "اکتیوی یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.on_leave",
+    "lang": "ur",
+    "value": "ون لیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.on_leave",
+    "lang": "ar",
+    "value": "ون لیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.on_leave",
+    "lang": "fa",
+    "value": "ون لیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.on_leave",
+    "lang": "ps",
+    "value": "ون لیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive_employees",
+    "lang": "ur",
+    "value": "یناکتیوی یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive_employees",
+    "lang": "ar",
+    "value": "یناکتیوی یمبلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive_employees",
+    "lang": "fa",
+    "value": "یناکتیوی یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive_employees",
+    "lang": "ps",
+    "value": "یناکتیوی یمپلوییس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.departments",
+    "lang": "ur",
+    "value": "دیپرمکملینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.departments",
+    "lang": "ar",
+    "value": "دیبرتمینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.departments",
+    "lang": "fa",
+    "value": "دیپرانجام شدینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.departments",
+    "lang": "ps",
+    "value": "دیپرترسره شوینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.designations",
+    "lang": "ur",
+    "value": "دیسیگناتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.designations",
+    "lang": "ar",
+    "value": "دیسیجناتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.designations",
+    "lang": "fa",
+    "value": "دیسیگناتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.designations",
+    "lang": "ps",
+    "value": "دیسیگناتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.vacancies",
+    "lang": "ur",
+    "value": "واکانکایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.vacancies",
+    "lang": "ar",
+    "value": "وامننمنیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.vacancies",
+    "lang": "fa",
+    "value": "واازنازیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.vacancies",
+    "lang": "ps",
+    "value": "وادندیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_countries",
+    "lang": "ur",
+    "value": "توتال کاورنترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_countries",
+    "lang": "ar",
+    "value": "توتال کونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_countries",
+    "lang": "fa",
+    "value": "توتال کونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_countries",
+    "lang": "ps",
+    "value": "توتال دونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_branches",
+    "lang": "ur",
+    "value": "کل برانچ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_branches",
+    "lang": "ar",
+    "value": "الإجمالي الفرع",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_branches",
+    "lang": "fa",
+    "value": "مجموع شعبه",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.total_branches",
+    "lang": "ps",
+    "value": "ټول څانګه",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_countries",
+    "lang": "ur",
+    "value": "الل کاورنترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_countries",
+    "lang": "ar",
+    "value": "الل کونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_countries",
+    "lang": "fa",
+    "value": "الل کونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_countries",
+    "lang": "ps",
+    "value": "الل دونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_branches",
+    "lang": "ur",
+    "value": "الل برانچیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_branches",
+    "lang": "ar",
+    "value": "الل برانتشیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_branches",
+    "lang": "fa",
+    "value": "الل شعبهیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_branches",
+    "lang": "ps",
+    "value": "الل څانګهیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_departments",
+    "lang": "ur",
+    "value": "الل دیپرمکملینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_departments",
+    "lang": "ar",
+    "value": "الل دیبرتمینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_departments",
+    "lang": "fa",
+    "value": "الل دیپرانجام شدینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_departments",
+    "lang": "ps",
+    "value": "الل دیپرترسره شوینتس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_statuses",
+    "lang": "ur",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_statuses",
+    "lang": "ar",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_statuses",
+    "lang": "fa",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.all_statuses",
+    "lang": "ps",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active",
+    "lang": "ur",
+    "value": "اکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active",
+    "lang": "ar",
+    "value": "اکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active",
+    "lang": "fa",
+    "value": "اکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.active",
+    "lang": "ps",
+    "value": "اکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive",
+    "lang": "ur",
+    "value": "یناکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive",
+    "lang": "ar",
+    "value": "یناکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive",
+    "lang": "fa",
+    "value": "یناکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.inactive",
+    "lang": "ps",
+    "value": "یناکتیوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.refresh",
+    "lang": "ur",
+    "value": "ریفریش کریں",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.refresh",
+    "lang": "ar",
+    "value": "تحديث",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.refresh",
+    "lang": "fa",
+    "value": "بازخوانی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.refresh",
+    "lang": "ps",
+    "value": "تازه کول",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.register_employee",
+    "lang": "ur",
+    "value": "ریگیستر یمپلویی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.register_employee",
+    "lang": "ar",
+    "value": "ریجیستر یمبلویی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.register_employee",
+    "lang": "fa",
+    "value": "ریگیستر یمپلویی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "empdir.register_employee",
+    "lang": "ps",
+    "value": "ریگیستر یمپلویی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-21T18:50:45.390Z"
   }
 ]
