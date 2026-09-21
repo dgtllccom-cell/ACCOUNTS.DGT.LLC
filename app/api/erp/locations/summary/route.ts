@@ -1,9 +1,12 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
+import { getErpSessionForApi } from "@/lib/auth/session";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getErpSessionForApi();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const searchParams = request.nextUrl.searchParams;
     const countryId = searchParams.get("countryId");
     const stateId = searchParams.get("stateId");

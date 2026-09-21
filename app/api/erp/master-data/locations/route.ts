@@ -1,5 +1,6 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
+import { getErpSessionForApi } from "@/lib/auth/session";
 import { masterParametersService, type MasterParameterCategory } from "@/lib/services/master-parameters-service";
 
 /**
@@ -9,6 +10,8 @@ import { masterParametersService, type MasterParameterCategory } from "@/lib/ser
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await getErpSessionForApi();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category") as MasterParameterCategory | null;
     const countryId = searchParams.get("countryId");
