@@ -961,7 +961,9 @@ export const sidebarTree: SidebarNode[] = [
       { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
       { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route },
       { key: "go-hr-reports", labelKey: "nav.hr_reports_hub", iconKey: "bar-chart", href: "/dashboard/general-office/hr-reports" as Route },
-      { key: "go-hr-reports-my-profile", labelKey: "nav.my_employee_profile", iconKey: "user-check", href: "/dashboard/general-office/my-profile" as Route }
+      { key: "go-hr-reports-my-profile", labelKey: "nav.my_employee_profile", iconKey: "user-check", href: "/dashboard/general-office/my-profile" as Route },
+      { key: "go-location-master", labelKey: "nav.location_route_management", iconKey: "globe", href: "/dashboard/settings/location-master" as Route, permission: { resource: "location_master", action: "read" } },
+      { key: "go-route-templates", labelKey: "nav.route_templates", iconKey: "truck", href: "/dashboard/settings/route-templates" as Route, permission: { resource: "route_templates", action: "read" } }
     ]
   },
   {

@@ -6014,5 +6014,1893 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-21T18:50:45.390Z"
+  },
+  {
+    "key": "loc.refresh",
+    "lang": "ur",
+    "value": "ریفریش کریں",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.refresh",
+    "lang": "ar",
+    "value": "تحديث",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.refresh",
+    "lang": "fa",
+    "value": "بازخوانی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.refresh",
+    "lang": "ps",
+    "value": "تازه کول",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_types",
+    "lang": "ur",
+    "value": "الل تیپیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_types",
+    "lang": "ar",
+    "value": "الل تیبیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_types",
+    "lang": "fa",
+    "value": "الل تیپیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_types",
+    "lang": "ps",
+    "value": "الل تیپیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_status",
+    "lang": "ur",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_status",
+    "lang": "ar",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_status",
+    "lang": "fa",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.filter_all_status",
+    "lang": "ps",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_seaport",
+    "lang": "ur",
+    "value": "سیپورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_seaport",
+    "lang": "ar",
+    "value": "سیبورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_seaport",
+    "lang": "fa",
+    "value": "سیپورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_seaport",
+    "lang": "ps",
+    "value": "سیپورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_airport",
+    "lang": "ur",
+    "value": "ایرپورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_airport",
+    "lang": "ar",
+    "value": "ایربورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_airport",
+    "lang": "fa",
+    "value": "ایرپورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_airport",
+    "lang": "ps",
+    "value": "ایرپورت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_land_border",
+    "lang": "ur",
+    "value": "لاند بوردر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_land_border",
+    "lang": "ar",
+    "value": "لاند بوردر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_land_border",
+    "lang": "fa",
+    "value": "لاند بوردر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_land_border",
+    "lang": "ps",
+    "value": "لاند بوردر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_railway_terminal",
+    "lang": "ur",
+    "value": "رایلوای ترمینال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_railway_terminal",
+    "lang": "ar",
+    "value": "رایلوای ترمینال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_railway_terminal",
+    "lang": "fa",
+    "value": "رایلوای ترمینال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_railway_terminal",
+    "lang": "ps",
+    "value": "رایلوای ترمینال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_warehouse",
+    "lang": "ur",
+    "value": "گودام",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_warehouse",
+    "lang": "ar",
+    "value": "المستودع",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_warehouse",
+    "lang": "fa",
+    "value": "انبار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_warehouse",
+    "lang": "ps",
+    "value": "ګدام",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_cross_stuffing",
+    "lang": "ur",
+    "value": "کروسس-ستوففینگ لوکاتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_cross_stuffing",
+    "lang": "ar",
+    "value": "کروسس-ستوففینج لومنتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_cross_stuffing",
+    "lang": "fa",
+    "value": "کروسس-ستوففینگ لوازتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_cross_stuffing",
+    "lang": "ps",
+    "value": "کروسس-ستوففینگ لودتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_city",
+    "lang": "ur",
+    "value": "کیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_city",
+    "lang": "ar",
+    "value": "کیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_city",
+    "lang": "fa",
+    "value": "کیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_city",
+    "lang": "ps",
+    "value": "کیتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_country",
+    "lang": "ur",
+    "value": "ملک",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_country",
+    "lang": "ar",
+    "value": "الدولة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_country",
+    "lang": "fa",
+    "value": "کشور",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.type_country",
+    "lang": "ps",
+    "value": "هیواد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_active",
+    "lang": "ur",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_active",
+    "lang": "ar",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_active",
+    "lang": "fa",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_active",
+    "lang": "ps",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_inactive",
+    "lang": "ur",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_inactive",
+    "lang": "ar",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_inactive",
+    "lang": "fa",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_inactive",
+    "lang": "ps",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_rejected",
+    "lang": "ur",
+    "value": "ریجیکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_rejected",
+    "lang": "ar",
+    "value": "ریجیکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_rejected",
+    "lang": "fa",
+    "value": "ریجیکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.status_rejected",
+    "lang": "ps",
+    "value": "ریجیکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_name",
+    "lang": "ur",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_name",
+    "lang": "ar",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_name",
+    "lang": "fa",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_name",
+    "lang": "ps",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_type",
+    "lang": "ur",
+    "value": "تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_type",
+    "lang": "ar",
+    "value": "تیبی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_type",
+    "lang": "fa",
+    "value": "تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_type",
+    "lang": "ps",
+    "value": "تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_country",
+    "lang": "ur",
+    "value": "ملک",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_country",
+    "lang": "ar",
+    "value": "الدولة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_country",
+    "lang": "fa",
+    "value": "کشور",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_country",
+    "lang": "ps",
+    "value": "هیواد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_code",
+    "lang": "ur",
+    "value": "کودی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_code",
+    "lang": "ar",
+    "value": "إلىدی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_code",
+    "lang": "fa",
+    "value": "بهدی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_code",
+    "lang": "ps",
+    "value": "تهدی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_status",
+    "lang": "ur",
+    "value": "حیثیت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_status",
+    "lang": "ar",
+    "value": "الحالة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_status",
+    "lang": "fa",
+    "value": "وضعیت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_status",
+    "lang": "ps",
+    "value": "حالت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_actions",
+    "lang": "ur",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_actions",
+    "lang": "ar",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_actions",
+    "lang": "fa",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.col_actions",
+    "lang": "ps",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.loading",
+    "lang": "ur",
+    "value": "لوڈنگ…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.loading",
+    "lang": "ar",
+    "value": "التحميل…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.loading",
+    "lang": "fa",
+    "value": "بارگیری…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.loading",
+    "lang": "ps",
+    "value": "بار کول…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.approve",
+    "lang": "ur",
+    "value": "اپپرووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.approve",
+    "lang": "ar",
+    "value": "اببرووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.approve",
+    "lang": "fa",
+    "value": "اپپرووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.approve",
+    "lang": "ps",
+    "value": "اپپرووی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.reject",
+    "lang": "ur",
+    "value": "ریجیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.reject",
+    "lang": "ar",
+    "value": "ریجیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.reject",
+    "lang": "fa",
+    "value": "ریجیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.reject",
+    "lang": "ps",
+    "value": "ریجیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.cancel",
+    "lang": "ur",
+    "value": "کانکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.cancel",
+    "lang": "ar",
+    "value": "مننکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.cancel",
+    "lang": "fa",
+    "value": "ازنکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.cancel",
+    "lang": "ps",
+    "value": "دنکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.submit_request",
+    "lang": "ur",
+    "value": "سوبمیت ریکویست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.submit_request",
+    "lang": "ar",
+    "value": "سوبمیت ریإلىیست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.submit_request",
+    "lang": "fa",
+    "value": "سوبمیت ریبهیست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.submit_request",
+    "lang": "ps",
+    "value": "سوبمیت ریتهیست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.optional",
+    "lang": "ur",
+    "value": "وپتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.optional",
+    "lang": "ar",
+    "value": "وبتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.optional",
+    "lang": "fa",
+    "value": "وپتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.optional",
+    "lang": "ps",
+    "value": "وپتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.picker_label",
+    "lang": "ur",
+    "value": "لوکاتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.picker_label",
+    "lang": "ar",
+    "value": "لومنتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.picker_label",
+    "lang": "fa",
+    "value": "لوازتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "loc.picker_label",
+    "lang": "ps",
+    "value": "لودتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.refresh",
+    "lang": "ur",
+    "value": "ریفریش کریں",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.refresh",
+    "lang": "ar",
+    "value": "تحديث",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.refresh",
+    "lang": "fa",
+    "value": "بازخوانی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.refresh",
+    "lang": "ps",
+    "value": "تازه کول",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_name",
+    "lang": "ur",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_name",
+    "lang": "ar",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_name",
+    "lang": "fa",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_name",
+    "lang": "ps",
+    "value": "نامی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_route",
+    "lang": "ur",
+    "value": "راورتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_route",
+    "lang": "ar",
+    "value": "روتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_route",
+    "lang": "fa",
+    "value": "روتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_route",
+    "lang": "ps",
+    "value": "راوتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_legs",
+    "lang": "ur",
+    "value": "لیگس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_legs",
+    "lang": "ar",
+    "value": "لیجس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_legs",
+    "lang": "fa",
+    "value": "لیگس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_legs",
+    "lang": "ps",
+    "value": "لیگس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_status",
+    "lang": "ur",
+    "value": "حیثیت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_status",
+    "lang": "ar",
+    "value": "الحالة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_status",
+    "lang": "fa",
+    "value": "وضعیت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_status",
+    "lang": "ps",
+    "value": "حالت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_actions",
+    "lang": "ur",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_actions",
+    "lang": "ar",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_actions",
+    "lang": "fa",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_actions",
+    "lang": "ps",
+    "value": "اکتیونس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_description",
+    "lang": "ur",
+    "value": "تفصیل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_description",
+    "lang": "ar",
+    "value": "بيان",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_description",
+    "lang": "fa",
+    "value": "شرح",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.col_description",
+    "lang": "ps",
+    "value": "تشریح",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.loading",
+    "lang": "ur",
+    "value": "لوڈنگ…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.loading",
+    "lang": "ar",
+    "value": "التحميل…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.loading",
+    "lang": "fa",
+    "value": "بارگیری…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.loading",
+    "lang": "ps",
+    "value": "بار کول…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_active",
+    "lang": "ur",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_active",
+    "lang": "ar",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_active",
+    "lang": "fa",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_active",
+    "lang": "ps",
+    "value": "اکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_inactive",
+    "lang": "ur",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_inactive",
+    "lang": "ar",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_inactive",
+    "lang": "fa",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.status_inactive",
+    "lang": "ps",
+    "value": "یناکتیوی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.optional",
+    "lang": "ur",
+    "value": "وپتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.optional",
+    "lang": "ar",
+    "value": "وبتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.optional",
+    "lang": "fa",
+    "value": "وپتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.optional",
+    "lang": "ps",
+    "value": "وپتیونال",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.legs",
+    "lang": "ur",
+    "value": "راورتی لیگس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.legs",
+    "lang": "ar",
+    "value": "روتی لیجس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.legs",
+    "lang": "fa",
+    "value": "روتی لیگس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.legs",
+    "lang": "ps",
+    "value": "راوتی لیگس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.add_leg",
+    "lang": "ur",
+    "value": "ادد لیگ",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.add_leg",
+    "lang": "ar",
+    "value": "ادد لیج",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.add_leg",
+    "lang": "fa",
+    "value": "ادد لیگ",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.add_leg",
+    "lang": "ps",
+    "value": "ادد لیگ",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_no",
+    "lang": "ur",
+    "value": "لیگ",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_no",
+    "lang": "ar",
+    "value": "لیج",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_no",
+    "lang": "fa",
+    "value": "لیگ",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_no",
+    "lang": "ps",
+    "value": "لیگ",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_from_country",
+    "lang": "ur",
+    "value": "سے ملک",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_from_country",
+    "lang": "ar",
+    "value": "من الدولة",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_from_country",
+    "lang": "fa",
+    "value": "از کشور",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_from_country",
+    "lang": "ps",
+    "value": "له هیواد",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_country",
+    "lang": "ur",
+    "value": "کو ملک",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_country",
+    "lang": "ar",
+    "value": "إلى الدولة",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_country",
+    "lang": "fa",
+    "value": "به کشور",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_country",
+    "lang": "ps",
+    "value": "ته هیواد",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_location",
+    "lang": "ur",
+    "value": "تو لوکاتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_location",
+    "lang": "ar",
+    "value": "تو لومنتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_location",
+    "lang": "fa",
+    "value": "تو لوازتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.leg_to_location",
+    "lang": "ps",
+    "value": "تو لودتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_mode",
+    "lang": "ur",
+    "value": "سیلیکت مودی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_mode",
+    "lang": "ar",
+    "value": "سیلیکت مودی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_mode",
+    "lang": "fa",
+    "value": "سیلیکت مودی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_mode",
+    "lang": "ps",
+    "value": "سیلیکت مودی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_sea",
+    "lang": "ur",
+    "value": "بی سی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_sea",
+    "lang": "ar",
+    "value": "بی سی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_sea",
+    "lang": "fa",
+    "value": "بی سی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_sea",
+    "lang": "ps",
+    "value": "بی سی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_road",
+    "lang": "ur",
+    "value": "بی رواد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_road",
+    "lang": "ar",
+    "value": "بی رواد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_road",
+    "lang": "fa",
+    "value": "بی رواد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_road",
+    "lang": "ps",
+    "value": "بی رواد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_air",
+    "lang": "ur",
+    "value": "بی ایر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_air",
+    "lang": "ar",
+    "value": "بی ایر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_air",
+    "lang": "fa",
+    "value": "بی ایر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_air",
+    "lang": "ps",
+    "value": "بی ایر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_rail",
+    "lang": "ur",
+    "value": "بی تراین",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_rail",
+    "lang": "ar",
+    "value": "بی تراین",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_rail",
+    "lang": "fa",
+    "value": "بی تراین",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.mode_by_rail",
+    "lang": "ps",
+    "value": "بی تراین",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_clearance",
+    "lang": "ur",
+    "value": "سیلیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_clearance",
+    "lang": "ar",
+    "value": "سیلیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_clearance",
+    "lang": "fa",
+    "value": "سیلیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.select_clearance",
+    "lang": "ps",
+    "value": "سیلیکت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_import",
+    "lang": "ur",
+    "value": "امپورٹ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_import",
+    "lang": "ar",
+    "value": "استيراد",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_import",
+    "lang": "fa",
+    "value": "واردات",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_import",
+    "lang": "ps",
+    "value": "واردات",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_export",
+    "lang": "ur",
+    "value": "ایکسپورٹ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_export",
+    "lang": "ar",
+    "value": "تصدير",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_export",
+    "lang": "fa",
+    "value": "صادرات",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_export",
+    "lang": "ps",
+    "value": "صادرات",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_transit",
+    "lang": "ur",
+    "value": "ٹرانزٹ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_transit",
+    "lang": "ar",
+    "value": "العبور",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_transit",
+    "lang": "fa",
+    "value": "ترانزیت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.clearance_transit",
+    "lang": "ps",
+    "value": "ترانزیت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.cancel",
+    "lang": "ur",
+    "value": "کانکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.cancel",
+    "lang": "ar",
+    "value": "مننکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.cancel",
+    "lang": "fa",
+    "value": "ازنکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.cancel",
+    "lang": "ps",
+    "value": "دنکیل",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.save_template",
+    "lang": "ur",
+    "value": "ساوری تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.save_template",
+    "lang": "ar",
+    "value": "سوی تیمبلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.save_template",
+    "lang": "fa",
+    "value": "سوی تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "rtpl.save_template",
+    "lang": "ps",
+    "value": "ساوی تیمپلاتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:17:38.597Z"
+  },
+  {
+    "key": "comv.airline_name",
+    "lang": "ur",
+    "value": "ایرلینی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.airline_name",
+    "lang": "ar",
+    "value": "ایرلینی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.airline_name",
+    "lang": "fa",
+    "value": "ایرلینی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.airline_name",
+    "lang": "ps",
+    "value": "ایرلینی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.flight_number",
+    "lang": "ur",
+    "value": "فلیغت نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.flight_number",
+    "lang": "ar",
+    "value": "فلیغت نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.flight_number",
+    "lang": "fa",
+    "value": "فلیغت نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.flight_number",
+    "lang": "ps",
+    "value": "فلیغت نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.railway_operator",
+    "lang": "ur",
+    "value": "رایلوای وپراتور",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.railway_operator",
+    "lang": "ar",
+    "value": "رایلوای وبراتور",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.railway_operator",
+    "lang": "fa",
+    "value": "رایلوای وپراتور",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.railway_operator",
+    "lang": "ps",
+    "value": "رایلوای وپراتور",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.wagon_number",
+    "lang": "ur",
+    "value": "واگون نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.wagon_number",
+    "lang": "ar",
+    "value": "واجون نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.wagon_number",
+    "lang": "fa",
+    "value": "واگون نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "comv.wagon_number",
+    "lang": "ps",
+    "value": "واگون نومبر",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T12:32:53.700Z"
   }
 ]

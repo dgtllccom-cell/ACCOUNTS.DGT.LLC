@@ -109,6 +109,11 @@ export type OrderLegInput = {
   toCountryName?: string | null;
   fromLocationText?: string | null;
   toLocationText?: string | null;
+  // Optional FK enrichment into the Central Location Master (erp_locations) — additive
+  // alongside the free-text fields above, which remain the source of truth for display
+  // when a leg has no matched master location (see 20260922_dynamic_location_route_master.sql).
+  fromLocationId?: string | null;
+  toLocationId?: string | null;
   transportMode?: "by_sea" | "by_road" | "by_air" | "by_rail" | null;
   responsibleCountryBranchId?: string | null;
   responsibleCityBranchId?: string | null;
@@ -155,6 +160,14 @@ export type OrderLegInput = {
   estimatedExpenseAmount?: number | null;
   actualExpenseAmount?: number | null;
   expenseCurrency?: string | null;
+  // By Air / By Train fields (transport_mode = 'by_air' / 'by_rail') — additive columns
+  // from 20260922_dynamic_location_route_master.sql.
+  airlineName?: string | null;
+  flightNumber?: string | null;
+  airwayBillNo?: string | null;
+  railwayOperator?: string | null;
+  wagonNumber?: string | null;
+  railContainerNumber?: string | null;
 };
 
 export type ClearingCustomerOrderLegRow = Record<string, any> & { id: string; order_id: string };
@@ -231,6 +244,8 @@ function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[
       toCountryName: trimOrNull(leg.toCountryName),
       fromLocationText: trimOrNull(leg.fromLocationText),
       toLocationText: trimOrNull(leg.toLocationText),
+      fromLocationId: trimOrNull(leg.fromLocationId),
+      toLocationId: trimOrNull(leg.toLocationId),
       transportMode: LEG_TRANSPORT_MODES.has(String(leg.transportMode)) ? (leg.transportMode as OrderLegInput["transportMode"]) : null,
       responsibleCountryBranchId: trimOrNull(leg.responsibleCountryBranchId),
       responsibleCityBranchId: trimOrNull(leg.responsibleCityBranchId),
@@ -276,7 +291,13 @@ function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[
       customsStatus: LEG_CUSTOMS_STATUSES.has(String(leg.customsStatus)) ? (leg.customsStatus as OrderLegInput["customsStatus"]) : "not_applicable",
       estimatedExpenseAmount: typeof leg.estimatedExpenseAmount === "number" ? leg.estimatedExpenseAmount : null,
       actualExpenseAmount: typeof leg.actualExpenseAmount === "number" ? leg.actualExpenseAmount : null,
-      expenseCurrency: trimOrNull(leg.expenseCurrency)
+      expenseCurrency: trimOrNull(leg.expenseCurrency),
+      airlineName: trimOrNull(leg.airlineName),
+      flightNumber: trimOrNull(leg.flightNumber),
+      airwayBillNo: trimOrNull(leg.airwayBillNo),
+      railwayOperator: trimOrNull(leg.railwayOperator),
+      wagonNumber: trimOrNull(leg.wagonNumber),
+      railContainerNumber: trimOrNull(leg.railContainerNumber)
     }))
     .filter((leg) => leg.fromCountryId || leg.toCountryId || leg.fromLocationText || leg.toLocationText || leg.transportMode);
 }
@@ -766,6 +787,8 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             to_country_name: leg.toCountryName,
             from_location_text: leg.fromLocationText,
             to_location_text: leg.toLocationText,
+            from_location_id: leg.fromLocationId,
+            to_location_id: leg.toLocationId,
             transport_mode: leg.transportMode,
             responsible_country_branch_id: leg.responsibleCountryBranchId,
             responsible_city_branch_id: leg.responsibleCityBranchId,
@@ -812,6 +835,12 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             status: leg.status,
             handover_id: leg.handoverId,
             remarks: leg.remarks,
+            airline_name: leg.airlineName,
+            flight_number: leg.flightNumber,
+            airway_bill_no: leg.airwayBillNo,
+            railway_operator: leg.railwayOperator,
+            wagon_number: leg.wagonNumber,
+            rail_container_number: leg.railContainerNumber,
             updated_at: now
           };
 

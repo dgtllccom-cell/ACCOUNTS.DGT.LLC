@@ -58,6 +58,11 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   loading_ports: [{ field: "port_name", mode: "transliterate" }],
   received_ports: [{ field: "port_name", mode: "transliterate" }],
   ports: [{ field: "port_name", mode: "transliterate" }],
+  erp_locations: [{ field: "name", mode: "transliterate" }],
+  route_templates: [
+    { field: "name", mode: "transliterate" },
+    { field: "description", mode: "translate" },
+  ],
 
   // ── Organizations / parties ──
   parent_business_groups: [

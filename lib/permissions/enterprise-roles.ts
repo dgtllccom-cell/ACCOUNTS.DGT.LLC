@@ -142,6 +142,15 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "shipping_records:update",
     "shipping_records:approve",
     "shipping_records:reject",
+    "location_master:create",
+    "location_master:read",
+    "location_master:update",
+    "location_master:approve",
+    "location_master:reject",
+    "route_templates:create",
+    "route_templates:read",
+    "route_templates:update",
+    "route_templates:delete",
     "shipping_transfers:create",
     "shipping_transfers:read",
     "shipping_transfers:approve",
@@ -234,7 +243,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:read",
     "documents:create",
     "uae_tax:read",
-    "contracts:read"
+    "contracts:read",
+    "location_master:read",
+    "route_templates:read"
   ],
   main_branch_admin: [
     "companies:read",
@@ -287,6 +298,12 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "shipping_records:update",
     "shipping_records:approve",
     "shipping_records:reject",
+    "location_master:create",
+    "location_master:read",
+    "location_master:update",
+    "route_templates:create",
+    "route_templates:read",
+    "route_templates:update",
     "shipping_transfers:create",
     "shipping_transfers:read",
     "shipping_transfers:approve",
@@ -380,6 +397,12 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "shipping_records:update",
     "shipping_records:approve",
     "shipping_records:reject",
+    "location_master:create",
+    "location_master:read",
+    "location_master:update",
+    "route_templates:create",
+    "route_templates:read",
+    "route_templates:update",
     "shipping_transfers:create",
     "shipping_transfers:read",
     "shipping_transfers:approve",
@@ -534,7 +557,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "whatsapp:read",
     "whatsapp:create"
   ],
-  staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read"],
+  staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"],
   auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "contracts:read"]
 };
 

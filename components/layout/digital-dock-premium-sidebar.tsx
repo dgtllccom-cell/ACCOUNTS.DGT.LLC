@@ -43,6 +43,8 @@ import {
   Globe,
   Globe2,
   History,
+  MapPin,
+  Route,
   Home,
   Landmark,
   Layers,
@@ -404,6 +406,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Departments & Designations"), href: "/dashboard/general-office/departments", icon: Building2 },
       { label: nt("Gratuity & End-of-Service"), href: "/dashboard/general-office/gratuity", icon: Receipt },
       { label: nt("Share External Forms"), href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
+      { label: nt("Dynamic Location & Route Management"), href: "/dashboard/settings/location-master", icon: MapPin, tone: "red" },
+      { label: nt("Reusable Route Templates"), href: "/dashboard/settings/route-templates", icon: Route, tone: "red" },
     ],
   },
   {

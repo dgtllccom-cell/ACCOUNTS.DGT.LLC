@@ -31,7 +31,8 @@ const LANG_COL: Record<string, "urdu_text" | "arabic_text" | "persian_text" | "p
 const PROPER_NAME_TABLES = new Set([
   "companies", "customers", "employees", "banks", "warehouses",
   "city_branches", "country_branches", "ports", "districts", "cities",
-  "states_provinces", "countries", "areas_locations"
+  "states_provinces", "countries", "areas_locations",
+  "erp_locations", "route_templates"
 ]);
 
 type DictRow = {
