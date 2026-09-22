@@ -7902,5 +7902,1509 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-22T12:32:53.700Z"
+  },
+  {
+    "key": "pjt.status_posted",
+    "lang": "ur",
+    "value": "پوسٹنگ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_posted",
+    "lang": "ar",
+    "value": "ترحيل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_posted",
+    "lang": "fa",
+    "value": "ثبت",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_posted",
+    "lang": "ps",
+    "value": "پوسټ کول",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_cancelled",
+    "lang": "ur",
+    "value": "منسوخ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_cancelled",
+    "lang": "ar",
+    "value": "ملغى",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_cancelled",
+    "lang": "fa",
+    "value": "لغو شد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_cancelled",
+    "lang": "ps",
+    "value": "لغوه شو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_pending",
+    "lang": "ur",
+    "value": "زیرِ التوا",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_pending",
+    "lang": "ar",
+    "value": "قيد الانتظار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_pending",
+    "lang": "fa",
+    "value": "در انتظار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.status_pending",
+    "lang": "ps",
+    "value": "پاتې",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.breadcrumb_home",
+    "lang": "ur",
+    "value": "ہومی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.breadcrumb_home",
+    "lang": "ar",
+    "value": "ہومی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.breadcrumb_home",
+    "lang": "fa",
+    "value": "ہومی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.breadcrumb_home",
+    "lang": "ps",
+    "value": "ہومی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_country",
+    "lang": "ur",
+    "value": "ملک",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_country",
+    "lang": "ar",
+    "value": "الدولة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_country",
+    "lang": "fa",
+    "value": "کشور",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_country",
+    "lang": "ps",
+    "value": "هیواد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_branch",
+    "lang": "ur",
+    "value": "برانچ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_branch",
+    "lang": "ar",
+    "value": "الفرع",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_branch",
+    "lang": "fa",
+    "value": "شعبه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_branch",
+    "lang": "ps",
+    "value": "څانګه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_user",
+    "lang": "ur",
+    "value": "وسر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_user",
+    "lang": "ar",
+    "value": "وسر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_user",
+    "lang": "fa",
+    "value": "وسر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_user",
+    "lang": "ps",
+    "value": "وسر",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_role",
+    "lang": "ur",
+    "value": "رولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_role",
+    "lang": "ar",
+    "value": "رولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_role",
+    "lang": "fa",
+    "value": "رولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.col_role",
+    "lang": "ps",
+    "value": "رولی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_payment_summary",
+    "lang": "ur",
+    "value": "پایمینت سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_payment_summary",
+    "lang": "ar",
+    "value": "معیمینت سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_payment_summary",
+    "lang": "fa",
+    "value": "پایمینت سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_payment_summary",
+    "lang": "ps",
+    "value": "پایمینت سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.total_payments",
+    "lang": "ur",
+    "value": "کل ادائیگیاں",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.total_payments",
+    "lang": "ar",
+    "value": "الإجمالي المدفوعات",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.total_payments",
+    "lang": "fa",
+    "value": "مجموع پرداخت‌ها",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.total_payments",
+    "lang": "ps",
+    "value": "ټول تادیات",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.paid_amount",
+    "lang": "ur",
+    "value": "ادا شدہ رقم",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.paid_amount",
+    "lang": "ar",
+    "value": "المبلغ المدفوع",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.paid_amount",
+    "lang": "fa",
+    "value": "مبلغ پرداخت‌شده",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.paid_amount",
+    "lang": "ps",
+    "value": "تادیه شوې اندازه",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance",
+    "lang": "ur",
+    "value": "بیلنس",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance",
+    "lang": "ar",
+    "value": "الرصيد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance",
+    "lang": "fa",
+    "value": "مانده",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance",
+    "lang": "ps",
+    "value": "بیلانس",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.overdue",
+    "lang": "ur",
+    "value": "ووردوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.overdue",
+    "lang": "ar",
+    "value": "ووردوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.overdue",
+    "lang": "fa",
+    "value": "ووردوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.overdue",
+    "lang": "ps",
+    "value": "ووردوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit",
+    "lang": "ur",
+    "value": "ڈیبٹ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit",
+    "lang": "ar",
+    "value": "مدين",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit",
+    "lang": "fa",
+    "value": "بدهکار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit",
+    "lang": "ps",
+    "value": "ډیبیټ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit",
+    "lang": "ur",
+    "value": "کریڈٹ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit",
+    "lang": "ar",
+    "value": "دائن",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit",
+    "lang": "fa",
+    "value": "بستانکار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit",
+    "lang": "ps",
+    "value": "کریډیټ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_country_branch",
+    "lang": "ur",
+    "value": "ملک/برانچ رپورٹ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_country_branch",
+    "lang": "ar",
+    "value": "الدولة/الفرع تقرير",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_country_branch",
+    "lang": "fa",
+    "value": "کشور/شعبه گزارش",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.card_country_branch",
+    "lang": "ps",
+    "value": "هیواد/څانګه راپور",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.countries",
+    "lang": "ur",
+    "value": "کاورنترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.countries",
+    "lang": "ar",
+    "value": "کونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.countries",
+    "lang": "fa",
+    "value": "کونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.countries",
+    "lang": "ps",
+    "value": "دونترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.branches",
+    "lang": "ur",
+    "value": "برانچ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.branches",
+    "lang": "ar",
+    "value": "الفرع",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.branches",
+    "lang": "fa",
+    "value": "شعبه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.branches",
+    "lang": "ps",
+    "value": "څانګه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.active_users",
+    "lang": "ur",
+    "value": "اکتیوی وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.active_users",
+    "lang": "ar",
+    "value": "اکتیوی وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.active_users",
+    "lang": "fa",
+    "value": "اکتیوی وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.active_users",
+    "lang": "ps",
+    "value": "اکتیوی وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.all_status",
+    "lang": "ur",
+    "value": "الل ستاتوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.all_status",
+    "lang": "ar",
+    "value": "الل ستاتوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.all_status",
+    "lang": "fa",
+    "value": "الل ستاتوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.all_status",
+    "lang": "ps",
+    "value": "الل ستاتوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.refresh",
+    "lang": "ur",
+    "value": "ریفریش کریں",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.refresh",
+    "lang": "ar",
+    "value": "تحديث",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.refresh",
+    "lang": "fa",
+    "value": "بازخوانی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.refresh",
+    "lang": "ps",
+    "value": "تازه کول",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.more_filters",
+    "lang": "ur",
+    "value": "موری فیلترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.more_filters",
+    "lang": "ar",
+    "value": "موری فیلترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.more_filters",
+    "lang": "fa",
+    "value": "موری فیلترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.more_filters",
+    "lang": "ps",
+    "value": "موری فیلترس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.new_payment",
+    "lang": "ur",
+    "value": "نیو پایمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.new_payment",
+    "lang": "ar",
+    "value": "نیو معیمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.new_payment",
+    "lang": "fa",
+    "value": "نیو پایمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.new_payment",
+    "lang": "ps",
+    "value": "نیو پایمینت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_no",
+    "lang": "ur",
+    "value": "پایمینت نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_no",
+    "lang": "ar",
+    "value": "معیمینت نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_no",
+    "lang": "fa",
+    "value": "پایمینت نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_no",
+    "lang": "ps",
+    "value": "پایمینت نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.vendor",
+    "lang": "ur",
+    "value": "سپلائر",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.vendor",
+    "lang": "ar",
+    "value": "المورد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.vendor",
+    "lang": "fa",
+    "value": "تأمین‌کننده",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.vendor",
+    "lang": "ps",
+    "value": "عرضه کوونکی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.amount",
+    "lang": "ur",
+    "value": "رقم",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.amount",
+    "lang": "ar",
+    "value": "المبلغ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.amount",
+    "lang": "fa",
+    "value": "مبلغ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.amount",
+    "lang": "ps",
+    "value": "مقدار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.reference",
+    "lang": "ur",
+    "value": "ریفرینکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.reference",
+    "lang": "ar",
+    "value": "ریفرینکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.reference",
+    "lang": "fa",
+    "value": "ریفرینکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.reference",
+    "lang": "ps",
+    "value": "ریفرینکی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.loading",
+    "lang": "ur",
+    "value": "لوڈنگ…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.loading",
+    "lang": "ar",
+    "value": "التحميل…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.loading",
+    "lang": "fa",
+    "value": "بارگیری…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.loading",
+    "lang": "ps",
+    "value": "بار کول…",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.to",
+    "lang": "ur",
+    "value": "کو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.to",
+    "lang": "ar",
+    "value": "إلى",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.to",
+    "lang": "fa",
+    "value": "به",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.to",
+    "lang": "ps",
+    "value": "ته",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.of",
+    "lang": "ur",
+    "value": "کا",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.of",
+    "lang": "ar",
+    "value": "من",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.of",
+    "lang": "fa",
+    "value": "از",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.of",
+    "lang": "ps",
+    "value": "د",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.entries",
+    "lang": "ur",
+    "value": "ینترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.entries",
+    "lang": "ar",
+    "value": "ینترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.entries",
+    "lang": "fa",
+    "value": "ینترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.entries",
+    "lang": "ps",
+    "value": "ینترایس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.page",
+    "lang": "ur",
+    "value": "پاگی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.page",
+    "lang": "ar",
+    "value": "معجی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.page",
+    "lang": "fa",
+    "value": "پاگی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.page",
+    "lang": "ps",
+    "value": "پاگی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_amount",
+    "lang": "ur",
+    "value": "خریداری آرڈر رقم",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_amount",
+    "lang": "ar",
+    "value": "أمر شراء المبلغ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_amount",
+    "lang": "fa",
+    "value": "سفارش خرید مبلغ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_amount",
+    "lang": "ps",
+    "value": "د پیرودنې امر مقدار",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance_amount",
+    "lang": "ur",
+    "value": "بیلنس رقم",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance_amount",
+    "lang": "ar",
+    "value": "الرصيد المبلغ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance_amount",
+    "lang": "fa",
+    "value": "مانده مبلغ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.balance_amount",
+    "lang": "ps",
+    "value": "بیلانس مقدار",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_details",
+    "lang": "ur",
+    "value": "پایمینت دیتایلس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_details",
+    "lang": "ar",
+    "value": "معیمینت دیتایلس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_details",
+    "lang": "fa",
+    "value": "پایمینت دیتایلس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_details",
+    "lang": "ps",
+    "value": "پایمینت دیتایلس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.print",
+    "lang": "ur",
+    "value": "پرینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.print",
+    "lang": "ar",
+    "value": "برینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.print",
+    "lang": "fa",
+    "value": "پرینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.print",
+    "lang": "ps",
+    "value": "پرینت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.download_pdf",
+    "lang": "ur",
+    "value": "داورنلواد پدف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.download_pdf",
+    "lang": "ar",
+    "value": "دونلواد بدف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.download_pdf",
+    "lang": "fa",
+    "value": "دونلواد پدف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.download_pdf",
+    "lang": "ps",
+    "value": "داونلواد پدف",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_overview",
+    "lang": "ur",
+    "value": "پایمینت ووروایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_overview",
+    "lang": "ar",
+    "value": "معیمینت ووروایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_overview",
+    "lang": "fa",
+    "value": "پایمینت ووروایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.payment_overview",
+    "lang": "ps",
+    "value": "پایمینت ووروایو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_date",
+    "lang": "ur",
+    "value": "خریداری آرڈر تاریخ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_date",
+    "lang": "ar",
+    "value": "أمر شراء التاريخ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_date",
+    "lang": "fa",
+    "value": "سفارش خرید تاریخ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.po_date",
+    "lang": "ps",
+    "value": "د پیرودنې امر نېټه",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.ledger_posting",
+    "lang": "ur",
+    "value": "لیجر پوسٹنگ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.ledger_posting",
+    "lang": "ar",
+    "value": "دفتر الأستاذ ترحيل",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.ledger_posting",
+    "lang": "fa",
+    "value": "دفتر کل ثبت",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.ledger_posting",
+    "lang": "ps",
+    "value": "لیجر پوسټ کول",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.posting_date",
+    "lang": "ur",
+    "value": "پوسٹنگ تاریخ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.posting_date",
+    "lang": "ar",
+    "value": "ترحيل التاريخ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.posting_date",
+    "lang": "fa",
+    "value": "ثبت تاریخ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.posting_date",
+    "lang": "ps",
+    "value": "پوسټ کول نېټه",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit_account",
+    "lang": "ur",
+    "value": "ڈیبٹ اکاؤنٹ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit_account",
+    "lang": "ar",
+    "value": "مدين حساب",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit_account",
+    "lang": "fa",
+    "value": "بدهکار حساب",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.debit_account",
+    "lang": "ps",
+    "value": "ډیبیټ حساب",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit_account",
+    "lang": "ur",
+    "value": "کریڈٹ اکاؤنٹ",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit_account",
+    "lang": "ar",
+    "value": "دائن حساب",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit_account",
+    "lang": "fa",
+    "value": "بستانکار حساب",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.credit_account",
+    "lang": "ps",
+    "value": "کریډیټ حساب",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.narration",
+    "lang": "ur",
+    "value": "تفصیل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.narration",
+    "lang": "ar",
+    "value": "بيان",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.narration",
+    "lang": "fa",
+    "value": "شرح",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.narration",
+    "lang": "ps",
+    "value": "تشریح",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.audit_trail",
+    "lang": "ur",
+    "value": "آڈٹ ٹریل",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.audit_trail",
+    "lang": "ar",
+    "value": "سجل التدقيق",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.audit_trail",
+    "lang": "fa",
+    "value": "ردپای حسابرسی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.audit_trail",
+    "lang": "ps",
+    "value": "د پلټنې لاره",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_by",
+    "lang": "ur",
+    "value": "کریتید بی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_by",
+    "lang": "ar",
+    "value": "کریتید بی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_by",
+    "lang": "fa",
+    "value": "کریتید بی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_by",
+    "lang": "ps",
+    "value": "کریتید بی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_on",
+    "lang": "ur",
+    "value": "کریتید ون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_on",
+    "lang": "ar",
+    "value": "کریتید ون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_on",
+    "lang": "fa",
+    "value": "کریتید ون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "pjt.created_on",
+    "lang": "ps",
+    "value": "کریتید ون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-22T13:31:43.702Z"
   }
 ]

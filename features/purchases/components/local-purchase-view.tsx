@@ -295,8 +295,12 @@ export function LocalPurchaseView({
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Stepper state: Step 1 (Items Entry) -> Step 2 (Settlement & Logistics) -> Step 3 (Printable A4 Voucher)
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  // Stepper state: Step 1 (Booking — bill/accounts + payment/logistics/destination)
+  // -> Step 2 (Goods Entry) -> Step 3 (Final — review, totals, save). Restyled to the
+  // owner-approved Booking/Goods Entry/Final workflow; old Step 3 "Logistics & Others"
+  // content now renders alongside Step 1 (see the `currentStep === 1` condition further
+  // down that used to read `currentStep === 3`), old Step 4 "Review" is now Step 3.
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Set by "Edit Draft" so handleSubmit updates this SAME row (PATCH by id)
   // instead of POSTing a brand-new duplicate purchase record.
@@ -517,6 +521,11 @@ export function LocalPurchaseView({
   const [rateType, setRateType] = useState("per_kg");
   const [purchaseRate, setPurchaseRate] = useState("");
   const [purchaseCurrency, setPurchaseCurrency] = useState("USD");
+  // Booking-level exchange rate to AED — the payload field `exchangeRate` already
+  // existed but was always hardcoded to 1 (no real UI input anywhere); this wires a
+  // real, user-editable rate into it. Booking-level only (not per goods line): the
+  // local_purchases table has no per-line currency, so this does not add one.
+  const [exchangeRateToAed, setExchangeRateToAed] = useState("1");
   const [applyTax, setApplyTax] = useState("No");
   const [taxType, setTaxType] = useState("VAT");
   const [taxPercentage, setTaxPercentage] = useState("0");
@@ -655,6 +664,17 @@ export function LocalPurchaseView({
       return;
     }
     if (activeCityBranches.length > 0) {
+      // Don't clobber an already-valid city branch — e.g. one the scope modal's
+      // "Confirm Scope" or "Edit Draft" just set explicitly. Without this guard,
+      // this default-selection effect re-fires on every selectedBranchId change
+      // (it runs in the same tick as Confirm Scope's setSelectedBranchId) and
+      // silently overwrote the deliberate choice with activeCityBranches[0],
+      // which was a non-business branch — the submit payload then carried the
+      // wrong city_branch_id and every "Book & Accept Bill" 403'd with
+      // NON_BUSINESS_BRANCH regardless of what the user actually picked.
+      if (selectedCityBranchId && activeCityBranches.some(c => c.id === selectedCityBranchId)) {
+        return;
+      }
       const userCityBranch = session.cityBranchIds?.[0] || session.city_branch_ids?.[0];
       if (userCityBranch && activeCityBranches.some(c => c.id === userCityBranch)) {
         setSelectedCityBranchId(userCityBranch);
@@ -664,7 +684,7 @@ export function LocalPurchaseView({
     } else {
       setSelectedCityBranchId("");
     }
-  }, [activeCityBranches, session, selectedBranchId, isGlobalUser]);
+  }, [activeCityBranches, session, selectedBranchId, isGlobalUser, selectedCityBranchId]);
 
   // Origin Country
   const selectedOriginCountryName = useMemo(() => {
@@ -685,10 +705,16 @@ export function LocalPurchaseView({
   }, [activeBranch]);
 
   useEffect(() => {
+    // Don't override a currency the user actually chose. "Edit Draft" restores
+    // the saved row's real purchase_currency in the same click that also sets
+    // editingPurchaseId and (often) a different selectedBranchId — which
+    // recomputes localCurrency and, without this guard, silently clobbered the
+    // restored currency back to the branch's default local currency on reopen.
+    if (editingPurchaseId) return;
     if (localCurrency) {
       setPurchaseCurrency(localCurrency);
     }
-  }, [localCurrency]);
+  }, [localCurrency, editingPurchaseId]);
 
   useEffect(() => {
     if (divideUnit === "50_kg") setDivideKgs("50");
@@ -1003,6 +1029,12 @@ export function LocalPurchaseView({
     return draftTotal + finalCost;
   }, [draftItems, finalCost]);
 
+  // Final Amount (AED) — combinedBillCost converted at the booking-level exchange
+  // rate. Same purchaseCurrency for the whole booking (no per-line rate).
+  const finalAmountAed = useMemo(() => {
+    return combinedBillCost * (Number(exchangeRateToAed) || 1);
+  }, [combinedBillCost, exchangeRateToAed]);
+
   // Step 2 Settlement & Logistics calculations
   const calculatedAdvanceAmount = useMemo(() => {
     if (manualAdvanceAmount !== "") return Number(manualAdvanceAmount);
@@ -1079,7 +1111,7 @@ export function LocalPurchaseView({
   }
 
   // Final submit handler with ledger posting dates serialization
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent, options?: { draftOnly?: boolean }) {
     e.preventDefault();
 
     const resolvedShippingMode = shippingMode === "Custom" ? customShippingMode.trim() : shippingMode;
@@ -1202,7 +1234,7 @@ export function LocalPurchaseView({
         rateType: primaryRateType,
         purchaseRate: primaryPurchaseRate,
         purchaseCurrency: purchaseCurrency,
-        exchangeRate: 1,
+        exchangeRate: Number(exchangeRateToAed) || 1,
         localCurrency: purchaseCurrency,
         purchaseCost: primaryPurchaseCost,
         applyTax: primaryApplyTax || "No",
@@ -1229,11 +1261,13 @@ export function LocalPurchaseView({
 
       const newPurchase = data.data?.purchase || data.purchase;
 
-      // Automatically accept the bill as per workflow (Draft -> Accepted transition) only if draft or newly created
+      // Automatically accept the bill as per workflow (Draft -> Accepted transition) only if
+      // draft or newly created, AND the user asked for "Book & Accept" rather than "Save Draft".
       let acceptedRecord = newPurchase;
       const isAlreadyProcessed = isEditingDraft && String(newPurchase?.status || "").toLowerCase() !== "draft";
+      const draftOnly = Boolean(options?.draftOnly);
 
-      if (!isAlreadyProcessed) {
+      if (!isAlreadyProcessed && !draftOnly) {
         try {
           const acceptRes = await fetch("/api/erp/purchases/local-purchase/accept", {
             method: "POST",
@@ -1249,7 +1283,12 @@ export function LocalPurchaseView({
         }
       }
 
-      if (isAlreadyProcessed) {
+      if (draftOnly) {
+        alert(
+          t(lang, "lp.bill_saved_draft", "Bill saved to draft.") +
+          ` (${t(lang, "lp.f_serial", "Serial:")} ${newPurchase?.manual_bill_no || newPurchase?.manualBillNo || newPurchase?.id})`
+        );
+      } else if (isAlreadyProcessed) {
         alert(
           data?.data?.cascaded
             ? "Local Purchase updated successfully! All transferred and linked records (Roznamcha, Journal, General Ledger) have been synchronized."
@@ -1302,9 +1341,16 @@ export function LocalPurchaseView({
       setWarehouseAccountNo("");
       setSelectedTruckId("");
       
-      // Reload logs and automatically redirect/open the newly accepted voucher in Payment Module
+      // Reload logs and automatically redirect/open the saved voucher
       await loadHistory();
-      if (isAlreadyProcessed) {
+      if (draftOnly) {
+        // Stay on the unfiltered registry and open the saved draft's own voucher —
+        // this IS the "reopen the draft" proof: a real row, with a real id, readable
+        // right back from the same registry the Edit Draft action uses.
+        setRegistryFilter("draft");
+        setActiveTab("all");
+        setSelectedRowForVoucher(newPurchase);
+      } else if (isAlreadyProcessed) {
         const targetTab = String(newPurchase?.status || "").toLowerCase() === "posted" ? "posted" : "accepted";
         setActiveTab(targetTab as any);
         setSelectedRowForVoucher(newPurchase);
@@ -1317,6 +1363,34 @@ export function LocalPurchaseView({
     } finally {
       setSaving(false);
     }
+  }
+
+  // Booking step is required before Goods Entry — the API rejects a save with
+  // no debit account and no credit/broker account anyway (zod .min(1) + the
+  // .refine on salesAccountNo/brokerAccountNo), so this just surfaces that same
+  // requirement before the user leaves the step, instead of only at save time.
+  function validateBookingStep(): boolean {
+    if (!purchaseAccountNo.trim()) {
+      alert(t(lang, "lp.validation_purchase_account", "Please select the Purchase Account (DR) before continuing."));
+      return false;
+    }
+    if (!salesAccountNo.trim() && !brokerAccountNo.trim()) {
+      alert(t(lang, "lp.validation_sales_account", "Please select the Sales Account (CR) or a Broker/Agent Account before continuing."));
+      return false;
+    }
+    return true;
+  }
+
+  // Mirrors the "at least one Goods Item" check handleSubmit already enforces at
+  // save time — surfaced here too so the "3 Final" tab can't be used to skip
+  // straight past Goods Entry from Step 1 with nothing entered.
+  function validateGoodsStep(): boolean {
+    const hasGoodsItem = draftItems.length > 0 || Boolean(goodsId) || Boolean(customGoodsName.trim());
+    if (!hasGoodsItem) {
+      alert(t(lang, "lp.validation_goods_item", "Please select or enter at least one Goods Item before continuing."));
+      return false;
+    }
+    return true;
   }
 
   // Filter history
@@ -2322,7 +2396,7 @@ export function LocalPurchaseView({
 
             <button
               type="button"
-              onClick={() => setCurrentStep(2)}
+              onClick={() => { if (currentStep === 1 && !validateBookingStep()) return; setCurrentStep(2); }}
               className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
                 currentStep === 2 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
@@ -2332,22 +2406,20 @@ export function LocalPurchaseView({
 
             <button
               type="button"
-              onClick={() => setCurrentStep(3)}
+              onClick={() => {
+                if (currentStep === 1) {
+                  if (!validateBookingStep()) return;
+                  if (!validateGoodsStep()) return;
+                } else if (currentStep === 2 && !validateGoodsStep()) {
+                  return;
+                }
+                setCurrentStep(3);
+              }}
               className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
                 currentStep === 3 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {t(lang, "lp.step3_tab", "3 Others")}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCurrentStep(4)}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
-                currentStep === 4 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {t(lang, "lp.step4_tab", "4 Review")}
+              {t(lang, "lp.step3_tab_final", "3 Final")}
             </button>
           </div>
 
@@ -2357,10 +2429,9 @@ export function LocalPurchaseView({
             <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
               <CardHeader className="bg-slate-50 border-b border-slate-100 p-3.5 flex flex-row items-center justify-between">
                 <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  {currentStep === 1 && <><FileText className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step1_header", "STEP 1: BILL & ACCOUNTS INFO")}</>}
+                  {currentStep === 1 && <><FileText className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step1_header_booking", "STEP 1: BOOKING")}</>}
                   {currentStep === 2 && <><Package className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step2_header", "STEP 2: GOODS ENTRY")}</>}
-                  {currentStep === 3 && <><Truck className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step3_header", "STEP 3: LOGISTICS & OTHERS")}</>}
-                  {currentStep === 4 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step4_header", "STEP 4: REVIEW & ACCEPT")}</>}
+                  {currentStep === 3 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step3_header_final", "STEP 3: FINAL")}</>}
                 </CardTitle>
                 <button
                   type="button"
@@ -2502,6 +2573,39 @@ export function LocalPurchaseView({
                       </select>
                     </div>
 
+                    {/* 6b. Purchase Currency + Exchange Rate to AED — booking-level (see
+                        finalAmountAed useMemo); the payload field `exchangeRate` already
+                        existed and was always hardcoded to 1 before this real input. */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                          <Coins className="h-3 w-3 text-emerald-600" /> {t(lang, "lp.purchase_currency", "Purchase Currency *")}
+                        </label>
+                        <select
+                          value={purchaseCurrency}
+                          onChange={e => setPurchaseCurrency(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-slate-700"
+                        >
+                          {CURRENCIES.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          {t(lang, "lp.exchange_rate_to_aed", "Exchange Rate to AED")}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          min="0"
+                          value={exchangeRateToAed}
+                          onChange={e => setExchangeRateToAed(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-mono font-bold text-slate-700"
+                        />
+                      </div>
+                    </div>
+
                     {/* 7. Remarks / Terms Notes */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remarks_label", "Remarks / Terms Notes")}</label>
@@ -2513,16 +2617,6 @@ export function LocalPurchaseView({
                         className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs outline-none font-sans"
                       />
                     </div>
-                  </div>
-
-                  <div className="pt-2 flex justify-end">
-                    <Button
-                      type="button"
-                      onClick={() => setCurrentStep(2)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
-                    >
-                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                    </Button>
                   </div>
                 </div>
               )}
@@ -2842,17 +2936,21 @@ export function LocalPurchaseView({
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => setCurrentStep(3)}
+                      onClick={() => { if (!validateGoodsStep()) return; setCurrentStep(3); }}
                       className="w-1/3 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1"
                     >
-                      {t(lang, "lp.next_logistics", "Next: Logistics")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                      {t(lang, "lp.next_final", "Next: Final")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: PAYMENT & LOGISTICS */}
-              {currentStep === 3 && (
+              {/* PAYMENT & LOGISTICS — merged into the Step 1 "Booking" display (owner-approved
+                  Booking/Goods Entry/Final restyle). Condition changed from the old, separate
+                  "STEP 3: PAYMENT & LOGISTICS" (currentStep === 3) so this content renders
+                  together with the Step 1 Bill & Accounts fields, matching the prototype's
+                  single "Booking" step. Field bindings/logic below are unchanged. */}
+              {currentStep === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-purple-600 pl-2">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -3122,20 +3220,16 @@ export function LocalPurchaseView({
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}
-                      className="w-1/2 h-9 rounded-xl text-xs font-bold">
-                      <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {th("Back")}
-                    </Button>
-                    <Button type="button" onClick={() => setCurrentStep(4)}
-                      className="w-1/2 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
-                      {t(lang, "lp.next_review", "Next: Review")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                    <Button type="button" onClick={() => { if (!validateBookingStep()) return; setCurrentStep(2); }}
+                      className="w-full h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
+                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 4: REVIEW & ACCEPT */}
-              {currentStep === 4 && (
+              {/* STEP 3: FINAL */}
+              {currentStep === 3 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-emerald-600 pl-2">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -3148,41 +3242,83 @@ export function LocalPurchaseView({
                     {t(lang, "lp.review_notice", "Please review the payment conditions, weights, and logistics summary before finalized acceptance.")}
                   </div>
 
-                  {/* Payment & Logistics Summary */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-1.5">
-                    <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">{t(lang, "lp.payment_logistics_s", "Payment & Logistics")}</p>
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-500">{t(lang, "lp.payment_mode", "Payment Mode:")}</span>
-                      <span className="font-bold text-slate-800">{paymentMode}</span>
+                  {/* Final 4-card summary grid — Loading / Payment / Goods / Origin & Total,
+                      matching the approved prototype's Step 4 layout. Same fields/values as
+                      the summary list this replaces; nothing renamed at the data level. */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Truck className="h-3 w-3 text-purple-600" /> {t(lang, "lp.card_loading_details", "Loading Details")}
+                      </p>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.shipment_type_s", "Shipment Type:")}</span>
+                        <span className="font-bold text-slate-800 text-right">{shipmentType}</span>
+                      </div>
+                      {truckNo && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.truck_no_s", "Truck No:")}</span><span className="font-mono font-bold text-indigo-700">{truckNo}</span></div>}
+                      {driverName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.driver_s", "Driver:")}</span><span className="font-bold text-slate-700">{driverName}</span></div>}
+                      {warehouseName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.warehouse_s", "Warehouse:")}</span><span className="font-bold text-slate-700">{warehouseName}</span></div>}
                     </div>
-                    {paymentMode === "Advance" && (
-                      <>
-                        <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">{t(lang, "lp.advance_amount_s", "Advance Amount:")}</span>
-                          <span className="font-mono font-bold text-emerald-700">{purchaseCurrency} {calculatedAdvanceAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
-                        </div>
-                        <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span>
-                          <span className="font-mono font-bold text-red-600">{purchaseCurrency} {remainingBalance.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
-                        </div>
-                        <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">{t(lang, "lp.advance_date_s", "Advance Date:")}</span>
-                          <span className="font-mono text-slate-700">{advancePaymentDate}</span>
-                        </div>
-                        <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">{t(lang, "lp.remaining_due_s", "Remaining Due:")}</span>
-                          <span className="font-mono text-slate-700">{remainingDueDate}</span>
-                        </div>
-                      </>
-                    )}
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-500">{t(lang, "lp.shipment_type_s", "Shipment Type:")}</span>
-                      <span className="font-bold text-slate-800">{shipmentType}</span>
+
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <CreditCard className="h-3 w-3 text-blue-500" /> {t(lang, "lp.card_payment_details", "Payment Details")}
+                      </p>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.payment_mode", "Payment Mode:")}</span>
+                        <span className="font-bold text-slate-800">{paymentMode}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.purchase_currency_s", "Currency:")}</span>
+                        <span className="font-bold text-slate-800">{purchaseCurrency}</span>
+                      </div>
+                      {paymentMode === "Advance" && (
+                        <>
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-slate-500">{t(lang, "lp.advance_amount_s", "Advance Amount:")}</span>
+                            <span className="font-mono font-bold text-emerald-700">{purchaseCurrency} {calculatedAdvanceAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+                          </div>
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-slate-500">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span>
+                            <span className="font-mono font-bold text-red-600">{purchaseCurrency} {remainingBalance.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    {truckNo && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.truck_no_s", "Truck No:")}</span><span className="font-mono font-bold text-indigo-700">{truckNo}</span></div>}
-                    {driverName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.driver_s", "Driver:")}</span><span className="font-bold text-slate-700">{driverName}</span></div>}
-                    {warehouseName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.warehouse_s", "Warehouse:")}</span><span className="font-bold text-slate-700">{warehouseName}</span></div>}
-                    {remarks && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.remarks_s", "Remarks:")}</span><span className="font-semibold text-slate-700 text-right max-w-[60%] truncate">{remarks}</span></div>}
+
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Package className="h-3 w-3 text-emerald-600" /> {t(lang, "lp.card_goods_details", "Goods Details")}
+                      </p>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.total_goods_lines", "Total Goods Lines:")}</span>
+                        <span className="font-mono font-bold text-slate-800">{draftItems.length > 0 ? draftItems.length : 1}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.total_net_weight", "Total Net Weight:")}</span>
+                        <span className="font-mono font-bold text-slate-800">
+                          {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.netWeight,0) : netWeight).toLocaleString()} kg
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Flag className="h-3 w-3 text-amber-600" /> {t(lang, "lp.card_origin_total", "Origin & Total Details")}
+                      </p>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.origin_s", "Origin:")}</span>
+                        <span className="font-bold text-slate-800 text-right truncate max-w-[60%]">{selectedOriginCountryName || "—"}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.exchange_rate_to_aed", "Exchange Rate to AED")}:</span>
+                        <span className="font-mono font-bold text-slate-800">{exchangeRateToAed}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{t(lang, "lp.final_amount_aed", "Final Amount (AED):")}</span>
+                        <span className="font-mono font-bold text-blue-700">{finalAmountAed.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+                      </div>
+                      {remarks && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.remarks_s", "Remarks:")}</span><span className="font-semibold text-slate-700 text-right max-w-[60%] truncate">{remarks}</span></div>}
+                    </div>
                   </div>
 
                   {/* Financial Totals */}
@@ -3207,18 +3343,24 @@ export function LocalPurchaseView({
                         {purchaseCurrency} {combinedBillCost?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
                       </span>
                     </div>
+                    <div className="flex justify-between items-center text-sm font-black text-blue-300">
+                      <span>{t(lang, "lp.final_amount_aed", "Final Amount (AED):")}</span>
+                      <span className="font-mono text-base font-black">
+                        AED {finalAmountAed.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-2 pt-2">
                     <div className="flex gap-2">
-                      <Button type="button" variant="outline" onClick={() => setCurrentStep(3)}
+                      <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}
                         className="w-1/2 h-9 rounded-xl text-xs font-bold border-slate-300">
                         <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {t(lang, "common.back", "Back")}
                       </Button>
-                      <Button type="button" variant="outline"
-                        onClick={() => { setIsFormOpen(false); alert(t(lang, "lp.bill_saved_draft", "Bill saved to draft.")); }}
+                      <Button type="button" variant="outline" disabled={saving}
+                        onClick={(e) => handleSubmit(e, { draftOnly: true })}
                         className="w-1/2 h-9 rounded-xl text-xs font-bold border-slate-300 text-slate-700 hover:bg-slate-100">
-                        {t(lang, "common.save_draft", "Save Draft")}
+                        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t(lang, "common.save_draft", "Save Draft")}
                       </Button>
                     </div>
 
@@ -3242,10 +3384,10 @@ export function LocalPurchaseView({
             <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
               <CardHeader className="bg-white text-slate-900 p-3.5 flex flex-row items-center justify-between border-b border-slate-200">
                 <CardTitle className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
-                  <Package className="h-4 w-4 text-emerald-600" /> {th("ADDED GOODS ITEMS TABLE")}
+                  <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
                 </CardTitle>
                 <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
-                  {draftItems.length > 0 ? t(lang, "lp.items_count_badge", "{n} Item(s)").replace("{n}", String(draftItems.length)) : t(lang, "lp.active_item_badge", "Active Item")}
+                  {draftItems.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
                 </span>
               </CardHeader>
               <CardContent className="p-0">
@@ -4129,6 +4271,7 @@ export function LocalPurchaseView({
                                           setRateType(row.rate_type || row.rateType || "per_kg");
                                           setPurchaseRate(String(row.purchase_rate ?? row.purchaseRate ?? ""));
                                           setPurchaseCurrency(row.purchase_currency || row.purchaseCurrency || "USD");
+                                          setExchangeRateToAed(String(row.exchange_rate ?? row.exchangeRate ?? "1"));
                                           setApplyTax(row.apply_tax || row.applyTax || "No");
                                           setTaxType(row.tax_type || row.taxType || "VAT");
                                           setTaxPercentage(String(row.tax_percentage ?? row.taxPercentage ?? "0"));
@@ -4696,6 +4839,7 @@ export function LocalPurchaseView({
                       setRateType(row.rate_type || row.rateType || "per_kg");
                       setPurchaseRate(String(row.purchase_rate ?? row.purchaseRate ?? ""));
                       setPurchaseCurrency(row.purchase_currency || row.purchaseCurrency || "USD");
+                      setExchangeRateToAed(String(row.exchange_rate ?? row.exchangeRate ?? "1"));
                       setApplyTax(row.apply_tax || row.applyTax || "No");
                       setTaxType(row.tax_type || row.taxType || "VAT");
                       setTaxPercentage(String(row.tax_percentage ?? row.taxPercentage ?? "0"));

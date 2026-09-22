@@ -81,6 +81,7 @@ import { rtlLanguages } from "@/lib/i18n/languages";
 import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-grid";
 import { PaymentJournalV2Header } from "./payment-journal-v2-header";
 import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
+import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -1104,8 +1105,13 @@ function NestedPaymentHistory({
   const advancePercent = Number(form.advancePercent || 0);
   const totalRequiredAdvanceFC = (totalPrice * advancePercent) / 100;
   
-  // Filter out the initial booking liability transfer so it only shows actual payments
-  const filteredPayments = payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer"));
+  // Filter out the initial booking liability transfer so it only shows actual payments.
+  // kind !== "booking" is the authoritative check (a real structured field on every row);
+  // the narration-text match is kept only as a belt-and-suspenders fallback for any older
+  // row that predates the kind column being populated on booking-transfer entries.
+  const filteredPayments = payments.filter(
+    (p: any) => p.kind !== "booking" && !p.narration?.toLowerCase().includes("initial booking transfer")
+  );
   
   // Payments come newest first. Sort chronologically (oldest first) to compute running balances.
   const chronological = [...filteredPayments].sort((a: any, b: any) =>
@@ -2740,7 +2746,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const response = await fetch(`/api/erp/purchases/orders/${row.id}/payments?lang=${currentLanguage}`, { credentials: "include" });
       const body = await response.json();
       if (body?.ok && body.data?.payments) {
-        paymentHistory = body.data.payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer"));
+        paymentHistory = body.data.payments.filter(
+          (p: any) => p.kind !== "booking" && !p.narration?.toLowerCase().includes("initial booking transfer")
+        );
       }
     } catch (err) {
       console.error("Failed to load nested payments for statement:", err);
@@ -2903,7 +2911,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         const response = await fetch(`/api/erp/purchases/orders/${viewingRowId}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
-          setViewingRowPayments(body.data.payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer")));
+          setViewingRowPayments(body.data.payments.filter(
+            (p: any) => p.kind !== "booking" && !p.narration?.toLowerCase().includes("initial booking transfer")
+          ));
         }
       } catch (err) {
         console.error("Failed to load full bill payment history:", err);
@@ -4441,6 +4451,39 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
+      {activeMode === "remaining" ? (
+        // Owner-approved 1:1 screenshot restyle — mode="remaining" only (the route
+        // this ships on: /dashboard/purchase/purchase-payments). Every other mode
+        // keeps rendering the unchanged header/filters/table JSX below. The modals
+        // further down (big detail modal, Open Full Bill, Add Payment Method,
+        // filter modal) are OUTSIDE this conditional and stay driven by the exact
+        // same shared state (selectedId/selected, viewingRow, etc.) regardless of
+        // which table UI is showing, so "View Full Details" still opens the real,
+        // unchanged detail modal.
+        <PurchasePaymentJournalRemainingView
+          lang={currentLanguage}
+          session={session}
+          isSuperAdmin={isSuperAdmin}
+          orders={orders}
+          ledgers={ledgers}
+          baseCurrency={baseCurrency}
+          countryOptions={countryOptions}
+          branchOptions={branchOptions}
+          onOpenFullDetails={(orderId) => selectOrder(orderId)}
+          onPrintReceipt={(payment, orderRow) =>
+            handlePrintReceipt(
+              { ...payment, roznamcha_entries: { super_admin_serial_number: payment.journal_no } },
+              orderRow,
+              ledgers,
+              baseCurrency,
+              true,
+              currentLanguage
+            )
+          }
+          onDownloadPdf={(orderRow) => handleOpenA4PDF(orderRow, true)}
+        />
+      ) : (
+      <>
       {/* ── Enterprise Centered Header & 4 Stats Cards (Matching Reference Screenshot) ── */}
       <PaymentJournalV2Header
         title={t("page_title", currentLanguage) || "Purchase Payments"}
@@ -4623,7 +4666,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileSpreadsheet className="h-10 w-10 opacity-30" />
                       <span>{t("no_payment_records_found", currentLanguage)}</span>
-                      {activeMode === "remaining" ? (
+                      {(activeMode as string) === "remaining" ? (
                         <div className="max-w-md text-center">
                           <span className="text-[11px] text-amber-500 font-bold block">
                             {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
@@ -4714,7 +4757,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           </div>
         </div>
       </div>
-
+      </>
+      )}
 
       {/* Ledger Cash Entry Panel (Modal) - Light & Dark Theme Synced matching Screenshot */}
       {selected && (
