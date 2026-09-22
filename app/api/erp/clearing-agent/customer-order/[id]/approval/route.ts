@@ -80,7 +80,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    const status = /not found/i.test(error?.message ?? "") ? 404 : /must be in pending_approval/i.test(error?.message ?? "") ? 409 : 500;
+    const status =
+      typeof error?.status === "number"
+        ? error.status
+        : /not found/i.test(error?.message ?? "")
+          ? 404
+          : /must be in pending_approval/i.test(error?.message ?? "")
+            ? 409
+            : 500;
     return NextResponse.json({ success: false, error: error.message }, { status });
   }
 }
