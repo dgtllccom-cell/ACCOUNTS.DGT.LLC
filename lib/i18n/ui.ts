@@ -6456,6 +6456,7 @@ export type UiKey =
   | "sales.sold_out_word" | "sales.total_outward_deductions_colon" | "sales.net_available_balance_colon" | "sales.live_stock_title"
   | "sales.no_lots_found_source" | "sales.booking_bill_info_title" | "sales.customer_account_dr_star" | "sales.select_customer_account_dr_header"
   | "sales.sale_source_lot_selection" | "sales.opt_booking_sale" | "sales.opt_in_transit_lot" | "sales.opt_local_purchase"
+  | "sales.local_sale_badge"
   | "sales.opt_warehouse_stock" | "sales.opt_endorse_stock" | "sales.selected_lot_colon" | "sales.goods_colon"
   | "sales.available_qty_colon" | "sales.stock_ref_colon" | "sales.open_stock_lots_msg" | "sales.currency_conversion_title"
   | "sales.step4_review_reports" | "sales.review_reports_subtitle" | "sales.download_review_report" | "sales.print_review_btn"
@@ -29076,6 +29077,7 @@ const en: Dict = {
   "pjt.created_by": "Created By",
   "pjt.created_on": "Created On",
   "pjt.global": "Global",
+  "sales.local_sale_badge": "Local Sale",
 };
 
 const ur: Dict = {
@@ -49052,6 +49054,7 @@ const ur: Dict = {
   "pjt.audit_trail": "آڈٹ ٹریل",
   "pjt.created_by": "کس نے بنایا",
   "pjt.created_on": "تاریخ تخلیق",
+  "sales.local_sale_badge": "مقامی فروخت",
 };
 
 const ar: Dict = {
@@ -69029,6 +69032,7 @@ const ar: Dict = {
   "pjt.audit_trail": "سجل التدقيق",
   "pjt.created_by": "أنشأه",
   "pjt.created_on": "تاريخ الإنشاء",
+  "sales.local_sale_badge": "بيع محلي",
 };
 
 const fa: Dict = {
@@ -89005,6 +89009,7 @@ const fa: Dict = {
   "pjt.audit_trail": "ردپای حسابرسی",
   "pjt.created_by": "ایجاد شده توسط",
   "pjt.created_on": "تاریخ ایجاد",
+  "sales.local_sale_badge": "فروش محلی",
 };
 
 const ps: Dict = {
@@ -108988,6 +108993,7 @@ const ps: Dict = {
   "pjt.audit_trail": "د پلټنې لاره",
   "pjt.created_by": "لخوا جوړ شوی",
   "pjt.created_on": "د جوړیدو نېټه",
+  "sales.local_sale_badge": "محلي پلورنه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
