@@ -157,13 +157,18 @@ export function DashboardFrame({
 
     if (!permissions || permissions.length === 0) return false;
 
-    const hasExplicitRouteRules = permissions.some((p) => p.startsWith("route:"));
-    if (!hasExplicitRouteRules) return false;
-
     const cleanPath = pathname.split("?")[0];
     if (cleanPath === "/dashboard" || cleanPath === "/dashboard/smart-operations") return false;
 
-    const permSet = new Set(permissions);
+    // permSet includes both granted resource:action permissions (e.g.
+    // "purchases:read") AND the user's role names (e.g. "city_branch_admin") —
+    // ROUTE_PERMISSION_MAP entries mix both kinds of requirement, and a plain
+    // role-based user (no custom "route:" grants) was previously skipped
+    // entirely by a `hasExplicitRouteRules` check, meaning any authenticated
+    // user could open any /dashboard/* page by typing the URL directly even
+    // though the sidebar correctly hid it. This makes the same existing map
+    // that already drives sidebar visibility also gate the route itself.
+    const permSet = new Set([...(permissions || []), ...(roles || [])]);
     if (permSet.has(`route:${cleanPath}`) || permSet.has(`route:${pathname}`)) {
       return false;
     }
@@ -324,7 +329,7 @@ export function DashboardFrame({
       window.removeEventListener("unhandledrejection", handleChunkError);
       window.removeEventListener("error", handleChunkError);
     };
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     const scopeKey = resolveMenuRoleScope();
@@ -441,31 +446,31 @@ export function DashboardFrame({
 
   const searchItems = useMemo(() => {
     return [
-      { title: "Dashboard Overview", titleKey: "cmd.dashboard_overview", category: "Navigation" as const, href: "/dashboard", keywords: "home main landing dashboard overview", icon: LayoutDashboard, tone: "indigo" as const },
-      { title: "Super Admin Dashboard", titleKey: "cmd.super_admin_dashboard", category: "Navigation" as const, href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats", icon: ShieldCheck, tone: "emerald" as const },
-      { title: "Country Admin Dashboard", titleKey: "cmd.country_admin_dashboard", category: "Navigation" as const, href: "/dashboard/country", keywords: "country admin dashboard summary stats", icon: Globe, tone: "sky" as const },
-      { title: "City Branch Dashboard", titleKey: "cmd.city_branch_dashboard", category: "Navigation" as const, href: "/dashboard/city", keywords: "city branch dashboard summary stats", icon: Building2, tone: "amber" as const },
-      { title: "Customers Directory List", titleKey: "cmd.customers_directory", category: "Modules" as const, href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts", icon: Users, tone: "blue" as const },
-      { title: "Add New Customer Profile", titleKey: "cmd.add_customer", category: "Actions" as const, href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile", icon: UserPlus, tone: "emerald" as const },
-      { title: "Country Branch Setup", titleKey: "cmd.country_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit", icon: MapPin, tone: "sky" as const },
-      { title: "City Branch Setup", titleKey: "cmd.city_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit", icon: Building, tone: "violet" as const },
-      { title: "Super Admin Branch Registry", titleKey: "cmd.super_admin_branch_registry", category: "Modules" as const, href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup", icon: Shield, tone: "indigo" as const },
-      { title: "User Registration / Management", titleKey: "cmd.user_registration", category: "Modules" as const, href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment", icon: UserCheck, tone: "purple" as const },
-      { title: "User Journal Log Report", titleKey: "cmd.user_journal_log", category: "Modules" as const, href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing", icon: History, tone: "slate" as const },
-      { title: "Daily Exchange Rate Manager", titleKey: "cmd.daily_exchange_rate", category: "Modules" as const, href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings", icon: Coins, tone: "amber" as const },
-      { title: "Credit & Debit Entries (Cash Entry)", titleKey: "cmd.cash_entry", category: "Modules" as const, href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction", icon: ArrowLeftRight, tone: "emerald" as const },
-      { title: "Expenses Bill (Bill Entry)", titleKey: "cmd.expenses_bill", category: "Modules" as const, href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice", icon: Receipt, tone: "rose" as const },
-      { title: "Money Changer (Currency Exchange)", titleKey: "cmd.money_changer", category: "Modules" as const, href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha", icon: Repeat, tone: "cyan" as const },
-      { title: "Roznamcha All Report Ledger", titleKey: "cmd.roznamcha_all", category: "Modules" as const, href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings", icon: BookOpen, tone: "indigo" as const },
-      { title: "Accounts Master General Report", titleKey: "cmd.accounts_master", category: "Modules" as const, href: "/dashboard/accounts", keywords: "accounts master general report setup balance", icon: CreditCard, tone: "blue" as const },
-      { title: "Create New Account Item", titleKey: "cmd.create_account", category: "Actions" as const, href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity", icon: PlusCircle, tone: "emerald" as const },
-      { title: "Ledger Statement General Report", titleKey: "cmd.ledger_statement", category: "Modules" as const, href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs", icon: FileSpreadsheet, tone: "sky" as const },
-      { title: "Master Forms Directory & Audit Report", titleKey: "cmd.forms_directory" as any, category: "Modules" as const, href: "/dashboard/reports/system-forms-directory", keywords: "forms directory all forms menu catalog report audit timeline pdf download", icon: BookOpen, tone: "indigo" as const },
-      { title: "Transit Entry & Public Report", titleKey: "cmd.transit_entry", category: "Modules" as const, href: "/dashboard/clearing-agent/transit-entry", keywords: "transit entry public report cargo customs border serial invoice python", icon: Truck, tone: "blue" as const },
-      { title: "Purchase Order Advance Payment", titleKey: "cmd.po_advance_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history", icon: BadgePercent, tone: "amber" as const },
-      { title: "Purchase Order Remaining Payment", titleKey: "cmd.po_remaining_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history", icon: CheckCircle2, tone: "emerald" as const },
-      { title: "Settings - Location Nodes Setup", titleKey: "cmd.settings_location", category: "Settings" as const, href: "/dashboard/settings/location", keywords: "settings location setup country state city area", icon: Compass, tone: "slate" as const },
-      { title: "Settings - Enterprise Company Profile", titleKey: "cmd.settings_company", category: "Settings" as const, href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry", icon: Briefcase, tone: "slate" as const }
+      { title: t(lang, "cmd.dashboard_overview" as any, "Dashboard Overview"), titleKey: "cmd.dashboard_overview", category: "Navigation" as const, href: "/dashboard", keywords: "home main landing dashboard overview", icon: LayoutDashboard, tone: "indigo" as const },
+      { title: t(lang, "cmd.super_admin_dashboard" as any, "Super Admin Dashboard"), titleKey: "cmd.super_admin_dashboard", category: "Navigation" as const, href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats", icon: ShieldCheck, tone: "emerald" as const },
+      { title: t(lang, "cmd.country_admin_dashboard" as any, "Country Admin Dashboard"), titleKey: "cmd.country_admin_dashboard", category: "Navigation" as const, href: "/dashboard/country", keywords: "country admin dashboard summary stats", icon: Globe, tone: "sky" as const },
+      { title: t(lang, "cmd.city_branch_dashboard" as any, "City Branch Dashboard"), titleKey: "cmd.city_branch_dashboard", category: "Navigation" as const, href: "/dashboard/city", keywords: "city branch dashboard summary stats", icon: Building2, tone: "amber" as const },
+      { title: t(lang, "cmd.customers_directory" as any, "Customers Directory List"), titleKey: "cmd.customers_directory", category: "Modules" as const, href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts", icon: Users, tone: "blue" as const },
+      { title: t(lang, "cmd.add_customer" as any, "Add New Customer Profile"), titleKey: "cmd.add_customer", category: "Actions" as const, href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile", icon: UserPlus, tone: "emerald" as const },
+      { title: t(lang, "cmd.country_branch_setup" as any, "Country Branch Setup"), titleKey: "cmd.country_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit", icon: MapPin, tone: "sky" as const },
+      { title: t(lang, "cmd.city_branch_setup" as any, "City Branch Setup"), titleKey: "cmd.city_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit", icon: Building, tone: "violet" as const },
+      { title: t(lang, "cmd.super_admin_branch_registry" as any, "Super Admin Branch Registry"), titleKey: "cmd.super_admin_branch_registry", category: "Modules" as const, href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup", icon: Shield, tone: "indigo" as const },
+      { title: t(lang, "cmd.user_registration" as any, "User Registration / Management"), titleKey: "cmd.user_registration", category: "Modules" as const, href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment", icon: UserCheck, tone: "purple" as const },
+      { title: t(lang, "cmd.user_journal_log" as any, "User Journal Log Report"), titleKey: "cmd.user_journal_log", category: "Modules" as const, href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing", icon: History, tone: "slate" as const },
+      { title: t(lang, "cmd.daily_exchange_rate" as any, "Daily Exchange Rate Manager"), titleKey: "cmd.daily_exchange_rate", category: "Modules" as const, href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings", icon: Coins, tone: "amber" as const },
+      { title: t(lang, "cmd.cash_entry" as any, "Credit & Debit Entries (Cash Entry)"), titleKey: "cmd.cash_entry", category: "Modules" as const, href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction", icon: ArrowLeftRight, tone: "emerald" as const },
+      { title: t(lang, "cmd.expenses_bill" as any, "Expenses Bill (Bill Entry)"), titleKey: "cmd.expenses_bill", category: "Modules" as const, href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice", icon: Receipt, tone: "rose" as const },
+      { title: t(lang, "cmd.money_changer" as any, "Money Changer (Currency Exchange)"), titleKey: "cmd.money_changer", category: "Modules" as const, href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha", icon: Repeat, tone: "cyan" as const },
+      { title: t(lang, "cmd.roznamcha_all" as any, "Roznamcha All Report Ledger"), titleKey: "cmd.roznamcha_all", category: "Modules" as const, href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings", icon: BookOpen, tone: "indigo" as const },
+      { title: t(lang, "cmd.accounts_master" as any, "Accounts Master General Report"), titleKey: "cmd.accounts_master", category: "Modules" as const, href: "/dashboard/accounts", keywords: "accounts master general report setup balance", icon: CreditCard, tone: "blue" as const },
+      { title: t(lang, "cmd.create_account" as any, "Create New Account Item"), titleKey: "cmd.create_account", category: "Actions" as const, href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity", icon: PlusCircle, tone: "emerald" as const },
+      { title: t(lang, "cmd.ledger_statement" as any, "Ledger Statement General Report"), titleKey: "cmd.ledger_statement", category: "Modules" as const, href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs", icon: FileSpreadsheet, tone: "sky" as const },
+      { title: t(lang, "cmd.forms_directory" as any, "Master Forms Directory & Audit Report"), titleKey: "cmd.forms_directory" as any, category: "Modules" as const, href: "/dashboard/reports/system-forms-directory", keywords: "forms directory all forms menu catalog report audit timeline pdf download", icon: BookOpen, tone: "indigo" as const },
+      { title: t(lang, "cmd.transit_entry" as any, "Transit Entry & Public Report"), titleKey: "cmd.transit_entry", category: "Modules" as const, href: "/dashboard/clearing-agent/transit-entry", keywords: "transit entry public report cargo customs border serial invoice python", icon: Truck, tone: "blue" as const },
+      { title: t(lang, "cmd.po_advance_payment" as any, "Purchase Order Advance Payment"), titleKey: "cmd.po_advance_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history", icon: BadgePercent, tone: "amber" as const },
+      { title: t(lang, "cmd.po_remaining_payment" as any, "Purchase Order Remaining Payment"), titleKey: "cmd.po_remaining_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history", icon: CheckCircle2, tone: "emerald" as const },
+      { title: t(lang, "cmd.settings_location" as any, "Settings - Location Nodes Setup"), titleKey: "cmd.settings_location", category: "Settings" as const, href: "/dashboard/settings/location", keywords: "settings location setup country state city area", icon: Compass, tone: "slate" as const },
+      { title: t(lang, "cmd.settings_company" as any, "Settings - Enterprise Company Profile"), titleKey: "cmd.settings_company", category: "Settings" as const, href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry", icon: Briefcase, tone: "slate" as const }
     ];
   }, []);
 
@@ -559,7 +564,7 @@ export function DashboardFrame({
               type="button"
               onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
               className="absolute end-3 top-4 z-10 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"
-              aria-label="Close navigation"
+              aria-label={t(lang, "nav.close_navigation", "Close navigation")}
             >
               <X className="h-4 w-4" />
             </button>
