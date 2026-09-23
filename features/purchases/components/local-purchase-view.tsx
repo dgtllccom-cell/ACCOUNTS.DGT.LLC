@@ -423,6 +423,7 @@ export function LocalPurchaseView({
   const [purchaseAccountNo, setPurchaseAccountNo] = useState("");
   const [salesAccountNo, setSalesAccountNo] = useState("");
   const [brokerAccountNo, setBrokerAccountNo] = useState("");
+  const [contractNo, setContractNo] = useState("");
   
   // Origin Country & Shipping Mode
   const [shipmentType, setShipmentType] = useState("Loading by Truck");
@@ -1204,6 +1205,7 @@ export function LocalPurchaseView({
         purchaseAccountNo: shipmentType === "Warehouse Transfer" ? (warehouseAccountNo || null) : (purchaseAccountNo || null),
         salesAccountNo: salesAccountNo || null,
         brokerAccountNo: brokerAccountNo || null,
+        contractNo: contractNo.trim() || null,
         brand: primaryBrand || null,
         size: primarySize || null,
         chassisCode: chassisCode.trim() || null,
@@ -1317,6 +1319,7 @@ export function LocalPurchaseView({
       setPurchaseAccountNo("");
       setSalesAccountNo("");
       setBrokerAccountNo("");
+      setContractNo("");
       setBrand("");
       setCustomBrand("");
       setSize("");
@@ -2087,6 +2090,10 @@ export function LocalPurchaseView({
                   <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100">LP-{serialNo}</span>
                 </div>
                 <div className="flex justify-between py-0.5">
+                  <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "lp.contract_no", "Contract No.")}</span>
+                  <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200">{contractNo || "—"}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
                   <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "purchase.payment_type", "Payment Type")}</span>
                   <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{paymentMode}</span>
                 </div>
@@ -2526,6 +2533,20 @@ export function LocalPurchaseView({
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* 3a. Contract No. — matches the approved prototype's "Contract No." field */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        {t(lang, "lp.contract_no", "Contract No.")}
+                      </label>
+                      <input
+                        type="text"
+                        value={contractNo}
+                        onChange={e => setContractNo(e.target.value)}
+                        placeholder={t(lang, "lp.contract_no_ph", "Contract no.")}
+                        className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none"
+                      />
                     </div>
 
                     {/* 3b. Supplier / Vendor (Person Master) */}
@@ -4268,6 +4289,7 @@ export function LocalPurchaseView({
                                           setPurchaseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
                                           setSalesAccountNo(row.sales_account_no || row.salesAccountNo || "");
                                           setBrokerAccountNo(row.broker_account_no || row.brokerAccountNo || "");
+                                          setContractNo(row.contract_no || row.contractNo || "");
                                           setChassisCode(row.chassis_code || row.chassisCode || "");
                                           setLotNo(row.lot_no || row.lotNo || "");
                                           setPaymentMode(row.payment_mode || row.paymentMode || "Cash");
@@ -4836,6 +4858,7 @@ export function LocalPurchaseView({
                       setPurchaseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
                       setSalesAccountNo(row.sales_account_no || row.salesAccountNo || "");
                       setBrokerAccountNo(row.broker_account_no || row.brokerAccountNo || "");
+                      setContractNo(row.contract_no || row.contractNo || "");
                       setChassisCode(row.chassis_code || row.chassisCode || "");
                       setLotNo(row.lot_no || row.lotNo || "");
                       setPaymentMode(row.payment_mode || row.paymentMode || "Cash");

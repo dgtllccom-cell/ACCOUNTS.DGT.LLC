@@ -32,6 +32,7 @@ const localPurchaseCreateSchema = z.object({
   purchaseAccountNo: z.string().trim().min(1, "A debit purchase ledger is required."),
   salesAccountNo: z.string().trim().nullable().optional(),
   brokerAccountNo: z.string().nullable().optional(),
+  contractNo: z.string().nullable().optional(),
   brand: z.string().nullable().optional(),
   size: z.string().nullable().optional(),
   chassisCode: z.string().nullable().optional(),
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
       const rows = await sql`
         insert into public.local_purchases (
           company_id, country_id, country_branch_id, city_branch_id,
-          goods_id, purchase_account_no, sales_account_no, broker_account_no,
+          goods_id, purchase_account_no, sales_account_no, broker_account_no, contract_no,
           brand, size, chassis_code, lot_no, goods_name, supplier_name,
           payment_mode, shipping_mode, origin_country_id, origin_country_name,
           advance_percentage, advance_amount, remaining_balance,
@@ -233,7 +234,7 @@ export async function POST(request: NextRequest) {
           ${payload.companyId}, ${payload.countryId}, ${payload.countryBranchId},
           ${payload.cityBranchId || null}, ${payload.goodsId || null},
           ${payload.purchaseAccountNo || null}, ${payload.salesAccountNo || null},
-          ${payload.brokerAccountNo || null}, ${payload.brand || null},
+          ${payload.brokerAccountNo || null}, ${payload.contractNo || null}, ${payload.brand || null},
           ${payload.size || null}, ${payload.chassisCode || null}, ${payload.lotNo || null},
           ${payload.goodsName}, ${payload.supplierName || null},
           ${payload.paymentMode || "Cash"}, ${payload.shippingMode || "Local Market"},
@@ -264,6 +265,7 @@ export async function POST(request: NextRequest) {
         country_branch_id: payload.countryBranchId, city_branch_id: payload.cityBranchId || null,
         goods_id: payload.goodsId || null, purchase_account_no: payload.purchaseAccountNo || null,
         sales_account_no: payload.salesAccountNo || null, broker_account_no: payload.brokerAccountNo || null,
+        contract_no: payload.contractNo || null,
         brand: payload.brand || null, size: payload.size || null, chassis_code: payload.chassisCode || null,
         lot_no: payload.lotNo || null, goods_name: payload.goodsName, supplier_name: payload.supplierName || null,
         payment_mode: payload.paymentMode || "Cash", shipping_mode: payload.shippingMode || "Local Market",
