@@ -3287,7 +3287,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     type="button"
                     onClick={handleTransfer}
                     disabled={savingOrder || isTransferred}
-                    className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
+                    className={cn(
+                      "h-10 text-[11px] font-black tracking-wider uppercase px-8 text-white transition-all duration-200",
+                      isLocalSale
+                        ? "bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200"
+                        : "bg-blue-600 hover:bg-blue-700 shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5"
+                    )}
                   >
                     <CheckCircle2 className="h-4 w-4"/> {t(lang, "sales.confirm_transfer_btn", "CONFIRM & TRANSFER")}
                   </Button>
@@ -3299,8 +3304,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
           {activeTab === "reports_tab" ? (
             <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center space-y-4 max-w-xl mx-auto shadow-sm">
-                <div className="inline-flex p-3 rounded-full bg-blue-50 text-blue-600 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-4 max-w-xl mx-auto shadow-sm">
+                <div className={cn("inline-flex p-3 rounded-full mb-1", isLocalSale ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" : "bg-blue-50 text-blue-600")}>
                   <FileText className="h-6 w-6" />
                 </div>
                 <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider">
@@ -3321,7 +3326,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <Button
                     type="button"
                     onClick={() => setActiveTab("report")}
-                    className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                    className={cn(
+                      "font-black text-xs h-10 px-8 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2",
+                      isLocalSale
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    )}
                   >
                     {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
                   </Button>
@@ -3668,7 +3678,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <Button
                     type="button"
                     onClick={() => setActiveTab("reports_tab")}
-                    className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                    className={cn(
+                      "font-black text-xs h-10 px-8 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2",
+                      isLocalSale
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    )}
                   >
                     {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
                   </Button>
@@ -3856,7 +3871,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {/* GOODS LIST TABLE */}
                 {activeTab === "goods" && (
                   <div className="mt-4">
-                    <div className="overflow-x-auto rounded-lg border border-border bg-background shadow-sm">
+                    {isLocalSale && (
+                      <div className="flex items-center justify-between rounded-t-lg bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-b-0 border-amber-300 dark:border-amber-800 px-3.5 py-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                          <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                          {goodsEntries.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
+                        </span>
+                      </div>
+                    )}
+                    <div className={cn("overflow-x-auto border border-border bg-background shadow-sm", isLocalSale ? "rounded-b-lg" : "rounded-lg")}>
                       <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead>
                           <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
@@ -4206,7 +4231,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <Button
                       type="button"
                       onClick={() => setActiveTab("goods")}
-                      className="w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow"
+                      className={cn(
+                        "w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider transition-all shadow",
+                        isLocalSale
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      )}
                     >
                       {t(lang, "lp.next_goods_entry", "Next: Goods Entry")}
                     </Button>
@@ -4837,7 +4867,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <Button
                         type="button"
                         onClick={() => setActiveTab("others")}
-                        className="flex-1 font-bold h-10 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
+                        className={cn(
+                          "flex-1 font-bold h-10 rounded-lg text-xs transition-all",
+                          isLocalSale
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
+                        )}
                       >
                         {t(lang, "common.next", "Next")}
                       </Button>
