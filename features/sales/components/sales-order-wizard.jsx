@@ -410,18 +410,19 @@ export function SalesOrderWizard({ session }) {
 
   // Local Sales (saleSource === "local") reuses this one wizard — see
   // app/dashboard/sales/local-sales/page.tsx. This flag only swaps card/header
-  // color tokens to the same gold/amber accent as Local Purchase; it changes
-  // no calculation, field, validation, or save behavior.
+  // color tokens to match the approved Local Purchase prototype's gold
+  // GRADIENT header strip on an otherwise plain card (not a full-card wash);
+  // it changes no calculation, field, validation, or save behavior.
   const isLocalSale = form.saleSource === "local";
-  const sectionPanelCls = isLocalSale
-    ? "rounded-2xl border border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10 p-4 shadow-sm"
-    : "rounded-2xl border border-border bg-card p-4 shadow-sm";
+  const sectionPanelCls = "rounded-2xl border border-border bg-card p-4 shadow-sm";
   const sectionPanelHeaderCls = isLocalSale
-    ? "border-b border-amber-200 dark:border-amber-900 pb-2"
-    : "border-b border-border pb-2";
-  const miniCardCls = isLocalSale
-    ? "bg-amber-50/40 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-900 p-4 rounded-xl shadow-sm text-[10px]"
-    : "bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px] dark:bg-slate-950 dark:border-slate-800";
+    ? "flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800 px-3 py-2 mb-3"
+    : "flex items-center justify-between border-b border-border pb-2";
+  const miniCardCls = "bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px] dark:bg-slate-950 dark:border-slate-800";
+  // Local Purchase's exact 4-color numbered-badge sequence (blue/emerald/purple/amber),
+  // cycled for however many numbered mini-cards a given section has.
+  const localBadgeColors = ["bg-blue-600", "bg-emerald-600", "bg-purple-600", "bg-amber-500"];
+  const localBadgeCls = (n) => (isLocalSale ? localBadgeColors[(n - 1) % localBadgeColors.length] : "bg-blue-600");
 
   useEffect(() => {
     const src = form.saleSource || "booking";
@@ -3338,7 +3339,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   {/* LEFT COLUMN: Shipping & Location */}
                   <div className="space-y-4">
                     {/* SECTION 1: SHIPPING & LOCATION */}
-                    <div className={cn("rounded-2xl border p-5 shadow-sm", isLocalSale ? "border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10" : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950")}>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
                       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                         <div className="flex items-center gap-2.5">
                           <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
@@ -3556,7 +3557,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   {/* RIGHT COLUMN: Advance & Payment Terms + Transport & Container Details + Remarks & Narration */}
                   <div className="space-y-4">
                     {/* SECTION 2: ADVANCE & PAYMENT TERMS */}
-                    <div className={cn("rounded-2xl border p-5 shadow-sm space-y-4", isLocalSale ? "border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10" : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950")}>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
                       <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
                         <CreditCard className="h-4 w-4 text-blue-600" />
                         <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
@@ -3607,7 +3608,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     {/* SECTION 3: TRANSPORT & CONTAINER DETAILS */}
-                    <div className={cn("rounded-2xl border p-5 shadow-sm space-y-4", isLocalSale ? "border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10" : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950")}>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
                       <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
                         <Truck className="h-4 w-4 text-blue-600" />
                         <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
@@ -3638,7 +3639,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     {/* SECTION 4: REMARKS & NARRATION */}
-                    <div className={cn("rounded-2xl border p-5 shadow-sm space-y-3", isLocalSale ? "border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10" : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950")}>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-3">
                       <div className="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                         <MessageSquare className="h-4 w-4 text-blue-600" />
                         <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
@@ -3940,10 +3941,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               {activeTab === "booking" && (
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className={cn("space-y-3 order-2 w-full mt-0", sectionPanelCls)}>
-                  <div className={cn("flex items-center justify-between", sectionPanelHeaderCls)}>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
+                  <div className={sectionPanelHeaderCls}>
+                    <h3 className={cn("text-xs font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
                     {isLocalSale && (
-                      <span className="text-[9px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/50 dark:text-amber-400 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800 uppercase tracking-wide shrink-0">
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
                         {t(lang, "sales.local_sale_badge", "Local Sale")}
                       </span>
                     )}
@@ -4215,12 +4216,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               {activeTab === "goods" && (
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className={cn("space-y-3 order-2 w-full mt-0 animate-in fade-in zoom-in-95 duration-200", sectionPanelCls)}>
-                  <div className={cn("flex items-center justify-between", sectionPanelHeaderCls)}>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <div className={sectionPanelHeaderCls}>
+                    <h3 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-2", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>
                       {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
                     </h3>
                     {isLocalSale && (
-                      <span className="text-[9px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/50 dark:text-amber-400 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800 uppercase tracking-wide shrink-0">
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
                         {t(lang, "sales.local_sale_badge", "Local Sale")}
                       </span>
                     )}
@@ -4852,10 +4853,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/50">
 
           {/* Top Review Header Banner */}
-          <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl shadow-sm", isLocalSale ? "bg-amber-50/40 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-900" : "bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800")}>
+          <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl shadow-sm", isLocalSale ? "bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800" : "bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800")}>
             <div>
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wider">{t(lang, "sales.final_review_title", "Sales Booking Order – Final Review & Approval")}</h2>
-              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Please review all information carefully before final approval. You can approve, send back for edit, or request changes.</p>
+              <h2 className={cn("text-base font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-slate-900")}>{t(lang, "sales.final_review_title", "Sales Booking Order – Final Review & Approval")}</h2>
+              <p className={cn("text-[10px] font-semibold mt-0.5", isLocalSale ? "text-amber-800/80 dark:text-amber-300/70" : "text-slate-500")}>Please review all information carefully before final approval. You can approve, send back for edit, or request changes.</p>
             </div>
             <div className="flex gap-2.5">
               <Button
@@ -4889,7 +4890,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 1. Branch & Booking Info */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">1</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(1), "text-white") : "bg-blue-50 text-blue-600")}>1</span>
                 {t(lang, "branch.section_branch_info", "Branch Information")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
@@ -4908,7 +4909,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 2. Address & Logistics */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">2</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(2), "text-white") : "bg-blue-50 text-blue-600")}>2</span>
                 {t(lang, "sales.logistics_routing_title", "Logistics & Routing")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
@@ -4925,7 +4926,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 3. Customer Account (DR) */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">3</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(3), "text-white") : "bg-blue-50 text-blue-600")}>3</span>
                 {t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}
               </h3>
               {form.customerAccountNo || form.customerAccountName ? (
@@ -4948,7 +4949,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 4. Sales Account (CR) */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">4</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(4), "text-white") : "bg-blue-50 text-blue-600")}>4</span>
                 {t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}
               </h3>
               {form.salesAccountNo || form.salesAccountName ? (
@@ -4976,7 +4977,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 5. Roles & Permissions Summary */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">5</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(5), "text-white") : "bg-blue-50 text-blue-600")}>5</span>
                 {t(lang, "branch.wizard_step7_title", "Roles & Permissions")}
               </h3>
               <table className="w-full text-left text-[9px] mt-1">
@@ -4999,7 +5000,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 6. Accounting Setup / Parameters */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">6</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(6), "text-white") : "bg-blue-50 text-blue-600")}>6</span>
                 {t(lang, "cbs.step7_label", "Accounting Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
@@ -5016,7 +5017,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 7. Communication Setup */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">7</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(7), "text-white") : "bg-blue-50 text-blue-600")}>7</span>
                 {t(lang, "cbs.communication_setup_label", "Communication Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
