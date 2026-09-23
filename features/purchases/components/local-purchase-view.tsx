@@ -31,6 +31,7 @@ import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { cn } from "@/lib/utils";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { useSetActiveRecord } from "@/lib/support/active-record-context";
+import { VoiceFormFill } from "@/components/voice-form-fill";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -2425,24 +2426,25 @@ export function LocalPurchaseView({
 
           {/* 2-Column Split: Active Step Form (Left) vs Added Goods Table (Right) */}
           <div className="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-5 items-start">
-            {/* Left Column: Form Stepper Card — amber-accented "active work panel" treatment
-                (matches the amber DRAFT badge already used on the Bill Details summary card
-                above, and the owner-approved reference design's highlighted left panel) */}
-            <Card className="border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10 shadow-md rounded-2xl overflow-hidden">
-              <CardHeader className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-100 dark:border-amber-900 p-3.5 flex flex-row items-center justify-between">
-                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            {/* Left Column: Form Stepper Card — matches the owner-approved
+                local_purchase_workflow_v49 prototype: a gold GRADIENT strip
+                header (card-head.yellow-strip: #fff3bf -> #ffe08a) on an
+                otherwise plain white card body, not a full amber wash. */}
+            <Card className="border-border shadow-md rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border-b border-amber-300 dark:border-amber-800 p-3.5 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">
                   {currentStep === 1 && <><FileText className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step1_header_booking", "STEP 1: BOOKING")}</>}
                   {currentStep === 2 && <><Package className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step2_header", "STEP 2: GOODS ENTRY")}</>}
                   {currentStep === 3 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step3_header_final", "STEP 3: FINAL")}</>}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9.5px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/50 dark:text-amber-400 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800">
+                  <span className="text-[9.5px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700">
                     {t(lang, "purchase.draft_badge", "DRAFT")}
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsFormOpen(false)}
-                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-amber-200/60 rounded-lg transition"
+                    className="p-1 text-amber-800/70 hover:text-amber-900 hover:bg-amber-300/50 dark:text-amber-300/70 dark:hover:bg-amber-800/50 rounded-lg transition"
                     title={t(lang, "lp.close_form_return", "Close Form & Return to Registry")}
                   >
                     <X className="h-4 w-4" />
@@ -2458,6 +2460,17 @@ export function LocalPurchaseView({
                   <div className="border-l-2 border-blue-600 pl-2">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.bill_accounts_info", "1. Bill & Accounts Information")}</h4>
                   </div>
+
+                  <VoiceFormFill
+                    context="purchase"
+                    lang={lang}
+                    compact
+                    onApply={(f) => {
+                      if (f.purchaseCurrency && typeof f.purchaseCurrency === "string") {
+                        setPurchaseCurrency(String(f.purchaseCurrency).toUpperCase().slice(0, 3));
+                      }
+                    }}
+                  />
 
                   <div className="space-y-3">
                     {/* 1. Sales Account (CR) */}
@@ -2937,14 +2950,14 @@ export function LocalPurchaseView({
                     <Button
                       type="button"
                       onClick={handleAddLineItem}
-                      className="w-1/3 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
+                      className="w-1/3 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
                     >
                       <Plus className="h-3.5 w-3.5" /> {t(lang, "lp.add_item_to_list", "Add Item to List")}
                     </Button>
                     <Button
                       type="button"
                       onClick={() => { if (!validateGoodsStep()) return; setCurrentStep(3); }}
-                      className="w-1/3 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1"
+                      className="w-1/3 h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
                     >
                       {t(lang, "lp.next_final", "Next: Final")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
@@ -3228,7 +3241,7 @@ export function LocalPurchaseView({
 
                   <div className="flex gap-2 pt-2">
                     <Button type="button" onClick={() => { if (!validateBookingStep()) return; setCurrentStep(2); }}
-                      className="w-full h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
+                      className="w-full h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm">
                       {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
@@ -3253,9 +3266,9 @@ export function LocalPurchaseView({
                       matching the approved prototype's Step 4 layout. Same fields/values as
                       the summary list this replaces; nothing renamed at the data level. */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
-                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <Truck className="h-3 w-3 text-purple-600" /> {t(lang, "lp.card_loading_details", "Loading Details")}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <span className="h-3.5 w-3.5 rounded flex items-center justify-center text-[8px] font-black text-white bg-blue-600 shrink-0">1</span> {t(lang, "lp.card_loading_details", "Loading Details")}
                       </p>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-slate-500">{t(lang, "lp.shipment_type_s", "Shipment Type:")}</span>
@@ -3266,9 +3279,9 @@ export function LocalPurchaseView({
                       {warehouseName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.warehouse_s", "Warehouse:")}</span><span className="font-bold text-slate-700">{warehouseName}</span></div>}
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
-                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <CreditCard className="h-3 w-3 text-blue-500" /> {t(lang, "lp.card_payment_details", "Payment Details")}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <span className="h-3.5 w-3.5 rounded flex items-center justify-center text-[8px] font-black text-white bg-emerald-600 shrink-0">2</span> {t(lang, "lp.card_payment_details", "Payment Details")}
                       </p>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-slate-500">{t(lang, "lp.payment_mode", "Payment Mode:")}</span>
@@ -3292,9 +3305,9 @@ export function LocalPurchaseView({
                       )}
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
-                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <Package className="h-3 w-3 text-emerald-600" /> {t(lang, "lp.card_goods_details", "Goods Details")}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <span className="h-3.5 w-3.5 rounded flex items-center justify-center text-[8px] font-black text-white bg-purple-600 shrink-0">3</span> {t(lang, "lp.card_goods_details", "Goods Details")}
                       </p>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-slate-500">{t(lang, "lp.total_goods_lines", "Total Goods Lines:")}</span>
@@ -3308,9 +3321,9 @@ export function LocalPurchaseView({
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-1">
-                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <Flag className="h-3 w-3 text-amber-600" /> {t(lang, "lp.card_origin_total", "Origin & Total Details")}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 space-y-1">
+                      <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <span className="h-3.5 w-3.5 rounded flex items-center justify-center text-[8px] font-black text-white bg-amber-500 shrink-0">4</span> {t(lang, "lp.card_origin_total", "Origin & Total Details")}
                       </p>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-slate-500">{t(lang, "lp.origin_s", "Origin:")}</span>
@@ -3388,8 +3401,8 @@ export function LocalPurchaseView({
 
           {/* Right Column: Live Added Goods Items Table & Bill Summary Card */}
           <div className="space-y-4 sticky top-6">
-            <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
-              <CardHeader className="bg-white text-slate-900 p-3.5 flex flex-row items-center justify-between border-b border-slate-200">
+            <Card className="border-border shadow-md rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 text-amber-900 dark:text-amber-200 p-3.5 flex flex-row items-center justify-between border-b border-amber-300 dark:border-amber-800">
                 <CardTitle className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
                   <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
                 </CardTitle>
