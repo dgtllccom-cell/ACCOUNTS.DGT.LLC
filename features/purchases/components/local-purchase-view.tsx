@@ -2425,22 +2425,29 @@ export function LocalPurchaseView({
 
           {/* 2-Column Split: Active Step Form (Left) vs Added Goods Table (Right) */}
           <div className="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-5 items-start">
-            {/* Left Column: Form Stepper Card */}
-            <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
-              <CardHeader className="bg-slate-50 border-b border-slate-100 p-3.5 flex flex-row items-center justify-between">
-                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+            {/* Left Column: Form Stepper Card — amber-accented "active work panel" treatment
+                (matches the amber DRAFT badge already used on the Bill Details summary card
+                above, and the owner-approved reference design's highlighted left panel) */}
+            <Card className="border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10 shadow-md rounded-2xl overflow-hidden">
+              <CardHeader className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-100 dark:border-amber-900 p-3.5 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   {currentStep === 1 && <><FileText className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step1_header_booking", "STEP 1: BOOKING")}</>}
                   {currentStep === 2 && <><Package className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step2_header", "STEP 2: GOODS ENTRY")}</>}
                   {currentStep === 3 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step3_header_final", "STEP 3: FINAL")}</>}
                 </CardTitle>
-                <button
-                  type="button"
-                  onClick={() => setIsFormOpen(false)}
-                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition"
-                  title={t(lang, "lp.close_form_return", "Close Form & Return to Registry")}
-                >
-                  <X className="h-4 w-4" />
-</button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9.5px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/50 dark:text-amber-400 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800">
+                    {t(lang, "purchase.draft_badge", "DRAFT")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsFormOpen(false)}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-amber-200/60 rounded-lg transition"
+                    title={t(lang, "lp.close_form_return", "Close Form & Return to Registry")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </CardHeader>
 
             <CardContent className="p-5 space-y-4">
