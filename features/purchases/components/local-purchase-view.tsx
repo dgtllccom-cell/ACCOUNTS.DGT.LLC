@@ -1972,41 +1972,21 @@ export function LocalPurchaseView({
             </div>
           </div>
 
-          {/* Top Navy Voucher Banner */}
-          <div className="bg-[#0B1528] text-white rounded-xl p-4 md:px-6 md:py-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="p-2.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400">
-                <FileText className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-base sm:text-lg font-black uppercase tracking-wider text-white">
-                  {t(lang, "lp.voucher_title", "Local Purchase Booking Voucher")}
-                </h1>
-                <p className="text-[11px] text-slate-300 font-medium">
-                  {t(lang, "purchase.voucher_subtitle", "Official Bill / Confirmation — document backing for Goods, Shipping & Payment")}
-                </p>
-              </div>
+          {/* Top Voucher Bar — slim single-row strip matching the approved prototype's
+              compact .top-company bar. Serial No / Booking Date / Branch are shown in
+              full in the cards directly below (Bill Details, Branch & User Information);
+              repeating them here was pure duplication, not new information. */}
+          <div className="bg-[#0B1528] text-white rounded-xl px-4 py-2.5 shadow-sm flex items-center gap-3">
+            <div className="p-1.5 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-400 shrink-0">
+              <FileText className="h-4 w-4" />
             </div>
-
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
-              <div>
-                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "lp.serial_no", "Serial No")}</span>
-                <span className="font-mono font-black text-white">LP-{serialNo}</span>
-              </div>
-              <div>
-                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.booking_date_colon", "Booking Date:")}</span>
-                <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px]">
-                  {new Date().toISOString().slice(0, 10)}
-                </span>
-              </div>
-              <div>
-                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.branch_word", "Branch")}</span>
-                <span className="font-bold text-white">{activeBranch?.name || "\u2014"}</span>
-              </div>
-              <div>
-                <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.system_word", "System")}</span>
-                <span className="font-bold text-white">Global System</span>
-              </div>
+            <div className="min-w-0">
+              <h1 className="text-xs font-black uppercase tracking-wider text-white truncate">
+                {t(lang, "lp.voucher_title", "Local Purchase Booking Voucher")}
+              </h1>
+              <p className="text-[10px] text-slate-400 font-medium truncate">
+                {t(lang, "purchase.voucher_subtitle", "Official Bill / Confirmation — document backing for Goods, Shipping & Payment")}
+              </p>
             </div>
           </div>
 
