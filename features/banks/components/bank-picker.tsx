@@ -49,13 +49,19 @@ export function BankPicker({
   value,
   onValueChange,
   disabled,
-  placeholder
+  placeholder,
+  countryId
 }: {
   label: string;
   value: string;
   onValueChange: (bankId: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Scope the list to one country's configured banks (e.g. the transaction's
+   * selected Country/Branch) — Pakistan shows Pakistan banks, UAE shows UAE
+   * banks, instead of every country's banks mixed together. Omit to fall
+   * back to the caller's own session-scoped default (unchanged behavior). */
+  countryId?: string;
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
@@ -65,7 +71,7 @@ export function BankPicker({
   async function loadList() {
     setLoading(true);
     try {
-      const rows = await listBanks({ limit: 100 });
+      const rows = await listBanks({ limit: 100, countryId: countryId || undefined });
       setBanks(rows);
     } finally {
       setLoading(false);
@@ -75,7 +81,7 @@ export function BankPicker({
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [countryId]);
 
   // If a value is selected but not in the current list, fetch it individually
   useEffect(() => {

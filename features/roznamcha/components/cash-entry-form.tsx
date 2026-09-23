@@ -1128,52 +1128,6 @@ export function CashEntryForm({
 
 
 
-  const recentTransactions = useMemo(() => [
-    {
-      date: entryDate.split("-").reverse().join("/"),
-      accountCode: selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "1102-0001",
-      accountName: selectedCounterLedger?.accountName || "ABC Traders",
-      voucherNo: lastEntryId || "PV-000123",
-      description: remarks.trim() ? remarks.trim() : "Payment to ABC Traders against invoice",
-      debit: paymentMode === "DEBIT" ? amount : 0,
-      credit: paymentMode === "CREDIT" ? amount : 0,
-      balance: paymentMode === "DEBIT" ? 25000 + amount : paymentMode === "CREDIT" ? 25000 - amount : 25000,
-      type: paymentMode === "DEBIT" ? "Receipt" : "Payment"
-    },
-    {
-      date: entryDate.split("-").reverse().join("/"),
-      accountCode: "1110-0002",
-      accountName: "Cash in Hand",
-      voucherNo: "RC-000087",
-      description: "Cash received from ABC Traders",
-      debit: 0,
-      credit: 7500,
-      balance: 17500,
-      type: "Receipt"
-    },
-    {
-      date: entryDate.split("-").reverse().join("/"),
-      accountCode: "6300-0001",
-      accountName: "Stationery Expenses",
-      voucherNo: "JV-000045",
-      description: "Stationery purchase",
-      debit: 300,
-      credit: 0,
-      balance: 17800,
-      type: "Journal"
-    },
-    {
-      date: entryDate.split("-").reverse().join("/"),
-      accountCode: "1120-0003",
-      accountName: "Bank Alfalah - Current A/C",
-      voucherNo: "BP-000012",
-      description: "Bank deposit",
-      debit: 0,
-      credit: 2650,
-      balance: 15150,
-      type: "Bank Payment"
-    }
-  ], [entryDate, selectedCounterLedger, lastEntryId, narration, paymentMode, amount, computedDetails, remarks]);
 
   const computed = useMemo(() => {
     if (!selectedCounterLedger) return null;
@@ -1607,9 +1561,9 @@ export function CashEntryForm({
         applyPostingLedger(res.account);
         return;
       }
-      setAccountLookupError("Account not found in Account Master. Check Account Number, Manual Reference, Customer Number, or Account Name.");
+      setAccountLookupError(t(lang, "cef.account_not_found", "Account not found in Account Master. Check Account Number, Manual Reference, Customer Number, or Account Name."));
     } catch (error) {
-      setAccountLookupError(error instanceof Error ? error.message : "Account lookup failed.");
+      setAccountLookupError(error instanceof Error ? error.message : t(lang, "cef.account_lookup_failed", "Account lookup failed."));
     }
   }
 
@@ -1787,27 +1741,27 @@ export function CashEntryForm({
     const entrySerial = firstLine?.entry_serial_number || (isDebit ? `DR-${header.id?.slice(0, 6)?.toUpperCase()}` : `CR-${header.id?.slice(0, 6)?.toUpperCase()}`);
 
     const rowsForPrint: { label: string; value: string }[] = [
-      { label: "Global Serial (Super Admin)", value: header.super_admin_serial_number || "-" },
-      { label: "Country Serial", value: header.country_transaction_serial_number || "-" },
-      { label: "Branch Serial", value: header.branch_transaction_serial_number || "-" },
-      { label: "Entry Serial (DR/CR)", value: entrySerial || "-" },
-      { label: "Date", value: header.entry_date || "-" },
-      { label: "Voucher No", value: header.voucher_no || "-" },
-      { label: "Journal No", value: header.journal_no || "-" },
-      { label: "Narration", value: resolveVerifiedTranslation(header.translations?.narration, lang) || translateNarrationBlock(header.narration, lang) || "-" },
-      { label: "Status", value: header.status || "-" }
+      { label: t(lang, "cef.print_global_serial", "Global Serial (Super Admin)"), value: header.super_admin_serial_number || "-" },
+      { label: t(lang, "cef.print_country_serial", "Country Serial"), value: header.country_transaction_serial_number || "-" },
+      { label: t(lang, "cef.print_branch_serial", "Branch Serial"), value: header.branch_transaction_serial_number || "-" },
+      { label: t(lang, "cef.print_entry_serial", "Entry Serial (DR/CR)"), value: entrySerial || "-" },
+      { label: t(lang, "cef.print_date", "Date"), value: header.entry_date || "-" },
+      { label: t(lang, "cef.print_voucher_no", "Voucher No"), value: header.voucher_no || "-" },
+      { label: t(lang, "cef.print_journal_no", "Journal No"), value: header.journal_no || "-" },
+      { label: t(lang, "cef.print_narration", "Narration"), value: resolveVerifiedTranslation(header.translations?.narration, lang) || translateNarrationBlock(header.narration, lang) || "-" },
+      { label: t(lang, "cef.print_status", "Status"), value: header.status || "-" }
     ];
-    
+
     if (firstLine) {
       rowsForPrint.push({
-        label: "Counterparty Account",
-        value: `${firstLine.account_number || "-"} | ${firstLine.ledgers?.name || "-"} | ${firstLine.debit ? "Debit (Receive)" : "Credit (Pay)"} ${fmtAmount(Number(firstLine.debit || firstLine.credit || 0))} ${firstLine.currency || ""}`
+        label: t(lang, "cef.print_counterparty_account", "Counterparty Account"),
+        value: `${firstLine.account_number || "-"} | ${firstLine.ledgers?.name || "-"} | ${firstLine.debit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(Number(firstLine.debit || firstLine.credit || 0))} ${firstLine.currency || ""}`
       });
     }
     if (secondLine) {
       rowsForPrint.push({
-        label: "Cash/Bank Account",
-        value: `${secondLine.account_number || "-"} | ${secondLine.ledgers?.name || "-"} | ${secondLine.debit ? "Debit (Receive)" : "Credit (Pay)"} ${fmtAmount(Number(secondLine.debit || secondLine.credit || 0))} ${secondLine.currency || ""}`
+        label: t(lang, "cef.print_cash_bank_account", "Cash/Bank Account"),
+        value: `${secondLine.account_number || "-"} | ${secondLine.ledgers?.name || "-"} | ${secondLine.debit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(Number(secondLine.debit || secondLine.credit || 0))} ${secondLine.currency || ""}`
       });
     }
     return rowsForPrint;
@@ -1818,7 +1772,7 @@ export function CashEntryForm({
       const res = await apiGet<any>(`/api/erp/roznamcha/${id}`);
       if (res.found && res.header) {
         openA4ReportWindow({
-          title: "Roznamcha Cash Entry",
+          title: t(lang, "cef.print_title", "Roznamcha Cash Entry"),
           subtitle: `${res.header.voucher_no || ""} · ${res.header.entry_date || ""}`,
           rows: buildA4RowsForEntry(res),
           autoPrint: false,
@@ -3103,7 +3057,7 @@ export function CashEntryForm({
                             }}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                           >
-                            <option value="">Deira City Branch</option>
+                            <option value="">{t(lang, "cef.select_branch_ellipsis", "Select Branch...")}</option>
                             {mainBranches.map((b) => (
                               <option key={b.id} value={b.id}>
                                 {b.name}
@@ -3113,7 +3067,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Branch Category</Label>
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.branch_category", "Branch Category")}</Label>
                           <select
                             value={branchCategory}
                             onChange={(e) => {
@@ -3122,20 +3076,20 @@ export function CashEntryForm({
                             }}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                           >
-                            <option value="business">Business Branch</option>
-                            <option value="agent">Clearing Agent</option>
+                            <option value="business">{t(lang, "cef.business_branch", "Business Branch")}</option>
+                            <option value="agent">{t(lang, "cef.clearing_agent", "Clearing Agent")}</option>
                           </select>
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">City / Branch</Label>
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.city_branch_label", "City / Branch")}</Label>
                           <select
                             value={cityBranchId}
                             disabled={!countryBranchId && cityBranches.length === 0}
                             onChange={(e) => setCityBranchId(e.target.value)}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none truncate"
                           >
-                            <option value="">Deira, Dubai</option>
+                            <option value="">{t(lang, "cef.select_city_ellipsis", "Select City...")}</option>
                             {cityBranches.map((b) => (
                               <option key={b.id} value={b.id}>
                                 {b.name}
@@ -3165,7 +3119,7 @@ export function CashEntryForm({
                       <SearchSelect
                         label=""
                         value={counterLedgerId}
-                        placeholder="UAE-DET-AC-0003 — alif Rex Trading LLC"
+                        placeholder={t(lang, "cef.search_account_ph", "Search account code or name...")}
                         options={accountOptions}
                         disabled={loadingLedgers}
                         onValueChange={handleCounterLedgerChange}
@@ -3263,11 +3217,11 @@ export function CashEntryForm({
                             }}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                           >
-                            <option value="cash">Cash Roznamcha</option>
-                            <option value="bank">Bank Roznamcha</option>
-                            <option value="business">Business Roznamcha</option>
-                            <option value="invoice">Invoice Journal</option>
-                            <option value="transfer">Transfer</option>
+                            <option value="cash">{t(lang, "cef.opt_cash_roznamcha", "Cash Roznamcha")}</option>
+                            <option value="bank">{t(lang, "cef.opt_bank_roznamcha", "Bank Roznamcha")}</option>
+                            <option value="business">{t(lang, "cef.opt_business_roznamcha", "Business Roznamcha")}</option>
+                            <option value="invoice">{t(lang, "cef.opt_invoice_journal", "Invoice Journal")}</option>
+                            <option value="transfer">{t(lang, "cef.opt_transfer", "Transfer")}</option>
                           </select>
                         </div>
 
@@ -3329,6 +3283,7 @@ export function CashEntryForm({
                               <BankPicker
                                 label=""
                                 value={typeDetails.bankId || ""}
+                                countryId={countryId || undefined}
                                 onValueChange={async (bankId) => {
                                   setTypeDetails((p) => ({ ...p, bankId }));
                                   if (!bankId) return;
@@ -3347,45 +3302,45 @@ export function CashEntryForm({
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Bank Account / IBAN</Label>
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_account_iban", "Bank Account / IBAN")}</Label>
                               <Input
                                 value={typeDetails.bankAccount || ""}
                                 readOnly
-                                placeholder="Select a bank to auto-fill"
-                                title="Populated automatically from the Bank Master — edit the bank record to change it"
+                                placeholder={t(lang, "cef.select_bank_autofill_ph", "Select a bank to auto-fill")}
+                                title={t(lang, "cef.bank_autofill_title", "Populated automatically from the Bank Master — edit the bank record to change it")}
                                 className="h-8.5 text-xs font-mono font-bold bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 cursor-not-allowed"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Transfer Method</Label>
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Method")}</Label>
                               <select
                                 value={typeDetails.method || "Online Transfer"}
                                 onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
                                 className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                               >
-                                <option value="Online Transfer">Online Transfer</option>
-                                <option value="Cheque">Cheque</option>
-                                <option value="Wire Transfer / TT">Wire Transfer / TT</option>
-                                <option value="Cash Deposit">Cash Deposit Slip</option>
-                                <option value="RTGS / NEFT">RTGS / NEFT</option>
+                                <option value="Online Transfer">{t(lang, "cef.opt_online_transfer", "Online Transfer")}</option>
+                                <option value="Cheque">{t(lang, "cef.opt_cheque", "Cheque")}</option>
+                                <option value="Wire Transfer / TT">{t(lang, "cef.opt_wire_transfer", "Wire Transfer / TT")}</option>
+                                <option value="Cash Deposit">{t(lang, "cef.opt_cash_deposit_slip", "Cash Deposit Slip")}</option>
+                                <option value="RTGS / NEFT">{t(lang, "cef.opt_rtgs_neft", "RTGS / NEFT")}</option>
                               </select>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Cheque / Ref Number</Label>
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.cheque_ref_number", "Cheque / Ref Number")}</Label>
                               <Input
                                 value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
                                 onChange={(e) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: e.target.value, refNo: e.target.value }))}
-                                placeholder="CHK-883492 or TXN-99482"
+                                placeholder={t(lang, "cef.cheque_ref_ph", "CHK-883492 or TXN-99482")}
                                 className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">Bank Receipt / Slip Upload</Label>
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_receipt_upload", "Bank Receipt / Slip Upload")}</Label>
                               <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
                                 <Paperclip className="h-3.5 w-3.5" />
                                 <span>{attachmentFile ? attachmentFile.name.slice(0, 16) : "Upload Deposit / Cheque Slip"}</span>
@@ -3414,30 +3369,30 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Business / Vendor Name</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.business_vendor_name", "Business / Vendor Name")}</Label>
                             <Input
                               value={typeDetails.purchaseInfo || typeDetails.businessName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))}
-                              placeholder="Supplier LLC"
+                              placeholder={t(lang, "cef.supplier_ph", "Supplier LLC")}
                               className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Contact Person</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.contact_person", "Contact Person")}</Label>
                             <Input
                               value={typeDetails.receiverSenderName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
-                              placeholder="Representative name"
+                              placeholder={t(lang, "cef.representative_name_ph", "Representative name")}
                               className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Invoice Copy Upload</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.invoice_copy_upload", "Invoice Copy Upload")}</Label>
                             <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
                               <Paperclip className="h-3.5 w-3.5" />
-                              <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : "Attach File"}</span>
+                              <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : t(lang, "cef.attach_file", "Attach File")}</span>
                               <input
                                 type="file"
                                 className="hidden"
@@ -3452,27 +3407,27 @@ export function CashEntryForm({
                       ) : paymentType === "transfer" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">From Account / Branch</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.from_account_branch", "From Account / Branch")}</Label>
                             <Input
                               value={typeDetails.from || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))}
-                              placeholder="Source"
+                              placeholder={t(lang, "cef.source_ph", "Source")}
                               className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">To Account / Branch</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.to_account_branch", "To Account / Branch")}</Label>
                             <Input
                               value={typeDetails.to || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))}
-                              placeholder="Destination"
+                              placeholder={t(lang, "cef.destination_ph", "Destination")}
                               className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Reference Number</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.reference_number", "Reference Number")}</Label>
                             <Input
                               value={typeDetails.ref || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))}
@@ -3500,11 +3455,11 @@ export function CashEntryForm({
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Receiver / Sender Name</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.receiver_sender_name", "Receiver / Sender Name")}</Label>
                             <Input
                               value={typeDetails.receiverSenderName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
-                              placeholder="Amrullah Abdullah"
+                              placeholder={t(lang, "cef.full_name_ph", "Full name")}
                               className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
                             />
                           </div>
@@ -3603,7 +3558,7 @@ export function CashEntryForm({
                                 size="icon"
                                 onClick={() => setCalcOp(calcOp === "mul" ? "div" : "mul")}
                                 className="h-9 w-9 rounded-xl border-slate-200 dark:border-slate-700"
-                                title="Toggle Operation"
+                                title={t(lang, "cef.toggle_operation", "Toggle Operation")}
                               >
                                 <ArrowLeftRight className="h-4 w-4 text-blue-600" />
                               </Button>
@@ -3719,12 +3674,12 @@ export function CashEntryForm({
                           variant="outline"
                           onClick={() => {
                             resetPaymentDraft();
-                            setMessage("Form reset.");
+                            setMessage(t(lang, "cef.form_reset_msg", "Form reset."));
                           }}
                           className="h-9 px-4 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700"
                         >
                           <RefreshCw className="h-3.5 w-3.5" />
-                          <span>Reset</span>
+                          <span>{t(lang, "common.reset", "Reset")}</span>
                         </Button>
 
                         <Button

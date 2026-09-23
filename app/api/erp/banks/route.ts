@@ -182,12 +182,21 @@ export async function GET(request: NextRequest) {
     const status = request.nextUrl.searchParams.get("status");
     const limit = Number(request.nextUrl.searchParams.get("limit") || "500");
     const offset = Number(request.nextUrl.searchParams.get("offset") || "0");
+    const requestedCountryId = request.nextUrl.searchParams.get("countryId") || "";
 
     const all = await loadBanks();
     const scoped = !session.isSuperAdmin
       ? all.filter((bank) => !bank.country_id || session.countryIds.includes(bank.country_id))
       : all;
-    const filtered = scoped.filter((bank) => {
+    // Explicit country filter (e.g. "which country is this transaction for") — the
+    // client already built this query param (features/banks/bank-api.ts listBanks),
+    // it just wasn't being read here, so every bank picker always showed every
+    // country's banks mixed together. A non-super-admin can only narrow further
+    // within their own session scope (already enforced above), never widen it.
+    const countryFiltered = requestedCountryId
+      ? scoped.filter((bank) => bank.country_id === requestedCountryId)
+      : scoped;
+    const filtered = countryFiltered.filter((bank) => {
       if (status === "Active" && !bank.is_active) return false;
       if (status === "Inactive" && bank.is_active) return false;
       if (!search) return true;
