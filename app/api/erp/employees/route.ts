@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 
 export async function GET(request: NextRequest) {
   try {
@@ -91,6 +92,13 @@ export async function POST(request: NextRequest) {
 
     if (!name || !employeeCode) {
       return new Response(JSON.stringify({ error: "name and employeeCode required" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+
+    // Country scope was accepted from the body with no validation against the caller's
+    // own scope (any authenticated employees:create holder could target any country).
+    // This is the same session.countryIds check every other create route already applies.
+    if (!session.isSuperAdmin && countryId && !session.countryIds.includes(countryId)) {
+      throw new ErpPermissionError("Country scope is not allowed for this user.");
     }
 
     const db = createSupabaseAdminClient();

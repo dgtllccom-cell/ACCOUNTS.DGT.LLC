@@ -373,6 +373,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Shipping Handovers"), href: "/dashboard/shipping-line/handover-inbox", icon: ClipboardList },
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
+      { label: nt("Shipping Account Access"), href: "/dashboard/shipping-line/account-access", icon: Wallet },
     ],
   },
   {
@@ -733,6 +734,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/clearing-agent": ["clearing_agents:read", "route:/dashboard/clearing-agent"],
   "/dashboard/clearing-agent/truck-registration": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/truck-registration"],
   "/dashboard/shipping-line/handover-inbox": ["shipping_records:read", "shipping_transfers:read", "route:/dashboard/shipping-line/handover-inbox"],
+  "/dashboard/shipping-line/account-access": ["accounts:read", "route:/dashboard/shipping-line/account-access"],
   "/dashboard/settings/bank": ["banks:read", "route:/dashboard/settings/bank"],
   "/dashboard/roznamcha/reports/bank": ["banks:read", "roznamcha:read", "route:/dashboard/roznamcha/reports/bank"],
   "/dashboard/roznamcha/money-exchange": ["exchange_rates:read", "route:/dashboard/roznamcha/money-exchange"],

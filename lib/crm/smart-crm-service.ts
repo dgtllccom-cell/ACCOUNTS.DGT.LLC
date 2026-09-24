@@ -497,6 +497,8 @@ export async function getCrmUniversalReportData(params: {
   startDate?: string | null;
   endDate?: string | null;
   status?: string | null;
+  /** "User Follow-Up" report: restrict to items assigned to this user only. */
+  userId?: string | null;
 }) {
   return withLocalPg(async (sql) => {
     let allowedCountryIds: string[] = [];
@@ -529,6 +531,7 @@ export async function getCrmUniversalReportData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${params.userId ? sql`AND responsible_user_id = ${params.userId}` : sql``}
         ${params.startDate ? sql`AND due_date >= ${params.startDate}::date` : sql``}
         ${params.endDate ? sql`AND due_date <= ${params.endDate}::date` : sql``}
       ORDER BY due_date ASC, created_at DESC;

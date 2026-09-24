@@ -9406,5 +9406,581 @@
     "engine": "local-phrase",
     "confidence": 0.6,
     "at": "2026-09-22T13:31:43.702Z"
+  },
+  {
+    "key": "shipacc.country_label",
+    "lang": "ur",
+    "value": "ملک",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.country_label",
+    "lang": "ar",
+    "value": "الدولة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.country_label",
+    "lang": "fa",
+    "value": "کشور",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.country_label",
+    "lang": "ps",
+    "value": "هیواد",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.search_button",
+    "lang": "ur",
+    "value": "سیرچ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.search_button",
+    "lang": "ar",
+    "value": "سیرتش",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.search_button",
+    "lang": "fa",
+    "value": "سیرچ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.search_button",
+    "lang": "ps",
+    "value": "سیرچ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_code",
+    "lang": "ur",
+    "value": "کودی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_code",
+    "lang": "ar",
+    "value": "إلىدی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_code",
+    "lang": "fa",
+    "value": "بهدی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_code",
+    "lang": "ps",
+    "value": "تهدی",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_name",
+    "lang": "ur",
+    "value": "اکاؤنٹ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_name",
+    "lang": "ar",
+    "value": "حساب",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_name",
+    "lang": "fa",
+    "value": "حساب",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_name",
+    "lang": "ps",
+    "value": "حساب",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_currency",
+    "lang": "ur",
+    "value": "کرنسی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_currency",
+    "lang": "ar",
+    "value": "العملة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_currency",
+    "lang": "fa",
+    "value": "ارز",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_currency",
+    "lang": "ps",
+    "value": "اسعارو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_branch",
+    "lang": "ur",
+    "value": "برانچ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_branch",
+    "lang": "ar",
+    "value": "الفرع",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_branch",
+    "lang": "fa",
+    "value": "شعبه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.col_branch",
+    "lang": "ps",
+    "value": "څانګه",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.select_account",
+    "lang": "ur",
+    "value": "سیلیکت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.select_account",
+    "lang": "ar",
+    "value": "سیلیکت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.select_account",
+    "lang": "fa",
+    "value": "سیلیکت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.select_account",
+    "lang": "ps",
+    "value": "سیلیکت",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_type",
+    "lang": "ur",
+    "value": "ترانساکتیون تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_type",
+    "lang": "ar",
+    "value": "ترانساکتیون تیبی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_type",
+    "lang": "fa",
+    "value": "ترانساکتیون تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_type",
+    "lang": "ps",
+    "value": "ترانساکتیون تیپی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_debit",
+    "lang": "ur",
+    "value": "دیبیت (ریکییوی)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_debit",
+    "lang": "ar",
+    "value": "دیبیت (ریکییوی)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_debit",
+    "lang": "fa",
+    "value": "دیبیت (ریکییوی)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_debit",
+    "lang": "ps",
+    "value": "دیبیت (ریکییوی)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_credit",
+    "lang": "ur",
+    "value": "کریدیت (پای)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_credit",
+    "lang": "ar",
+    "value": "کریدیت (معی)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_credit",
+    "lang": "fa",
+    "value": "کریدیت (پای)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_credit",
+    "lang": "ps",
+    "value": "کریدیت (پای)",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.amount",
+    "lang": "ur",
+    "value": "رقم",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.amount",
+    "lang": "ar",
+    "value": "المبلغ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.amount",
+    "lang": "fa",
+    "value": "مبلغ",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.amount",
+    "lang": "ps",
+    "value": "مقدار",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.currency",
+    "lang": "ur",
+    "value": "کرنسی",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.currency",
+    "lang": "ar",
+    "value": "العملة",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.currency",
+    "lang": "fa",
+    "value": "ارز",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.currency",
+    "lang": "ps",
+    "value": "اسعارو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.entry_date",
+    "lang": "ur",
+    "value": "ینتری داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.entry_date",
+    "lang": "ar",
+    "value": "ینتری داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.entry_date",
+    "lang": "fa",
+    "value": "ینتری داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.entry_date",
+    "lang": "ps",
+    "value": "ینتری داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.description",
+    "lang": "ur",
+    "value": "تفصیل",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.description",
+    "lang": "ar",
+    "value": "بيان",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.description",
+    "lang": "fa",
+    "value": "شرح",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.description",
+    "lang": "ps",
+    "value": "تشریح",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.reference_no",
+    "lang": "ur",
+    "value": "ریفرینکی نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.reference_no",
+    "lang": "ar",
+    "value": "ریفرینکی نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.reference_no",
+    "lang": "fa",
+    "value": "ریفرینکی نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.reference_no",
+    "lang": "ps",
+    "value": "ریفرینکی نو.",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_submit",
+    "lang": "ur",
+    "value": "پوست ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_submit",
+    "lang": "ar",
+    "value": "بوست ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_submit",
+    "lang": "fa",
+    "value": "پوست ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.post_submit",
+    "lang": "ps",
+    "value": "پوست ترانساکتیون",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.permission_denied_title",
+    "lang": "ur",
+    "value": "اککیسس ریستریکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.permission_denied_title",
+    "lang": "ar",
+    "value": "اککیسس ریستریکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.permission_denied_title",
+    "lang": "fa",
+    "value": "اککیسس ریستریکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.permission_denied_title",
+    "lang": "ps",
+    "value": "اککیسس ریستریکتید",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.loading",
+    "lang": "ur",
+    "value": "لوڈنگ...",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.loading",
+    "lang": "ar",
+    "value": "التحميل...",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.loading",
+    "lang": "fa",
+    "value": "بارگیری...",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "shipacc.loading",
+    "lang": "ps",
+    "value": "بار کول...",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-24T16:19:08.113Z"
   }
 ]

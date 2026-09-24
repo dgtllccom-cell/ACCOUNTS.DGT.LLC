@@ -8,6 +8,7 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { hasRolePermission } from "@/lib/permissions/middleware";
 
 
 /** Localize `description` on every nested roznamcha_lines row across a list of entries. */
@@ -617,11 +618,30 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     // this ledger. Guards a client that pairs an in-scope branch id with an
     // out-of-scope account id (the simplified mobile form derives both from the
     // same ledger row, so this only ever fires on a tampered request).
-    if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
-      throw new Error("The selected account does not belong to the posting branch.");
-    }
-    if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
-      throw new Error("The selected account does not belong to the posting main branch.");
+    //
+    // A session explicitly granted `roznamcha:post_cross_branch` (Shipping Line users,
+    // per-user opt-in via the Permission Control Center) is exempt from the branch-match
+    // check, but ONLY within its own country — that boundary is enforced unconditionally
+    // below (unlike validateLedgerCountryScope further down, which is advisory/fail-open
+    // when the admin client is unavailable). A session without this permission keeps the
+    // exact original same-branch-only behavior.
+    const crossBranchPostingAllowed = Boolean(input.session) && hasRolePermission(input.session, "roznamcha", "post_cross_branch");
+
+    if (!crossBranchPostingAllowed) {
+      if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
+        throw new Error("The selected account does not belong to the posting branch.");
+      }
+      if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
+        throw new Error("The selected account does not belong to the posting main branch.");
+      }
+    } else if (ledger.country_id) {
+      const isSuperAdmin = Boolean(input.session?.isSuperAdmin);
+      const ownCountryIds: string[] = input.session?.countryIds ?? [];
+      const sameCountryAsPostingEntry = !effectiveCountryId || ledger.country_id === effectiveCountryId;
+      const sameCountryAsSession = isSuperAdmin || ownCountryIds.includes(ledger.country_id);
+      if (!sameCountryAsPostingEntry || !sameCountryAsSession) {
+        throw new Error("Cross-branch posting is only permitted within your own country scope.");
+      }
     }
 
     // Rule 1: Country Scope Validation — advisory/non-blocking (fail-open on lookup

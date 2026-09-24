@@ -285,6 +285,48 @@ export const ERP_MODULE_DEFINITIONS: ErpModuleDef[] = [
     deletePerms: [],
     approvePerms: ["contracts:write"],
     exportPerms: ["reports:export"]
+  },
+
+  // 5. Shipping Line User — independent, explicitly-granted extensions on top of the
+  // existing Account Master / Ledger / Roznamcha / CRM / Employee architecture. None of
+  // these are in any role's default permission array (including agent_user) — a Super
+  // Admin grants them per-user via this same Permission Control Center, one checkbox at
+  // a time, exactly as the owner asked for ("independent permissions rather than one
+  // large switch"). Country/branch scope (session.countryIds/cityBranchIds) still applies
+  // on top of every one of these — a granted permission only ever widens WHAT a user may
+  // attempt, never WHERE.
+  {
+    key: "shipping_account_ledger_access",
+    name: "Shipping — Account Search, Create & Cross-Branch Posting",
+    category: "Logistics & Customs",
+    viewPerms: ["accounts:read"],
+    createPerms: ["accounts:create"],
+    editPerms: ["roznamcha:post_cross_branch"],
+    deletePerms: [],
+    approvePerms: ["ledger_full:read"],
+    exportPerms: ["reports:export"]
+  },
+  {
+    key: "shipping_crm_access",
+    name: "Shipping — CRM Follow-Up Access",
+    category: "Logistics & Customs",
+    viewPerms: ["crm:read"],
+    createPerms: ["crm:create"],
+    editPerms: ["crm:followup"],
+    deletePerms: [],
+    approvePerms: [],
+    exportPerms: []
+  },
+  {
+    key: "shipping_employee_access",
+    name: "Shipping — Employee Management Access",
+    category: "Logistics & Customs",
+    viewPerms: ["employees:read"],
+    createPerms: ["employees:create"],
+    editPerms: [],
+    deletePerms: [],
+    approvePerms: [],
+    exportPerms: []
   }
 ];
 

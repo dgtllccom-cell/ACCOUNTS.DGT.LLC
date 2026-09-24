@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getSmartCrmDashboardData } from "@/lib/crm/smart-crm-service";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -9,6 +10,7 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "crm", "read");
     const { searchParams } = new URL(request.url);
 
     const generalBrand = searchParams.get("generalBrand");
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch CRM dashboard data." },
-      { status: 500 }
+      { status: error?.status || 500 }
     );
   }
 }

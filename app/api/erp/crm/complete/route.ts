@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
+import { t } from "@/lib/i18n/ui";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "crm", "followup");
     const body = await request.json();
     const { crmItemId, remarks } = body;
 
@@ -32,10 +35,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Action item successfully marked as completed."
+      message: t(session.preferredLanguage, "crm.item_completed", "Action item successfully marked as completed.")
     });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message || "Failed to complete item." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to complete item." }, { status: error?.status || 500 });
   }
 }

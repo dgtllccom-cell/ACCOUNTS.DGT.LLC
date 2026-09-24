@@ -7,6 +7,7 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,8 @@ async function getNextEmployeeCode(sql: any): Promise<string> {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "employees", "read");
     let supabase = await createServerSupabaseClient();
 
     const searchParams = request.nextUrl.searchParams;
@@ -206,13 +208,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ employees: filtered });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err?.status || 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "employees", "create");
     let supabase = await createServerSupabaseClient();
     const body = await request.json();
 
@@ -278,6 +281,9 @@ export async function POST(request: NextRequest) {
     }
     if (!category) {
       return NextResponse.json({ error: "Employee category is required" }, { status: 400 });
+    }
+    if (!session.isSuperAdmin && countryId && !session.countryIds.includes(countryId)) {
+      return NextResponse.json({ error: "Country scope is not allowed for this user." }, { status: 403 });
     }
 
     const newEmployeeId = await withLocalPg(async (sql) => {
@@ -370,6 +376,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ employee: newEmployee });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err?.status || 500 });
   }
 }
