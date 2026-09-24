@@ -64,7 +64,7 @@ import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
-import { translateNarrationBlock } from "@/lib/i18n/table-headers";
+import { translateNarrationBlock, translateHeader } from "@/lib/i18n/table-headers";
 import { localizeTerm } from "@/lib/i18n/transliteration";
 
 function getRoznamchaCategoryLabel(row: any) {

@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, Loader2, Paperclip, Link2, UserCheck, ArrowRightLeft, History, Languages,
-  CheckCircle2, XCircle, Download, Trash2, ListPlus, Send,
+  CheckCircle2, XCircle, Download, Trash2, ListPlus, Send, Phone, PhoneIncoming, PhoneOutgoing,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { fmtDate, fmtDateTime, statusTone, type InquiryStatus } from "../lib/shared";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
+import { CallDetailDrawer } from "@/features/ai-receptionist/components/call-detail-drawer";
 
 export function InquiryDetailModal({
   inquiryId,
@@ -34,6 +35,8 @@ export function InquiryDetailModal({
   const [assignees, setAssignees] = useState<{ userId: string; name: string | null }[]>([]);
   const [linkQ, setLinkQ] = useState("");
   const [linkResults, setLinkResults] = useState<{ id: string; label: string }[]>([]);
+  const [relatedCalls, setRelatedCalls] = useState<any[]>([]);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setNode(document.body); }, []);
@@ -58,6 +61,17 @@ export function InquiryDetailModal({
   useEffect(() => { void load(); }, [load]);
 
   const inq = data?.inquiry;
+
+  // Related Calls — one connected communication history hub: this inquiry's
+  // customer_id already links back to the real AI Calls that filed it (or any
+  // other call the same customer made), never a duplicated/parallel record.
+  useEffect(() => {
+    if (!inq?.customer_id) { setRelatedCalls([]); return; }
+    fetch(`/api/erp/ai-calls?customerId=${inq.customer_id}&limit=10`)
+      .then((r) => r.json())
+      .then((d) => setRelatedCalls(d?.data?.rows ?? []))
+      .catch(() => setRelatedCalls([]));
+  }, [inq?.customer_id]);
 
   async function act(path: string, body: any, method = "POST") {
     setBusy(true);
@@ -195,6 +209,30 @@ export function InquiryDetailModal({
                 </div>
               </div>
 
+              {/* related calls — one connected communication history */}
+              {relatedCalls.length > 0 && (
+                <div>
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Phone className="h-3 w-3" />{s.t("related_calls", "Related Calls")} ({relatedCalls.length})
+                  </span>
+                  <div className="mt-1 space-y-1">
+                    {relatedCalls.map((c: any) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setSelectedCallId(c.id)}
+                        className="flex w-full items-center gap-2 rounded-md bg-slate-50 dark:bg-slate-800 px-2 py-1 text-[11px] text-start hover:bg-slate-100 dark:hover:bg-slate-700"
+                      >
+                        {c.direction === "inbound" ? <PhoneIncoming className="h-3 w-3 text-slate-400" /> : <PhoneOutgoing className="h-3 w-3 text-slate-400" />}
+                        <span className="text-slate-500">{new Date(c.started_at).toLocaleString()}</span>
+                        <span className="text-slate-400">{c.intent || ""}</span>
+                        <span className="ms-auto text-slate-400">{c.status}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* workflow actions */}
               {inq.canEdit && (
                 <div className="space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
@@ -304,6 +342,9 @@ export function InquiryDetailModal({
           onSuccess={() => setHandoffModalOpen(false)}
           lang={langProp}
         />
+      )}
+      {selectedCallId && (
+        <CallDetailDrawer callId={selectedCallId} onClose={() => setSelectedCallId(null)} lang={s.lang} />
       )}
     </div>,
     node,

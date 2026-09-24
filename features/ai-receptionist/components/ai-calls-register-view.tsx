@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Phone, PhoneIncoming, PhoneOutgoing, RefreshCw, ExternalLink, AlertTriangle } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneOutgoing, RefreshCw, ExternalLink, AlertTriangle, ShieldAlert, ShieldCheck, ShieldQuestion, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { CallDetailDrawer } from "./call-detail-drawer";
 
 type CallRow = {
   id: string;
@@ -28,18 +29,32 @@ type Resp = {
   telephony: { configured: boolean; provider: string | null; ownerActionRequired: string[] };
 };
 
+type IntelSummary = {
+  counts: { high: number; medium: number; low: number; not_analyzed: number; follow_up_gap: number };
+  topSignals: Array<{ type: string; n: number }>;
+  topTopics: Array<{ topic: string; n: number }>;
+  repeatedContact: Array<{ contact_key: string; label: string; call_count: number; last_call_at: string }>;
+  agentPerformance: Array<{ user_id: string; user_name: string | null; calls_handled: number; high_risk_calls: number; follow_ups_created: number; coaching_gap: number }>;
+};
+
 export function AiCallsRegisterView({ lang }: { lang?: string }) {
   const s = useErpScreen("aicall", lang);
   const [data, setData] = useState<Resp | null>(null);
+  const [intel, setIntel] = useState<IntelSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGet<Resp>("/api/erp/ai-calls?limit=200");
+      const [res, intelRes] = await Promise.all([
+        apiGet<Resp>("/api/erp/ai-calls?limit=200"),
+        apiGet<{ summary: IntelSummary }>("/api/erp/ai-calls/intelligence/summary").catch(() => null),
+      ]);
       setData(res);
+      if (intelRes) setIntel(intelRes.summary);
     } catch (e: any) {
       setError(e?.message ?? s.t("load_err", "Could not load AI calls."));
     } finally {
@@ -115,6 +130,89 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
         </div>
       ) : null}
 
+      {/* Conversation Intelligence — portfolio dashboard */}
+      {intel ? (
+        <div className={s.textStart}>
+          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+            <Sparkles className="h-3 w-3" /> {s.t("intel_portfolio_title", "Conversation Intelligence — Portfolio Risk")}
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-600"><ShieldAlert className="h-3.5 w-3.5" />{s.t("intel_risk_high", "High Risk")}</div>
+              <div className="mt-1 text-xl font-black">{intel.counts.high}</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-amber-600"><ShieldQuestion className="h-3.5 w-3.5" />{s.t("intel_risk_medium", "Medium Risk")}</div>
+              <div className="mt-1 text-xl font-black">{intel.counts.medium}</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-600"><ShieldCheck className="h-3.5 w-3.5" />{s.t("intel_risk_low", "Low Risk")}</div>
+              <div className="mt-1 text-xl font-black">{intel.counts.low}</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground"><ShieldQuestion className="h-3.5 w-3.5" />{s.t("intel_not_analyzed", "Not Yet Analyzed")}</div>
+              <div className="mt-1 text-xl font-black">{intel.counts.not_analyzed}</div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_top_signals", "Top Signals")}</p>
+              {intel.topSignals.length ? (
+                <ul className="mt-1.5 space-y-1">
+                  {intel.topSignals.map((sig) => (
+                    <li key={sig.type} className="flex items-center justify-between text-[11px]">
+                      <span>{s.t(`signal_${sig.type}_title`, sig.type.replace(/_/g, " "))}</span>
+                      <span className="font-bold">{sig.n}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_top_topics", "Top Topics")}</p>
+              {intel.topTopics.length ? (
+                <ul className="mt-1.5 space-y-1">
+                  {intel.topTopics.map((tp) => (
+                    <li key={tp.topic} className="flex items-center justify-between text-[11px]">
+                      <span>{s.t(`topic_${tp.topic}_title`, tp.topic.replace(/_/g, " "))}</span>
+                      <span className="font-bold">{tp.n}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_repeated_contact", "Repeated Contact")}</p>
+              {intel.repeatedContact.length ? (
+                <ul className="mt-1.5 space-y-1">
+                  {intel.repeatedContact.map((rc) => (
+                    <li key={rc.contact_key} className="flex items-center justify-between text-[11px]">
+                      <span>{rc.label}</span>
+                      <span className="font-bold">{rc.call_count}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_agent_performance", "Agent / User Performance")}</p>
+              {intel.agentPerformance.length ? (
+                <ul className="mt-1.5 space-y-1">
+                  {intel.agentPerformance.map((ap) => (
+                    <li key={ap.user_id} className="text-[11px]">
+                      <span className="font-bold">{ap.user_name || "—"}</span>
+                      {" — "}{s.t("intel_calls_handled", "calls")}: {ap.calls_handled}, {s.t("intel_high_risk", "high-risk")}: {ap.high_risk_calls}, {s.t("intel_follow_ups", "follow-ups")}: {ap.follow_ups_created}
+                      {ap.coaching_gap > 0 ? <span className="ms-1 font-bold text-amber-600">({s.t("intel_coaching_gap", "coaching gap")}: {ap.coaching_gap})</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="overflow-x-auto rounded-lg border border-border bg-background">
         <table className="w-full min-w-[900px] text-sm">
           <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
@@ -131,7 +229,7 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
           <tbody className="divide-y divide-border">
             {data?.rows?.length ? (
               data.rows.map((r) => (
-                <tr key={r.id} className="hover:bg-muted/30">
+                <tr key={r.id} className="cursor-pointer hover:bg-muted/30" onClick={() => setSelectedCallId(r.id)}>
                   <td className="px-3 py-2 whitespace-nowrap">{new Date(r.started_at).toLocaleString()}</td>
                   <td className="px-3 py-2">
                     <span className="inline-flex items-center gap-1">
@@ -145,7 +243,7 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
                   <td className="px-3 py-2">{fmtDur(r.duration_seconds)}</td>
                   <td className="px-3 py-2">
                     {r.inquiry_id ? (
-                      <Link href="/dashboard/customer-inquiries" className="inline-flex items-center gap-1 text-primary">
+                      <Link href="/dashboard/customer-inquiries" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-primary">
                         {s.t("view_inquiry", "View")} <ExternalLink className="h-3 w-3" />
                       </Link>
                     ) : (
@@ -164,6 +262,10 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
           </tbody>
         </table>
       </div>
+
+      {selectedCallId ? (
+        <CallDetailDrawer callId={selectedCallId} onClose={() => setSelectedCallId(null)} lang={s.lang} />
+      ) : null}
     </section>
   );
 }

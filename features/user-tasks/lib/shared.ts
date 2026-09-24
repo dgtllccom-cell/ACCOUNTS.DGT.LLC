@@ -96,5 +96,7 @@ export const RELATED_MODULE_ROUTES: Record<string, string> = {
   shipping: "/dashboard/logistics",
   clearing: "/dashboard/logistics",
   reports: "/dashboard/reports",
+  customer_inquiry: "/dashboard/customer-inquiries",
+  ai_calls: "/dashboard/customer-inquiries/calls",
   other: "",
 };

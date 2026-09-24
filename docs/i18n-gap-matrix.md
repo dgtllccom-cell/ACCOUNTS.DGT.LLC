@@ -1,8 +1,8 @@
 # i18n gap matrix — UI dictionary (`lib/i18n/ui.ts`)
 
-_Generated 2026-09-24T09:32:26.709Z by `scripts/i18n-autofill.mts`._
+_Generated 2026-09-24T12:34:41.967Z by `scripts/i18n-autofill.mts`._
 
-Keys per language block: **17160**
+Keys per language block: **17230**
 
 | Language | Gaps before | Auto-filled | Gaps remaining |
 |---|--:|--:|--:|

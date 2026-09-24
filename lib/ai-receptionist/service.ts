@@ -13,6 +13,7 @@ import { ApiClientError } from "@/lib/api/response";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { AiCallNumberMap, AiCallRow, CallIntent, CallStatus } from "./types";
+import { analyzeCall } from "./call-intelligence";
 
 /** withLocalPg but non-null — throws a clean error when the pool is unavailable. */
 async function pg<T>(fn: Parameters<typeof withLocalPg<T>>[0]): Promise<T> {
@@ -89,7 +90,7 @@ export async function upsertNumberMap(
         ${input.greeting_override ?? null}, ${input.announce_recording ?? true}, ${input.assigned_to ?? null},
         ${input.is_active ?? true}, ${session.userId}::uuid
       )
-      on conflict (id) do update set
+      on conflict (lower(btrim(phone_e164))) do update set
         phone_e164 = excluded.phone_e164, label = excluded.label,
         country_id = excluded.country_id, country_branch_id = excluded.country_branch_id, city_branch_id = excluded.city_branch_id,
         purpose = excluded.purpose, default_language = excluded.default_language,
@@ -174,7 +175,18 @@ export async function finalizeCall(params: {
     if (!call) throw new ApiClientError("Call not found.", { status: 404, code: "NOT_FOUND" });
 
     let inquiryId: string | null = call.inquiry_id;
-    const transcript = (params.transcript || call.transcript || "").trim();
+    // Build the FULL multi-turn transcript from every caller utterance recorded
+    // on this call's event timeline (each webhook turn already calls recordEvent
+    // with detail.speech) — not just the final turn's speech text. Conversation
+    // Intelligence needs the whole call, not a one-line fragment.
+    const speechEvents = (await sql`
+      select detail->>'speech' as speech
+      from public.ai_call_events
+      where call_id = ${params.callId}::uuid and detail->>'speech' is not null and btrim(detail->>'speech') <> ''
+      order by at asc
+    `) as unknown as Array<{ speech: string }>;
+    const fullTranscript = speechEvents.map((e) => e.speech).join(" ").trim();
+    const transcript = (fullTranscript || params.transcript || call.transcript || "").trim();
     const leftContent = Boolean(transcript) && params.intent !== "hours" && params.intent !== "address";
 
     if (leftContent && !inquiryId) {
@@ -243,6 +255,16 @@ export async function finalizeCall(params: {
         /* non-fatal */
       }
     }
+
+    // Conversation Intelligence — non-fatal, same idiom as the translateMasterRecord
+    // call above. Runs the deterministic (+ optional AI) analysis and, when
+    // warranted, auto-creates a real User Tasks follow-up (see call-intelligence.ts).
+    try {
+      await analyzeCall(params.callId, { lang: call.language_code as SupportedLanguage });
+    } catch {
+      /* non-fatal */
+    }
+
     return { inquiryId };
   });
 }
@@ -251,7 +273,7 @@ export async function finalizeCall(params: {
 
 export async function listCalls(
   session: ErpSession,
-  opts: { direction?: string; status?: string; limit?: number } = {},
+  opts: { direction?: string; status?: string; customerId?: string; limit?: number } = {},
 ): Promise<AiCallRow[]> {
   const limit = Math.min(opts.limit ?? 100, 500);
   const countryIds = session.countryIds ?? [];
@@ -261,9 +283,10 @@ export async function listCalls(
       : sql`(c.country_id is null or c.country_id = any(${countryIds}::uuid[]))`;
     const dir = opts.direction ? sql`and c.direction = ${opts.direction}` : sql``;
     const st = opts.status ? sql`and c.status = ${opts.status}` : sql``;
+    const cust = opts.customerId ? sql`and c.customer_id = ${opts.customerId}::uuid` : sql``;
     return (await sql`
       select c.* from public.ai_calls c
-      where ${scoped} ${dir} ${st}
+      where ${scoped} ${dir} ${st} ${cust}
       order by c.started_at desc
       limit ${limit}
     `) as unknown as AiCallRow[];

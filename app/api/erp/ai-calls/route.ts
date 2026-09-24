@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
         listCalls(session, {
           direction: p.get("direction") || undefined,
           status: p.get("status") || undefined,
+          customerId: p.get("customerId") || undefined,
           limit: p.get("limit") ? Number(p.get("limit")) : undefined,
         }),
         callSummary(session),
