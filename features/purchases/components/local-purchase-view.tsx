@@ -2370,45 +2370,53 @@ export function LocalPurchaseView({
       {isFormOpen ? (
         <form onSubmit={handleSubmit} className="w-full space-y-5 animate-in fade-in duration-200">
 
-          {/* Stepper Navigation Badges matching Purchase Booking Order */}
-          <div className="flex items-center gap-2 bg-white border border-slate-200 p-2 rounded-2xl shadow-xs">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(1)}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
-                currentStep === 1 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {t(lang, "lp.step1_tab", "1 Booking")}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { if (currentStep === 1 && !validateBookingStep()) return; setCurrentStep(2); }}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
-                currentStep === 2 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {t(lang, "lp.step2_tab", "2 Goods")}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (currentStep === 1) {
-                  if (!validateBookingStep()) return;
-                  if (!validateGoodsStep()) return;
-                } else if (currentStep === 2 && !validateGoodsStep()) {
-                  return;
-                }
-                setCurrentStep(3);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
-                currentStep === 3 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {t(lang, "lp.step3_tab_final", "3 Final")}
-            </button>
+          {/* Stepper Navigation — right-aligned matching prototype .core-nav-wrap */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: draft status pill */}
+            <span className="text-[9.5px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full hidden sm:inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              {editingPurchaseId ? t(lang, "lp.editing_draft", "EDITING DRAFT") : t(lang, "purchase.draft_badge", "DRAFT")}
+            </span>
+            {/* Right: step pills grid matching prototype's max-width:620px steps grid */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 p-1.5 rounded-xl shadow-xs ms-auto">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
+                  currentStep === 1 ? "bg-teal-700 text-white shadow-sm" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }`}
+              >
+                {t(lang, "lp.step1_tab", "1 Booking")}
+              </button>
+              <ArrowRight className="h-3 w-3 text-slate-300 shrink-0" />
+              <button
+                type="button"
+                onClick={() => { if (currentStep === 1 && !validateBookingStep()) return; setCurrentStep(2); }}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
+                  currentStep === 2 ? "bg-teal-700 text-white shadow-sm" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }`}
+              >
+                {t(lang, "lp.step2_tab", "2 Goods")}
+              </button>
+              <ArrowRight className="h-3 w-3 text-slate-300 shrink-0" />
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentStep === 1) {
+                    if (!validateBookingStep()) return;
+                    if (!validateGoodsStep()) return;
+                  } else if (currentStep === 2 && !validateGoodsStep()) {
+                    return;
+                  }
+                  setCurrentStep(3);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase flex items-center gap-1.5 transition-all ${
+                  currentStep === 3 ? "bg-teal-700 text-white shadow-sm" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }`}
+              >
+                {t(lang, "lp.step3_tab_final", "3 Final")}
+              </button>
+            </div>
           </div>
 
           {/* 2-Column Split: Active Step Form (Left) vs Added Goods Table (Right) */}
@@ -3266,7 +3274,7 @@ export function LocalPurchaseView({
                   {/* Final 4-card summary grid — Loading / Payment / Goods / Origin & Total,
                       matching the approved prototype's Step 4 layout. Same fields/values as
                       the summary list this replaces; nothing renamed at the data level. */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 space-y-1">
                       <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                         <span className="h-3.5 w-3.5 rounded flex items-center justify-center text-[8px] font-black text-white bg-blue-600 shrink-0">1</span> {t(lang, "lp.card_loading_details", "Loading Details")}
@@ -3550,6 +3558,39 @@ export function LocalPurchaseView({
                       )}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Goods Bottom Summary — 4-stat compact strip matching prototype .goods-bottom-summary / .totals-grid */}
+                <div className="border-t border-amber-100 bg-amber-50/30">
+                  <div className="grid grid-cols-4 divide-x divide-amber-100">
+                    <div className="px-3 py-2.5 min-w-0">
+                      <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Entered")}</span>
+                      <strong className="block text-[12px] font-black text-slate-800 truncate">{draftItems.length > 0 ? draftItems.length : (goodsId || customGoodsName ? 1 : 0)}</strong>
+                    </div>
+                    <div className="px-3 py-2.5 min-w-0">
+                      <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
+                      <strong className="block text-[12px] font-black text-slate-800 truncate">
+                        {draftItems.length > 0
+                          ? draftItems.reduce((a, i) => a + i.quantityKgs, 0).toLocaleString()
+                          : (quantityCount || 0)}
+                      </strong>
+                    </div>
+                    <div className="px-3 py-2.5 min-w-0">
+                      <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
+                      <strong className="block text-[12px] font-black text-blue-700 truncate">
+                        {(draftItems.length > 0
+                          ? draftItems.reduce((a, i) => a + i.netWeight, 0)
+                          : netWeight
+                        ).toLocaleString()} <span className="text-[9px] font-bold">kg</span>
+                      </strong>
+                    </div>
+                    <div className="px-3 py-2.5 min-w-0">
+                      <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
+                      <strong className="block text-[11px] font-black text-emerald-600 truncate">
+                        {purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </strong>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bill Live Totals Card */}

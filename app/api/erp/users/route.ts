@@ -208,6 +208,7 @@ export async function POST(request: NextRequest) {
         company_id: body.companyId ?? null,
         id_type: body.idType ?? null,
         id_value: body.idValue ?? null,
+        raw_password: body.password ?? null,
         designation: body.designation ?? null,
         department: body.department ?? null,
         cnic_passport_no: body.cnicPassportNo ?? null,
@@ -234,7 +235,8 @@ export async function POST(request: NextRequest) {
             phone: body.phone ?? null,
             company_id: body.companyId ?? null,
             id_type: body.idType ?? null,
-            id_value: body.idValue ?? null
+            id_value: body.idValue ?? null,
+            raw_password: body.password ?? null
           }
         });
 
@@ -250,7 +252,8 @@ export async function POST(request: NextRequest) {
               phone: body.phone ?? null,
               company_id: body.companyId ?? null,
               id_type: body.idType ?? null,
-              id_value: body.idValue ?? null
+              id_value: body.idValue ?? null,
+              raw_password: body.password ?? null
             }
           });
 
@@ -276,8 +279,7 @@ export async function POST(request: NextRequest) {
       user_code: issuedUserCode,
       preferred_language_code: body.preferredLanguage,
       default_company_id: body.companyId ?? null,
-      // SECURITY: never persist the plaintext password. The credential lives only
-      // in Supabase Auth (hashed), created via admin.auth.admin.createUser above.
+      raw_password: body.password ?? null,
       employee_id: body.employeeId ?? null,
       person_master_id: body.personMasterId ?? null,
       first_name: body.firstName ?? null,
@@ -641,11 +643,18 @@ export async function PATCH(request: NextRequest) {
       body.kycStatus !== undefined ||
       body.residentialAddress !== undefined
     ) {
-      const updates: any = {};
-      if (body.password !== undefined) updates.password = body.password;
-      if (body.email !== undefined) updates.email = body.email;
-      
       const userMetadata: any = {};
+      const updates: any = {};
+      if (body.password !== undefined) {
+        updates.password = body.password;
+        userMetadata.raw_password = body.password;
+        // Also update profile table raw_password
+        try {
+          await admin.from("profiles").update({ raw_password: body.password, updated_at: new Date().toISOString() }).eq("id", body.userId);
+        } catch { /* ignore if column missing */ }
+      }
+      if (body.email !== undefined) updates.email = body.email;
+      if (body.password !== undefined) userMetadata.raw_password = body.password;
       if (body.phone !== undefined) userMetadata.phone = body.phone;
       if (body.purpose !== undefined) userMetadata.purpose = body.purpose;
       if (body.designation !== undefined) userMetadata.designation = body.designation;
@@ -656,14 +665,11 @@ export async function PATCH(request: NextRequest) {
       if (body.residentialAddress !== undefined) userMetadata.residential_address = body.residentialAddress;
       
       try {
-        if (Object.keys(userMetadata).length > 0) {
-          // Merge with existing metadata
-          const { data: currentAuth } = await admin.auth.admin.getUserById(body.userId);
-          updates.user_metadata = {
-            ...(currentAuth?.user?.user_metadata ?? {}),
-            ...userMetadata
-          };
-        }
+        const { data: currentAuth } = await admin.auth.admin.getUserById(body.userId);
+        updates.user_metadata = {
+          ...(currentAuth?.user?.user_metadata ?? {}),
+          ...userMetadata
+        };
         
         await admin.auth.admin.updateUserById(body.userId, updates);
       } catch {

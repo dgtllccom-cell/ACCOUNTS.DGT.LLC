@@ -1161,7 +1161,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
     fetchBranding(null).then((b) => setBrandCompany(brandingName(b, lang) || null)).catch(() => {});
     fetch("/api/erp/auth/session")
       .then((r) => r.json())
-      .then((j) => setSess(j?.data || j))
+      .then((j) => {
+        const d = j?.data || j;
+        const isSuper = Boolean(
+          d?.isSuperAdmin ||
+          d?.scopes?.isSuperAdmin ||
+          (Array.isArray(d?.roles) && d.roles.includes("super_admin"))
+        );
+        setSess({ ...d, isSuperAdmin: isSuper });
+      })
       .catch(() => {});
   }, [lang]);
 
@@ -2187,28 +2195,26 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <td className="py-3.5 px-3">
                         {sess?.isSuperAdmin ? (
                           <div className="flex items-center gap-1.5 font-mono text-xs text-slate-800 dark:text-slate-200">
-                            <span className={cn("font-medium select-none", !isPwdVisible && "tracking-widest")}>
-                              {isPwdVisible ? (u.passwordKey || "—") : "••••••••"}
+                            <span className={cn("font-medium select-none", !isPwdVisible && "tracking-widest", isPwdVisible && !u.passwordKey && "text-slate-400 italic text-[11px]")}>
+                              {isPwdVisible ? (u.passwordKey || th("Not Set (Use Key)")) : "••••••••"}
                             </span>
+                            <button
+                              type="button"
+                              onClick={() => setVisiblePasswords((prev) => ({ ...prev, [u.userId]: !prev[u.userId] }))}
+                              title={isPwdVisible ? th("Hide Password") : th("Show Password")}
+                              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                            >
+                              {isPwdVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+                            </button>
                             {u.passwordKey ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => setVisiblePasswords((prev) => ({ ...prev, [u.userId]: !prev[u.userId] }))}
-                                  title={isPwdVisible ? th("Hide Password") : th("Show Password")}
-                                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
-                                >
-                                  {isPwdVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
-                                  title={th("Copy Password")}
-                                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
-                                >
-                                  {copiedKey === `pwd-${u.userId}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                                </button>
-                              </>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
+                                title={th("Copy Password")}
+                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                              >
+                                {copiedKey === `pwd-${u.userId}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
                             ) : null}
                             <button
                               type="button"

@@ -1,4 +1,4 @@
-import type { SupportedLanguage } from "@/lib/i18n/languages";
+﻿import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
   | "invtpl.center_template_tab"
@@ -24237,6 +24237,7 @@ const en: Dict = {
 
 
   "purchase.draft_badge": "DRAFT",
+  "lp.editing_draft": "EDITING DRAFT",
 
 
   "purchase.save_short": "Save",
@@ -44313,6 +44314,7 @@ const ur: Dict = {
 
 
   "purchase.draft_badge": "ڈرافٹ",
+  "lp.editing_draft": "ڈرافٹ ترمیم",
 
 
   "purchase.save_short": "محفوظ کریں",
@@ -64471,6 +64473,7 @@ const ar: Dict = {
 
 
   "purchase.draft_badge": "مسودة",
+  "lp.editing_draft": "تحرير المسودة",
 
 
   "purchase.save_short": "حفظ",
@@ -84679,6 +84682,7 @@ const fa: Dict = {
 
 
   "purchase.draft_badge": "پیش‌نویس",
+  "lp.editing_draft": "ویرایش پیش‌نویس",
 
 
   "purchase.save_short": "ذخیره",
@@ -104885,6 +104889,7 @@ const ps: Dict = {
 
 
   "purchase.draft_badge": "مسوده",
+  "lp.editing_draft": "سملون مسوده",
 
 
   "purchase.save_short": "خوندي کول",

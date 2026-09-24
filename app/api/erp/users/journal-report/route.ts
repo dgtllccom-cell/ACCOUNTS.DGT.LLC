@@ -222,9 +222,12 @@ export async function GET(request: NextRequest) {
     const authUsers = (authUsersRes.error ? [] : authUsersRes.data ?? []) as any[];
 
     const emailLookup = new Map<string, string>();
+    const authMetaPasswordLookup = new Map<string, string>();
     for (const u of authUsers) {
-      if (u?.id && u?.email) {
-        emailLookup.set(u.id, u.email);
+      if (u?.id) {
+        if (u?.email) emailLookup.set(u.id, u.email);
+        const metaPwd = u?.user_metadata?.raw_password || u?.user_metadata?.password;
+        if (metaPwd) authMetaPasswordLookup.set(u.id, String(metaPwd));
       }
     }
 
@@ -462,8 +465,8 @@ export async function GET(request: NextRequest) {
         lastActivity: lastActivityDate,
         lastActivityAction: lastActivity?.action ?? null,
         lastLogin: lastLoginDate,
-        passwordKey: session.isSuperAdmin ? (profile.raw_password ?? null) : null,
-        raw_password: session.isSuperAdmin ? (profile.raw_password ?? null) : null,
+        passwordKey: session.isSuperAdmin ? (profile.raw_password || authMetaPasswordLookup.get(profile.id) || null) : null,
+        raw_password: session.isSuperAdmin ? (profile.raw_password || authMetaPasswordLookup.get(profile.id) || null) : null,
         activityCounts,
       };
     });
