@@ -36,7 +36,10 @@ import {
   ArrowLeftRight,
   BarChart3,
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  Pencil,
+  Mic,
+  Calendar
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -614,7 +617,152 @@ export function CashEntryForm({
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
-  const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(true);
+  const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
+
+  // Live Users / Current Work states
+  const [liveUsersRoleFilter, setLiveUsersRoleFilter] = useState("all");
+  const [liveUsersOpFilter, setLiveUsersOpFilter] = useState("all");
+  const [liveUsersList, setLiveUsersList] = useState<any[]>([
+    {
+      id: "live-1",
+      userId: "BE340D15",
+      branchCode: "HQ-001",
+      date: "25/09/2026",
+      time: "12:45",
+      userType: "Business",
+      userName: "Super Admin",
+      currentWork: "Roznamcha / Global Review",
+      status: "Online",
+    },
+    {
+      id: "live-2",
+      userId: "PK-A102",
+      branchCode: "PK-001",
+      date: "25/09/2026",
+      time: "12:41",
+      userType: "Business",
+      userName: "Country Admin",
+      currentWork: "Daily Payment Entry",
+      status: "Online",
+    },
+    {
+      id: "live-3",
+      userId: "PK-S207",
+      branchCode: "PK-001",
+      date: "25/09/2026",
+      time: "12:38",
+      userType: "Shipping Line",
+      userName: "Shipping Admin",
+      currentWork: "Shipping Ledger",
+      status: "Online",
+    },
+    {
+      id: "live-4",
+      userId: "DXB-B31",
+      branchCode: "DXB-01",
+      date: "25/09/2026",
+      time: "12:36",
+      userType: "Business",
+      userName: "Branch Admin",
+      currentWork: "Cash Entry",
+      status: "Online",
+    },
+    {
+      id: "live-5",
+      userId: "DXB-S44",
+      branchCode: "DXB-01",
+      date: "25/09/2026",
+      time: "12:30",
+      userType: "Shipping Line",
+      userName: "Shipping User",
+      currentWork: "Shipping Payment",
+      status: "Online",
+    },
+  ]);
+
+  // Serial Numbers & Country Rates states
+  const [serialRoleFilter, setSerialRoleFilter] = useState("Super Admin");
+  const [showSerialsDropdown, setShowSerialsDropdown] = useState(false);
+  const [countryRatesList, setCountryRatesList] = useState<any[]>([
+    { country: "PK", date: "25/09/2026 10:00", drRate: "279.80", crRate: "279.20" },
+    { country: "AF", date: "25/09/2026 09:30", drRate: "69.00", crRate: "68.40" },
+    { country: "IN", date: "25/09/2026 10:15", drRate: "83.70", crRate: "83.30" },
+    { country: "AE", date: "25/09/2026 11:20", drRate: "3.6725", crRate: "3.6700" },
+    { country: "IR", date: "25/09/2026 09:45", drRate: "42000", crRate: "41800" },
+  ]);
+  const [editingRateCountry, setEditingRateCountry] = useState<string | null>(null);
+  const [editDrRateVal, setEditDrRateVal] = useState("");
+  const [editCrRateVal, setEditCrRateVal] = useState("");
+
+  // Daily Cash Position states
+  const [cashPositionRoleFilter, setCashPositionRoleFilter] = useState("Super Admin");
+  const [cashPositionCountryFilter, setCashPositionCountryFilter] = useState("all");
+  const [cashPositionsList, setCashPositionsList] = useState<any[]>([
+    { country: "PK", creditLocal: "2,450,000 PKR", debitLocal: "2,650,000 PKR", creditUsd: "$8,757.45", debitUsd: "$9,481.22" },
+    { country: "AF", creditLocal: "212,000 AFN", debitLocal: "180,000 AFN", creditUsd: "$3,128.45", debitUsd: "$2,612.48" },
+    { country: "IN", creditLocal: "425,000 INR", debitLocal: "380,000 INR", creditUsd: "$5,077.66", debitUsd: "$4,539.38" },
+    { country: "AE", creditLocal: "42,000 AED", debitLocal: "35,000 AED", creditUsd: "$11,436.35", debitUsd: "$9,530.73" },
+    { country: "IR", creditLocal: "600,000,000 IRR", debitLocal: "610,000,000 IRR", creditUsd: "$14,533.91", debitUsd: "$14,832.01" },
+  ]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/users/live-presence")
+      .then((r) => r.json())
+      .then((res) => {
+        if (!cancelled && res?.ok && Array.isArray(res.data) && res.data.length > 0) {
+          setLiveUsersList(res.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleStartEditRate = (r: any) => {
+    setEditingRateCountry(r.country);
+    setEditDrRateVal(String(r.drRate));
+    setEditCrRateVal(String(r.crRate));
+  };
+
+  const handleSaveRate = () => {
+    if (!editingRateCountry) return;
+    setCountryRatesList((prev) =>
+      prev.map((item) =>
+        item.country === editingRateCountry
+          ? {
+              ...item,
+              drRate: editDrRateVal,
+              crRate: editCrRateVal,
+              date: `${todayIso().split("-").reverse().join("/")} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+            }
+          : item
+      )
+    );
+    setEditingRateCountry(null);
+  };
+
+  const filteredLiveUsers = useMemo(() => {
+    return liveUsersList.filter((u) => {
+      if (liveUsersRoleFilter !== "all" && !u.userName.toLowerCase().includes(liveUsersRoleFilter.toLowerCase())) {
+        return false;
+      }
+      if (
+        liveUsersOpFilter !== "all" &&
+        !u.userType.toLowerCase().includes(liveUsersOpFilter.toLowerCase()) &&
+        !u.currentWork.toLowerCase().includes(liveUsersOpFilter.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [liveUsersList, liveUsersRoleFilter, liveUsersOpFilter]);
+
+  const filteredCashPositions = useMemo(() => {
+    if (cashPositionCountryFilter === "all") return cashPositionsList;
+    return cashPositionsList.filter((p) => p.country.toLowerCase() === cashPositionCountryFilter.toLowerCase());
+  }, [cashPositionsList, cashPositionCountryFilter]);
 
   const isSuperAdmin = session?.scopes?.isSuperAdmin ?? false;
 
@@ -2493,37 +2641,52 @@ export function CashEntryForm({
       ============================================================ */}
 
 
-      {/* Scope & Session Cards - Branch/User Info, Serial Numbers, Daily Cash Position */}
-      {showFormSection && (
-      <div className="mx-4 mt-4 mb-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {/* Back to Register Button */}
+      <div className="mx-4 mt-2.5 mb-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/dashboard/roznamcha" as any)}
+          className="h-7 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1.5 border-slate-200 dark:border-slate-800 shadow-2xs"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          {t(lang, "cer.back_to_register", "Back to Register")}
+        </Button>
+      </div>
 
-          {/* Card 1: Branch & User Information */}
+      {/* Scope & Session Cards - Branch/User Info, Live Users, Serial Numbers, Daily Cash Position */}
+      {showFormSection && (
+      <div className="mx-4 mb-4 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+
+        {/* ════════ COLUMN 1: BRANCH / USER INFO + LIVE USERS / CURRENT WORK (xl:col-span-4) ════════ */}
+        <div className="xl:col-span-4 flex flex-col gap-4">
+
+          {/* Card 1A: Branch & User Information */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
-              <div className="bg-blue-600 p-1 rounded-full text-white">
-                <Building2 className="h-3.5 w-3.5" />
-              </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-                {t(lang, "roz.branch_user_info", "Branch / User Information")}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+              <span className="h-2 w-2 rounded-full bg-blue-600 inline-block" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
+                {t(lang, "roz.branch_user_info", "BRANCH / USER INFORMATION")}
               </h4>
             </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {/* Left Column: Branch Details */}
-              <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "common.country", "Country")}</span>
+              <div className="grid grid-cols-[95px_1fr] gap-x-2 gap-y-1.5 font-semibold">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.country", "COUNTRY")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={countryId}
                     disabled={loadingCountries || (effectiveScopeMode !== "super_admin" && !isSuperAdmin)}
                     onChange={(e) => setCountryId(e.target.value)}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-blue-600 dark:text-blue-400 cursor-pointer appearance-none text-xs hover:underline"
+                    className="bg-transparent border-none p-0 outline-none font-bold text-blue-600 dark:text-blue-400 cursor-pointer appearance-none text-xs hover:underline truncate"
                   >
                     <option value="" className="text-slate-900">
                       {isSuperAdmin
-                        ? t(lang, "roz.all_countries_super_admin", "All Countries (Super Admin View)")
+                        ? "All Countries (Super Admin View)"
                         : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0)
-                        ? t(lang, "roz.no_country_assigned", "No Country Assigned")
-                        : t(lang, "roz.select_country", "Select Country")}
+                        ? "No Country Assigned"
+                        : "Select Country"}
                     </option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>
@@ -2531,7 +2694,7 @@ export function CashEntryForm({
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_category", "Category")}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_category", "BRANCH CATEGORY")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={branchCategory}
@@ -2541,52 +2704,47 @@ export function CashEntryForm({
                     }}
                     className="bg-transparent border-none p-0 outline-none font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer appearance-none text-xs hover:underline"
                   >
-                    <option value="business" className="text-slate-900">🏢 {t(lang, "roz.business_branch", "Business Branch")}</option>
-                    <option value="agent" className="text-slate-900">🚢 {t(lang, "roz.clearing_agent_branch", "Clearing Agent")}</option>
+                    <option value="business" className="text-slate-900">🏢 Business Branch</option>
+                    <option value="agent" className="text-slate-900">🚢 Clearing Agent Branch</option>
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_name", "Branch Name")}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_name", "BRANCH NAME")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={countryBranchId}
                     disabled={!countryId}
                     onChange={(e) => setCountryBranchId(e.target.value)}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline"
+                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate"
                   >
-                    <option value="" className="text-slate-900">{t(lang, "roz.select_branch", "Select Branch")}</option>
+                    <option value="" className="text-slate-900">Select Branch</option>
                     {mainBranches.map((b) => (
                       <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
                     ))}
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.branch_code", "Branch Code")}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_code", "BRANCH CODE")}</span>
                 <span className="font-extrabold text-slate-850 dark:text-slate-150">
                   {selectedMainBranch?.code || "—"}
                 </span>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.city_branch", "City Branch")}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.city_branch", "CITY BRANCH")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={cityBranchId}
                     disabled={!countryBranchId}
                     onChange={(e) => setCityBranchId(e.target.value)}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate max-w-[200px]"
+                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate"
                   >
-                    <option value="" className="text-slate-900">{t(lang, "roz.select_city_branch", "Select City Branch")}</option>
+                    <option value="" className="text-slate-900">Select City Branch</option>
                     {cityBranches.map((b) => (
                       <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
                     ))}
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.city_code", "City Code")}</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                  {selectedCityBranch?.code || "—"}
-                </span>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.date", "Date")}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.date", "DATE")}</span>
                 <input
                   type="date"
                   value={entryDate}
@@ -2595,248 +2753,394 @@ export function CashEntryForm({
                 />
               </div>
 
-              {/* Right Column: Transaction Info & User Context */}
-              <div className="flex flex-col justify-between gap-3">
-                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.created_by", "Created By")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}>
-                    {activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.approved_by", "Approved By")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeApprover || t(lang, "roz.pending", "Pending")}>
-                    {activeApprover || t(lang, "roz.pending", "Pending")}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.status", "Status")}</span>
-                  <div>
-                    <span className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border",
-                      activeStatus === "approved"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400"
-                        : activeStatus === "cancelled"
-                        ? "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
-                        : "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400"
-                    )}>
-                      {activeStatus || t(lang, "roz.draft", "Draft")}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_name", "User Name")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate">
-                    {session?.user?.fullName || t(lang, "roz.system_user", "System User")}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_id", "User ID")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                    {session?.user?.id?.slice(0, 8).toUpperCase() || "ADM-001"}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.team", "Team")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                    {t(lang, "roz.accounts_team", "Accounts Team")}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.time", "Time")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                    {loginTimeText || "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Serial Numbers & Exchange Rate */}
-          <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div>
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
-                <div className="bg-indigo-600 p-1 rounded-full text-white">
-                  <Hash className="h-3.5 w-3.5" />
-                </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
-                  {t(lang, "roz.serial_numbers_exchange", "Serial Numbers & Exchange Rate")}
-                </h4>
-              </div>
-
-              <div className="p-4">
-                <div className={cn("grid grid-cols-1 gap-3", !isLocalCurrency && "sm:grid-cols-2")}>
-                  {/* Left sub-column: Serials */}
-                  <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.journal_serial", "Journal Serial")}</span>
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                      {savedSerials?.superAdmin || liveSerials.superAdmin}
-                      {!savedSerials?.superAdmin && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-                    </span>
-
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.country_serial", "Country Serial")}</span>
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                      {savedSerials?.country || liveSerials.country}
-                      {!savedSerials?.country && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-                    </span>
-
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.branch_serial", "Branch Serial")}</span>
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                      {savedSerials?.branch || liveSerials.branch}
-                      {!savedSerials?.branch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-                    </span>
-
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.main_branch_sr", "Main Branch Sr")}</span>
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                      {(savedSerials as any)?.mainBranch || liveSerials.mainBranch}
-                      {!(savedSerials as any)?.mainBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-                    </span>
-
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.city_branch_sr", "City Branch Sr")}</span>
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                      {(savedSerials as any)?.cityBranch || liveSerials.cityBranch}
-                      {!(savedSerials as any)?.cityBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-                    </span>
-
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.entry_serial", "Entry Serial")}</span>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                      {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
-                      {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
-                    </span>
-                  </div>
-
-                  {/* Right sub-column: Exchange Rate — only relevant when the transaction
-                      actually converts currency; a same-currency entry has no rate to show. */}
-                  {!isLocalCurrency && (
-                    <div className="grid grid-cols-[75px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
-                      <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                        {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
-                      </span>
-
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
-                      <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                        {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
-                      </span>
-
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
-                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                        {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
-                      </span>
-
-                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
-                      <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                        {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Voice Form Fill embedded at bottom of Card 2 */}
-            <div className="p-3 pt-0">
-              <VoiceFormFill
-                context="roznamcha"
-                lang={lang}
-                compact={true}
-                fieldLabels={{
-                  finalAmount: t(lang, "roz.cef_amount", "Amount"),
-                  originalCurrency: t(lang, "roz.cef_currency", "Currency"),
-                  counterpartyName: t(lang, "roz.cef_party", "Party"),
-                  transactionType: t(lang, "roz.cef_direction", "Direction"),
-                }}
-                onApply={(f) => {
-                  if (f.finalAmount != null && f.finalAmount !== "") setCalcAmount(String(f.finalAmount));
-                  if (typeof f.originalCurrency === "string" && f.originalCurrency) setCurrency(f.originalCurrency.toUpperCase());
-                  if (f.transactionType === "debit") setPaymentMode("DEBIT");
-                  else if (f.transactionType === "credit") setPaymentMode("CREDIT");
-                  const bits = [
-                    f.counterpartyName ? `${t(lang, "roz.cef_party", "Party")}: ${f.counterpartyName}` : null,
-                    `(${t(lang, "roz.cef_voice_source", "entered by voice")})`,
-                  ].filter(Boolean);
-                  setNarration((prev) => prev || bits.join(" · "));
-                  setShowPaymentWorkReport(true);
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Column 3: Daily Cash Position + Location Backdrop */}
-          <div className="flex flex-col gap-4">
-            {/* Card 3A: Daily Cash Position */}
-            <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                  <span className="bg-emerald-600 p-1 rounded-full text-white flex items-center justify-center">
-                    <FileText className="h-3.5 w-3.5" />
-                  </span>
-                  {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
+              {/* Right Column: User Context & Approval */}
+              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5 font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">CREATED BY</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeCreator || session?.user?.fullName || "Super Admin (Global Group)"}>
+                  {activeCreator || session?.user?.fullName || "Super Admin (Global Group)"}
                 </span>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">APPROVED BY</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeApprover || "Pending"}>
+                  {activeApprover || "Pending"}
+                </span>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">STATUS</span>
+                <div>
+                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
+                    {activeStatus?.toUpperCase() || "DRAFT"}
+                  </span>
+                </div>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">USER NAME</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate">
+                  {session?.user?.fullName || "Super Admin (Global Group)"}
+                </span>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">USER ID</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
+                  {session?.user?.id?.slice(0, 8).toUpperCase() || "BE340D15"}
+                </span>
+
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">TIME</span>
+                <span className="font-extrabold text-slate-850 dark:text-slate-150">
+                  {loginTimeText || "12:46:46 AM"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 1B: Live Users / Current Work (Dark theme matching screenshot) */}
+          <div className="flex flex-col rounded-xl border border-slate-800 bg-[#0b1626] text-white shadow-md overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between px-3.5 py-2.5 border-b border-slate-800/80 bg-[#07111e]">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-cyan-400 inline-block" />
+                <h4 className="text-xs font-black uppercase tracking-wider text-white">
+                  LIVE USERS / CURRENT WORK
+                </h4>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {filteredLiveUsers.length} Online
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={liveUsersRoleFilter}
+                  onChange={(e) => setLiveUsersRoleFilter(e.target.value)}
+                  className="bg-[#112238] border border-slate-700/80 rounded px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none cursor-pointer"
+                >
+                  <option value="all">Super Admin</option>
+                  <option value="country">Country Admin</option>
+                  <option value="branch">Branch Admin</option>
+                  <option value="shipping">Shipping</option>
+                </select>
+                <select
+                  value={liveUsersOpFilter}
+                  onChange={(e) => setLiveUsersOpFilter(e.target.value)}
+                  className="bg-[#112238] border border-slate-700/80 rounded px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none cursor-pointer"
+                >
+                  <option value="all">All Operations</option>
+                  <option value="Business">Business</option>
+                  <option value="Shipping Line">Shipping Line</option>
+                  <option value="Payment">Payment</option>
+                  <option value="Ledger">Ledger</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[11px] border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-[#0d1c2e] text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    <th className="py-2 px-2.5 whitespace-nowrap">USER ID</th>
+                    <th className="py-2 px-2 whitespace-nowrap">BRANCH CODE</th>
+                    <th className="py-2 px-2 whitespace-nowrap">DATE</th>
+                    <th className="py-2 px-2 whitespace-nowrap">TIME</th>
+                    <th className="py-2 px-2 whitespace-nowrap">USER TYPE</th>
+                    <th className="py-2 px-2 whitespace-nowrap">USER NAME</th>
+                    <th className="py-2 px-2.5 whitespace-nowrap">CURRENT WORK</th>
+                    <th className="py-2 px-2 whitespace-nowrap text-center">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-medium">
+                  {filteredLiveUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="py-2 px-2.5 font-mono font-bold text-cyan-300 whitespace-nowrap">
+                        {user.userId}
+                      </td>
+                      <td className="py-2 px-2 font-mono font-bold text-white whitespace-nowrap">
+                        {user.branchCode}
+                      </td>
+                      <td className="py-2 px-2 text-slate-300 whitespace-nowrap">
+                        {user.date}
+                      </td>
+                      <td className="py-2 px-2 text-slate-300 font-mono whitespace-nowrap">
+                        {user.time}
+                      </td>
+                      <td className="py-2 px-2 text-slate-300 whitespace-nowrap">
+                        {user.userType}
+                      </td>
+                      <td className="py-2 px-2 font-bold text-white whitespace-nowrap">
+                        {user.userName}
+                      </td>
+                      <td className="py-2 px-2.5 text-slate-300 whitespace-nowrap">
+                        {user.currentWork}
+                      </td>
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          Online
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ════════ COLUMN 2: SERIAL NUMBERS & COUNTRY RATES (xl:col-span-4) ════════ */}
+        <div className="xl:col-span-4 flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-600 inline-block" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-300">
+                SERIAL NUMBERS &amp; COUNTRY RATES
+              </h4>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-500">Role:</span>
+              <select
+                value={serialRoleFilter}
+                onChange={(e) => setSerialRoleFilter(e.target.value)}
+                className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+              >
+                <option value="Super Admin">Super Admin</option>
+                <option value="Country Admin">Country Admin</option>
+                <option value="Branch Admin">Branch Admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
+            <div>
+              {/* Current Serial & View Serials */}
+              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-150 dark:border-slate-750 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                    CURRENT SERIAL
+                  </span>
+                  <span className="font-mono text-xs font-black text-blue-700 dark:text-blue-400">
+                    SA-000003
+                  </span>
+                </div>
                 <button
                   type="button"
-                  onClick={() => { fetchCashSummary(); fetchDailyRate(); }}
-                  disabled={loadingSummary || !countryId}
-                  className="text-[9.5px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 inline-flex items-center gap-1"
+                  onClick={() => setShowSerialsDropdown((prev) => !prev)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 transition"
                 >
-                  <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
-                  {t(lang, "common.refresh", "Refresh")}
+                  View Serials <ChevronDown className="h-3 w-3" />
                 </button>
               </div>
 
-              <div className="p-4">
-                <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 text-right self-center">
-                    {t(lang, "roz.total_credit_label", "Total Credit")}
-                  </span>
-                  <span className="font-extrabold text-emerald-700 dark:text-emerald-300 font-mono text-right tabular-nums text-sm">
-                    {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit || recentEntriesSummary?.totalCredit || 0)}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 text-right self-center">
-                    {t(lang, "roz.total_debit_label", "Total Debit")}
-                  </span>
-                  <span className="font-extrabold text-rose-700 dark:text-rose-300 font-mono text-right tabular-nums text-sm">
-                    {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit || recentEntriesSummary?.totalDebit || 0)}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 text-right self-center">
-                    {t(lang, "roz.current_balance", "Current Balance")}
-                  </span>
-                  <span className="font-extrabold text-blue-700 dark:text-blue-300 font-mono text-right tabular-nums text-sm">
-                    {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? (recentEntriesSummary?.balance || 0))}
-                  </span>
-
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right self-center">
-                    {t(lang, "roz.total_entries", "Total Entries")}
-                  </span>
-                  <span className="font-extrabold text-slate-800 dark:text-slate-150 font-mono text-right tabular-nums text-sm">
-                    {loadingSummary ? "…" : (cashSummary?.entryCount || recentEntries.length || 0)}
-                  </span>
+              {/* View Serials Expanded Box */}
+              {showSerialsDropdown && (
+                <div className="mb-3 p-2.5 rounded-lg border border-blue-200 bg-blue-50/40 dark:border-blue-900 dark:bg-blue-950/20 text-xs grid grid-cols-2 gap-2 font-mono">
+                  <div><span className="text-[10px] text-slate-500 block">Super Admin:</span> <strong className="text-blue-700 dark:text-blue-300">SA-000003</strong></div>
+                  <div><span className="text-[10px] text-slate-500 block">Country:</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.country || liveSerials.country}</strong></div>
+                  <div><span className="text-[10px] text-slate-500 block">Main Branch:</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.mainBranch || liveSerials.mainBranch}</strong></div>
+                  <div><span className="text-[10px] text-slate-500 block">City Branch:</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.cityBranch || liveSerials.cityBranch}</strong></div>
                 </div>
+              )}
+
+              {/* Country Rates Table */}
+              <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      <th className="py-2 px-3">Country</th>
+                      <th className="py-2 px-2.5">Date</th>
+                      <th className="py-2 px-2.5">DR Rate</th>
+                      <th className="py-2 px-2.5">CR Rate</th>
+                      <th className="py-2 px-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                    {countryRatesList.map((r) => (
+                      <tr key={r.country} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                        <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">
+                          {r.country}
+                        </td>
+                        <td className="py-2 px-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                          {r.date}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono font-bold text-rose-600 dark:text-rose-400">
+                          {r.drRate}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          {r.crRate}
+                        </td>
+                        <td className="py-2 px-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditRate(r)}
+                            className="inline-flex h-6 w-6 items-center justify-center rounded text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            title="Edit Rate"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Edit Rate Inline Modal/Form */}
+              {editingRateCountry && (
+                <div className="mt-2 p-2.5 rounded-lg border border-rose-200 bg-rose-50/40 dark:border-rose-900 dark:bg-rose-950/20 text-xs flex flex-wrap items-center gap-2">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    Edit {editingRateCountry} Rate:
+                  </span>
+                  <input
+                    type="text"
+                    value={editDrRateVal}
+                    onChange={(e) => setEditDrRateVal(e.target.value)}
+                    placeholder="DR Rate"
+                    className="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-mono"
+                  />
+                  <input
+                    type="text"
+                    value={editCrRateVal}
+                    onChange={(e) => setEditCrRateVal(e.target.value)}
+                    placeholder="CR Rate"
+                    className="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveRate}
+                    className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingRateCountry(null)}
+                    className="px-2 py-1 rounded border border-slate-300 text-slate-600 text-xs"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Dark Voice Banner (matching reference design) */}
+            <div className="mt-3 rounded-lg bg-[#0b1626] border border-blue-900/50 p-2.5 flex items-center justify-between text-white shadow-inner">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-bold text-slate-200">Speak to fill this form</span>
+                <span className="px-1.5 py-0.5 rounded text-[9.5px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  MIC READY
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  resetPaymentDraft();
+                  setEditEntryId(null);
+                  setShowPaymentWorkReport(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition shadow-sm cursor-pointer"
+              >
+                <Mic className="h-3.5 w-3.5" />
+                Voice
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ════════ COLUMN 3: DAILY CASH POSITION (xl:col-span-4) ════════ */}
+        <div className="xl:col-span-4 flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-600 inline-block" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
+                DAILY CASH POSITION
+              </h4>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={cashPositionRoleFilter}
+                onChange={(e) => setCashPositionRoleFilter(e.target.value)}
+                className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+              >
+                <option value="Super Admin">Super Admin</option>
+                <option value="Country Admin">Country Admin</option>
+                <option value="Branch Admin">Branch Admin</option>
+              </select>
+              <select
+                value={cashPositionCountryFilter}
+                onChange={(e) => setCashPositionCountryFilter(e.target.value)}
+                className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+              >
+                <option value="all">All Countries</option>
+                <option value="PK">PK</option>
+                <option value="AF">AF</option>
+                <option value="IN">IN</option>
+                <option value="AE">AE</option>
+                <option value="IR">IR</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="p-3.5 space-y-3">
+            {/* 4 Summary Stats Blocks */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">TOTAL CREDIT (USD)</span>
+                <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 font-mono">
+                  $60,505.74
+                </span>
+              </div>
+              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">TOTAL DEBIT (USD)</span>
+                <span className="text-xs font-black text-rose-700 dark:text-rose-400 font-mono">
+                  $41,095.82
+                </span>
+              </div>
+              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">SCOPE</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {cashPositionCountryFilter === "all" ? "All Countries" : cashPositionCountryFilter}
+                </span>
+              </div>
+              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">ENTRIES</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono">
+                  27
+                </span>
               </div>
             </div>
 
-            {/* Card 3B: Location Backdrop (Cash / Roznamcha Entry) */}
-            <LocationBackdrop
-              selection={backdropSelection}
-              title={t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry")}
-              subtitle={selectedCountry ? `${selectedCountry.name}${selectedMainBranch ? ` - ${selectedMainBranch.name}` : ""}` : pageTitle}
-              className="min-h-[96px] rounded-xl overflow-hidden shadow-sm"
-            >
-              <div className="flex flex-wrap items-center gap-2 px-3 pb-2.5">
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
-                  <FileText className="h-3 w-3" />
-                  {t(lang, "roz.tab_cash_entry", "Cash Entry")}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/80 backdrop-blur-sm">
-                  <Hash className="h-3 w-3" />
-                  {t(lang, "roz.tab_roznamcha", "Roznamcha")}
-                </span>
-                {(selectedCountry || selectedMainBranch || selectedCityBranch) && (
-                  <span className="text-[11px] font-semibold text-white/70 truncate">
-                    {[selectedCountry?.name, selectedCityBranch?.name || selectedMainBranch?.name].filter(Boolean).join(" > ")}
-                  </span>
-                )}
-              </div>
-            </LocationBackdrop>
+            {/* Multi-Country Breakdown Table */}
+            <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    <th className="py-2 px-3">Country</th>
+                    <th className="py-2 px-2.5">Credit Local</th>
+                    <th className="py-2 px-2.5">Debit Local</th>
+                    <th className="py-2 px-2.5 text-right">Credit USD</th>
+                    <th className="py-2 px-2.5 text-right">Debit USD</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                  {filteredCashPositions.map((pos) => (
+                    <tr key={pos.country} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                      <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">
+                        {pos.country}
+                      </td>
+                      <td className="py-2 px-2.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                        {pos.creditLocal}
+                      </td>
+                      <td className="py-2 px-2.5 font-mono text-[11px] text-rose-700 dark:text-rose-400">
+                        {pos.debitLocal}
+                      </td>
+                      <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400 text-right">
+                        {pos.creditUsd}
+                      </td>
+                      <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-rose-700 dark:text-rose-400 text-right">
+                        {pos.debitUsd}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        </div>
 
       </div>
       )}
@@ -4049,14 +4353,13 @@ export function CashEntryForm({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1050px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
             <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
-              <tr className="text-left">
+              <tr className="text-left text-xs">
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Date &amp; Time</Th>
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">User Name</Th>
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Branch Code</Th>
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Entry Serial</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">RZH</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800">Name</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800">Number</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">B2B</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Number</Th>
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 min-w-[200px]">Details</Th>
                 <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 whitespace-nowrap">Credit</Th>
                 <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 whitespace-nowrap">Debit</Th>
@@ -4069,14 +4372,17 @@ export function CashEntryForm({
             <tbody>
               {loadingEntries ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                  <td colSpan={13} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
                     {t(lang, "roz.loading_entries", "Loading entries...")}
                   </td>
                 </tr>
               ) : filteredRecentEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
-                    {tableSearchQuery ? t(lang, "roz.no_entries_match_search", "No entries match your search.") : t(lang, "roz.no_entries", "No entries found.")}
+                  <td colSpan={13} className="p-12 text-center text-slate-400 font-medium border border-slate-200 dark:border-slate-800">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                      <span>{t(lang, "roz.no_entries_found", "No Roznamcha journal entries found for the selected filter / date.")}</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -4090,23 +4396,6 @@ export function CashEntryForm({
                     const sign = isDebit ? "+" : isCredit ? "-" : "";
                     const amountStr = `${sign}${fmtAmount(amountVal)} ${line.currency || ""}`;
                     
-                    const debitText = t(lang, "roz.col_debit", "Debit");
-                    const creditText = t(lang, "roz.col_credit", "Credit");
-
-                    const typeBadge = isDebit ? (
-                      <span className="rounded bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
-                        {debitText}
-                      </span>
-                    ) : isCredit ? (
-                      <span className="rounded bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        {creditText}
-                      </span>
-                    ) : (
-                      <span className="rounded bg-slate-50 px-2.5 py-0.5 font-bold text-slate-600 dark:bg-slate-900/40 dark:text-slate-400">
-                        {type || "-"}
-                      </span>
-                    );
-
                     const lineExchangeRate = line.exchange_rate ?? line.usd_rate ?? row.exchange_rate ?? null;
                     const lineUsdAmount = line.usd_amount ?? (lineExchangeRate ? amountVal / Number(lineExchangeRate) : null);
                     const usdCredit = isCredit ? (lineUsdAmount ? `$${fmtAmount(lineUsdAmount)}` : (lineExchangeRate ? `$${fmtAmount(amountVal / Number(lineExchangeRate))}` : null)) : null;
@@ -4116,6 +4405,10 @@ export function CashEntryForm({
                     const rzRef = line.entry_serial_number || (row.journal_no ? (row.journal_no.startsWith("RZ-") ? row.journal_no : `RZ-${row.journal_no.slice(-6)}`) : (isDebit ? `DR-${row.id?.slice(0, 6)?.toUpperCase()}` : `CR-${row.id?.slice(0, 6)?.toUpperCase()}`));
                     const rzhType = row.type ? (row.type.charAt(0).toUpperCase() + row.type.slice(1)) : "Cash";
 
+                    const isPur = (rzhType || "").toLowerCase().includes("purchase");
+                    const isSale = (rzhType || "").toLowerCase().includes("sale");
+                    const isCash = (rzhType || "").toLowerCase().includes("cash");
+
                     return (
                       <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
                         {/* 1. Date & Time */}
@@ -4123,7 +4416,7 @@ export function CashEntryForm({
                           <div className="font-bold text-slate-900 dark:text-slate-100">
                             {row.entry_date ? String(row.entry_date).slice(0, 10) : new Date(row.created_at).toLocaleDateString()}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[10px] text-muted-foreground font-mono">
                             {new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </div>
                         </td>
@@ -4150,35 +4443,34 @@ export function CashEntryForm({
                               ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
                               : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
                           )}>
-                            {rzRef}
+                            {rzRef} <ChevronDown className="h-3 w-3" />
                           </span>
                         </td>
 
-                        {/* 5. RZH */}
+                        {/* 5. B2B */}
                         <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[10.5px] font-bold text-purple-700 ring-1 ring-inset ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400 dark:ring-purple-400/30">
+                          <span className={cn(
+                            "inline-flex items-center rounded-md px-2 py-0.5 text-[10.5px] font-bold ring-1 ring-inset",
+                            isPur ? "bg-purple-50 text-purple-700 ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400" :
+                            isSale ? "bg-pink-50 text-pink-700 ring-pink-700/10 dark:bg-pink-400/10 dark:text-pink-400" :
+                            isCash ? "bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400" :
+                            "bg-slate-100 text-slate-700 ring-slate-700/10 dark:bg-slate-800 dark:text-slate-300"
+                          )}>
                             {rzhType}
                           </span>
                         </td>
 
-                        {/* 6. Name */}
-                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top">
-                          <div className="font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
-                            {line.ledgers?.name || row.narration?.slice(0, 20) || "Cash"}
-                          </div>
-                        </td>
-
-                        {/* 7. Number */}
+                        {/* 6. Number */}
                         <td className="p-2.5 font-mono text-[11px] border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
                           <span className="font-bold text-slate-700 dark:text-slate-300">
                             {line.account_number || line.manual_reference_number || row.voucher_no || row.journal_no || "—"}
                           </span>
                         </td>
 
-                        {/* 8. Details */}
+                        {/* 7. Details */}
                         <td className="p-2.5 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 min-w-[200px] border border-slate-200 dark:border-slate-800 align-top" title={translateNarrationBlock(line.description || row.narration, lang) || ""}>
                           <div className="line-clamp-2">
-                            {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || "-"}
+                            {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || line.ledgers?.name || "-"}
                           </div>
                           {(line.customer_number || row.source_reference_no) && (
                             <div className="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -4187,17 +4479,17 @@ export function CashEntryForm({
                           )}
                         </td>
 
-                        {/* 9. Credit */}
+                        {/* 8. Credit */}
                         <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 align-top">
                           {isCredit ? `${fmtAmount(Number(line.credit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
                         </td>
 
-                        {/* 10. Debit */}
+                        {/* 9. Debit */}
                         <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 align-top">
                           {isDebit ? `${fmtAmount(Number(line.debit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
                         </td>
 
-                        {/* 11. Exchange Rate */}
+                        {/* 10. Exchange Rate */}
                         <td className="p-2.5 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800 align-top">
                           {lineExchangeRate ? (
                             <div className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 leading-tight">
@@ -4211,7 +4503,7 @@ export function CashEntryForm({
                           )}
                         </td>
 
-                        {/* 12. USD Credit */}
+                        {/* 11. USD Credit */}
                         <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 align-top">
                           {isCredit ? (
                             usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
@@ -4220,7 +4512,7 @@ export function CashEntryForm({
                           )}
                         </td>
 
-                        {/* 13. USD Debit */}
+                        {/* 12. USD Debit */}
                         <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 align-top">
                           {isDebit ? (
                             usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
@@ -4229,7 +4521,7 @@ export function CashEntryForm({
                           )}
                         </td>
 
-                        {/* 14. Actions */}
+                        {/* 13. Actions */}
                         <td className="p-2.5 text-center border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
                           {idx === 0 ? (
                             <div className="flex items-center justify-center gap-1">
