@@ -56,7 +56,11 @@ export function assertSameCountry(session: ErpSession, accountCountryId: string 
 
 function project(row: any, session: ErpSession): MinimalAccountView {
   const ownBranch = isOwnBranchScope(session, row.country_branch_id, row.city_branch_id);
-  const showBalance = ownBranch || hasFullLedgerView(session);
+  const shippingOnly = !session.isSuperAdmin && !(session.operationalDomains ?? ["business"]).some((d) => d === "business" || d === "both");
+  // A shared ("both") account's stored balance mixes Business and Shipping activity — a
+  // Shipping-only login must never receive that combined figure; it gets the Shipping-only
+  // running balance from the statement instead.
+  const showBalance = (ownBranch || hasFullLedgerView(session)) && !(shippingOnly && row.operational_domain === "both");
   return {
     id: row.id,
     code: row.code,
@@ -138,6 +142,8 @@ export async function getAccountForCrossBranchAccess(session: ErpSession, accoun
   const row = rows?.[0];
   if (!row) return null;
   assertSameCountry(session, row.country_id);
+  const shippingOnlyDetail = !session.isSuperAdmin && !(session.operationalDomains ?? ["business"]).some((d) => d === "business" || d === "both");
+  if (shippingOnlyDetail && (row.operational_domain ?? "business") === "business") return null;
   return project(row, session);
 }
 
@@ -171,4 +177,118 @@ export async function getOwnPostedTransactions(
 /** Whether this session may post a cross-branch (same-country) DR/CR entry. */
 export function canPostCrossBranch(session: ErpSession) {
   return session.isSuperAdmin || hasRolePermission(session, "roznamcha", "post_cross_branch");
+}
+
+export type StatementMode = "full" | "own";
+
+export type AccountStatement = {
+  account: MinimalAccountView;
+  mode: StatementMode;
+  /** Shipping-only logins see Shipping-domain activity only, even on a shared ("both") account. */
+  domainFilter: "shipping" | null;
+  openingBalance: number | null;
+  closingBalance: number | null;
+  lines: Array<{
+    lineId: string;
+    entryId: string;
+    entryDate: string;
+    createdAt: string;
+    voucherNo: string | null;
+    journalNo: string | null;
+    referenceNo: string | null;
+    description: string | null;
+    debit: number;
+    credit: number;
+    currency: string;
+    runningBalance: number | null;
+    sourceModule: string | null;
+    sourceTransactionType: string | null;
+    entryCategory: string | null;
+    operationalDomain: string | null;
+    createdById: string | null;
+    createdByName: string | null;
+    branchName: string | null;
+  }>;
+};
+
+/** Who may read the COMPLETE authorised ledger of an account (vs only their own postings). */
+function fullStatementAllowed(session: ErpSession, row: any) {
+  if (session.isSuperAdmin) return true;
+  if (isOwnBranchScope(session, row.country_branch_id, row.city_branch_id)) return true;
+  if (!session.countryIds?.includes(row.country_id)) return false;
+  // Country / main-branch level roles (no city-branch assignment) hold their whole
+  // authorised scope; a city-scoped login needs the explicit ledger_full:read grant.
+  if (!session.cityBranchIds?.length) return true;
+  return hasRolePermission(session, "ledger_full", "read");
+}
+
+export async function getAccountStatement(
+  session: ErpSession,
+  params: { enterpriseAccountId: string; from?: string | null; to?: string | null }
+): Promise<AccountStatement | null> {
+  const accountRows = await withReadPg(async (sql) => sql`
+    select ea.id, ea.code, ea.name, ea.currency, ea.account_number, ea.manual_reference_number,
+           ea.customer_number, ea.country_id, ea.country_branch_id, ea.city_branch_id,
+           ea.operational_domain, ea.opening_balance, ea.current_balance, l.id as ledger_id
+    from public.enterprise_accounts ea
+    left join public.ledgers l on l.enterprise_account_id = ea.id and l.deleted_at is null
+    where ea.deleted_at is null and ea.id = ${params.enterpriseAccountId}
+    limit 1
+  `);
+  const row = accountRows?.[0];
+  if (!row) return null;
+  assertSameCountry(session, row.country_id);
+
+  const shippingOnly = !session.isSuperAdmin && !(session.operationalDomains ?? ["business"]).some((d) => d === "business" || d === "both");
+  const accountDomain = row.operational_domain ?? "business";
+  if (shippingOnly && accountDomain === "business") return null;
+
+  const mode: StatementMode = fullStatementAllowed(session, row) ? "full" : "own";
+  const domainFilter = shippingOnly ? ("shipping" as const) : null;
+
+  const lines = await withReadPg(async (sql) => sql`
+    select rl.id as line_id, rl.debit, rl.credit, rl.currency, rl.usd_amount, rl.description,
+           re.id as entry_id, re.voucher_no, re.journal_no, re.reference_no, re.entry_date, re.created_at,
+           re.source_module, re.source_transaction_type, re.entry_category, re.operational_domain,
+           re.created_by, p.full_name as created_by_name, cb.name as branch_name
+    from public.roznamcha_lines rl
+    join public.roznamcha_entries re on re.id = rl.roznamcha_entry_id
+    left join public.profiles p on p.id = re.created_by
+    left join public.city_branches cb on cb.id = re.city_branch_id
+    where rl.enterprise_account_id = ${params.enterpriseAccountId}
+      and re.deleted_at is null and coalesce(re.status, 'posted') <> 'cancelled'
+      ${mode === "own" ? sql`and re.created_by = ${session.userId}` : sql``}
+      ${domainFilter ? sql`and coalesce(re.operational_domain, ${accountDomain}) = 'shipping'` : sql``}
+      ${params.from ? sql`and re.entry_date >= ${params.from}::date` : sql``}
+      ${params.to ? sql`and re.entry_date <= ${params.to}::date` : sql``}
+    order by re.entry_date asc, re.created_at asc
+  `);
+
+  // Opening balance is only meaningful for a complete single-domain view: a shared account's
+  // opening figure is not attributable to one domain, and an "own postings" view has no base.
+  const includeOpening = mode === "full" && !(shippingOnly && accountDomain === "both") && !params.from;
+  let running = includeOpening ? Number(row.opening_balance ?? 0) : 0;
+  const opening = includeOpening ? running : null;
+  const showRunning = mode === "full";
+
+  const out: AccountStatement["lines"] = (lines ?? []).map((l: any) => {
+    const debit = Number(l.debit ?? 0);
+    const credit = Number(l.credit ?? 0);
+    running += debit - credit;
+    return {
+      lineId: l.line_id, entryId: l.entry_id,
+      entryDate: l.entry_date instanceof Date ? l.entry_date.toISOString().slice(0, 10) : String(l.entry_date).slice(0, 10),
+      createdAt: l.created_at instanceof Date ? l.created_at.toISOString() : String(l.created_at),
+      voucherNo: l.voucher_no ?? null, journalNo: l.journal_no ?? null, referenceNo: l.reference_no ?? null,
+      description: l.description ?? null, debit, credit, currency: l.currency,
+      runningBalance: showRunning ? running : null,
+      sourceModule: l.source_module ?? null, sourceTransactionType: l.source_transaction_type ?? null,
+      entryCategory: l.entry_category ?? null, operationalDomain: l.operational_domain ?? null,
+      createdById: l.created_by ?? null, createdByName: l.created_by_name ?? null, branchName: l.branch_name ?? null
+    };
+  });
+
+  const account = project({ ...row, ledger_id: row.ledger_id }, session);
+  if (mode === "own") account.currentBalance = null;
+  return { account, mode, domainFilter, openingBalance: opening, closingBalance: showRunning ? running : null, lines: out };
 }

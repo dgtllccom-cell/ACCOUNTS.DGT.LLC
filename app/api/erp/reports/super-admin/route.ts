@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -63,6 +64,7 @@ function requireQuery(result: { data: any; error: { message: string } | null }, 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     authorize(session, { resource: "reports", action: "read" });
     const scope = resolveReportScope(session);
     const params = querySchema.parse(Object.fromEntries(request.nextUrl.searchParams.entries()));

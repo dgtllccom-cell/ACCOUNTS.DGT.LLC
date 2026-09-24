@@ -506,6 +506,8 @@ export async function getCrmUniversalReportData(params: {
     if (!params.session.isSuperAdmin && !params.session.roles?.includes("super_admin")) {
       allowedCountryIds = params.session.countryIds || [];
       allowedBranchIds = params.session.cityBranchIds || [];
+      // Country CRM: a city-scoped login only sees its whole country when explicitly granted.
+      if (params.reportType === "country_crm" && (params.session.permissions ?? []).includes("crm:report_country")) allowedBranchIds = [];
     }
 
     let typeFilter = sql`1=1`;
@@ -575,4 +577,60 @@ export async function getCrmUniversalReportData(params: {
       }))
     };
   });
+}
+
+/**
+ * Country/branch boundary for a single CRM action item. followup/complete previously updated
+ * any item by id with no scope check; this rejects an item outside the caller's authorised
+ * country / city branch (items with no country/branch recorded stay reachable, as before).
+ */
+export async function assertCrmItemInScope(session: ErpSession, crmItemId: string) {
+  if (session.isSuperAdmin || session.roles?.includes("super_admin")) return;
+  const rows = await withLocalPg(async (sql) =>
+    sql`SELECT country_id, city_branch_id FROM crm_action_items WHERE id = ${crmItemId}::uuid LIMIT 1`
+  );
+  const item = rows?.[0];
+  if (!item) throw Object.assign(new Error("CRM item not found."), { status: 404 });
+  const countries = session.countryIds ?? [];
+  const cities = session.cityBranchIds ?? [];
+  if (item.country_id && !countries.includes(item.country_id)) {
+    throw Object.assign(new Error("This CRM item is outside your authorised country."), { status: 403 });
+  }
+  if (item.city_branch_id && cities.length > 0 && !cities.includes(item.city_branch_id)) {
+    throw Object.assign(new Error("This CRM item is outside your authorised branch."), { status: 403 });
+  }
+}
+
+/** Manual follow-up item (CRM Create). Country/branch always come from the caller's own scope. */
+export async function createManualCrmItem(session: ErpSession, input: {
+  partyName: string; dueDate: string; itemType: string; amount: number; currency: string;
+  referenceNo?: string | null; notes?: string | null; countryId?: string | null; cityBranchId?: string | null;
+}) {
+  const countries = session.countryIds ?? [];
+  const cities = session.cityBranchIds ?? [];
+  const countryId = input.countryId ?? countries[0] ?? null;
+  const cityBranchId = input.cityBranchId ?? cities[0] ?? null;
+  if (!session.isSuperAdmin) {
+    if (!countryId || !countries.includes(countryId)) throw Object.assign(new Error("Country scope is not allowed for this user."), { status: 403 });
+    if (cityBranchId && cities.length > 0 && !cities.includes(cityBranchId)) throw Object.assign(new Error("Branch scope is not allowed for this user."), { status: 403 });
+  }
+  const rows = await withLocalPg(async (sql) => {
+    const [ctry] = countryId ? await sql`SELECT name FROM public.countries WHERE id = ${countryId}::uuid` : [null];
+    const [br] = cityBranchId ? await sql`SELECT name FROM public.city_branches WHERE id = ${cityBranchId}::uuid` : [null];
+    const ref = input.referenceNo?.trim() || `MAN-${Date.now().toString(36).toUpperCase()}`;
+    return sql`
+      INSERT INTO crm_action_items (
+        source_type, source_id, reference_no, party_name, due_date, item_type, module,
+        amount, paid_amount, remaining_amount, currency, country_id, country_name, city_branch_id, branch_name,
+        responsible_user_id, responsible_user_name, urgency_class, status, notes
+      ) VALUES (
+        'manual', ${crypto.randomUUID()}, ${ref}, ${input.partyName}, ${input.dueDate}::date, ${input.itemType}, 'shipping',
+        ${input.amount}, 0, ${input.amount}, ${input.currency.toUpperCase()}, ${countryId}, ${ctry?.name ?? null}, ${cityBranchId}, ${br?.name ?? null},
+        ${session.userId}, ${session.fullName ?? null},
+        CASE WHEN ${input.dueDate}::date < CURRENT_DATE THEN 'overdue' WHEN ${input.dueDate}::date = CURRENT_DATE THEN 'due_today' ELSE 'upcoming' END,
+        'Manual', ${input.notes ?? null}
+      ) RETURNING id, reference_no
+    `;
+  });
+  return rows?.[0] ?? null;
 }

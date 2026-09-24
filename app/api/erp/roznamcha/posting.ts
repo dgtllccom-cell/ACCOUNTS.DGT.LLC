@@ -555,6 +555,14 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       limit 1
     `;
     operationalDomain = domainRows[0]?.operational_domain ?? null;
+    // Shared ("both") account: the entry carries the domain of the transaction's SOURCE so a
+    // Shipping-only user is later shown only Shipping-side activity of a shared account.
+    if (operationalDomain === "both") {
+      const requested = ((body as any).operationalDomain ?? ((body as any).roznamchaCategory === "shipping" ? "shipping" : null)) as string | null | undefined;
+      const doms: string[] = input.session?.operationalDomains ?? [];
+      const shippingOnlySession = !input.session?.isSuperAdmin && doms.length > 0 && !doms.includes("business") && !doms.includes("both");
+      operationalDomain = shippingOnlySession ? "shipping" : requested === "shipping" || requested === "business" ? requested : "business";
+    }
   }
 
   const entryRows = await sql`

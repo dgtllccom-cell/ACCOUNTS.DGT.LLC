@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const reportType = searchParams.get("reportType") || "daily_action";
+    const reportTokens: Record<string, string> = { user_followup: "report_user", branch_crm: "report_branch", country_crm: "report_country" };
+    if (reportTokens[reportType]) assertShippingUserExplicitPermission(session, "crm", reportTokens[reportType]);
     const countryId = searchParams.get("countryId");
     const cityBranchId = searchParams.get("cityBranchId");
     const startDate = searchParams.get("startDate");

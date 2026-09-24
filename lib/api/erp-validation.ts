@@ -155,6 +155,9 @@ export const roznamchaPostingSchema = scopeSchema
     sourceTransactionId: optionalUuidSchema,
     sourceReferenceNo: z.string().max(120).optional().nullable(),
     roznamchaCategory: z.enum(["business", "bank", "cash", "invoice", "transfer", "shipping"]).optional().nullable(),
+    // Source domain of THIS transaction. Only consulted when the ledger's account is a shared
+    // ("both") Account Master row; single-domain accounts always keep their own domain.
+    operationalDomain: z.enum(["business", "shipping"]).optional().nullable(),
     originalLanguage: supportedLanguageSchema.default("en"),
     translations: z.record(z.string(), z.record(supportedLanguageSchema, z.string().trim())).optional()
   })
@@ -654,7 +657,7 @@ export const accountUpdateSchema = scopeSchema.partial().extend({
 
 export const enterpriseAccountCreateSchema = scopeSchema.extend({
   scope: ledgerScopeSchema,
-  operationalDomain: z.enum(["business", "shipping"]).default("business"),
+  operationalDomain: z.enum(["business", "shipping", "both"]).default("business"),
   category: z.string().trim().max(120).optional().nullable(),
   categoryId: optionalUuidSchema,
   parentId: optionalUuidSchema,

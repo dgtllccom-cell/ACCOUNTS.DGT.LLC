@@ -179,6 +179,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter by search terms across all visible fields if provided.
+    // Country boundary at the query result level (the RPC's own scoping cannot be relied on: the
+    // server client can carry a service role). Employees outside the caller's authorised
+    // countries are never returned; records with no country are visible to Super Admin only.
+    if (!session.isSuperAdmin) {
+      const allowed = new Set(session.countryIds ?? []);
+      employees = employees.filter((e: any) => {
+        const cid = e.country_id ?? e.country?.id ?? null;
+        return cid ? allowed.has(cid) : false;
+      });
+    }
     let filtered = employees || [];
     if (search) {
       filtered = filtered.filter((emp: any) => {
@@ -287,6 +297,14 @@ export async function POST(request: NextRequest) {
     }
 
     const newEmployeeId = await withLocalPg(async (sql) => {
+      // One Employee per Person Master record, and the person must be inside the caller's country.
+      const [person] = await sql`SELECT id, country_id FROM public.customers WHERE id = ${personMasterId}::uuid AND deleted_at IS NULL LIMIT 1`;
+      if (!person) throw Object.assign(new Error("Person Master record not found."), { status: 404 });
+      if (!session.isSuperAdmin && person.country_id && !session.countryIds.includes(person.country_id)) {
+        throw Object.assign(new Error("This person belongs to a country outside your authorised scope."), { status: 403 });
+      }
+      const [dupEmp] = await sql`SELECT id, employee_code FROM public.employees WHERE person_master_id = ${personMasterId}::uuid AND deleted_at IS NULL LIMIT 1`;
+      if (dupEmp) throw Object.assign(new Error(`This person is already registered as employee ${dupEmp.employee_code}.`), { status: 409 });
       // Generate employee code
       const generatedCode = await getNextEmployeeCode(sql);
 

@@ -10,6 +10,7 @@ import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/confi
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -102,6 +103,7 @@ async function buildAccountListViaLocalPg(
         ea.created_at
       from public.enterprise_accounts ea
       where ea.deleted_at is null
+        ${isShippingDomainOnly(session) ? sql`and ea.operational_domain in ('shipping','both')` : sql``}
         and (
           (
             (
@@ -383,6 +385,7 @@ export async function GET(request: NextRequest) {
       )
       .is("deleted_at", null)
       .order("code", { ascending: true });
+    if (isShippingDomainOnly(session)) query = query.in("operational_domain", ["shipping", "both"]);
 
     if (!session.isSuperAdmin) {
       // Global "super admin scope" accounts (country_id null AND scope=super_admin)
@@ -467,9 +470,45 @@ export async function POST(request: NextRequest) {
     // Geography scope alone doesn't gate the Business/Shipping axis — a
     // caller could otherwise post operationalDomain:"shipping" straight past
     // a UI that never shows them that option (UI hiding is not enforcement).
-    const requestedDomain = body.operationalDomain === "shipping" ? "shipping" : "business";
-    if (!sessionInDomain(session, requestedDomain)) {
+    const requestedDomain = body.operationalDomain === "shipping" ? "shipping" : body.operationalDomain === "both" ? "both" : "business";
+    const domainAllowed =
+      requestedDomain === "both"
+        ? sessionInDomain(session, "business") && sessionInDomain(session, "shipping")
+        : sessionInDomain(session, requestedDomain);
+    if (!domainAllowed) {
       throw new ApiClientError(`You do not have ${requestedDomain} domain access to create this account.`, { status: 403, code: "DOMAIN_FORBIDDEN" });
+    }
+
+    // One Account Master per party: if the same party (linked customer) already has a live
+    // account in this country in the same currency — in ANY branch or domain — creation is
+    // refused with the existing Account ID so the caller reuses it (and, where the domains
+    // differ, an authorised user upgrades it to operationalDomain "both") instead of
+    // creating a parallel Business/Shipping copy. Shipping/shared creators additionally
+    // get an exact same-name match within the country.
+    if (body.countryId) {
+      const dupCountryId = body.countryId;
+      const dupCustomerId = body.customerId ?? null;
+      const dup = await withLocalPg(async (sql) => {
+        const rows = await sql`
+          select id, code, name, operational_domain, city_branch_id
+          from public.enterprise_accounts
+          where deleted_at is null
+            and country_id = ${dupCountryId}::uuid
+            and upper(currency) = ${String(body.currency).toUpperCase()}
+            and (
+              ${dupCustomerId ? sql`customer_id = ${dupCustomerId}::uuid` : sql`false`}
+              or ${requestedDomain !== "business" ? sql`lower(btrim(name)) = lower(btrim(${body.name}))` : sql`false`}
+            )
+          limit 1
+        `;
+        return rows[0] ?? null;
+      });
+      if (dup) {
+        throw new ApiClientError(
+          `An account for this party already exists in this country (${dup.code}). Reuse the existing Account ID.`,
+          { status: 409, code: "DUPLICATE_ACCOUNT", details: { existingAccountId: dup.id, existingCode: dup.code, existingDomain: dup.operational_domain, existingCityBranchId: dup.city_branch_id } }
+        );
+      }
     }
 
     const supabase = await createApiSupabaseClient();

@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -28,6 +29,7 @@ import { computeBusinessSummary } from "@/lib/reports/business-summary-data";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     authorize(session, { resource: "reports", action: "read" });
 
     const sp = request.nextUrl.searchParams;

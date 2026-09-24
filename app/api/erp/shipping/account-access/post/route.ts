@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
         referenceNo: body.referenceNo ?? null,
         narration: body.description ?? null,
         roznamchaCategory: "shipping",
+        operationalDomain: "shipping",
         originalLanguage: session.preferredLanguage ?? "en",
         lines: [
           {

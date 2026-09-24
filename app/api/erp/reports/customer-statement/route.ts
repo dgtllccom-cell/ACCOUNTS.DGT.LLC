@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { getCombinedCustomerStatement } from "@/lib/services/customer-statement-service";
 
 /**
@@ -34,12 +35,13 @@ export async function GET(req: NextRequest) {
 
     const report = await getCombinedCustomerStatement(customerId, {
       from: searchParams.get("from"),
-      to: searchParams.get("to")
+      to: searchParams.get("to"),
+      shippingOnly: isShippingDomainOnly(session)
     });
 
     return NextResponse.json({ success: true, data: report });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: error?.status || 500 });
   }
 }

@@ -318,6 +318,28 @@ export const ERP_MODULE_DEFINITIONS: ErpModuleDef[] = [
     exportPerms: []
   },
   {
+    key: "shipping_crm_reports",
+    name: "Shipping — CRM Reports (User / Branch / Country)",
+    category: "Logistics & Customs",
+    viewPerms: ["crm:report_user"],
+    createPerms: ["crm:report_branch"],
+    editPerms: ["crm:report_country"],
+    deletePerms: [],
+    approvePerms: [],
+    exportPerms: []
+  },
+  {
+    key: "shipping_reports_access",
+    name: "Shipping — Shipping Reports",
+    category: "Logistics & Customs",
+    viewPerms: ["shipping_reports:read", "reports:read"],
+    createPerms: [],
+    editPerms: [],
+    deletePerms: [],
+    approvePerms: [],
+    exportPerms: ["reports:export"]
+  },
+  {
     key: "shipping_employee_access",
     name: "Shipping — Employee Management Access",
     category: "Logistics & Customs",

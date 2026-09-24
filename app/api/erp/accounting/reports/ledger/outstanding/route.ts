@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -27,6 +28,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     authorizeApiScope(session, { resource: "reports", action: "read" });
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 

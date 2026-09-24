@@ -9,10 +9,23 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
+import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
+import type { ErpSession } from "@/lib/auth/session";
+
+async function assertEmployeeInScope(session: ErpSession, employeeId: string) {
+  if (session.isSuperAdmin) return;
+  const rows = await withLocalPg(async (sql) => sql`SELECT country_id FROM public.employees WHERE id = ${employeeId}::uuid AND deleted_at IS NULL LIMIT 1`);
+  const cid = rows?.[0]?.country_id;
+  if (!rows?.[0]) throw Object.assign(new Error("Employee not found."), { status: 404 });
+  if (!cid || !(session.countryIds ?? []).includes(cid)) throw Object.assign(new Error("This employee is outside your authorised country."), { status: 403 });
+}
+
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "employees", "read");
+    await assertEmployeeInScope(session, params.id);
 
     let employee = await withLocalPg(async (sql) => {
       const rows = await sql`
@@ -70,7 +83,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     return NextResponse.json({ employee });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err?.status || 500 });
   }
 }
 
@@ -78,6 +91,8 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   const params = await props.params;
   try {
     const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "employees", "create");
+    await assertEmployeeInScope(session, params.id);
     const body = await request.json();
 
     const {
@@ -264,14 +279,16 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     return NextResponse.json({ employee: result });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err?.status || 500 });
   }
 }
 
 export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    assertShippingUserExplicitPermission(session, "employees", "delete");
+    await assertEmployeeInScope(session, params.id);
     await withLocalPg(async (sql) => {
       await sql`
         UPDATE public.employees
@@ -283,6 +300,6 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
     return NextResponse.json({ success: true });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err?.status || 500 });
   }
 }

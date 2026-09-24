@@ -867,8 +867,21 @@ export class LedgerReportService {
     const header = headerRows[0] ?? null;
     if (!header) return { header: null, lines: [], openingBalance: 0 };
 
+    // Shipping-only login: never expose Business activity. Business accounts return nothing,
+    // shared ("both") accounts are served only by the domain-filtered Shipping statement
+    // (/api/erp/shipping/account-access/[id]/statement), and sibling ledgers are not merged in.
+    const shippingOnlySession = !input.session.isSuperAdmin && !(input.session.operationalDomains ?? ["business"]).some((d) => d === "business" || d === "both");
+    if (shippingOnlySession) {
+      const domRows = await withReadPg((sql: any) => sql`
+        select ea.operational_domain from public.enterprise_accounts ea
+        where ea.id = ${header.accountId ?? null} or ea.id = (select enterprise_account_id from public.ledgers where id = ${header.ledgerId} limit 1)
+        limit 1`);
+      const dom = (domRows as any)?.[0]?.operational_domain ?? "business";
+      if (dom !== "shipping") return { header: null, lines: [], openingBalance: 0 };
+    }
+
     let siblingLedgerIds: string[] = [];
-    if (header.accountId) {
+    if (header.accountId && !shippingOnlySession) {
       const { data: siblingLedgers } = await supabase
         .from("ledgers")
         .select("id")

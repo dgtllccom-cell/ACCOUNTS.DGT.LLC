@@ -1,3 +1,5 @@
+import { isShippingDomainOnly, SHIPPING_ONLY_REPORT_TYPES } from "@/lib/permissions/shipping-explicit-gate";
+import { ErpPermissionError, hasRolePermission } from "@/lib/permissions/middleware";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -93,6 +95,13 @@ export async function GET(request: NextRequest) {
       lang: searchParams.get("lang") ?? "en",
       limit: searchParams.get("limit") ?? undefined
     });
+
+    if (isShippingDomainOnly(session) && !SHIPPING_ONLY_REPORT_TYPES.has(parsed.reportType)) {
+      throw new ErpPermissionError(`Report '${parsed.reportType}' contains Business data and is not available to a Shipping-only login.`);
+    }
+    if (isShippingDomainOnly(session) && session.roles?.includes("agent_user") && !hasRolePermission(session, "shipping_reports", "read")) {
+      throw new ErpPermissionError("Missing permission: shipping_reports:read");
+    }
 
     // Resolve scope and enforce data boundaries
     const scope = resolveReportScope(session);

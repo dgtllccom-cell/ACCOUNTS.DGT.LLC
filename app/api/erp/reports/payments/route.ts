@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -25,6 +26,7 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     authorize(session, { resource: "reports", action: "read" });
     const rscope = resolveReportScope(session);
     const p = request.nextUrl.searchParams;

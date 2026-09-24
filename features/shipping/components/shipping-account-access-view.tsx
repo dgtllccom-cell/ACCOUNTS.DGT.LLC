@@ -37,6 +37,16 @@ type OwnTransaction = {
   created_at: string;
 };
 
+type StatementLine = {
+  lineId: string; entryDate: string; voucherNo: string | null; referenceNo: string | null; description: string | null;
+  debit: number; credit: number; currency: string; runningBalance: number | null; sourceModule: string | null;
+  createdByName: string | null; branchName: string | null; createdAt: string;
+};
+type Statement = {
+  mode: "full" | "own"; domainFilter: "shipping" | null; openingBalance: number | null; closingBalance: number | null;
+  lines: StatementLine[];
+};
+
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<{ ok: boolean; data?: T; error?: string; status: number }> {
   const res = await fetch(url, init);
   const body = await res.json().catch(() => ({}));
@@ -59,6 +69,8 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
 
   const [selected, setSelected] = useState<MinimalAccountView | null>(null);
   const [ownTransactions, setOwnTransactions] = useState<OwnTransaction[]>([]);
+  const [statement, setStatement] = useState<Statement | null>(null);
+  const [statementLoading, setStatementLoading] = useState(false);
 
   const [postType, setPostType] = useState<"debit" | "credit">("debit");
   const [amount, setAmount] = useState("");
@@ -105,10 +117,19 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
     );
     if (!res.ok || !res.data) return;
     setSelected(res.data.account);
+    setStatement(null);
     setOwnTransactions(res.data.ownTransactions ?? []);
     setCurrency(res.data.account.currency ?? "");
     setPostMessage(null);
   }, []);
+
+  const loadStatement = useCallback(async () => {
+    if (!selected) return;
+    setStatementLoading(true);
+    const res = await fetchJson<{ statement: Statement }>(`/api/erp/shipping/account-access/${selected.id}/statement`);
+    setStatementLoading(false);
+    if (res.ok && res.data?.statement) setStatement(res.data.statement);
+  }, [selected]);
 
   const submitPost = useCallback(async () => {
     if (!selected || !countryId) return;
@@ -140,7 +161,8 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
     setDescription("");
     setReferenceNo("");
     void selectAccount(selected.id);
-  }, [selected, countryId, postType, amount, currency, entryDate, description, referenceNo, s, selectAccount]);
+    if (statement) void loadStatement();
+  }, [selected, countryId, postType, amount, currency, entryDate, description, referenceNo, s, selectAccount, statement, loadStatement]);
 
   if (bootLoading) {
     return <div className="p-6 text-sm text-muted-foreground">{s.t("loading", "Loading...")}</div>;
@@ -257,7 +279,7 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
           </CardHeader>
           <CardContent className="space-y-4">
             <p className={`text-xs text-muted-foreground ${s.textStart}`}>
-              {selected.isOwnBranch || selected.currentBalance !== null
+              {selected.isOwnBranch || selected.currentBalance !== null || statement?.mode === "full"
                 ? s.t("full_ledger_notice", "You are viewing this account's full ledger because it is in your own branch or you hold Full Ledger View permission.")
                 : s.t("narrow_ledger_notice", "This account belongs to another branch. You can see only enough information to identify it and your own posted transactions — not its full ledger or balance history.")}
             </p>
@@ -285,6 +307,66 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
                 </div>
               )}
             </div>
+
+            <div>
+              <Button variant="outline" size="sm" onClick={loadStatement} disabled={statementLoading}>
+                {s.t("view_statement", "View Statement")}
+              </Button>
+              {selected.operationalDomain === "both" && (
+                <span className="ms-2 rounded bg-violet-100 px-2 py-0.5 text-xs text-violet-800">{s.t("domain_both", "Shared (Business + Shipping)")}</span>
+              )}
+            </div>
+            {statement && (
+              <div className="space-y-2 rounded-md border p-3">
+                <p className={`text-sm font-semibold ${s.textStart}`}>{s.t("statement_title", "Account Statement")}</p>
+                <p className={`text-xs text-muted-foreground ${s.textStart}`}>
+                  {statement.mode === "full" ? s.t("statement_mode_full", "Complete authorised ledger with running balance.") : s.t("statement_mode_own", "Only the transactions you posted are shown. Other activity and the balance are not available to you.")}
+                  {statement.domainFilter === "shipping" ? " " + s.t("statement_shipping_only", "Shipping-side activity only. Business transactions of a shared account are not shown.") : ""}
+                </p>
+                {statement.openingBalance !== null && (
+                  <p className="text-xs">{s.t("opening_balance", "Opening balance")}: <span className="font-mono">{statement.openingBalance.toLocaleString()}</span></p>
+                )}
+                {statement.lines.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{s.t("no_statement_lines", "No transactions to show.")}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className={`p-1 ${s.textStart}`}>{s.t("col_date", "Date")}</th>
+                          <th className={`p-1 ${s.textStart}`}>{s.t("col_voucher", "Voucher")}</th>
+                          <th className={`p-1 ${s.textStart}`}>{s.t("col_reference", "Reference")}</th>
+                          <th className={`p-1 ${s.textStart}`}>{s.t("col_user", "User")}</th>
+                          <th className={`p-1 ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
+                          <th className={`p-1 ${s.textStart}`}>{s.t("col_source", "Source")}</th>
+                          <th className={`p-1 ${s.textEnd}`}>{s.t("col_debit", "Debit")}</th>
+                          <th className={`p-1 ${s.textEnd}`}>{s.t("col_credit", "Credit")}</th>
+                          <th className={`p-1 ${s.textEnd}`}>{s.t("col_balance", "Balance")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statement.lines.map((l) => (
+                          <tr key={l.lineId} className="border-t">
+                            <td className="p-1">{l.entryDate}</td>
+                            <td className="p-1">{l.voucherNo}</td>
+                            <td className="p-1">{l.referenceNo ?? l.description}</td>
+                            <td className="p-1">{l.createdByName}</td>
+                            <td className="p-1">{l.branchName}</td>
+                            <td className="p-1">{l.sourceModule ?? "roznamcha"}</td>
+                            <td className={`p-1 font-mono ${s.textEnd}`}>{l.debit ? l.debit.toLocaleString() : ""}</td>
+                            <td className={`p-1 font-mono ${s.textEnd}`}>{l.credit ? l.credit.toLocaleString() : ""}</td>
+                            <td className={`p-1 font-mono ${s.textEnd}`}>{l.runningBalance === null ? "" : l.runningBalance.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {statement.closingBalance !== null && (
+                  <p className="text-xs">{s.t("closing_balance", "Closing balance")}: <span className="font-mono">{statement.closingBalance.toLocaleString()}</span></p>
+                )}
+              </div>
+            )}
 
             {canPostCrossBranch ? (
               <div className="space-y-3 rounded-md border p-4">

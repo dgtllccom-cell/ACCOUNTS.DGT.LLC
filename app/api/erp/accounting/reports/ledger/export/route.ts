@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -35,6 +36,7 @@ function monthStartIso() {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     const query = querySchema.parse({
       format: request.nextUrl.searchParams.get("format") ?? undefined,
       countryId: request.nextUrl.searchParams.get("countryId") ?? undefined,

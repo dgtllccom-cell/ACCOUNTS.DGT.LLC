@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -29,6 +30,7 @@ function normalizeForSearch(value: string) {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     const urlLang = request.nextUrl.searchParams.get("language");
     // Narrow the raw ?language= query value to a SupportedLanguage literal (no cast); otherwise
     // fall back to the request's resolved language. Keeps `language` typed as SupportedLanguage.

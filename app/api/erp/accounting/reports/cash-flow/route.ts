@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { financialStatementQuerySchema } from "@/lib/api/erp-validation";
@@ -21,6 +22,7 @@ import { fetchFinancialStatementRows, classifyCashPosition } from "@/lib/reports
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     const query = financialStatementQuerySchema.parse({
       scope: request.nextUrl.searchParams.get("scope"),
       countryId: request.nextUrl.searchParams.get("countryId"),

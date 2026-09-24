@@ -3,7 +3,8 @@ import { z } from "zod";
 import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
+import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
@@ -29,6 +30,7 @@ const updateSchema = scopeSchema.extend({
   currency: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional(),
   openingBalance: z.coerce.number().finite().optional(),
   status: z.enum(["active", "archived"]).optional(),
+  operationalDomain: z.enum(["business", "shipping", "both"]).optional(),
   isControlAccount: z.coerce.boolean().optional(),
   customerId: optionalUuidSchema,
   companyId: optionalUuidSchema,
@@ -44,7 +46,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function loadAccount(id: string) {
   const admin = createSupabaseAdminClient() as any;
-  const selectFields = "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at, deleted_at";
+  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at, deleted_at";
 
   let data = null;
   if (isUuid(id)) {
@@ -102,6 +104,7 @@ async function loadAccount(id: string) {
         bank_id?: string | null;
         shipping_line_id?: string | null;
         linked_countries?: any;
+        operational_domain?: string | null;
         code: string;
         account_number?: string | null;
         customer_number?: string | null;
@@ -136,6 +139,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const account = await loadAccount(id);
 
     if (!account || account.deleted_at) {
+      return apiOk({ account: null }, { status: 404 });
+    }
+
+    if (isShippingDomainOnly(session) && (account.operational_domain ?? "business") === "business") {
       return apiOk({ account: null }, { status: 404 });
     }
 
@@ -254,6 +261,18 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       updatePayload.current_balance = body.openingBalance;
     }
     if (body.status !== undefined) updatePayload.status = body.status;
+    if (body.operationalDomain !== undefined && body.operationalDomain !== (current.operational_domain ?? "business")) {
+      const from = current.operational_domain ?? "business";
+      const to = body.operationalDomain;
+      const isUpgradeToBoth = to === "both" && from !== "both";
+      if (!isUpgradeToBoth && !session.isSuperAdmin) {
+        throw new ApiClientError("Only a Super Admin can narrow or switch an account's operational domain.", { status: 403, code: "DOMAIN_FORBIDDEN" });
+      }
+      if (to === "both" ? !(sessionInDomain(session, "business") && sessionInDomain(session, "shipping")) : !sessionInDomain(session, to as any)) {
+        throw new ApiClientError("You do not have access to that operational domain.", { status: 403, code: "DOMAIN_FORBIDDEN" });
+      }
+      updatePayload.operational_domain = to;
+    }
     if (body.isControlAccount !== undefined) updatePayload.is_control_account = body.isControlAccount;
     if (rawHas("customerId")) updatePayload.customer_id = body.customerId;
     if (rawHas("companyId")) updatePayload.company_id = body.companyId;

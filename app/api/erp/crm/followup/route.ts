@@ -4,6 +4,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
 import { t } from "@/lib/i18n/ui";
+import { assertCrmItemInScope } from "@/lib/crm/smart-crm-service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,7 @@ export async function POST(request: NextRequest) {
     if (!crmItemId || !noteText) {
       return NextResponse.json({ error: "crmItemId and noteText are required." }, { status: 400 });
     }
+    await assertCrmItemInScope(session, crmItemId);
 
     const result = await withLocalPg(async (sql) => {
       // 1. Insert note into crm_followup_notes

@@ -1,3 +1,4 @@
+import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
@@ -174,14 +175,24 @@ async function loadFilterOptions(session: Session) {
     ? await withTimeout<any>(
         supabase
           .from("enterprise_accounts")
-          .select("id, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, currency, current_balance")
+          .select("id, operational_domain, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, currency, current_balance")
           .in("id", accountIds)
           .is("deleted_at", null),
         "ledger accounts"
       )
     : { data: [], error: null };
   const accountById = new Map(((accountRes.data ?? []) as any[]).map((row) => [row.id, row] as const));
-  const enrichedLedgers = ledgerRows.map((row: any) => {
+  // A Shipping-only login only ever receives Shipping-domain accounts here, and a balance only
+  // for accounts in its own city branch — never another branch's or a shared account's combined
+  // Business+Shipping balance.
+  const shippingOnlyLogin = isShippingDomainOnly(session);
+  const visibleLedgerRows = shippingOnlyLogin
+    ? ledgerRows.filter((row: any) => {
+        const dom = row.enterprise_account_id ? accountById.get(row.enterprise_account_id)?.operational_domain : null;
+        return dom === "shipping" || dom === "both";
+      })
+    : ledgerRows;
+  const enrichedLedgers = visibleLedgerRows.map((row: any) => {
     const account = row.enterprise_account_id ? accountById.get(row.enterprise_account_id) : null;
     return {
       ...row,
@@ -192,7 +203,10 @@ async function loadFilterOptions(session: Session) {
       branch_serial_number: account?.branch_serial_number ?? null,
       account_name: account?.name ?? row.name,
       account_currency: account?.currency ?? row.currency,
-      account_balance: account?.current_balance ?? row.current_balance
+      account_balance: account?.current_balance ?? row.current_balance,
+      ...(shippingOnlyLogin && !((session.cityBranchIds ?? []).includes(row.city_branch_id)) || (shippingOnlyLogin && account?.operational_domain === "both")
+        ? { current_balance: null, account_balance: null }
+        : {})
     };
   });
 

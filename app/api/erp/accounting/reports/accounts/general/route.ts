@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -693,6 +694,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     const query = querySchema.parse({
       q: request.nextUrl.searchParams.get("q") ?? undefined,
       scope: request.nextUrl.searchParams.get("scope") ?? undefined,

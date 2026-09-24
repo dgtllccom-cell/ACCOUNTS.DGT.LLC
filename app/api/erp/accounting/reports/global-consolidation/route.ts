@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { globalConsolidationQuerySchema } from "@/lib/api/erp-validation";
@@ -8,6 +9,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     authorizeApiScope(session, {
       resource: "reports",
       action: "read"

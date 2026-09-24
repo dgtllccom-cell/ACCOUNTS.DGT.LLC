@@ -22,11 +22,13 @@ export type ApiErrorBody = {
 export class ApiClientError extends Error {
   status = 400;
   code = "BAD_REQUEST";
-  constructor(message: string, opts?: { status?: number; code?: string }) {
+  details?: unknown;
+  constructor(message: string, opts?: { status?: number; code?: string; details?: unknown }) {
     super(message);
     this.name = "ApiClientError";
     if (opts?.status) this.status = opts.status;
     if (opts?.code) this.code = opts.code;
+    if (opts?.details !== undefined) this.details = opts.details;
   }
 }
 
@@ -193,6 +195,7 @@ export async function handleApiError(error: unknown) {
     code = error.code;
     message = error.message;
     status = error.status;
+    details = error.details;
   } else if (error instanceof ZodError) {
     code = "VALIDATION_ERROR";
     const issues = error.errors.map(err => {

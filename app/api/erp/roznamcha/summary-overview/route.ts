@@ -1,3 +1,4 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,6 +11,7 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertNotShippingOnly(session);
     const { searchParams } = new URL(request.url);
     const dateParam = (searchParams.get("date") || new Date().toISOString().slice(0, 10)).trim();
     const filterCountryId = searchParams.get("countryId")?.trim() || null;
@@ -233,6 +235,6 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
     console.error("Error in country-cash-summary GET:", err);
-    return NextResponse.json({ error: err.message || "Failed to fetch summary overview" }, { status: 500 });
+    return NextResponse.json({ error: err.message || "Failed to fetch summary overview" }, { status: err?.status || 500 });
   }
 }

@@ -4,6 +4,8 @@ import type { CustomerLedgerReportData, CustomerLedgerRow } from "@/lib/reports/
 export interface CustomerStatementOptions {
   from?: string | null;
   to?: string | null;
+  /** Shipping-only login: drop Business accounts and Business-domain lines of shared accounts. */
+  shippingOnly?: boolean;
 }
 
 /**
@@ -27,9 +29,11 @@ export async function getCombinedCustomerStatement(
       JOIN public.ledgers l ON l.enterprise_account_id = ea.id AND l.deleted_at IS NULL
       WHERE ea.customer_id = ${customerId} AND ea.deleted_at IS NULL
     `;
-    const ledgerIds = ledgers.map((l: any) => l.id);
+    const scopedLedgers = options.shippingOnly ? ledgers.filter((l: any) => l.operational_domain === "shipping" || l.operational_domain === "both") : ledgers;
+    const domainByLedger = new Map<string, string>(scopedLedgers.map((l: any) => [l.id, l.operational_domain ?? "business"]));
+    const ledgerIds = scopedLedgers.map((l: any) => l.id);
     if (ledgerIds.length === 0) {
-      return { customer, ledgers, lines: [] as any[] };
+      return { customer, ledgers: scopedLedgers, lines: [] as any[] };
     }
 
     const from = options.from ?? "1970-01-01";
@@ -39,7 +43,7 @@ export async function getCombinedCustomerStatement(
       SELECT
         rl.id AS line_id, rl.debit, rl.credit, rl.currency, rl.description, rl.ledger_id,
         re.entry_date, re.voucher_no, re.journal_no, re.narration, re.source_module,
-        re.city_branch_id, cb.name AS branch_name
+        re.city_branch_id, re.operational_domain AS entry_domain, cb.name AS branch_name
       FROM public.roznamcha_lines rl
       JOIN public.roznamcha_entries re ON re.id = rl.roznamcha_entry_id AND re.deleted_at IS NULL
       LEFT JOIN public.city_branches cb ON cb.id = re.city_branch_id
@@ -47,7 +51,10 @@ export async function getCombinedCustomerStatement(
         AND re.entry_date BETWEEN ${from}::date AND ${to}::date
       ORDER BY re.entry_date ASC, re.created_at ASC
     `;
-    return { customer, ledgers, lines };
+    const visible = options.shippingOnly
+      ? lines.filter((l: any) => domainByLedger.get(l.ledger_id) === "shipping" || (domainByLedger.get(l.ledger_id) === "both" && l.entry_domain === "shipping"))
+      : lines;
+    return { customer, ledgers: scopedLedgers, lines: visible };
   });
 
   if (!data) throw new Error("Customer statement needs a direct database connection.");
